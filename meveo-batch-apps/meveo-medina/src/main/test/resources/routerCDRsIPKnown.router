@@ -1,0 +1,4 @@
+flow-accounting for [eth1]
+Src Addr        Dst Addr        Sport Dport Proto    Packets      Bytes   Flows
+5.5.5.5    6.6.6.6	49602 22      tcp       6901     1000      19
+6.6.6.6    7.7.7.7  137   137     udp       4930     2000     116

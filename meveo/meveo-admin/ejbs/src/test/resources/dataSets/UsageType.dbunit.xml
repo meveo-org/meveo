@@ -1,0 +1,13 @@
+<dataset>
+
+	<!-- USAGE_TYPES -->
+	<RATING_USAGE_TYPE ID="2" VERSION="0" NAME="Name_2" CODE="Code_2"
+		METRIC_NAME="Metric_Name_2" METRIC_CODE="Metric_Code_2" />
+	
+	<RATING_USAGE_TYPE ID="3" VERSION="0" NAME="Name_3" CODE="Code_3"
+		METRIC_NAME="Metric_Name_3" METRIC_CODE="Metric_Code_3" />
+	
+	<RATING_USAGE_TYPE ID="4" VERSION="0" NAME="Name_4" CODE="Code_4"
+		METRIC_NAME="Metric_Name_4" METRIC_CODE="Metric_Code_4" />
+
+</dataset>
