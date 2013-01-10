@@ -47,7 +47,6 @@ public class MultipleFilesOutputHandler implements OutputHandler {
      * @see org.meveo.core.outputhandler.OutputHandler#handleOutput(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
         Object outputObject = taskExecution.getOutputObject();
         logger.info("Moving output files to output dir:");

@@ -41,7 +41,6 @@ public class TIPTask implements Runnable {
 
 	private static final Logger logger = Logger.getLogger(TIPTask.class);
 
-	@Override
 	public void run() {
 		logger.info("Starting TIPTask tasks...");
 		File dir = new File(BayadConfig.getTIPSourceFilesDirectory());

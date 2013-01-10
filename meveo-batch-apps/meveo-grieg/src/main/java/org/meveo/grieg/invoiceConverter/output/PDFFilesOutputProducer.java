@@ -64,8 +64,7 @@ public class PDFFilesOutputProducer implements OutputProducer {
     /**
      * @see org.meveo.core.outputproducer.OutputProducer#produceOutput(java.util.List)
      */
-    @Override
-    public Object produceOutput(List<Output> outputTickets) {
+     public Object produceOutput(List<Output> outputTickets) {
         List<FileInfoHolder> files = new ArrayList<FileInfoHolder>();
 
         String resDir = griegConfig.getResourcesFilesDirectory();

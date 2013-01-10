@@ -54,7 +54,6 @@ public class JavaScriptAction implements JavaScriptActionLocal {
         return null;
     }
 
-    @Override
     public String calculateOneShotChargeInstanceAmountWithoutTax(String chargeTemplateCode, String amount2String) {
         BigDecimal amount2 = bigDecimalConverterAsObject(amount2String);
         ChargeTemplate chargeTemplate = (ChargeTemplate) chargeTemplateService.findByCode(chargeTemplateCode);
@@ -90,7 +89,6 @@ public class JavaScriptAction implements JavaScriptActionLocal {
 
     }
 
-    @Override
     public String getFormatedAmountString(String value) {
         return  getBigDecimalAsString(bigDecimalConverterAsObject(value));
     }

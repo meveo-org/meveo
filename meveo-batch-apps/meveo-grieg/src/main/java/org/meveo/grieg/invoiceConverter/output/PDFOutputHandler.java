@@ -61,7 +61,6 @@ public class PDFOutputHandler implements OutputHandler {
     private MessageService messageService;
 
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
 
         PDFsToDBOutputHandler pdFsToDBOutputHandler = new PDFsToDBOutputHandler();

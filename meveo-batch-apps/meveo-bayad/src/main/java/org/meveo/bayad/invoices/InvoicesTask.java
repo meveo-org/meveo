@@ -43,7 +43,6 @@ public class InvoicesTask implements Runnable {
 
     private static final Logger logger = Logger.getLogger(InvoicesTask.class);
 
-    @Override
     public void run() {
         logger.info("Starting InvoicesTask tasks...");
         File dir = new File(BayadConfig.getInvoicesSourceFilesDirectory());

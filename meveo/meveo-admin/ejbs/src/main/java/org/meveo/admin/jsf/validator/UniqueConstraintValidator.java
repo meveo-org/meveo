@@ -39,7 +39,6 @@ import org.meveo.service.validation.ValidationServiceLocal;
 @BypassInterceptors
 public class UniqueConstraintValidator implements Validator {
 
-    @Override
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
 
         ModelValidator modelValidator = new ModelValidator();

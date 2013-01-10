@@ -54,7 +54,6 @@ public class DunningOutputProducer implements OutputProducer {
 
     private static final Logger logger = Logger.getLogger(DunningOutputProducer.class);
 
-    @Override
     public Object produceOutput(List<Output> outputTickets) {
         List<DunningAction> files = new ArrayList<DunningAction>();
         String resDir = griegConfig.getResourcesFilesDirectory();

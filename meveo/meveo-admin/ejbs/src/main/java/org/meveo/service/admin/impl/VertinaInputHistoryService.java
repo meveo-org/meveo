@@ -46,7 +46,6 @@ public class VertinaInputHistoryService extends PersistenceService<VertinaInputH
      *      org.meveo.model.billing.ApplicationChgStatusEnum)
      */
     @SuppressWarnings("unchecked")
-    @Override
     public List<ChargeApplication> getChargeApplications(Long inputHistoryId, ApplicationChgStatusEnum status) {
         if (status == null) {
             Query q = em.createQuery("select ca from ChargeApplication ca where ca.inputHistoryId = :id");
@@ -62,7 +61,6 @@ public class VertinaInputHistoryService extends PersistenceService<VertinaInputH
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public List<ChargeApplication> getTransactions(Long inputHistoryId, RatedTransactionStatusEnum status) {
         if (status == null) {
             Query q = em.createQuery("select rt from RatedTransaction rt where rt.inputHistoryId = :id");

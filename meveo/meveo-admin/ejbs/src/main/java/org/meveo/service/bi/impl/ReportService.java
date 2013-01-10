@@ -45,7 +45,6 @@ public class ReportService extends PersistenceService<Report> implements ReportS
         return query.getResultList();
     }
 
-    @Override
     public List<Object> getBordereauRemiseChequeRecords(Date startDate, Date endDate) {
 
         // Query query = em

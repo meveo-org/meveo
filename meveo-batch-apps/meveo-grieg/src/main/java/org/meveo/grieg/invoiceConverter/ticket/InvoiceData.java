@@ -186,12 +186,10 @@ public class InvoiceData implements GriegTicket {
         return netToPay;
     }
 
-    @Override
     public String getSource() {
         return source;
     }
 
-    @Override
     public String getInvoiceNumber() {
         return invoiceNumber;
     }

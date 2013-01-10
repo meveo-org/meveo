@@ -47,7 +47,6 @@ public class CopyFileOutputHandler implements OutputHandler {
      * @see org.meveo.core.outputhandler.OutputHandler#handleOutput(java.lang.String)
      */
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
         Object outputObject = taskExecution.getOutputObject(); 
         if (outputObject != null) {

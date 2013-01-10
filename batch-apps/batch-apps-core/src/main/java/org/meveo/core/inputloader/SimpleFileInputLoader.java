@@ -43,7 +43,6 @@ public class SimpleFileInputLoader extends AbstractFileInputLoader {
      * 
      * @see org.meveo.core.inputloader.InputLoader#loadInput()
      */
-    @Override
     public Input loadInput() {
 
         File file = getFileForProcessing();
@@ -87,7 +86,6 @@ public class SimpleFileInputLoader extends AbstractFileInputLoader {
      *            processing.
      */
     @SuppressWarnings("unchecked")
-    @Override
     public void handleInputAfterProcessing(Input input, TaskExecution taskExecution) {
         String acceptedFilesDirectory = meveoFileConfig.getAcceptedFilesDirectory();
         if (logger.isDebugEnabled()) {
@@ -115,7 +113,6 @@ public class SimpleFileInputLoader extends AbstractFileInputLoader {
      * 
      * @see org.meveo.core.inputloader.InputLoader#handleInputFailure()
      */
-    @Override
     public void handleInputAfterFailure(Input input, Throwable e) {
         FileUtils.addExtension((File) input.getInputObject(), meveoFileConfig.getFileProcessingFailedExtension());
     }

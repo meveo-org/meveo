@@ -242,7 +242,6 @@ public class DocumentBean implements Serializable {
     @SuppressWarnings("unchecked")
     class DocumetCreateDateDESCComparator implements Comparator {
 
-        @Override
         public int compare(Object d1, Object d2) {
             if (((Document) d1).getCreateDate().before(((Document) d2).getCreateDate())) {
                 return 1;
@@ -257,7 +256,6 @@ public class DocumentBean implements Serializable {
     @SuppressWarnings("unchecked")
     class DocumetCreateDateASCComparator implements Comparator {
 
-        @Override
         public int compare(Object d1, Object d2) {
             if (((Document) d1).getCreateDate().before(((Document) d2).getCreateDate())) {
                 return -1;
@@ -281,7 +279,6 @@ public class DocumentBean implements Serializable {
             this.fromDate = fromDate;
         }
 
-        @Override
         public boolean accept(File dir, String name) {
             log.info("accept file path #0, name #1.", dir.getPath(), name);
             File file = new File(dir.getAbsoluteFile() + File.separator + name);

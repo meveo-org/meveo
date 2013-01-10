@@ -41,14 +41,14 @@ public class AbstractInputHandlerTest {
         MeveoPersistence.getEntityManager().getTransaction().begin();
         
         AbstractInputHandler inputHandler = new InputHandlerImpl(new Processor<Object>() {
-            @Override
+            
             public void commit(TaskExecution<Object> taskExecution) {
             }
-            @Override
+            
             public PreparedStatement getStatementByName(String name) {
                 return null;
             }
-            @Override
+            
             public Map<String, Object> process(Object ticket, TaskExecution<Object> taskExecution) {
                 return null;
             }
@@ -67,14 +67,14 @@ public class AbstractInputHandlerTest {
         MeveoPersistence.getEntityManager().getTransaction().begin();
         
         AbstractInputHandler inputHandler = new InputHandlerImpl(new Processor<Object>() {
-            @Override
+            
             public void commit(TaskExecution<Object> taskExecution) {
             }
-            @Override
+            
             public PreparedStatement getStatementByName(String name) {
                 return null;
             }
-            @Override
+            
             public Map<String, Object> process(Object ticket, TaskExecution<Object> taskExecution) {
                 return null;
             }
@@ -95,7 +95,7 @@ public class AbstractInputHandlerTest {
             super(processor, outputProducer);
             super.config = new TestConfig();
         }
-        @Override
+        
         public TaskExecution executeInputHandling(Input input, TaskExecution taskExecution) throws Exception {
             return taskExecution;
         }

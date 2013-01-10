@@ -53,7 +53,6 @@ public class RibValidator implements Validator {
         return new BigDecimal(extendedRib.toString()).remainder(new BigDecimal(97)).intValue() == 0;
     }
 
-    @Override
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
 
         ModelValidator modelValidator = new ModelValidator();

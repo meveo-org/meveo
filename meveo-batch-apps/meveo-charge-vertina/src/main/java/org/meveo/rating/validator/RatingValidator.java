@@ -38,7 +38,6 @@ public class RatingValidator implements Validator<RatingTicket> {
      * 
      * @see org.meveo.core.validator.Validator#validate(org.meveo.core.ticket.Ticket)
      */
-    @Override
     public boolean validate(RatingTicket ticket) {
     	boolean result=false;
     	if(ticket.chargeApplication!=null){

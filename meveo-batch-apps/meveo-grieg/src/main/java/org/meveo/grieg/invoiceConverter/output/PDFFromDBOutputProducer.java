@@ -52,7 +52,6 @@ public class PDFFromDBOutputProducer implements OutputProducer {
 
     private static final Logger logger = Logger.getLogger(PDFFromDBOutputProducer.class);
 
-    @Override
     public Object produceOutput(List<Output> outputTickets) {
         List<FileInfoHolder> files = new ArrayList<FileInfoHolder>();
         for (Output output : outputTickets) {

@@ -72,14 +72,14 @@ public class AbstractParserTest {
     
     @SuppressWarnings("unchecked")
     private class ParserImpl extends AbstractParser {
-        @Override
+        
         public Object next() throws ParserException {
             return null;
         }
-        @Override
+        
         public void close() {
         }
-        @Override
+        
         public void setParsingFile(String fileName) throws ParserException {
         }
     }

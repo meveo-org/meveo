@@ -35,7 +35,6 @@ public class OudayaDatabaseInputLoader extends AbstractInputLoader {
     private static final Logger logger = Logger.getLogger(OudayaDatabaseInputLoader.class);
 
     @SuppressWarnings("unchecked")
-    @Override
     public Input loadInput() {
         try {
             logger.info("Load billingRun");
@@ -62,12 +61,10 @@ public class OudayaDatabaseInputLoader extends AbstractInputLoader {
         }
     }
 
-    @Override
     public void handleInputAfterFailure(Input arg0, Throwable arg1) {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public void handleInputAfterProcessing(Input arg0, TaskExecution arg1) {
     }
 

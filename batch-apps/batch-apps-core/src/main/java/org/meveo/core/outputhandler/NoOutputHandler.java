@@ -29,7 +29,6 @@ import org.meveo.core.inputhandler.TaskExecution;
 public class NoOutputHandler implements OutputHandler {
 
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
         // do nothing
     }

@@ -87,7 +87,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getSourceFilesDirectory()
      */
-    @Override
     public String getSourceFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(SOURCE_FILES_DIR);
     }
@@ -95,7 +94,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getRejectedFilesDirectory()
      */
-    @Override
     public String getRejectedFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(REJECTED_FILES_DIR);
     }
@@ -103,7 +101,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getTempFilesDirectory()
      */
-    @Override
     public String getTempFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(TEMP_FILES_DIR, DEFAULT_TEMP_FILES_DIR);
     }
@@ -111,7 +108,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getAcceptedFilesDirectory()
      */
-    @Override
     public String getAcceptedFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(ACCEPTED_FILES_DIR);
     }
@@ -119,7 +115,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getOutputFilesDirectory()
      */
-    @Override
     public String getOutputFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(OUTPUT_FILES_DIR);
     }
@@ -127,7 +122,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getRejectedTicketsFilesDirectory()
      */
-    @Override
     public String getRejectedTicketsFilesDirectory() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(REJECTED_TICKETS_FILES_DIR);
     }
@@ -146,7 +140,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getScanningInterval()
      */
-    @Override
     public long getScanningInterval() {
         String value = ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(SCANNING_INTERVAL,
                 DEFAULT_SCANNING_INTERVAL);
@@ -165,7 +158,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getFileProcessingExtension()
      */
-    @Override
     public String getFileProcessingExtension() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(PROCESSING_EXT, DEFAULT_PROCESSING_EXT);
     }
@@ -173,7 +165,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getFileProcessingFailedExtension()
      */
-    @Override
     public String getFileProcessingFailedExtension() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(PROCESSING_FAILED_EXT,
                 DEFAULT_PROCESSING_FAILED_EXT);
@@ -182,7 +173,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getErrorFileExtension()
      */
-    @Override
     public String getErrorFileExtension() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(ERROR_FILE_EXT, DEFAULT_ERROR_FILE_EXT);
     }
@@ -190,7 +180,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getIgnoredFileExtension()
      */
-    @Override
     public String getIgnoredFileExtension() {
         return ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(IGNORED_FILE_EXT, DEFAULT_IGNORED_FILE_EXT);
     }
@@ -198,7 +187,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoFileConfig#getFileExtensions()
      */
-    @Override
     public List<String> getFileExtensions() {
         String extensions = ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(FILE_EXT_TO_PROCESS,
                 DEFAULT_FILE_EXT_TO_PROCESS);
@@ -209,7 +197,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getSQLBatchSize()
      */
-    @Override
     public long getSQLBatchSize() {
         String value = ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(SQL_BATCH_SIZE,
                 DEFAULT_SQL_BATCH_SIZE);
@@ -219,7 +206,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getThreadCount()
      */
-    @Override
     public int getThreadCount() {
         String value = ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(WORKING_THREADS,
                 DEFAULT_WORKING_THREADS);
@@ -229,7 +215,6 @@ public class GriegConfig implements MeveoFileConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getTicketSeparator()
      */
-    @Override
     public String getTicketSeparator() {
         return "";
     }
@@ -341,13 +326,11 @@ public class GriegConfig implements MeveoFileConfig {
         return Arrays.asList(exts);
     }
 
-    @Override
     public String getApplicationName() {
         return "GRIEG";
     }
 
-    @Override
-	public Long getDefaultProviderId() {
+  public Long getDefaultProviderId() {
 		return Long.valueOf(ParamBean.getInstance(GRIEG_PROPERTIES_FILENAME).getProperty(DEFAULT_PROVIDER_ID,
 				DEFAULT_DEFAULT_PROVIDER_ID));
 	}

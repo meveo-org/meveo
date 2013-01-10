@@ -36,7 +36,6 @@ import org.meveo.config.MeveoConfig;
 import org.meveo.core.inputhandler.TaskExecution;
 import org.meveo.core.process.step.AbstractProcessStep;
 import org.meveo.core.process.step.StepExecution;
-import org.meveo.edf.oudaya.billing.impl.XMLInvoiceCreatorEDF;
 import org.meveo.model.billing.BillingAccount;
 import org.meveo.model.billing.BillingCycle;
 import org.meveo.model.billing.BillingProcessTypesEnum;

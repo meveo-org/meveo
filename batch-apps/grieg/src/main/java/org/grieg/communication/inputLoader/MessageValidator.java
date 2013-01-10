@@ -20,7 +20,6 @@ import org.meveo.core.validator.Validator;
 
 public class MessageValidator implements Validator<MessageTicket> {
 
-	@Override
 	public boolean validate(MessageTicket ticket) {
 		return true;
 	}

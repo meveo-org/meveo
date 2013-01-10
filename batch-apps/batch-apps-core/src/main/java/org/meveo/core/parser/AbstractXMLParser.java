@@ -51,7 +51,6 @@ public abstract class AbstractXMLParser<T> extends AbstractParser<T> {
     /**
      * @see org.meveo.core.parser.Parser#setParsingFile(java.lang.String)
      */
-    @Override
     public void setParsingFile(String fileName) throws ParserException {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -67,7 +66,6 @@ public abstract class AbstractXMLParser<T> extends AbstractParser<T> {
     /**
      * @see org.meveo.core.parser.Parser#close()
      */
-    @Override
     public void close() {
         // TODO check if closing is needed
         xmlDocument = null;
@@ -114,6 +112,5 @@ public abstract class AbstractXMLParser<T> extends AbstractParser<T> {
     /**
      * @see org.meveo.core.parser.Parser#next()
      */
-    @Override
     public abstract T next() throws ParserException;
 }

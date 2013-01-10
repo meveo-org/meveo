@@ -74,7 +74,6 @@ public class DunningOutputHandler implements OutputHandler {
     private MessageService messageService;
 
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
 
         Object outputObject = taskExecution.getOutputObject();

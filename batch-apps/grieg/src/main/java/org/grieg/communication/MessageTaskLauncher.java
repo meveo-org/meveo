@@ -43,7 +43,6 @@ public class MessageTaskLauncher implements TaskLauncher {
     @Inject
     private MeveoTask<MessageTicket> task;
     
-    @Override
     public void launchTasks() {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(griegConfig
                 .getThreadCount());

@@ -69,7 +69,6 @@ public class RecurringChargeInstanceService extends ChargeInstanceService<Recurr
         return recurringChargeInstances;
     }
 
-    @Override
     public Long recurringChargeApplication(Subscription subscription, RecurringChargeTemplate chargetemplate,
             Date effetDate, BigDecimal amoutWithoutTax, BigDecimal amoutWithoutTx2, Integer quantity, String criteria1,
             String criteria2, String criteria3, User creator) throws BusinessException {
@@ -97,7 +96,6 @@ public class RecurringChargeInstanceService extends ChargeInstanceService<Recurr
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public List<RecurringChargeInstance> findRecurringChargeInstanceBySubscriptionId(Long subscriptionId) {
         QueryBuilder qb = new QueryBuilder(RecurringChargeInstance.class, "c");
         qb.addCriterion("c.subscription.id", "=", subscriptionId, true);

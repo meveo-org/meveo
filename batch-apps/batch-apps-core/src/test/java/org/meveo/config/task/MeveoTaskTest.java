@@ -114,7 +114,6 @@ public class MeveoTaskTest {
     
     private class InputHandlerProviderImpl implements Provider<InputHandler<Object>> {
         @SuppressWarnings("unchecked")
-        @Override
         public InputHandler<Object> get() {
             return new InputHandlerImpl(null, null);
         }
@@ -122,7 +121,6 @@ public class MeveoTaskTest {
     }
     
     private class InputLoaderProviderImpl implements Provider<InputLoader> {
-        @Override
         public InputLoader get() {
             return new InputLoaderImpl();
         }
@@ -131,7 +129,7 @@ public class MeveoTaskTest {
     
     private class InputHandlerProviderImplThrowException implements Provider<InputHandler<Object>> {
         @SuppressWarnings("unchecked")
-        @Override
+        
         public InputHandler<Object> get() {
             return new InputHandlerImplThrowException(null, null);
         }
@@ -143,7 +141,6 @@ public class MeveoTaskTest {
         public InputHandlerImplThrowException(Processor processor, OutputProducer outputProducer) {
             super(processor, outputProducer);
         }
-        @Override
         public TaskExecution handleInput(Input input) throws Exception {
             super.handleInput(input);
             // throws exception so currency should not be commited to database
@@ -156,7 +153,7 @@ public class MeveoTaskTest {
         public InputHandlerImpl(Processor processor, OutputProducer outputProducer) {
             super(processor, outputProducer);
         }
-        @Override
+        
         public TaskExecution handleInput(Input input) throws Exception {
             // lets say handle input saves new currency (to test if MeveoTask.run() commits DB transaction) 
             EntityManager em = MeveoPersistence.getEntityManager();
@@ -168,24 +165,21 @@ public class MeveoTaskTest {
             em.persist(currency);
             return new TaskExecution(input.getName(), new Date(), input, null, null);
         }
-        @Override
+        
         public TaskExecution executeInputHandling(Input input, TaskExecution taskExecution) throws Exception {
             return null;
         }
     }
     
     private class InputLoaderImpl extends AbstractInputLoader {
-        @Override
         public Input loadInput() {
             return new Input("aaa", null);
         }
-        @Override
         public void handleInputAfterFailure(Input input, Throwable e) {
             String rejectedFilesDirectory = TEST_REJECTED_DIR;
             FileUtils.moveFile(rejectedFilesDirectory, new File(TEST_DIR, TEST_FILE_NAME), TEST_FILE_NAME);
         }
         @SuppressWarnings("unchecked")
-        @Override
         public void handleInputAfterProcessing(Input input, TaskExecution taskExecution) {
             String acceptedFilesDirectory = TEST_ACCEPTED_DIR;
             FileUtils.moveFile(acceptedFilesDirectory, new File(TEST_DIR, TEST_FILE_NAME), TEST_FILE_NAME);
@@ -194,7 +188,7 @@ public class MeveoTaskTest {
     }
     
     private class OutputHandlerProviderImpl implements Provider<OutputHandler> {
-        @Override
+        
         public OutputHandler get() {
             return new OutputHandlerImpl();
         }
@@ -202,7 +196,7 @@ public class MeveoTaskTest {
     
     private class OutputHandlerImpl implements OutputHandler {
         @SuppressWarnings("unchecked")
-        @Override
+        
         public void handleOutput(TaskExecution taskExecution) {
         }
     }
@@ -211,7 +205,7 @@ public class MeveoTaskTest {
         public MeveoTaskImpl(Provider<InputLoader> inputLoaderProvider, Provider<InputHandler<Object>> inputHandlerProvider, Provider<OutputHandler> outputHandlerProvider) {
             super(inputLoaderProvider, inputHandlerProvider, outputHandlerProvider);
         }
-        @Override
+        
         protected void persistInputHistory(TaskExecution<Object> taskExecution) {
             InputHistory InputHistory = new MedinaInputHistory();
             InputHistory.setName(taskExecution.getInputObject().getName());

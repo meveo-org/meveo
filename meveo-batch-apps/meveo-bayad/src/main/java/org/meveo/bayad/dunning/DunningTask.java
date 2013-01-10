@@ -30,7 +30,6 @@ public class DunningTask implements Runnable {
     public DunningTask() {
     }
 
-    @Override
     public void run() {
         logger.info("Starting DunningTask tasks...");
         DunningProcess process = new DunningProcess();

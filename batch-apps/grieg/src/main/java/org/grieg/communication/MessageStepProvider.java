@@ -38,7 +38,6 @@ public class MessageStepProvider implements Provider<AbstractProcessStep<Message
         this.meveoConfig = meveoConfig;
     }
 
-    @Override
     public AbstractProcessStep<MessageTicket> get() {
         return new MessageProcess(null, meveoConfig);
     }

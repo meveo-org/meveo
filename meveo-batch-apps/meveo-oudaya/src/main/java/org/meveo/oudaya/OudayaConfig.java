@@ -110,7 +110,6 @@ public class OudayaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getSQLBatchSize()
      */
-    @Override
     public long getSQLBatchSize() {
         String value = ParamBean.getInstance(OUDAYA_PROPERTIES_FILENAME).getProperty(SQL_BATCH_SIZE,
                 DEFAULT_SQL_BATCH_SIZE);
@@ -120,7 +119,6 @@ public class OudayaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getScanningInterval()
      */
-    @Override
     public long getScanningInterval() {
         String value = ParamBean.getInstance(OUDAYA_PROPERTIES_FILENAME).getProperty(SCANNING_INTERVAL,
                 DEFAULT_SCANNING_INTERVAL);
@@ -130,7 +128,6 @@ public class OudayaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getThreadCount()
      */
-    @Override
     public int getThreadCount() {
         String value = ParamBean.getInstance(OUDAYA_PROPERTIES_FILENAME).getProperty(WORKING_THREADS,
                 DEFAULT_WORKING_THREADS);
@@ -140,7 +137,6 @@ public class OudayaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getApplicationName()
      */
-    @Override
     public String getApplicationName() {
         return "OUDAYA";
     }
@@ -148,7 +144,6 @@ public class OudayaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getBatchJobCron(java.lang.String)
      */
-    @Override
     public String getBatchJobCron(String batchJobName) {
         return null;
     }
@@ -179,7 +174,6 @@ public class OudayaConfig implements MeveoConfig {
                 DEFAULT_SERVICE_PROVIDER_URL);
     }
 
-	@Override
 	public Long getDefaultProviderId() {
 		return Long.valueOf(ParamBean.getInstance(OUDAYA_PROPERTIES_FILENAME).getProperty(DEFAULT_PROVIDER_ID,
 				DEFAULT_DEFAULT_PROVIDER_ID));

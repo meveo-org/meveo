@@ -42,7 +42,6 @@ public class PDFsToDBOutputHandler implements OutputHandler {
     private static final Logger logger = Logger.getLogger(PDFsToDBOutputHandler.class);
     
     @SuppressWarnings("unchecked")
-    @Override
     public void handleOutput(TaskExecution taskExecution) {
         Object outputObject = taskExecution.getOutputObject();
         if (outputObject != null) {

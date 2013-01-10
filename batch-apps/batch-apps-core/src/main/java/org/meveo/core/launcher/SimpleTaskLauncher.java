@@ -50,7 +50,6 @@ public class SimpleTaskLauncher implements TaskLauncher {
     /**
      * @see org.meveo.core.launcher.TaskLauncher#launchTasks()
      */
-    @Override
     public void launchTasks() {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(config.getThreadCount());
 

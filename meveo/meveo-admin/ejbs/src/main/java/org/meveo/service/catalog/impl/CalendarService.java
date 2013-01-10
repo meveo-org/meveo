@@ -46,7 +46,6 @@ public class CalendarService extends PersistenceService<Calendar> implements Cal
      * @see org.meveo.service.catalog.local.CalendarServiceLocal#listChargeApplicationCalendars()
      */
     @SuppressWarnings("unchecked")
-    @Override
     public List<Calendar> listChargeApplicationCalendars() {
         Provider currentProvider = (Provider) Component.getInstance("currentProvider");
         Query query = new QueryBuilder(Calendar.class, "c", null).addCriterionEnum("type",

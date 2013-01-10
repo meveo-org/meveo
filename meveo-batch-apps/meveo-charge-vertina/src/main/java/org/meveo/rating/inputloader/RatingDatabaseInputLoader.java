@@ -50,7 +50,6 @@ public class RatingDatabaseInputLoader extends AbstractInputLoader {
     VertinaConfig vertinaConfig;
     
     @SuppressWarnings("unchecked")
-    @Override
     public Input loadInput() throws InputNotLoadedException {
         try {
             logger.info("Load charge applications");
@@ -98,7 +97,6 @@ public class RatingDatabaseInputLoader extends AbstractInputLoader {
     /**
      * @see org.meveo.core.inputloader.InputLoader#handleInputAfterFailure(org.meveo.core.inputloader.Input, java.lang.Throwable)
      */
-    @Override
     public void handleInputAfterFailure(Input input, Throwable e) {
 
     }
@@ -107,7 +105,6 @@ public class RatingDatabaseInputLoader extends AbstractInputLoader {
      * @see org.meveo.core.inputloader.InputLoader#handleInputAfterProcessing(org.meveo.core.inputloader.Input, org.meveo.core.inputhandler.TaskExecution)
      */
     @SuppressWarnings("unchecked")
-    @Override
     public void handleInputAfterProcessing(Input input, TaskExecution taskExecution) {
 
     }

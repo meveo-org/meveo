@@ -119,7 +119,7 @@ public class DWHAccountOperationService extends PersistenceService<DWHAccountOpe
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<DWHAccountOperation> getAccountingDetailRecords(String providerCode, Date endDate) {
         List<DWHAccountOperation> result = null;
@@ -136,7 +136,7 @@ public class DWHAccountOperationService extends PersistenceService<DWHAccountOpe
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<DWHAccountOperation> getAccountingJournalRecords(String providerCode, Date startDate, Date endDate) {
         List<DWHAccountOperation> result = null;
@@ -153,7 +153,7 @@ public class DWHAccountOperationService extends PersistenceService<DWHAccountOpe
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<Object> getAccountingSummaryRecords(String providerCode, Date endDate, int category) {
         List<Object> result = null;
@@ -173,7 +173,7 @@ public class DWHAccountOperationService extends PersistenceService<DWHAccountOpe
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<Object> getObjectsForSIMPAC(String providerCode, Date startDate, Date endDate) {
         List<Object> result = null;

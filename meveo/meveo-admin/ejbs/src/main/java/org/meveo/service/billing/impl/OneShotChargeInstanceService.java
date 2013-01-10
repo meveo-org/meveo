@@ -123,7 +123,6 @@ public class OneShotChargeInstanceService extends BusinessService<OneShotChargeI
         return oneShotChargeInstance.getId();
     }
 
-    @Override
     public void oneShotChargeApplication(Subscription subscription, OneShotChargeInstance oneShotChargeInstance,
             Date effetDate, Integer quantity, User creator) throws BusinessException {
 
@@ -133,7 +132,6 @@ public class OneShotChargeInstanceService extends BusinessService<OneShotChargeI
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public List<OneShotChargeInstance> findOneShotChargeInstancesBySubscriptionId(Long subscriptionId) {
         QueryBuilder qb = new QueryBuilder(OneShotChargeInstance.class, "c");
         qb.addCriterion("c.subscription.id", "=", subscriptionId, true);

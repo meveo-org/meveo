@@ -30,8 +30,7 @@ import org.meveo.core.output.Output;
  */
 public class NoOutputProducer implements OutputProducer {
 
-    @Override
-    public String produceOutput(List<Output> outputs) {
+     public String produceOutput(List<Output> outputs) {
         return null;
     }
 

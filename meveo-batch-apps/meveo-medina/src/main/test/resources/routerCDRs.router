@@ -1,9 +1,0 @@
-flow-accounting for [eth1]
-Src Addr        Dst Addr        Sport Dport Proto    Packets      Bytes   Flows
-1.1.1.1    3.3.3.3  49602 22      tcp       6901     11000      19
-2.2.2.2    4.4.4.4  137   137     udp       4930     12000     116
-1.1.1.1    3.3.3.3  49602 22      tcp       6901     11000      19
-Total entries: 0
-Total flows  : 0
-Total pkts   : 0
-Total bytes  : 0

@@ -85,7 +85,6 @@ public abstract class AbstractTextParser<T> extends AbstractParser<T> {
     /**
      * @see org.meveo.core.parser.Parser#close()
      */
-    @Override
     public void close() {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Closing channel from '%s'", fileName));

@@ -88,7 +88,6 @@ public class VertinaConfig implements MeveoConfig {
         return ParamBean.getInstance(VERTINA_PROPERTIES_FILENAME).getProperty(VERTINA_PROVIDER_CODES, ",").replaceAll(";", ",").split(",");
     }
     
-    @Override
     public String getApplicationName() {
         return "VERTINA";
     }
@@ -96,7 +95,6 @@ public class VertinaConfig implements MeveoConfig {
     /**
      * @see org.meveo.config.MeveoConfig#getBatchJobCron(java.lang.String)
      */
-    @Override
     public String getBatchJobCron(String batchJobName) {
         return null;
     }

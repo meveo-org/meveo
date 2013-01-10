@@ -39,7 +39,6 @@ public class MessageInputLoader extends AbstractInputLoader {
 	@Inject
 	GriegConfig config;
 	
-	@Override
 	public synchronized Input loadInput() {
 		Input result=null;
 		 try {
@@ -80,8 +79,7 @@ public class MessageInputLoader extends AbstractInputLoader {
 	 * @see org.meveo.core.inputloader.InputLoader#handleInputAfterProcessing(org.meveo.core.inputloader.Input, org.meveo.core.inputhandler.TaskExecution)
 	 */
 	@SuppressWarnings("rawtypes")
-    @Override
-	public void handleInputAfterProcessing(Input input,
+    public void handleInputAfterProcessing(Input input,
 			TaskExecution taskExecution) {
         EntityManager em = MeveoPersistence.getEntityManager();
         if(input.getInputObject()!=null){
@@ -94,7 +92,6 @@ public class MessageInputLoader extends AbstractInputLoader {
         }
 	}
 
-	@Override
 	public void handleInputAfterFailure(Input input, Throwable e) {
         EntityManager em = MeveoPersistence.getEntityManager();
         if(input.getInputObject()!=null){

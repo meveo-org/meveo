@@ -29,7 +29,6 @@ public class InvoicingValidator implements Validator<InvoicingTicket> {
      * 
      * @see org.meveo.core.validator.Validator#validate(org.meveo.core.ticket.Ticket)
      */
-    @Override
     public boolean validate(InvoicingTicket ticket) {
         return true;
     }

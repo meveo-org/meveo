@@ -38,7 +38,6 @@ public class GriegOutput implements Output {
         this.parameters = parameters;
     }
 
-    @Override
     public String getTicketOutput() {
         return xmlInvoice;
     }

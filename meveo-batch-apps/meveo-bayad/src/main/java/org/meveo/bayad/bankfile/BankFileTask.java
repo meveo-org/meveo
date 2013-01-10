@@ -43,7 +43,6 @@ public class BankFileTask implements Callable<BankFileTaskResponse> {
 
 	private static final Logger logger = Logger.getLogger(BankFileTask.class);
 
-	@Override
 	public BankFileTaskResponse call() throws Exception {
 		logger.info("Starting BankFileTask tasks...");
 		File dir = new File(BayadConfig.getBankFileSourceFilesDirectory());

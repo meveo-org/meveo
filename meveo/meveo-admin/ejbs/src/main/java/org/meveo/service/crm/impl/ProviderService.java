@@ -50,7 +50,6 @@ public class ProviderService extends PersistenceService<Provider> implements Pro
         }
     }
 
-    @Override
     public List<Provider> findUsersProviders(String userName) {
         User user = userService.findByUsername(userName);
         if (user != null) {

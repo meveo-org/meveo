@@ -177,7 +177,6 @@ public class AccountingDetail extends FileProducer implements Reporting {
         return sb.toString();
     }
 
-    @Override
     public void export(Report report) {
         ParamBean param = ParamBean.getInstance("meveo-admin.properties");
         reportsFolder = param.getProperty("reportsURL");

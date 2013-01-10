@@ -25,7 +25,6 @@ public class RunCallable implements Runnable {
 		this.callable = callable;
 	}
 
-	@Override
 	public void run() {
 		try {
 			callable.call();

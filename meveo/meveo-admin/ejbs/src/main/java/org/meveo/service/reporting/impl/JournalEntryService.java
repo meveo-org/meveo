@@ -40,7 +40,7 @@ public class JournalEntryService extends PersistenceService<JournalEntry> implem
         JournalEntryServiceLocal {
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<Object> getTaxRecodsBetweenDate(String providerCode,Date startDate, Date endDate) {
     	List<Object> result = null;
@@ -58,7 +58,7 @@ public class JournalEntryService extends PersistenceService<JournalEntry> implem
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<Object> getJournalRecords(String providerCode,Date startDate, Date endDate) {
     	List<Object> result = null;
@@ -79,7 +79,7 @@ public class JournalEntryService extends PersistenceService<JournalEntry> implem
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+    
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public List<Object> getSIMPACRecords(String providerCode,Date startDate, Date endDate) {
     	List<Object> result = null;

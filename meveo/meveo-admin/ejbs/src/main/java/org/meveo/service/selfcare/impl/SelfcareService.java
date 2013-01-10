@@ -235,7 +235,6 @@ public class SelfcareService extends PersistenceService<CustomerAccount>
 		return balance;
 	}
 
-	@Override
 	public byte[] getPDFInvoice(String invoiceNumber, String providerCode)
 			throws BusinessException {
 		Invoice invoice = invoiceService.getInvoiceByNumber(invoiceNumber,
@@ -247,7 +246,6 @@ public class SelfcareService extends PersistenceService<CustomerAccount>
 		}
 	}
 
-	@Override
 	public byte[] getPDFInvoice(String invoiceNumber) throws BusinessException {
 		Invoice invoice = invoiceService.getInvoiceByNumber(invoiceNumber);
 		if (invoice != null) {
@@ -257,7 +255,6 @@ public class SelfcareService extends PersistenceService<CustomerAccount>
 		}
 	}
 
-	@Override
 	public void sendMail(String from, List<String> to, List<String> cc,
 			String subject, String body, List<File> files)
 			throws BusinessException {
@@ -290,7 +287,6 @@ public class SelfcareService extends PersistenceService<CustomerAccount>
 		log.info("successfully send email to #0", email);
 	}
 
-	@Override
 	public String getBillingAccountProviderCode(String code)
 			throws BusinessException {
 		log.info("searching provider code for billing account id #0", code);

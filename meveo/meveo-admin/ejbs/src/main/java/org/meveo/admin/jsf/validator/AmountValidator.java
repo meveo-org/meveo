@@ -64,7 +64,6 @@ public class AmountValidator implements Validator {
         return false;
     }
 
-    @Override
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
         ModelValidator modelValidator = new ModelValidator();
         modelValidator.validate(context, component, value);

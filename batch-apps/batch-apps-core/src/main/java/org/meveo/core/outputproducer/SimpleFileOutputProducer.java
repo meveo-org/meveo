@@ -51,7 +51,6 @@ public class SimpleFileOutputProducer implements OutputProducer {
         }
     }
 
-    @Override
     public String produceOutput(List<Output> outputs) {
         for (Output output : outputs) {
             writer.println(output.getTicketOutput());

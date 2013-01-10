@@ -44,7 +44,6 @@ public class DDRequestTask implements Runnable {
 	public DDRequestTask() {
 	}
 
-	@Override
 	public void run() {
 		logger.info("Starting DDRequestTask tasks...");
 		User user = null;

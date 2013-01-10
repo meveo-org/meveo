@@ -253,7 +253,6 @@ public class CRMConnectorRejectedFileBean implements Serializable {
             this.fromDate = fromDate;
         }
 
-        @Override
         public boolean accept(File dir, String name) {
             log.info("accept file path #0, name #1.", dir.getPath(), name);
             File file = new File(dir.getAbsoluteFile() + File.separator + name);
