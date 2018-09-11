@@ -6,10 +6,15 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="fbo" />
         <module name="opencell-admin-ejbs" />
+        <module name="opencell-admin-web" />
         <module name="opencell-model" />
         <module name="opencell-security" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="opencell" target="1.5" />
+    </bytecodeTargetLevel>
   </component>
 </project>
