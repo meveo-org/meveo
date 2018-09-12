@@ -33,13 +33,6 @@ public class QuoteItem extends BaseEntity {
     private String itemId;
 
     /**
-     * Product offerings associated to an quote item. In case of bundled offers, the first item in a list is the parent offering.
-     */
-    @OneToMany(mappedBy = "quoteItem", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderColumn(name = "ITEM_ORDER")
-    private List<QuoteItemProductOffering> quoteItemProductOfferings = new ArrayList<>();
-
-    /**
      * Serialized quoteItem dto.
      */
     @Column(name = "source", nullable = false, columnDefinition = "TEXT")
@@ -67,14 +60,6 @@ public class QuoteItem extends BaseEntity {
 
     public void setItemId(String itemId) {
         this.itemId = itemId;
-    }
-
-    public List<QuoteItemProductOffering> getQuoteItemProductOfferings() {
-        return quoteItemProductOfferings;
-    }
-
-    public void setQuoteItemProductOfferings(List<QuoteItemProductOffering> quoteItemProductOfferings) {
-        this.quoteItemProductOfferings = quoteItemProductOfferings;
     }
 
     public String getSource() {

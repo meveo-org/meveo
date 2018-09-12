@@ -1,11 +1,5 @@
 package org.meveo.api.communication;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseApi;
@@ -15,10 +9,13 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.model.admin.User;
 import org.meveo.model.communication.MeveoInstance;
-import org.meveo.model.crm.Customer;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
-import org.meveo.service.crm.impl.CustomerService;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -31,9 +28,6 @@ public class MeveoInstanceApi extends BaseApi{
 
 	@Inject
 	private MeveoInstanceService meveoInstanceService;
-	
-	@Inject
-	private CustomerService customerService;
 	
 	@Inject
 	private UserService userService;
@@ -80,13 +74,6 @@ public class MeveoInstanceApi extends BaseApi{
   		meveoInstance.setUrl(postData.getUrl());
   		meveoInstance.setAuthUsername(postData.getAuthUsername());
   		meveoInstance.setAuthPassword(postData.getAuthPassword());
-  		if(!StringUtils.isBlank(postData.getCustomer())){
-  			Customer customer=customerService.findByCode(postData.getCustomer());
-  			if(customer==null){
-  				throw new EntityDoesNotExistsException(Customer.class, postData.getCustomer());
-  			}
-  			meveoInstance.setCustomer(customer);
-  		}
   		if(!StringUtils.isBlank(postData.getUser())){
   			User user=userService.findByUsername(postData.getUser());
   			if(user==null){
@@ -135,13 +122,6 @@ public class MeveoInstanceApi extends BaseApi{
   		}
   		meveoInstance.setAuthUsername(postData.getAuthUsername());
   		meveoInstance.setAuthPassword(postData.getAuthPassword());
-  		if(!StringUtils.isBlank(postData.getCustomer())){
-  			Customer customer=customerService.findByCode(postData.getCustomer());
-  			if(customer==null){
-  				throw new EntityDoesNotExistsException(Customer.class, postData.getCustomer());
-  			}
-  			meveoInstance.setCustomer(customer);
-  		}
   		if(!StringUtils.isBlank(postData.getUser())){
   			User user=userService.findByUsername(postData.getUser());
   			if(user==null){

@@ -18,23 +18,17 @@
  */
 package org.meveo.admin.action.admin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.model.crm.Provider;
-import org.meveo.model.payments.PaymentMethodEnum;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.ProviderService;
 import org.omnifaces.cdi.Param;
-import org.primefaces.model.DualListModel;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 @Named
 @ViewScoped
@@ -49,7 +43,6 @@ public class ProviderBean extends CustomFieldBean<Provider> {
     @Param
     private String mode;
 
-    private DualListModel<PaymentMethodEnum> paymentMethodsModel;
 
     public ProviderBean() {
         super(Provider.class);
@@ -81,16 +74,6 @@ public class ProviderBean extends CustomFieldBean<Provider> {
         }
 
         super.initEntity();
-        if (entity.getId() != null && entity.getInvoiceConfiguration() == null) {
-            InvoiceConfiguration invoiceConfiguration = new InvoiceConfiguration();
-            invoiceConfiguration.setProvider(entity);
-            entity.setInvoiceConfiguration(invoiceConfiguration);
-        }
-
-        if (entity.getBankCoordinates() == null) {
-            entity.setBankCoordinates(new BankCoordinates());
-        }
-
         return entity;
     }
 
@@ -103,9 +86,6 @@ public class ProviderBean extends CustomFieldBean<Provider> {
     @Override
     protected Provider saveOrUpdate(Provider entity) throws BusinessException {
         boolean isNew = entity.isTransient();
-        if (isNew) {
-            entity.getInvoiceConfiguration().setProvider(entity);
-        }
         entity = super.saveOrUpdate(entity);
         return entity;
     }
@@ -113,8 +93,6 @@ public class ProviderBean extends CustomFieldBean<Provider> {
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException {
-        getEntity().getPaymentMethods().clear();
-        getEntity().setPaymentMethods(paymentMethodsModel.getTarget());
         String returnTo = super.saveOrUpdate(killConversation);
 
         if ("appConfiguration".equals(mode)) {
@@ -122,26 +100,6 @@ public class ProviderBean extends CustomFieldBean<Provider> {
         }
 
         return returnTo;
-    }
-
-    public DualListModel<PaymentMethodEnum> getPaymentMethodsModel() {
-        if (paymentMethodsModel == null) {
-            List<PaymentMethodEnum> source = new ArrayList<PaymentMethodEnum>(Arrays.asList(PaymentMethodEnum.values()));
-            List<PaymentMethodEnum> target = new ArrayList<PaymentMethodEnum>();
-            if (getEntity().getPaymentMethods() != null) {
-                target.addAll(getEntity().getPaymentMethods());
-            }
-            source.removeAll(target);
-            paymentMethodsModel = new DualListModel<PaymentMethodEnum>(source, target);
-        }
-        return paymentMethodsModel;
-    }
-
-    /**
-     * @param paymentMethodsModel the paymentMethodsModel to set
-     */
-    public void setPaymentMethodsModel(DualListModel<PaymentMethodEnum> paymentMethodsModel) {
-        this.paymentMethodsModel = paymentMethodsModel;
     }
 
 }

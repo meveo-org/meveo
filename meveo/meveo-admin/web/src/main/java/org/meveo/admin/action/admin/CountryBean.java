@@ -18,17 +18,17 @@
  */
 package org.meveo.admin.action.admin;
 
-import java.util.Arrays;
-import java.util.List;
+import org.meveo.admin.action.BaseBean;
+import org.meveo.model.billing.Country;
+import org.meveo.service.admin.impl.CountryService;
+import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.local.IPersistenceService;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import org.meveo.admin.action.BaseBean;
-import org.meveo.service.admin.impl.CountryService;
-import org.meveo.service.base.PersistenceService;
-import org.meveo.service.base.local.IPersistenceService;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Standard backing bean for {@link Country} (extends {@link BaseBean} that

@@ -18,19 +18,6 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -52,11 +39,21 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.PersistenceService;
-import org.meveo.service.catalog.impl.OfferTemplateService;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -66,12 +63,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private ModuleScriptService moduleScriptService;
-
-    @Inject
-    private ServiceTemplateService serviceTemplateService;
-
-    @Inject
-    private OfferTemplateService offerTemplateService;
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
@@ -195,12 +186,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         ModuleScriptInterface moduleScript = null;
         if (module.getScript() != null) {
             moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
-        }
-
-        if (module instanceof BusinessServiceModel) {
-            serviceTemplateService.disable(((BusinessServiceModel) module).getServiceTemplate());
-        } else if (module instanceof BusinessOfferModel) {
-            offerTemplateService.disable(((BusinessOfferModel) module).getOfferTemplate());
         }
 
         for (MeveoModuleItem item : module.getModuleItems()) {

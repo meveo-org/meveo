@@ -1,15 +1,7 @@
 package org.meveo.admin.action.notification;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.Entity;
-
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.action.UpdateMapTypeFieldBean;
-import org.meveo.admin.parse.csv.CDR;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.NotifiableEntity;
 import org.meveo.model.ObservableEntity;
@@ -18,8 +10,13 @@ import org.meveo.model.mediation.MeveoFtpFile;
 import org.meveo.model.notification.InboundRequest;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
-import org.meveo.model.rating.EDR;
 import org.meveo.service.notification.DefaultObserver;
+
+import javax.persistence.Entity;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Tyshan　Shi(tyshan@manaty.net)
@@ -48,7 +45,6 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
         List<Class> classes = null;
         try {
             classes = ReflectionUtils.getClasses("org.meveo.model");
-            classes.add(CDR.class);
         } catch (Exception e) {
             log.error("Failed to get a list of classes for a model package", e);
             return null;
@@ -94,25 +90,17 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
         if (hasObservableEntity(clazz)) {
             events.addAll(Arrays.asList(NotificationEventTypeEnum.CREATED, NotificationEventTypeEnum.UPDATED, NotificationEventTypeEnum.REMOVED, NotificationEventTypeEnum.DISABLED,
                 NotificationEventTypeEnum.ENABLED));
-            if (clazzStr.equals(WalletInstance.class.getName())) {
-                events.add(NotificationEventTypeEnum.LOW_BALANCE);
-            } else if (clazzStr.equals(org.meveo.model.admin.User.class.getName())) {
+            if (clazzStr.equals(org.meveo.model.admin.User.class.getName())) {
                 events.add(NotificationEventTypeEnum.LOGGED_IN);
             } else if (clazzStr.equals(InboundRequest.class.getName())) {
                 events.add(NotificationEventTypeEnum.INBOUND_REQ);
-            } else if (clazzStr.equals(WalletOperation.class.getName()) || clazzStr.equals(EDR.class.getName()) || clazzStr.equals(RecurringChargeTemplate.class.getName())) {
-                events.add(NotificationEventTypeEnum.REJECTED);
             } else if (clazzStr.equals(CounterPeriod.class.getName())) {
                 events.add(NotificationEventTypeEnum.COUNTER_DEDUCED);
-            } else if (clazzStr.equals(Subscription.class.getName())) {
-                events.add(NotificationEventTypeEnum.END_OF_TERM);
             }
         } else if (hasNotificableEntity(clazz)) {
             if (clazzStr.equals(MeveoFtpFile.class.getName())) {
                 events = Arrays.asList(NotificationEventTypeEnum.FILE_UPLOAD, NotificationEventTypeEnum.FILE_DOWNLOAD, NotificationEventTypeEnum.FILE_DELETE,
                     NotificationEventTypeEnum.FILE_RENAME);
-            } else if (clazzStr.equals(CDR.class.getName())) {
-                events.add(NotificationEventTypeEnum.REJECTED_CDR);
             }
         }
 		return events;

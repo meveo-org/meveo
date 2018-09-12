@@ -1,15 +1,16 @@
 package org.meveo.admin.web.servlet;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
+import org.meveo.admin.util.ModuleUtil;
+import org.meveo.model.crm.Provider;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
+import org.meveo.service.catalog.impl.ServiceTemplateService;
+import org.meveo.service.crm.impl.ProviderService;
+import org.meveo.util.ApplicationProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -17,21 +18,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpStatus;
-import org.meveo.admin.util.ModuleUtil;
-import org.meveo.model.crm.Provider;
-import org.meveo.security.CurrentUser;
-import org.meveo.security.MeveoUser;
-import org.meveo.service.catalog.impl.OfferTemplateCategoryService;
-import org.meveo.service.catalog.impl.ProductOfferingService;
-import org.meveo.service.catalog.impl.ProductTemplateService;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
-import org.meveo.service.crm.impl.ProviderService;
-import org.meveo.util.ApplicationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Show a picture from a rest URI like /meveo/picture/provider/module/tmp/filename.suffix or /meveo/picture/provider/offerCategory/offerCategoryID or
@@ -60,16 +52,7 @@ public class PictureServlet extends HttpServlet {
     ProviderService providerService;
 
     @Inject
-    ProductOfferingService productOfferingService;
-
-    @Inject
     ServiceTemplateService serviceTemplateService;
-
-    @Inject
-    private OfferTemplateCategoryService offerTemplateCategoryService;
-
-    @Inject
-    private ProductTemplateService productTemplateService;
 
     @Inject
     @ApplicationProvider
@@ -127,46 +110,6 @@ public class PictureServlet extends HttpServlet {
 
             Long id = Long.parseLong(filename);
 
-            if ("offerCategory".equals(groupname)) {
-                OfferTemplateCategory offerTemplateCategory = offerTemplateCategoryService.findById(id);
-                if (offerTemplateCategory == null) {
-                    log.error("Offer category with ID " + id + " does not exist");
-                    resp.setStatus(HttpStatus.SC_NOT_FOUND);
-                    return;
-                }
-
-                imagePath = offerTemplateCategory.getImagePath();
-
-            } else if ("offer".equals(groupname)) {
-                ProductOffering offering = productOfferingService.findById(id);
-                if (offering == null) {
-                    log.error("Offer with ID " + id + " does not exist");
-                    resp.setStatus(HttpStatus.SC_NOT_FOUND);
-                    return;
-                }
-
-                imagePath = offering.getImagePath();
-
-            } else if ("service".equals(groupname)) {
-                ServiceTemplate serviceTemplate = serviceTemplateService.findById(id);
-                if (serviceTemplate == null) {
-                    log.error("Service with ID " + id + " does not exist");
-                    resp.setStatus(HttpStatus.SC_NOT_FOUND);
-                    return;
-                }
-                imagePath = serviceTemplate.getImagePath();
-
-            } else if ("product".equals(groupname)) {
-                ProductTemplate productTemplate = productTemplateService.findById(id);
-                if (productTemplate == null) {
-                    log.error("Product with ID " + id + " does not exist");
-                    resp.setStatus(HttpStatus.SC_NOT_FOUND);
-                    return;
-                }
-
-                imagePath = productTemplate.getImagePath();
-
-            }
             if (imagePath != null) {
                 imagePath = rootPath + File.separator + imagePath;
             }

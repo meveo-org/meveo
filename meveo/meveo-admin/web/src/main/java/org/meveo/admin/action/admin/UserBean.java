@@ -18,31 +18,6 @@
  */
 package org.meveo.admin.action.admin;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.faces.event.ActionEvent;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -52,7 +27,6 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
-import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.DetailedSecuredEntity;
@@ -70,12 +44,16 @@ import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.DefaultTreeNode;
-import org.primefaces.model.DualListModel;
-import org.primefaces.model.StreamedContent;
-import org.primefaces.model.TreeNode;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.*;
+
+import javax.annotation.PostConstruct;
+import javax.faces.event.ActionEvent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create, edit,
@@ -99,14 +77,6 @@ public class UserBean extends CustomFieldBean<User> {
 
     @Inject
     private SecuredBusinessEntityService securedBusinessEntityService;
-
-    @Inject
-    @Any
-    private Instance<AccountBean<?>> accountBeans;
-
-    @Inject
-    @Named
-    private SellerBean sellerBean;
 
     /** paramBeanFactory */
     @Inject
@@ -173,12 +143,8 @@ public class UserBean extends CustomFieldBean<User> {
             userGroupRootNode = new DefaultTreeNode("Root", null);
             List<UserHierarchyLevel> roots;
             roots = userHierarchyLevelService.findRoots();
-            UserHierarchyLevel userHierarchyLevel = getEntity().getUserLevel();
             if (CollectionUtils.isNotEmpty(roots)) {
                 Collections.sort(roots);
-                for (UserHierarchyLevel userGroupTree : roots) {
-                    createTree(userGroupTree, userGroupRootNode, userHierarchyLevel);
-                }
             }
         }
         return userGroupRootNode;
@@ -220,7 +186,6 @@ public class UserBean extends CustomFieldBean<User> {
 
         if (this.getUserGroupSelectedNode() != null) {
             UserHierarchyLevel userHierarchyLevel = (UserHierarchyLevel) this.getUserGroupSelectedNode().getData();
-            getEntity().setUserLevel(userHierarchyLevel);
         }
 
         getEntity().getRoles().clear();
@@ -716,16 +681,6 @@ public class UserBean extends CustomFieldBean<User> {
         if (accountBeanMap == null || accountBeanMap.isEmpty()) {
             accountBeanMap = new HashMap<>();
             securedEntityTypes = new HashMap<>();
-            String key = ReflectionUtils.getHumanClassName(sellerBean.getClazz().getSimpleName());
-            String value = ReflectionUtils.getCleanClassName(sellerBean.getClazz().getName());
-            securedEntityTypes.put(key, value);
-            accountBeanMap.put(value, sellerBean);
-            for (AccountBean<?> accountBean : accountBeans) {
-                key = ReflectionUtils.getHumanClassName(accountBean.getClazz().getSimpleName());
-                value = ReflectionUtils.getCleanClassName(accountBean.getClazz().getName());
-                securedEntityTypes.put(key, value);
-                accountBeanMap.put(value, accountBean);
-            }
         }
         log.debug("this.securedEntityTypes: {}", this.securedEntityTypes);
         log.debug("this.accountBeanMap: {}", this.accountBeanMap);

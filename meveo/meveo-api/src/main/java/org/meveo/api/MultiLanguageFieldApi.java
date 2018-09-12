@@ -33,7 +33,6 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MultiLanguageFieldService;
 import org.meveo.service.base.PersistenceService;
-import org.meveo.service.billing.impl.TradingLanguageService;
 
 /**
  * @author Wassim Drira
@@ -45,9 +44,6 @@ public class MultiLanguageFieldApi extends BaseApi {
 
     @Inject
     private MultiLanguageFieldService multiLanguageFieldService;
-
-    @Inject
-    private TradingLanguageService tradingLanguageService;
 
     /**
      * Find entity field translations for a particular entity, field (defaults to "description") and a language (optional).
@@ -90,8 +86,6 @@ public class MultiLanguageFieldApi extends BaseApi {
         Collection<String> languageCodes = null;
         if (languageCode != null) {
             languageCodes = Arrays.asList(languageCode);
-        } else {
-            languageCodes = tradingLanguageService.listLanguageCodes();
         }
 
         PersistenceService persistenceService = (PersistenceService) EjbUtils.getServiceInterface(entityClass);
@@ -270,8 +264,6 @@ public class MultiLanguageFieldApi extends BaseApi {
             Collection<String> languageCodes = null;
             if (languageCode != null) {
                 languageCodes = Arrays.asList(languageCode);
-            } else {
-                languageCodes = tradingLanguageService.listLanguageCodes();
             }
 
             PersistenceService persistenceService = (PersistenceService) EjbUtils.getServiceInterface(entityClass);

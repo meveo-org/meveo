@@ -328,13 +328,6 @@ public class DefaultObserver {
         e.getHeaders().put("fired", fired ? "true" : "false");
     }
 
-    @MeveoAudit
-    public void LowBalance(@Observes WalletInstance e) throws BusinessException {
-        log.debug("Defaut observer : low balance on {} ", e.getCode());
-        checkEvent(NotificationEventTypeEnum.LOW_BALANCE, e);
-
-    }
-
     public void businesException(@Observes BusinessExceptionEvent bee) {
         log.debug("BusinessExceptionEvent handler inactivated {}",
             bee);/*

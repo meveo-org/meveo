@@ -1,93 +1,17 @@
 package org.meveo.api.ws.impl;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.interceptor.Interceptors;
-import javax.jws.WebService;
-
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.CalendarApi;
-import org.meveo.api.ConfigurationApi;
-import org.meveo.api.CountryApi;
-import org.meveo.api.CurrencyApi;
-import org.meveo.api.CustomFieldTemplateApi;
-import org.meveo.api.InvoiceCategoryApi;
-import org.meveo.api.InvoiceSubCategoryApi;
-import org.meveo.api.InvoiceSubCategoryCountryApi;
-import org.meveo.api.InvoiceTypeApi;
-import org.meveo.api.LanguageApi;
-import org.meveo.api.MultiLanguageFieldApi;
-import org.meveo.api.PermissionApi;
-import org.meveo.api.ProviderApi;
-import org.meveo.api.RoleApi;
-import org.meveo.api.UserApi;
+import org.meveo.api.*;
 import org.meveo.api.account.ProviderContactApi;
 import org.meveo.api.communication.EmailTemplateApi;
 import org.meveo.api.communication.MeveoInstanceApi;
-import org.meveo.api.dto.ActionStatus;
-import org.meveo.api.dto.ActionStatusEnum;
-import org.meveo.api.dto.BillingCycleDto;
-import org.meveo.api.dto.CalendarDto;
-import org.meveo.api.dto.CalendarsDto;
-import org.meveo.api.dto.CatMessagesDto;
-import org.meveo.api.dto.CountryDto;
-import org.meveo.api.dto.CurrencyDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
-import org.meveo.api.dto.InvoiceCategoryDto;
-import org.meveo.api.dto.InvoiceSubCategoryCountryDto;
-import org.meveo.api.dto.InvoiceSubCategoryDto;
-import org.meveo.api.dto.LanguageDto;
-import org.meveo.api.dto.OccTemplateDto;
-import org.meveo.api.dto.ProviderDto;
-import org.meveo.api.dto.RoleDto;
-import org.meveo.api.dto.RolesDto;
-import org.meveo.api.dto.SellerDto;
-import org.meveo.api.dto.TaxDto;
-import org.meveo.api.dto.TerminationReasonDto;
-import org.meveo.api.dto.UserDto;
-import org.meveo.api.dto.UsersDto;
+import org.meveo.api.dto.*;
 import org.meveo.api.dto.account.ProviderContactDto;
-import org.meveo.api.dto.billing.InvoiceTypeDto;
 import org.meveo.api.dto.communication.EmailTemplateDto;
 import org.meveo.api.dto.communication.MeveoInstanceDto;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelDto;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelsDto;
-import org.meveo.api.dto.response.DescriptionsResponseDto;
-import org.meveo.api.dto.response.GetBillingCycleResponse;
-import org.meveo.api.dto.response.GetCalendarResponse;
-import org.meveo.api.dto.response.GetCountryResponse;
-import org.meveo.api.dto.response.GetCurrencyResponse;
-import org.meveo.api.dto.response.GetCustomFieldTemplateReponseDto;
-import org.meveo.api.dto.response.GetCustomerAccountConfigurationResponseDto;
-import org.meveo.api.dto.response.GetCustomerConfigurationResponseDto;
-import org.meveo.api.dto.response.GetDescriptionsResponse;
-import org.meveo.api.dto.response.GetInvoiceCategoryResponse;
-import org.meveo.api.dto.response.GetInvoiceSubCategoryCountryResponse;
-import org.meveo.api.dto.response.GetInvoiceSubCategoryResponse;
-import org.meveo.api.dto.response.GetInvoiceTypeResponse;
-import org.meveo.api.dto.response.GetInvoiceTypesResponse;
-import org.meveo.api.dto.response.GetInvoicingConfigurationResponseDto;
-import org.meveo.api.dto.response.GetLanguageResponse;
-import org.meveo.api.dto.response.GetOccTemplateResponseDto;
-import org.meveo.api.dto.response.GetOccTemplatesResponseDto;
-import org.meveo.api.dto.response.GetProviderResponse;
-import org.meveo.api.dto.response.GetRoleResponse;
-import org.meveo.api.dto.response.GetSellerResponse;
-import org.meveo.api.dto.response.GetTaxResponse;
-import org.meveo.api.dto.response.GetTaxesResponse;
-import org.meveo.api.dto.response.GetTerminationReasonResponse;
-import org.meveo.api.dto.response.GetTradingConfigurationResponseDto;
-import org.meveo.api.dto.response.GetUserResponse;
-import org.meveo.api.dto.response.ListCalendarResponse;
-import org.meveo.api.dto.response.PagingAndFiltering;
-import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
-import org.meveo.api.dto.response.PermissionResponseDto;
-import org.meveo.api.dto.response.SellerCodesResponseDto;
-import org.meveo.api.dto.response.SellerResponseDto;
-import org.meveo.api.dto.response.UserHierarchyLevelResponseDto;
+import org.meveo.api.dto.response.*;
 import org.meveo.api.dto.response.account.ProviderContactResponseDto;
 import org.meveo.api.dto.response.account.ProviderContactsResponseDto;
 import org.meveo.api.dto.response.communication.EmailTemplateResponseDto;
@@ -98,6 +22,13 @@ import org.meveo.api.hierarchy.UserHierarchyLevelApi;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.ws.SettingsWs;
 
+import javax.inject.Inject;
+import javax.interceptor.Interceptors;
+import javax.jws.WebService;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 /**
  * @author Edward P. Legaspi
  * @lastModifiedVersion 5.0
@@ -107,9 +38,6 @@ import org.meveo.api.ws.SettingsWs;
 @Interceptors({ WsRestApiInterceptor.class })
 public class SettingsWsImpl extends BaseWs implements SettingsWs {
     
-    @Inject
-    private OccTemplateApi occTemplateApi;
-
     @Inject
     private CustomFieldTemplateApi customFieldTemplateApi;
 
@@ -123,28 +51,10 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
     private LanguageApi languageApi;
 
     @Inject
-    private InvoiceCategoryApi invoiceCategoryApi;
-
-    @Inject
-    private InvoiceSubCategoryCountryApi invoiceSubCategoryCountryApi;
-
-    @Inject
-    private InvoiceSubCategoryApi invoiceSubCategoryApi;
-
-    @Inject
     private ProviderApi providerApi;
 
     @Inject
-    private SellerApi sellerApi;
-
-    @Inject
-    private TaxApi taxApi;
-
-    @Inject
     private UserApi userApi;
-
-    @Inject
-    private BillingCycleApi billingCycleApi;
 
     @Inject
     private CalendarApi calendarApi;
@@ -157,12 +67,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
 
     @Inject
     private MultiLanguageFieldApi multilanguageFieldApi;
-
-    @Inject
-    private TerminationReasonApi terminationReasonApi;
-
-    @Inject
-    private InvoiceTypeApi invoiceTypeApi;
 
     @Inject
     private ProviderContactApi providerContactApi;
@@ -306,161 +210,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createInvoiceCategory(InvoiceCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceCategoryApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateInvoiceCategory(InvoiceCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceCategoryApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetInvoiceCategoryResponse findInvoiceCategory(String invoiceCategoryCode) {
-        GetInvoiceCategoryResponse result = new GetInvoiceCategoryResponse();
-
-        try {
-            result.setInvoiceCategory(invoiceCategoryApi.find(invoiceCategoryCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeInvoiceCategory(String invoiceCategoryCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceCategoryApi.remove(invoiceCategoryCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createInvoiceSubCategoryCountry(InvoiceSubCategoryCountryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryCountryApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateInvoiceSubCategoryCountry(InvoiceSubCategoryCountryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryCountryApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetInvoiceSubCategoryCountryResponse findInvoiceSubCategoryCountry(String invoiceSubCategoryCode, String country) {
-        GetInvoiceSubCategoryCountryResponse result = new GetInvoiceSubCategoryCountryResponse();
-
-        try {
-            result.setInvoiceSubCategoryCountryDto(invoiceSubCategoryCountryApi.find(invoiceSubCategoryCode, country));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeInvoiceSubCategoryCountry(String invoiceSubCategoryCode, String country) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryCountryApi.remove(invoiceSubCategoryCode, country);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createInvoiceSubCategory(InvoiceSubCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateInvoiceSubCategory(InvoiceSubCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetInvoiceSubCategoryResponse findInvoiceSubCategory(String invoiceSubCategoryCode) {
-        GetInvoiceSubCategoryResponse result = new GetInvoiceSubCategoryResponse();
-
-        try {
-            result.setInvoiceSubCategory(invoiceSubCategoryApi.find(invoiceSubCategoryCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeInvoiceSubCategory(String invoiceSubCategoryCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryApi.remove(invoiceSubCategoryCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createLanguage(LanguageDto postData) {
@@ -557,135 +306,7 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createSeller(SellerDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
-        try {
-            sellerApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateSeller(SellerDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            sellerApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetSellerResponse findSeller(String sellerCode) {
-        GetSellerResponse result = new GetSellerResponse();
-
-        try {
-            result.setSeller(sellerApi.find(sellerCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeSeller(String sellerCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            sellerApi.remove(sellerCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public SellerCodesResponseDto listSellerCodes() {
-        SellerCodesResponseDto result = new SellerCodesResponseDto();
-
-        try {
-            result = sellerApi.listSellerCodes();
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createTax(TaxDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            taxApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateTax(TaxDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            taxApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetTaxResponse findTax(String taxCode) {
-        GetTaxResponse result = new GetTaxResponse();
-
-        try {
-            result.setTax(taxApi.find(taxCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeTax(String taxCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            taxApi.remove(taxCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetTaxesResponse listTaxes() {
-        GetTaxesResponse result = new GetTaxesResponse();
-
-        try {
-            result.setTaxesDto(taxApi.list());
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createUser(UserDto postData) {
@@ -792,58 +413,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createBillingCycle(BillingCycleDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            billingCycleApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateBillingCycle(BillingCycleDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            billingCycleApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetBillingCycleResponse findBillingCycle(String billingCycleCode) {
-        GetBillingCycleResponse result = new GetBillingCycleResponse();
-        result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
-
-        try {
-            result.setBillingCycle(billingCycleApi.find(billingCycleCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeBillingCycle(String billingCycleCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            billingCycleApi.remove(billingCycleCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createCalendar(CalendarDto postData) {
@@ -913,126 +482,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public SellerResponseDto listSeller() {
-        SellerResponseDto result = new SellerResponseDto();
-
-        try {
-            result.setSellers(sellerApi.list());
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetTradingConfigurationResponseDto findTradingConfiguration(String providerCode) {
-        GetTradingConfigurationResponseDto result = new GetTradingConfigurationResponseDto();
-
-        try {
-            result = providerApi.getTradingConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetInvoicingConfigurationResponseDto findInvoicingConfiguration(String providerCode) {
-        GetInvoicingConfigurationResponseDto result = new GetInvoicingConfigurationResponseDto();
-
-        try {
-            result = providerApi.getInvoicingConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetCustomerConfigurationResponseDto findCustomerConfiguration(String providerCode) {
-        GetCustomerConfigurationResponseDto result = new GetCustomerConfigurationResponseDto();
-
-        try {
-            result = providerApi.getCustomerConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetCustomerAccountConfigurationResponseDto findCustomerAccountConfiguration(String providerCode) {
-        GetCustomerAccountConfigurationResponseDto result = new GetCustomerAccountConfigurationResponseDto();
-
-        try {
-            result = providerApi.getCustomerAccountConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOccTemplate(OccTemplateDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            occTemplateApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateOccTemplate(OccTemplateDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            occTemplateApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetOccTemplateResponseDto findOccTemplate(String occTemplateCode) {
-        GetOccTemplateResponseDto result = new GetOccTemplateResponseDto();
-
-        try {
-            result.setOccTemplate(occTemplateApi.find(occTemplateCode));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeOccTemplate(String occTemplateCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            occTemplateApi.remove(occTemplateCode);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createCustomFieldTemplate(CustomFieldTemplateDto postData) {
@@ -1100,19 +549,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
     }
 
     @Override
-    public ActionStatus createOrUpdateBillingCycle(BillingCycleDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            billingCycleApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
     public ActionStatus createOrUpdateCalendar(CalendarDto postData) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
@@ -1125,29 +561,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createOrUpdateTax(TaxDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            taxApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOrUpdateSeller(SellerDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            sellerApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createOrUpdateCustomFieldTemplate(CustomFieldTemplateDto postData) {
@@ -1161,44 +574,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createOrUpdateInvoiceCategory(InvoiceCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceCategoryApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOrUpdateInvoiceSubCategoryCountry(InvoiceSubCategoryCountryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryCountryApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOrUpdateOccTemplate(OccTemplateDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            occTemplateApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
 
     @Deprecated
     @Override
@@ -1227,18 +602,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    public ActionStatus createOrUpdateInvoiceSubCategory(InvoiceSubCategoryDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            invoiceSubCategoryApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-
-    }
 
     @Override
     public PermissionResponseDto listPermissions() {
@@ -1434,83 +797,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createTerminationReason(TerminationReasonDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            terminationReasonApi.create(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateTerminationReason(TerminationReasonDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            terminationReasonApi.update(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOrUpdateTerminationReason(TerminationReasonDto postData) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            terminationReasonApi.createOrUpdate(postData);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeTerminationReason(String code) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-        try {
-            terminationReasonApi.remove(code);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetTerminationReasonResponse findTerminationReason(String code) {
-        GetTerminationReasonResponse result = new GetTerminationReasonResponse();
-
-        try {
-            result.getTerminationReason().add(terminationReasonApi.find(code));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetTerminationReasonResponse listTerminationReason() {
-        GetTerminationReasonResponse result = new GetTerminationReasonResponse();
-
-        try {
-            result.getTerminationReason().addAll(terminationReasonApi.list());
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
 
     @Deprecated
     @Override
@@ -1526,73 +812,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         return result;
     }
 
-    @Override
-    public ActionStatus createInvoiceType(InvoiceTypeDto invoiceTypeDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            invoiceTypeApi.create(invoiceTypeDto);
-        } catch (Exception e) {
-            super.processException(e, result);
-        }
-        return result;
-    }
-
-    @Override
-    public ActionStatus updateInvoiceType(InvoiceTypeDto invoiceTypeDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            invoiceTypeApi.update(invoiceTypeDto);
-        } catch (Exception e) {
-            super.processException(e, result);
-        }
-        return result;
-    }
-
-    @Override
-    public GetInvoiceTypeResponse findInvoiceType(String invoiceTypeCode) {
-        GetInvoiceTypeResponse result = new GetInvoiceTypeResponse();
-        result.setActionStatus(new ActionStatus(ActionStatusEnum.SUCCESS, ""));
-        try {
-            result.setInvoiceTypeDto(invoiceTypeApi.find(invoiceTypeCode));
-        } catch (Exception e) {
-            super.processException(e, result.getActionStatus());
-        }
-        return result;
-    }
-
-    @Override
-    public ActionStatus removeInvoiceType(String invoiceTypeCode) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            invoiceTypeApi.remove(invoiceTypeCode);
-        } catch (Exception e) {
-            super.processException(e, result);
-        }
-        return result;
-    }
-
-    @Override
-    public ActionStatus createOrUpdateInvoiceType(InvoiceTypeDto invoiceTypeDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            invoiceTypeApi.createOrUpdate(invoiceTypeDto);
-        } catch (Exception e) {
-            super.processException(e, result);
-        }
-        return result;
-    }
-
-    @Override
-    public GetInvoiceTypesResponse listInvoiceTypes() {
-        GetInvoiceTypesResponse result = new GetInvoiceTypesResponse();
-        result.setActionStatus(new ActionStatus(ActionStatusEnum.SUCCESS, ""));
-        try {
-            result.setInvoiceTypesDto(invoiceTypeApi.list());
-        } catch (Exception e) {
-            super.processException(e, result.getActionStatus());
-        }
-        return result;
-    }
 
     @Override
     public ActionStatus updateProviderCF(ProviderDto postData) {
@@ -1942,20 +1161,4 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         }
         return result;
     }
-    
-    @Override
-    public GetOccTemplatesResponseDto listOccTemplate(String query, String fields, Integer offset, Integer limit, String sortBy, SortOrder sortOrder) {
-        GetOccTemplatesResponseDto result = new GetOccTemplatesResponseDto();
-
-        PagingAndFiltering pagingAndFiltering = new PagingAndFiltering(query, null, offset, limit, sortBy, sortOrder);
-        
-        try {
-            result = occTemplateApi.list(pagingAndFiltering);
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-   
 }

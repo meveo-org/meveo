@@ -1,41 +1,19 @@
 package org.meveocrm.admin.action.reporting;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.model.dwh.BarChart;
-import org.meveo.model.dwh.Chart;
-import org.meveo.model.dwh.LineChart;
-import org.meveo.model.dwh.MeasurableQuantity;
-import org.meveo.model.dwh.MeasuredValue;
-import org.meveo.model.dwh.MeasurementPeriodEnum;
-import org.meveo.model.dwh.PieChart;
+import org.meveo.model.dwh.*;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.order.OrderService;
 import org.meveocrm.services.dwh.ChartService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
-import org.primefaces.model.chart.Axis;
-import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.BarChartModel;
-import org.primefaces.model.chart.CategoryAxis;
-import org.primefaces.model.chart.ChartModel;
-import org.primefaces.model.chart.ChartSeries;
-import org.primefaces.model.chart.LineChartModel;
-import org.primefaces.model.chart.LineChartSeries;
-import org.primefaces.model.chart.PieChartModel;
+import org.primefaces.model.chart.*;
+
+import javax.inject.Inject;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends ChartEntityModel<T, CM>> extends BaseBean<T> {
 
@@ -47,9 +25,6 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 
 	@Inject
 	protected MeasurableQuantityService mqService;
-
-	@Inject
-	private OrderService orderService;
 
 	protected EM chartEntityModel;
 
@@ -407,8 +382,6 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 
 		result.setDescription("New Orders");
 		result.setLastUpdated(currentDate.getTime());
-		result.setValue(orderService.countNewOrders(currentDate).doubleValue());
-		result.computeDifference(orderService.countNewOrders(beforeDate).doubleValue());
 
 		return result;
 	}
@@ -421,8 +394,6 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 
 		result.setDescription("Pending Orders");
 		result.setLastUpdated(Calendar.getInstance().getTime());
-		result.setValue(orderService.countPendingOrders(currentDate).doubleValue());
-		result.computeDifference(orderService.countPendingOrders(beforeDate).doubleValue());
 
 		return result;
 	}

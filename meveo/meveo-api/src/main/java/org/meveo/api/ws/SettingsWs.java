@@ -1,77 +1,25 @@
 package org.meveo.api.ws;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.jws.WebMethod;
-import javax.jws.WebParam;
-import javax.jws.WebService;
-
-import org.meveo.api.dto.ActionStatus;
-import org.meveo.api.dto.BillingCycleDto;
-import org.meveo.api.dto.CalendarDto;
-import org.meveo.api.dto.CatMessagesDto;
-import org.meveo.api.dto.CountryDto;
-import org.meveo.api.dto.CurrencyDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
-import org.meveo.api.dto.InvoiceCategoryDto;
-import org.meveo.api.dto.InvoiceSubCategoryCountryDto;
-import org.meveo.api.dto.InvoiceSubCategoryDto;
-import org.meveo.api.dto.LanguageDto;
-import org.meveo.api.dto.OccTemplateDto;
-import org.meveo.api.dto.ProviderDto;
-import org.meveo.api.dto.RoleDto;
-import org.meveo.api.dto.RolesDto;
-import org.meveo.api.dto.SellerDto;
-import org.meveo.api.dto.TaxDto;
-import org.meveo.api.dto.TerminationReasonDto;
-import org.meveo.api.dto.UserDto;
-import org.meveo.api.dto.UsersDto;
+import org.meveo.api.dto.*;
 import org.meveo.api.dto.account.ProviderContactDto;
-import org.meveo.api.dto.billing.InvoiceTypeDto;
 import org.meveo.api.dto.communication.EmailTemplateDto;
 import org.meveo.api.dto.communication.MeveoInstanceDto;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelDto;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelsDto;
-import org.meveo.api.dto.response.DescriptionsResponseDto;
-import org.meveo.api.dto.response.GetBillingCycleResponse;
-import org.meveo.api.dto.response.GetCalendarResponse;
-import org.meveo.api.dto.response.GetCountryResponse;
-import org.meveo.api.dto.response.GetCurrencyResponse;
-import org.meveo.api.dto.response.GetCustomFieldTemplateReponseDto;
-import org.meveo.api.dto.response.GetCustomerAccountConfigurationResponseDto;
-import org.meveo.api.dto.response.GetCustomerConfigurationResponseDto;
-import org.meveo.api.dto.response.GetDescriptionsResponse;
-import org.meveo.api.dto.response.GetInvoiceCategoryResponse;
-import org.meveo.api.dto.response.GetInvoiceSubCategoryCountryResponse;
-import org.meveo.api.dto.response.GetInvoiceSubCategoryResponse;
-import org.meveo.api.dto.response.GetInvoiceTypeResponse;
-import org.meveo.api.dto.response.GetInvoiceTypesResponse;
-import org.meveo.api.dto.response.GetInvoicingConfigurationResponseDto;
-import org.meveo.api.dto.response.GetLanguageResponse;
-import org.meveo.api.dto.response.GetOccTemplateResponseDto;
-import org.meveo.api.dto.response.GetOccTemplatesResponseDto;
-import org.meveo.api.dto.response.GetProviderResponse;
-import org.meveo.api.dto.response.GetRoleResponse;
-import org.meveo.api.dto.response.GetSellerResponse;
-import org.meveo.api.dto.response.GetTaxResponse;
-import org.meveo.api.dto.response.GetTaxesResponse;
-import org.meveo.api.dto.response.GetTerminationReasonResponse;
-import org.meveo.api.dto.response.GetTradingConfigurationResponseDto;
-import org.meveo.api.dto.response.GetUserResponse;
-import org.meveo.api.dto.response.ListCalendarResponse;
-import org.meveo.api.dto.response.PagingAndFiltering;
+import org.meveo.api.dto.response.*;
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
-import org.meveo.api.dto.response.PermissionResponseDto;
-import org.meveo.api.dto.response.SellerCodesResponseDto;
-import org.meveo.api.dto.response.SellerResponseDto;
-import org.meveo.api.dto.response.UserHierarchyLevelResponseDto;
 import org.meveo.api.dto.response.account.ProviderContactResponseDto;
 import org.meveo.api.dto.response.account.ProviderContactsResponseDto;
 import org.meveo.api.dto.response.communication.EmailTemplateResponseDto;
 import org.meveo.api.dto.response.communication.EmailTemplatesResponseDto;
 import org.meveo.api.dto.response.communication.MeveoInstanceResponseDto;
 import org.meveo.api.dto.response.communication.MeveoInstancesResponseDto;
+
+import javax.jws.WebMethod;
+import javax.jws.WebParam;
+import javax.jws.WebService;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Edward P. Legaspi
@@ -106,18 +54,6 @@ public interface SettingsWs extends IBaseWs {
     GetProviderResponse findProviderCF(@WebParam(name = "providerCode") String providerCode);
 
     // configuration
-
-    @WebMethod
-    GetTradingConfigurationResponseDto findTradingConfiguration(@WebParam(name = "providerCode") String providerCode);
-
-    @WebMethod
-    GetInvoicingConfigurationResponseDto findInvoicingConfiguration(@WebParam(name = "providerCode") String providerCode);
-
-    @WebMethod
-    GetCustomerConfigurationResponseDto findCustomerConfiguration(@WebParam(name = "providerCode") String providerCode);
-
-    @WebMethod
-    GetCustomerAccountConfigurationResponseDto findCustomerAccountConfiguration(@WebParam(name = "providerCode") String providerCode);
 
     // user
 
@@ -171,26 +107,6 @@ public interface SettingsWs extends IBaseWs {
 
     // seller
 
-    @WebMethod
-    ActionStatus createSeller(@WebParam(name = "seller") SellerDto postData);
-
-    @WebMethod
-    ActionStatus updateSeller(@WebParam(name = "seller") SellerDto postData);
-
-    @WebMethod
-    GetSellerResponse findSeller(@WebParam(name = "sellerCode") String sellerCode);
-
-    @WebMethod
-    ActionStatus removeSeller(@WebParam(name = "sellerCode") String sellerCode);
-
-    @WebMethod
-    SellerResponseDto listSeller();
-
-    @WebMethod
-    SellerCodesResponseDto listSellerCodes();
-
-    @WebMethod
-    ActionStatus createOrUpdateSeller(@WebParam(name = "seller") SellerDto postData);
 
     // tradingLanguage
 
@@ -258,75 +174,9 @@ public interface SettingsWs extends IBaseWs {
 
     // tax
 
-    @WebMethod
-    ActionStatus createTax(@WebParam(name = "tax") TaxDto postData);
-
-    @WebMethod
-    ActionStatus updateTax(@WebParam(name = "tax") TaxDto postData);
-
-    @WebMethod
-    GetTaxResponse findTax(@WebParam(name = "taxCode") String taxCode);
-
-    @WebMethod
-    ActionStatus removeTax(@WebParam(name = "taxCode") String taxCode);
-
-    @WebMethod
-    ActionStatus createOrUpdateTax(@WebParam(name = "tax") TaxDto postData);
-
-    @WebMethod
-    GetTaxesResponse listTaxes();
 
     // invoice category
 
-    @WebMethod
-    ActionStatus createInvoiceCategory(@WebParam(name = "invoiceCategory") InvoiceCategoryDto postData);
-
-    @WebMethod
-    ActionStatus updateInvoiceCategory(@WebParam(name = "invoiceCategory") InvoiceCategoryDto postData);
-
-    @WebMethod
-    GetInvoiceCategoryResponse findInvoiceCategory(@WebParam(name = "invoiceCategoryCode") String invoiceCategoryCode);
-
-    @WebMethod
-    ActionStatus removeInvoiceCategory(@WebParam(name = "invoiceCategoryCode") String invoiceCategoryCode);
-
-    @WebMethod
-    ActionStatus createOrUpdateInvoiceCategory(@WebParam(name = "invoiceCategory") InvoiceCategoryDto postData);
-
-    // invoice sub category
-
-    @WebMethod
-    ActionStatus createInvoiceSubCategory(@WebParam(name = "invoiceSubCategory") InvoiceSubCategoryDto postData);
-
-    @WebMethod
-    ActionStatus updateInvoiceSubCategory(@WebParam(name = "invoiceSubCategory") InvoiceSubCategoryDto postData);
-
-    @WebMethod
-    ActionStatus createOrUpdateInvoiceSubCategory(@WebParam(name = "invoiceSubCategory") InvoiceSubCategoryDto postData);
-
-    @WebMethod
-    GetInvoiceSubCategoryResponse findInvoiceSubCategory(@WebParam(name = "invoiceSubCategoryCode") String invoiceSubCategoryCode);
-
-    @WebMethod
-    ActionStatus removeInvoiceSubCategory(@WebParam(name = "invoiceSubCategoryCode") String invoiceSubCategoryCode);
-
-    // invoice sub category country
-
-    @WebMethod
-    ActionStatus createInvoiceSubCategoryCountry(@WebParam(name = "invoiceSubCategoryCountry") InvoiceSubCategoryCountryDto postData);
-
-    @WebMethod
-    ActionStatus updateInvoiceSubCategoryCountry(@WebParam(name = "invoiceSubCategoryCountry") InvoiceSubCategoryCountryDto postData);
-
-    @WebMethod
-    GetInvoiceSubCategoryCountryResponse findInvoiceSubCategoryCountry(@WebParam(name = "invoiceSubCategoryCode") String invoiceSubCategoryCode,
-            @WebParam(name = "country") String country);
-
-    @WebMethod
-    ActionStatus removeInvoiceSubCategoryCountry(@WebParam(name = "invoiceSubCategoryCode") String invoiceSubCategoryCode, @WebParam(name = "country") String country);
-
-    @WebMethod
-    ActionStatus createOrUpdateInvoiceSubCategoryCountry(@WebParam(name = "invoiceSubCategoryCountry") InvoiceSubCategoryCountryDto postData);
 
     // calendar
 
@@ -348,39 +198,6 @@ public interface SettingsWs extends IBaseWs {
     @WebMethod
     ListCalendarResponse listCalendars();
 
-    // billing cycle
-
-    @WebMethod
-    ActionStatus createBillingCycle(@WebParam(name = "billingCycle") BillingCycleDto postData);
-
-    @WebMethod
-    ActionStatus updateBillingCycle(@WebParam(name = "billingCycle") BillingCycleDto postData);
-
-    @WebMethod
-    GetBillingCycleResponse findBillingCycle(@WebParam(name = "billingCycleCode") String billingCycleCode);
-
-    @WebMethod
-    ActionStatus removeBillingCycle(@WebParam(name = "billingCycleCode") String billingCycleCode);
-
-    @WebMethod
-    ActionStatus createOrUpdateBillingCycle(@WebParam(name = "billingCycle") BillingCycleDto postData);
-
-    // occ template
-
-    @WebMethod
-    ActionStatus createOccTemplate(@WebParam(name = "occTemplate") OccTemplateDto postData);
-
-    @WebMethod
-    ActionStatus updateOccTemplate(@WebParam(name = "occTemplate") OccTemplateDto postData);
-
-    @WebMethod
-    GetOccTemplateResponseDto findOccTemplate(@WebParam(name = "occTemplateCode") String occTemplateCode);
-
-    @WebMethod
-    ActionStatus removeOccTemplate(@WebParam(name = "occTemplateCode") String occTemplateCode);
-
-    @WebMethod
-    ActionStatus createOrUpdateOccTemplate(@WebParam(name = "occTemplate") OccTemplateDto postData);
 
     // custom field
 
@@ -559,44 +376,6 @@ public interface SettingsWs extends IBaseWs {
     public DescriptionsResponseDto listTranslations(@WebParam(name = "entityClass") String entityClass, @WebParam(name = "fieldName") String fieldname,
             @WebParam(name = "languageCode") String languageCode);
 
-    /* termination reasons */
-
-    @WebMethod
-    ActionStatus createTerminationReason(@WebParam(name = "terminationReason") TerminationReasonDto postData);
-
-    @WebMethod
-    ActionStatus updateTerminationReason(@WebParam(name = "terminationReason") TerminationReasonDto postData);
-
-    @WebMethod
-    ActionStatus createOrUpdateTerminationReason(@WebParam(name = "terminationReason") TerminationReasonDto postData);
-
-    @WebMethod
-    ActionStatus removeTerminationReason(@WebParam(name = "terminationReasonCode") String code);
-
-    @WebMethod
-    GetTerminationReasonResponse findTerminationReason(@WebParam(name = "terminationReasonCode") String code);
-
-    @WebMethod
-    GetTerminationReasonResponse listTerminationReason();
-
-    // InvoiceType
-    @WebMethod
-    ActionStatus createInvoiceType(@WebParam(name = "invoiceType") InvoiceTypeDto invoiceTypeDto);
-
-    @WebMethod
-    ActionStatus updateInvoiceType(@WebParam(name = "invoiceType") InvoiceTypeDto invoiceTypeDto);
-
-    @WebMethod
-    GetInvoiceTypeResponse findInvoiceType(@WebParam(name = "invoiceTypeCode") String invoiceTypeCode);
-
-    @WebMethod
-    ActionStatus removeInvoiceType(@WebParam(name = "invoiceTypeCode") String invoiceTypeCode);
-
-    @WebMethod
-    ActionStatus createOrUpdateInvoiceType(@WebParam(name = "invoiceType") InvoiceTypeDto invoiceTypeDto);
-
-    @WebMethod
-    GetInvoiceTypesResponse listInvoiceTypes();
 
     /**
      * create a providerContact by dto
@@ -821,18 +600,5 @@ public interface SettingsWs extends IBaseWs {
     @WebMethod
     public ActionStatus setConfigurationProperty(@WebParam(name = "property") String property, @WebParam(name = "value") String value);
 
-    /**
-     * Returns a list of OCCTemplate.
-     * 
-     * @param query query
-     * @param fields fields
-     * @param offset offset
-     * @param limit limit
-     * @param sortBy sortBy
-     * @param sortOrder sortOrder
-     * @return GetOccTemplatesResponseDto
-     */
-    @WebMethod
-    GetOccTemplatesResponseDto listOccTemplate(@WebParam(name = "query") String query, @WebParam(name = "fields") String fields, @WebParam(name = "offset") Integer offset, @WebParam(name = "limit")  Integer limit, @WebParam(name = "sortBy")  String sortBy, @WebParam(name = "sortOrder")  SortOrder sortOrder);
 
 }

@@ -18,24 +18,7 @@
  */
 package org.meveo.admin.action;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.enterprise.context.Conversation;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ValueChangeEvent;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
+import com.lapis.jsfexporter.csv.CSVExportOptions;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jboss.seam.international.status.Messages;
@@ -60,7 +43,6 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.billing.impl.TradingLanguageService;
 import org.meveo.service.filter.FilterService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.ApplicationProvider;
@@ -78,7 +60,16 @@ import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.lapis.jsfexporter.csv.CSVExportOptions;
+import javax.enterprise.context.Conversation;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
@@ -113,9 +104,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private FilterService filterService;
-
-    @Inject
-    private TradingLanguageService tradingLanguageService;
 
     @Inject
     private FilterCustomFieldSearchBean filterCustomFieldSearchBean;
@@ -887,10 +875,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         objectId = null;
     }
 
-    public List<String> getProviderLanguages() {
-        return tradingLanguageService.listLanguageCodes();
-    }
-
     public String getProviderLanguageCode() {
         if (appProvider.getLanguage() != null) {
             return appProvider.getLanguage().getLanguageCode();
@@ -1178,7 +1162,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     /**
      * Find entities that reference a given class and ID
      * 
-     * @param Entity class to reference
      * @param id Record identifier
      * @return A concatinated list of entities (humanized classnames and their codes) E.g. Customer Account: first ca, second ca, third ca; Customer: first customer, second
      *         customer

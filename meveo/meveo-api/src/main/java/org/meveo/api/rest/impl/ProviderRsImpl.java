@@ -10,11 +10,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.ProviderDto;
 import org.meveo.api.dto.ProvidersDto;
-import org.meveo.api.dto.response.GetCustomerAccountConfigurationResponseDto;
-import org.meveo.api.dto.response.GetCustomerConfigurationResponseDto;
-import org.meveo.api.dto.response.GetInvoicingConfigurationResponseDto;
 import org.meveo.api.dto.response.GetProviderResponse;
-import org.meveo.api.dto.response.GetTradingConfigurationResponseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.ProviderRs;
 
@@ -69,60 +65,6 @@ public class ProviderRsImpl extends BaseRs implements ProviderRs {
         return result;
     }
 
-    @Override
-    public GetTradingConfigurationResponseDto findTradingConfiguration(String providerCode) {
-        GetTradingConfigurationResponseDto result = new GetTradingConfigurationResponseDto();
-
-        try {
-            result = providerApi.getTradingConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetInvoicingConfigurationResponseDto findInvoicingConfiguration(String providerCode) {
-        GetInvoicingConfigurationResponseDto result = new GetInvoicingConfigurationResponseDto();
-
-        try {
-            result = providerApi.getInvoicingConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetCustomerConfigurationResponseDto findCustomerConfiguration(String providerCode) {
-        GetCustomerConfigurationResponseDto result = new GetCustomerConfigurationResponseDto();
-
-        try {
-            result = providerApi.getCustomerConfiguration();
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
-    public GetCustomerAccountConfigurationResponseDto findCustomerAccountConfiguration(String providerCode) {
-        GetCustomerAccountConfigurationResponseDto result = new GetCustomerAccountConfigurationResponseDto();
-
-        try {
-            result = providerApi.getCustomerAccountConfiguration();
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
 
     @Override
     public ActionStatus createOrUpdate(ProviderDto postData) {

@@ -67,22 +67,7 @@ public class ProviderService extends PersistenceService<Provider> {
      * @return provider
      */
     public Provider getProvider() {
-
         Provider provider = getEntityManager().createNamedQuery("Provider.first", Provider.class).getResultList().get(0);
-
-        if (provider.getCurrency() != null) {
-            provider.getCurrency().getCurrencyCode();
-        }
-        if (provider.getCountry() != null) {
-            provider.getCountry().getCountryCode();
-        }
-        if (provider.getLanguage() != null) {
-            provider.getLanguage().getLanguageCode();
-        }
-        if (provider.getInvoiceConfiguration() != null) {
-            provider.getInvoiceConfiguration().getDisplayBillingCycle();
-        }
-        provider.getPaymentMethods().size();
         return provider;
     }
 
@@ -133,11 +118,6 @@ public class ProviderService extends PersistenceService<Provider> {
             log.error("Failed to update alProvider fields");
         }
 
-        appProvider.setCurrency(provider.getCurrency() != null ? provider.getCurrency() : null);
-        appProvider.setCountry(provider.getCountry() != null ? provider.getCountry() : null);
-        appProvider.setLanguage(provider.getLanguage() != null ? provider.getLanguage() : null);
-        appProvider.setInvoiceConfiguration(provider.getInvoiceConfiguration() != null ? provider.getInvoiceConfiguration() : null);
-        appProvider.setPaymentMethods(provider.getPaymentMethods());
         appProvider.setCfValues(provider.getCfValues());
     }
 

@@ -23,11 +23,6 @@ public class BusinessProductModelDto extends MeveoModuleDto implements Serializa
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -4510290371772010482L;
 
-    /** The product template. */
-    @NotNull
-    @XmlElement(required = true)
-    private ProductTemplateDto productTemplate;
-
     /**
      * Instantiates a new business product model dto.
      */
@@ -42,24 +37,6 @@ public class BusinessProductModelDto extends MeveoModuleDto implements Serializa
      */
     public BusinessProductModelDto(MeveoModule module) {
         super(module);
-    }
-
-    /**
-     * Gets the product template.
-     *
-     * @return the product template
-     */
-    public ProductTemplateDto getProductTemplate() {
-        return productTemplate;
-    }
-
-    /**
-     * Sets the product template.
-     *
-     * @param productTemplate the new product template
-     */
-    public void setProductTemplate(ProductTemplateDto productTemplate) {
-        this.productTemplate = productTemplate;
     }
 
 }

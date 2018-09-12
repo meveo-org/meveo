@@ -1,20 +1,12 @@
 package org.meveo.api.dto.account;
 
+import org.meveo.api.dto.CustomFieldsDto;
+
+import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import org.meveo.api.dto.CustomFieldsDto;
-import org.meveo.api.dto.payment.PaymentMethodDto;
-import org.meveo.model.crm.Customer;
 
 /**
  * The Class AccountHierarchyDto.
@@ -121,11 +113,6 @@ public class AccountHierarchyDto implements Serializable {
     @XmlTransient
     private int index;
 
-    /** The payment methods. */
-    @XmlElementWrapper(name = "paymentMethods")
-    @XmlElement(name = "methodOfPayment")
-    private List<PaymentMethodDto> paymentMethods;
-
     /**
      * Field was deprecated in 4.6 version. Use 'paymentMethods' field instead
      */
@@ -152,43 +139,6 @@ public class AccountHierarchyDto implements Serializable {
      */
     public AccountHierarchyDto() {
 
-    }
-
-    /**
-     * Instantiates a new account hierarchy dto.
-     *
-     * @param customer the customer
-     * @param customFieldInstances the custom field instances
-     */
-    public AccountHierarchyDto(Customer customer, CustomFieldsDto customFieldInstances) {
-        this.setCustomerId(customer.getCode());
-        if (customer.getContactInformation() != null) {
-            this.setEmail(customer.getContactInformation().getEmail());
-            this.setPhoneNumber(customer.getContactInformation().getPhone());
-        }
-        if (customer.getSeller() != null) {
-            this.sellerCode = customer.getSeller().getCode();
-        }
-
-        if (customer.getAddress() != null) {
-            this.setAddress1(customer.getAddress().getAddress1());
-            this.setAddress2(customer.getAddress().getAddress2());
-            this.setAddress3(customer.getAddress().getAddress3());
-            this.setState(customer.getAddress().getState());
-            this.setZipCode(customer.getAddress().getZipCode());
-            this.setCountryCode(customer.getAddress().getCountry() == null ? null : customer.getAddress().getCountry().getCountryCode());
-            this.setCity(customer.getAddress().getCity());
-        }
-
-        if (customer.getName() != null) {
-            if (customer.getName().getTitle() != null) {
-                this.setTitleCode(customer.getName().getTitle().getCode());
-            }
-            this.setLastName(customer.getName().getLastName());
-            this.setFirstName(customer.getName().getFirstName());
-        }
-
-        customFields = customFieldInstances;
     }
 
     /**
@@ -693,24 +643,6 @@ public class AccountHierarchyDto implements Serializable {
      */
     public void setDiscountPlan(String discountPlan) {
         this.discountPlan = discountPlan;
-    }
-
-    /**
-     * Gets the payment methods.
-     *
-     * @return the payment methods
-     */
-    public List<PaymentMethodDto> getPaymentMethods() {
-        return paymentMethods;
-    }
-
-    /**
-     * Sets the payment methods.
-     *
-     * @param paymentMethods the new payment methods
-     */
-    public void setPaymentMethods(List<PaymentMethodDto> paymentMethods) {
-        this.paymentMethods = paymentMethods;
     }
 
     /**

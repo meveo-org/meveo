@@ -18,14 +18,6 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.util.List;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
-
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -37,12 +29,16 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
-import org.meveo.service.catalog.impl.OfferTemplateService;
-import org.meveo.service.catalog.impl.ProductTemplateService;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+import java.util.List;
 
 @Stateless
 public class GenericModuleService<T extends MeveoModule> extends BusinessService<T> {
@@ -55,15 +51,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @Inject
     private ModuleScriptService moduleScriptService;
-
-    @Inject
-    private ServiceTemplateService serviceTemplateService;
-
-    @Inject
-    private OfferTemplateService offerTemplateService;
-
-    @Inject
-    private ProductTemplateService productTemplateService;
 
     @SuppressWarnings("rawtypes")
     public void loadModuleItem(MeveoModuleItem item) {
@@ -140,14 +127,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             moduleScript = moduleScriptService.preDisableModule(module.getScript().getCode(), module);
         }
 
-        if (module instanceof BusinessServiceModel) {
-            serviceTemplateService.disable(((BusinessServiceModel) module).getServiceTemplate());
-        } else if (module instanceof BusinessOfferModel) {
-            offerTemplateService.disable(((BusinessOfferModel) module).getOfferTemplate());
-        } else if (module instanceof BusinessProductModel) {
-            productTemplateService.disable(((BusinessProductModel) module).getProductTemplate());
-        }
-
         for (MeveoModuleItem item : module.getModuleItems()) {
             loadModuleItem(item);
             BusinessEntity itemEntity = item.getItemEntity();
@@ -198,14 +177,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         ModuleScriptInterface moduleScript = null;
         if (module.getScript() != null) {
             moduleScript = moduleScriptService.preEnableModule(module.getScript().getCode(), module);
-        }
-
-        if (module instanceof BusinessServiceModel) {
-            serviceTemplateService.enable(((BusinessServiceModel) module).getServiceTemplate());
-        } else if (module instanceof BusinessOfferModel) {
-            offerTemplateService.enable(((BusinessOfferModel) module).getOfferTemplate());
-        } else if (module instanceof BusinessProductModel) {
-            productTemplateService.enable(((BusinessProductModel) module).getProductTemplate());
         }
 
         for (MeveoModuleItem item : module.getModuleItems()) {

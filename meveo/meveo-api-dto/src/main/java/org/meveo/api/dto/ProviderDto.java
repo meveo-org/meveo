@@ -1,13 +1,8 @@
 package org.meveo.api.dto;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.meveo.api.dto.invoice.InvoiceConfigurationDto;
 import org.meveo.model.crm.Provider;
+
+import javax.xml.bind.annotation.*;
 
 /**
  * The Class ProviderDto.
@@ -73,15 +68,9 @@ public class ProviderDto extends BaseDto {
     /** The email. */
     private String email;
     
-    /** The bank coordinates. */
-    private BankCoordinatesDto bankCoordinates = new BankCoordinatesDto();
-    
     /** The recognize revenue. */
     private Boolean recognizeRevenue;
     
-    /** The invoice configuration. */
-    private InvoiceConfigurationDto invoiceConfiguration = new InvoiceConfigurationDto();
-
     /** The custom fields. */
     @XmlElement(required = false)
     private CustomFieldsDto customFields;
@@ -114,38 +103,7 @@ public class ProviderDto extends BaseDto {
 
         if (loadProviderData) {
             description = provider.getDescription();
-            if (provider.getCurrency() != null) {
-                currency = provider.getCurrency().getCurrencyCode();
-            }
-            if (provider.getCountry() != null) {
-                country = provider.getCountry().getCountryCode();
-            }
-            if (provider.getLanguage() != null) {
-                language = provider.getLanguage().getLanguageCode();
-            }
-            multiCurrency = provider.getMulticurrencyFlag();
-            multiCountry = provider.getMulticountryFlag();
-            multiLanguage = provider.getMultilanguageFlag();
-            rounding = provider.getRounding();
-            prepaidReservationExpirationDelayinMillisec = provider.getPrepaidReservationExpirationDelayinMillisec();
-            discountAccountingCode = provider.getDiscountAccountingCode();
             email = provider.getEmail();
-
-            this.setEnterprise(provider.isEntreprise());
-            this.setLevelDuplication(provider.isLevelDuplication());
-
-            this.setRecognizeRevenue(provider.isRecognizeRevenue());
-
-            if (provider.getBankCoordinates() != null) {
-                this.setBankCoordinates(new BankCoordinatesDto(provider.getBankCoordinates()));
-            }
-
-            if (provider.getInvoiceConfiguration() != null) {
-                this.setInvoiceConfiguration(new InvoiceConfigurationDto(provider.getInvoiceConfiguration()));
-            } else {
-                this.setInvoiceConfiguration(new InvoiceConfigurationDto());
-            }
-            this.getInvoiceConfiguration().setDisplayFreeTransacInInvoice(provider.isDisplayFreeTransacInInvoice());
         }
 
         customFields = customFieldInstances;
@@ -368,42 +326,6 @@ public class ProviderDto extends BaseDto {
     }
 
     /**
-     * Gets the bank coordinates.
-     *
-     * @return the bank coordinates
-     */
-    public BankCoordinatesDto getBankCoordinates() {
-        return bankCoordinates;
-    }
-
-    /**
-     * Sets the bank coordinates.
-     *
-     * @param bankCoordinates the new bank coordinates
-     */
-    public void setBankCoordinates(BankCoordinatesDto bankCoordinates) {
-        this.bankCoordinates = bankCoordinates;
-    }
-
-    /**
-     * Gets the invoice configuration.
-     *
-     * @return the invoice configuration
-     */
-    public InvoiceConfigurationDto getInvoiceConfiguration() {
-        return invoiceConfiguration;
-    }
-
-    /**
-     * Sets the invoice configuration.
-     *
-     * @param invoiceConfiguration the new invoice configuration
-     */
-    public void setInvoiceConfiguration(InvoiceConfigurationDto invoiceConfiguration) {
-        this.invoiceConfiguration = invoiceConfiguration;
-    }
-
-    /**
      * Gets the rounding.
      *
      * @return the rounding
@@ -501,8 +423,8 @@ public class ProviderDto extends BaseDto {
         return "ProviderDto [code=" + code + ", description=" + description + ", currency=" + currency + ", country=" + country + ", language=" + language + ", multiCurrency="
                 + multiCurrency + ", multiCountry=" + multiCountry + ", multiLanguage=" + multiLanguage + ", userAccount=" + userAccount + ", enterprise=" + enterprise
                 + ", levelDuplication=" + levelDuplication + ", rounding=" + rounding + ", prepaidReservationExpirationDelayinMillisec="
-                + prepaidReservationExpirationDelayinMillisec + ", discountAccountingCode=" + discountAccountingCode + ", email=" + email + ", bankCoordinates=" + bankCoordinates
-                + ", recognizeRevenue=" + recognizeRevenue + ", invoiceConfiguration=" + invoiceConfiguration + ", customFields=" + customFields + "]";
+                + prepaidReservationExpirationDelayinMillisec + ", discountAccountingCode=" + discountAccountingCode + ", email=" + email
+                + ", recognizeRevenue=" + recognizeRevenue + ", customFields=" + customFields + "]";
     }
 
 }

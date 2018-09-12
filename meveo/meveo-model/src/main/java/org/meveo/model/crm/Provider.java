@@ -22,6 +22,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.*;
+import org.meveo.model.admin.Currency;
+import org.meveo.model.billing.Country;
+import org.meveo.model.billing.Language;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 
@@ -52,6 +55,18 @@ public class Provider extends AuditableEntity implements ICustomFieldEntity {
     @Size(max = 60, min = 1)
     @NotNull
     protected String code;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "currency_id")
+    private Currency currency;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private Country country;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "language_id")
+    private Language language;
 
     @Column(name = "description", length = 255)
     @Size(max = 255)
@@ -172,5 +187,29 @@ public class Provider extends AuditableEntity implements ICustomFieldEntity {
     @Override
     public void clearCfValues() {
         cfValues = null;
+    }
+
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
+    }
+
+    public Country getCountry() {
+        return country;
+    }
+
+    public void setCountry(Country country) {
+        this.country = country;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 }

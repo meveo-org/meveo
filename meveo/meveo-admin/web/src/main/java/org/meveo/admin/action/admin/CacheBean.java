@@ -18,29 +18,14 @@
  */
 package org.meveo.admin.action.admin;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.cache.CdrEdrProcessingCacheContainerProvider;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
-import org.meveo.cache.WalletCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
@@ -49,17 +34,18 @@ import org.omnifaces.cdi.Param;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
+
 @Named
 @ViewScoped
 public class CacheBean implements Serializable {
 
     private static final long serialVersionUID = -8072659867697109888L;
-
-    @Inject
-    private WalletCacheContainerProvider walletCacheContainerProvider;
-
-    @Inject
-    private CdrEdrProcessingCacheContainerProvider cdrEdrProcessingCacheContainerProvider;
 
     @Inject
     private NotificationCacheContainerProvider notificationCacheContainerProvider;
@@ -126,12 +112,10 @@ public class CacheBean implements Serializable {
     public void preRenderView() {
 
         if (cacheName != null) {
-            Map<String, Cache> caches = walletCacheContainerProvider.getCaches();
-            caches.putAll(cdrEdrProcessingCacheContainerProvider.getCaches());
+            Map<String, Cache> caches = new HashMap<>();
             caches.putAll(notificationCacheContainerProvider.getCaches());
             caches.putAll(customFieldsCacheContainerProvider.getCaches());
             caches.putAll(jobCacheContainerProvider.getCaches());
-
             selectedCache = caches.get(cacheName);
         }
     }
@@ -145,8 +129,7 @@ public class CacheBean implements Serializable {
     public List<Map<String, String>> getSummaryOfCaches() {
         List<Map<String, String>> cacheSummary = new ArrayList<Map<String, String>>();
 
-        Map<String, Cache> caches = walletCacheContainerProvider.getCaches();
-        caches.putAll(cdrEdrProcessingCacheContainerProvider.getCaches());
+        Map<String, Cache> caches = new HashMap<>();
         caches.putAll(notificationCacheContainerProvider.getCaches());
         caches.putAll(customFieldsCacheContainerProvider.getCaches());
         caches.putAll(jobCacheContainerProvider.getCaches());
@@ -170,8 +153,6 @@ public class CacheBean implements Serializable {
         if (StringUtils.isBlank(cacheName)) {
             cacheName = null;
         }
-        walletCacheContainerProvider.refreshCache(cacheName);
-        cdrEdrProcessingCacheContainerProvider.refreshCache(cacheName);
         notificationCacheContainerProvider.refreshCache(cacheName);
         customFieldsCacheContainerProvider.refreshCache(cacheName);
         jobCacheContainerProvider.refreshCache(cacheName);
@@ -179,8 +160,6 @@ public class CacheBean implements Serializable {
     }
 
     public void refreshCaches() {
-        walletCacheContainerProvider.refreshCache(null);
-        cdrEdrProcessingCacheContainerProvider.refreshCache(null);
         notificationCacheContainerProvider.refreshCache(null);
         customFieldsCacheContainerProvider.refreshCache(null);
         jobCacheContainerProvider.refreshCache(null);

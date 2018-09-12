@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.admin.Currency;
-import org.meveo.model.billing.TradingCurrency;
 
 /**
  * The Class CurrencyDto.
@@ -33,16 +32,6 @@ public class CurrencyDto extends BaseDto {
      */
     public CurrencyDto() {
 
-    }
-
-    /**
-     * Instantiates a new currency dto.
-     *
-     * @param tradingCurrency the trading currency
-     */
-    public CurrencyDto(TradingCurrency tradingCurrency) {
-        code = tradingCurrency.getCurrencyCode();
-        description = tradingCurrency.getPrDescription();
     }
 
     /**

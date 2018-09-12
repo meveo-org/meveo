@@ -39,16 +39,6 @@ public class ImageUploadEventHandler<T extends IEntity> {
      * @return picture file name path.
      */
     public String getPicturePath(T entity) {
-        if (entity instanceof OfferTemplateCategory) {
-            return ModuleUtil.getPicturePath(userProviderCode, "offerCategory");
-        } else if (entity instanceof OfferTemplate) {
-            return ModuleUtil.getPicturePath(userProviderCode, "offer");
-        } else if (entity instanceof ServiceTemplate) {
-            return ModuleUtil.getPicturePath(userProviderCode, "service");
-        } else if (entity instanceof ProductTemplate) {
-            return ModuleUtil.getPicturePath(userProviderCode, "product");
-        }
-
         return "";
     }
 

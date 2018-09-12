@@ -1,33 +1,14 @@
 package org.meveo.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.interceptor.Interceptors;
-import javax.servlet.http.HttpServletRequest;
-
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.SecuredEntityDto;
 import org.meveo.api.dto.UserDto;
 import org.meveo.api.dto.UsersDto;
-import org.meveo.api.dto.account.FilterProperty;
-import org.meveo.api.dto.account.FilterResults;
 import org.meveo.api.dto.response.PagingAndFiltering;
-import org.meveo.api.exception.ActionForbiddenException;
-import org.meveo.api.exception.EntityAlreadyExistsException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.InvalidParameterException;
-import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.*;
 import org.meveo.api.security.Interceptor.SecuredBusinessEntityMethod;
 import org.meveo.api.security.Interceptor.SecuredBusinessEntityMethodInterceptor;
-import org.meveo.api.security.filter.ListFilter;
-import org.meveo.api.security.filter.ObjectFilter;
 import org.meveo.api.security.parameter.ObjectPropertyParser;
 import org.meveo.api.security.parameter.SecureMethodParameter;
 import org.meveo.commons.utils.StringUtils;
@@ -43,6 +24,12 @@ import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.model.SortOrder;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.interceptor.Interceptors;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * @author Edward P. Legaspi
@@ -144,7 +131,6 @@ public class UserApi extends BaseApi {
             user.setName(name);
             user.setRoles(roles);
             user.setSecuredEntities(securedEntities);
-            user.setUserLevel(userHierarchyLevel);
 
             userService.create(user);
         }
@@ -226,8 +212,6 @@ public class UserApi extends BaseApi {
             user.setRoles(roles);
             user.setSecuredEntities(securedEntities);
         }
-        user.setUserLevel(userHierarchyLevel);
-
         userService.update(user);
     }
 

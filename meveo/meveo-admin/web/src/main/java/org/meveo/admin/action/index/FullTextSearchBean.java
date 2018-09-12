@@ -1,19 +1,8 @@
 package org.meveo.admin.action.index;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.enterprise.context.Conversation;
-import javax.enterprise.context.ConversationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.meveo.admin.action.BaseBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.BusinessEntity;
-import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessEntityService;
@@ -22,6 +11,15 @@ import org.meveo.service.index.ElasticSearchClassInfo;
 import org.meveo.util.view.ESBasedDataModel;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
+
+import javax.enterprise.context.Conversation;
+import javax.enterprise.context.ConversationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Named
 @ConversationScoped
@@ -82,11 +80,11 @@ public class FullTextSearchBean implements Serializable {
                 public String[] getSearchScope() {
 
                     // Limit search scope to offers, product, offer template categories, user groups for marketing manager application
-                    if (FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogManager")
-                            || FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogVisualization")) {
-                        return new String[] { OfferTemplate.class.getName(), ProductTemplate.class.getName(), BundleTemplate.class.getName(), OfferTemplateCategory.class.getName(),
-                                UserHierarchyLevel.class.getName() };
-                    }
+//                    if (FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogManager")
+//                            || FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogVisualization")) {
+//                        return new String[] { OfferTemplate.class.getName(), ProductTemplate.class.getName(), BundleTemplate.class.getName(), OfferTemplateCategory.class.getName(),
+//                                UserHierarchyLevel.class.getName() };
+//                    }
                     return null;
                 }
             };

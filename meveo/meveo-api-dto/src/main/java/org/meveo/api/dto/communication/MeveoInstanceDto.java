@@ -150,9 +150,6 @@ public class MeveoInstanceDto extends BusinessDto {
         if (meveoInstance.getUser() != null) {
             this.user = meveoInstance.getUser().getUserName();
         }
-        if (meveoInstance.getCustomer() != null) {
-            this.customer = meveoInstance.getCustomer().getCode();
-        }
     }
 
     /**

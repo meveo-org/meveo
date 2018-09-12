@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.billing.Language;
-import org.meveo.model.billing.TradingLanguage;
 
 /**
  * The Class LanguageDto.
@@ -33,16 +32,6 @@ public class LanguageDto extends BaseDto {
      */
     public LanguageDto() {
 
-    }
-
-    /**
-     * Instantiates a new language dto.
-     *
-     * @param tradingLanguage the trading language
-     */
-    public LanguageDto(TradingLanguage tradingLanguage) {
-        code = tradingLanguage.getLanguageCode();
-        description = tradingLanguage.getPrDescription();
     }
 
     /**

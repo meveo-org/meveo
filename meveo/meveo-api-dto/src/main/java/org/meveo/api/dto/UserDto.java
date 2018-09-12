@@ -132,9 +132,9 @@ public class UserDto extends BaseDto {
             role = roles.get(roles.size() - 1);
         }
 
-        if (user.getUserLevel() != null) {
-            userLevel = user.getUserLevel().getCode();
-        }
+//        if (user.getUserLevel() != null) {
+//            userLevel = user.getUserLevel().getCode();
+//        }
 
         if (includeSecuredEntities && user.getSecuredEntities() != null) {
             this.securedEntities = new ArrayList<>();

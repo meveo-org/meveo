@@ -66,7 +66,6 @@ import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.ValueExpressionWrapper;
-import org.meveo.service.billing.impl.TradingLanguageService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.ApplicationProvider;
@@ -110,9 +109,6 @@ public abstract class BaseApi {
     @Inject
     @ApplicationProvider
     protected Provider appProvider;
-
-    @Inject
-    private TradingLanguageService tradingLanguageService;
 
     @Inject
     protected BusinessEntityService businessEntityService;
@@ -1011,8 +1007,6 @@ public abstract class BaseApi {
             return null;
         }
 
-        List<String> supportedLanguages = tradingLanguageService.listLanguageCodes();
-
         Map<String, String> values = null;
         if (currentValues == null) {
             values = new HashMap<>();
@@ -1021,9 +1015,6 @@ public abstract class BaseApi {
         }
 
         for (LanguageDescriptionDto translationInfo : translationInfos) {
-            if (!supportedLanguages.contains(translationInfo.getLanguageCode())) {
-                throw new InvalidParameterException("Language " + translationInfo.getLanguageCode() + " is not supported by the provider.");
-            }
             if (StringUtils.isBlank(translationInfo.getDescription())) {
                 values.remove(translationInfo.getLanguageCode());
             } else {

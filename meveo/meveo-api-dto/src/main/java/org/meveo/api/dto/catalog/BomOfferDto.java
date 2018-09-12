@@ -73,11 +73,6 @@ public class BomOfferDto extends BaseDto {
     /** The life cycle status enum. */
     private LifeCycleStatusEnum lifeCycleStatusEnum;
 
-    /** The offer template categories. */
-    @XmlElementWrapper(name = "offerTemplateCategories")
-    @XmlElement(name = "offerTemplateCategory")
-    private List<OfferTemplateCategoryDto> offerTemplateCategories;
-
     /**
      * Gets the bom code.
      *
@@ -258,29 +253,11 @@ public class BomOfferDto extends BaseDto {
         this.lifeCycleStatusEnum = lifeCycleStatusEnum;
     }
 
-    /**
-     * Gets the offer template categories.
-     *
-     * @return the offerTemplateCategories
-     */
-    public List<OfferTemplateCategoryDto> getOfferTemplateCategories() {
-        return offerTemplateCategories;
-    }
-
-    /**
-     * Sets the offer template categories.
-     *
-     * @param offerTemplateCategories the offerTemplateCategories to set
-     */
-    public void setOfferTemplateCategories(List<OfferTemplateCategoryDto> offerTemplateCategories) {
-        this.offerTemplateCategories = offerTemplateCategories;
-    }
-
     @Override
     public String toString() {
         return "BomOfferDto [bomCode=" + bomCode + ", code=" + code + ", name=" + name + ", description=" + description + ", customFields=" + customFields + ", prefix=" + prefix
                 + ", servicesToActivate=" + servicesToActivate + ", productsToActivate=" + productsToActivate + ", businessServiceModels=" + businessServiceModels
-                + ", lifeCycleStatusEnum=" + lifeCycleStatusEnum + ", offerTemplateCategories=" + offerTemplateCategories + "]";
+                + ", lifeCycleStatusEnum=" + lifeCycleStatusEnum +"]";
     }
 
 }

@@ -78,6 +78,7 @@
 						<phase>prepare-package</phase>
 						<configuration>
 							<target>
+								<copy file="../lib/flatworm-3.0.2.jar" tofile="${project.build.directory}/meveo/WEB-INF/lib/flatworm-3.0.2.jar" />
 								<copy file="src/main/resources/import-${dbtype}.sql" tofile="${project.build.directory}/meveo/WEB-INF/classes/import.sql" />
 							</target>
 						</configuration>
@@ -128,11 +129,13 @@
 					</includes>
 					<replacements>
 						<replacement>
-							<!--<token>@VERSION_NUMBER@</token>-->
+							<!--suppress UnresolvedMavenProperty -->
+							<token>@VERSION_NUMBER@</token>
 							<value>${project.version}</value>
 						</replacement>
 						<replacement>
-							<!--<token>@BUILD_NUMBER@</token>-->
+							<!--suppress UnresolvedMavenProperty -->
+							<token>@BUILD_NUMBER@</token>
 							<value>${buildNumber}</value>
 						</replacement>
 					</replacements>
@@ -158,10 +161,11 @@
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-admin-ejbs</artifactId>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>org.meveo</groupId>-->
-			<!--<artifactId>meveo-api</artifactId>-->
-		<!--</dependency>-->
+		<dependency>
+			<groupId>org.meveo</groupId>
+			<artifactId>meveo-api</artifactId>
+		</dependency>
+
 		<!--<dependency>-->
 			<!--<groupId>org.meveo</groupId>-->
 			<!--<artifactId>meveo-client</artifactId>-->

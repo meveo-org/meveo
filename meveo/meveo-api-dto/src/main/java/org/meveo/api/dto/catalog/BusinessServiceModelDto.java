@@ -11,7 +11,7 @@ import org.meveo.model.module.MeveoModule;
 
 /**
  * The Class BusinessServiceModelDto.
- * 
+ *
  * @author anasseh
  */
 @XmlRootElement(name = "BusinessServiceModel")
