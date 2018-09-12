@@ -6,20 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="fbo" />
         <module name="meveo-admin-ejbs" />
         <module name="meveo-admin-web" />
+        <module name="meveo-json-schema" />
         <module name="meveo-model" />
         <module name="meveo-security" />
+        <module name="opencell-api" />
+        <module name="opencell-api-dto" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="opencell" target="1.5" />
-      <module name="opencell-admin" target="1.5" />
-      <module name="opencell-admin-ejbs" target="1.8" />
-      <module name="opencell-admin-web" target="1.8" />
-      <module name="opencell-model" target="1.8" />
-      <module name="opencell-security" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>

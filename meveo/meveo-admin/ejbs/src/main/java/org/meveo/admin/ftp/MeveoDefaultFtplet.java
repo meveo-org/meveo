@@ -16,6 +16,7 @@ import org.meveo.admin.ftp.event.FileDelete;
 import org.meveo.admin.ftp.event.FileDownload;
 import org.meveo.admin.ftp.event.FileRename;
 import org.meveo.admin.ftp.event.FileUpload;
+import org.meveo.model.mediation.ActionEnum;
 import org.meveo.model.mediation.MeveoFtpFile;
 import org.meveo.service.admin.impl.UserService;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class MeveoDefaultFtplet extends DefaultFtplet {
 	@Override
 	public FtpletResult onDownloadEnd(FtpSession session, FtpRequest request) throws FtpException, IOException {
 		log.debug("ftp end download ...");
-		MeveoFtpFile file = getEventFile(session, request,ActionEnum.DOWNLOAD);
+		MeveoFtpFile file = getEventFile(session, request, ActionEnum.DOWNLOAD);
 		if (file != null) {
 			download.fire(file);
 		}

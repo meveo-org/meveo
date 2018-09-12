@@ -1,0 +1,249 @@
+package org.meveo.model.quote;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.meveo.model.BusinessCFEntity;
+import org.meveo.model.CustomFieldEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
+import org.meveo.model.order.Order;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+@Entity
+@ExportIdentifier({ "code" })
+@CustomFieldEntity(cftCodePrefix = "QUOTE")
+@Table(name = "ord_quote", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+        @Parameter(name = "sequence_name", value = "ord_quote_seq"), })
+public class Quote extends BusinessCFEntity {
+
+    private static final long serialVersionUID = -9060067698650286828L;
+
+    public static Integer DEFAULT_PRIORITY = 2;
+
+    /**
+     * External identifier
+     */
+    @Column(name = "external_id", length = 100)
+    @Size(max = 100)
+    private String externalId;
+
+    /**
+     * Quote version because if the customer rejected the quote but negotiations still open a new version of the quote is managed
+     */
+    @Column(name = "quote_version", length = 10)
+    @Size(max = 10)
+    private String quoteVersion;
+
+    /**
+     * Contact attached to the quote to send back information regarding this quote
+     */
+    @Column(name = "contact", length = 100)
+    @Size(max = 100)
+    private String notificationContact;
+
+    /**
+     * Date when quote was created
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "quote_date", nullable = false, updatable = false)
+    @NotNull
+    private Date quoteDate = new Date();
+
+    /**
+     * Quote validity dates
+     */
+    @AttributeOverrides({ @AttributeOverride(name = "from", column = @Column(name = "valid_from")), @AttributeOverride(name = "to", column = @Column(name = "valid_to")) })
+    private DatePeriod validity = new DatePeriod();
+
+    /**
+     * Initial quote required by date from the requestor perspective
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "req_completion_date")
+    private Date requestedCompletionDate;
+
+    /**
+     * Date when product in the quote should be available
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "order_start_date")
+    private Date fulfillmentStartDate;
+
+    /**
+     * Date when the quoted was Cancelled or Rejected or Accepted
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "completion_date")
+    private Date completionDate;
+
+    /**
+     * Category
+     */
+    @Column(name = "category", length = 200)
+    private String category;
+
+    /**
+     * Order processing status as defined by the workflow.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @NotNull
+    private QuoteStatusEnum status = QuoteStatusEnum.IN_PROGRESS;
+
+    @Column(name = "status_message", length = 2000)
+    private String statusMessage;
+
+    /**
+     * A list of qupte items. Not modifiable once send to customer for approval.
+     */
+    @OneToMany(mappedBy = "quote", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuoteItem> quoteItems;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "routed_to_user_group_id")
+    private UserHierarchyLevel routedToUserGroup;
+
+    @Column(name = "received_from", length = 50)
+    private String receivedFromApp;
+
+    @OneToOne(mappedBy = "quote", fetch = FetchType.LAZY)
+    private Order order;
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getQuoteVersion() {
+        return quoteVersion;
+    }
+
+    public void setQuoteVersion(String quoteVersion) {
+        this.quoteVersion = quoteVersion;
+    }
+
+    public String getNotificationContact() {
+        return notificationContact;
+    }
+
+    public void setNotificationContact(String notificationContact) {
+        this.notificationContact = notificationContact;
+    }
+
+    public Date getQuoteDate() {
+        return quoteDate;
+    }
+
+    public void setQuoteDate(Date quoteDate) {
+        this.quoteDate = quoteDate;
+    }
+
+    public DatePeriod getValidity() {
+        if (validity == null) {
+            validity = new DatePeriod();
+        }
+        return validity;
+    }
+
+    public void setValidity(DatePeriod validity) {
+        this.validity = validity;
+    }
+
+    public Date getRequestedCompletionDate() {
+        return requestedCompletionDate;
+    }
+
+    public void setRequestedCompletionDate(Date requestedCompletionDate) {
+        this.requestedCompletionDate = requestedCompletionDate;
+    }
+
+    public Date getFulfillmentStartDate() {
+        return fulfillmentStartDate;
+    }
+
+    public void setFulfillmentStartDate(Date fulfillmentStartDate) {
+        this.fulfillmentStartDate = fulfillmentStartDate;
+    }
+
+    public Date getCompletionDate() {
+        return completionDate;
+    }
+
+    public void setCompletionDate(Date completionDate) {
+        this.completionDate = completionDate;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public QuoteStatusEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(QuoteStatusEnum status) {
+        this.status = status;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
+    }
+
+    public List<QuoteItem> getQuoteItems() {
+        return quoteItems;
+    }
+
+    public void setQuoteItems(List<QuoteItem> quoteItems) {
+        this.quoteItems = quoteItems;
+    }
+
+    public void addQuoteItem(QuoteItem quoteItem) {
+        if (this.quoteItems == null) {
+            this.quoteItems = new ArrayList<>();
+        }
+        this.quoteItems.add(quoteItem);
+    }
+
+    public UserHierarchyLevel getRoutedToUserGroup() {
+        return routedToUserGroup;
+    }
+
+    public void setRoutedToUserGroup(UserHierarchyLevel routedToUserGroup) {
+        this.routedToUserGroup = routedToUserGroup;
+    }
+
+    public String getReceivedFromApp() {
+        return receivedFromApp;
+    }
+
+    public void setReceivedFromApp(String receivedFromApp) {
+        this.receivedFromApp = receivedFromApp;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+}

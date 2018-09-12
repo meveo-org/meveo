@@ -5,6 +5,9 @@
     <file url="file://$PROJECT_DIR$/meveo/meveo-admin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/meveo/meveo-admin/ejbs" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/meveo/meveo-admin/web" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/meveo/meveo-api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/meveo/meveo-api-dto" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/meveo/meveo-json-schema" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/meveo/meveo-model" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/meveo/meveo-security" charset="UTF-8" />
   </component>

@@ -31,14 +31,14 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
 
 <component>
 	<component-type>org.primefaces.component.OpencellMenu</component-type>
-	<component-class>org.meveo.util.view.composite.OpencellMenu</component-class>
+	<component-class>org.meveo.util.view.composite.MeveoMenu</component-class>
 </component>
 
 <render-kit>
 	<renderer>
 		<component-family>org.primefaces.component</component-family>
 		<renderer-type>org.primefaces.component.OpencellMenuRenderer</renderer-type>
-		<renderer-class>org.meveo.util.view.composite.OpencellMenuRenderer</renderer-class>
+		<renderer-class>org.meveo.util.view.composite.MeveoMenuRenderer</renderer-class>
 	</renderer>
 </render-kit>
 

@@ -165,12 +165,6 @@ public class EntityExportImportService implements Serializable {
     private Logger log;
 
     @Inject
-    private WalletCacheContainerProvider walletCacheContainerProvider;
-
-    @Inject
-    private CdrEdrProcessingCacheContainerProvider cdrEdrProcessingCacheContainerProvider;
-
-    @Inject
     private NotificationCacheContainerProvider notificationCacheContainerProvider;
 
     @Inject
@@ -2140,8 +2134,6 @@ public class EntityExportImportService implements Serializable {
 
     private void refreshCaches() {
         log.info("Initiating cache reload after import ");
-        walletCacheContainerProvider.refreshCache(null);
-        cdrEdrProcessingCacheContainerProvider.refreshCache(null);
         notificationCacheContainerProvider.refreshCache(null);
         customFieldsCacheContainerProvider.refreshCache(null);
         jobCacheContainerProvider.refreshCache(null);

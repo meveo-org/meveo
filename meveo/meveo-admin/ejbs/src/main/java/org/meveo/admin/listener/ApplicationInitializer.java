@@ -57,12 +57,6 @@ public class ApplicationInitializer {
     private Logger log;
 
     @Inject
-    private WalletCacheContainerProvider walletCache;
-
-    @Inject
-    private CdrEdrProcessingCacheContainerProvider cdrEdrCache;
-
-    @Inject
     private NotificationCacheContainerProvider notifCache;
 
     @Inject
@@ -129,8 +123,6 @@ public class ApplicationInitializer {
         scriptInstanceService.compileAll();
 
         // Initialize caches
-        walletCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        cdrEdrCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
         notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
         cftCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
         jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
