@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
-		<groupId>org.meveo</groupId>
 		<artifactId>meveo-admin</artifactId>
+		<groupId>org.meveo</groupId>
 		<version>6.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-
 	<artifactId>meveo-admin-ejbs</artifactId>
 	<name>Meveo Admin Web Application - EJBs Module</name>
 	<packaging>jar</packaging>
-
 	<build>
 		<resources>
 			<resource>
@@ -23,15 +20,13 @@
 				</excludes>
 			</resource>
 		</resources>
-
-
 		<plugins>
 			<!-- Copy files from other projects for testing -->
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>2.7</version>
 				<executions>
-					<!-- Copy message, authentication and other configuration files from 
+					<!-- Copy message, authentication and other configuration files from
 						configuration module for testing -->
 					<execution>
 						<id>copy-config-properties-file</id>
@@ -41,7 +36,6 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-
 							<resources>
 								<resource>
 									<directory>${project.basedir}/../config/src/main/resources</directory>
@@ -65,7 +59,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
@@ -84,7 +77,6 @@
 					<shortRevisionLength>41</shortRevisionLength>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>com.google.code.maven-replacer-plugin</groupId>
 				<artifactId>maven-replacer-plugin</artifactId>
@@ -112,15 +104,12 @@
 							<value>${project.version}</value>
 						</replacement>
 						<replacement>
-							<!--suppress UnresolvedMavenProperty -->
 							<token>@buildNumber@</token>
-							<!--suppress UnresolvedMavenProperty -->
 							<value>${buildNumber}</value>
 						</replacement>
 					</replacements>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
@@ -143,7 +132,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -172,126 +161,132 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
 	<dependencies>
-
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
+			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
+			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api-dto</artifactId>
+			<version>${project.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-json-schema</artifactId>
-			<version>6.0</version>
+			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
 		</dependency>
-
 		<!-- Libraries included in Jboss -->
-
 		<dependency>
 			<groupId>org.jboss.spec.javax.servlet</groupId>
 			<artifactId>jboss-servlet-api_3.1_spec</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>javax.mail-api</artifactId>
 			<version>1.5.5</version>
 			<scope>provided</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.spec.javax.ejb</groupId>
 			<artifactId>jboss-ejb-api_3.2_spec</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
 			<artifactId>hibernate-jpa-2.1-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.spec.javax.faces</groupId>
 			<artifactId>jboss-jsf-api_2.2_spec</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.spec.javax.el</groupId>
 			<artifactId>jboss-el-api_3.0_spec</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-core</artifactId>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>jboss-logging</artifactId>
+					<groupId>org.jboss.logging</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxb-provider</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-multipart-provider</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.spec.javax.jms</groupId>
 			<artifactId>jboss-jms-api_2.0_spec</artifactId>
 			<version>1.0.0.Final</version>
 			<scope>provided</scope>
 		</dependency>
-
 		<!-- End of libraries included in Jboss -->
-
 		<dependency>
 			<groupId>org.primefaces</groupId>
 			<artifactId>primefaces</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-vfs</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
@@ -339,37 +334,26 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 		</dependency>
-
-		<!-- <dependency> -->
-		<!-- <groupId>xalan</groupId> -->
-		<!-- <artifactId>xalan</artifactId> -->
-		<!-- </dependency> -->
-
 		<dependency>
 			<groupId>jaxen</groupId>
 			<artifactId>jaxen</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-vfs2</artifactId>
@@ -380,32 +364,26 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream-hibernate</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-httpclient</groupId>
 			<artifactId>commons-httpclient</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.ftpserver</groupId>
 			<artifactId>ftpserver-core</artifactId>
@@ -416,18 +394,15 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>net.sourceforge.jexcelapi</groupId>
 			<artifactId>jxl</artifactId>
@@ -439,62 +414,48 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>com.github.taksan</groupId>
 			<artifactId>skype-java-api</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.igniterealtime.smack</groupId>
 			<artifactId>smack</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.blackbear</groupId>
 			<artifactId>flatworm</artifactId>
-			<scope>system</scope>
-			<systemPath>${basedir}/../lib/flatworm-3.0.2.jar</systemPath>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.beanio</groupId>
 			<artifactId>beanio</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
-
 		<!-- For testing -->
-
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.dbunit</groupId>
 			<artifactId>dbunit</artifactId>
@@ -506,47 +467,36 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.shrinkwrap.resolver</groupId>
 			<artifactId>shrinkwrap-resolver-api-maven</artifactId>
-			<version>3.1.3</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>
 			<artifactId>arquillian-junit-container</artifactId>
 			<scope>test</scope>
-			<version>1.4.0.Final</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>com.esotericsoftware.yamlbeans</groupId>
 			<artifactId>yamlbeans</artifactId>
 			<version>1.11</version>
 		</dependency>
-
-
 		<dependency>
-   			 <groupId>com.ingenico.connect.gateway</groupId>
-  			<artifactId>connect-sdk-java</artifactId>
-  			<version>5.18.0</version>
+			<groupId>com.ingenico.connect.gateway</groupId>
+			<artifactId>connect-sdk-java</artifactId>
+			<version>5.18.0</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-admin-client</artifactId>
 			<version>${version.keycloak}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.slimpay</groupId>
 			<artifactId>hapiclient</artifactId>
@@ -558,60 +508,20 @@
 			<version>1.0.4</version>
 			<optional>true</optional>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.1</version>
 		</dependency>
-	<dependency>
-		    <groupId>org.neo4j</groupId>
-		    <artifactId>neo4j-ogm-http-driver</artifactId>
-		    <version>2.0.4</version>
-		</dependency>
-		 <dependency>
-        <groupId>org.neo4j.driver</groupId>
-        <artifactId>neo4j-java-driver</artifactId>
-        <version>1.0.4</version>
-       </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.ejb</groupId>
-            <artifactId>jboss-ejb-api_3.1_spec</artifactId>
-            <version>1.0.2.Final</version>
-            <scope>compile</scope>
-        </dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.25</version>
-			<scope>compile</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-            <version>8.2.8.Final</version>
-            <scope>compile</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>jboss-logging</artifactId>
-					<groupId>org.jboss.logging</groupId>
-				</exclusion>
-			</exclusions>
-        </dependency>
-        <dependency>
-            <groupId>javax.enterprise</groupId>
-            <artifactId>cdi-api</artifactId>
-            <version>1.2</version>
-            <scope>compile</scope>
-        </dependency>
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>7.0</version>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j-ogm-http-driver</artifactId>
+			<version>2.0.4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.meveo</groupId>
-			<artifactId>meveo-api-dto</artifactId>
+			<groupId>org.neo4j.driver</groupId>
+			<artifactId>neo4j-java-driver</artifactId>
+			<version>1.0.4</version>
 		</dependency>
 	</dependencies>
 
@@ -634,7 +544,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 		<profile>
 			<!-- An optional Arquillian testing profile that executes tests in your 
 				JBoss AS instance -->
@@ -642,7 +551,6 @@
 				test, shutting it down when done -->
 			<!-- Run with: mvn clean test -Parq-jbossas-managed -->
 			<id>arq-jbossas-managed</id>
-
 			<dependencies>
 				<dependency>
 					<groupId>org.jboss.as</groupId>
@@ -650,7 +558,6 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
-
 			<build>
 				<plugins>
 					<plugin>
@@ -663,8 +570,6 @@
 					</plugin>
 				</plugins>
 			</build>
-
 		</profile>
 	</profiles>
-
 </project>
