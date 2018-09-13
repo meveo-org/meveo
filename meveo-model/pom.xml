@@ -73,6 +73,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -109,6 +110,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- JSR-303 (Bean Validation) Implementation Provides portable constraints such as @Email -->
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -186,27 +192,6 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>1.0.0.Final</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>5.1.10.Final</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 
