@@ -8,12 +8,23 @@
         <outputRelativeToContentRoot value="true" />
         <module name="meveo-admin-ejbs" />
         <module name="meveo-admin-web" />
+        <module name="meveo-api" />
+        <module name="meveo-api-dto" />
         <module name="meveo-json-schema" />
         <module name="meveo-model" />
         <module name="meveo-security" />
-        <module name="opencell-api" />
-        <module name="opencell-api-dto" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="meveo" target="1.5" />
+      <module name="meveo-admin" target="1.5" />
+      <module name="meveo-admin-ejbs" target="1.8" />
+      <module name="meveo-admin-web" target="1.8" />
+      <module name="meveo-api" target="1.8" />
+      <module name="meveo-api-dto" target="1.8" />
+      <module name="meveo-json-schema" target="1.8" />
+      <module name="meveo-model" target="1.8" />
+      <module name="meveo-security" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

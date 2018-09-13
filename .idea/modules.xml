@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/meveo.iml" filepath="$PROJECT_DIR$/meveo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-admin/meveo-admin.iml" filepath="$PROJECT_DIR$/meveo-admin/meveo-admin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-admin/ejbs/meveo-admin-ejbs.iml" filepath="$PROJECT_DIR$/meveo-admin/ejbs/meveo-admin-ejbs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-admin/web/meveo-admin-web.iml" filepath="$PROJECT_DIR$/meveo-admin/web/meveo-admin-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-api/meveo-api.iml" filepath="$PROJECT_DIR$/meveo-api/meveo-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-api-dto/meveo-api-dto.iml" filepath="$PROJECT_DIR$/meveo-api-dto/meveo-api-dto.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-json-schema/meveo-json-schema.iml" filepath="$PROJECT_DIR$/meveo-json-schema/meveo-json-schema.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-model/meveo-model.iml" filepath="$PROJECT_DIR$/meveo-model/meveo-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/meveo-security/meveo-security.iml" filepath="$PROJECT_DIR$/meveo-security/meveo-security.iml" />
+    </modules>
+  </component>
+</project>

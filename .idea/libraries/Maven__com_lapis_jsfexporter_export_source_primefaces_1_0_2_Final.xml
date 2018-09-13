@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.lapis.jsfexporter:export-source-primefaces:1.0.2.Final">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-source-primefaces/1.0.2.Final/export-source-primefaces-1.0.2.Final.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-source-primefaces/1.0.2.Final/export-source-primefaces-1.0.2.Final-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-source-primefaces/1.0.2.Final/export-source-primefaces-1.0.2.Final-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

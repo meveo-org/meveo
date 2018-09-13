@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.lapis.jsfexporter:export-type-csv:1.0.3.Final">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-type-csv/1.0.3.Final/export-type-csv-1.0.3.Final.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-type-csv/1.0.3.Final/export-type-csv-1.0.3.Final-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/export-type-csv/1.0.3.Final/export-type-csv-1.0.3.Final-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

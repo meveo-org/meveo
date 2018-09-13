@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.lapis.jsfexporter:jsf-exporter-core:1.0.3.Final">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/jsf-exporter-core/1.0.3.Final/jsf-exporter-core-1.0.3.Final.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/jsf-exporter-core/1.0.3.Final/jsf-exporter-core-1.0.3.Final-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/lapis/jsfexporter/jsf-exporter-core/1.0.3.Final/jsf-exporter-core-1.0.3.Final-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
