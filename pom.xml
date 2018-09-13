@@ -7,6 +7,10 @@
     <packaging>pom</packaging>
     <version>6.0</version>
     <name>Meveo Parent Project</name>
+    <scm>
+        <connection>scm:git:https://git.assembla.com/Check-and-Trust/finprotect.fbo.git</connection>
+        <url>https://git.assembla.com/Check-and-Trust/finprotect.fbo.git</url>
+    </scm>
     <modules>
         <module>meveo-security</module>
         <module>meveo-model</module>
@@ -24,6 +28,10 @@
             <id>wd</id>
             <name>webdrone nexus</name>
             <url>http://maven.webdrone.fr:8081/nexus/content/groups/webdrone</url>
+        </repository>
+        <repository>
+            <id>opencell-repo</id>
+            <url>http://libs.opencellsoft.com/</url>
         </repository>
     </repositories>
     <distributionManagement>
@@ -69,43 +77,33 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-api</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-api-dto</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-api-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-admin-ejbs</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-admin-ejbs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-admin-web</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-admin-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-model</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-tmforum</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-security</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.opencellsoft</groupId>
-                <artifactId>opencell-client</artifactId>
+                <groupId>org.meveo</groupId>
+                <artifactId>meveo-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

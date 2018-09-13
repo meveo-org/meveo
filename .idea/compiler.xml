@@ -25,6 +25,7 @@
       <module name="meveo-json-schema" target="1.8" />
       <module name="meveo-model" target="1.8" />
       <module name="meveo-security" target="1.8" />
+      <module name="opencell-api" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

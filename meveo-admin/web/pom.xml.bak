@@ -42,7 +42,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1</version>
+				<version>2.0.2</version>
 				<configuration>
 					<packagingExcludes>**/import*.sql</packagingExcludes>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
@@ -118,14 +118,12 @@
 				</configuration>
 				<executions>
 					<execution>
-						<id>install-web</id>
 						<phase>install</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
 					</execution>
 					<execution>
-						<id>package-web</id>
 						<phase>prepare-package</phase>
 						<configuration>
 							<target>
@@ -240,7 +238,26 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.iep</groupId>
+			<artifactId>iep-connector</artifactId>
+			<version>3.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.iep</groupId>
+			<artifactId>iep-api</artifactId>
+			<version>3.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.iep</groupId>
+			<artifactId>iep-kbstudio</artifactId>
+			<version>3.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.iep</groupId>
+			<artifactId>crawler-dto</artifactId>
+			<version>3.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
@@ -308,7 +325,12 @@
 			<artifactId>hibernate-jpa-2.1-api</artifactId>
 			<version>1.0.0.Final</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>7.0</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 	<profiles>
 		<profile>
