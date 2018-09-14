@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" version="3.1">
-	<module-name>opencell</module-name>
-	<display-name>Opencell Admin</display-name>
+	<module-name>meveo</module-name>
+	<display-name>Meveo Admin</display-name>
 	<context-param>
 		<param-name>pageAccessFile</param-name>
 		<param-value>/WEB-INF/page-access.xml</param-value>
@@ -256,7 +256,7 @@
 	</security-constraint>
 	<login-config>
 		<auth-method>KEYCLOAK</auth-method>
-		<realm-name>opencell</realm-name>
+		<realm-name>meveo</realm-name>
 	</login-config>
 	<security-role>
 		<role-name>apiAccess</role-name>

@@ -90,7 +90,7 @@ public class FrontendServlet extends HttpServlet {
             throw new IOException("FrontendServlet requestedFile '" + requestedFile + "' must contain provider code.");
         }
         requestedFile = requestedFile.substring(providerCode.length());
-        String basePath = paramBeanFactory.getInstance().getProperty("providers.rootDir", "./opencelldata/") + File.separator + providerCode;
+        String basePath = paramBeanFactory.getInstance().getProperty("providers.rootDir", "./meveodata/") + File.separator + providerCode;
         File dir = new File(basePath);
         if (!dir.exists() || !dir.isDirectory() || !dir.canRead()) {
             throw new IOException("FrontendServlet dir '" + dir + "' is not a writable directory.");

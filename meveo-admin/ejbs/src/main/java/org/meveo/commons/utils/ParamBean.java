@@ -210,11 +210,11 @@ public class ParamBean {
      */
     public String getChrootDir(String provider) {
         if (!isMultitenancyEnabled() || "".equals(provider) || provider == null) {
-            return getInstance().getProperty("providers.rootDir", "./opencelldata") + File.separator + instance.getProperty("provider.rootDir", "default");
+            return getInstance().getProperty("providers.rootDir", "./meveodata") + File.separator + instance.getProperty("provider.rootDir", "default");
         }
 
         String dir;
-        dir = getInstance().getProperty("providers.rootDir", "./opencelldata");
+        dir = getInstance().getProperty("providers.rootDir", "./meveodata");
         dir += File.separator;
         dir += getInstanceByProvider(provider).getProperty("provider.rootDir", provider);
         return dir;

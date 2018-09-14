@@ -19,9 +19,9 @@ $.fn.clickOff = function(callback, selfDestroy) {
 };
 
 /**
- * PrimeFaces Opencell Layout
+ * PrimeFaces Meveo Layout
  */
-var Opencell = {
+var Meveo = {
 
 	init : function() {
 		this.menuWrapper = $('#layout-menu-cover');
@@ -52,7 +52,7 @@ var Opencell = {
 			}
 
 			// Equalizing of height of first level nodes of main menu
-			$('.OpencellMegaMenu .layout-menu > li').equalHeights(true);
+			$('.MeveoMegaMenu .layout-menu > li').equalHeights(true);
 		});
 
 		this.topMenuButton.on('click', function() {
@@ -106,7 +106,7 @@ var Opencell = {
 				$this.menuWrapper.removeClass('active');
 			}
 
-			equalheight('.OpencellMegaMenu .layout-menu > li');
+			equalheight('.MeveoMegaMenu .layout-menu > li');
 
 			$this.saveMenuState();
 		});
@@ -145,19 +145,19 @@ var Opencell = {
 	},
 
 	saveMenuState : function() {
-		$.cookie('Opencell_expandeditems', this.expandedMenuitems.join(','), {
+		$.cookie('Meveo_expandeditems', this.expandedMenuitems.join(','), {
 			path : '/'
 		});
 	},
 
 	clearMenuState : function() {
-		$.removeCookie('Opencell_expandeditems', {
+		$.removeCookie('Meveo_expandeditems', {
 			path : '/'
 		});
 	},
 
 	restoreMenuState : function() {
-		var menucookie = $.cookie('Opencell_expandeditems');
+		var menucookie = $.cookie('Meveo_expandeditems');
 		if (menucookie) {
 			this.expandedMenuitems = menucookie.split(',');
 			for (var i = 0; i < this.expandedMenuitems.length; i++) {
@@ -179,7 +179,7 @@ var Opencell = {
 };
 
 $(function() {
-	Opencell.init();
+	Meveo.init();
 });
 
 

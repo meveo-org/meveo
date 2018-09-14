@@ -6716,7 +6716,7 @@
             <column name="disabled" valueNumeric="0" />
             <column name="created" valueDate="2015-03-19 00:04:19.892" />
             <column name="code" value="OPENCELL" />
-            <column name="description" value="Opencell Software" />
+            <column name="description" value="Meveo Software" />
             <column name="address_1" value="14 rue Crespin du Gast" />
             <column name="address_2" />
             <column name="address_3" />

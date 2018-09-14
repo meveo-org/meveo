@@ -46,7 +46,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
     /**
      * Contains association between job instance and cluster nodes it runs in. Key format: &lt;JobInstance.id&gt;, value: List of &lt;cluster node name&gt;
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/opencell/opencell-running-jobs")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-running-jobs")
     private Cache<CacheKeyLong, List<String>> runningJobsCache;
 
     @Inject

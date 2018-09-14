@@ -1,20 +1,5 @@
 package org.meveo.keycloak.client;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.apache.http.HttpStatus;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.OAuth2Constants;
@@ -37,6 +22,16 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Edward P. Legaspi
@@ -63,19 +58,19 @@ public class KeycloakAdminClientService {
         KeycloakAdminClientConfig keycloakAdminClientConfig = new KeycloakAdminClientConfig();
         try {
             // override from system property
-            String keycloakServer = System.getProperty("opencell.keycloak.url");
+            String keycloakServer = System.getProperty("meveo.keycloak.url");
             if (!StringUtils.isBlank(keycloakServer)) {
                 keycloakAdminClientConfig.setServerUrl(keycloakServer);
             }
-            String realm = System.getProperty("opencell.keycloak.realm");
+            String realm = System.getProperty("meveo.keycloak.realm");
             if (!StringUtils.isBlank(realm)) {
                 keycloakAdminClientConfig.setRealm(realm);
             }
-            String clientId = System.getProperty("opencell.keycloak.client");
+            String clientId = System.getProperty("meveo.keycloak.client");
             if (!StringUtils.isBlank(clientId)) {
                 keycloakAdminClientConfig.setClientId(clientId);
             }
-            String clientSecret = System.getProperty("opencell.keycloak.secret");
+            String clientSecret = System.getProperty("meveo.keycloak.secret");
             if (!StringUtils.isBlank(clientSecret)) {
                 keycloakAdminClientConfig.setClientSecret(clientSecret);
             }
@@ -194,22 +189,22 @@ public class KeycloakAdminClientService {
 
         usersResource.get(userId).roles().realmLevel().add(externalRolesRepresentation);
 
-        ClientRepresentation opencellWebClient = realmResource.clients() //
+        ClientRepresentation meveoWebClient = realmResource.clients() //
             .findByClientId(keycloakAdminClientConfig.getClientId()).get(0);
 
         // Get client level role (requires view-clients role)
-        RoleRepresentation apiRole = realmResource.clients().get(opencellWebClient.getId()) //
+        RoleRepresentation apiRole = realmResource.clients().get(meveoWebClient.getId()) //
             .roles().get(KeycloakConstants.ROLE_API_ACCESS).toRepresentation();
-        RoleRepresentation guiRole = realmResource.clients().get(opencellWebClient.getId()) //
+        RoleRepresentation guiRole = realmResource.clients().get(meveoWebClient.getId()) //
             .roles().get(KeycloakConstants.ROLE_GUI_ACCESS).toRepresentation();
-        RoleRepresentation adminRole = realmResource.clients().get(opencellWebClient.getId()) //
+        RoleRepresentation adminRole = realmResource.clients().get(meveoWebClient.getId()) //
             .roles().get(KeycloakConstants.ROLE_ADMINISTRATEUR).toRepresentation();
-        RoleRepresentation userManagementRole = realmResource.clients().get(opencellWebClient.getId()) //
+        RoleRepresentation userManagementRole = realmResource.clients().get(meveoWebClient.getId()) //
             .roles().get(KeycloakConstants.ROLE_USER_MANAGEMENT).toRepresentation();
 
         // Assign client level role to user
         usersResource.get(userId).roles() //
-            .clientLevel(opencellWebClient.getId()).add(Arrays.asList(apiRole, guiRole, adminRole, userManagementRole));
+            .clientLevel(meveoWebClient.getId()).add(Arrays.asList(apiRole, guiRole, adminRole, userManagementRole));
 
         // Define password credential
         CredentialRepresentation credential = new CredentialRepresentation();

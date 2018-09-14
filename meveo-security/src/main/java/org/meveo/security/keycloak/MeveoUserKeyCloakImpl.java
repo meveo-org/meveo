@@ -77,7 +77,7 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
             }
 
             // Import client roles
-            String clientName = System.getProperty("opencell.keycloak.client");
+            String clientName = System.getProperty("meveo.keycloak.client");
             if (accessToken.getResourceAccess(clientName) != null) {
                 this.roles.addAll(accessToken.getResourceAccess(clientName).getRoles());
             }

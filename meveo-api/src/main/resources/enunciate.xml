@@ -1,6 +1,6 @@
 <enunciate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" slug="meveoApi" xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.9.0.xsd">
-    <title>opencell REST and WS API</title>
-    <description>opencell API</description>
+    <title>meveo REST and WS API</title>
+    <description>meveo API</description>
 
     <api-classes>
         <include pattern="org.meveo.api.rest.**" />
@@ -27,6 +27,6 @@
         <jaxb />
         <jaxws />
         <docs docsSubdir="api"  />
-        <swagger host="integration.i.opencellsoft.com" basePath="/opencell/api/rest" docsSubdir="swagger" disabled="true" />
+        <swagger host="integration.i.opencellsoft.com" basePath="/meveo/api/rest" docsSubdir="swagger" disabled="true" />
     </modules>
 </enunciate>

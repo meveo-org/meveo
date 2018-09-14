@@ -30,14 +30,14 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
 </application>
 
 <component>
-	<component-type>org.primefaces.component.OpencellMenu</component-type>
+	<component-type>org.primefaces.component.MeveoMenu</component-type>
 	<component-class>org.meveo.util.view.composite.MeveoMenu</component-class>
 </component>
 
 <render-kit>
 	<renderer>
 		<component-family>org.primefaces.component</component-family>
-		<renderer-type>org.primefaces.component.OpencellMenuRenderer</renderer-type>
+		<renderer-type>org.primefaces.component.MeveoMenuRenderer</renderer-type>
 		<renderer-class>org.meveo.util.view.composite.MeveoMenuRenderer</renderer-class>
 	</renderer>
 </render-kit>

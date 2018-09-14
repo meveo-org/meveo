@@ -174,7 +174,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
-    // protected String providerFilePath = paramBean.getProperty("providers.rootDir", "./opencelldata/");
+    // protected String providerFilePath = paramBean.getProperty("providers.rootDir", "./meveodata/");
 
     private UploadedFile uploadedFile;
 

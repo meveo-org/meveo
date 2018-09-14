@@ -168,7 +168,6 @@
                         <configuration>
                             <wadlFile>${project.build.directory}/docs/application.wadl</wadlFile>
                             <formatWadlFile>true</formatWadlFile>
-                            <baseUri>http://integration.i.opencellsoft.com/opencell/api/rest</baseUri>
                             <packagesResourceConfig>
                                 <param>org.meveo.api.rest</param>
                             </packagesResourceConfig>

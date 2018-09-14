@@ -180,11 +180,11 @@
     </tag>
     
     <tag>
-        <description><![CDATA[Menu is a navigation component for Opencell Layout.]]></description>
+        <description><![CDATA[Menu is a navigation component for Meveo Layout.]]></description>
 		<tag-name>menu</tag-name>
 		<component>
-			<component-type>org.primefaces.component.OpencellMenu</component-type>
-			<renderer-type>org.primefaces.component.OpencellMenuRenderer</renderer-type>
+			<component-type>org.primefaces.component.MeveoMenu</component-type>
+			<renderer-type>org.primefaces.component.MeveoMenuRenderer</renderer-type>
 		</component>
 		<attribute>
 			<description><![CDATA[Unique identifier of the component in a namingContainer.]]></description>

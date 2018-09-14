@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
- * All the Opencell API web service response must extend this class.
+ * All the Meveo API web service response must extend this class.
  * 
  * @author Edward P. Legaspi
  **/

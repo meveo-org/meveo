@@ -9,7 +9,7 @@ public interface CacheContainerProvider {
     /**
      * System property indicating what caches should be loaded on a current cluster node. Dont pass any value for single-server installation.
      */
-    public static String SYSTEM_PROPERTY_CACHES_TO_LOAD = "opencell.caches.load";
+    public static String SYSTEM_PROPERTY_CACHES_TO_LOAD = "meveo.caches.load";
 
     /**
      * Refresh cache identified by a particular name, or all caches if not provider. Should be @Asynchronous implementation

@@ -61,7 +61,7 @@ public class EntityManagerProvider {
     @Inject
     private Logger log;
 
-    @Resource(lookup = "java:jboss/infinispan/cache/opencell/opencell-multiTenant-cache")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-multiTenant-cache")
     private Cache<String, EntityManagerFactory> entityManagerFactories;
 
     private static boolean isMultiTenancyEnabled = ParamBean.isMultitenancyEnabled();

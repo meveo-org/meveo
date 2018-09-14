@@ -28,16 +28,16 @@ public class AuthenticationProvider {
     }
     
 	public String getAccountUrl() {
-		String kcUrl = System.getProperty("opencell.keycloak.url");
-		String kcRealm = System.getProperty("opencell.keycloak.realm");
+		String kcUrl = System.getProperty("meveo.keycloak.url");
+		String kcRealm = System.getProperty("meveo.keycloak.realm");
 		String acctUri = KeycloakUriBuilder.fromUri(kcUrl).path(ServiceUrlConstants.ACCOUNT_SERVICE_PATH).build(kcRealm)
 				.toString();
 		return acctUri + "?faces-redirect=true";
 	}
 
 	public String getAuthPath() {
-		String kcUrl = System.getProperty("opencell.keycloak.url");
-		String kcRealm = System.getProperty("opencell.keycloak.realm");
+		String kcUrl = System.getProperty("meveo.keycloak.url");
+		String kcRealm = System.getProperty("meveo.keycloak.realm");
 		String uri = KeycloakUriBuilder.fromUri(kcUrl).path(ServiceUrlConstants.AUTH_PATH).build(kcRealm).toString();
 		return uri + "?faces-redirect=true";
 	}

@@ -47,9 +47,9 @@
 }
 
 /* MENU ----------------------------------------------------------------------------------*/
-/* OpencellMega Menu */
+/* MeveoMega Menu */
 /*Layout Menu Cover */
-.OpencellMegaMenu #layout-menu-cover {
+.MeveoMegaMenu #layout-menu-cover {
 	overflow: hidden;
 	/*margin: 0 -25px 0px -25px;*/
 	clear: both;
@@ -57,7 +57,7 @@
 	/*display: block;*/
 }
 
-.OpencellMegaMenu #layout-menu-cover.active {
+.MeveoMegaMenu #layout-menu-cover.active {
 	background-color: #002050;
 	height: auto;
 	max-height: 470px;
@@ -68,7 +68,7 @@
 }
 
 /*Layout Menu */
-.OpencellMegaMenu .layout-menu {
+.MeveoMegaMenu .layout-menu {
 	width: auto;
 	height: auto;
 	margin: 0;
@@ -83,20 +83,20 @@
 	transition: all 0.7s ease;
 }
 
-.OpencellMegaMenu #layout-menu-cover.active .layout-menu {
+.MeveoMegaMenu #layout-menu-cover.active .layout-menu {
 	opacity: 1;
 	margin-top: 25px;
 }
 
 /* first node */
-.OpencellMegaMenu .layout-menu > li {
+.MeveoMegaMenu .layout-menu > li {
 	width: 210px;
 	float: left;
 	margin: 0 40px 20px 0;
 	overflow: hidden;
 }
 
-.OpencellMegaMenu .layout-menu > li > a {
+.MeveoMegaMenu .layout-menu > li > a {
 	width: 210px;
 	padding: 10px 0;
 	display: block;
@@ -111,25 +111,25 @@
 	cursor: pointer;
 }
 
-.OpencellMegaMenu .layout-menu > li > a i {
+.MeveoMegaMenu .layout-menu > li > a i {
 	font-size: 16px;
 	float: left;
 	margin-right: 10px;
 }
 
 /* second node */
-.OpencellMegaMenu .layout-menu > li ul {
+.MeveoMegaMenu .layout-menu > li ul {
 	margin: 0;
 	padding: 0;
 }
 
-.OpencellMegaMenu .layout-menu > li ul li {
+.MeveoMegaMenu .layout-menu > li ul li {
 	display: block;
 	padding: 0;
 	margin: 0;
 }
 
-.OpencellMegaMenu .layout-menu > li ul li a {
+.MeveoMegaMenu .layout-menu > li ul li a {
 	color: #fff;
 	font-size: 16px;
 	font-family: "Roboto", 'Source Sans Pro', "Arial", sans-serif;
@@ -140,12 +140,12 @@
 	cursor: pointer;
 }
 
-.OpencellMegaMenu .layout-menu > li ul li a:hover,
-.OpencellMegaMenu .layout-menu > li ul li a:focus {
+.MeveoMegaMenu .layout-menu > li ul li a:hover,
+.MeveoMegaMenu .layout-menu > li ul li a:focus {
 	border-bottom: dotted 1px rgba(0, 0, 0, 0.1);
 }
 
-.OpencellMegaMenu .layout-menu > li ul li a i {
+.MeveoMegaMenu .layout-menu > li ul li a i {
 	float: left;
 	margin-right: 10px;
 	font-size: 15px;
@@ -153,7 +153,7 @@
 }
 
 /* third and more nodes */
-.OpencellMegaMenu .layout-menu > li ul li ul {
+.MeveoMegaMenu .layout-menu > li ul li ul {
 	margin-left: 4px;
 	padding-left: 12px;
 	border-left: dotted 1px rgba(0, 0, 0, 0.1);
@@ -161,7 +161,7 @@
 	overflow: hidden;
 }
 
-.OpencellMegaMenu .layout-menu > li ul li ul.active-menu {
+.MeveoMegaMenu .layout-menu > li ul li ul.active-menu {
 	height: auto;
 }
 

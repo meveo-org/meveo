@@ -23,7 +23,7 @@ public class AuditEventDBWriter extends PersistenceService<AuditLog> {
 
 		// temp fix
 		if (StringUtils.isBlank(auditLog.getActor())) {
-			auditLog.setActor("opencell.admin.hardcoded");
+			auditLog.setActor("meveo.admin.hardcoded");
 		}
 
 		auditLog.setCreated(new Date());

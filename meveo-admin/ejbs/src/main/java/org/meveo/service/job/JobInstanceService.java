@@ -147,7 +147,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         Job result = null;
         try {
             InitialContext ic = new InitialContext();
-            result = (Job) ic.lookup("java:global/" + paramBean.getProperty("opencell.moduleName", "opencell") + "/" + jobName);
+            result = (Job) ic.lookup("java:global/" + paramBean.getProperty("meveo.moduleName", "meveo") + "/" + jobName);
         } catch (NamingException e) {
             log.error("Failed to get job by name {}", jobName, e);
         }

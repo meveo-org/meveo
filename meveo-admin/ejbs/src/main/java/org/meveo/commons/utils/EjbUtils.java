@@ -100,7 +100,7 @@ public class EjbUtils {
     public static Object getServiceInterface(String serviceInterfaceName) {
         try {
             InitialContext ic = new InitialContext();
-            return ic.lookup("java:global/" + ParamBean.getInstance().getProperty("opencell.moduleName", "opencell") + "/" + serviceInterfaceName);
+            return ic.lookup("java:global/" + ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + "/" + serviceInterfaceName);
         } catch (Exception e) {
             Logger log = LoggerFactory.getLogger(EjbUtils.class);
             log.error("Failed to obtain service interface for {} {}", serviceInterfaceName, e.getMessage());
@@ -125,6 +125,6 @@ public class EjbUtils {
 
     public static boolean isRunningInClusterMode() {
         String nodeName = System.getProperty("jboss.node.name");
-        return  nodeName!= null && nodeName.startsWith("opencell");
+        return  nodeName!= null && nodeName.startsWith("meveo");
     }
 }

@@ -243,7 +243,7 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
         ResponseWriter writer = context.getResponseWriter();
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
-        writer.write("Opencell.restoreMenuState();");
+        writer.write("Meveo.restoreMenuState();");
         writer.endElement("script");
     }
     

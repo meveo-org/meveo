@@ -1,7 +1,26 @@
 package org.meveo.api.rest.impl;
 
-import java.sql.SQLException;
-import java.util.Set;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.MeveoApiErrorCodeEnum;
+import org.meveo.api.dto.ActionStatus;
+import org.meveo.api.dto.ActionStatusEnum;
+import org.meveo.api.dto.response.BaseResponse;
+import org.meveo.api.exception.EntityAlreadyExistsException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.exception.*;
+import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.crm.Provider;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
+import org.meveo.util.ApplicationProvider;
+import org.meveo.util.MeveoParamBean;
+import org.meveo.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -13,32 +32,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.MeveoApiErrorCodeEnum;
-import org.meveo.api.dto.ActionStatus;
-import org.meveo.api.dto.ActionStatusEnum;
-import org.meveo.api.dto.response.BaseResponse;
-import org.meveo.api.exception.EntityAlreadyExistsException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
-import org.meveo.api.rest.IBaseRs;
-import org.meveo.api.rest.exception.BadRequestException;
-import org.meveo.api.rest.exception.ForbiddenException;
-import org.meveo.api.rest.exception.InternalServerErrorException;
-import org.meveo.api.rest.exception.NotAuthorizedException;
-import org.meveo.api.rest.exception.NotFoundException;
-import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.crm.Provider;
-import org.meveo.security.CurrentUser;
-import org.meveo.security.MeveoUser;
-import org.meveo.util.ApplicationProvider;
-import org.meveo.util.MeveoParamBean;
-import org.meveo.util.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.sql.SQLException;
+import java.util.Set;
 
 /**
  * @author Edward P. Legaspi
@@ -69,7 +64,7 @@ public abstract class BaseRs implements IBaseRs {
     protected final String RESPONSE_DELIMITER = " - ";
 
     public ActionStatus index() {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "Opencell Rest API version " + Version.appVersion + " commit " + Version.buildNumber);
+        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "Meveo Rest API version " + Version.appVersion + " commit " + Version.buildNumber);
         return result;
     }
 

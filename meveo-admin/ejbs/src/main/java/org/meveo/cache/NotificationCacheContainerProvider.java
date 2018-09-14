@@ -57,7 +57,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
     /**
      * Contains association between event type, entity class and notifications. Key format: &lt;eventTypeFilter&gt;-&lt;entity class&gt;
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/opencell/opencell-notification-cache")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-notification-cache")
     private Cache<CacheKeyStr, List<Notification>> eventNotificationCache;
 
     @Inject

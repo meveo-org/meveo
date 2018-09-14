@@ -71,13 +71,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
      * Groups custom field templates applicable to the same entity type. Key format: &lt;custom field template appliesTo code&gt;. Value is a map of custom field templates
      * identified by a template code
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/opencell/opencell-cft-cache")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-cft-cache")
     private Cache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftsByAppliesTo;
 
     /**
      * Contains custom entity templates.Key format: &lt;CET code&gt;, value: &lt;CustomEntityTemplate&gt;
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/opencell/opencell-cet-cache")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-cet-cache")
     private Cache<CacheKeyStr, CustomEntityTemplate> cetsByCode;
 
     @Inject
