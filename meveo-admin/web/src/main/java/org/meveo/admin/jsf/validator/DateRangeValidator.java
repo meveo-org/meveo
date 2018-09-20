@@ -1,13 +1,12 @@
 package org.meveo.admin.jsf.validator;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-
 import javax.ejb.Stateless;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 
 @Named
 @Stateless
