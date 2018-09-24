@@ -24,6 +24,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.*;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
@@ -85,6 +86,18 @@ public class User extends EnableEntity implements ICustomFieldEntity {
 
     @Transient
     private Map<Class<?>, Set<SecuredEntity>> securedEntitiesMap;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hierarchy_level_id")
+    private UserHierarchyLevel userLevel;
+
+    public UserHierarchyLevel getUserLevel() {
+        return userLevel;
+    }
+
+    public void setUserLevel(UserHierarchyLevel userLevel) {
+        this.userLevel = userLevel;
+    }
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "last_login_date")

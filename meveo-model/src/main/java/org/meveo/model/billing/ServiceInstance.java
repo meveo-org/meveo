@@ -27,15 +27,12 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.ServiceTemplate;
-import org.meveo.model.order.OrderHistory;
 import org.meveo.model.order.OrderItemActionEnum;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author Edward P. Legaspi
@@ -106,9 +103,6 @@ public class ServiceInstance extends BusinessCFEntity {
     @Column(name = "minimum_label_el", length = 2000)
     @Size(max = 2000)
     private String minimumLabelEl;
-
-    @OneToMany(mappedBy = "serviceInstance", fetch = FetchType.LAZY)
-    private List<OrderHistory> orderHistories;
 
     /**
      * PK of OrderItem.id.
@@ -265,14 +259,6 @@ public class ServiceInstance extends BusinessCFEntity {
 
     public void setOrderItemAction(OrderItemActionEnum orderItemAction) {
         this.orderItemAction = orderItemAction;
-    }
-
-    public List<OrderHistory> getOrderHistories() {
-        return orderHistories;
-    }
-
-    public void setOrderHistories(List<OrderHistory> orderHistories) {
-        this.orderHistories = orderHistories;
     }
 
     public String getMinimumAmountEl() {
