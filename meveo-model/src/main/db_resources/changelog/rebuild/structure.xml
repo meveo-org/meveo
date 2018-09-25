@@ -3971,6 +3971,13 @@
             </column>
             <column name="tags" type="VARCHAR(2000)" />
             <column name="description_i18n" type="${type.json}" />
+            <column name="IS_UNIQUE" type="{type.boolean}" defaultValueNumeric="1">
+                <constraints nullable="false" />
+            </column>
+            <column name="IS_FILTER" type="{type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="EXPRESSION_SEPARATOR" type="VARCHAR(2)" />
         </createTable>
     </changeSet>
     <changeSet author="AndriusKarpavicius" id="rebuild-str-tbl-243">

@@ -32,399 +32,399 @@
 						styleClass="panelGrid-column100"
 						rendered="#{currentUser.hasRole('administrationVisualization')}">
 						<h:panelGrid styleClass="panelGrid-column100">
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="chargeTemplate">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructChargesWithNotPricePlan}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.chargesWithNotPricePlan']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrChargesWithNotPricePlan}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbrChargesWithNotPricePlan==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrChargesWithNotPricePlan}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbrChargesWithNotPricePlan!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrUsagesWithNotPricePlan!=0}">
-										<h:outputLabel
-											value="#{messages['menu.usageChargeTemplates']}" />
-										<hftl:dataList
-											label="#{messages['usageChargeTemplate.title']}"
-											resultsId="usages_panel" sortBy="code" exportToXml="false"
-											backingBean="#{usageChargeTemplateBean}" checkMany="true"
-											dataModel="#{configIssuesReportingBean.usagesWithNotPricePlList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.unityMultiplicator']}"
-												field="unitMultiplicator" converterParam="12digits" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.filterParam1']}"
-												field="filterParam1" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.filterParam2']}"
-												field="filterParam2" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.priority']}"
-												field="priority" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="usagesButton"
-													outcome="usageChargeTemplateDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{usageChargeTemplateBean.delete}"
-													update=":#{p:component('chargeTemplate')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{usageChargeTemplateBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrRecurringWithNotPricePlan!=0}">
-										<h:outputLabel
-											value="#{messages['recurringChargeTemplate.title']}" />
-										<hftl:dataList resultsId="recurring_panel" checkMany="true"
-											exportToXml="false"
-											backingBean="#{recurringChargeTemplateBean}" sortBy="code"
-											dataModel="#{configIssuesReportingBean.recurringWithNotPricePlanList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['chargeTemplate.amountEditable']}"
-												field="amountEditable" isMessage="true" />
-											<hftl:column
-												label="#{messages['recurringChargeTemplate.durationTermInMonth']}"
-												field="durationTermInMonth" />
-											<hftl:column
-												label="#{messages['recurringChargeTemplate.applyInAdvance']}"
-												field="applyInAdvance" isMessage="true" />
-											<hftl:column label="#{messages['charge.subCategory']}"
-												field="invoiceSubCategory.code"
-												valueIdField="invoiceSubCategory.id"
-												entityView="invoiceSubCategoryDetail"
-												propagateConversaion="false" backView="invoiceCategories" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="recurringButton"
-													outcome="recurringChargeTemplates" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{recurringChargeTemplateBean.delete}"
-													update=":#{p:component('chargeTemplate')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{recurringChargeTemplateBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrOneShotWithNotPricePlan!=0}">
-										<h:outputLabel
-											value="#{messages['oneShotChargeTemplate.title']}" />
-										<hftl:dataList
-											label="#{messages['oneShotChargeTemplate.title']}"
-											checkMany="true" resultsId="onshot_panel" noClose="false"
-											sortBy="code" exportToXml="false"
-											backingBean="#{oneShotChargeTemplateBean}"
-											dataModel="#{configIssuesReportingBean.oneShotChrgWithNotPricePlanList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['chargeTemplate.amountEditable']}"
-												field="amountEditable" isMessage="true" />
-											<hftl:column label="#{messages['chargeTemplate.type']}"
-												field="oneShotChargeTemplateType.label" isMessage="true" />
-											<hftl:column label="#{messages['charge.subCategory']}"
-												field="invoiceSubCategory.code" isMessage="false"
-												valueIdField="invoiceSubCategory.id"
-												propagateConversation="false"
-												entityView="invoiceSubCategoryDetail"
-												backView="invoiceCategories" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<hftl:column
-												label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"
-												field="immediateInvoicing" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="oneShotButton"
-													outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{oneShotChargeTemplateListBean.delete}"
-													update=":#{p:component('chargeTemplate')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{oneShotChargeTemplateListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="accordionTax">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructTaxesNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.taxesNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbTaxesNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbTaxesNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbTaxesNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbTaxesNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbTaxesNotAssociated!=0}">
-										<hftl:dataList label="#{messages['tax.title']}"
-											resultsId="taxes_panel" exportToXml="false"
-											backingBean="#{taxBean}" sortBy="code" checkMany="true"
-											dataModel="#{configIssuesReportingBean.taxesNotAssociatedList}">
-											<hftl:column label="#{messages['tax.code']}" field="code"
-												noLinkToView="true" />
-											<hftl:column label="#{messages['tax.description']}"
-												field="description" />
-											<hftl:column label="#{messages['tax.percent']}"
-												field="percent" converterParam="4digits" />
-											<hftl:column
-												label="#{messages['invoiceSubCategory.accountingCode']}"
-												field="accountingCode" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="taxesButton" outcome="taxDetail"
-													icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{taxBean.delete}"
-													update=":#{p:component('accordionTax')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener target="#{taxBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="languages">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructLanguagesNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.languagesNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbLanguageNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbLanguageNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbLanguageNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbLanguageNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbLanguageNotAssociated!=0}">
-										<hftl:dataList label="#{messages['comLanguage.title']}"
-											resultsId="languages_panel" checkMany="true"
-											exportToXml="false" backingBean="#{tradingLanguageBean}"
-											dataModel="#{configIssuesReportingBean.languagesNotAssociatedList}">
-											<hftl:column
-												label="#{messages['tradingLanguage.languageCode']}"
-												field="language.languageCode" width="10%" />
-											<hftl:column
-												label="#{messages['tradingLanguage.prDescription']}"
-												field="prDescription" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" width="10%" />
-											<p:column style="width:50px">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="languagesButton"
-													outcome="tradingLanguagesDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{tradingLanguageListBean.delete}"
-													update=":#{p:component('languages')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{tradingLanguageListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="invoiceCats">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructInvoiceCatNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.invoiceCategoryNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbInvCatNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbInvCatNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbInvCatNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbInvCatNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbInvCatNotAssociated!=0}">
-										<hftl:dataList label="#{messages['invoiceCategory.title']}"
-											resultsId="invoiceCat_panel"
-											dataModel="#{configIssuesReportingBean.invoiceCatNotAssociatedList}"
-											backingBean="#{invoiceCategoryBean}" checkMany="true"
-											sortBy="code" exportToXml="false">
-											<hftl:column label="#{messages['invoiceCategory.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['invoiceCategory.description']}"
-												field="description" />
-											<p:column style="width:50px">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="invoiceCatButton"
-													outcome="invoiceCategoryDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{invoiceCategoryListBean.delete}"
-													update=":#{p:component('invoiceCats')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{invoiceCategoryListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="invoiceSubs">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructInvoiceSubCatNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.invoiceSubCategoryNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbInvSubCatNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbInvSubCatNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated!=0}">
-										<hftl:dataList label="#{messages['invoiceSubCategory.title']}"
-											checkMany="true" resultsId="invoiceSubCat_panel"
-											dataModel="#{configIssuesReportingBean.invoiceSubCatNotAssociatedList}"
-											backingBean="#{invoiceSubCategoryBean}" sortBy="code"
-											exportToXml="false">
-											<hftl:column label="#{messages['invoiceSubCategory.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['invoiceSubCategory.invoiceCategory']}"
-												field="invoiceCategory.code" />
-											<hftl:column
-												label="#{messages['invoiceSubCategory.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['invoiceSubCategory.accountingCode']}"
-												field="accountingCode" />
-											<p:column style="width:50px">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="invoiceSubCatButton"
-													outcome="invoiceSubCategoryDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-											</p:column>
-											<p:commandButton icon="ui-icon-trash"
-												action="#{invoiceSubCategoryListBean.delete}"
-												update=":#{p:component('invoiceSubs')}"
-												onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-												<f:setPropertyActionListener
-													target="#{invoiceSubCategoryListBean.entity}"
-													value="#{entity}"></f:setPropertyActionListener>
-											</p:commandButton>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="chargeTemplate">-->
+								<!--&lt;!&ndash;<p:ajax event="tabChange"&ndash;&gt;-->
+									<!--&lt;!&ndash;listener="#{configIssuesReportingBean.constructChargesWithNotPricePlan}" />&ndash;&gt;-->
+								<!--<p:tab>-->
+									<!--&lt;!&ndash;<f:facet name="title">&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputText&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{messages['configIssuesReporting.chargesWithNotPricePlan']} : " />&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputText&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{configIssuesReportingBean.nbrChargesWithNotPricePlan}"&ndash;&gt;-->
+											<!--&lt;!&ndash;style="color:#3FCA21"&ndash;&gt;-->
+											<!--&lt;!&ndash;rendered="#{configIssuesReportingBean.nbrChargesWithNotPricePlan==0}" />&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputText&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{configIssuesReportingBean.nbrChargesWithNotPricePlan}"&ndash;&gt;-->
+											<!--&lt;!&ndash;style="color:red"&ndash;&gt;-->
+											<!--&lt;!&ndash;rendered="#{configIssuesReportingBean.nbrChargesWithNotPricePlan!=0}" />&ndash;&gt;-->
+									<!--&lt;!&ndash;</f:facet>&ndash;&gt;-->
+									<!--&lt;!&ndash;<h:panelGrid columns="1"&ndash;&gt;-->
+										<!--&lt;!&ndash;rendered="#{configIssuesReportingBean.nbrUsagesWithNotPricePlan!=0}">&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputLabel&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{messages['menu.usageChargeTemplates']}" />&ndash;&gt;-->
+										<!--&lt;!&ndash;<hftl:dataList&ndash;&gt;-->
+											<!--&lt;!&ndash;label="#{messages['usageChargeTemplate.title']}"&ndash;&gt;-->
+											<!--&lt;!&ndash;resultsId="usages_panel" sortBy="code" exportToXml="false"&ndash;&gt;-->
+											<!--&lt;!&ndash;backingBean="#{usageChargeTemplateBean}" checkMany="true"&ndash;&gt;-->
+											<!--&lt;!&ndash;dataModel="#{configIssuesReportingBean.usagesWithNotPricePlList}">&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['chargeTemplate.code']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="code" noLinkToView="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['chargeTemplate.description']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="description" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['usageChargeTemplate.unityMultiplicator']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="unitMultiplicator" converterParam="12digits" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['usageChargeTemplate.filterParam1']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="filterParam1" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['usageChargeTemplate.filterParam2']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="filterParam2" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['menu.triggeredEdrTemplates']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="edrTemplates" valueLabelField="code" isList="true"&ndash;&gt;-->
+												<!--&lt;!&ndash;sort="false" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['usageChargeTemplate.priority']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="priority" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['enableEntity.active']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="active" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<p:column width="50">&ndash;&gt;-->
+												<!--&lt;!&ndash;<f:facet name="header">&ndash;&gt;-->
+													<!--&lt;!&ndash;<h:outputText value="Actions" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</f:facet>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:button id="usagesButton"&ndash;&gt;-->
+													<!--&lt;!&ndash;outcome="usageChargeTemplateDetail" icon="ui-icon-search">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="objectId" value="#{entity.id}" />&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="edit" value="true" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:button>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:commandButton icon="ui-icon-trash"&ndash;&gt;-->
+													<!--&lt;!&ndash;action="#{usageChargeTemplateBean.delete}"&ndash;&gt;-->
+													<!--&lt;!&ndash;update=":#{p:component('chargeTemplate')}"&ndash;&gt;-->
+													<!--&lt;!&ndash;onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:setPropertyActionListener&ndash;&gt;-->
+														<!--&lt;!&ndash;target="#{usageChargeTemplateBean.entity}"&ndash;&gt;-->
+														<!--&lt;!&ndash;value="#{entity}"></f:setPropertyActionListener>&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:commandButton>&ndash;&gt;-->
+											<!--&lt;!&ndash;</p:column>&ndash;&gt;-->
+										<!--&lt;!&ndash;</hftl:dataList>&ndash;&gt;-->
+									<!--&lt;!&ndash;</h:panelGrid>&ndash;&gt;-->
+									<!--&lt;!&ndash;<h:panelGrid columns="1"&ndash;&gt;-->
+										<!--&lt;!&ndash;rendered="#{configIssuesReportingBean.nbrRecurringWithNotPricePlan!=0}">&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputLabel&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{messages['recurringChargeTemplate.title']}" />&ndash;&gt;-->
+										<!--&lt;!&ndash;<hftl:dataList resultsId="recurring_panel" checkMany="true"&ndash;&gt;-->
+											<!--&lt;!&ndash;exportToXml="false"&ndash;&gt;-->
+											<!--&lt;!&ndash;backingBean="#{recurringChargeTemplateBean}" sortBy="code"&ndash;&gt;-->
+											<!--&lt;!&ndash;dataModel="#{configIssuesReportingBean.recurringWithNotPricePlanList}">&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['chargeTemplate.code']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="code" noLinkToView="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['chargeTemplate.description']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="description" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['chargeTemplate.amountEditable']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="amountEditable" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['recurringChargeTemplate.durationTermInMonth']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="durationTermInMonth" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['recurringChargeTemplate.applyInAdvance']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="applyInAdvance" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['charge.subCategory']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="invoiceSubCategory.code"&ndash;&gt;-->
+												<!--&lt;!&ndash;valueIdField="invoiceSubCategory.id"&ndash;&gt;-->
+												<!--&lt;!&ndash;entityView="invoiceSubCategoryDetail"&ndash;&gt;-->
+												<!--&lt;!&ndash;propagateConversaion="false" backView="invoiceCategories" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['menu.triggeredEdrTemplates']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="edrTemplates" valueLabelField="code" isList="true"&ndash;&gt;-->
+												<!--&lt;!&ndash;sort="false" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['enableEntity.active']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="active" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<p:column width="50">&ndash;&gt;-->
+												<!--&lt;!&ndash;<f:facet name="header">&ndash;&gt;-->
+													<!--&lt;!&ndash;<h:outputText value="Actions" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</f:facet>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:button id="recurringButton"&ndash;&gt;-->
+													<!--&lt;!&ndash;outcome="recurringChargeTemplates" icon="ui-icon-search">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="objectId" value="#{entity.id}" />&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="edit" value="true" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:button>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:commandButton icon="ui-icon-trash"&ndash;&gt;-->
+													<!--&lt;!&ndash;action="#{recurringChargeTemplateBean.delete}"&ndash;&gt;-->
+													<!--&lt;!&ndash;update=":#{p:component('chargeTemplate')}"&ndash;&gt;-->
+													<!--&lt;!&ndash;onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:setPropertyActionListener&ndash;&gt;-->
+														<!--&lt;!&ndash;target="#{recurringChargeTemplateBean.entity}"&ndash;&gt;-->
+														<!--&lt;!&ndash;value="#{entity}"></f:setPropertyActionListener>&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:commandButton>&ndash;&gt;-->
+											<!--&lt;!&ndash;</p:column>&ndash;&gt;-->
+										<!--&lt;!&ndash;</hftl:dataList>&ndash;&gt;-->
+									<!--&lt;!&ndash;</h:panelGrid>&ndash;&gt;-->
+									<!--&lt;!&ndash;<h:panelGrid columns="1"&ndash;&gt;-->
+										<!--&lt;!&ndash;rendered="#{configIssuesReportingBean.nbrOneShotWithNotPricePlan!=0}">&ndash;&gt;-->
+										<!--&lt;!&ndash;<h:outputLabel&ndash;&gt;-->
+											<!--&lt;!&ndash;value="#{messages['oneShotChargeTemplate.title']}" />&ndash;&gt;-->
+										<!--&lt;!&ndash;<hftl:dataList&ndash;&gt;-->
+											<!--&lt;!&ndash;label="#{messages['oneShotChargeTemplate.title']}"&ndash;&gt;-->
+											<!--&lt;!&ndash;checkMany="true" resultsId="onshot_panel" noClose="false"&ndash;&gt;-->
+											<!--&lt;!&ndash;sortBy="code" exportToXml="false"&ndash;&gt;-->
+											<!--&lt;!&ndash;backingBean="#{oneShotChargeTemplateBean}"&ndash;&gt;-->
+											<!--&lt;!&ndash;dataModel="#{configIssuesReportingBean.oneShotChrgWithNotPricePlanList}">&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['chargeTemplate.code']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="code" noLinkToView="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['chargeTemplate.description']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="description" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['chargeTemplate.amountEditable']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="amountEditable" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['chargeTemplate.type']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="oneShotChargeTemplateType.label" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['charge.subCategory']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="invoiceSubCategory.code" isMessage="false"&ndash;&gt;-->
+												<!--&lt;!&ndash;valueIdField="invoiceSubCategory.id"&ndash;&gt;-->
+												<!--&lt;!&ndash;propagateConversation="false"&ndash;&gt;-->
+												<!--&lt;!&ndash;entityView="invoiceSubCategoryDetail"&ndash;&gt;-->
+												<!--&lt;!&ndash;backView="invoiceCategories" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['menu.triggeredEdrTemplates']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="edrTemplates" valueLabelField="code" isList="true"&ndash;&gt;-->
+												<!--&lt;!&ndash;sort="false" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column label="#{messages['enableEntity.active']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="active" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<hftl:column&ndash;&gt;-->
+												<!--&lt;!&ndash;label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"&ndash;&gt;-->
+												<!--&lt;!&ndash;field="immediateInvoicing" isMessage="true" />&ndash;&gt;-->
+											<!--&lt;!&ndash;<p:column width="50">&ndash;&gt;-->
+												<!--&lt;!&ndash;<f:facet name="header">&ndash;&gt;-->
+													<!--&lt;!&ndash;<h:outputText value="Actions" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</f:facet>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:button id="oneShotButton"&ndash;&gt;-->
+													<!--&lt;!&ndash;outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="objectId" value="#{entity.id}" />&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:param name="edit" value="true" />&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:button>&ndash;&gt;-->
+												<!--&lt;!&ndash;<p:commandButton icon="ui-icon-trash"&ndash;&gt;-->
+													<!--&lt;!&ndash;action="#{oneShotChargeTemplateListBean.delete}"&ndash;&gt;-->
+													<!--&lt;!&ndash;update=":#{p:component('chargeTemplate')}"&ndash;&gt;-->
+													<!--&lt;!&ndash;onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">&ndash;&gt;-->
+													<!--&lt;!&ndash;<f:setPropertyActionListener&ndash;&gt;-->
+														<!--&lt;!&ndash;target="#{oneShotChargeTemplateListBean.entity}"&ndash;&gt;-->
+														<!--&lt;!&ndash;value="#{entity}"></f:setPropertyActionListener>&ndash;&gt;-->
+												<!--&lt;!&ndash;</p:commandButton>&ndash;&gt;-->
+											<!--&lt;!&ndash;</p:column>&ndash;&gt;-->
+										<!--&lt;!&ndash;</hftl:dataList>&ndash;&gt;-->
+									<!--&lt;!&ndash;</h:panelGrid>&ndash;&gt;-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="accordionTax">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructTaxesNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.taxesNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbTaxesNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbTaxesNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbTaxesNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbTaxesNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbTaxesNotAssociated!=0}">-->
+										<!--<hftl:dataList label="#{messages['tax.title']}"-->
+											<!--resultsId="taxes_panel" exportToXml="false"-->
+											<!--backingBean="#{taxBean}" sortBy="code" checkMany="true"-->
+											<!--dataModel="#{configIssuesReportingBean.taxesNotAssociatedList}">-->
+											<!--<hftl:column label="#{messages['tax.code']}" field="code"-->
+												<!--noLinkToView="true" />-->
+											<!--<hftl:column label="#{messages['tax.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column label="#{messages['tax.percent']}"-->
+												<!--field="percent" converterParam="4digits" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['invoiceSubCategory.accountingCode']}"-->
+												<!--field="accountingCode" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="taxesButton" outcome="taxDetail"-->
+													<!--icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{taxBean.delete}"-->
+													<!--update=":#{p:component('accordionTax')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener target="#{taxBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="languages">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructLanguagesNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.languagesNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbLanguageNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbLanguageNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbLanguageNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbLanguageNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbLanguageNotAssociated!=0}">-->
+										<!--<hftl:dataList label="#{messages['comLanguage.title']}"-->
+											<!--resultsId="languages_panel" checkMany="true"-->
+											<!--exportToXml="false" backingBean="#{tradingLanguageBean}"-->
+											<!--dataModel="#{configIssuesReportingBean.languagesNotAssociatedList}">-->
+											<!--<hftl:column-->
+												<!--label="#{messages['tradingLanguage.languageCode']}"-->
+												<!--field="language.languageCode" width="10%" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['tradingLanguage.prDescription']}"-->
+												<!--field="prDescription" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" width="10%" />-->
+											<!--<p:column style="width:50px">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="languagesButton"-->
+													<!--outcome="tradingLanguagesDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{tradingLanguageListBean.delete}"-->
+													<!--update=":#{p:component('languages')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{tradingLanguageListBean.entity}"-->
+														<!--value="#{entity}"/>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="invoiceCats">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructInvoiceCatNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.invoiceCategoryNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbInvCatNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbInvCatNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbInvCatNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbInvCatNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbInvCatNotAssociated!=0}">-->
+										<!--<hftl:dataList label="#{messages['invoiceCategory.title']}"-->
+											<!--resultsId="invoiceCat_panel"-->
+											<!--dataModel="#{configIssuesReportingBean.invoiceCatNotAssociatedList}"-->
+											<!--backingBean="#{invoiceCategoryBean}" checkMany="true"-->
+											<!--sortBy="code" exportToXml="false">-->
+											<!--<hftl:column label="#{messages['invoiceCategory.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['invoiceCategory.description']}"-->
+												<!--field="description" />-->
+											<!--<p:column style="width:50px">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="invoiceCatButton"-->
+													<!--outcome="invoiceCategoryDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{invoiceCategoryListBean.delete}"-->
+													<!--update=":#{p:component('invoiceCats')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{invoiceCategoryListBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="invoiceSubs">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructInvoiceSubCatNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.invoiceSubCategoryNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbInvSubCatNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbInvSubCatNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbInvSubCatNotAssociated!=0}">-->
+										<!--<hftl:dataList label="#{messages['invoiceSubCategory.title']}"-->
+											<!--checkMany="true" resultsId="invoiceSubCat_panel"-->
+											<!--dataModel="#{configIssuesReportingBean.invoiceSubCatNotAssociatedList}"-->
+											<!--backingBean="#{invoiceSubCategoryBean}" sortBy="code"-->
+											<!--exportToXml="false">-->
+											<!--<hftl:column label="#{messages['invoiceSubCategory.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['invoiceSubCategory.invoiceCategory']}"-->
+												<!--field="invoiceCategory.code" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['invoiceSubCategory.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['invoiceSubCategory.accountingCode']}"-->
+												<!--field="accountingCode" />-->
+											<!--<p:column style="width:50px">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="invoiceSubCatButton"-->
+													<!--outcome="invoiceSubCategoryDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+											<!--</p:column>-->
+											<!--<p:commandButton icon="ui-icon-trash"-->
+												<!--action="#{invoiceSubCategoryListBean.delete}"-->
+												<!--update=":#{p:component('invoiceSubs')}"-->
+												<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+												<!--<f:setPropertyActionListener-->
+													<!--target="#{invoiceSubCategoryListBean.entity}"-->
+													<!--value="#{entity}"></f:setPropertyActionListener>-->
+											<!--</p:commandButton>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
 							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
 								id="servicesTmpl">
 								<p:ajax event="tabChange"
@@ -503,80 +503,80 @@
 									</h:panelGrid>
 								</p:tab>
 							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="usagesTempl">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructUsagesChrgNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.usagesChrgWithNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated!=0}">
-										<hftl:dataList
-											label="#{messages['usageChargeTemplate.title']}"
-											resultsId="usageCharges_panel" sortBy="code"
-											exportToXml="false" checkMany="true"
-											backingBean="#{usageChargeTemplateListBean}"
-											dataModel="#{configIssuesReportingBean.usagesChrgNotAssociatedList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.unityMultiplicator']}"
-												field="unitMultiplicator" converterParam="12digits" />
-											<!-- 			<hftl:column -->
-											<!-- 				label="#{messages['usageChargeTemplate.unityDescription']}" -->
-											<!-- 				field="unityDescription" /> -->
-											<hftl:column
-												label="#{messages['usageChargeTemplate.filterParam1']}"
-												field="filterParam1" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.filterParam2']}"
-												field="filterParam2" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column
-												label="#{messages['usageChargeTemplate.priority']}"
-												field="priority" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="usageChargesButton"
-													outcome="usageChargeTemplateDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{usageChargeTemplateListBean.delete}"
-													update=":#{p:component('usagesTempl')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{usageChargeTemplateListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="usagesTempl">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructUsagesChrgNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.usagesChrgWithNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbrUsagesChrgNotAssociated!=0}">-->
+										<!--<hftl:dataList-->
+											<!--label="#{messages['usageChargeTemplate.title']}"-->
+											<!--resultsId="usageCharges_panel" sortBy="code"-->
+											<!--exportToXml="false" checkMany="true"-->
+											<!--backingBean="#{usageChargeTemplateListBean}"-->
+											<!--dataModel="#{configIssuesReportingBean.usagesChrgNotAssociatedList}">-->
+											<!--<hftl:column label="#{messages['chargeTemplate.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['usageChargeTemplate.unityMultiplicator']}"-->
+												<!--field="unitMultiplicator" converterParam="12digits" />-->
+											<!--&lt;!&ndash; 			<hftl:column &ndash;&gt;-->
+											<!--&lt;!&ndash; 				label="#{messages['usageChargeTemplate.unityDescription']}" &ndash;&gt;-->
+											<!--&lt;!&ndash; 				field="unityDescription" /> &ndash;&gt;-->
+											<!--<hftl:column-->
+												<!--label="#{messages['usageChargeTemplate.filterParam1']}"-->
+												<!--field="filterParam1" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['usageChargeTemplate.filterParam2']}"-->
+												<!--field="filterParam2" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['menu.triggeredEdrTemplates']}"-->
+												<!--field="edrTemplates" valueLabelField="code" isList="true"-->
+												<!--sort="false" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['usageChargeTemplate.priority']}"-->
+												<!--field="priority" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="usageChargesButton"-->
+													<!--outcome="usageChargeTemplateDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{usageChargeTemplateListBean.delete}"-->
+													<!--update=":#{p:component('usagesTempl')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{usageChargeTemplateListBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
 
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
 							<p:accordionPanel activeIndex="null" dynamic="true" cache="false">
 								<p:ajax event="tabChange"
 									listener="#{configIssuesReportingBean.jasperFilesNotFound}" />
@@ -678,256 +678,256 @@
 									</h:panelGrid>
 								</p:tab>
 							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="recurrings">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructRecurringNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.recurringWithNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated!=0}">
-										<hftl:dataList resultsId="recCh_panel" exportToXml="false"
-											checkMany="true"
-											backingBean="#{recurringChargeTemplateListBean}"
-											sortBy="code"
-											dataModel="#{configIssuesReportingBean.recurringNotAssociatedList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['chargeTemplate.amountEditable']}"
-												field="amountEditable" isMessage="true" />
-											<hftl:column
-												label="#{messages['recurringChargeTemplate.durationTermInMonth']}"
-												field="durationTermInMonth" />
-											<hftl:column
-												label="#{messages['recurringChargeTemplate.applyInAdvance']}"
-												field="applyInAdvance" isMessage="true" />
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="recurrings">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructRecurringNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.recurringWithNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbrRecurringChrgNotAssociated!=0}">-->
+										<!--<hftl:dataList resultsId="recCh_panel" exportToXml="false"-->
+											<!--checkMany="true"-->
+											<!--backingBean="#{recurringChargeTemplateListBean}"-->
+											<!--sortBy="code"-->
+											<!--dataModel="#{configIssuesReportingBean.recurringNotAssociatedList}">-->
+											<!--<hftl:column label="#{messages['chargeTemplate.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.amountEditable']}"-->
+												<!--field="amountEditable" isMessage="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['recurringChargeTemplate.durationTermInMonth']}"-->
+												<!--field="durationTermInMonth" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['recurringChargeTemplate.applyInAdvance']}"-->
+												<!--field="applyInAdvance" isMessage="true" />-->
 
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="recButton"
-													outcome="recurringChargeTemplateDetail"
-													icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{recurringChargeTemplateListBean.delete}"
-													update=":#{p:component('recurrings')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{recurringChargeTemplateListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="termCharges">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructTermChrgNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.termChrgNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated!=0}">
-										<hftl:dataList
-											label="#{messages['oneShotChargeTemplate.title']}"
-											resultsId="termination_panel" checkMany="true"
-											noClose="false" sortBy="code" exportToXml="false"
-											backingBean="#{serviceChargeTemplateTerminationBean}"
-											dataModel="#{configIssuesReportingBean.terminationNotAssociatedList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['chargeTemplate.amountEditable']}"
-												field="amountEditable" isMessage="true" />
-											<hftl:column label="#{messages['chargeTemplate.type']}"
-												field="oneShotChargeTemplateType.label" isMessage="true" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<hftl:column
-												label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"
-												field="immediateInvoicing" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="terminationButton"
-													outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-											</p:column>
-											<p:commandButton icon="ui-icon-trash"
-												action="#{oneShotChargeTemplateBean.delete}"
-												update=":#{p:component('termCharges')}"
-												onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-												<f:setPropertyActionListener
-													target="#{oneShotChargeTemplateBean.entity}"
-													value="#{entity}"></f:setPropertyActionListener>
-											</p:commandButton>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="subCharges">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructSubChrgNotAssociated}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.subChrgNotAssociated']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated!=0}">
-										<hftl:dataList
-											label="#{messages['oneShotChargeTemplate.title']}"
-											resultsId="subscription_panel" checkMany="true"
-											noClose="false" sortBy="code" exportToXml="false"
-											backingBean="#{serviceChargeTemplateSubscriptionBean}"
-											dataModel="#{configIssuesReportingBean.subNotAssociatedList}">
-											<hftl:column label="#{messages['chargeTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['chargeTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['chargeTemplate.amountEditable']}"
-												field="amountEditable" isMessage="true" />
-											<hftl:column label="#{messages['chargeTemplate.type']}"
-												field="oneShotChargeTemplateType.label" isMessage="true" />
-											<hftl:column
-												label="#{messages['menu.triggeredEdrTemplates']}"
-												field="edrTemplates" valueLabelField="code" isList="true"
-												sort="false" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<hftl:column
-												label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"
-												field="immediateInvoicing" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="subButton"
-													outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{oneShotChargeTemplateBean.delete}"
-													update=":#{p:component('subCharges')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{oneShotChargeTemplateBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false">
-								<p:tab
-									title="#{messages['configIssuesReporting.walletOperationStatus']}">
-									<h:panelGrid columns="4">
-										<hftl:panelGroup columns="4">
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.open']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpOpen}" />
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.canceled']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpCancled}" />
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.reserved']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpReserved}" />
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.rerated']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpRerated}" />
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.to_rerate']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpTorerate}" />
-											<h:outputLabel
-												value="#{messages['walletOperationStatus.treated']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpTreated}" />
-										</hftl:panelGroup>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false">
-								<p:tab title="#{messages['configIssuesReporting.edrStatus']}">
-									<h:panelGrid>
-										<hftl:panelGroup columns="4">
-											<h:outputLabel value="#{messages['edrStatus.open']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrEdrOpen}" />
-											<h:outputLabel value="#{messages['edrStatus.rejected']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrEdrRejected}" />
-											<h:outputLabel value="#{messages['edrStatus.rated']} :" />
-											<h:outputText
-												value="#{configIssuesReportingBean.reportConfigDto.nbrEdrRated}" />
-										</hftl:panelGroup>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
+											<!--<hftl:column-->
+												<!--label="#{messages['menu.triggeredEdrTemplates']}"-->
+												<!--field="edrTemplates" valueLabelField="code" isList="true"-->
+												<!--sort="false" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="recButton"-->
+													<!--outcome="recurringChargeTemplateDetail"-->
+													<!--icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{recurringChargeTemplateListBean.delete}"-->
+													<!--update=":#{p:component('recurrings')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{recurringChargeTemplateListBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="termCharges">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructTermChrgNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.termChrgNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbrTerminationChrgNotAssociated!=0}">-->
+										<!--<hftl:dataList-->
+											<!--label="#{messages['oneShotChargeTemplate.title']}"-->
+											<!--resultsId="termination_panel" checkMany="true"-->
+											<!--noClose="false" sortBy="code" exportToXml="false"-->
+											<!--backingBean="#{serviceChargeTemplateTerminationBean}"-->
+											<!--dataModel="#{configIssuesReportingBean.terminationNotAssociatedList}">-->
+											<!--<hftl:column label="#{messages['chargeTemplate.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.amountEditable']}"-->
+												<!--field="amountEditable" isMessage="true" />-->
+											<!--<hftl:column label="#{messages['chargeTemplate.type']}"-->
+												<!--field="oneShotChargeTemplateType.label" isMessage="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['menu.triggeredEdrTemplates']}"-->
+												<!--field="edrTemplates" valueLabelField="code" isList="true"-->
+												<!--sort="false" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"-->
+												<!--field="immediateInvoicing" isMessage="true" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="terminationButton"-->
+													<!--outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+											<!--</p:column>-->
+											<!--<p:commandButton icon="ui-icon-trash"-->
+												<!--action="#{oneShotChargeTemplateBean.delete}"-->
+												<!--update=":#{p:component('termCharges')}"-->
+												<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+												<!--<f:setPropertyActionListener-->
+													<!--target="#{oneShotChargeTemplateBean.entity}"-->
+													<!--value="#{entity}"></f:setPropertyActionListener>-->
+											<!--</p:commandButton>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="subCharges">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructSubChrgNotAssociated}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.subChrgNotAssociated']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbrSubscriptionChrgNotAssociated!=0}">-->
+										<!--<hftl:dataList-->
+											<!--label="#{messages['oneShotChargeTemplate.title']}"-->
+											<!--resultsId="subscription_panel" checkMany="true"-->
+											<!--noClose="false" sortBy="code" exportToXml="false"-->
+											<!--backingBean="#{serviceChargeTemplateSubscriptionBean}"-->
+											<!--dataModel="#{configIssuesReportingBean.subNotAssociatedList}">-->
+											<!--<hftl:column label="#{messages['chargeTemplate.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['chargeTemplate.amountEditable']}"-->
+												<!--field="amountEditable" isMessage="true" />-->
+											<!--<hftl:column label="#{messages['chargeTemplate.type']}"-->
+												<!--field="oneShotChargeTemplateType.label" isMessage="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['menu.triggeredEdrTemplates']}"-->
+												<!--field="edrTemplates" valueLabelField="code" isList="true"-->
+												<!--sort="false" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['oneShotChargeTemplate.immediateInvoicing']}"-->
+												<!--field="immediateInvoicing" isMessage="true" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="subButton"-->
+													<!--outcome="oneShotChargeTemplateDetail" icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{oneShotChargeTemplateBean.delete}"-->
+													<!--update=":#{p:component('subCharges')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{oneShotChargeTemplateBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false">-->
+								<!--<p:tab-->
+									<!--title="#{messages['configIssuesReporting.walletOperationStatus']}">-->
+									<!--<h:panelGrid columns="4">-->
+										<!--<hftl:panelGroup columns="4">-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.open']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpOpen}" />-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.canceled']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpCancled}" />-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.reserved']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpReserved}" />-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.rerated']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpRerated}" />-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.to_rerate']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpTorerate}" />-->
+											<!--<h:outputLabel-->
+												<!--value="#{messages['walletOperationStatus.treated']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrWalletOpTreated}" />-->
+										<!--</hftl:panelGroup>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false">-->
+								<!--<p:tab title="#{messages['configIssuesReporting.edrStatus']}">-->
+									<!--<h:panelGrid>-->
+										<!--<hftl:panelGroup columns="4">-->
+											<!--<h:outputLabel value="#{messages['edrStatus.open']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrEdrOpen}" />-->
+											<!--<h:outputLabel value="#{messages['edrStatus.rejected']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrEdrRejected}" />-->
+											<!--<h:outputLabel value="#{messages['edrStatus.rated']} :" />-->
+											<!--<h:outputText-->
+												<!--value="#{configIssuesReportingBean.reportConfigDto.nbrEdrRated}" />-->
+										<!--</hftl:panelGroup>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
 							<p:accordionPanel activeIndex="null" dynamic="true" cache="false">
 								<p:ajax event="tabChange"
 									listener="#{configIssuesReportingBean.constructScriptInstancesWithError}" />

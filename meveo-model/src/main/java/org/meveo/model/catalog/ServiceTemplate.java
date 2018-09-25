@@ -35,17 +35,6 @@ import javax.validation.constraints.Size;
 @Table(name = "cat_service_template", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "cat_service_template_seq"), })
-@NamedQueries({
-        @NamedQuery(name = "serviceTemplate.getNbServiceWithNotOffer", query = "select count(*) from ServiceTemplate s where s.id not in (select serv.serviceTemplate.id from OfferTemplate o join o.offerServiceTemplates serv)"),
-        @NamedQuery(name = "serviceTemplate.getServicesWithNotOffer", query = "from ServiceTemplate s where s.id not in (select serv.serviceTemplate.id from OfferTemplate o join o.offerServiceTemplates serv)"),
-        @NamedQuery(name = "serviceTemplate.getServicesWithRecurringsByChargeTemplate", query = "from ServiceTemplate s left join s.serviceRecurringCharges c where c.chargeTemplate=:chargeTemplate")
-        // @NamedQuery(name = "serviceTemplate.getServicesWithSubscriptionsByChargeTemplate",
-        // query = "from ServiceTemplate s left join s.serviceSubscriptionCharges c where c.chargeTemplate=:chargeTemplate"),
-        // @NamedQuery(name = "serviceTemplate.getServicesWithTerminationsByChargeTemplate",
-        // query = "from ServiceTemplate s left join s.serviceTerminationCharges c where c.chargeTemplate=:chargeTemplate"),
-        // @NamedQuery(name = "serviceTemplate.getServicesWithUsagesByChargeTemplate",
-        // query = "from ServiceTemplate s left join s.serviceUsageCharges c where c.chargeTemplate=:chargeTemplate")
-})
 public class ServiceTemplate extends BusinessCFEntity implements IImageUpload {
 
     private static final long serialVersionUID = 1L;
