@@ -53,15 +53,6 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
     Map<String, String> jasperFilesList = new HashMap<String, String>();
 
 
-    public void constructServicesWithNotOffer(TabChangeEvent event) {
-        servicesWithNotOfferList = serviceTemplateService.getServicesWithNotOffer();
-    }
-
-    public void constructCounterWithNotService(TabChangeEvent event) {
-        counterWithNotServicList = counterTemplateService.getCounterWithNotService();
-    }
-
-
     public void constructScriptInstancesWithError(TabChangeEvent event) {
         scriptInstanceWithErrorList = scriptInstanceService.getScriptInstancesWithError();
     }
@@ -118,10 +109,6 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
         }
     }
 
-
-    public Integer getNbServiceWithNotOffer() {
-        return serviceTemplateService.getNbServiceWithNotOffer();
-    }
 
     public Integer getNbrCounterWithNotService() {
         return counterTemplateService.getNbrCounterWithNotService();

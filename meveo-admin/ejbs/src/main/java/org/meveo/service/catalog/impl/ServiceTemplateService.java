@@ -20,13 +20,11 @@ package org.meveo.service.catalog.impl;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.catalog.*;
+import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.service.base.BusinessService;
 
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,14 +43,6 @@ public class ServiceTemplateService extends BusinessService<ServiceTemplate> {
     public ServiceTemplate update(ServiceTemplate serviceTemplate) throws BusinessException {
         ServiceTemplate result = super.update(serviceTemplate);
         return result;
-    }
-
-    public int getNbServiceWithNotOffer() {
-        return ((Long) getEntityManager().createNamedQuery("serviceTemplate.getNbServiceWithNotOffer", Long.class).getSingleResult()).intValue();
-    }
-
-    public List<ServiceTemplate> getServicesWithNotOffer() {
-        return (List<ServiceTemplate>) getEntityManager().createNamedQuery("serviceTemplate.getServicesWithNotOffer", ServiceTemplate.class).getResultList();
     }
 
     @SuppressWarnings("unchecked")

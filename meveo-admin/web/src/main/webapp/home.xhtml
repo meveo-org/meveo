@@ -425,84 +425,84 @@
 									<!--</h:panelGrid>-->
 								<!--</p:tab>-->
 							<!--</p:accordionPanel>-->
-							<p:accordionPanel activeIndex="null" dynamic="true" cache="false"
-								id="servicesTmpl">
-								<p:ajax event="tabChange"
-									listener="#{configIssuesReportingBean.constructServicesWithNotOffer}" />
-								<p:tab>
-									<f:facet name="title">
-										<h:outputText
-											value="#{messages['configIssuesReporting.servicesWithNotOffer']} : " />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbServiceWithNotOffer}"
-											style="color:#3FCA21"
-											rendered="#{configIssuesReportingBean.nbServiceWithNotOffer==0}" />
-										<h:outputText
-											value="#{configIssuesReportingBean.nbServiceWithNotOffer}"
-											style="color:red"
-											rendered="#{configIssuesReportingBean.nbServiceWithNotOffer!=0}" />
-									</f:facet>
-									<h:panelGrid columns="1"
-										rendered="#{configIssuesReportingBean.nbServiceWithNotOffer!=0}">
-										<hftl:dataList label="#{messages['serviceTemplate.title']}"
-											checkMany="true" noClose="false" sortBy="code"
-											exportToXml="false" backingBean="#{serviceTemplateBean}"
-											dataModel="#{configIssuesReportingBean.servicesWithNotOfferList}"
-											resultsId="servicesOffer_panel">
-											<hftl:column label="#{messages['serviceTemplate.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['serviceTemplate.description']}"
-												field="description" />
-											<hftl:column
-												label="#{messages['serviceTemplate.recurringCharges']}"
-												field="serviceRecurringCharges" isList="true"
-												valueLabelField="chargeTemplate.code"
-												valueIdField="chargeTemplate.id"
-												view="recurringChargeTemplateDetail" />
-											<hftl:column
-												label="#{messages['serviceTemplate.subscriptionCharges']}"
-												field="serviceSubscriptionCharges" isList="true"
-												valueLabelField="chargeTemplate.code"
-												valueIdField="chargeTemplate.id"
-												view="oneShotChargeTemplateDetail" />
-											<hftl:column
-												label="#{messages['serviceTemplate.terminationCharges']}"
-												field="serviceTerminationCharges" isList="true"
-												valueLabelField="chargeTemplate.code"
-												valueIdField="chargeTemplate.id"
-												view="oneShotChargeTemplateDetail"
-												backView="serviceTemplates" />
-											<hftl:column
-												label="#{messages['serviceTemplate.usageCharges']}"
-												field="serviceUsageCharges" isList="true"
-												valueLabelField="chargeTemplate.code"
-												valueIdField="chargeTemplate.id"
-												view="usageChargeTemplateDetail" />
-											<hftl:column label="#{messages['enableEntity.active']}"
-												field="active" isMessage="true" />
-											<p:column width="50">
-												<f:facet name="header">
-													<h:outputText value="Actions" />
-												</f:facet>
-												<p:button id="serviceButton" outcome="serviceTemplateDetail"
-													icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
-													<f:param name="edit" value="true" />
-												</p:button>
-												<p:commandButton icon="ui-icon-trash"
-													action="#{serviceTemplateListBean.delete}"
-													update=":#{p:component('servicesTmpl')}"
-													onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
-													<f:setPropertyActionListener
-														target="#{serviceTemplateListBean.entity}"
-														value="#{entity}"></f:setPropertyActionListener>
-												</p:commandButton>
-											</p:column>
-										</hftl:dataList>
-									</h:panelGrid>
-								</p:tab>
-							</p:accordionPanel>
+							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
+								<!--id="servicesTmpl">-->
+								<!--<p:ajax event="tabChange"-->
+									<!--listener="#{configIssuesReportingBean.constructServicesWithNotOffer}" />-->
+								<!--<p:tab>-->
+									<!--<f:facet name="title">-->
+										<!--<h:outputText-->
+											<!--value="#{messages['configIssuesReporting.servicesWithNotOffer']} : " />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbServiceWithNotOffer}"-->
+											<!--style="color:#3FCA21"-->
+											<!--rendered="#{configIssuesReportingBean.nbServiceWithNotOffer==0}" />-->
+										<!--<h:outputText-->
+											<!--value="#{configIssuesReportingBean.nbServiceWithNotOffer}"-->
+											<!--style="color:red"-->
+											<!--rendered="#{configIssuesReportingBean.nbServiceWithNotOffer!=0}" />-->
+									<!--</f:facet>-->
+									<!--<h:panelGrid columns="1"-->
+										<!--rendered="#{configIssuesReportingBean.nbServiceWithNotOffer!=0}">-->
+										<!--<hftl:dataList label="#{messages['serviceTemplate.title']}"-->
+											<!--checkMany="true" noClose="false" sortBy="code"-->
+											<!--exportToXml="false" backingBean="#{serviceTemplateBean}"-->
+											<!--dataModel="#{configIssuesReportingBean.servicesWithNotOfferList}"-->
+											<!--resultsId="servicesOffer_panel">-->
+											<!--<hftl:column label="#{messages['serviceTemplate.code']}"-->
+												<!--field="code" noLinkToView="true" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['serviceTemplate.description']}"-->
+												<!--field="description" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['serviceTemplate.recurringCharges']}"-->
+												<!--field="serviceRecurringCharges" isList="true"-->
+												<!--valueLabelField="chargeTemplate.code"-->
+												<!--valueIdField="chargeTemplate.id"-->
+												<!--view="recurringChargeTemplateDetail" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['serviceTemplate.subscriptionCharges']}"-->
+												<!--field="serviceSubscriptionCharges" isList="true"-->
+												<!--valueLabelField="chargeTemplate.code"-->
+												<!--valueIdField="chargeTemplate.id"-->
+												<!--view="oneShotChargeTemplateDetail" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['serviceTemplate.terminationCharges']}"-->
+												<!--field="serviceTerminationCharges" isList="true"-->
+												<!--valueLabelField="chargeTemplate.code"-->
+												<!--valueIdField="chargeTemplate.id"-->
+												<!--view="oneShotChargeTemplateDetail"-->
+												<!--backView="serviceTemplates" />-->
+											<!--<hftl:column-->
+												<!--label="#{messages['serviceTemplate.usageCharges']}"-->
+												<!--field="serviceUsageCharges" isList="true"-->
+												<!--valueLabelField="chargeTemplate.code"-->
+												<!--valueIdField="chargeTemplate.id"-->
+												<!--view="usageChargeTemplateDetail" />-->
+											<!--<hftl:column label="#{messages['enableEntity.active']}"-->
+												<!--field="active" isMessage="true" />-->
+											<!--<p:column width="50">-->
+												<!--<f:facet name="header">-->
+													<!--<h:outputText value="Actions" />-->
+												<!--</f:facet>-->
+												<!--<p:button id="serviceButton" outcome="serviceTemplateDetail"-->
+													<!--icon="ui-icon-search">-->
+													<!--<f:param name="objectId" value="#{entity.id}" />-->
+													<!--<f:param name="edit" value="true" />-->
+												<!--</p:button>-->
+												<!--<p:commandButton icon="ui-icon-trash"-->
+													<!--action="#{serviceTemplateListBean.delete}"-->
+													<!--update=":#{p:component('servicesTmpl')}"-->
+													<!--onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">-->
+													<!--<f:setPropertyActionListener-->
+														<!--target="#{serviceTemplateListBean.entity}"-->
+														<!--value="#{entity}"></f:setPropertyActionListener>-->
+												<!--</p:commandButton>-->
+											<!--</p:column>-->
+										<!--</hftl:dataList>-->
+									<!--</h:panelGrid>-->
+								<!--</p:tab>-->
+							<!--</p:accordionPanel>-->
 							<!--<p:accordionPanel activeIndex="null" dynamic="true" cache="false"-->
 								<!--id="usagesTempl">-->
 								<!--<p:ajax event="tabChange"-->
