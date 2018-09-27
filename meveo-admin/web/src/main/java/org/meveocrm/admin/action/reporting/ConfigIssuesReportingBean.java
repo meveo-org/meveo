@@ -110,10 +110,6 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
     }
 
 
-    public Integer getNbrCounterWithNotService() {
-        return counterTemplateService.getNbrCounterWithNotService();
-    }
-
     public long getNbrScriptInstanceWithError() {
         return scriptInstanceService.countScriptInstancesWithError();
     }

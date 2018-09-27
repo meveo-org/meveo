@@ -719,7 +719,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * To filter by a related entity's field you can either filter by related entity's field or by related entity itself specifying code as value. These two example will do the
      * same in case when quering a customer account: customer.code=aaa OR customer=aaa
      * 
-     * To filter a list of related entities by a list of entity codes use "inList" on related entity field. e.g. for quering offer template by sellers: inList sellers=code1,code2
+     * To filter a list of related entities by a list of entity codes use "inList" on related entity field.
      * 
      * 
      * <b>Note:</b> Quering by related entity field directly will result in exception when entity with a specified code does not exists
@@ -815,7 +815,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                         Field field = ReflectionUtils.getField(entityClass, fieldName);
                         Class<?> fieldClassType = field.getType();
 
-                        // Searching for a list inside a list field requires to join it first as collection member e.g. "IN (a.sellers) seller"
+                        // Searching for a list inside a list field requires to join it first as collection member
                         if (Collection.class.isAssignableFrom(fieldClassType)) {
 
                             String paramName = queryBuilder.convertFieldToParam(fieldName);

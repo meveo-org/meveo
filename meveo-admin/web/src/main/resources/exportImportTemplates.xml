@@ -189,7 +189,7 @@
     </template>
 
     <template name="Customer hierarchy and subscriptions">
-        <groupedTemplates>
+        <groupedTemplates>200
             <template ref="Customer hierarchy" />
         </groupedTemplates>
     </template>
@@ -200,14 +200,6 @@
         </groupedTemplates>
     </template>
 
-    <template name="EDR" entityToExport="org.meveo.model.rating.EDR" canDeleteAfterExport="true">
-        <parameters>
-            <entry>
-                <string>eventDate</string>
-                <string>dateRange</string>
-            </entry>
-        </parameters>
-    </template>
     <template name="Workflow" entityToExport="org.meveo.model.wf.Workflow">
         <classesToExportAsFull>
             <java-class>org.meveo.model.wf.WFTransition</java-class>

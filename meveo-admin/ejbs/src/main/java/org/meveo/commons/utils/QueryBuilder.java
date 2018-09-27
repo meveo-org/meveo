@@ -18,20 +18,13 @@
  */
 package org.meveo.commons.utils;
 
-import java.lang.reflect.Field;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
-import org.meveo.admin.util.pagination.PaginationConfiguration;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  * Query builder class for building JPA queries.
@@ -794,7 +787,7 @@ public class QueryBuilder {
      * Convert fieldname to a collection member item name.
      * 
      * @param fieldname Fieldname
-     * @return Fieldname converted to parameter name with suffix "Item". e.g. for "sellers" it will return sellersItem
+     * @return Fieldname converted to parameter name with suffix "Item".
      */
     public String convertFieldToCollectionMemberItem(String fieldname) {
         return convertFieldToParam(fieldname) + "Item";
@@ -866,32 +859,4 @@ public class QueryBuilder {
         }
         return result;
     }
-
-    // Was causing issues with distinct clause. Switched to EXISTS clause instead when using inList criteria for list type field
-    // /**
-    // * Add a collection member join e.g " IN (a.sellers) s " right after a from clause
-    // *
-    // * @param fieldName
-    // */
-    // public void addCollectionMember(String fieldName) {
-    //
-    // String sql = q.toString().toLowerCase();
-    //
-    // String regex = "(from[ \\t]+[\\w\\.]+[ \\t]+(\\w+))";
-    // Pattern pattern = Pattern.compile(regex);
-    // Matcher matcher = pattern.matcher(sql);
-    // if (!matcher.find()) {
-    // throw new RuntimeException("Can not determine where to add collection member clause");
-    // }
-    // String fromClause = matcher.group(1);
-    // String aliasName = matcher.group(2);
-    //
-    // q.insert(sql.indexOf(fromClause) + fromClause.length(),
-    // ", IN (" + (aliasName != null ? aliasName + "." : "") + fieldName + ") as " + convertFieldToCollectionMemberItem(fieldName));
-    //
-    // // Append select clause to select only a main entity
-    // if (!sql.startsWith("select") && aliasName != null) {
-    // q.insert(0, "select distinct " + aliasName + " ");
-    // }
-    // }
 }

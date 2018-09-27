@@ -22,10 +22,6 @@
                 </p:menuitem>
             </p:submenu>
 
-            <p:submenu id="settings" label="#{messages['menu.settings']}">
-                <p:menuitem id="mmOfferCategories" outcome="mm_offerTemplateCategories" value="#{messages['menu.marketingManager.manageCategories']}" />
-            </p:submenu>
-
             <p:menuitem action="#{authenticationProvider.logout}" value="#{messages['menutop.logout']}" rendered="#{currentUser.authenticated}" immediate="true"/>
         </hftl:menu>
     </h:form>

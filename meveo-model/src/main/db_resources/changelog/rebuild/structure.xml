@@ -5571,20 +5571,6 @@
         </createTable>
         <addPrimaryKey columnNames="product_id, bam_id" constraintName="cat_product_offer_bam_pkey" tableName="cat_product_offer_bam" />
     </changeSet>
-    <changeSet author="AndriusKarpavicius" id="rebuild-str-tbl-329">
-        <createTable tableName="cat_product_offer_channels">
-            <column name="product_id" type="bigint">
-                <constraints nullable="false" />
-            </column>
-            <column name="channel_id" type="bigint">
-                <constraints nullable="false" />
-            </column>
-            <column name="indx" type="int4">
-                <constraints nullable="false" />
-            </column>
-        </createTable>
-        <addPrimaryKey columnNames="product_id, channel_id" constraintName="cat_prod_off_channels_pkey" tableName="cat_product_offer_channels" />
-    </changeSet>
     <changeSet author="AndriusKarpavicius" id="rebuild-str-tbl-330">
         <createTable tableName="cat_digital_resource">
             <column name="id" type="bigint" autoIncrement="${id.auto}">
@@ -7686,14 +7672,6 @@
     <changeSet author="AndriusKarpavicius" id="rebuild-str-fk-1154">
         <addForeignKeyConstraint baseColumnNames="prd_offering_id" baseTableName="ord_quot_item_offerings" constraintName="fk_ord_quote_item_offerings_prd_offering" deferrable="false"
             initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cat_offer_template" />
-    </changeSet>
-    <changeSet author="AndriusKarpavicius" id="rebuild-str-fk-1155">
-        <addForeignKeyConstraint baseColumnNames="invoice_id" baseTableName="billing_invoices_orders" constraintName="fk_invoice_id_bill_invoices-orders" deferrable="false" initiallyDeferred="false"
-            onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="billing_invoice" />
-    </changeSet>
-    <changeSet author="AndriusKarpavicius" id="rebuild-str-fk-1156">
-        <addForeignKeyConstraint baseColumnNames="order_id" baseTableName="billing_invoices_orders" constraintName="fk_order_id_bill_invoices-orders" deferrable="false" initiallyDeferred="false"
-            onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ord_order" />
     </changeSet>
     <changeSet author="AndriusKarpavicius" id="rebuild-str-fk-1157">
         <addForeignKeyConstraint baseColumnNames="product_charge_template_id" baseTableName="cat_product_templ_charge_templ" constraintName="fk_prd_templ_ct_pct_id" deferrable="false"

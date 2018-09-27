@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -9,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -23,33 +24,21 @@ import org.meveo.service.base.BusinessService;
 
 import javax.ejb.Stateless;
 import javax.persistence.Query;
-import java.util.List;
 
 /**
  * Counter Template service implementation.
- * 
+ * @author Clément Bareth
  */
 @Stateless
 public class CounterTemplateService extends BusinessService<CounterTemplate> {
 
-	public void removeByPrefix(String prefix) {
-		Query query = getEntityManager()
-				.createQuery("DELETE CounterTemplate t WHERE t.code LIKE '"
-						+ prefix + "%'");
-		
-		query.executeUpdate();
-	}
-	
-
-		
-	public  int getNbrCounterWithNotService() { 
-		return ((Long)getEntityManager().createNamedQuery("counterTemplate.getNbrCounterWithNotService",Long.class)
-				.getSingleResult()).intValue();
-	}
-
-	public List<CounterTemplate> getCounterWithNotService() {
-		return (List<CounterTemplate>)getEntityManager().createNamedQuery("counterTemplate.getCounterWithNotService", CounterTemplate.class)
-				.getResultList();
-	}
+    /**
+     * Remove a counter template whose code start with prefix
+     * @param prefix Prefix to look for
+     */
+    public void removeByPrefix(String prefix) {
+        Query query = getEntityManager().createQuery("DELETE CounterTemplate t WHERE t.code LIKE '"+ prefix + "%'");
+        query.executeUpdate();
+    }
 
 }

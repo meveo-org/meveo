@@ -59,21 +59,7 @@
 		<constraint>currentUser.hasRole('superAdminManagement')</constraint>
 	</page>
 	
-	<page view-id=".+\/admin\/sellers\/.*">
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('administrationManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
-	</page>
-	
 	<page view-id=".+\/admin\/title\/.*">
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('administrationManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/admin\/creditCategories\/.*">
 		<constraint>currentUser.hasRole('catalogManagement')</constraint>
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>
 		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
@@ -96,86 +82,7 @@
 		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
 	</page>
 	
-	<!-- PAGE RULES FOR BILLING PAGES -->
-	<page view-id=".+\/billing\/invoicing\/billingRuns">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/invoicing\/exceptionelInvoicing">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
 
-	<page view-id=".+\/billing\/invoices\/createInvoiceDetail">
-		<constraint>currentUser.hasRole('creditNoteManagement')</constraint>
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint>currentUser.hasRole('createInvoice')</constraint>
-		<constraint type="READ">currentUser.hasRole('creditNoteVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('createInvoice')</constraint>
-	</page>	
-
-	<page view-id=".+\/billing\/invoices\/.*">
-		<constraint>currentUser.hasRole('creditNoteManagement')</constraint>
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/ratedTransactions\/.*">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('creditNoteVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/walletOperations\/.*">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/billingAccounts\/.*">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/wallets\/wallet.*">
-		<constraint>#{currentUser.hasRole('billingManagement')}</constraint>
-	</page>
-	
-	<page view-id=".+\/billing\/.+">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-	</page>
-	
-	<!-- PAGE RULES FOR CATALOG PAGES -->
-	<page view-id=".+\/catalog\/pricePlanMatrixes\/.*">
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/catalog\/discountPlans\/.*">
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
 	<page view-id=".+\/catalog\/calendars\/.*" >
 		<constraint>currentUser.hasRole('catalogManagement')</constraint>
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>
@@ -194,15 +101,8 @@
 		<constraint>currentUser.hasRole('accountManagement')</constraint> 
 		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
 	</page>
-	
-	<page view-id=".+\/crm\/customerBrands\/.*" >
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('administrationManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/crm\/customerCategories\/.*" >
+
+    <page view-id=".+\/crm\/customerCategories\/.*" >
 		<constraint>currentUser.hasRole('catalogManagement')</constraint>
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>
 		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
@@ -214,12 +114,6 @@
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>
 		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
 		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/crm\/syntheseClients\/syntheseClientDetail" >
-		<constraint>currentUser.hasRole('accountManagement')</constraint> 
-		<constraint type="READ">currentUser.hasRole('customerSummaryVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
 	</page>
 	
 	<page view-id=".+\/crm\/.+" >
@@ -244,27 +138,6 @@
 		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
 	</page>
 	
-	<!-- PAGE RULES FOR PAYMENT PAGES -->
-	<page view-id=".+\/payments\/customerAccounts\/customerAccount.*">
-		<constraint>currentUser.hasRole('accountManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
-	</page>
-	
-	<page view-id=".+\/payments\/occTemplates\/occTemplate.*">
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-	</page>
-		
-	<page view-id=".+\/payments\/.+">
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-	
-	<!-- PAGE RULES FOR RATING PAGES -->
-	<page view-id=".+\/rating\/.+">
-		<constraint>currentUser.hasRole('billingManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('billingVisualization')</constraint>
-	</page>
-
 	<!-- PAGE RULES FOR REPORTING PAGES -->
 	<page view-id=".+\/reporting\/cache\/.*">
 		<constraint>currentUser.hasRole('reportingManagement')</constraint>
@@ -303,15 +176,5 @@
     	<constraint>currentUser.hasRole('marketingCatalogManager')</constraint>
         <constraint type="READ">currentUser.hasRole('marketingCatalogVisualization')</constraint>
     </page>
-    
-    <page view-id=".+\/order\/.+" >
-        <constraint>currentUser.hasRole('orderManagement')</constraint>
-        <constraint type="READ">currentUser.hasRole('orderVisualization')</constraint>
-    </page>
 
-    <page view-id=".+\/quote\/.+" >
-        <constraint>currentUser.hasRole('quoteManagement')</constraint>
-        <constraint type="READ">currentUser.hasRole('quoteVisualization')</constraint>
-    </page>    
-    
 </page-access>
