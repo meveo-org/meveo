@@ -61,10 +61,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.Conversation;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -78,6 +80,8 @@ import java.util.Map.Entry;
  * @lastModifiedVersion 5.0
  * 
  */
+@Named
+@ViewScoped
 public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private static final long serialVersionUID = 1L;

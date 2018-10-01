@@ -18,15 +18,11 @@
  */
 package org.meveo.model;
 
+import org.meveo.security.MeveoUser;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import org.meveo.security.MeveoUser;
 
 @Embeddable
 public class Auditable implements Serializable {
@@ -118,4 +114,15 @@ public class Auditable implements Serializable {
     public boolean isCreator(MeveoUser currentUser) {
         return currentUser.getUserName().equals(this.creator);
     }
+
+    @PrePersist
+	@PreUpdate
+    public void checkUsernames() {
+		if (this.creator != null) {
+			this.creator = this.creator.toUpperCase();
+		}
+		if (this.updater != null) {
+			this.updater= this.updater.toUpperCase();
+		}
+	}
 }

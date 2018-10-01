@@ -1,57 +1,29 @@
 package org.meveo.admin.action.admin.custom;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
-import org.meveo.service.custom.CustomizedEntityService;
-import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.job.Job;
-import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 @Named
 @ViewScoped
-public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
+public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
 
     private static final long serialVersionUID = 1187554162639618526L;
-
-    @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
-
-    /**
-     * Request parameter
-     */
-    private String entityClassName;
-
-    /**
-     * Request parameter
-     */
-    private String appliesTo;
-
-    /**
-     * Class corresponding to a entityClassName value or CustomEntityTemplate class if null
-     */
-    @SuppressWarnings("rawtypes")
-    private Class entityClass = CustomEntityTemplate.class;
 
     /**
      * Object being customized in case customization corresponds to a non CustomEntityTemplate class instance
@@ -65,54 +37,14 @@ public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
 
     private SortedTreeNode groupedFields;
 
-    private TreeNode selectedFieldGrouping;
-
     private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
-
-    /**
-     * Remember tree nodes before refreshing them - that way tabs and fieldgroups are not lost after refresh if they had no children
-     */
-    private List<TreeNode> cachedTreeNodes;
-
-    private List<EntityCustomAction> entityActions;
 
     private EntityCustomAction selectedEntityAction;
 
-    @Inject
-    private CustomEntityTemplateService customEntityTemplateService;
-
-    @Inject
-    private EntityCustomActionService entityActionScriptService;
-
-    @Inject
-    private JobInstanceService jobInstanceService;
-
-    @Inject
-    private CustomizedEntityService customizedEntityService;
 
     public CustomEntityTemplateBean() {
         super(CustomEntityTemplate.class);
-    }
-
-    public String getEntityClassName() {
-        return entityClassName;
-    }
-
-    public void setEntityClassName(String entityClassName) {
-
-        if (entityClassName != null) {
-            entityClassName = ReflectionUtils.getCleanClassName(entityClassName);
-        }
-
-        this.entityClassName = entityClassName;
-    }
-
-    public String getAppliesTo() {
-        return appliesTo;
-    }
-
-    public void setAppliesTo(String appliesTo) {
-        this.appliesTo = appliesTo;
+        entityClass = CustomEntityTemplate.class;
     }
 
     @Override
@@ -234,15 +166,6 @@ public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
         return groupedFields;
     }
 
-    private TreeNode getChildNodeByValue(TreeNode parentTreeNode, String value) {
-        for (TreeNode childNode : parentTreeNode.getChildren()) {
-            if (childNode.getData().equals(value)) {
-                return childNode;
-            }
-        }
-        return null;
-    }
-
     public List<EntityCustomAction> getEntityActions() {
 
         if (entityActions != null || cetPrefix == null) {
@@ -257,15 +180,11 @@ public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
         return entityActions;
     }
 
-    public void removeField(TreeNode currentNode) {
-        currentNode.getParent().getChildren().remove(currentNode);
-        refreshFields();
-    }
-
     /**
      * Remember the tabs and fieldgroups as they are reconstructed from field and action guiPosition fields. And then clear groupedFields value so it would be reconstructed again
      * uppon the first reqeust.
      */
+    @Override
     public void refreshFields() {
         if (groupedFields != null) {
             cachedTreeNodes = new ArrayList<TreeNode>();
@@ -322,14 +241,6 @@ public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
     }
 
     @Override
-    @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
-        super.saveOrUpdate(killConversation);
-
-        return getEditViewName();
-    }
-
-    @Override
     public String getEditViewName() {
         return "customizedEntity";
     }
@@ -350,55 +261,32 @@ public class CustomEntityTemplateBean extends BaseBean<CustomEntityTemplate> {
         return null;
     }
 
+    @Override
     public void newTab() {
         setSelectedFieldGrouping(new SortedTreeNode(GroupedCustomFieldTreeItemType.tab, new TranslatableLabel(""), groupedFields, true));
-        // this.selectedFieldGroupingLabel = (TranslatableLabel) selectedFieldGrouping.getData();
     }
 
+    @Override
     public void newFieldGroup(TreeNode parentNode) {
         setSelectedFieldGrouping(new SortedTreeNode(GroupedCustomFieldTreeItemType.fieldGroup, new TranslatableLabel(""), parentNode, true));
-        // this.selectedFieldGroupingLabel = (TranslatableLabel) selectedFieldGrouping.getData();
     }
 
+    @Override
     public void saveUpdateFieldGrouping() {
-
         try {
-
             ((SortedTreeNode) selectedFieldGrouping).setData(selectedFieldGroupingLabel);
-
             updateFieldGuiPositionValue((SortedTreeNode) selectedFieldGrouping);
-
         } catch (BusinessException e) {
             log.error("Failed to update field grouping {}", selectedFieldGrouping, e);
             messages.error(new BundleKey("messages", "error.unexpected"));
         }
     }
 
+    @Override
     public void cancelFieldGrouping() {
         if (((TranslatableLabel) selectedFieldGrouping.getData()).isEmpty()) {
             selectedFieldGrouping.getParent().getChildren().remove(selectedFieldGrouping);
         }
-    }
-
-    public void removeFieldGrouping() {
-
-        try {
-            for (TreeNode childNode : selectedFieldGrouping.getChildren()) {
-                if (childNode.getType().equals(GroupedCustomFieldTreeItemType.field.name())) {
-                    customFieldTemplateService.remove(((CustomFieldTemplate) childNode.getData()).getId());
-                } else if (childNode.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
-                    for (TreeNode childChildNode : childNode.getChildren()) {
-                        customFieldTemplateService.remove(((CustomFieldTemplate) childChildNode.getData()).getId());
-                    }
-                }
-            }
-
-            selectedFieldGrouping.getParent().getChildren().remove(selectedFieldGrouping);
-
-        } catch (BusinessException e) {
-            log.error("Failed to remove field grouping", e);
-        }
-        refreshFields();
     }
 
     public void moveUp(SortedTreeNode node) {

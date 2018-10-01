@@ -1,25 +1,14 @@
 package org.meveo.model.customEntities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.billing.RelationshipDirectionEnum;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @ModuleItem
@@ -85,6 +74,14 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	public void setEndNode(CustomEntityTemplate endNode) {
 		this.endNode = endNode;
 	}
+
+	public void setEndEntity(CustomEntityTemplate endNode) {
+        this.endNode = endNode;
+    }
+
+    public void setStartEntity(CustomEntityTemplate startEntity){
+        this.startNode = startEntity;
+    }
 
 	public RelationshipDirectionEnum getDirection() {
 		return direction;
