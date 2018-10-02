@@ -18,24 +18,11 @@
  */
 package org.meveo.commons.utils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * Contains application configuration settings
@@ -147,7 +134,7 @@ public class ParamBean {
             return getInstance("meveo-admin.properties");
         } catch (Exception e) {
             log.error("Failed to initialize meveo-admin.properties file.", e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

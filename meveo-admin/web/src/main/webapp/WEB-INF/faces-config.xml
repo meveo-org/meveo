@@ -128,18 +128,6 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             <redirect/>
         </navigation-case>
         <navigation-case>
-            <from-outcome>counterTemplates</from-outcome>
-            <to-view-id>/pages/catalog/counterTemplates/counterTemplates.xhtml
-            </to-view-id>
-            <redirect />
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>counterTemplateDetail</from-outcome>
-            <to-view-id>/pages/catalog/counterTemplates/counterTemplateDetail.xhtml
-            </to-view-id>
-            <redirect />
-        </navigation-case>
-        <navigation-case>
             <from-outcome>jobInstanceDetail</from-outcome>
             <to-view-id>/pages/admin/job/jobInstanceDetail.xhtml</to-view-id>
             <redirect include-view-params="true"/>
@@ -816,67 +804,6 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
                 <!-- <value>#{userAccountBean.entity.id}</value> -->
                 <!-- </view-param> -->
             </redirect>
-        </navigation-case>
-
-        <navigation-case>
-            <from-outcome>customerCategorys</from-outcome>
-            <to-view-id>/pages/crm/customerCategories/customerCategories.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>customerCategories</from-outcome>
-            <to-view-id>/pages/crm/customerCategories/customerCategories.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>customerCategoryDetail</from-outcome>
-            <to-view-id>/pages/crm/customerCategories/customerCategoryDetail.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>customerBrands</from-outcome>
-            <to-view-id>/pages/crm/customerBrands/customerBrands.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>customerBrandDetail</from-outcome>
-            <to-view-id>/pages/crm/customerBrands/customerBrandDetail.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>serviceInstances</from-outcome>
-            <to-view-id>/pages/resource/serviceInstances/serviceInstances.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>serviceInstanceDetail</from-outcome>
-            <to-view-id>/pages/resource/serviceInstances/serviceInstanceDetail.xhtml
-            </to-view-id>
-            <redirect include-view-params="true"/>
-            <!-- <redirect include-view-params="true"> -->
-            <!-- <view-param> -->
-            <!-- <name>backView</name> -->
-            <!-- <value>subscriptionDetailWithNavigation</value> -->
-            <!-- </view-param> -->
-            <!-- </redirect> -->
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>serviceParameterInstances</from-outcome>
-            <to-view-id>/pages/resource/serviceParameterInstances/serviceParameterInstances.xhtml
-            </to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>serviceParameterInstancesDetail</from-outcome>
-            <to-view-id>/pages/resource/serviceParameterInstances/serviceParameterInstanceDetail.xhtml
-            </to-view-id>
-            <redirect/>
         </navigation-case>
         <navigation-case>
             <from-outcome>usageTypes</from-outcome>

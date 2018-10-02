@@ -25,11 +25,6 @@
 			value="#{messages['menu.userGroupHierarchy']}"
 			outcome="userGroupHierarchy"
 			rendered="#{currentUser.hasRole('administrationVisualization')}" />
-		<p:submenu id="menu" label="#{messages['menu.crm']}">
-			<p:menuitem id="titles" outcome="titles"
-				value="#{messages['menu.titles']}" />
-			<p:menuitem id="customerCategories" outcome="customerCategories"
-				value="#{messages['menu.customerCategories']}" />
 		</p:submenu>
 		<p:submenu id="trading" label="#{messages['menu.trading']}"
 			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
@@ -54,47 +49,6 @@
 		<p:menuitem id="meveoProperties"
 			rendered="#{currentUser.hasRole('superAdminManagement')}"
 			outcome="meveoProperties" value="#{messages['menu.properties']}" />
-	</p:submenu>
-	<!-- Catalog -->
-	<p:submenu id="catalog" label="#{messages['menu.catalog']}"
-		rendered="#{currentUser.hasRole('catalogVisualization')}">
-		<p:submenu id="serviceManagement"
-			label="#{messages['menu.catalog.serviceManagement']}">
-			<p:menuitem id="serviceTemplates" outcome="serviceTemplates"
-				value="#{messages['menu.serviceTemplates']}" />
-			<p:menuitem id="counterTemplates" outcome="counterTemplates"
-				value="#{messages['menu.counterTemplates']}" />
-		</p:submenu>
-		<p:submenu id="models" label="#{messages['menu.catalog.models']}">
-			<p:menuitem id="businessServiceModels"
-				outcome="businessServiceModels"
-				value="#{messages['menu.businessServiceModels']}" />
-		</p:submenu>
-	</p:submenu>
-
-	<p:submenu id="crm" label="#{messages['menu.crm']}"
-		rendered="#{currentUser.hasRole('accountVisualization') or currentUser.hasRole('customerSummaryVisualization')}">
-		<p:menuitem id="customerSearch"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="customerSearch" value="#{messages['menu.customerSearch']}" />
-		<p:menuitem id="customers"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="customers" value="#{messages['menu.customers']}" />
-		<p:menuitem id="customerAccounts"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="customerAccounts"
-			value="#{messages['menu.customerAccounts']}" />
-		<p:menuitem id="userAccounts"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="userAccounts" value="#{messages['menu.userAccounts']}" />
-		<p:menuitem id="crmAccounts"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="crmAccounts" value="#{messages['menu.crmAccounts']}" />
-		<p:menuitem id="accessPoints"
-			rendered="#{currentUser.hasRole('accountVisualization')}"
-			outcome="access" value="#{messages['menu.accessPoints']}" />
-	</p:submenu>
-
 	<p:submenu styleClass="mmCustomersSM"
 		label="#{messages['menu.customers']}"
 		rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">

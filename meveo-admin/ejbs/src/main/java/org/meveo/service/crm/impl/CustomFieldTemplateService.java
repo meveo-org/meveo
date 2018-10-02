@@ -1,24 +1,12 @@
 package org.meveo.service.crm.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBeanFactory;
+import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
@@ -34,10 +22,17 @@ import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @author Clément Bareth
+ * @lastModifiedVersion 6.0
  */
 @Stateless
 public class CustomFieldTemplateService extends BusinessService<CustomFieldTemplate> {
@@ -53,6 +48,18 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @PostConstruct
     private void init() {
         useCFTCache = Boolean.parseBoolean(ParamBeanFactory.getAppScopeInstance().getProperty("cache.cacheCFT", "true"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {
+        QueryBuilder qb = new QueryBuilder(CustomFieldTemplate.class, "c", null);
+        qb.addCriterion("appliesTo", "=", appliesTo, true);
+        qb.addBooleanCriterion("unique", true);
+        try {
+            return (List<CustomFieldTemplate> ) qb.getQuery(getEntityManager()).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**

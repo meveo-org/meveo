@@ -84,8 +84,6 @@
   <nodes xsi:type="pageflow:PFPage" name="pages/catalog/triggeredEdrTemplates/triggeredEdrTemplateDetail.xhtml" x="338" y="45511" id="pf1530932774978441" referenceLink="//@navigationRule.0/@navigationCase.125/@toViewId|" inlinks="pf1530932774974126" path="/pages/catalog/triggeredEdrTemplates/triggeredEdrTemplateDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/catalog/calendars/calendars.xhtml" x="338" y="45895" id="pf1530932774978442" referenceLink="//@navigationRule.0/@navigationCase.126/@toViewId|" inlinks="pf1530932774974127" path="/pages/catalog/calendars/calendars.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/catalog/calendars/calendarDetail.xhtml" x="338" y="46279" id="pf1530932774978443" referenceLink="//@navigationRule.0/@navigationCase.127/@toViewId|" inlinks="pf1530932774974128" path="/pages/catalog/calendars/calendarDetail.xhtml"/>
-  <nodes xsi:type="pageflow:PFPage" name="pages/catalog/counterTemplates/counterTemplates.xhtml" x="338" y="53191" id="pf1530932774982461" referenceLink="//@navigationRule.0/@navigationCase.145/@toViewId|" inlinks="pf1530932774974146" path="/pages/catalog/counterTemplates/counterTemplates.xhtml"/>
-  <nodes xsi:type="pageflow:PFPage" name="pages/catalog/counterTemplates/counterTemplateDetail.xhtml" x="338" y="53575" id="pf1530932774982462" referenceLink="//@navigationRule.0/@navigationCase.146/@toViewId|" inlinks="pf1530932774974147" path="/pages/catalog/counterTemplates/counterTemplateDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/crm/customers/customers.xhtml" x="338" y="53959" id="pf1530932774982463" referenceLink="//@navigationRule.0/@navigationCase.147/@toViewId|" inlinks="pf1530932774974148" path="/pages/crm/customers/customers.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/crm/customers/customerDetail.xhtml" x="1202" y="66875" id="pf1530932774982464" referenceLink="//@navigationRule.3/@navigationCase.1/@toViewId|" inlinks="pf1530932774974149 pf1530932774982465 pf1530932774982466" path="/pages/crm/customers/customerDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/payments/customerAccounts/customerAccountDetail.xhtml" x="986" y="110714" id="pf1530932774982467" referenceLink="//@navigationRule.5/@navigationCase.0/@toViewId|" outlinks="pf1530932774982465 pf1530932774982466" inlinks="pf1530932774974150 pf1530932774974153 pf1530932774974154 pf1530932774977405 pf1530932774977406 pf1530932774982468" path="/pages/payments/customerAccounts/customerAccountDetail.xhtml"/>
@@ -121,8 +119,6 @@
   <nodes xsi:type="pageflow:PFPage" name="pages/medina/access/accessDetail.xhtml" x="338" y="64711" id="pf1530932774982500" referenceLink="//@navigationRule.0/@navigationCase.188/@toViewId|" inlinks="pf1530932774974188 pf1530932774974189" path="/pages/medina/access/accessDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/medina/importedFile/importedFiles.xhtml" x="338" y="65095" id="pf1530932774982501" referenceLink="//@navigationRule.0/@navigationCase.189/@toViewId|" inlinks="pf1530932774974190" path="/pages/medina/importedFile/importedFiles.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/medina/importedFile/importedFileDetail.xhtml" x="338" y="65479" id="pf1530932774982502" referenceLink="//@navigationRule.0/@navigationCase.190/@toViewId|" inlinks="pf1530932774974191" path="/pages/medina/importedFile/importedFileDetail.xhtml"/>
-  <nodes xsi:type="pageflow:PFPage" name="pages/crm/customerCategories/customerCategories.xhtml" x="338" y="65863" id="pf1530932774982503" referenceLink="//@navigationRule.0/@navigationCase.193/@toViewId|" inlinks="pf1530932774974193 pf1530932774974194" path="/pages/crm/customerCategories/customerCategories.xhtml"/>
-  <nodes xsi:type="pageflow:PFPage" name="pages/crm/customerCategories/customerCategoryDetail.xhtml" x="338" y="66247" id="pf1530932774982504" referenceLink="//@navigationRule.0/@navigationCase.194/@toViewId|" inlinks="pf1530932774974195" path="/pages/crm/customerCategories/customerCategoryDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/crm/customerBrands/customerBrands.xhtml" x="338" y="66631" id="pf1530932774982505" referenceLink="//@navigationRule.0/@navigationCase.195/@toViewId|" inlinks="pf1530932774974196" path="/pages/crm/customerBrands/customerBrands.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/crm/customerBrands/customerBrandDetail.xhtml" x="338" y="67015" id="pf1530932774982506" referenceLink="//@navigationRule.0/@navigationCase.196/@toViewId|" inlinks="pf1530932774974197" path="/pages/crm/customerBrands/customerBrandDetail.xhtml"/>
   <nodes xsi:type="pageflow:PFPage" name="pages/resource/serviceInstances/serviceInstances.xhtml" x="338" y="67399" id="pf1530932774982507" referenceLink="//@navigationRule.0/@navigationCase.197/@toViewId|" inlinks="pf1530932774974198" path="/pages/resource/serviceInstances/serviceInstances.xhtml"/>
@@ -329,12 +325,6 @@
   <links id="pf1530932774974139" target="pf1530932774982454" source="pf15309327749730" outcome="invoiceCategoryDetail" redirect="true"/>
   <links id="pf1530932774974140" target="pf1530932774982455" source="pf15309327749730" outcome="invoiceSubCategories" redirect="true"/>
   <links id="pf1530932774974141" target="pf1530932774982456" source="pf15309327749730" outcome="invoiceSubCategoryDetail" redirect="true"/>
-  <links id="pf1530932774974142" target="pf1530932774982457" source="pf15309327749730" outcome="usageChargeTemplates" redirect="true"/>
-  <links id="pf1530932774974143" target="pf1530932774982458" source="pf15309327749730" outcome="usageChargeTemplateDetail" redirect="true"/>
-  <links id="pf1530932774974144" target="pf1530932774982459" source="pf15309327749730" outcome="walletTemplates" redirect="true"/>
-  <links id="pf1530932774974145" target="pf1530932774982460" source="pf15309327749730" outcome="walletTemplateDetail" redirect="true"/>
-  <links id="pf1530932774974146" target="pf1530932774982461" source="pf15309327749730" outcome="counterTemplates" redirect="true"/>
-  <links id="pf1530932774974147" target="pf1530932774982462" source="pf15309327749730" outcome="counterTemplateDetail" redirect="true"/>
   <links id="pf1530932774974148" target="pf1530932774982463" source="pf15309327749730" outcome="customers" redirect="true"/>
   <links id="pf1530932774974149" target="pf1530932774982464" source="pf15309327749730" outcome="customerDetail" redirect="true"/>
   <links id="pf1530932774974150" target="pf1530932774982467" source="pf15309327749730" outcome="addCustomerAccount" redirect="true"/>
@@ -381,7 +371,6 @@
   <links id="pf1530932774974191" target="pf1530932774982502" source="pf15309327749730" outcome="importedFileDetail" redirect="true"/>
   <links id="pf1530932774974192" target="pf1530932774982497" source="pf15309327749730" outcome="addNewSubscription" redirect="true"/>
   <links id="pf1530932774974193" target="pf1530932774982503" source="pf15309327749730" outcome="customerCategorys" redirect="true"/>
-  <links id="pf1530932774974194" target="pf1530932774982503" source="pf15309327749730" outcome="customerCategories" redirect="true"/>
   <links id="pf1530932774974195" target="pf1530932774982504" source="pf15309327749730" outcome="customerCategoryDetail" redirect="true"/>
   <links id="pf1530932774974196" target="pf1530932774982505" source="pf15309327749730" outcome="customerBrands" redirect="true"/>
   <links id="pf1530932774974197" target="pf1530932774982506" source="pf15309327749730" outcome="customerBrandDetail" redirect="true"/>

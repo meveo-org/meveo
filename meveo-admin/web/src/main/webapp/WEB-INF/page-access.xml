@@ -102,13 +102,6 @@
 		<constraint type="READ">currentUser.hasRole('accountVisualization')</constraint>
 	</page>
 
-    <page view-id=".+\/crm\/customerCategories\/.*" >
-		<constraint>currentUser.hasRole('catalogManagement')</constraint>
-		<constraint>currentUser.hasRole('administrationManagement')</constraint>
-		<constraint type="READ">currentUser.hasRole('catalogVisualization')</constraint>
-		<constraint type="READ">currentUser.hasRole('administrationVisualization')</constraint>
-	</page>
-	
 	<page view-id=".+\/crm\/providerContacts\/.*" >
 		<constraint>currentUser.hasRole('catalogManagement')</constraint>
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>

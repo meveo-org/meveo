@@ -20,11 +20,6 @@
 			</p:breadCrumb>
 		</h:form>    
 
-        <hftl:entityPopup id="searchCounterTemplatePopup" header="#{messages['counterTemplate.title']}" updateField=":webHookFormId:counterTemplateSelectedId :webHookFormId:counterTemplateSelectedId_text"
-            selection="#{webHookBean.entity.counterTemplate}" backingBean="#{counterTemplateBean}" searchField1Label="#{messages['businessEntity.code']}" searchField1="code"
-            column1Label="#{messages['businessEntity.code']}" column1="code" column2Label="#{messages['businessEntity.description']}" column2="description"
-            dataModel="#{counterTemplateBean.getLazyDataModel('NOTIFICATION')}">
-        </hftl:entityPopup>
         <hftl:entityPopup id="scriptInstancePopup" header="#{messages['scriptInstance.title']}" backingBean="#{scriptInstanceBean}"
             searchField1Label="#{messages['BusinessEntity.code']}" searchField1="code" column1Label="#{messages['BusinessEntity.code']}" column1="code"
             selection="#{webHookBean.entity.scriptInstance}" column2Label="#{messages['BusinessEntity.description']}" column2="description"
@@ -38,9 +33,6 @@
                 autocompleteBean="#{webHookBean}" autocompleteMethod="autocompleteClassNames" isAutocomplete="true" listenerUpdate="eventTypeFilter"/>
             <hftl:formField id="eventTypeFilter" label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" required="true" listValues="#{webHookBean.getNotificationEventTypeFilters()}"/>
             <hftl:formField label="#{messages['entity.notification.elFilter']}" field="elFilter" textArea="true" rows="1" maxlength="2000" componentWidth="50" newLine="true" />
-
-            <hftl:formField id="counterTemplateSelectedId" label="#{messages['counterTemplate.title']}" field="counterTemplate" valueLabelField="code" popup="true"
-                popupId="searchCounterTemplatePopup" showResetButton="true" required="false" />
 
 			<hftl:formField label="#{messages['entity.webHook.protocol']}" field="httpProtocol" />
             <hftl:formField label="#{messages['entity.webHook.host']}" field="host" required="true" size="100" />
