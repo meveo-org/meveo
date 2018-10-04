@@ -15,61 +15,59 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.connector;
+package org.meveo.api.dto;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
-import org.meveo.model.BusinessEntity;
+import org.meveo.model.connector.Connector;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
+ * Data transfer object for connector.
+ *
  * @author Clément Bareth
  */
-@Table(name = "connectors", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
-@GenericGenerator(
-        name = "ID_GENERATOR",
-        strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-        parameters = {@Parameter(name = "sequence_name", value = "connector_seq")}
-)
-public class ConnectorInstance extends BusinessEntity {
+@XmlRootElement()
+@XmlAccessorType(XmlAccessType.FIELD)
+public class ConnectorDto extends BusinessDto {
 
-    @Type(type = "json")
-    @Column(name = "connector", columnDefinition = "text")
+    @NotNull(message = "The connector data must not be null")
     private Connector connector;
 
-    @Column(name = "name")
+    @NotNull(message = "The connector name must be provided")
     private String name;
 
-    /**
-     * Connector retrieved
-     */
+    @Min(value = 0, message = "Connector version cannot be lower than {value}.")
+    private Integer version;
+
+    public ConnectorDto() {
+    }
+
     public Connector getConnector() {
         return connector;
     }
 
-    /**
-     * @param connector Connector to store. Should not be null
-     */
     public void setConnector(Connector connector) {
         this.connector = connector;
     }
 
-    /**
-     * Name of the connector
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * @param name Name of the connector
-     */
     public void setName(String name) {
         this.name = name;
     }
 
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 }
