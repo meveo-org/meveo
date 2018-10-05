@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+    
+    <changeSet id="#1102_20160823" author="rachidAityaazza">
+        <createSequence sequenceName="CUST_CRT_SEQ"/>
+
+        <createTable tableName="CUST_CRT">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="version" type="INT4" />
+            <column name="disabled" type="${type.boolean}">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
+            <column name="description" type="VARCHAR(100)" />
+            <column name="code" type="VARCHAR(50)" />
+            <column name="provider_id" type="BIGINT" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+
+            <column name="name" type="VARCHAR(100)" />
+            <column name="direction" type="VARCHAR(100)" />
+            <column name="start_node_id" type="BIGINT" />
+            <column name="end_node_id" type="BIGINT" />
+            <column name="start_node_keys" type="VARCHAR(100)" />
+            <column name="end_node_keys" type="VARCHAR(100)" />
+        </createTable>
+
+        <addPrimaryKey columnNames="id" constraintName="cust_crt_pkey"
+            tableName="cust_crt" />
+
+        <addForeignKeyConstraint baseColumnNames="provider_id"
+            baseTableName="cust_crt" constraintName="fk_cust_crt_crm_provider"
+            deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="crm_provider" />
+
+        <addForeignKeyConstraint baseColumnNames="start_node_id"
+            baseTableName="cust_crt" constraintName="fk_cust_crt_start_node"
+            deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cet"/>
+
+        <addForeignKeyConstraint baseColumnNames="end_node_id"
+            baseTableName="cust_crt" constraintName="fk_cust_crt_end_node"
+            deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cet"/>
+
+    </changeSet>
+    <changeSet id="#1150_20161010" author="rachidAityaazza" failOnError="false">
+		<addColumn tableName="crm_custom_field_tmpl">
+            <column name="is_unique" type="${type.boolean}" defaultValueNumeric="0"/>
+            <column name="is_filter" type="${type.boolean}" defaultValueNumeric="0"/>
+            <column name="expression_separator" type="VARCHAR(100)"/>
+		</addColumn>
+	</changeSet>
+	<changeSet id="#2289_20170202" author="rachidAityaazza"> 
+        <modifyDataType tableName="CRM_CUSTOM_FIELD_TMPL" columnName="INDEX_TYPE" newDataType="VARCHAR(250)"/>
+    </changeSet> 
+    <changeSet id="#2289_20170203" author="rachidAityaazza"> 
+        <modifyDataType tableName="CUST_CEI" columnName="CODE" newDataType="VARCHAR(250)"/>
+    </changeSet>
+    <changeSet id="#2290_20170524" author="pbach">
+        <createSequence sequenceName="IEP_REGION_SEQ"/>
+
+        <createTable tableName="IEP_REGION">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="version" type="INT4" />
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
+            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="region_code" type="VARCHAR(50)" />
+            <column name="description_en" type="VARCHAR(100)" />
+            <column name="description_fr" type="VARCHAR(100)" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="iep_region_pkey"
+                       tableName="IEP_REGION" />
+
+        <createTable tableName="IEP_REGION_COUNTRY">
+            <column name="region_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="country_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="region_id, country_id" constraintName="iep_region_country_pkey" tableName="IEP_REGION_COUNTRY" />
+        <addForeignKeyConstraint baseColumnNames="region_id" baseTableName="IEP_REGION_COUNTRY" constraintName="fk_iep_region_country_region" deferrable="false"
+                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="IEP_REGION" />
+        <addForeignKeyConstraint baseColumnNames="country_id" baseTableName="IEP_REGION_COUNTRY" constraintName="fk_iep_region_country_country" deferrable="false"
+                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ADM_COUNTRY" />
+
+         <!--<sql>-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (1, 0, '2017-05-24 07:46:20.404', NULL, 'AS', 'Asia', 'Asie', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (2, 0, '2017-05-24 07:46:20.404', NULL, 'NA,', 'North America,', 'Amérique du nord', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (3, 0, '2017-05-24 07:46:20.404', NULL, 'SA', 'South America', 'Amérique du sud', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (4, 0, '2017-05-24 07:46:20.404', NULL, 'EU', 'Europe', 'Europe', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (5, 0, '2017-05-24 07:46:20.404', NULL, 'AF', 'Africa', 'Afrique', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (6, 0, '2017-05-24 07:46:20.404', NULL, 'AN', 'Antarctica', 'Antarctique', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (7, 0, '2017-05-24 07:46:20.404', NULL, 'AU', 'Australia', 'Australie', 1, NULL);-->
+            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (8, 0, '2017-05-24 07:46:20.404', NULL, 'OC', 'Oceania', 'Océanie', 1, NULL);-->
+        <!--</sql>-->
+    </changeSet>
+
+</databaseChangeLog>

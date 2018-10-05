@@ -60,7 +60,10 @@ public class ElasticClientConnection {
         String clusterName = null;
         String[] hosts = null;
         String portStr = null;
-
+        
+        if(paramBean.getProperty("elasticsearch.disabled", "false").equals("true")) {
+        	return;
+        }
         try {
             clusterName = paramBean.getProperty("elasticsearch.cluster.name", "");
             hosts = paramBean.getProperty("elasticsearch.hosts", "localhost").split(";");

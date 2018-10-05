@@ -1,13 +1,13 @@
 package org.meveo.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.meveo.api.MeveoApiErrorCodeEnum;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import org.meveo.api.MeveoApiErrorCodeEnum;
 
 /**
  * Determine the status of the MEVEO API web service response.
@@ -38,6 +38,7 @@ public class ActionStatus {
 
     public ActionStatus() {
         status = ActionStatusEnum.SUCCESS;
+        this.message = "";
     }
 
     /**

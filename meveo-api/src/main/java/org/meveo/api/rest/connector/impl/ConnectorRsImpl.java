@@ -17,6 +17,7 @@
  */
 package org.meveo.api.rest.connector.impl;
 
+import org.meveo.api.ConnectorApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ConnectorDto;
 import org.meveo.api.dto.response.GetConnectorResponse;
@@ -26,9 +27,8 @@ import org.meveo.api.rest.connector.ConnectorRs;
 import org.meveo.api.rest.impl.BaseRs;
 
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.interceptor.Interceptors;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * @author Clément Bareth
@@ -37,34 +37,34 @@ import javax.validation.constraints.NotNull;
 @Interceptors({WsRestApiInterceptor.class})
 public class ConnectorRsImpl extends BaseRs implements ConnectorRs {
 
+    @Inject
+    private ConnectorApi connectorApi;
+
     @Override
     public ActionStatus index() {
         return null;
     }
 
     @Override
-    public ActionStatus create(@Valid @NotNull ConnectorDto postData) {
-        return null;
+    public ActionStatus create(ConnectorDto postData) {
+        ActionStatus result = new ActionStatus();
+        try {
+            connectorApi.create(postData);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
     }
 
     @Override
-    public ActionStatus update(@Valid @NotNull ConnectorDto postData) {
-        return null;
-    }
-
-    @Override
-    public GetConnectorResponse findByNameAndVersionOrLatest(String connectorName, String version) {
-        return null;
-    }
-
-    @Override
-    public ListConnectorResponse list() {
-        return null;
-    }
-
-    @Override
-    public ListConnectorResponse listByName(String connectorName) {
-        return null;
+    public ActionStatus update(ConnectorDto postData) {
+        ActionStatus result = new ActionStatus();
+        try {
+            connectorApi.update(postData);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
     }
 
     @Override
@@ -73,7 +73,41 @@ public class ConnectorRsImpl extends BaseRs implements ConnectorRs {
     }
 
     @Override
-    public ActionStatus createOrUpdate(@Valid @NotNull ConnectorDto postData) {
+    public ActionStatus createOrUpdate(ConnectorDto postData) {
         return null;
     }
+
+    @Override
+    public GetConnectorResponse findByNameAndVersionOrLatest(String connectorName, String version) {
+        GetConnectorResponse result = new GetConnectorResponse();
+        try {
+            result.setConnectorDto(connectorApi.findByNameAndVersionOrLatest(connectorName, version != null ? Integer.parseInt(version) : null));
+        } catch (Exception e) {
+            processException(e, result.getActionStatus());
+        }
+        return result;
+    }
+
+    @Override
+    public ListConnectorResponse list(String connectorName) {
+        ListConnectorResponse result = new ListConnectorResponse();
+        try {
+            result.setConnectors(connectorApi.list(connectorName));
+        } catch (Exception e) {
+            processException(e, result.getActionStatus());
+        }
+        return result;
+    }
+
+    @Override
+    public ListConnectorResponse listByName(String connectorName) {
+        ListConnectorResponse result = new ListConnectorResponse();
+        try {
+            result.setConnectors(connectorApi.listByName(connectorName));
+        } catch (Exception e) {
+            processException(e, result.getActionStatus());
+        }
+        return result;
+    }
+
 }

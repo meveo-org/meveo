@@ -67,11 +67,12 @@ public interface ConnectorRs extends IBaseRs {
     /**
      * Retrieve a list of all connectors.
      *
+     * @param connectorName Name filter
      * @return list of all connectors
      */
     @Path("/")
     @GET
-    ListConnectorResponse list();
+    ListConnectorResponse list(@QueryParam("connectorName") String connectorName);
 
     /**
      * Retrieve a list of all versions of the connector with the given name.

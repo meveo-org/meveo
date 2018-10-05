@@ -795,9 +795,12 @@
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE">
                 <constraints nullable="false" />
             </column>
+            <column name="disabled" type="INT4"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE" />
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
+            <column name="description" type="varchar(255)" />
+            <column name="code" type="varchar(255)" />
             <column name="connector" type="${type.longtext}" >
                 <constraints nullable="false" />
             </column>

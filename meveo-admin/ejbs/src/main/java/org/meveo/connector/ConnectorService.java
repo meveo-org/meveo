@@ -21,6 +21,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.connector.ConnectorInstance;
 import org.meveo.service.base.BusinessService;
 
+import javax.ejb.Stateless;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.Optional;
  *
  * @author Clément Bareth
  */
+@Stateless
 public class ConnectorService extends BusinessService<ConnectorInstance> {
 
     /**
@@ -58,13 +60,14 @@ public class ConnectorService extends BusinessService<ConnectorInstance> {
      * @param name Name of the connector to retrieve
      * @return The list of connector's version
      */
-    public List<ConnectorInstance> findByName(String name) {
+    @SuppressWarnings("unchecked")
+	public List<ConnectorInstance> findByName(String name) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "connector", null);
         qb.addCriterion("connector.name", "=", name, true);
         try {
             return (List<ConnectorInstance>) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
-            log.warn("No CustomEntityInstance by name {} found", name);
+            log.warn("No Connector by name {} found", name);
         }
         return new ArrayList<>();
     }
@@ -76,13 +79,14 @@ public class ConnectorService extends BusinessService<ConnectorInstance> {
      * @return The last version of the connector
      */
     public Optional<ConnectorInstance> findLatestByName(String name) {
-        QueryBuilder qb = new QueryBuilder(getEntityClass(), "connector", null);
+    	QueryBuilder qb = new QueryBuilder(getEntityClass(), "connector", null);
         qb.addCriterion("connector.name", "=", name, true);
-        qb.addSql("connector.version = (select max(ci.version) from ConnectorInstance ci where ci.name = connector.name)");
+        qb.addSql("connector.version = (select max(ci.version) from org.meveo.model.connector.ConnectorInstance ci where "
+        		+ "ci.name = connector.name)");
         try {
             return Optional.of((ConnectorInstance) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
-            log.warn("No CustomEntityInstance by name {} found", name);
+            log.warn("No Connector by name {} found", name);
         }
         return Optional.empty();
     }
@@ -96,12 +100,12 @@ public class ConnectorService extends BusinessService<ConnectorInstance> {
      */
     public Optional<ConnectorInstance> findByNameAndVersion(String name, Integer version) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "connector", null);
-        qb.addCriterion("connector.name", "=", name, true);
-        qb.addCriterion("connector.version", "=", version, true);
+        qb.addCriterion("name", "=", name, true);
+        qb.addCriterion("version", "=", version, true);
         try {
             return Optional.of((ConnectorInstance) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
-            log.warn("No CustomEntityInstance by name {} and version {} found", name, version);
+            log.warn("No Connector by name {} and version {} found", name, version);
         }
         return Optional.empty();
     }

@@ -17,18 +17,20 @@
  */
 package org.meveo.model.connector;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-
 /**
  * @author Clément Bareth
  */
+@Entity
 @Table(name = "connectors", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
 @GenericGenerator(
         name = "ID_GENERATOR",
@@ -37,7 +39,9 @@ import javax.persistence.UniqueConstraint;
 )
 public class ConnectorInstance extends BusinessEntity {
 
-    @Type(type = "json")
+	private static final long serialVersionUID = 1L;
+
+	@Type(type = "json")
     @Column(name = "connector", columnDefinition = "text")
     private Connector connector;
 
