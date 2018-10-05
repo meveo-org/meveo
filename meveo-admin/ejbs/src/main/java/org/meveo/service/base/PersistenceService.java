@@ -163,20 +163,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * 
      * @param entity Entity to update in DB
      * @return Updated entity
-     * @throws BusinessException General business exception
      */
-    public E updateNoCheck(E entity) throws BusinessException {
+    public E updateNoCheck(E entity) {
         log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
-
-        if (BusinessEntity.class.isAssignableFrom(entity.getClass())) {
-            // validate code
-            validateCode((BusinessEntity) entity);
-        }
-
         updateAudit(entity);
-        E mergedEntity = getEntityManager().merge(entity);
-
-        return mergedEntity;
+        return getEntityManager().merge(entity);
     }
 
     /**
@@ -226,7 +217,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         StringBuilder queryString = new StringBuilder("from " + productClass.getName() + " a");
         if (fetchFields != null && !fetchFields.isEmpty()) {
             for (String fetchField : fetchFields) {
-                queryString.append(" left join fetch a." + fetchField);
+                queryString.append(" left join fetch a.").append(fetchField);
             }
         }
         queryString.append(" where a.id = :id");
@@ -236,7 +227,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         List<E> results = query.getResultList();
         E e = null;
         if (!results.isEmpty()) {
-            e = (E) results.get(0);
+            e = results.get(0);
             if (refresh) {
                 log.debug("refreshing loaded entity");
                 getEntityManager().refresh(e);
@@ -263,9 +254,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
             log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
             ((EnableEntity) entity).setDisabled(true);
-            if (entity instanceof IAuditable) {
-                ((IAuditable) entity).updateAudit(currentUser);
-            }
+            ((IAuditable) entity).updateAudit(currentUser);
             entity = getEntityManager().merge(entity);
             if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
                 entityDisabledEventProducer.fire((BaseEntity) entity);
@@ -292,9 +281,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         if (entity instanceof EnableEntity && ((EnableEntity) entity).isDisabled()) {
             log.debug("start of enable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
             ((EnableEntity) entity).setDisabled(false);
-            if (entity instanceof IAuditable) {
-                ((IAuditable) entity).updateAudit(currentUser);
-            }
+            ((IAuditable) entity).updateAudit(currentUser);
             entity = getEntityManager().merge(entity);
             if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
                 entityEnabledEventProducer.fire((BaseEntity) entity);
@@ -313,8 +300,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
                 entityRemovedEventProducer.fire((BaseEntity) entity);
             }
-            // getEntityManager().flush();
-
             // Remove entity from Elastic Search
             if (BusinessEntity.class.isAssignableFrom(entity.getClass())) {
                 elasticClient.remove((BusinessEntity) entity);
@@ -327,7 +312,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
             if (entity instanceof IImageUpload) {
                 try {
-                    ImageUploadEventHandler<E> imageUploadEventHandler = new ImageUploadEventHandler<E>(currentUser.getProviderCode());
+                    ImageUploadEventHandler<E> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
                     imageUploadEventHandler.deleteImage(entity);
                 } catch (IOException e) {
                     log.error("Failed deleting image file");
@@ -335,7 +320,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             }
         }
 
-        log.trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity.getId());
+        log.trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity != null ? entity.getId() : "");
     }
 
     /**
@@ -366,10 +351,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     public E update(E entity) throws BusinessException {
         log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
-        if (entity instanceof ISearchable) {
-            validateCode((ISearchable) entity);
-        }
-
         if (entity instanceof IAuditable) {
             ((IAuditable) entity).updateAudit(currentUser);
         }
@@ -379,7 +360,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         }
 
         // Schedule end of period events
-        // Be carefull - if called after persistence might loose ability to determine new period as CustomFeldvalue.isNewPeriod is not serialized to json
+        // Be careful - if called after persistence might loose ability to determine new period as CustomFeldvalue.isNewPeriod is not serialized to json
         if (entity instanceof ICustomFieldEntity) {
             customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
         }
@@ -399,24 +380,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         return entity;
     }
 
-    private boolean validateCode(ISearchable entity) throws BusinessException {
-        // if (!StringUtils.isMatch(entity.getCode(), ParamBeanFactory.getAppScopeInstance().getProperty("meveo.code.pattern", StringUtils.CODE_REGEX))) {
-        // throw new BusinessException("Invalid characters found in entity code.");
-        // }
-
-        return true;
-    }
-
     /**
      * @see org.meveo.service.base.local.IPersistenceService#create(org.meveo.model.IEntity)
      */
     @Override
     public void create(E entity) throws BusinessException {
         log.debug("start of create {} entity={}", entity.getClass().getSimpleName());
-
-        if (entity instanceof ISearchable) {
-            validateCode((ISearchable) entity);
-        }
 
         if (entity instanceof IAuditable) {
             ((IAuditable) entity).updateAudit(currentUser);
@@ -551,13 +520,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      */
     @Override
     public void refresh(IEntity entity) {
-        // entity manager throws exception if trying to refresh not managed
-        // entity (ejb spec requires this).
-        /*
-         * TODO: Hibernate. org.hibernate.Session session = (Session) getEntityManager().getDelegate(); session.refresh(entity);
-         */
-        // getEntityManager().getEntityManagerFactory().getCache().evict(entity.getClass(),
-        // entity.getId());
         if (getEntityManager().contains(entity)) {
             getEntityManager().refresh(entity);
         }
@@ -592,7 +554,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             return null;
         }
 
-        List<E> refreshedEntities = new ArrayList<E>();
+        List<E> refreshedEntities = new ArrayList<>();
         for (E entity : entities) {
             refreshedEntities.add(refreshOrRetrieve(entity));
         }
@@ -607,7 +569,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             return null;
         }
 
-        Set<E> refreshedEntities = new HashSet<E>();
+        Set<E> refreshedEntities = new HashSet<>();
         for (E entity : entities) {
             refreshedEntities.add(refreshOrRetrieve(entity));
         }
@@ -647,7 +609,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             return null;
         }
 
-        List<E> refreshedEntities = new ArrayList<E>();
+        List<E> refreshedEntities = new ArrayList<>();
         for (E entity : entities) {
             refreshedEntities.add(retrieveIfNotManaged(entity));
         }
@@ -662,7 +624,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             return null;
         }
 
-        Set<E> refreshedEntities = new HashSet<E>();
+        Set<E> refreshedEntities = new HashSet<>();
         for (E entity : entities) {
             refreshedEntities.add(retrieveIfNotManaged(entity));
         }
@@ -769,7 +731,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                     }
 
                     // Key format is: condition field1 field2 or condition-field1-field2-fieldN
-                    // example: "ne code", condition=code, fieldName=code, fieldName2=null
+                    // example: "ne code", condition=ne, fieldName=code, fieldName2=null
                     String[] fieldInfo = key.split(" ");
                     String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
                     String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
@@ -846,12 +808,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                             List classes = new ArrayList<Class>();
                             for (Object classNameOrClass : (Collection) filterValue) {
                                 if (classNameOrClass instanceof Class) {
-                                    classes.add((Class) classNameOrClass);
+                                    classes.add(classNameOrClass);
                                 } else {
                                     try {
                                         classes.add(Class.forName((String) classNameOrClass));
                                     } catch (ClassNotFoundException e) {
-                                        log.error("Search by a type will be ignored - unknown class {}", (String) classNameOrClass);
+                                        log.error("Search by a type will be ignored - unknown class {}", classNameOrClass);
                                     }
                                 }
                             }
@@ -988,7 +950,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
                             // if contains dot, that means join is needed
                             String filterString = (String) filterValue;
-                            boolean wildcard = (filterString.indexOf("*") != -1);
+                            boolean wildcard = (filterString.contains("*"));
                             if (wildcard) {
                                 queryBuilder.addCriterionWildcard("a." + fieldName, filterString, true, "ne".equals(condition));
                             } else {
@@ -1006,7 +968,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
                         } else if (filterValue instanceof Enum) {
                             if (filterValue instanceof IdentifiableEnum) {
-                                String enumIdKey = new StringBuilder(fieldName).append("Id").toString();
+                                String enumIdKey = fieldName + "Id";
                                 queryBuilder.addCriterion("a." + enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
                             } else {
                                 queryBuilder.addCriterionEnum("a." + fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
@@ -1033,9 +995,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             queryBuilder.addPaginationConfiguration(config, "a");
         }
 
-        // log.trace("Filters is {}", filters);
-        // log.trace("Query is {}", queryBuilder.getSqlString());
-        // log.trace("Query params are {}", queryBuilder.getParams());
         return queryBuilder;
     }
 
@@ -1044,7 +1003,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             try {
                 conversation.isTransient();
                 return true;
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -1109,8 +1068,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                 q.setParameter(entry.getKey(), entry.getValue());
             }
         }
-        List<Map<String, Object>> aliasToValueMapList = q.list();
-
-        return aliasToValueMapList;
+        return (List<Map<String, Object>>) q.list();
     }
 }

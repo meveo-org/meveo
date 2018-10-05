@@ -23,8 +23,6 @@ import org.meveo.api.dto.response.GetConnectorResponse;
 import org.meveo.api.dto.response.ListConnectorResponse;
 import org.meveo.api.rest.IBaseRs;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
@@ -45,7 +43,7 @@ public interface ConnectorRs extends IBaseRs {
      */
     @Path("/")
     @POST
-    ActionStatus create(@Valid @NotNull ConnectorDto postData);
+    ActionStatus create(ConnectorDto postData);
 
     /**
      * Update a connector.
@@ -54,7 +52,7 @@ public interface ConnectorRs extends IBaseRs {
      */
     @Path("/")
     @PUT
-    ActionStatus update(@Valid @NotNull ConnectorDto postData);
+    ActionStatus update(ConnectorDto postData);
 
     /**
      * Search for connector with a given name.
@@ -104,6 +102,6 @@ public interface ConnectorRs extends IBaseRs {
      */
     @Path("/createOrUpdate")
     @POST
-    ActionStatus createOrUpdate(@Valid @NotNull ConnectorDto postData);
+    ActionStatus createOrUpdate(ConnectorDto postData);
 
 }

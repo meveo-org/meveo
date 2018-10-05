@@ -36,7 +36,10 @@ public class ConnectorsDto extends BusinessDto {
     private List<ConnectorDto> connectors = new ArrayList<>();
 
     public ConnectorsDto() {
+    }
 
+    public ConnectorsDto(List<ConnectorDto> connectors) {
+        this.connectors = connectors;
     }
 
     public List<ConnectorDto> getConnectors() {
