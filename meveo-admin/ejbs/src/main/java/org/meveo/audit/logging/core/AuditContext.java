@@ -41,21 +41,22 @@ public class AuditContext {
 	 */
 	public void init() {
 		_propertyFile = AUDIT_CONFIG;
-		if (System.getProperty(AUDIT_CONFIG) != null) {
-			_propertyFile = System.getProperty(AUDIT_CONFIG);
-		} else {
-			// https://docs.jboss.org/author/display/AS7/Command+line+parameters
-			// http://www.jboss.org/jdf/migrations/war-stories/2012/07/18/jack_wang/
-			if (System.getProperty("jboss.server.config.dir") == null) {
-				_propertyFile = ResourceUtils.getFileFromClasspathResource(AUDIT_CONFIG).getAbsolutePath();
-			} else {
-				_propertyFile = System.getProperty("jboss.server.config.dir") + File.separator + AUDIT_CONFIG;
-			}
-		}
+        try {
+            if (System.getProperty(AUDIT_CONFIG) != null) {
+                _propertyFile = System.getProperty(AUDIT_CONFIG);
+            } else {
+                if (System.getProperty("jboss.server.config.dir") == null) {
+                    _propertyFile = ResourceUtils.getFileFromClasspathResource(AUDIT_CONFIG).getAbsolutePath();
+                } else {
+                    _propertyFile = System.getProperty("jboss.server.config.dir") + File.separator + AUDIT_CONFIG;
+                }
+            }
+            initialize();
+            log.info("Initialized AuditContext.");
+        } catch (NullPointerException e) {
+            log.info("Audit configuration file not found, AuditContext not initialized");
+        }
 
-		initialize();
-
-		log.info("Initialized AuditContext.");
 	}
 
 	public boolean initialize() {

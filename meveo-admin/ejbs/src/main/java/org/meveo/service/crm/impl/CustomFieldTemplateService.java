@@ -82,7 +82,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      * Find a list of custom field templates corresponding to a given entity. Custom field templates are looked up in cache or retrieved from DB.
      * 
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
-     * @return A list of custom field templates mapped by a template key
+     * @return A list of custom field templates mapped by a template code
      */
     public Map<String, CustomFieldTemplate> findByAppliesTo(String appliesTo) {
 
@@ -414,13 +414,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             cft.setCalendar(PersistenceUtils.initializeAndUnproxy(cft.getCalendar()));
             if (cft.getCalendar() instanceof CalendarDaily) {
                 ((CalendarDaily) cft.getCalendar()).setHours(PersistenceUtils.initializeAndUnproxy(((CalendarDaily) cft.getCalendar()).getHours()));
-                ((CalendarDaily) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             } else if (cft.getCalendar() instanceof CalendarYearly) {
                 ((CalendarYearly) cft.getCalendar()).setDays(PersistenceUtils.initializeAndUnproxy(((CalendarYearly) cft.getCalendar()).getDays()));
-                ((CalendarYearly) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             } else if (cft.getCalendar() instanceof CalendarInterval) {
                 ((CalendarInterval) cft.getCalendar()).setIntervals(PersistenceUtils.initializeAndUnproxy(((CalendarInterval) cft.getCalendar()).getIntervals()));
-                ((CalendarInterval) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             }
         }
         if (cft.getListValues() != null) {

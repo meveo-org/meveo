@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.connector;
+package org.meveo.model.technicalservice;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 
 /**
  * Description of an entity in stake for the connector.
@@ -26,13 +26,45 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class EntityDescription extends Description {
 
-    @JsonProperty(required = true)
     private String name;
 
-    /**
-     * Name of the entity.
-     */
+    private CustomEntityTemplate type;
+
+    @Override
     public String getName() {
         return name;
     }
+
+    /**
+     * Instance name of the variable described
+     *
+     * @param name Instance name of the variable described
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * The CustomEntityTemplate described.
+     *
+     * @return The CET described
+     */
+    public CustomEntityTemplate getType() {
+        return type;
+    }
+
+    /**
+     * The CustomEntityTemplate described.
+     *
+     * @param customEntityTemplate The CustomEntityTemplate to describe
+     */
+    public void setType(CustomEntityTemplate customEntityTemplate) {
+        this.type = customEntityTemplate;
+    }
+
+    @Override
+    public String getTypeName() {
+        return type.getCode();
+    }
+
 }

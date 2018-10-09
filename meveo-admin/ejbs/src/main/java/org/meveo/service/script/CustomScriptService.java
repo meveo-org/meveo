@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -18,19 +19,16 @@
  */
 package org.meveo.service.script;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.util.ResourceBundle;
+import org.meveo.cache.CacheKeyStr;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -39,38 +37,22 @@ import javax.persistence.NoResultException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.ElementNotFoundException;
-import org.meveo.admin.exception.InvalidPermissionException;
-import org.meveo.admin.exception.InvalidScriptException;
-import org.meveo.admin.util.ResourceBundle;
-import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.StringUtils;
-import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
-import org.meveo.event.monitoring.ClusterEventPublisher;
-import org.meveo.model.IEntity;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
-import org.meveo.service.base.BusinessService;
-
-public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends BusinessService<T> {
+public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends ExecutableService<T, SI> {
 
     @Inject
     private ResourceBundle resourceMessages;
 
-    @Inject
-    private ClusterEventPublisher clusterEventPublisher;
-
     protected final Class<SI> scriptInterfaceClass;
 
-    private Map<CacheKeyStr, List<String>> allLogs = new HashMap<>();
-
     private Map<CacheKeyStr, Class<SI>> allScriptInterfaces = new HashMap<>();
-
-    private Map<CacheKeyStr, SI> cachedScriptInstances = new HashMap<>();
 
     private CharSequenceCompiler<SI> compiler;
 
@@ -113,73 +95,34 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     }
 
     @Override
-    public void create(T script) throws BusinessException {
+    protected void afterUpdateOrCreate(T script) {
+        compileScript(script, false);
+    }
 
+    @Override
+    protected void validate(T script) throws BusinessException {
         String className = getClassName(script.getScript());
         if (className == null) {
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid"));
         }
         String fullClassName = getFullClassname(script.getScript());
-
         if (isOverwritesJavaClass(fullClassName)) {
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
-        script.setCode(fullClassName);
-
-        super.create(script);
-        compileScript(script, false);
-
-        clusterEventPublisher.publishEvent(script, CrudActionEnum.create);
     }
 
     @Override
-    public T update(T script) throws BusinessException {
+    protected String getCode(T script) {
+        return getFullClassname(script.getScript());
+    }
 
-        String className = getClassName(script.getScript());
-        if (className == null) {
-            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid"));
+    @Override
+    public SI getExecutionEngine(String scriptCode) {
+        try {
+            return this.getScriptInstance(scriptCode);
+        } catch (ElementNotFoundException | InvalidScriptException e) {
+            throw new RuntimeException(e);
         }
-
-        String fullClassName = getFullClassname(script.getScript());
-        if (isOverwritesJavaClass(fullClassName)) {
-            throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
-        }
-
-        script.setCode(fullClassName);
-
-        script = super.update(script);
-
-        compileScript(script, false);
-
-        clusterEventPublisher.publishEvent(script, CrudActionEnum.update);
-        return script;
-    }
-
-    @Override
-    public void remove(T script) throws BusinessException {
-        super.remove(script);
-
-        clusterEventPublisher.publishEvent(script, CrudActionEnum.remove);
-    }
-
-    @Override
-    public T enable(T script) throws BusinessException {
-
-        script = super.enable(script);
-
-        clusterEventPublisher.publishEvent(script, CrudActionEnum.enable);
-
-        return script;
-    }
-
-    @Override
-    public T disable(T script) throws BusinessException {
-
-        script = super.disable(script);
-
-        clusterEventPublisher.publishEvent(script, CrudActionEnum.disable);
-
-        return script;
     }
 
     /**
@@ -369,9 +312,9 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classpath);
 
-        compiler = new CharSequenceCompiler<SI>(this.getClass().getClassLoader(), Arrays.asList(new String[] { "-cp", classpath }));
+        compiler = new CharSequenceCompiler<SI>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<JavaFileObject>();
-        Class<SI> compiledScript = compiler.compile(fullClassName, javaSrc, errs, new Class<?>[] { scriptInterfaceClass });
+        Class<SI> compiledScript = compiler.compile(fullClassName, javaSrc, errs, scriptInterfaceClass);
         return compiledScript;
     }
 
@@ -497,63 +440,6 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
         }
     }
 
-    /**
-     * Get a the same/single/cached instance of compiled script class. A subsequent call to this method will retun the same instance of scipt.
-     * 
-     * @param scriptCode Script code
-     * @return A compiled script class
-     * @throws ElementNotFoundException ElementNotFoundException
-     * @throws InvalidScriptException InvalidScriptException
-     */
-    public SI getCachedScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
-        SI script = null;
-        script = cachedScriptInstances.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
-        if (script == null) {
-            script = getScriptInstance(scriptCode);
-
-            cachedScriptInstances.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), script);
-        }
-        return script;
-    }
-
-    /**
-     * Add a log line for a script
-     * 
-     * @param message message to be displayed
-     * @param scriptCode code of script.
-     */
-    public void addLog(String message, String scriptCode) {
-
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), new ArrayList<String>());
-        }
-        allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
-    }
-
-    /**
-     * Get logs for script
-     * 
-     * @param scriptCode code of script
-     * @return list logs.
-     */
-    public List<String> getLogs(String scriptCode) {
-
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            return new ArrayList<String>();
-        }
-        return allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
-    }
-
-    /**
-     * Clear all logs for a script.
-     * 
-     * @param scriptCode script's code
-     */
-    public void clearLogs(String scriptCode) {
-        if (allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
-        }
-    }
 
     /**
      * Find the package name in a source java text.
@@ -592,119 +478,12 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     }
 
     /**
-     * Execute action on an entity.
-     * 
-     * @param entity Entity to execute action on
-     * @param scriptCode Script to execute, identified by a code
-     * @param encodedParameters Additional parameters encoded in URL like style param=value&amp;param=value
-     * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws InvalidPermissionException Insufficient access to run the script
-     * @throws ElementNotFoundException Script not found
-     * @throws BusinessException Any execution exception
-     */
-    public Map<String, Object> execute(IEntity entity, String scriptCode, String encodedParameters) throws BusinessException {
-
-        return execute(entity, scriptCode, CustomScriptService.parseParameters(encodedParameters));
-    }
-
-    /**
-     * Execute action on an entity.
-     * 
-     * @param entity Entity to execute action on
-     * @param scriptCode Script to execute, identified by a code
-     * @param context Additional parameters
-     * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws InvalidScriptException Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
-     * @throws InvalidPermissionException Insufficient access to run the script
-     * @throws BusinessException Any execution exception
-     */
-    public Map<String, Object> execute(IEntity entity, String scriptCode, Map<String, Object> context)
-            throws BusinessException {
-
-        if (context == null) {
-            context = new HashMap<String, Object>();
-        }
-        context.put(Script.CONTEXT_ENTITY, entity);
-        Map<String, Object> result = execute(scriptCode, context);
-        return result;
-    }
-
-    /**
-     * Execute action on an entity.
-     * 
-     * @param scriptCode Script to execute, identified by a code
-     * @param context Method context
-     * 
-     * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws InvalidScriptException Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
-     * @throws InvalidPermissionException Insufficient access to run the script
-     * @throws BusinessException Any execution exception
-     */
-    public Map<String, Object> execute(String scriptCode, Map<String, Object> context)
-            throws BusinessException {
-
-        log.trace("Script {} to be executed with parameters {}", scriptCode, context);
-
-        SI classInstance = getScriptInstance(scriptCode);
-        classInstance.execute(context);
-
-        log.trace("Script {} executed with parameters {}", scriptCode, context);
-        return context;
-    }
-
-    /**
-     * Execute a class that extends Script
-     * 
-     * @param compiledScript Compiled script class
-     * @param context Method context
-     * 
-     * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws BusinessException Any execution exception
-     */
-    protected Map<String, Object> execute(SI compiledScript, Map<String, Object> context) throws BusinessException {
-        if (context == null) {
-            context = new HashMap<String, Object>();
-        }
-
-        compiledScript.execute(context);
-        return context;
-    }
-
-    /**
-     * Parse parameters encoded in URL like style param=value&amp;param=value.
-     * 
-     * @param encodedParameters Parameters encoded in URL like style param=value&amp;param=value
-     * @return A map of parameter keys and values
-     */
-    public static Map<String, Object> parseParameters(String encodedParameters) {
-        Map<String, Object> parameters = new HashMap<String, Object>();
-
-        if (!StringUtils.isBlank(encodedParameters)) {
-            StringTokenizer tokenizer = new StringTokenizer(encodedParameters, "&");
-            while (tokenizer.hasMoreElements()) {
-                String paramValue = tokenizer.nextToken();
-                String[] paramValueSplit = paramValue.split("=");
-                if (paramValueSplit.length == 2) {
-                    parameters.put(paramValueSplit[0], paramValueSplit[1]);
-                } else {
-                    parameters.put(paramValueSplit[0], null);
-                }
-            }
-
-        }
-        return parameters;
-    }
-
-    /**
      * Remove compiled script, its logs and cached instances for given script code
      * 
      * @param scriptCode Script code
      */
     public void clearCompiledScripts(String scriptCode) {
-        cachedScriptInstances.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        super.clear(scriptCode);
         allScriptInterfaces.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
-        allLogs.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
 }

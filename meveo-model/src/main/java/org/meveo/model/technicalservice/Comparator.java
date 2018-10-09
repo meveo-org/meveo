@@ -1,32 +1,10 @@
-/*
- * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * This program is not suitable for any direct or indirect application in MILITARY industry
- * See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-package org.meveo.model.connector;
+package org.meveo.model.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.util.stream.Stream;
 
-/**
- * Comparators that can be used in cypher
- * @author Clément Bareth
- */
 public enum Comparator {
-
     GREATER_THAN("&gt;",">"),
     LOWER_THAN("&lt;","<"),
     EQUALS("=","="),
@@ -45,18 +23,13 @@ public enum Comparator {
     /**
      * Corresponding syntax in cypher
      */
-    private String operator;
+    private String cypherOperator;
 
-    Comparator(String name, String operator){
+    Comparator(String name, String cypherOperator) {
         this.name = name;
-        this.operator = operator;
+        this.cypherOperator = cypherOperator;
     }
 
-    /**
-     * Find the {@link Comparator} that has the provided name
-     * @param name Name of the {@link Comparator}
-     * @return The corresponding {@link Comparator}
-     */
     @JsonCreator
     public static Comparator fromName(String name) {
         return Stream.of(Comparator.values())
@@ -75,8 +48,8 @@ public enum Comparator {
     /**
      * @return The corresponding syntax in cypher
      */
-    public String getOperator() {
-        return this.operator;
+    public String getCypherOperator() {
+        return this.cypherOperator;
     }
 
     /**

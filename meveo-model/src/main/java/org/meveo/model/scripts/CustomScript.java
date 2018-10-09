@@ -1,32 +1,17 @@
 package org.meveo.model.scripts;
 
+import org.hibernate.annotations.Type;
+import org.meveo.model.ExportIdentifier;
+
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.annotations.Type;
-import org.meveo.commons.utils.XStreamCDATAConverter;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.ExportIdentifier;
-
-import com.thoughtworks.xstream.annotations.XStreamConverter;
-
 @ExportIdentifier({ "code"})
 @MappedSuperclass
-public abstract class CustomScript extends BusinessEntity {
+public abstract class CustomScript extends Executable {
 
     private static final long serialVersionUID = 8176170199770220430L;
-
-    @Column(name = "script", nullable = false, columnDefinition = "TEXT")
-    @NotNull
-    @XStreamConverter(XStreamCDATAConverter.class)
-    private String script;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "src_type")
@@ -51,20 +36,6 @@ public abstract class CustomScript extends BusinessEntity {
      */
     public void setSourceTypeEnum(ScriptSourceTypeEnum sourceTypeEnum) {
         this.sourceTypeEnum = sourceTypeEnum;
-    }
-
-    /**
-     * @return the script
-     */
-    public String getScript() {
-        return script;
-    }
-
-    /**
-     * @param script the script to set
-     */
-    public void setScript(String script) {
-        this.script = script;
     }
 
     /**

@@ -15,42 +15,52 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.api.dto.response;
+package org.meveo.api.dto;
 
-import org.meveo.api.dto.ConnectorsDto;
+import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
- * The Class ListConnectorResponse.
+ * Data transfer object for connector.
  *
  * @author Clément Bareth
  */
-@XmlRootElement(name = "ListConnectorResponse")
+@XmlRootElement(name = "Connectors")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ListConnectorResponse extends BaseResponse {
+public class TechnicalServicesDto extends BusinessDto {
 
+    private static final long serialVersionUID = -5952076128269784073L;
 
-    private ConnectorsDto connectors = new ConnectorsDto();
+    private List<TechnicalServiceDto> technicalServices = new ArrayList<>();
 
-    /**
-     * @return the connectors
-     */
-    public ConnectorsDto getConnectors() {
-        return connectors;
+    public TechnicalServicesDto() {
     }
 
     /**
-     * @param connectors the new connectors
+     * @param services Technical services DTO
      */
-    public void setConnectors(ConnectorsDto connectors) {
-        this.connectors = connectors;
+    public TechnicalServicesDto(List<TechnicalServiceDto> services) {
+        this.technicalServices = services;
     }
 
-    @Override
-    public String toString() {
-        return "ListConnectorsResponse [connectors=" + connectors + ", toString()=" + super.toString() + "]";
+    /**
+     * @return Technical services DTO
+     */
+    public List<TechnicalServiceDto> geTechnicalServiceDtos() {
+        return technicalServices;
     }
+
+    /**
+     * @param services Technical services DTO
+     */
+    public void setTechnicalServices(List<TechnicalServiceDto> services) {
+        this.technicalServices = services;
+    }
+
 }

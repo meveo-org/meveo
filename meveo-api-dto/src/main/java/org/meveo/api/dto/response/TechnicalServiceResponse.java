@@ -15,59 +15,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.api.dto;
+package org.meveo.api.dto.response;
 
-import org.meveo.model.connector.Connector;
+import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 /**
- * Data transfer object for connector.
- *
  * @author Clément Bareth
  */
-@XmlRootElement()
+@XmlRootElement(name = "TechnicalServiceResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ConnectorDto extends BusinessDto {
+public class TechnicalServiceResponse extends BaseResponse {
 
-    @NotNull(message = "The connector data must not be null")
-    private Connector connector;
+    private static final long serialVersionUID = 1507326300507935339L;
 
-    @NotNull(message = "The connector name must be provided")
-    private String name;
+    private TechnicalServiceDto technicalServiceDto;
 
-    @Min(value = 0, message = "Connector version cannot be lower than {value}.")
-    private Integer version;
-
-    public ConnectorDto() {
+    /**
+     * Data representing the TechnicalService queried
+     *
+     * @return DTO object
+     */
+    public TechnicalServiceDto getTechnicalServiceDto() {
+        return technicalServiceDto;
     }
 
-    public Connector getConnector() {
-        return connector;
+    /**
+     * Data representing the TechnicalService queried
+     *
+     * @return DTO object
+     */
+    public void setTechnicalServiceDto(TechnicalServiceDto connectorDto) {
+        this.technicalServiceDto = connectorDto;
     }
 
-    public void setConnector(Connector connector) {
-        this.connector = connector;
+    @Override
+    public String toString() {
+        return "TechnicalServiceResponse [technicalservice=" + technicalServiceDto + ", toString()=" + super.toString() + "]";
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
 }

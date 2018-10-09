@@ -785,9 +785,9 @@
        </addColumn>
     </changeSet>
     <!-- Connectors -->
-    <changeSet id="connector" author="Clément Bareth">
-        <createSequence sequenceName="connector_seq"/>
-        <createTable tableName="connectors">
+    <changeSet id="technical_services" author="Clément Bareth">
+        <createSequence sequenceName="technical_services_seq"/>
+        <createTable tableName="technical_services">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" />
             </column>
@@ -800,16 +800,22 @@
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
             <column name="description" type="varchar(255)" />
+            <column name="descriptions" type="${type.longtext}"/>
             <column name="code" type="varchar(255)" />
-            <column name="connector" type="${type.longtext}" >
+            <column name="script" type="${type.longtext}">
                 <constraints nullable="false" />
             </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
+            <column name="service_type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
-        <addUniqueConstraint columnNames="name,version" constraintName="connector_name_version" deferrable="false" disabled="false" initiallyDeferred="false" tableName="connectors" />
-        <createIndex tableName="connectors" indexName="connector_name_index">
+        <addUniqueConstraint columnNames="name,version" constraintName="technical_services_name_version"
+                             deferrable="false" disabled="false" initiallyDeferred="false"
+                             tableName="technical_services"/>
+        <createIndex tableName="technical_services" indexName="technical_services_name_index">
             <column name="name"/>
         </createIndex>
     </changeSet>

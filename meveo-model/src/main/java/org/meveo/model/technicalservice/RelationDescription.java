@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.connector;
+package org.meveo.model.technicalservice;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 /**
  * Description of relation in stake for the connector.
@@ -26,28 +26,61 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class RelationDescription extends Description{
 
-    @JsonProperty(required = true)
     private String source;
-
-    @JsonProperty(required = true)
     private String target;
+    private CustomRelationshipTemplate type;
 
     /**
-     * Source entity name of the relation
+     * @return The CustomRelationshipTemplate for the described relation
+     */
+    public CustomRelationshipTemplate getType() {
+        return type;
+    }
+
+    /**
+     * @param type The CustomRelationshipTemplate for the described relation
+     */
+    public void setType(CustomRelationshipTemplate type) {
+        this.type = type;
+    }
+
+    /**
+     * Source entity instance name of the relation
      */
     public String getSource() {
         return source;
     }
 
     /**
-     * Target entity name of the relation
+     *
+     * @param source Source entity instance name of the relation
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    /**
+     * Target entity instance name of the relation
      */
     public String getTarget() {
         return target;
+    }
+
+    /**
+     * @param target Target entity instance name of the relation
+     */
+    public void setTarget(String target) {
+        this.target = target;
     }
 
     @Override
     public String getName() {
         return source + "-" + target;
     }
+
+    @Override
+    public String getTypeName() {
+        return type.getCode();
+    }
+    
 }

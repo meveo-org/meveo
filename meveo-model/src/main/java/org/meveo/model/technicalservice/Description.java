@@ -15,11 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.connector;
+package org.meveo.model.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +27,6 @@ import java.util.List;
  *
  * @author Clément Bareth
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "descriptionType")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = EntityDescription.class, name = "EntityDescription"),
-        @JsonSubTypes.Type(value = RelationDescription.class, name = "RelationDescription"),
-})
 public abstract class Description {
 
     /**
@@ -47,12 +40,6 @@ public abstract class Description {
      */
     @JsonProperty
     private List<OutputProperty> outputProperties = new ArrayList<>();
-
-    /**
-     * Ontology type of the variable.
-     */
-    @JsonProperty(required = true)
-    private String type;
 
     /**
      * Whether the variable is defined as input of the connector.
@@ -83,14 +70,6 @@ public abstract class Description {
     }
 
     /**
-     * Ontology type of the variable.
-     * @return The ontology type of the variable
-     */
-    public String getType() {
-        return type;
-    }
-
-    /**
      * Whether the variable is defined as input of the connector.
      * @return "true" if the variable is an input.
      */
@@ -111,4 +90,23 @@ public abstract class Description {
      * @return The name of the variable
      */
     public abstract String getName();
+
+    public abstract String getTypeName();
+
+    public void setInputProperties(List<InputProperty> inputProperties) {
+        this.inputProperties = inputProperties;
+    }
+
+    public void setOutputProperties(List<OutputProperty> outputProperties) {
+        this.outputProperties = outputProperties;
+    }
+
+    public void setInput(boolean input) {
+        this.input = input;
+    }
+
+    public void setOutput(boolean output) {
+        this.output = output;
+    }
+    
 }
