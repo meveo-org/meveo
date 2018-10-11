@@ -4,10 +4,9 @@
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.0</version>
+		<version>6.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>meveo-security</artifactId>
-	<version>6.0</version>
 	<packaging>jar</packaging>
 	<name>Meveo Security</name>
 
