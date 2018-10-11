@@ -944,27 +944,6 @@ INSERT INTO CRM_CUSTOMER_BRAND (id, disabled, version, created, code, descriptio
 DROP SEQUENCE IF EXISTS CRM_CUSTOMER_BRAND_SEQ;
 CREATE SEQUENCE CRM_CUSTOMER_BRAND_SEQ start with 3 increment by 1;
 
---Trading Language
-insert into billing_trading_language (id, version, disabled, created, provider_id, creator_id, language_id, pr_description) values (1, 0, false, now(), 1, 1, 2, 'English');
-insert into billing_trading_language (id, version, disabled, created, provider_id, creator_id, language_id, pr_description) values (2, 0, false, now(), 1, 1, 12, 'French');
-
-DROP SEQUENCE IF EXISTS billing_trading_language_SEQ;
-CREATE SEQUENCE billing_trading_language_SEQ start with 3 increment by 1;
-
---Trading Currency
-insert into billing_trading_currency (id, version, disabled, created, provider_id, creator_id, currency_id, pr_description) values (1, 0, false, now(), 1, 1, 49, 'US Dollar');
-insert into billing_trading_currency (id, version, disabled, created, provider_id, creator_id, currency_id, pr_description) values (2, 0, false, now(), 1, 1, 5, 'France');
-
-DROP SEQUENCE IF EXISTS billing_trading_currency_SEQ;
-CREATE SEQUENCE billing_trading_currency_SEQ start with 3 increment by 1;
-
---Trading Country
-insert into billing_trading_country (id, version, disabled, created, provider_id, creator_id, country_id, pr_description) values (1, 0, false, now(), 1, 1, 220, 'United States');
-insert into billing_trading_country (id, version, disabled, created, provider_id, creator_id, country_id, pr_description) values (2, 0, false, now(), 1, 1, 70, 'France');
-
-DROP SEQUENCE IF EXISTS billing_trading_country_SEQ;
-CREATE SEQUENCE billing_trading_country_SEQ start with 3 increment by 1;
-
 --Counter Calendar
 insert into cat_calendar (cal_type,id, version, disabled, created, provider_id, creator_id, code, description) values ('YEARLY',1, 0, false, now(), 1, 1, 'CAL_COUNTER', 'Counter Calendar');
 insert into cat_calendar_days (calendar_id, day_id) values (1, 1);
@@ -1043,42 +1022,6 @@ insert into cat_calendar_days (calendar_id, day_id) values (5, 1101);
 DROP SEQUENCE IF EXISTS cat_calendar_SEQ;
 CREATE SEQUENCE cat_calendar_SEQ start with 6 increment by 1;
 
---Tax
-insert into billing_tax (id, version, disabled, created, provider_id, creator_id, code, description, tax_percentage) values (1, 0, false, now(), 1, 1, 'TAX_00', '0 Percent Tax', 0);
-insert into billing_tax (id, version, disabled, created, provider_id, creator_id, code, description, tax_percentage) values (2, 0, false, now(), 1, 1, 'TAX_05', '5 Percent Tax', 5);
-insert into billing_tax (id, version, disabled, created, provider_id, creator_id, code, description, tax_percentage) values (3, 0, false, now(), 1, 1, 'TAX_18', '18 Percent Tax', 18);
-
-DROP SEQUENCE IF EXISTS billing_tax_SEQ;
-CREATE SEQUENCE billing_tax_SEQ start with 4 increment by 1;
-
---Invoice Category
-insert into BILLING_INVOICE_CAT (id, version, disabled, created, provider_id, creator_id, code, description, sort_index) values (1, 0, false, now(), 1, 1, 'CONSUMPTION', 'Consumption', 1);
-insert into BILLING_INVOICE_CAT (id, version, disabled, created, provider_id, creator_id, code, description, sort_index) values (2, 0, false, now(), 1, 1, 'SUBSCRIPTION', 'Subscription', 2);
-
-DROP SEQUENCE IF EXISTS BILLING_INVOICE_CAT_SEQ;
-CREATE SEQUENCE BILLING_INVOICE_CAT_SEQ start with 3 increment by 1;
-
---Invoice Sub Category
-insert into BILLING_INVOICE_SUB_CAT (id, version, disabled, created, provider_id, creator_id, code, description, accounting_code, discount, invoice_category_id) values (1, 0, false, now(), 1, 1, 'CMP_DATA', 'Consumption Data', '120.121.21.2', 0, 1);
-insert into BILLING_INVOICE_SUB_CAT (id, version, disabled, created, provider_id, creator_id, code, description, accounting_code, discount, invoice_category_id) values (2, 0, false, now(), 1, 1, 'SUB_DATA', 'Subscription Data', '120.121.21.4', 0, 2);
-
-DROP SEQUENCE IF EXISTS BILLING_INVOICE_SUB_CAT_SEQ;
-CREATE SEQUENCE BILLING_INVOICE_SUB_CAT_SEQ start with 3 increment by 1;
-
-insert into BILLING_INV_SUB_CAT_COUNTRY (id, version, disabled, created, provider_id, creator_id, invoice_sub_category_id, tax_id, trading_country_id) values (1, 0, false, now(), 1, 1, 1, 1, 1);
-insert into BILLING_INV_SUB_CAT_COUNTRY (id, version, disabled, created, provider_id, creator_id, invoice_sub_category_id, tax_id, trading_country_id) values (2, 0, false, now(), 1, 1, 1, 2, 2);
-insert into BILLING_INV_SUB_CAT_COUNTRY (id, version, disabled, created, provider_id, creator_id, invoice_sub_category_id, tax_id, trading_country_id) values (3, 0, false, now(), 1, 1, 2, 1, 1);
-insert into BILLING_INV_SUB_CAT_COUNTRY (id, version, disabled, created, provider_id, creator_id, invoice_sub_category_id, tax_id, trading_country_id) values (4, 0, false, now(), 1, 1, 2, 2, 2);
-
-DROP SEQUENCE IF EXISTS BILLING_INV_SUB_CAT_COUNTRY_SEQ;
-CREATE SEQUENCE BILLING_INV_SUB_CAT_COUNTRY_SEQ start with 5 increment by 1;
-
---Billing Cycle
-insert into BILLING_CYCLE (id, version, disabled, created, provider_id, creator_id, code, description, billing_template_name, due_date_delay, invoice_date_delay, calendar) values (1, 0, false, now(), 1, 1, 'CYC_INV_MT_1', 'Monthly Invoice Cycle 1', '1', 2, 4, 2);
-insert into BILLING_CYCLE (id, version, disabled, created, provider_id, creator_id, code, description, billing_template_name, due_date_delay, invoice_date_delay, calendar) values (2, 0, false, now(), 1, 1, 'CYC_INV_MT_2', 'Monthly Invoice Cycle 2', '1', 2, 4, 2);
-
-DROP SEQUENCE IF EXISTS BILLING_CYCLE_SEQ;
-CREATE SEQUENCE BILLING_CYCLE_SEQ start with 3 increment by 1;
 
 --Primary Contact
 insert into CRM_PROVIDER_CONTACT (id, version, disabled, created, provider_id, creator_id, code, description, lastname, firstname, email, phone, address_zipcode, address_city) values (1, 0, false, now(), 1, 1, 'DEMO_ADMIN', 'Demo Administrator', 'Admin', 'Admin', 'contact@manaty.net', '09152154716', '21000', 'DIJON');
@@ -1086,137 +1029,28 @@ insert into CRM_PROVIDER_CONTACT (id, version, disabled, created, provider_id, c
 DROP SEQUENCE IF EXISTS CRM_PROVIDER_CONTACT_SEQ;
 CREATE SEQUENCE CRM_PROVIDER_CONTACT_SEQ start with 2 increment by 1;
 
---Seller
-insert into crm_seller (id, version, disabled, created, provider_id, creator_id, code, description, parent_seller_id, trading_currency_id, trading_language_id) values (1, 0, false, now(), 1, 1, 'MAIN_SELLER', 'Demo Distributor', null, 1, 1);
-insert into crm_seller (id, version, disabled, created, provider_id, creator_id, code, description, parent_seller_id, trading_currency_id, trading_language_id) values (2, 0, false, now(), 1, 1, 'SELLER_US', 'US Seller',1, 1, 1);
-insert into crm_seller (id, version, disabled, created, provider_id, creator_id, code, description, parent_seller_id, trading_currency_id, trading_language_id) values (3, 0, false, now(), 1, 1, 'SELLER_FR', 'France Seller',1, 2, 2);
 
-DROP SEQUENCE IF EXISTS crm_seller_SEQ;
-CREATE SEQUENCE crm_seller_SEQ start with 4 increment by 1;
-
---Termination Reasons
-insert into BILLING_SUBSCRIP_TERMIN_REASON (id, version, provider_id, code, description, apply_agreement, apply_reimbursment, apply_termination_charges) values (1, 0, 1, 'TERM_REASON_1', 'Agreement Reimbursement Charge', true, true, true);
-insert into BILLING_SUBSCRIP_TERMIN_REASON (id, version, provider_id, code, description, apply_agreement, apply_reimbursment, apply_termination_charges) values (2, 0, 1, 'TERM_REASON_2', 'Agreement', true, false, false);
-insert into BILLING_SUBSCRIP_TERMIN_REASON (id, version, provider_id, code, description, apply_agreement, apply_reimbursment, apply_termination_charges) values (3, 0, 1, 'TERM_REASON_3', 'Charge', false, true, false);
-
-DROP SEQUENCE IF EXISTS BILLING_SUB_TERM_REASON_SEQ;
-CREATE SEQUENCE BILLING_SUB_TERM_REASON_SEQ start with 4 increment by 1;
-
-
-
---------------------------------------------------------
---  AR_OCC_TEMPLATE  
---------------------------------------------------------
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (1,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_CHQ','Règlement par chèque','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (2,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_TIP','Règlement par TIP','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (3,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_PLVT','Prélèvement','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (4,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_VIRT','Avis de crédit (virement)','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (5,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','IP_CHQ','Chèque impayé','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (6,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','IP_PLVT','Rejet de Prèlèvement','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (7,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','IP_TIP','Impayé TIP','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (8,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,4191,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_CHQNI','Règlement par chèque sur compte NI','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (9,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,4191,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RG_VIRTNI','Règlement par virement sur compte NI','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (10,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RB_CHQ','Remboursement par chèque','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (11,0,false,to_timestamp('17/11/11 14:26:47,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','RB_PLVT','Remboursement par prélèvement','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (12,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_CC_CL','Transfert Compte client - Compte de liaison','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (13,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,4191,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_CL_NI','Transfert Compte de liaison - Compte  NI','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (14,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,4191,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_NI_CL','Transfert Compte NI - Compte de liaison','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (15,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_CL_CC','Transfert Compte de liaison - Compte client','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (16,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_ODD','Débit porté directement sur compte client','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (17,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,4721,00000,000,0000,00000000,00000','OD_ODC','Crédit porté directement sur compte client','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (18,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,65870,00000,000,0000,00000000,00000','OD_PERT','Perte sur règlement','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (19,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,75870,00000,000,0000,00000000,00000','OD_PROF','Profit sur règlement','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (20,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,4191,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','OD_ACPT','Versement d''un acompte','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (21,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,4191,00000,000,0000,00000000,00000','OD_EXC','Enregistrement de trop perçu','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (22,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,416,00000,000,0000,00000000,00000','OD_IRRE','Passage en irrecouvrable','CREDIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (23,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000','90590,51214170,00000,000,0000,00000000,00000','INV_FEE','Pénalité de relance','DEBIT',1,null,null);
-Insert into AR_OCC_TEMPLATE (ID,VERSION,DISABLED,CREATED,UPDATED,ACCOUNT_CODE,ACCOUNT_CODE_CLIENT_SIDE,CODE,DESCRIPTION,OCC_CATEGORY,PROVIDER_ID,CREATOR_ID,UPDATER_ID) values (25,0,false,to_timestamp('17/11/11 14:26:48,000000000','DD/MM/RR HH24:MI:SS,FF'),null,'90590,41115,00000,000,0000,00000000,00000',null,'INV_STD','Facture','DEBIT',1,null,null);
-
-/* Catalogs */
-insert into CAT_CHARGE_TEMPLATE (id, version, provider_id, disabled, created, code, description, INVOICE_SUB_CATEGORY, unit_nb_decimal, INPUT_UNIT_DESCRIPTION, RATING_UNIT_DESCRIPTION, UNIT_MULTIPLICATOR) values (1, 0, 1, false, now(), 'REC1', 'REC1', 1, 2, 'xxx', 'yyy', 1.5);
-insert into CAT_CHARGE_TEMPLATE (id, version, provider_id, disabled, created, code, description, INVOICE_SUB_CATEGORY, unit_nb_decimal, INPUT_UNIT_DESCRIPTION, RATING_UNIT_DESCRIPTION, UNIT_MULTIPLICATOR) values (2, 0, 1, false, now(), 'SUB1', 'SUB1', 1, 2, 'xxx', 'yyy', 1.5);
-insert into CAT_CHARGE_TEMPLATE (id, version, provider_id, disabled, created, code, description, INVOICE_SUB_CATEGORY, unit_nb_decimal, INPUT_UNIT_DESCRIPTION, RATING_UNIT_DESCRIPTION, UNIT_MULTIPLICATOR) values (3, 0, 1, false, now(), 'USAGE1', 'USAGE1', 1, 2, 'xxx', 'yyy', 1.5);
-insert into CAT_CHARGE_TEMPLATE (id, version, provider_id, disabled, created, code, description, INVOICE_SUB_CATEGORY, unit_nb_decimal, INPUT_UNIT_DESCRIPTION, RATING_UNIT_DESCRIPTION, UNIT_MULTIPLICATOR) values (4, 0, 1, false, now(), 'SUB2', 'SUB2', 1, 2, 'xxx', 'yyy', 1.5);
-
-DROP SEQUENCE IF EXISTS CAT_CHARGE_TEMPLATE_SEQ;
-CREATE SEQUENCE CAT_CHARGE_TEMPLATE_SEQ start with 5 increment by 1;
-
-insert into CAT_RECURRING_CHARGE_TEMPL (id, CALENDAR_ID, APPLY_IN_ADVANCE, subscription_prorata, termination_prorata) values (1, 3, true, true, true);
-insert into CAT_ONE_SHOT_CHARGE_TEMPL (id, type, immediate_invoicing) values (2, 'SUBSCRIPTION', false);
-insert into CAT_USAGE_CHARGE_TEMPLATE (id) values (3);
-insert into CAT_ONE_SHOT_CHARGE_TEMPL (id, type, immediate_invoicing) values (4, 'SUBSCRIPTION', false);
 
 insert into CAT_SERVICE_TEMPLATE (id, version, disabled, created, code, description, provider_id) values (1, 0, false, now(), 'SERV1', 'SERV1', 1);
 
 DROP SEQUENCE IF EXISTS CAT_SERVICE_TEMPLATE_SEQ;
 CREATE SEQUENCE CAT_SERVICE_TEMPLATE_SEQ start with 2 increment by 1;
 
-/*insert into CAT_SERV_RECCHARGE_TEMPLATES (service_template_id, charge_template_id) values (1, 1);
-insert into CAT_SERV_ONECHARGE_S_TEMPLATES (service_template_id, charge_template_id) values (1, 2);
-insert into CAT_SERV_ONECHARGE_S_TEMPLATES (service_template_id, charge_template_id) values (1, 4);*/
 
-insert into CAT_offer_TEMPLATE (id, version, disabled, created, code, description, provider_id) values (1, 0, false, now(), 'OFF1', 'OFF1', 1);
 
-DROP SEQUENCE IF EXISTS CAT_OFFER_TEMPLATE_SEQ;
-CREATE SEQUENCE CAT_OFFER_TEMPLATE_SEQ start with 2 increment by 1;
 
-insert into CAT_OFFER_SERV_TEMPLATES (offer_template_id, service_template_id) values (1, 1);
 
-insert into CAT_PRICE_PLAN_MATRIX (id, version, disabled, created, provider_id, PRIORITY, EVENT_CODE, AMOUNT_WITHOUT_TAX, AMOUNT_WITH_TAX, code, description) values (1, 0, false, now(), 1, 1, 'REC1', 5, 10, 'REC1', 'REC1');
-insert into CAT_PRICE_PLAN_MATRIX (id, version, disabled, created, provider_id, PRIORITY, EVENT_CODE, AMOUNT_WITHOUT_TAX, AMOUNT_WITH_TAX, code, description) values (2, 0, false, now(), 1, 1, 'SUB1', 15, 20, 'SUB1', 'SUB1');
-insert into CAT_PRICE_PLAN_MATRIX (id, version, disabled, created, provider_id, PRIORITY, EVENT_CODE, AMOUNT_WITHOUT_TAX, AMOUNT_WITH_TAX, code, description) values (3, 0, false, now(), 1, 1, 'USAGE1', 25, 30, 'USAGE1', 'USAGE1');
-insert into CAT_PRICE_PLAN_MATRIX (id, version, disabled, created, provider_id, PRIORITY, EVENT_CODE, AMOUNT_WITHOUT_TAX, AMOUNT_WITH_TAX, code, description) values (4, 0, false, now(), 1, 1, 'SUB2', 15, 20, 'SUB2', 'SUB2');
 
-DROP SEQUENCE IF EXISTS CAT_PRICE_PLAN_MATRIX_SEQ;
-CREATE SEQUENCE CAT_PRICE_PLAN_MATRIX_SEQ start with 5 increment by 1;
-
-insert into account_entity (id, version, disabled, created, provider_id, code, description, lastname, DEFAULT_LEVEL, account_type) values (1, 0, false, now(), 1, 'CUST1', 'CUST1', 'DEMO', TRUE, 'CUST');
-insert into account_entity (id, version, disabled, created, provider_id, code, description, lastname, DEFAULT_LEVEL, account_type) values (2, 0, false, now(), 1, 'CA1', 'CA1', 'DEMO', TRUE, 'CA');
-insert into account_entity (id, version, disabled, created, provider_id, code, description, lastname, DEFAULT_LEVEL, account_type) values (3, 0, false, now(), 1, 'BA1', 'BA1', 'DEMO', TRUE, 'BA');
-insert into account_entity (id, version, disabled, created, provider_id, code, description, lastname, DEFAULT_LEVEL, account_type) values (4, 0, false, now(), 1, 'UA1', 'UA1', 'DEMO', TRUE, 'UA');
-
-DROP SEQUENCE IF EXISTS ACCOUNT_ENTITY_SEQ;
-CREATE SEQUENCE ACCOUNT_ENTITY_SEQ start with 5 increment by 1;
 
 insert into crm_customer (id, CUSTOMER_CATEGORY_ID, CUSTOMER_BRAND_ID, SELLER_ID) values (1, 2, 1, 1);
-insert into AR_CUSTOMER_ACCOUNT (id, CUSTOMER_ID, TRADING_CURRENCY_ID, STATUS) values (2, 1, 1, 'ACTIVE');
-insert into BILLING_BILLING_ACCOUNT (id, CUSTOMER_ACCOUNT_ID, BILLING_CYCLE, TRADING_COUNTRY_ID, TRADING_language_ID, PAYMENT_METHOD, ELECTRONIC_BILLING) values (3, 2, 1, 1, 1, 'CHECK', false);
-insert into BILLING_USER_ACCOUNT (id, BILLING_ACCOUNT_ID) values (4, 3);
 
-insert into cat_wallet_template (id, version, disabled, created, code, description, FAST_RATING_LEVEL, wallet_type, provider_id, CONSUMPTION_ALERT_SET) values (1, 0, false, now(), 'POSTPAID_WALLET', 'Post Paid Wallet', 1, 'POSTPAID', 1, true);
-insert into cat_wallet_template (id, version, disabled, created, code, description, FAST_RATING_LEVEL, wallet_type, provider_id, CONSUMPTION_ALERT_SET) values (2, 0, false, now(), 'PREPAID_WALLET', 'Prepaid Wallet', 1, 'PREPAID', 1, true);
-insert into CAT_WALLET_TEMPLATE (id, version, disabled, created, code, description, consumption_alert_set, fast_rating_level, wallet_type, provider_id, creator_id) values (3, 0, false, now(), 'SOAP_WALLET10', 'SOAP_WALLET10', true, 1, 'PREPAID', 1, 1);
-insert into CAT_WALLET_TEMPLATE (id, version, disabled, created, code, description, consumption_alert_set, fast_rating_level, wallet_type, provider_id, creator_id) values (4, 0, false, now(), 'SOAP_WALLET20', 'SOAP_WALLET20', true, 1, 'PREPAID', 1, 1);
 
-DROP SEQUENCE IF EXISTS CAT_WALLET_TEMPLATE_SEQ;
-CREATE SEQUENCE CAT_WALLET_TEMPLATE_SEQ start with 5 increment by 1;
 
-insert into CAT_SERV_REC_CHARGE_TEMPLATE (id, version, provider_id, charge_template_id, service_template_id) values (1, 0, 1, 1, 1);
-insert into CAT_SERV_SUB_CHARGE_TEMPLATE (id, version, provider_id, charge_template_id, service_template_id) values (1, 0, 1, 2, 1);
-insert into CAT_SERV_USAGE_CHARGE_TEMPLATE (id, version, provider_id, charge_template_id, service_template_id) values (1, 0, 1, 3, 1);
 
-DROP SEQUENCE IF EXISTS CAT_CHARGE_TEMPLATE_SEQ;
-CREATE SEQUENCE CAT_CHARGE_TEMPLATE_SEQ start with 5 increment by 1;
 
-insert into CAT_SERV_REC_WALLET_TEMPLATE (service_rec_templt_id, wallet_template_id, indx) values (1, 1, 0);
-insert into CAT_SERV_SUB_WALLET_TEMPLATE (service_sub_templt_id, wallet_template_id, indx) values (1, 1, 0);
-insert into CAT_SERV_USAGE_WALLET_TEMPLATE (service_usage_templt_id, wallet_template_id, indx) values (1, 1, 0);
 
-DROP SEQUENCE IF EXISTS CAT_SERV_RECCHRG_TEMPLT_SEQ;
-CREATE SEQUENCE CAT_SERV_RECCHRG_TEMPLT_SEQ start with 2 increment by 1;
 
-DROP SEQUENCE IF EXISTS CAT_SERV_SUBCHRG_TEMPLT_SEQ;
-CREATE SEQUENCE CAT_SERV_SUBCHRG_TEMPLT_SEQ start with 2 increment by 1;
 
-DROP SEQUENCE IF EXISTS CAT_SERV_USAGECHRG_TEMPLT_SEQ;
-CREATE SEQUENCE CAT_SERV_USAGECHRG_TEMPLT_SEQ start with 2 increment by 1;
-
-/* Add wallet to userAccount=1 */
-insert into BILLING_WALLET (id, version, disabled, created, code, description, provider_id, user_account_id) values (1, 0, false, now(), 'PRINCIPAL', 'Principal', 1, 4);
-DROP SEQUENCE IF EXISTS BILLING_WALLET_SEQ;
-CREATE SEQUENCE BILLING_WALLET_SEQ start with 2 increment by 1;
-
-update BILLING_USER_ACCOUNT set wallet_id=1 where id=4;
 
 /* Custom Fields */
 insert into CRM_CUSTOM_FIELD_TMPL (id, version, disabled, created, code, description, account_type, field_type, value_required, provider_id, creator_id) values (1, 0, false, now(), 'SOAP_CUST10', 'SOAP_CUST10', 'CUST', 'STRING', false, 1, 1);

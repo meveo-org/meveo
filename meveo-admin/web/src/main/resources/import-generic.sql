@@ -889,8 +889,6 @@ INSERT INTO CAT_DAY_IN_YEAR(ID, VERSION, MONTH, DAY, creator, CREATED) VALUES (1
 --INSERT INTO CRM_CUSTOMER_CATEGORY (id, disabled, version, created, code, description, exonerated_from_taxes,provider_id, creator) VALUES (1, false, 0, CURRENT_TIMESTAMP, 'PROSPECT', 'Prospect',false, 1, 1);
 --INSERT INTO CRM_CUSTOMER_CATEGORY (id, disabled, version, created, code, description, exonerated_from_taxes,provider_id, creator) VALUES (2, false, 0, CURRENT_TIMESTAMP, 'CLIENT', 'Client',false, 1, 1);
 
---insert into billing_trading_language (id, version, disabled, created, provider_id, creator, language_id, pr_description) values (1, 0, 0, CURRENT_TIMESTAMP, 1, 1, 2, 'English');
---insert into billing_trading_language (id, version, disabled, created, provider_id, creator, language_id, pr_description) values (2, 0, 0, CURRENT_TIMESTAMP, 1, 1, 12, 'French');
 
 insert into cat_calendar (cal_type,id, version, disabled, created, creator, code, description) values ('YEARLY',1, 0, 0, CURRENT_TIMESTAMP, 1, 'MONTHLY', 'Monthly Calendar');
 insert into cat_calendar_days (calendar_id, day_id) values (1, 1);

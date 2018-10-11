@@ -113,14 +113,6 @@ public class OrderItem extends BaseEntity {
         this.shippingAddress = shippingAddress;
     }
 
-    // public ProductInstance getProductInstance() {
-    // Logger log = LoggerFactory.getLogger(getClass());
-    // if (productInstances != null && productInstances.size() > 0) {
-    // return productInstances.get(0);
-    // }
-    // return null;
-    // }
-
     public Object getOrderItemDto() {
         return orderItemDto;
     }

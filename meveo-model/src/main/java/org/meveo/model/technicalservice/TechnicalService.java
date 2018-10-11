@@ -37,7 +37,7 @@ import java.util.List;
 @GenericGenerator(
         name = "ID_GENERATOR",
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-        parameters = {@Parameter(name = "sequence_name", value = "connector_seq")}
+        parameters = {@Parameter(name = "sequence_name", value = "technical_services_seq")}
 )
 public class TechnicalService extends Executable {
 

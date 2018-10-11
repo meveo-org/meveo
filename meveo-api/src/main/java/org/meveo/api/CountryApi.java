@@ -52,8 +52,6 @@ public class CountryApi extends BaseApi {
         handleMissingParameters();
         
 
-        // If countryCode exist in the trading country table ("billing_trading_country"), return error.
-        
 
         Country country = countryService.findByCode(postData.getCountryCode());
 
@@ -141,7 +139,8 @@ public class CountryApi extends BaseApi {
     public void createOrUpdate(CountryDto postData) throws MeveoApiException, BusinessException {
 
     }
-    public void findOrCreate(String countryCode) throws EntityDoesNotExistsException, BusinessException {
+
+    public void findOrCreate(String countryCode) {
 
 	}
 }
