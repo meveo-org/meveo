@@ -2,3 +2,6 @@
 /org.eclipse.jdt.core.prefs
 /org.eclipse.wst.common.component
 /org.eclipse.wst.common.project.facet.core.xml
+/org.eclipse.jpt.core.prefs
+/org.eclipse.wst.common.project.facet.core.prefs.xml
+/org.eclipse.wst.validation.prefs
