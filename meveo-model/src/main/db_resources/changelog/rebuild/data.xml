@@ -6903,9 +6903,9 @@
             <column name="email" />
             <column name="firstname" />
             <column name="lastname" />
-            <column name="username" value="OPENCELL.ADMIN" />
+            <column name="username" value="MEVEO.ADMIN" />
             <column name="title_id" />
-            <column name="uuid" value="OPENCELL.ADMIN" />
+            <column name="uuid" value="MEVEO.ADMIN" />
         </insert>
         <insert tableName="adm_user">
             <column name="id" valueNumeric="-2" />
@@ -6915,9 +6915,9 @@
             <column name="email" />
             <column name="firstname" />
             <column name="lastname" />
-            <column name="username" value="OPENCELL.SUPERADMIN" />
+            <column name="username" value="MEVEO.SUPERADMIN" />
             <column name="title_id" />
-            <column name="uuid" value="OPENCELL.SUPERADMIN" />
+            <column name="uuid" value="MEVEO.SUPERADMIN" />
         </insert>
         <insert tableName="adm_user">
             <column name="id" valueNumeric="-3" />
@@ -6927,9 +6927,9 @@
             <column name="email" />
             <column name="firstname" />
             <column name="lastname" />
-            <column name="username" value="OPENCELL.MARKETINGMANAGER" />
+            <column name="username" value="MEVEO.MARKETINGMANAGER" />
             <column name="title_id" />
-            <column name="uuid" value="OPENCELL.MARKETINGMANAGER" />
+            <column name="uuid" value="MEVEO.MARKETINGMANAGER" />
         </insert>
         <insert tableName="adm_user_role">
             <column name="user_id" valueNumeric="-1" />
@@ -6949,7 +6949,7 @@
             <column name="id" valueNumeric="-1" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="ASSOC" />
             <column name="description" value="Assoc." />
@@ -6960,7 +6960,7 @@
             <column name="id" valueNumeric="-2" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="CIE" />
             <column name="description" value="Cie." />
@@ -6971,7 +6971,7 @@
             <column name="id" valueNumeric="-3" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="MR" />
             <column name="description" value="Mr." />
@@ -6982,7 +6982,7 @@
             <column name="id" valueNumeric="-4" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="MRS" />
             <column name="description" value="Mrs." />
@@ -6993,7 +6993,7 @@
             <column name="id" valueNumeric="-5" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="MS" />
             <column name="description" value="Ms." />
@@ -7004,7 +7004,7 @@
             <column name="id" valueNumeric="-6" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="DR" />
             <column name="description" value="Dr." />
@@ -7015,7 +7015,7 @@
             <column name="id" valueNumeric="-7" />
             <column name="version" valueNumeric="0" />
             <column name="disabled" valueNumeric="0" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="created" valueDate="2016-11-03 00:00:00.000" />
             <column name="code" value="PROF" />
             <column name="description" value="Prof." />
@@ -7212,7 +7212,7 @@
             <column name="job_template" value="ReRatingJob" />
             <column name="code" value="Rerate_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="Rerate_Job" />
         </insert>
@@ -7226,7 +7226,7 @@
             <column name="job_template" value="ImportCustomersJob" />
             <column name="code" value="Cust_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="Cust_Job" />
         </insert>
@@ -7239,7 +7239,7 @@
             <column name="job_template" value="MediationJob" />
             <column name="code" value="M_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="M_Job" />
         </insert>
@@ -7252,7 +7252,7 @@
             <column name="job_template" value="UsageRatingJob" />
             <column name="code" value="U_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="U_Job" />
         </insert>
@@ -7265,7 +7265,7 @@
             <column name="job_template" value="RecurringRatingJob" />
             <column name="code" value="RR_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="RR_Job" />
         </insert>
@@ -7278,7 +7278,7 @@
             <column name="job_template" value="RatedTransactionsJob" />
             <column name="code" value="RT_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="RT_Job" />
         </insert>
@@ -7291,7 +7291,7 @@
             <column name="job_template" value="XMLInvoiceGenerationJob" />
             <column name="code" value="XML_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="XML_Job" />
         </insert>
@@ -7304,7 +7304,7 @@
             <column name="job_template" value="PDFInvoiceGenerationJob" />
             <column name="code" value="PDF_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="PDF_Job" />
         </insert>
@@ -7317,7 +7317,7 @@
             <column name="job_template" value="ImportAccountsJob" />
             <column name="code" value="Acco_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="Acco_Job" />
         </insert>
@@ -7330,7 +7330,7 @@
             <column name="job_template" value="ImportSubscriptionsJob" />
             <column name="code" value="Subs_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="Subs_Job" />
         </insert>
@@ -7343,7 +7343,7 @@
             <column name="job_template" value="InvoicingJob" />
             <column name="code" value="Inv_Job" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="Inv_Job" />
         </insert>
@@ -7356,7 +7356,7 @@
             <column name="job_template" value="DWHQueryJob" />
             <column name="code" value="DWH_Job_MRR" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-2" />
             <column name="uuid" value="DWH_Job_MRR" />
             <column name="parametres" value="MRR" />
@@ -7370,7 +7370,7 @@
             <column name="job_template" value="DWHQueryJob" />
             <column name="code" value="DWH_Job_CHURN" />
 
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-2" />
             <column name="uuid" value="DWH_Job_CHURN" />
             <column name="parametres" value="CHURN" />
@@ -7384,7 +7384,7 @@
             <column name="job_category" value="ACCOUNT_RECEIVABLES" />
             <column name="job_template" value="AccountOperationsGenerationJob" />
             <column name="code" value="AO_Job" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-1" />
             <column name="uuid" value="ACC_REC_Job" />
         </insert>
@@ -7396,7 +7396,7 @@
             <column name="job_category" value="UTILS" />
             <column name="job_template" value="SubscriptionStatusJob" />
             <column name="code" value="Sub_Status_Job" />
-            <column name="creator" value="OPENCELL.ADMIN" />
+            <column name="creator" value="MEVEO.ADMIN" />
             <column name="timerentity_id" valueNumeric="-3" />
             <column name="uuid" value="Sub_Status_Job" />
         </insert>
@@ -7405,24 +7405,24 @@
     <changeSet author="AndriusKarpavicius" id="rebuild-data-decisionRule">
         <sql>
             INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (1, 0, 0, '2016-08-12 21:02:31.26', NULL,
-            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'Other', 'OPENCELL.ADMIN', NULL, 1);
+            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'Other', 'MEVEO.ADMIN', NULL, 1);
         </sql>
         <sql>
             INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (2, 0, 0, '2016-08-13 22:43:06.214', NULL,
-            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'south', 'OPENCELL.ADMIN', NULL, 0);
+            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'south', 'MEVEO.ADMIN', NULL, 0);
         </sql>
         <sql>
             INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (3, 0, 0, '2016-08-13 22:43:06.214', NULL,
-            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'west', 'OPENCELL.ADMIN', NULL, 0);
+            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'west', 'MEVEO.ADMIN', NULL, 0);
         </sql>
         <sql> INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (4, 0, 0, '2016-08-13 22:52:44.007', NULL,
-            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'north', 'OPENCELL.ADMIN', NULL, 0);
+            '#{mv:getCFValue(entity,"Territory")==_VALUE_}', 'Territory', 'STRING', 'north', 'MEVEO.ADMIN', NULL, 0);
         </sql>
         <sql> INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (5, 0, 0, '2016-08-15 08:09:43.616', NULL,
-            '#{mv:getCFValue(entity,"SalesAmount")==_VALUE_}', 'Sales amount', 'RANGE_NUMBER', 'Other', 'OPENCELL.ADMIN', NULL, 1);
+            '#{mv:getCFValue(entity,"SalesAmount")==_VALUE_}', 'Sales amount', 'RANGE_NUMBER', 'Other', 'MEVEO.ADMIN', NULL, 1);
         </sql>
         <sql> INSERT INTO ${db.schema.adapted}wf_decision_rule (id, version, disabled, created, updated, condition_el, name, type, value, creator, updater, model) VALUES (8, 0, 0, '2016-08-16 07:46:20.404', NULL,
-            '#{mv:getCFValue(entity,"AccountType")==_VALUE_}', 'Account Type', 'STRING', 'Other', 'OPENCELL.ADMIN', NULL, 1);
+            '#{mv:getCFValue(entity,"AccountType")==_VALUE_}', 'Account Type', 'STRING', 'Other', 'MEVEO.ADMIN', NULL, 1);
         </sql>
     </changeSet>
 </databaseChangeLog>

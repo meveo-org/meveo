@@ -7,10 +7,6 @@
         <property name="meveo.instance.name" value="demo"/>
         <property name="swarm.bind.address" value="127.0.0.1"/>
         <property name="java.net.preferIPv4Stack" value="true"/>
-        <property name="meveo.keycloak.url" value="http://localhost:8080/auth"/>
-        <property name="meveo.keycloak.secret" value="afe07e5a-68cb-4fb0-8b75-5b6053b07dc3"/>
-        <property name="meveo.keycloak.realm" value="meveo"/>
-        <property name="meveo.keycloak.client" value="meveo-web"/>
     </system-properties>
 
     <management>
@@ -18,26 +14,26 @@
             <security-realm name="ManagementRealm">
                 <authentication>
                     <local default-user="$local" skip-group-loading="true"/>
-                    <properties path="${meveo.properties}/mgmt-users.properties"/>
+                    <properties path="${meveo.config.directory}/mgmt-users.properties"/>
                 </authentication>
                 <authorization map-groups-to-roles="false">
-                    <properties path="${meveo.properties}/mgmt-groups.properties"/>
+                    <properties path="${meveo.config.directory}/mgmt-groups.properties"/>
                 </authorization>
             </security-realm>
             <security-realm name="ApplicationRealm">
                 <server-identities>
                     <ssl>
-                        <keystore path="${meveo.properties}/application.keystore"
+                        <keystore path="${meveo.config.directory}/application.keystore"
                                   keystore-password="password" alias="server" key-password="password"
                                   generate-self-signed-certificate-host="localhost"/>
                     </ssl>
                 </server-identities>
                 <authentication>
                     <local default-user="$local" allowed-users="*" skip-group-loading="true"/>
-                    <properties path="${meveo.properties}/application-users.properties"/>
+                    <properties path="${meveo.config.directory}/application-users.properties"/>
                 </authentication>
                 <authorization>
-                    <properties path="${meveo.properties}/application-roles.properties"/>
+                    <properties path="${meveo.config.directory}/application-roles.properties"/>
                 </authorization>
             </security-realm>
         </security-realms>
@@ -74,7 +70,7 @@
     <profile>
         <subsystem xmlns="urn:jboss:domain:logging:3.0">
             <console-handler name="CONSOLE">
-                <level name="ERROR"/>
+                <level name="INFO"/>
                 <formatter>
                     <named-formatter name="COLOR-PATTERN"/>
                 </formatter>
@@ -83,7 +79,7 @@
                 <formatter>
                     <named-formatter name="PATTERN"/>
                 </formatter>
-                <file relative-to="jboss.server.log.dir" path="server.log"/>
+                <file path="${meveo.log.directory}/server.log"/>
                 <suffix value=".yyyy-MM-dd"/>
                 <append value="true"/>
             </periodic-rotating-file-handler>
@@ -126,7 +122,7 @@
             <datasources>
                 <xa-datasource jndi-name="java:jboss/datasources/KeycloakDS" pool-name="KeycloakDS">
                     <xa-datasource-property name="URL">
-                        jdbc:h2:${meveo.directory}/keycloak
+                        jdbc:h2:${keycloak.directory}/keycloak
                     </xa-datasource-property>
                     <driver>h2</driver>
                     <xa-pool>
@@ -525,7 +521,7 @@
                 <websockets/>
             </servlet-container>
             <handlers>
-                <file name="meveodata" path="${meveo.directory}/meveodata"/>
+                <file name="meveodata" path="${meveo.welcome-content}"/>
             </handlers>
             <filters>
                 <response-header name="server-header" header-name="Server" header-value="WildFly/10"/>
@@ -557,7 +553,7 @@
                 <staticMaxAge>2592000</staticMaxAge>
                 <cacheThemes>true</cacheThemes>
                 <cacheTemplates>true</cacheTemplates>
-                <dir>${jboss.home.dir}/themes</dir>
+                <dir>${keycloak.themes}</dir>
             </theme>
             <spi name="eventsStore">
                 <provider name="jpa" enabled="true">

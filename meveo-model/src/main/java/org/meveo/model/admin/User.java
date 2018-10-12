@@ -46,7 +46,7 @@ import java.util.*;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_user_seq"), })
 @NamedQueries({ @NamedQuery(name = "User.listUsersInMM", query = "SELECT u FROM User u LEFT JOIN u.roles as role WHERE role.name IN (:roleNames)"),
-        @NamedQuery(name = "User.getByUsername", query = "SELECT u FROM User u JOIN FETCH u.roles WHERE lower(u.userName)=:username", hints = {
+        @NamedQuery(name = "User.getByUsername", query = "SELECT u FROM User u WHERE lower(u.userName)=:username", hints = {
                 @QueryHint(name = "org.hibernate.cacheable", value = "TRUE") }) })
 public class User extends EnableEntity implements ICustomFieldEntity {
 

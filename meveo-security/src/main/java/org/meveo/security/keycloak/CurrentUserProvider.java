@@ -6,16 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.enterprise.context.ContextNotActiveException;
-import javax.enterprise.inject.Instance;
+import javax.enterprise.context.SessionScoped;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-
 import org.keycloak.KeycloakPrincipal;
 import org.meveo.model.admin.User;
 import org.meveo.model.security.Permission;
@@ -38,10 +37,14 @@ public class CurrentUserProvider {
     private SessionContext ctx;
 
     @Inject
-    private Instance<UserAuthTimeProducer> userAuthTimeProducer;
+    private UserAuthTimeProducer userAuthTimeProducer;
 
     @Inject
     private Logger log;
+    
+    @Inject 
+    private BeanManager beanManager;
+
 
     /**
      * Contains a current tenant
@@ -172,6 +175,18 @@ public class CurrentUserProvider {
         log.trace("Current user is {}", user);
         return user;
     }
+    
+    private boolean isSessionScopeActive() {
+        try {
+            if (beanManager.getContext(SessionScoped.class).isActive()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (final ContextNotActiveException e) {
+            return false;
+        }
+    }
 
     /**
      * Register a user in application if accesing for the first time with that username
@@ -179,29 +194,23 @@ public class CurrentUserProvider {
      * @param currentUser Authenticated current user
      */
     private void supplementOrCreateUserInApp(MeveoUser currentUser, EntityManager em) {
-
         // Takes care of anonymous users
         if (currentUser.getUserName() == null) {
             return;
         }
-
         // Create or retrieve current user
         try {
             User user = null;
             try {
                 user = em.createNamedQuery("User.getByUsername", User.class).setParameter("username", currentUser.getUserName().toLowerCase()).getSingleResult();
-
-                if (userAuthTimeProducer.get().getAuthTime() != currentUser.getAuthTime()) {
-                    userAuthTimeProducer.get().setAuthTime(currentUser.getAuthTime());
+                if (isSessionScopeActive() && userAuthTimeProducer.getAuthTime() != currentUser.getAuthTime()) {
+                    userAuthTimeProducer.setAuthTime(currentUser.getAuthTime());
                     user.setLastLoginDate(new Date());
                     em.merge(user);
                     em.flush();
                 }
-
                 currentUser.setFullName(user.getNameOrUsername());
-
             } catch (NoResultException e) {
-
                 user = new User();
                 user.setUserName(currentUser.getUserName().toUpperCase());
                 if (currentUser.getFullName() != null) {
@@ -221,9 +230,8 @@ public class CurrentUserProvider {
                 em.persist(user);
                 em.flush();
                 log.info("A new application user was registered with username {} and name {}", user.getUserName(), user.getName() != null ? user.getName().getFullName() : "");
-
             } catch (ContextNotActiveException e) {
-                log.error("No session context={}", e.getMessage());
+                log.warn("No active session context : {}", e.getMessage());
             }
 
         } catch (Exception e) {
