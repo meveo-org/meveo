@@ -38,7 +38,7 @@ import javax.interceptor.Interceptors;
 @Interceptors({WsRestApiInterceptor.class})
 public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService, S extends TechnicalServiceService<T>> extends BaseRs implements TechnicalServiceRs {
 
-    protected abstract TechnicalServiceApi<T, S> technicalServiceApi();
+    protected abstract TechnicalServiceApi<T> technicalServiceApi();
 
     @Override
     public ActionStatus index() {

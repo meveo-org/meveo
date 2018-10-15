@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * @author Clément Bareth
  */
 @Stateless
-public abstract class TechnicalServiceApi<T extends TechnicalService, S extends TechnicalServiceService<T>>
+public abstract class TechnicalServiceApi<T extends TechnicalService>
         extends BaseApi {
 
     @Inject
@@ -67,6 +67,17 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, S extends 
         dto.setScript(technicalService.getScript());
         dto.setServiceType(technicalService.getServiceType());
         return dto;
+    }
+
+    private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+        final T technicalService = newInstance();
+        technicalService.setCode(postData.getCode());
+        List<Description> descriptions = fromDescriptionsDto(postData);
+        technicalService.setDescriptions(descriptions);
+        technicalService.setName(postData.getName());
+        technicalService.setVersion(postData.getVersion());
+        technicalService.setScript(postData.getScript());
+        return technicalService;
     }
 
     private List<InputOutputDescriptionDto> toDescriptionsDto(TechnicalService technicalService) {
@@ -161,18 +172,6 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, S extends 
             outputProperties.add(outputProperty);
         }
         return description;
-    }
-
-    private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
-        final T technicalService = newInstance();
-        technicalService.setCode(postData.getCode());
-        List<Description> descriptions = fromDescriptionsDto(postData);
-        technicalService.setDescriptions(descriptions);
-        technicalService.setName(postData.getName());
-        technicalService.setVersion(postData.getVersion());
-        technicalService.setScript(postData.getScript());
-        technicalService.setServiceType(postData.getServiceType());
-        return technicalService;
     }
 
     private List<Description> fromDescriptionsDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {

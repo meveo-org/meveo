@@ -50,7 +50,6 @@ public class TechnicalServiceDto extends BusinessDto {
     @NotNull(message = "Source code must be provided")
     private String script;
 
-    @NotNull(message = "Service type must be provided")
     private String serviceType;
 
     public TechnicalServiceDto() {

@@ -93,11 +93,4 @@ public class TechnicalService extends Executable {
         return serviceType;
     }
 
-    /**
-     * @param serviceType Name of the service type defined by the administrator
-     */
-    public void setServiceType(String serviceType) {
-        this.serviceType = serviceType;
-    }
-
 }
