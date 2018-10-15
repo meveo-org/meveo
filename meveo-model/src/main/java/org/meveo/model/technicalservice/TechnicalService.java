@@ -17,17 +17,19 @@
  */
 package org.meveo.model.technicalservice;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.scripts.Executable;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Clément Bareth
@@ -39,6 +41,8 @@ import java.util.List;
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
         parameters = {@Parameter(name = "sequence_name", value = "technical_services_seq")}
 )
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "service_type")
 public class TechnicalService extends Executable {
 
 	private static final long serialVersionUID = 1L;
@@ -51,7 +55,7 @@ public class TechnicalService extends Executable {
     @Type(type = "json")
     private List<Description> descriptions;
 
-    @Column(name = "service_type")
+    @Column(name = "service_type", insertable = false, updatable = false)
     private String serviceType;
     
     /**
