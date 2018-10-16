@@ -25,6 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Technical service rest service
@@ -34,6 +35,18 @@ import javax.ws.rs.core.MediaType;
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public interface TechnicalServiceRs extends IBaseRs {
+
+    /**
+     * Check if service exists
+     *
+     * @param name Name of service to check
+     * @param version Version of service to check - optional
+     * @return true if specified service exists
+     */
+    @Path("/{name}")
+    @HEAD
+    Response exists(@PathParam("name") String name, @QueryParam("version") Integer version);
+
 
     /**
      * Create a new technical service.
@@ -61,7 +74,7 @@ public interface TechnicalServiceRs extends IBaseRs {
      */
     @Path("/{name}")
     @GET
-    TechnicalServiceResponse findByNameAndVersionOrLatest(@PathParam("name") String name, @QueryParam("version") String version);
+    TechnicalServiceResponse findByNameAndVersionOrLatest(@PathParam("name") String name, @QueryParam("version") Integer version);
 
     /**
      * Retrieve a list of all technical services.
@@ -91,7 +104,7 @@ public interface TechnicalServiceRs extends IBaseRs {
      */
     @Path("/{name}")
     @DELETE
-    ActionStatus remove(@PathParam("name") String name, @QueryParam("version") String version);
+    ActionStatus remove(@PathParam("name") String name, @QueryParam("version") Integer version);
 
     /**
      * Create new or update an existing technical service.
@@ -102,5 +115,13 @@ public interface TechnicalServiceRs extends IBaseRs {
     @Path("/createOrUpdate")
     @POST
     ActionStatus createOrUpdate(TechnicalServiceDto postData);
+
+    @Path("/rename")
+    @PUT
+    ActionStatus rename(@FormParam("oldName") String oldName, @FormParam("newName") String newName);
+
+    @Path("/renameVersion/{name}")
+    @PUT
+    ActionStatus renameVersion(@PathParam("name") String name, @FormParam("oldVersion") Integer oldVersion, @FormParam("newVersion") Integer newVersion);
 
 }

@@ -34,7 +34,6 @@ import java.util.Optional;
  *
  * @author Clément Bareth
  */
-@Stateless
 public abstract class TechnicalServiceService<T extends TechnicalService>
         extends ExecutableService<T, TechnicalServiceEngine<T>> {
 
@@ -82,11 +81,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
      */
     @SuppressWarnings("unchecked")
     public Optional<T> findLatestByName(String name) {
-        QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
-        qb.addCriterion("service.name", "=", name, true);
-        qb.addSql("service.version = (select max(ci.version) from org.meveo.model.technicalservice.TechnicalService ci where "
-                + "ci.name = service.name)");
         try {
+            QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
+            qb.addCriterion("service.name", "=", name, true);
+            qb.addSql("service.version = (select max(ci.version) from org.meveo.model.technicalservice.TechnicalService ci where "
+                    + "ci.name = service.name)");
             return Optional.of((T) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
             log.warn("No Technical service by name {} found", name);

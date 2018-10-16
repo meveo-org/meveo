@@ -27,20 +27,19 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Clément Bareth
  */
 @XmlRootElement(name = "TechnicalServiceResponse")
-@XmlAccessorType(XmlAccessType.FIELD)
 public class TechnicalServiceResponse extends BaseResponse {
 
     private static final long serialVersionUID = 1507326300507935339L;
 
-    private TechnicalServiceDto technicalServiceDto;
+    private TechnicalServiceDto technicalService;
 
     /**
      * Data representing the TechnicalService queried
      *
      * @return DTO object
      */
-    public TechnicalServiceDto getTechnicalServiceDto() {
-        return technicalServiceDto;
+    public TechnicalServiceDto getTechnicalService() {
+        return technicalService;
     }
 
     /**
@@ -48,13 +47,13 @@ public class TechnicalServiceResponse extends BaseResponse {
      *
      * @return DTO object
      */
-    public void setTechnicalServiceDto(TechnicalServiceDto connectorDto) {
-        this.technicalServiceDto = connectorDto;
+    public void setTechnicalService(TechnicalServiceDto connectorDto) {
+        this.technicalService = connectorDto;
     }
 
     @Override
     public String toString() {
-        return "TechnicalServiceResponse [technicalservice=" + technicalServiceDto + ", toString()=" + super.toString() + "]";
+        return "TechnicalServiceResponse [technicalservice=" + technicalService + ", toString()=" + super.toString() + "]";
     }
 
 }

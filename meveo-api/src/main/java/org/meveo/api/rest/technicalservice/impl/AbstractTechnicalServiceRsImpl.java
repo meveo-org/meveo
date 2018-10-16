@@ -17,6 +17,7 @@
  */
 package org.meveo.api.rest.technicalservice.impl;
 
+import org.jboss.resteasy.core.ServerResponse;
 import org.meveo.api.TechnicalServiceApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
@@ -26,17 +27,17 @@ import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.technicalservice.TechnicalServiceRs;
 import org.meveo.model.technicalservice.TechnicalService;
-import org.meveo.service.technicalservice.TechnicalServiceService;
 
 import javax.enterprise.context.RequestScoped;
 import javax.interceptor.Interceptors;
+import javax.ws.rs.core.Response;
 
 /**
  * @author Clément Bareth
  */
 @RequestScoped
 @Interceptors({WsRestApiInterceptor.class})
-public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService, S extends TechnicalServiceService<T>> extends BaseRs implements TechnicalServiceRs {
+public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService> extends BaseRs implements TechnicalServiceRs {
 
     protected abstract TechnicalServiceApi<T> technicalServiceApi();
 
@@ -68,20 +69,32 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService,
     }
 
     @Override
-    public ActionStatus remove(String connectorName, String version) {
-        return null;
+    public ActionStatus remove(String connectorName, Integer version) {
+        ActionStatus result = new ActionStatus();
+        try {
+            technicalServiceApi().remove(connectorName, version);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
     }
 
     @Override
     public ActionStatus createOrUpdate(TechnicalServiceDto postData) {
-        return null;
+        ActionStatus result = new ActionStatus();
+        try {
+            technicalServiceApi().createOrUpdate(postData);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
     }
 
     @Override
-    public TechnicalServiceResponse findByNameAndVersionOrLatest(String connectorName, String version) {
+    public TechnicalServiceResponse findByNameAndVersionOrLatest(String connectorName, Integer version) {
         TechnicalServiceResponse result = new TechnicalServiceResponse();
         try {
-            result.setTechnicalServiceDto(technicalServiceApi().findByNameAndVersionOrLatest(connectorName, version != null ? Integer.parseInt(version) : null));
+            result.setTechnicalService(technicalServiceApi().findByNameAndVersionOrLatest(connectorName, version));
         } catch (Exception e) {
             processException(e, result.getActionStatus());
         }
@@ -110,4 +123,42 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService,
         return result;
     }
 
+    @Override
+    public Response exists(String name, Integer version) {
+        ServerResponse response = new ServerResponse();
+        try {
+            boolean exists = technicalServiceApi().exists(name, version);
+            if(exists){
+                response.setStatus(200);
+            }else{
+                response.setStatus(404);
+            }
+        } catch (Exception e) {
+            response.setStatus(400);
+            response.setEntity(e.getMessage());
+        }
+        return response;
+    }
+
+    @Override
+    public ActionStatus rename(String oldName, String newName) {
+        ActionStatus result = new ActionStatus();
+        try {
+            technicalServiceApi().rename(oldName, newName);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
+    }
+
+    @Override
+    public ActionStatus renameVersion(String name, Integer oldVersion, Integer newVersion) {
+        ActionStatus result = new ActionStatus();
+        try {
+            technicalServiceApi().renameVersion(name, oldVersion, newVersion);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+        return result;
+    }
 }

@@ -16,10 +16,12 @@
 package org.meveo.api.dto.response;
 
 import org.meveo.api.dto.TechnicalServicesDto;
+import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /**
  * The Class ListConnectorResponse.
@@ -27,7 +29,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Clément Bareth
  */
 @XmlRootElement(name = "ListConnectorResponse")
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ListTechnicalServiceResponse extends BaseResponse {
 
     private static final long serialVersionUID = 8305118549760963932L;
@@ -37,8 +38,8 @@ public class ListTechnicalServiceResponse extends BaseResponse {
     /**
      * @return the technical services retrieved
      */
-    public TechnicalServicesDto getTechnicalServices() {
-        return technicalServices;
+    public List<TechnicalServiceDto> getTechnicalServices() {
+        return technicalServices.geTechnicalServiceDtos();
     }
 
     /**

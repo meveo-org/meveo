@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
  *
  * @author Clément Bareth
  */
-@Stateless
 public abstract class TechnicalServiceApi<T extends TechnicalService>
         extends BaseApi {
 
@@ -225,11 +224,27 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @throws BusinessException            if the technical service can't be updated
      */
     public void update(@Valid @NotNull TechnicalServiceDto postData) throws EntityDoesNotExistsException, BusinessException {
-        T technicalService;
-        technicalService = getTechninicalService(postData.getName(), postData.getVersion());
+        final T technicalService = getTechninicalService(postData.getName(), postData.getVersion());
         technicalService.setDescriptions(fromDescriptionsDto(postData));
         technicalService.setScript(postData.getScript());
         technicalServiceService().update(technicalService);
+    }
+
+    public void rename(String oldName, String newName) throws BusinessException {
+        final List<T> technicalServices = technicalServiceService().findByName(oldName);
+        for (T t : technicalServices) {
+            t.setName(newName);
+            t.setCode(newName + "." + t.getVersion());
+            technicalServiceService().update(t);
+        }
+    }
+
+    public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
+        final T service = technicalServiceService().findByNameAndVersion(name, oldVersion)
+                .orElseThrow(() -> new EntityDoesNotExistsException(name+"."+oldVersion));
+        service.setVersion(newVersion);
+        service.setCode(name + "." + service.getVersion());
+        technicalServiceService().update(service);
     }
 
     /**
@@ -333,5 +348,15 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     private T getTechnicalServiceByNameAndVersion(String name, Integer version) throws EntityDoesNotExistsException {
         return technicalServiceService().findByNameAndVersion(name, version)
                 .orElseThrow(() -> new EntityDoesNotExistsException("TechnicalService with name " + name + " and version " + version + " does not exists"));
+    }
+
+    public boolean exists(String name, Integer version){
+        if(name == null){
+            throw new IllegalArgumentException("Name must be provided");
+        }
+        if(version != null){
+            return technicalServiceService().findByNameAndVersion(name, version).isPresent();
+        }
+        return !technicalServiceService().findByName(name).isEmpty();
     }
 }
