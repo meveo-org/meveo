@@ -25,9 +25,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
+
+import org.hibernate.annotations.*;
 import org.meveo.model.scripts.Executable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -54,6 +53,10 @@ public class TechnicalService extends Executable {
     @Column(name = "descriptions", columnDefinition = "TEXT")
     @Type(type = "json")
     private List<Description> descriptions;
+
+    @JsonProperty
+    @Column(name = "service_version", nullable = false)
+    private Integer serviceVersion = 1;
 
     @Column(name = "service_type", insertable = false, updatable = false)
     private String serviceType;
@@ -93,4 +96,11 @@ public class TechnicalService extends Executable {
         return serviceType;
     }
 
+    public Integer getServiceVersion() {
+        return serviceVersion;
+    }
+
+    public void setServiceVersion(Integer serviceVersion) {
+        this.serviceVersion = serviceVersion;
+    }
 }

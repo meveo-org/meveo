@@ -18,7 +18,6 @@
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.EntityDescriptionDto;
 import org.meveo.api.dto.TechnicalServicesDto;
 import org.meveo.api.dto.technicalservice.*;
@@ -32,8 +31,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 
-import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.*;
@@ -46,6 +45,8 @@ import java.util.stream.Collectors;
  */
 public abstract class TechnicalServiceApi<T extends TechnicalService>
         extends BaseApi {
+
+    //TODO: Document
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -62,7 +63,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         List<InputOutputDescriptionDto> descriptionDtos = toDescriptionsDto(technicalService);
         dto.setDescriptions(descriptionDtos);
         dto.setName(technicalService.getName());
-        dto.setVersion(technicalService.getVersion());
+        dto.setVersion(technicalService.getServiceVersion());
         dto.setScript(technicalService.getScript());
         dto.setServiceType(technicalService.getServiceType());
         return dto;
@@ -74,7 +75,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         List<Description> descriptions = fromDescriptionsDto(postData);
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
-        technicalService.setVersion(postData.getVersion());
+        technicalService.setServiceVersion(postData.getVersion());
         technicalService.setScript(postData.getScript());
         return technicalService;
     }
@@ -116,6 +117,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             outputPropertyDto.setTrustness(p.getTrustness());
             outputProperties.add(outputPropertyDto);
         }
+        descriptionDto.setInputProperties(inputProperties);
+        descriptionDto.setOutputProperties(outputProperties);
         return descriptionDto;
     }
 
@@ -160,6 +163,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             inputProperty.setRequired(p.isRequired());
             inputProperties.add(inputProperty);
         }
+        description.setInputProperties(inputProperties);
         for (OutputPropertyDto p : dto.getOutputProperties()) {
             OutputProperty outputProperty = new OutputProperty();
             CustomFieldTemplate property = customFields.get(p.getProperty());
@@ -170,6 +174,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             outputProperty.setTrustness(p.getTrustness());
             outputProperties.add(outputProperty);
         }
+        description.setOutputProperties(outputProperties);
         return description;
     }
 
@@ -201,7 +206,6 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      *
      * @param postData Data used to create the technical service
      * @throws BusinessException            If technical service already exists for specified name and version
-     * @throws EntityDoesNotExistsException
      */
     public void create(@Valid @NotNull TechnicalServiceDto postData) throws BusinessException, EntityDoesNotExistsException {
         final T technicalService = fromDto(postData);
@@ -211,7 +215,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             if (latestVersion.isPresent()) {
                 versionNumber = latestVersion.get() + 1;
             }
-            technicalService.setVersion(versionNumber);
+            technicalService.setServiceVersion(versionNumber);
         }
         technicalServiceService().create(technicalService);
     }
@@ -224,7 +228,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @throws BusinessException            if the technical service can't be updated
      */
     public void update(@Valid @NotNull TechnicalServiceDto postData) throws EntityDoesNotExistsException, BusinessException {
-        final T technicalService = getTechninicalService(postData.getName(), postData.getVersion());
+        final T technicalService = getTechnicalService(postData.getName(), postData.getVersion());
         technicalService.setDescriptions(fromDescriptionsDto(postData));
         technicalService.setScript(postData.getScript());
         technicalServiceService().update(technicalService);
@@ -234,7 +238,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         final List<T> technicalServices = technicalServiceService().findByName(oldName);
         for (T t : technicalServices) {
             t.setName(newName);
-            t.setCode(newName + "." + t.getVersion());
+            t.setCode(newName + "." + t.getServiceVersion());
             technicalServiceService().update(t);
         }
     }
@@ -242,8 +246,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
         final T service = technicalServiceService().findByNameAndVersion(name, oldVersion)
                 .orElseThrow(() -> new EntityDoesNotExistsException(name+"."+oldVersion));
-        service.setVersion(newVersion);
-        service.setCode(name + "." + service.getVersion());
+        service.setServiceVersion(newVersion);
+        service.setCode(name + "." + service.getServiceVersion());
         technicalServiceService().update(service);
     }
 
@@ -257,27 +261,25 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @throws EntityDoesNotExistsException if the technical service does not exists
      */
     public TechnicalServiceDto findByNameAndVersionOrLatest(String name, Integer version) throws EntityDoesNotExistsException {
-        TechnicalService technicalService = getTechninicalService(name, version);
+        TechnicalService technicalService = getTechnicalService(name, version);
         return toDto(technicalService);
     }
 
     /**
      * List all the technical services present in database
      *
-     * @param name Name filter - Search for technical service that has a similar name
      * @return The list of all technical services DTOs object retrieved
      */
-    public TechnicalServicesDto list(String name) {
-        Map<String, Object> filter = new HashMap<>();
-        if (name != null) {
-            filter.put("wildcardOr " + name, null);
-        }
-        PaginationConfiguration config = new PaginationConfiguration(filter);
-        List<T> list = technicalServiceService().list(config);
+    public TechnicalServicesDto list(TechnicalServiceFilters filters) {
+        List<T> list = technicalServiceService().list(filters);
         List<TechnicalServiceDto> customEntityInstanceDTOs = list.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
         return new TechnicalServicesDto(customEntityInstanceDTOs);
+    }
+
+    public long count(TechnicalServiceFilters filters) {
+        return technicalServiceService().count(filters);
     }
 
     /**
@@ -324,7 +326,6 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      *
      * @param postData Data used to create or update the technical service
      * @throws BusinessException            if the technical service can't be created or updated
-     * @throws EntityDoesNotExistsException
      */
     public void createOrUpdate(@Valid @NotNull TechnicalServiceDto postData) throws BusinessException, EntityDoesNotExistsException {
         try {
@@ -334,7 +335,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         }
     }
 
-    private T getTechninicalService(String name, Integer version) throws EntityDoesNotExistsException {
+    private T getTechnicalService(String name, Integer version) throws EntityDoesNotExistsException {
         T technicalService;
         if (version != null) {
             technicalService = getTechnicalServiceByNameAndVersion(name, version);
@@ -358,5 +359,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             return technicalServiceService().findByNameAndVersion(name, version).isPresent();
         }
         return !technicalServiceService().findByName(name).isEmpty();
+    }
+
+    public List<String> names() {
+        return technicalServiceService().names();
+    }
+
+    public List<Integer> versions(String name) {
+        return technicalServiceService().versions(name);
     }
 }

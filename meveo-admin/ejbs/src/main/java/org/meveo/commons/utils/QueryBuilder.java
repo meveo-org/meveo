@@ -696,6 +696,16 @@ public class QueryBuilder {
         return result;
     }
 
+    public <Z> TypedQuery<Z> getTypedQuery(EntityManager em, Class<Z> clazz){
+        applyPagination(paginationSortAlias);
+        TypedQuery<Z> result = em.createQuery(q.toString(), clazz);
+        applyPagination(result);
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            result.setParameter(e.getKey(), e.getValue());
+        }
+        return result;
+    }
+
     /**
      * Return a query to retrive ids.
      * 

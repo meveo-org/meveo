@@ -17,14 +17,17 @@
  */
 package org.meveo.service.technicalservice;
 
+import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.ExecutableService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
 
-import javax.ejb.Stateless;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +40,8 @@ import java.util.Optional;
 public abstract class TechnicalServiceService<T extends TechnicalService>
         extends ExecutableService<T, TechnicalServiceEngine<T>> {
 
+    private final String serviceType = getEntityClass().getAnnotation(DiscriminatorValue.class).value();
+
     /**
      * Retrieve the last version of the technical service with the specified name
      *
@@ -44,10 +49,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
      * @return The last version number or empty if the technical service does not exists
      */
     public Optional<Integer> latestVersionNumber(String name) {
-        String queryString = "Select max(service.version) from org.meveo.model.technicalservice.TechnicalService service \n" +
-                "where service.name = :name";
+        String queryString = "Select max(service.serviceVersion) from org.meveo.model.technicalservice.TechnicalService service \n" +
+                "where service.name = :name and service.serviceType = :service_type";
         Query q = getEntityManager().createQuery(queryString)
-                .setParameter("name", name);
+                .setParameter("name", name)
+                .setParameter("service_type", serviceType);
         try {
             return Optional.of((Integer) q.getSingleResult());
         } catch (NoResultException ignored) {
@@ -84,8 +90,8 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         try {
             QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
             qb.addCriterion("service.name", "=", name, true);
-            qb.addSql("service.version = (select max(ci.version) from org.meveo.model.technicalservice.TechnicalService ci where "
-                    + "ci.name = service.name)");
+            qb.addSql("service.serviceVersion = (select max(ci.serviceVersion) from org.meveo.model.technicalservice.TechnicalService ci where "
+                    + "ci.name = service.name and ci.serviceType = service.serviceType)");
             return Optional.of((T) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
             log.warn("No Technical service by name {} found", name);
@@ -104,7 +110,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
     public Optional<T> findByNameAndVersion(String name, Integer version) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
         qb.addCriterion("service.name", "=", name, true);
-        qb.addCriterion("service.version", "=", version, true);
+        qb.addCriterion("service.serviceVersion", "=", version, true);
         try {
             return Optional.of((T) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
@@ -113,17 +119,53 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return Optional.empty();
     }
 
-    @Override
-    protected void afterUpdateOrCreate(T executable) {
+    public List<T> list(TechnicalServiceFilters filters) {
+        QueryBuilder qb = filteredQueryBuilder(filters);
+        TypedQuery<T> query = qb.getTypedQuery(getEntityManager(), getEntityClass());
+        return query.getResultList();
+    }
+
+    public List<String> names(){
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<String> query = cb.createQuery(String.class);
+        Root<T> root = query.from(entityClass);
+        query.select(root.get("name"));
+        return getEntityManager().createQuery(query).getResultList();
+    }
+
+    public List<Integer> versions(String name){
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Integer> query = cb.createQuery(Integer.class);
+        Root<T> service = query.from(entityClass);
+        query.select(service.get("service_version"));
+        query.where(cb.equal(service.get("name"), name));
+        return getEntityManager().createQuery(query).getResultList();
+    }
+
+    public long count(TechnicalServiceFilters filters){
+        QueryBuilder qb = filteredQueryBuilder(filters);
+        return qb.count(getEntityManager());
     }
 
     @Override
-    protected void validate(T executable) {
-    }
+    protected void afterUpdateOrCreate(T executable) {}
+
+    @Override
+    protected void validate(T executable) {}
 
     @Override
     protected String getCode(T executable) {
-        return executable.getName() + "." + executable.getVersion();
+        return executable.getName() + "." + executable.getServiceVersion();
+    }
+
+    private QueryBuilder filteredQueryBuilder(TechnicalServiceFilters filters) {
+        QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
+        if(filters.getName() != null){
+            qb.addCriterion("service.name", "=", filters.getName(), true);
+        }else if(filters.getLikeName() != null){
+            qb.addCriterion("service.name", "like", filters.getName(), true);
+        }
+        return qb;
     }
 
 }

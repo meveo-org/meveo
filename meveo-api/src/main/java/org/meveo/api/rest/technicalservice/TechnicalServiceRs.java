@@ -17,10 +17,12 @@
  */
 package org.meveo.api.rest.technicalservice;
 
+import org.jboss.resteasy.annotations.Form;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
+import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.rest.IBaseRs;
 
 import javax.ws.rs.*;
@@ -32,9 +34,10 @@ import javax.ws.rs.core.Response;
  *
  * @author Clément Bareth
  */
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public interface TechnicalServiceRs extends IBaseRs {
+
+    //TODO: Document
 
     /**
      * Check if service exists
@@ -47,6 +50,9 @@ public interface TechnicalServiceRs extends IBaseRs {
     @HEAD
     Response exists(@PathParam("name") String name, @QueryParam("version") Integer version);
 
+    @Path("/count")
+    @GET
+    Response count(@Form TechnicalServiceFilters filters);
 
     /**
      * Create a new technical service.
@@ -55,6 +61,7 @@ public interface TechnicalServiceRs extends IBaseRs {
      */
     @Path("/")
     @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     ActionStatus create(TechnicalServiceDto postData);
 
     /**
@@ -64,7 +71,19 @@ public interface TechnicalServiceRs extends IBaseRs {
      */
     @Path("/")
     @PUT
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     ActionStatus update(TechnicalServiceDto postData);
+
+    /**
+     * Create new or update an existing technical service.
+     *
+     * @param postData The technical service's data
+     * @return Request processing status
+     */
+    @Path("/createOrUpdate")
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    ActionStatus createOrUpdate(TechnicalServiceDto postData);
 
     /**
      * Search for technical service with a given name.
@@ -79,12 +98,19 @@ public interface TechnicalServiceRs extends IBaseRs {
     /**
      * Retrieve a list of all technical services.
      *
-     * @param name Name filter
      * @return list of all technical services
      */
     @Path("/")
     @GET
-    ListTechnicalServiceResponse list(@QueryParam("name") String name);
+    ListTechnicalServiceResponse list(@Form TechnicalServiceFilters filters);
+
+    @Path("/list/names")
+    @GET
+    Response names();
+
+    @Path("/{name}/versions")
+    @GET
+    Response versions(@PathParam("name") String name);
 
     /**
      * Retrieve a list of all versions of the technical service with the given name.
@@ -106,22 +132,14 @@ public interface TechnicalServiceRs extends IBaseRs {
     @DELETE
     ActionStatus remove(@PathParam("name") String name, @QueryParam("version") Integer version);
 
-    /**
-     * Create new or update an existing technical service.
-     *
-     * @param postData The technical service's data
-     * @return Request processing status
-     */
-    @Path("/createOrUpdate")
-    @POST
-    ActionStatus createOrUpdate(TechnicalServiceDto postData);
-
     @Path("/rename")
     @PUT
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     ActionStatus rename(@FormParam("oldName") String oldName, @FormParam("newName") String newName);
 
     @Path("/renameVersion/{name}")
     @PUT
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     ActionStatus renameVersion(@PathParam("name") String name, @FormParam("oldVersion") Integer oldVersion, @FormParam("newVersion") Integer newVersion);
 
 }

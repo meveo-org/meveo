@@ -179,7 +179,10 @@
                 <constraints nullable="false" />
             </column>
             <column name="version" type="INT4" />
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE">
+            <column name="service_version" type="INT4" >
+                <constraints nullable="false" />
+            </column>
+            <column defaultValue="1" name="created" type="TIMESTAMP WITHOUT TIME ZONE">
                 <constraints nullable="false" />
             </column>
             <column name="disabled" type="INT4"/>
