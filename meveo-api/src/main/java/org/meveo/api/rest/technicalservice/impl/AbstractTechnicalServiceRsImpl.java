@@ -156,6 +156,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
 
     @Override
     public Response exists(String name, Integer version) {
+
         ServerResponse response = new ServerResponse();
         try {
             boolean exists = technicalServiceApi().exists(name, version);

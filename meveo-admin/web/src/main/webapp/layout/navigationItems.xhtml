@@ -103,14 +103,6 @@
 			value="#{messages['menu.userGroupHierarchy']}" />
 	</p:submenu>
 
-	<p:submenu styleClass="mmSettingsSM" id="settings"
-		label="#{messages['menu.settings']}"
-		rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
-		<p:menuitem id="mmOfferCategories"
-			outcome="mm_offerTemplateCategories"
-			value="#{messages['menu.marketingManager.manageCategories']}" />
-	</p:submenu>
-
 	<p:submenu id="automation" label="#{messages['menu.admin']}"
 		rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
 		<p:submenu id="adminJobs" label="#{messages['menu.jobs']}">

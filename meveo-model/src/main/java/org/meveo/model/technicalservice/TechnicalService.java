@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Clément Bareth
  */
 @Entity
-@Table(name = "technical_services", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "version"}))
+@Table(name = "technical_services", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "service_version"}))
 @GenericGenerator(
         name = "ID_GENERATOR",
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",

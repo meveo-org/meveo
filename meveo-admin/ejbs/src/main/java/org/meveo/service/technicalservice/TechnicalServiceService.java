@@ -119,6 +119,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return Optional.empty();
     }
 
+    //TODO: Document
     public List<T> list(TechnicalServiceFilters filters) {
         QueryBuilder qb = filteredQueryBuilder(filters);
         TypedQuery<T> query = qb.getTypedQuery(getEntityManager(), getEntityClass());
@@ -128,16 +129,17 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
     public List<String> names(){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<String> query = cb.createQuery(String.class);
-        Root<T> root = query.from(entityClass);
+        Root<T> root = query.from(getEntityClass());
         query.select(root.get("name"));
+        query.distinct(true);
         return getEntityManager().createQuery(query).getResultList();
     }
 
     public List<Integer> versions(String name){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Integer> query = cb.createQuery(Integer.class);
-        Root<T> service = query.from(entityClass);
-        query.select(service.get("service_version"));
+        Root<T> service = query.from(getEntityClass());
+        query.select(service.get("serviceVersion"));
         query.where(cb.equal(service.get("name"), name));
         return getEntityManager().createQuery(query).getResultList();
     }
