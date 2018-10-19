@@ -22,8 +22,10 @@ import org.meveo.api.TechnicalServiceApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
+import org.meveo.api.dto.technicalservice.InputOutputDescriptionDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.technicalservice.TechnicalServiceRs;
@@ -31,9 +33,6 @@ import org.meveo.model.technicalservice.TechnicalService;
 
 import javax.enterprise.context.RequestScoped;
 import javax.interceptor.Interceptors;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
@@ -141,7 +140,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
         return response;
     }
 
-    public Response versions(@PathParam("name") String name){
+    public Response versions(String name){
         ServerResponse response = new ServerResponse();
         try {
             List<Integer> names = technicalServiceApi().versions(name);
@@ -156,7 +155,6 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
 
     @Override
     public Response exists(String name, Integer version) {
-
         ServerResponse response = new ServerResponse();
         try {
             boolean exists = technicalServiceApi().exists(name, version);
@@ -180,11 +178,28 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
             response.setStatus(200);
             response.setEntity(count);
         } catch (Exception e) {
-            response.setStatus(400);
+            response.setStatus(500);
             response.setEntity(e.getMessage());
         }
         return response;
     }
+
+    @Override
+    public Response description(String name, Integer version){
+        ServerResponse response = new ServerResponse();
+        try {
+            List<InputOutputDescriptionDto> desc = technicalServiceApi().description(name, version);
+            response.setStatus(200);
+            response.setEntity(desc);
+        } catch(EntityDoesNotExistsException e){
+            response.setStatus(404);
+        } catch (Exception e) {
+            response.setStatus(500);
+            response.setEntity(e.getMessage());
+        }
+        return response;
+    }
+
 
     @Override
     public ActionStatus rename(String oldName, String newName) {

@@ -32,10 +32,11 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 
 import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.NoResultException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -72,7 +73,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
-        List<Description> descriptions = fromDescriptionsDto(postData);
+        ProcessDescription descriptions = fromDescriptionsDto(postData);
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
         technicalService.setServiceVersion(postData.getVersion());
@@ -81,7 +82,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     }
 
     private List<InputOutputDescriptionDto> toDescriptionsDto(TechnicalService technicalService) {
-        return technicalService.getDescriptions()
+        return toDescriptionsDto(technicalService.getDescriptions());
+    }
+
+    private List<InputOutputDescriptionDto> toDescriptionsDto(List<Description> descriptions) {
+        return descriptions
                 .stream()
                 .map(this::fromDescription)
                 .collect(Collectors.toList());
@@ -178,8 +183,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return description;
     }
 
-    private List<Description> fromDescriptionsDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
-        List<Description> descriptions = new ArrayList<>();
+    private ProcessDescription fromDescriptionsDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+        ProcessDescription descriptions = new ProcessDescription();
         for (InputOutputDescriptionDto descDto : postData.getDescriptions()) {
             descriptions.add(toDescription(descDto));
         }
@@ -341,14 +346,22 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             technicalService = getTechnicalServiceByNameAndVersion(name, version);
         } else {
             technicalService = technicalServiceService().findLatestByName(name)
-                    .orElseThrow(() -> new EntityDoesNotExistsException("TechnicalService with name " + name + " does not exists"));
+                    .orElseThrow(() -> getEntityDoesNotExistsException(name));
         }
         return technicalService;
     }
 
     private T getTechnicalServiceByNameAndVersion(String name, Integer version) throws EntityDoesNotExistsException {
         return technicalServiceService().findByNameAndVersion(name, version)
-                .orElseThrow(() -> new EntityDoesNotExistsException("TechnicalService with name " + name + " and version " + version + " does not exists"));
+                .orElseThrow(() -> getEntityDoesNotExistsException(name, version));
+    }
+
+    private EntityDoesNotExistsException getEntityDoesNotExistsException(String name) {
+        return new EntityDoesNotExistsException("TechnicalService with name " + name + " does not exists");
+    }
+
+    private EntityDoesNotExistsException getEntityDoesNotExistsException(String name, Integer version) {
+        return new EntityDoesNotExistsException("TechnicalService with name " + name + " and version " + version + " does not exists");
     }
 
     public boolean exists(String name, Integer version){
@@ -367,5 +380,23 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
 
     public List<Integer> versions(String name) {
         return technicalServiceService().versions(name);
+    }
+
+    public List<InputOutputDescriptionDto> description(String name, Integer version) throws EntityDoesNotExistsException {
+        // First, retrieve code of the technical service
+        if(version == null){
+            // Use latest version if version is not provided
+            version = technicalServiceService().latestVersionNumber(name)
+                    .orElseThrow(() -> getEntityDoesNotExistsException(name));
+        }
+        final Integer finalVersion = version;
+        List<Description> description = technicalServiceService().description(buildCode(name, finalVersion))
+                .orElseThrow(() -> getEntityDoesNotExistsException(name, finalVersion));
+        return toDescriptionsDto(description);
+    }
+
+
+    private String buildCode(String name, Integer version){
+        return name+"."+version;
     }
 }

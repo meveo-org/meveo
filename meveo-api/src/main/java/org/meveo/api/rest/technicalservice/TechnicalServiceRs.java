@@ -37,8 +37,6 @@ import javax.ws.rs.core.Response;
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public interface TechnicalServiceRs extends IBaseRs {
 
-    //TODO: Document
-
     /**
      * Check if service exists
      *
@@ -50,9 +48,26 @@ public interface TechnicalServiceRs extends IBaseRs {
     @HEAD
     Response exists(@PathParam("name") String name, @QueryParam("version") Integer version);
 
+    /**
+     * Count the number of hits corresponding to the query
+     *
+     * @param filters Filters used to restrict results
+     * @return A {@link Response} containing the number of hits in the body
+     */
     @Path("/count")
     @GET
     Response count(@Form TechnicalServiceFilters filters);
+
+    /**
+     * Retrieve the description of a technical service
+     *
+     * @param name Name of the technical service
+     * @param version Version of the technical service - if not provided, will get last version.
+     * @return A {@link Response} containing the description in the body
+     */
+    @Path("/{name}/description")
+    @GET
+    Response description(@PathParam("name") String name, @QueryParam("version") Integer version);
 
     /**
      * Create a new technical service.
@@ -104,10 +119,12 @@ public interface TechnicalServiceRs extends IBaseRs {
     @GET
     ListTechnicalServiceResponse list(@Form TechnicalServiceFilters filters);
 
+    //TODO: Document
     @Path("/list/names")
     @GET
     Response names();
 
+    //TODO: Document
     @Path("/{name}/versions")
     @GET
     Response versions(@PathParam("name") String name);
@@ -132,11 +149,13 @@ public interface TechnicalServiceRs extends IBaseRs {
     @DELETE
     ActionStatus remove(@PathParam("name") String name, @QueryParam("version") Integer version);
 
+    //TODO: Document
     @Path("/rename")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     ActionStatus rename(@FormParam("oldName") String oldName, @FormParam("newName") String newName);
 
+    //TODO: Document
     @Path("/renameVersion/{name}")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

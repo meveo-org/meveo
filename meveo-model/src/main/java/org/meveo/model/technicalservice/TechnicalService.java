@@ -52,7 +52,7 @@ public class TechnicalService extends Executable {
     @JsonProperty
     @Column(name = "descriptions", columnDefinition = "TEXT")
     @Type(type = "json")
-    private List<Description> descriptions;
+    private ProcessDescription descriptions;
 
     @JsonProperty
     @Column(name = "service_version", nullable = false)
@@ -71,7 +71,7 @@ public class TechnicalService extends Executable {
     /**
      * @param descriptions Description of the inputs and outputs of the connector
      */
-    public void setDescriptions(List<Description> descriptions) {
+    public void setDescriptions(ProcessDescription descriptions) {
         this.descriptions = descriptions;
     }
 

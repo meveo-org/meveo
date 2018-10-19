@@ -19,6 +19,7 @@ package org.meveo.service.technicalservice;
 
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.model.technicalservice.ProcessDescription;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.ExecutableService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
@@ -27,7 +28,9 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -126,6 +129,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return query.getResultList();
     }
 
+    //TODO: Document
     public List<String> names(){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<String> query = cb.createQuery(String.class);
@@ -135,6 +139,22 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return getEntityManager().createQuery(query).getResultList();
     }
 
+    //TODO: Document
+    public Optional<ProcessDescription> description(String code) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<ProcessDescription> query = cb.createQuery(ProcessDescription.class);
+        Root<T> root = query.from(getEntityClass());
+        query.select(root.get("descriptions"));
+        query.where(cb.equal(root.get("code"), code));
+        try {
+            return Optional.of(getEntityManager().createQuery(query).getSingleResult());
+        }catch (NoResultException e){
+            log.warn("No Technical service for code {} found", code);
+            return Optional.empty();
+        }
+    }
+
+    //TODO: Document
     public List<Integer> versions(String name){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Integer> query = cb.createQuery(Integer.class);
@@ -144,6 +164,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return getEntityManager().createQuery(query).getResultList();
     }
 
+    //TODO: Document
     public long count(TechnicalServiceFilters filters){
         QueryBuilder qb = filteredQueryBuilder(filters);
         return qb.count(getEntityManager());
