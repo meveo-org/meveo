@@ -50,7 +50,7 @@ public class CustomFieldValueHolder implements Serializable {
     /**
      * GUI Field id used to show detail values of a single value period.
      */
-    private String selectedValuePeriodId; // TODO no longer available
+    private String selectedValuePeriodId;
 
     /**
      * Is single value period editable.
@@ -299,7 +299,7 @@ public class CustomFieldValueHolder implements Serializable {
     }
 
     public String getShortRepresentationOfValues() {
-        return "CustomFieldValueHolder short representation"; // TODO should we implement it??
+        return "CustomFieldValueHolder short representation";
     }
 
     /**

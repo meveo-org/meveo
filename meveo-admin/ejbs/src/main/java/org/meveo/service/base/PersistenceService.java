@@ -509,7 +509,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      */
     @Override
     public void detach(E entity) {
-        // TODO: Hibernate. org.hibernate.Session session = (Session)
         // getEntityManager().getDelegate();
         // session.evict(entity);
         getEntityManager().detach(entity);

@@ -994,7 +994,6 @@ public class CustomFieldInstanceService extends BaseService {
      * Match for a given entity's or its parent's custom field (non-versionable values) as close as possible map's key to the key provided and return a map value. Match is
      * performed by matching a full string and then reducing one by one symbol until a match is found.
      * 
-     * TODO can be an issue with lower/upper case mismatch
      *
      * @param entity     Entity to match
      * @param cfCode     Custom field code
@@ -1037,7 +1036,6 @@ public class CustomFieldInstanceService extends BaseService {
      * Match for a given date (versionable values) for a given entity's or its parent's custom field as close as possible map's key to the key provided and return a map value.
      * Match is performed by matching a full string and then reducing one by one symbol until a match is found.
      * 
-     * TODO can be an issue with lower/upper case mismatch
      *
      * @param entity     Entity to match
      * @param code       Custom field code
@@ -1318,7 +1316,6 @@ public class CustomFieldInstanceService extends BaseService {
      * Match for a given entity's custom field (non-versionable values) as close as possible map's key to the key provided and return a map value. Match is performed by matching a
      * full string and then reducing one by one symbol until a match is found.
      * 
-     * TODO can be an issue with lower/upper case mismatch
      *
      * @param entity     Entity to match
      * @param cfCode     Custom field code
@@ -1356,7 +1353,6 @@ public class CustomFieldInstanceService extends BaseService {
      * Match for a given date (versionable values) for a given entity's custom field as close as possible map's key to the key provided and return a map value. Match is performed
      * by matching a full string and then reducing one by one symbol until a match is found.
      * 
-     * TODO can be an issue with lower/upper case mismatch
      *
      * @param entity     Entity to match
      * @param cfCode     Custom field code
@@ -1631,7 +1627,6 @@ public class CustomFieldInstanceService extends BaseService {
      * Match as close as possible map's key to the key provided and return a map value. Match is performed by matching a full string and then reducing one by one symbol untill a
      * match is found.
      * 
-     * TODO can be an issue with lower/upper case mismatch
      *
      * @param value      Value to inspect
      * @param keyToMatch Key to match

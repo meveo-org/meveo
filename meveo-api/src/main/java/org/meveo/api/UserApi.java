@@ -262,7 +262,6 @@ public class UserApi extends BaseApi {
         userService.remove(user);
     }
 
-    // TODO[Andrius] Why is it here?
 //    @SecuredBusinessEntityMethod(resultFilter = ObjectFilter.class)
 //    @FilterResults(itemPropertiesToFilter = { @FilterProperty(property = "userLevel", entityClass = UserHierarchyLevel.class) })
     public UserDto find(HttpServletRequest httpServletRequest, String username) throws MeveoApiException, BusinessException {

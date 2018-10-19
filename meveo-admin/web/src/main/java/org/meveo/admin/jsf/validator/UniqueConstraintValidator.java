@@ -41,9 +41,6 @@ public class UniqueConstraintValidator implements Validator {
     
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
 
-        /*
-         * TODO: ModelValidator modelValidator = new ModelValidator(); modelValidator.validate(context, component, value);
-         */
 
         String className = (String) component.getAttributes().get("className");
         String fieldName = (String) component.getAttributes().get("fieldName");

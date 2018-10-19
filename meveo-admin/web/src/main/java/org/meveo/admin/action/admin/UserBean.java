@@ -324,7 +324,6 @@ public class UserBean extends CustomFieldBean<User> {
             String folder = getFilePath() + File.separator + (this.selectedFolder == null ? "" : this.selectedFolder);
             result = new DefaultStreamedContent(new FileInputStream(new File(folder + File.separator + selectedFileName)), null, selectedFileName);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             log.error("error generated while getting seleceted file", e);
         }
         return result;

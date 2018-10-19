@@ -23,6 +23,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
 import org.meveo.api.dto.technicalservice.InputOutputDescriptionDto;
+import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -33,6 +34,8 @@ import org.meveo.model.technicalservice.TechnicalService;
 
 import javax.enterprise.context.RequestScoped;
 import javax.interceptor.Interceptors;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
@@ -125,6 +128,19 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
             processException(e, result.getActionStatus());
         }
         return result;
+    }
+
+    @Override
+    public Response updateDescription(@PathParam("name") String name, @QueryParam("version") Integer version, ProcessDescriptionsDto dtos){
+        ServerResponse response = new ServerResponse();
+        try {
+            technicalServiceApi().updateDescription(name, version, dtos);
+            response.setStatus(200);
+        } catch (Exception e) {
+            response.setStatus(500);
+            response.setEntity(e.getMessage());
+        }
+        return response;
     }
 
     public Response names(){

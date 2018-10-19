@@ -44,19 +44,16 @@ public class WFTypeScript<E extends BusinessEntity> extends WorkflowType<E> impl
 
 	@Override
 	public List<String> getStatusList() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void changeStatus(String newStatus) throws BusinessException {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public String getActualStatus() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

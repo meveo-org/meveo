@@ -448,7 +448,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * 
      * @return string for navigation
      */
-    // TODO: @End(beforeRedirect = true, root = false)
     public String backAndEndConversation() {
         String outcome = back();
         endConversation();

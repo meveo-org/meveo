@@ -79,7 +79,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         try {
             jaxbCxt = JAXBContext.newInstance(MeveoModuleDto.class);
         } catch (JAXBException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

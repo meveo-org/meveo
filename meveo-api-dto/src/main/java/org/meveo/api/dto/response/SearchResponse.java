@@ -41,7 +41,7 @@ public abstract class SearchResponse extends BaseResponse {
                 if (value == null || (value instanceof Collection && ((Collection) value).isEmpty())) {
                     this.paging.getFilters().remove(filterKey);
 
-                } else if (value.getClass().isArray()) { // TODO would need to deal with array of dates to format date properly
+                } else if (value.getClass().isArray()) {
                     this.paging.getFilters().put(filterKey, StringUtils.concatenate((Object[]) value));
 
                 } else if (value instanceof BusinessEntity) {

@@ -138,7 +138,7 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
         JobCategoryEnum jobCategory = job.getJobCategory();
 
         jobInstance.setJobTemplate(postData.getJobTemplate());
-        jobInstance.setParametres(postData.getParameter()); // TODO setParametres should be renamed
+        jobInstance.setParametres(postData.getParameter());
         jobInstance.setActive(postData.isActive());
         jobInstance.setJobCategoryEnum(jobCategory);
         jobInstance.setDescription(postData.getDescription());

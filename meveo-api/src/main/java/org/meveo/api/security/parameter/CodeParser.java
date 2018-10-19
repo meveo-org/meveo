@@ -24,7 +24,6 @@ public class CodeParser extends SecureMethodParameterParser<BusinessEntity> {
         // retrieve the code from the parameter
         String code = (String) values[parameter.index()];
         if (StringUtils.isBlank(code)) {
-            // TODO how to handle when entity to filter can not be resolved because it is null - is it an error?
             return null;
             // throw new MissingParameterException("code parameter is an empty value");
         }

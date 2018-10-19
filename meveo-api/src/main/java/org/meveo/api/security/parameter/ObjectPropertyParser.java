@@ -28,7 +28,6 @@ public class ObjectPropertyParser extends SecureMethodParameterParser<BusinessEn
             BusinessEntity entity = extractBusinessEntity(parameter, code);
             return entity;
         } catch (MissingParameterException e) {
-            // TODO how to handle when entity to filter can not be resolved because it is null - is it an error?
             return null;
             // throw e;
         }

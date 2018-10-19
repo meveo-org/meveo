@@ -13,7 +13,6 @@ public class RemoteInstanceNotifier {
 	private Logger log;
 	
 	public void invoke(String input,String url) {
-		//TODO: find a better way to send logs
 		/*
 		try {
 			log.debug("Request  ={}",input);
@@ -48,7 +47,6 @@ public class RemoteInstanceNotifier {
 		*/
 	}
 	
-	//TODO use this  (no deprecation ), also for checkUpdate
 //	public void invoke(String input,String url) {
 //		Response response =null;
 //		try {		

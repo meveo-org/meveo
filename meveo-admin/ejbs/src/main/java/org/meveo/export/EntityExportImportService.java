@@ -1119,7 +1119,6 @@ public class EntityExportImportService implements Serializable {
                             continue;
                         }
 
-                        // TODO should a check be added here for ManyToMany fields?? - if so - extractNonCascadableEntities and loadonCascadableFields should handle it as well.
                         // Extract @oneToOne fields that do not cascade
                         // } else if (field.isAnnotationPresent(ManyToMany.class)) {
                         // ManyToMany manyToManyAnotation = field.getAnnotation(ManyToMany.class);
@@ -1226,7 +1225,7 @@ public class EntityExportImportService implements Serializable {
     }
 
     /**
-     * Determine if field is an entity type field, and if it is not managed yet - save it first. TODO fix here as when lookupById, id value would be filled already
+     * Determine if field is an entity type field, and if it is not managed yet - save it first.
      * 
      * @param fieldValue Field value. If not passed - a lookup in entity by a field will be done.
      * @param entity Entity to obtain field value from if one is not provided. Also used to update the value if it was saved (after merge)
@@ -1300,7 +1299,7 @@ public class EntityExportImportService implements Serializable {
                 if (singleValue == null) {
                     continue;
                 }
-                // If entity is managed, then continue on unless detached. Update value in a map with a new value. TODO fix here as when lookupById, id value would be filled
+                // If entity is managed, then continue on unless detached. Update value in a map with a new value.
                 // already
                 isManaged = getEntityManager().contains((IEntity) singleValue);// ((IEntity) singleValue).getId() != null;
                 if (!isManaged) {
@@ -1346,7 +1345,7 @@ public class EntityExportImportService implements Serializable {
                 if (singleValue == null) {
                     continue;
                 }
-                // If entity is not managed, then save it. TODO fix here as when lookupById, id value would be filled already
+                // If entity is not managed, then save it.
                 isManaged = getEntityManager().contains((IEntity) singleValue);// ((IEntity) singleValue).getId() != null;
                 if (!isManaged) {
                     log.debug("Persisting non-managed collection's child field {}.{}'s (cascaded={}, id={}) value {}", clazz.getSimpleName(), field.getName(), isCascadedField,
@@ -1385,7 +1384,6 @@ public class EntityExportImportService implements Serializable {
         } else {
 
             // If entity is not managed, then save it.
-            // TODO emTarget.contains(fieldValue) fails - need to fix this temporary solution as when lookupById is used, id value would be
             // filled already for an entity this this .getId() != null would always be true
             isManaged = getEntityManager().contains((IEntity) fieldValue);// ((IEntity) fieldValue).getId() != null;
             if (!isManaged) {
@@ -1565,7 +1563,7 @@ public class EntityExportImportService implements Serializable {
                     if (field.isAnnotationPresent(Transient.class)) {
                         attributesToOmitLocal.put(clazz.getName() + "." + field.getName(), new Object[] { clazz, field });
 
-                        // This is a workaround to BLOB import issue "blobs may not be accessed after serialization"// TODO need a better solution as field is simply ignored
+                        // This is a workaround to BLOB import issue "blobs may not be accessed after serialization"//
                     } else if (field.isAnnotationPresent(Lob.class)) {
                         attributesToOmitLocal.put(clazz.getName() + "." + field.getName(), new Object[] { clazz, field });
 

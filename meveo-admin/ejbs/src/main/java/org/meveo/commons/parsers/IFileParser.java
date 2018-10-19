@@ -16,5 +16,4 @@ public interface IFileParser {
 	public boolean hasNext()throws Exception;
 	public RecordContext getNextRecord() throws RecordRejectedException;
 	public void close();
-	//TODO : add more stuff like line context, errors....
 }

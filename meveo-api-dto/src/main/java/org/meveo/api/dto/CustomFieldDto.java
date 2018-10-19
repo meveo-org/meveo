@@ -369,7 +369,7 @@ public class CustomFieldDto {
             case ENTITY:
                 return entityReferenceValue == null || entityReferenceValue.isEmpty();
             case CHILD_ENTITY:
-                return true; // TODO add implementation for child entity value
+                return true;
             case BOOLEAN:
                 return booleanValue == null;     
             }
@@ -383,8 +383,6 @@ public class CustomFieldDto {
      * @return True if value is empty
      */
     public boolean isEmpty() {
-        // TODO add implementation for child entity value
-
         if (mapValue != null) {
             for (Entry<String, CustomFieldValueDto> mapItem : mapValue.entrySet()) {
                 if (mapItem.getKey() != null && !mapItem.getKey().isEmpty() && mapItem.getValue() != null && mapItem.getValue().isEmpty()) {

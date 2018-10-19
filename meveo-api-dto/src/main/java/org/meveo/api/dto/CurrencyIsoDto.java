@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.admin.Currency;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class CurrencyIsoDto.
  *

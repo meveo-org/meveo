@@ -202,7 +202,6 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         }
     }
 
-    //TODO: Generify SortedTreeNode
     public void moveUp(SortedTreeNode node) {
 
         int currentIndex = node.getIndexInParent();

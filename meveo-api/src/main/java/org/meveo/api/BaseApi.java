@@ -225,7 +225,6 @@ public abstract class BaseApi {
                 // for instance if the current CFT not for a customer then dont
                 // throw exception, because the current CFT can be used on
                 // billingAccount...
-                // TODO need to re think about this for a global fix
                 // throw new MissingParameterException("No Custom field
                 // templates were found to match provided custom field values");
             } else {
@@ -667,7 +666,6 @@ public abstract class BaseApi {
 
                 // Null value - clear current field value
                 if (dtoValue == null) {
-                    // TODO Need to handle list, Map and Set type field by
                     // clearing them instead of setting them null
 
                     FieldUtils.writeField(entityToPopulate, dtoField.getName(), dtoValue, true);

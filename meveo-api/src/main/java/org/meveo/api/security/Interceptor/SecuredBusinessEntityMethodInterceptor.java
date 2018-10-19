@@ -104,8 +104,6 @@ public class SecuredBusinessEntityMethodInterceptor implements Serializable {
         for (SecureMethodParameter parameter : parametersForValidation) {
             BusinessEntity entity = parameterHandler.getParameterValue(parameter, values, BusinessEntity.class);
             if (entity == null) {
-                // TODO what to do if entity was not resolved because parameter value was null e.g. doing a search by a restricted field and dont provide any field value - that
-                // means that instead of filtering search criteria, results should be filtered instead
 
             } else {
                 if (!securedBusinessEntityService.isEntityAllowed(entity, user, false)) {

@@ -52,7 +52,6 @@ public class WFActionBean extends BaseBean<WFAction> {
     @Inject
     private WorkflowService dunningPlanService;
 
-    // TODO comment @Inject because remove @Produre Workflow in workflowBean and Abdelhadi consider to reuse this bean on his purpose or clean later
     // @Inject
     private Workflow dunningPlan;
 

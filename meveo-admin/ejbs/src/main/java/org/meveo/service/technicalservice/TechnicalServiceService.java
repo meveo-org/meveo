@@ -122,14 +122,23 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return Optional.empty();
     }
 
-    //TODO: Document
+    /**
+     * Retrieves a filtered list of all services
+     *
+     * @param filters Filter to apply
+     * @return The services corresponding to the specified filters
+     */
     public List<T> list(TechnicalServiceFilters filters) {
         QueryBuilder qb = filteredQueryBuilder(filters);
         TypedQuery<T> query = qb.getTypedQuery(getEntityManager(), getEntityClass());
         return query.getResultList();
     }
 
-    //TODO: Document
+    /**
+     * Retrieves the names of all the technical services
+     *
+     * @return The names of all the technical services
+     */
     public List<String> names(){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<String> query = cb.createQuery(String.class);
@@ -139,7 +148,12 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return getEntityManager().createQuery(query).getResultList();
     }
 
-    //TODO: Document
+    /**
+     * Retrieve the description for a particular technical service
+     *
+     * @param code Code of the service
+     * @return The description of the service with given code
+     */
     public Optional<ProcessDescription> description(String code) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<ProcessDescription> query = cb.createQuery(ProcessDescription.class);
@@ -154,7 +168,12 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         }
     }
 
-    //TODO: Document
+    /**
+     * Retrieves the different versions number for a technical service
+     *
+     * @param name Name of the service
+     * @return The versions numbers for the technical service with the given name
+     */
     public List<Integer> versions(String name){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Integer> query = cb.createQuery(Integer.class);
@@ -164,7 +183,12 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return getEntityManager().createQuery(query).getResultList();
     }
 
-    //TODO: Document
+    /**
+     * Count the technical services
+     *
+     * @param filters Filters to apply
+     * @return The count of technical services corresponding to the filters
+     */
     public long count(TechnicalServiceFilters filters){
         QueryBuilder qb = filteredQueryBuilder(filters);
         return qb.count(getEntityManager());

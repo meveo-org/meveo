@@ -50,13 +50,11 @@ public class PrimitiveFilterCondition extends FilterCondition {
 
 	@Override
 	public boolean match(BaseEntity e) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public List<BaseEntity> filter(List<BaseEntity> e) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

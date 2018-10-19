@@ -21,6 +21,7 @@ import org.jboss.resteasy.annotations.Form;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
+import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.rest.IBaseRs;
@@ -68,6 +69,18 @@ public interface TechnicalServiceRs extends IBaseRs {
     @Path("/{name}/description")
     @GET
     Response description(@PathParam("name") String name, @QueryParam("version") Integer version);
+
+    /**
+     * Updat the description of a technical service
+     *
+     * @param name Name of the technical service
+     * @param version Version of the technical service - if not provided, will update last version.
+     * @param dtos New description of the technical service
+     * @return A {@link Response} with status 200 if the update was a success
+     */
+    @Path("/{name}/description")
+    @PUT
+    Response updateDescription(@PathParam("name") String name, @QueryParam("version") Integer version, ProcessDescriptionsDto dtos);
 
     /**
      * Create a new technical service.
@@ -119,12 +132,21 @@ public interface TechnicalServiceRs extends IBaseRs {
     @GET
     ListTechnicalServiceResponse list(@Form TechnicalServiceFilters filters);
 
-    //TODO: Document
+    /**
+     * Retrieves the names of all technical services
+     *
+     * @return List of all technical services names
+     */
     @Path("/list/names")
     @GET
     Response names();
 
-    //TODO: Document
+    /**
+     * Retrieves the versions number of a technical services
+     *
+     * @param name Name of the technical service
+     * @return The versions number of the specified technical service
+     */
     @Path("/{name}/versions")
     @GET
     Response versions(@PathParam("name") String name);
@@ -149,13 +171,26 @@ public interface TechnicalServiceRs extends IBaseRs {
     @DELETE
     ActionStatus remove(@PathParam("name") String name, @QueryParam("version") Integer version);
 
-    //TODO: Document
+    /**
+     * Update the name of a technical service
+     *
+     * @param oldName Service name to update
+     * @param newName New name of the service
+     * @return
+     */
     @Path("/rename")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     ActionStatus rename(@FormParam("oldName") String oldName, @FormParam("newName") String newName);
 
-    //TODO: Document
+    /**
+     * Re-number the specified version
+     *
+     * @param name Name of the technical service to update
+     * @param oldVersion Version number to update
+     * @param newVersion New version number to give
+     * @return
+     */
     @Path("/renameVersion/{name}")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)

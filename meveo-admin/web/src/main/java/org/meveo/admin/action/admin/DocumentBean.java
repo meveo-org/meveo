@@ -58,7 +58,6 @@ public class DocumentBean implements Serializable {
     @Inject
     private Logger log;
 
-    // TODO: DataModel. @DataModel
     private List<Document> documents;
 
     @Inject

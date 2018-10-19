@@ -132,7 +132,6 @@ public class InboundRequest extends BusinessEntity {
     @Size(max = 255)
     private String requestURI;
 
-    // TODO: add parts of a multipart/form-data POST request
 
     // Response
 

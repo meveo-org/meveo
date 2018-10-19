@@ -32,7 +32,6 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     private static final long serialVersionUID = 1L;
 
     @Column(name = "code", nullable = false, length = 255)
-    // TODO : Create sql script to ad index. @Index(name = "CODE_IDX")
     @Size(max = 255, min = 1)
     @NotNull
     protected String code;

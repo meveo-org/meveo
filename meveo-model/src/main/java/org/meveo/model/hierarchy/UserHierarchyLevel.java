@@ -77,7 +77,6 @@ public class UserHierarchyLevel extends HierarchyLevel<User> {
             return true;
         }
 
-        // TODO fix me - throws class cast exception
         // if (getParentLevel() != null) {
         // return ((UserHierarchyLevel) getParentLevel()).isUserBelongsHereOrHigher(userToCheck);
         // }

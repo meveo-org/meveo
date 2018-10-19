@@ -164,7 +164,6 @@ public class ReportExecution implements Serializable {
         try {
             Class clazz = Class.forName(report.getProducerClassName());
             Object obj = clazz.newInstance();
-            // TODO: Component.getInstance(clazz);
             if (obj instanceof ReportDBSourceProducer) {
                 log.info("executeReport report class is ReportDBSourceProducer");
                 ReportDBSourceProducer reportSourceProducer = (ReportDBSourceProducer) obj;

@@ -215,7 +215,6 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
 
                 // If cache was not prepopulated or cache record was removed by cache itself (limit or cache entries, expiration, etc..)
                 // and there is no cache entry for the base class, then return null, as cache needs to be populated first
-                // TODO there could be a problem that a cache record for parent class is expired by cache. There should be no cache limit/expiration for Notification cache
             } else if (i == 0) {
                 return null;
             }

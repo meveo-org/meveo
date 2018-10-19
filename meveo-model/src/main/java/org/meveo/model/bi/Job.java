@@ -67,7 +67,6 @@ public class Job extends AuditableEntity {
     private Integer jobRepositoryId;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // TODO : Add orphanRemoval annotation.
     // @Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
     private List<JobExecutionHisto> jobHistory;
 

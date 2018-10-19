@@ -18,6 +18,11 @@
 package org.meveo.model.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +32,11 @@ import java.util.List;
  *
  * @author Clément Bareth
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "descriptionType")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = EntityDescription.class, name = "EntityDescription"),
+        @JsonSubTypes.Type(value = RelationDescription.class, name = "RelationDescription")
+})
 public abstract class Description {
 
     /**
@@ -108,5 +118,5 @@ public abstract class Description {
     public void setOutput(boolean output) {
         this.output = output;
     }
-    
+
 }

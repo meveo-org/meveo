@@ -82,5 +82,5 @@ public class RelationDescription extends Description{
     public String getTypeName() {
         return type.getCode();
     }
-    
+
 }

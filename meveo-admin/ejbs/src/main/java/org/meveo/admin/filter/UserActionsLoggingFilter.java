@@ -31,15 +31,11 @@ import org.meveo.model.admin.User;
 
 @Startup
 @ApplicationScoped
-/*TODO: javaee6 @Name("org.meveo.admin.filter.UserActionsLoggingFilter")
-@BypassInterceptors
-@Filter(around = "org.jboss.seam.web.ajax4jsfFilter")*/
 public class UserActionsLoggingFilter /*extends AbstractFilter*/ {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
             ServletException {
         
-        // TODO
 //        HttpServletRequest httpReq = (HttpServletRequest) request;
 //        User user = null;
 //        if (httpReq.getSession().getAttribute("currentUser") != null) {
@@ -64,7 +60,6 @@ public class UserActionsLoggingFilter /*extends AbstractFilter*/ {
     public void output(User user, String objectId, String edit, String uri) {
         if (uri.endsWith("jsf") && (user != null)) {
             
-            // TODO
         	/*Lifecycle.beginCall();
             UserServiceLocal userService = (UserServiceLocal) Component.getInstance("userService", true);
 

@@ -182,7 +182,6 @@ public class IEntityExportIdentifierConverter implements Converter {
 
         // Obtain a reference to an entity by ID
         if (referenceFKById && idValue != null) {
-            // TODO maybe should check if an entity actually exists
             Object entity = em.find(expectedType, Long.parseLong(idValue));
             if (entity == null) {
                 if (ignoreNotFoundFK) {

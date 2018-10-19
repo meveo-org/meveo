@@ -108,7 +108,6 @@ public class Currency extends AuditableEntity {
     }
 
     public boolean isTransient() {
-        // TODO Auto-generated method stub
         return false;
     }
 

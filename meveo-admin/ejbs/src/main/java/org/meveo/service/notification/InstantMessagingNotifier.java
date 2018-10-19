@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 
 import com.skype.Skype;
 
-//TODO : transform that into MDB to correctly handle retries
 @Stateless
 public class InstantMessagingNotifier {
 

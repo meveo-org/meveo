@@ -53,7 +53,6 @@ public class CurrencyService extends PersistenceService<Currency> {
 	 * @param currency curencey to check.
 	 * @throws BusinessException business exception.
 	 */
-	// TODO use it
 	public void validateBeforeRemove(Currency currency)
 			throws BusinessException {
 		if (currency.getSystemCurrency()){

@@ -241,7 +241,7 @@ public class CustomFieldDataEntryBean implements Serializable {
         // if (!((IEntity) entity).isTransient() && customFieldTemplates != null && customFieldTemplates.size() > 0) {
         // No longer checking for isTransient as for offer new version creation, CFs are duplicated, but entity is not persisted, offering to review it in GUI before saving it.
         if (customFieldTemplates != null && customFieldTemplates.size() > 0 && ((ICustomFieldEntity) entity).getCfValues() != null) {
-            cfValuesByCode = ((ICustomFieldEntity) entity).getCfValues().getValuesByCode(); // TODO need to close the values
+            cfValuesByCode = ((ICustomFieldEntity) entity).getCfValues().getValuesByCode();
         }
         cfValuesByCode = prepareCFIForGUI(customFieldTemplates, cfValuesByCode, entity);
         CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(customFieldTemplates, cfValuesByCode, entity);
@@ -990,7 +990,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 
                 for (CustomFieldValue cfValue : entityFieldsValues.getValues(cft)) {
 
-                    // TODO not sure what this code is about - need to check its use AK
 
                     // if (duplicateCFI) {
                     // if (removedOriginalCFI) {
@@ -1483,7 +1482,6 @@ public class CustomFieldDataEntryBean implements Serializable {
         if (groupedCustomFields != null) {
             for (CustomFieldTemplate cft : groupedCustomFields.getFields()) {
 
-                // TODO instead of looping an preserving the last value only, could figure the latest value right away
                 for (CustomFieldValue cfValue : entityFieldsValues.getValues(cft)) {
 
                     try {
@@ -1521,7 +1519,7 @@ public class CustomFieldDataEntryBean implements Serializable {
             CustomFieldValue cfValue = entityFieldsValues.getFirstValue(cfValueInfo.getKey().getCode());
             if (cfValue == null) {
                 // log.error("AKK not CFI found in holder for {}", cfValueInfo.getKey().getCode());
-                continue; // TODO - maybe we should add??
+                continue;
             }
             cfValue.setValue(cfValueInfo.getValue());
             deserializeForGUI(cfValue, cfValueInfo.getKey());

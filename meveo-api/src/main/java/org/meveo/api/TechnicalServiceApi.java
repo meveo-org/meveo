@@ -32,11 +32,12 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 
 import javax.inject.Inject;
-import javax.persistence.NoResultException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -191,6 +192,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return descriptions;
     }
 
+    private ProcessDescription fromDescriptionsDto(List<InputOutputDescriptionDto> dtos) throws EntityDoesNotExistsException {
+        ProcessDescription descriptions = new ProcessDescription();
+        for (InputOutputDescriptionDto descDto : dtos) {
+            descriptions.add(toDescription(descDto));
+        }
+        return descriptions;
+    }
+
     /**
      * Service required for database operations
      *
@@ -237,6 +246,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         technicalService.setDescriptions(fromDescriptionsDto(postData));
         technicalService.setScript(postData.getScript());
         technicalServiceService().update(technicalService);
+    }
+
+    public void updateDescription(String name, Integer version, List<InputOutputDescriptionDto> dtos) throws EntityDoesNotExistsException {
+        final T technicalService = getTechnicalService(name, version);
+        technicalService.setDescriptions(fromDescriptionsDto(dtos));
     }
 
     public void rename(String oldName, String newName) throws BusinessException {
