@@ -17,31 +17,19 @@
  */
 package org.meveo.model.technicalservice;
 
-import org.meveo.model.crm.CustomFieldTemplate;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 
 /**
  * Description of an output property of an entity or relation.
  *
  * @author Clément Bareth
  */
-public class OutputProperty {
+@Entity
+@DiscriminatorValue("output")
+public class OutputProperty extends PropertyDescription{
 
-    private CustomFieldTemplate property;
     private int trustness;
-
-    /**
-     * @return CustomFieldTemplate related to the CustomEntityTemplate described
-     */
-    public CustomFieldTemplate getProperty() {
-        return property;
-    }
-
-    /**
-     * @param property CustomFieldTemplate related to the CustomEntityTemplate described
-     */
-    public void setProperty(CustomFieldTemplate property) {
-        this.property = property;
-    }
 
     /**
      * @return Percentage of confidence we have that the property corresponds to what we really wanted.

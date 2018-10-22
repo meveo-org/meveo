@@ -171,8 +171,8 @@
 	<changeSet id="#3436_20180508" author="EdwardPLegaspi">
 		<modifyDataType tableName="dwh_measurable_quant" columnName="sql_query" newDataType="text" />
 	</changeSet>
-    <!-- Technical Services -->
     <changeSet id="technical_services" author="Clément Bareth">
+        <!-- Technical Services -->
         <createSequence sequenceName="technical_services_seq"/>
         <createTable tableName="technical_services">
             <column name="id" type="BIGINT">
@@ -182,7 +182,7 @@
             <column name="service_version" type="INT4" >
                 <constraints nullable="false" />
             </column>
-            <column defaultValue="1" name="created" type="TIMESTAMP WITHOUT TIME ZONE">
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE">
                 <constraints nullable="false" />
             </column>
             <column name="disabled" type="INT4"/>
@@ -190,7 +190,6 @@
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
             <column name="description" type="varchar(255)" />
-            <column name="descriptions" type="${type.longtext}"/>
             <column name="code" type="varchar(255)" />
             <column name="script" type="${type.longtext}">
                 <constraints nullable="false" />
@@ -202,13 +201,70 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <addPrimaryKey tableName="technical_services" columnNames="id"/>
         <addUniqueConstraint columnNames="name,service_version" constraintName="technical_services_name_version"
                              deferrable="false" disabled="false" initiallyDeferred="false"
                              tableName="technical_services"/>
         <createIndex tableName="technical_services" indexName="technical_services_name_index">
             <column name="name"/>
         </createIndex>
+        <!-- Descriptions -->
+        <createSequence sequenceName="technical_services_description_seq"/>
+        <createTable tableName="technical_services_description">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description_type" type="varchar(255)"/>
+            <column name="service_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="input" defaultValue="false" type="boolean"/>
+            <column name="output" defaultValue="false" type="boolean"/>
+            <column name="entity_name" type="varchar(255)" />
+            <column name="target_name" type="varchar(255)" />
+            <column name="source_name" type="varchar(255)" />
+            <column name="cet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="crt_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="technical_services_description" columnNames="id" />
+        <addForeignKeyConstraint baseTableName="technical_services_description" baseColumnNames="service_id"
+                                 constraintName="fk_ts_desc_service_id" referencedTableName="technical_services"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="technical_services_description" baseColumnNames="cet_id"
+                                 constraintName="fk_ts_cet_id" referencedTableName="cust_cet"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="technical_services_description" baseColumnNames="crt_id"
+                                 constraintName="fk_ts_crt_id" referencedTableName="cust_crt"
+                                 referencedColumnNames="id"/>
+        <!-- Property description -->
+        <createSequence sequenceName="property_description_seq"/>
+        <createTable tableName="property_description">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cft_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="required" defaultValue="false" type="boolean"/>
+            <column name="comparator" type="varchar(255)"/>
+            <column name="comparison_value" type="varchar(255)"/>
+            <column name="default_value" type="varchar(255)"/>
+            <column name="trustness" type="INT"/>
+            <column name="direction" type="varchar(255)"/>
+        </createTable>
+        <addPrimaryKey tableName="property_description" columnNames="id" />
+        <addForeignKeyConstraint baseTableName="property_description" baseColumnNames="cft_id"
+                                 constraintName="fk_prop_desc_cft_id" referencedTableName="crm_custom_field_tmpl"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="property_description" baseColumnNames="description_id"
+                                 constraintName="fk_prop_desc_desc_id" referencedTableName="technical_services_description"
+                                 referencedColumnNames="id"/>
     </changeSet>
-    <!-- Technical Services -->
-
 </databaseChangeLog>

@@ -18,23 +18,19 @@
 package org.meveo.model.technicalservice;
 
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
+import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.*;
+import org.hibernate.annotations.Parameter;
 import org.meveo.model.scripts.Executable;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Clément Bareth
  */
 @Entity
-@Table(name = "technical_services", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "service_version"}))
+@Table(name = "technical_services",  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "service_version"}))
 @GenericGenerator(
         name = "ID_GENERATOR",
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
@@ -49,12 +45,9 @@ public class TechnicalService extends Executable {
     @Column(name = "name")
     private String name;
 
-    @JsonProperty
-    @Column(name = "descriptions", columnDefinition = "TEXT")
-    @Type(type = "json")
-    private ProcessDescription descriptions;
+    @OneToMany(mappedBy = "service")
+    private List<Description> descriptions;
 
-    @JsonProperty
     @Column(name = "service_version", nullable = false)
     private Integer serviceVersion = 1;
 

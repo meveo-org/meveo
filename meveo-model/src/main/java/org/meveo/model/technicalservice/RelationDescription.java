@@ -19,15 +19,25 @@ package org.meveo.model.technicalservice;
 
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
+import javax.persistence.*;
+
 /**
  * Description of relation in stake for the connector.
  *
  * @author Clément Bareth
  */
+@Entity
+@DiscriminatorValue("relation_description")
 public class RelationDescription extends Description{
 
+    @Column(name = "source_name")
     private String source;
+
+    @Column(name = "target_name")
     private String target;
+
+    @ManyToOne
+    @JoinColumn(name = "crt_id")
     private CustomRelationshipTemplate type;
 
     /**
@@ -48,7 +58,7 @@ public class RelationDescription extends Description{
      * Source entity instance name of the relation
      */
     public String getSource() {
-        return source;
+        return type.getStartNode().getCode();
     }
 
     /**

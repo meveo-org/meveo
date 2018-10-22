@@ -26,8 +26,24 @@ public class OutputPropertyDto {
 
     @JsonProperty(required = true)
     private String property;
-    @JsonProperty(required = true)
-    private int trustness;
+
+    private int trustness = 0;
+
+    private String value;
+
+    /**
+     * @return The expected value for that property
+     */
+    public String getValue() {
+        return value;
+    }
+
+    /**
+     * @param value The expected value for that property
+     */
+    public void setValue(String value) {
+        this.value = value;
+    }
 
     /**
      * @return The code of the CustomFieldTemplate linked to the CET

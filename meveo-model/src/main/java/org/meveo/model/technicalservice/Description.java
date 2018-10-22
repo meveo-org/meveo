@@ -17,13 +17,10 @@
  */
 package org.meveo.model.technicalservice;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,35 +29,45 @@ import java.util.List;
  *
  * @author Clément Bareth
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "descriptionType")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = EntityDescription.class, name = "EntityDescription"),
-        @JsonSubTypes.Type(value = RelationDescription.class, name = "RelationDescription")
-})
+@GenericGenerator(
+        name = "ID_GENERATOR",
+        strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+        parameters = {@Parameter(name = "sequence_name", value = "technical_services_description_seq")}
+)
+@Entity
+@Table(name = "technical_services_description")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "description_type")
 public abstract class Description {
+
+    @Id
+    @GeneratedValue(generator = "ID_GENERATOR", strategy = GenerationType.AUTO)
+    private long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id")
+    private TechnicalService service;
 
     /**
      * List of properties that are defined as inputs. Non empty list implies input = true.
      */
-    @JsonProperty
+    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class)
     private List<InputProperty> inputProperties = new ArrayList<>();
 
     /**
      * List of properties that are defined as outputs. Non empty list implies output = true.
      */
-    @JsonProperty
+    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class)
     private List<OutputProperty> outputProperties = new ArrayList<>();
 
     /**
      * Whether the variable is defined as input of the connector.
      */
-    @JsonProperty
     private boolean input;
 
     /**
      * Whether the variable is defined as output of the connector.
      */
-    @JsonProperty
     private boolean output;
 
     /**
@@ -117,6 +124,18 @@ public abstract class Description {
 
     public void setOutput(boolean output) {
         this.output = output;
+    }
+
+    public TechnicalService getService() {
+        return service;
+    }
+
+    public void setService(TechnicalService service) {
+        this.service = service;
+    }
+
+    public long getId() {
+        return id;
     }
 
 }

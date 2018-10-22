@@ -15,38 +15,27 @@
  */
 package org.meveo.model.technicalservice;
 
-import org.meveo.model.crm.CustomFieldTemplate;
+import javax.persistence.*;
 
 /**
  * Description of an input property of an entity or relation.
  *
  * @author Clément Bareth
  */
-public class InputProperty {
+@Entity
+@DiscriminatorValue("input")
+public class InputProperty extends PropertyDescription {
 
-    private CustomFieldTemplate property;
     private boolean required;
+
+    @Enumerated(EnumType.STRING)
     private Comparator comparator;
+
+    @Column(name = "comparison_value")
     private String comparisonValue;
+
+    @Column(name = "default_value")
     private String defaultValue;
-
-    /**
-     * CustomFieldTemplate linked to the CustomEntityTemplate described
-     *
-     * @return The CustomFieldTemplate object
-     */
-    public CustomFieldTemplate getProperty() {
-        return property;
-    }
-
-    /**
-     * CustomFieldTemplate linked to the CustomEntityTemplate described
-     *
-     * @param property The CustomFieldTemplate object
-     */
-    public void setProperty(CustomFieldTemplate property) {
-        this.property = property;
-    }
 
     /**
      * Whether the property is mandatory.

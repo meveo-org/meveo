@@ -19,15 +19,22 @@ package org.meveo.model.technicalservice;
 
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
+import javax.persistence.*;
+
 /**
  * Description of an entity in stake for the connector.
  *
  * @author Clément Bareth
  */
+@Entity
+@DiscriminatorValue("entity_description")
 public class EntityDescription extends Description {
 
+    @Column(name = "entity_name")
     private String name;
 
+    @JoinColumn(name = "cet_id")
+    @ManyToOne
     private CustomEntityTemplate type;
 
     @Override
