@@ -19,7 +19,7 @@ package org.meveo.service.technicalservice;
 
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.technicalservice.ProcessDescription;
+import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.ExecutableService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
@@ -44,6 +44,19 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         extends ExecutableService<T, TechnicalServiceEngine<T>> {
 
     private final String serviceType = getEntityClass().getAnnotation(DiscriminatorValue.class).value();
+
+
+    /**
+     * @param serviceId id of the service to remove description
+     */
+    public void removeDescription(long serviceId){
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Description> query = cb.createQuery(Description.class);
+        Root<Description> service = query.from(Description.class);
+        query.where(cb.equal(service.get("service"), serviceId));
+        List<Description> descriptions = getEntityManager().createQuery(query).getResultList();
+        descriptions.forEach(description -> getEntityManager().remove(description));
+    }
 
     /**
      * Retrieve the last version of the technical service with the specified name
@@ -154,18 +167,13 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
      * @param code Code of the service
      * @return The description of the service with given code
      */
-    public Optional<ProcessDescription> description(String code) {
+    public List<Description> description(String code) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<ProcessDescription> query = cb.createQuery(ProcessDescription.class);
+        CriteriaQuery<Description> query = cb.createQuery(Description.class);
         Root<T> root = query.from(getEntityClass());
         query.select(root.get("descriptions"));
         query.where(cb.equal(root.get("code"), code));
-        try {
-            return Optional.of(getEntityManager().createQuery(query).getSingleResult());
-        }catch (NoResultException e){
-            log.warn("No Technical service for code {} found", code);
-            return Optional.empty();
-        }
+        return getEntityManager().createQuery(query).getResultList();
     }
 
     /**

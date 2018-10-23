@@ -25,7 +25,7 @@ import javax.persistence.Entity;
  *
  * @author Clément Bareth
  */
-@Entity
+@Entity(name = "OutputProperty")
 @DiscriminatorValue("output")
 public class OutputProperty extends PropertyDescription{
 

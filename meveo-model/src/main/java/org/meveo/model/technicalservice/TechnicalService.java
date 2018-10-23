@@ -19,6 +19,7 @@ package org.meveo.model.technicalservice;
 
 import java.util.List;
 import javax.persistence.*;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -45,7 +46,7 @@ public class TechnicalService extends Executable {
     @Column(name = "name")
     private String name;
 
-    @OneToMany(mappedBy = "service")
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     private List<Description> descriptions;
 
     @Column(name = "service_version", nullable = false)
@@ -64,7 +65,7 @@ public class TechnicalService extends Executable {
     /**
      * @param descriptions Description of the inputs and outputs of the connector
      */
-    public void setDescriptions(ProcessDescription descriptions) {
+    public void setDescriptions(List<Description> descriptions) {
         this.descriptions = descriptions;
     }
 

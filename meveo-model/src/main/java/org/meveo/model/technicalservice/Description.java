@@ -19,6 +19,7 @@ package org.meveo.model.technicalservice;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -51,13 +52,15 @@ public abstract class Description {
     /**
      * List of properties that are defined as inputs. Non empty list implies input = true.
      */
-    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class)
+    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class, cascade = CascadeType.ALL)
+    @Where(clause = "direction ='input'")
     private List<InputProperty> inputProperties = new ArrayList<>();
 
     /**
      * List of properties that are defined as outputs. Non empty list implies output = true.
      */
-    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class)
+    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class, cascade = CascadeType.ALL)
+    @Where(clause = "direction = 'output'")
     private List<OutputProperty> outputProperties = new ArrayList<>();
 
     /**
@@ -108,32 +111,56 @@ public abstract class Description {
      */
     public abstract String getName();
 
+    /**
+     * @return Type name of the described entity
+     */
     public abstract String getTypeName();
 
+    /**
+     * @param inputProperties Input properties defined for the described entity
+     */
     public void setInputProperties(List<InputProperty> inputProperties) {
         this.inputProperties = inputProperties;
     }
 
+    /**
+     * @param outputProperties Output properties defined for the described entity
+     */
     public void setOutputProperties(List<OutputProperty> outputProperties) {
         this.outputProperties = outputProperties;
     }
 
+    /**
+     * @param input Whether the described entity is an input
+     */
     public void setInput(boolean input) {
         this.input = input;
     }
 
+    /**
+     * @param output Whether the described entity is an output
+     */
     public void setOutput(boolean output) {
         this.output = output;
     }
 
+    /**
+     * @return Technical service that is described
+     */
     public TechnicalService getService() {
         return service;
     }
 
+    /**
+     * @param service Technical service that is described
+     */
     public void setService(TechnicalService service) {
         this.service = service;
     }
 
+    /**
+     * @return The id of the description in the database
+     */
     public long getId() {
         return id;
     }

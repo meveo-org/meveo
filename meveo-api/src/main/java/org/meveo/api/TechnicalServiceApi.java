@@ -72,7 +72,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
-        ProcessDescription descriptions = fromDescriptionsDto(technicalService, postData);
+        List<Description> descriptions = fromDescriptionsDto(technicalService, postData);
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
         technicalService.setServiceVersion(postData.getVersion());
@@ -191,16 +191,16 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return description;
     }
 
-    private ProcessDescription fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
-        ProcessDescription descriptions = new ProcessDescription();
+    private List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+        List<Description> descriptions = new ArrayList<>();
         for (InputOutputDescriptionDto descDto : postData.getDescriptions()) {
             descriptions.add(toDescription(service, descDto));
         }
         return descriptions;
     }
 
-    private ProcessDescription fromDescriptionsDto(TechnicalService service, List<InputOutputDescriptionDto> dtos) throws EntityDoesNotExistsException {
-        ProcessDescription descriptions = new ProcessDescription();
+    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescriptionDto> dtos) throws EntityDoesNotExistsException {
+        List<Description> descriptions = new ArrayList<>();
         for (InputOutputDescriptionDto descDto : dtos) {
             descriptions.add(toDescription(service, descDto));
         }
@@ -227,6 +227,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      *
      * @param postData Data used to create the technical service
      * @throws BusinessException If technical service already exists for specified name and version
+     * @throws EntityDoesNotExistsException If elements referenced in the dto does not exists
      */
     public void create(@Valid @NotNull TechnicalServiceDto postData) throws BusinessException, EntityDoesNotExistsException {
         final T technicalService = fromDto(postData);
@@ -255,8 +256,6 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         technicalServiceService().update(technicalService);
     }
 
-    //TODO: Document
-
     /**
      * Update the technical service description with the specified information
      *
@@ -264,10 +263,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @param version         Version of the service - If not provided, will take highest version
      * @param descriptionsDto Description of the service
      * @throws EntityDoesNotExistsException If service to update does not exists
+     * @throws BusinessException If an error occurs
      */
-    public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException {
+    public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(name, version);
+        technicalServiceService().removeDescription(technicalService.getId());
         technicalService.setDescriptions(fromDescriptionsDto(technicalService, descriptionsDto));
+        technicalServiceService().update(technicalService);
     }
 
     /**
@@ -275,6 +277,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      *
      * @param oldName Current name of the service
      * @param newName New name of the service
+     * @throws BusinessException If an error occurs
      */
     public void rename(String oldName, String newName) throws BusinessException {
         final List<T> technicalServices = technicalServiceService().findByName(oldName);
@@ -292,6 +295,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @param oldVersion Old version number
      * @param newVersion New version number
      * @throws EntityDoesNotExistsException If the service does not exists
+     * @throws BusinessException If an error occurs
      */
     public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
         final T service = technicalServiceService().findByNameAndVersion(name, oldVersion)
@@ -383,6 +387,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      *
      * @param postData Data used to create or update the technical service
      * @throws BusinessException if the technical service can't be created or updated
+     * @throws EntityDoesNotExistsException If an entity referenced in the dto does not exist
      */
     public void createOrUpdate(@Valid @NotNull TechnicalServiceDto postData) throws BusinessException, EntityDoesNotExistsException {
         try {
@@ -442,8 +447,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
                     .orElseThrow(() -> getEntityDoesNotExistsException(name));
         }
         final Integer finalVersion = version;
-        List<Description> description = technicalServiceService().description(buildCode(name, finalVersion))
-                .orElseThrow(() -> getEntityDoesNotExistsException(name, finalVersion));
+        List<Description> description = technicalServiceService().description(buildCode(name, finalVersion));
         return toDescriptionsDto(description);
     }
 

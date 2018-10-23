@@ -22,7 +22,7 @@ import javax.persistence.*;
  *
  * @author Clément Bareth
  */
-@Entity
+@Entity(name = "InputProperty")
 @DiscriminatorValue("input")
 public class InputProperty extends PropertyDescription {
 

@@ -55,10 +55,10 @@ public class RelationDescription extends Description{
     }
 
     /**
-     * Source entity instance name of the relation
+     * @return Source entity instance name of the relation
      */
     public String getSource() {
-        return type.getStartNode().getCode();
+        return this.source;
     }
 
     /**
