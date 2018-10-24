@@ -51,7 +51,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.util.*;
-//import org.meveo.service.notification.DefaultObserver;
+import org.meveo.service.notification.DefaultObserver;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods declared in the {@link IPersistenceService} interface.

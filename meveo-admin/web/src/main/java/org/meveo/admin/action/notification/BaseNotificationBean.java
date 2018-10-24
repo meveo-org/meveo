@@ -10,7 +10,7 @@ import org.meveo.model.mediation.MeveoFtpFile;
 import org.meveo.model.notification.InboundRequest;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
-//import org.meveo.service.notification.DefaultObserver;
+import org.meveo.service.notification.DefaultObserver;
 
 import javax.persistence.Entity;
 import java.util.ArrayList;
@@ -72,10 +72,9 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
         return getEventTypesByClazz(clazzStr);
     }
 
-//    /**
-//     * get notification eventType by class name filter, refer for {@link NotificationEventTypeEnum} and {@link DefaultObserver}
-//     *
-     /**
+    /**
+     * get notification eventType by class name filter, refer for {@link NotificationEventTypeEnum} and {@link DefaultObserver}
+     *
      * @param clazzStr
      * @return
      */
