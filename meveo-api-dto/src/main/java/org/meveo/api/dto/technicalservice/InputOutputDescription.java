@@ -18,18 +18,23 @@ package org.meveo.api.dto.technicalservice;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.meveo.api.dto.EntityDescriptionDto;
+import org.meveo.api.dto.ProcessEntityDescription;
+import org.meveo.model.technicalservice.Description;
+import org.meveo.model.technicalservice.InputProperty;
+import org.meveo.model.technicalservice.OutputProperty;
+import org.meveo.model.technicalservice.RelationDescription;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "descriptionType")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = EntityDescriptionDto.class, name = "EntityDescription"),
-        @JsonSubTypes.Type(value = RelationDescriptionDto.class, name = "RelationDescription")
+        @JsonSubTypes.Type(value = ProcessEntityDescription.class, name = "EntityDescription"),
+        @JsonSubTypes.Type(value = ProcessRelationDescription.class, name = "RelationDescription")
 })
-public abstract class InputOutputDescriptionDto {
+public abstract class InputOutputDescription {
 
     @JsonProperty
     private List<InputPropertyDto> inputProperties = new ArrayList<>();
@@ -150,5 +155,53 @@ public abstract class InputOutputDescriptionDto {
      * @param name The instance name of the variable described
      */
     public abstract void setName(String name);
+
+    public static InputOutputDescription fromDescription(Description desc) {
+        InputOutputDescription descriptionDto;
+        if (desc instanceof RelationDescription) {
+            descriptionDto = new ProcessRelationDescription();
+            ((ProcessRelationDescription) descriptionDto).setSource(((RelationDescription) desc).getSource());
+            ((ProcessRelationDescription) descriptionDto).setTarget(((RelationDescription) desc).getTarget());
+        } else {
+            descriptionDto = new ProcessEntityDescription();
+        }
+        descriptionDto.setName(desc.getName());
+        descriptionDto.setType(desc.getTypeName());
+        descriptionDto.setInput(desc.isInput());
+        descriptionDto.setOutput(desc.isOutput());
+        final List<InputPropertyDto> inputProperties = new ArrayList<>();
+        final List<OutputPropertyDto> outputProperties = new ArrayList<>();
+        for (InputProperty p : desc.getInputProperties()) {
+            InputPropertyDto inputPropertyDto = new InputPropertyDto();
+            String property = p.getProperty().getCode();
+            inputPropertyDto.setProperty(property);
+            inputPropertyDto.setComparator(p.getComparator());
+            inputPropertyDto.setComparisonValue(p.getComparisonValue());
+            inputPropertyDto.setDefaultValue(p.getDefaultValue());
+            inputPropertyDto.setRequired(p.isRequired());
+            inputProperties.add(inputPropertyDto);
+        }
+        for (OutputProperty p : desc.getOutputProperties()) {
+            OutputPropertyDto outputPropertyDto = new OutputPropertyDto();
+            String property = p.getProperty().getCode();
+            outputPropertyDto.setProperty(property);
+            outputPropertyDto.setTrustness(p.getTrustness());
+            outputProperties.add(outputPropertyDto);
+        }
+        descriptionDto.setInputProperties(inputProperties);
+        descriptionDto.setOutputProperties(outputProperties);
+        return descriptionDto;
+    }
+
+    public static List<InputOutputDescription> fromDescriptions(List<Description> descriptions) {
+        return descriptions
+                .stream()
+                .map(InputOutputDescription::fromDescription)
+                .collect(Collectors.toList());
+    }
+
+
+
+
 
 }

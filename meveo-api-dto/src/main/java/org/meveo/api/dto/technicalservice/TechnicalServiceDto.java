@@ -39,7 +39,7 @@ public class TechnicalServiceDto extends BusinessDto {
 
     private static final long serialVersionUID = 5579910176536059520L;
 
-    private List<InputOutputDescriptionDto> descriptions = new ArrayList<>();
+    private List<InputOutputDescription> descriptions = new ArrayList<>();
 
     @NotNull(message = "The technical service name must be provided")
     private String name;
@@ -64,11 +64,11 @@ public class TechnicalServiceDto extends BusinessDto {
     /**
      * Description of the inputs and outputs of the connector
      */
-    public List<InputOutputDescriptionDto> getDescriptions() {
+    public List<InputOutputDescription> getDescriptions() {
         return descriptions;
     }
 
-    public void setDescriptions(List<InputOutputDescriptionDto> dto) {
+    public void setDescriptions(List<InputOutputDescription> dto) {
         this.descriptions = dto;
     }
 

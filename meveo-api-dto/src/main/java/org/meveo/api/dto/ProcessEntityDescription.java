@@ -1,11 +1,11 @@
 package org.meveo.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.meveo.api.dto.technicalservice.InputOutputDescriptionDto;
+import org.meveo.api.dto.technicalservice.InputOutputDescription;
 
 import javax.validation.constraints.NotNull;
 
-public class EntityDescriptionDto extends InputOutputDescriptionDto {
+public class ProcessEntityDescription extends InputOutputDescription {
 
     @JsonProperty(required = true)
     @NotNull

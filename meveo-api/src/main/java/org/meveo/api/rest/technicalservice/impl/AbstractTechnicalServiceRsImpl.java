@@ -22,7 +22,7 @@ import org.meveo.api.TechnicalServiceApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
-import org.meveo.api.dto.technicalservice.InputOutputDescriptionDto;
+import org.meveo.api.dto.technicalservice.InputOutputDescription;
 import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
@@ -204,7 +204,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response description(String name, Integer version){
         ServerResponse response = new ServerResponse();
         try {
-            List<InputOutputDescriptionDto> desc = technicalServiceApi().description(name, version);
+            List<InputOutputDescription> desc = technicalServiceApi().description(name, version);
             response.setStatus(200);
             response.setEntity(desc);
         } catch(EntityDoesNotExistsException e){

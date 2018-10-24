@@ -2,7 +2,7 @@ package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RelationDescriptionDto extends InputOutputDescriptionDto {
+public class ProcessRelationDescription extends InputOutputDescription {
 
     @JsonProperty(required = true)
     private String source;

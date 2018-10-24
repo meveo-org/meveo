@@ -18,7 +18,7 @@
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.EntityDescriptionDto;
+import org.meveo.api.dto.ProcessEntityDescription;
 import org.meveo.api.dto.TechnicalServicesDto;
 import org.meveo.api.dto.technicalservice.*;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -60,7 +60,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     private TechnicalServiceDto toDto(TechnicalService technicalService) {
         final TechnicalServiceDto dto = new TechnicalServiceDto();
         dto.setCode(technicalService.getCode());
-        List<InputOutputDescriptionDto> descriptionDtos = toDescriptionsDto(technicalService);
+        List<InputOutputDescription> descriptionDtos = fromDescriptions(technicalService);
         dto.setDescriptions(descriptionDtos);
         dto.setName(technicalService.getName());
         dto.setVersion(technicalService.getServiceVersion());
@@ -80,59 +80,15 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return technicalService;
     }
 
-    private List<InputOutputDescriptionDto> toDescriptionsDto(TechnicalService technicalService) {
-        return toDescriptionsDto(technicalService.getDescriptions());
+    private List<InputOutputDescription> fromDescriptions(TechnicalService technicalService) {
+        return InputOutputDescription.fromDescriptions(technicalService.getDescriptions());
     }
 
-    private List<InputOutputDescriptionDto> toDescriptionsDto(List<Description> descriptions) {
-        return descriptions
-                .stream()
-                .map(this::fromDescription)
-                .collect(Collectors.toList());
-    }
-
-    private InputOutputDescriptionDto fromDescription(Description desc) {
-        InputOutputDescriptionDto descriptionDto;
-        if (desc instanceof RelationDescription) {
-            descriptionDto = new RelationDescriptionDto();
-            ((RelationDescriptionDto) descriptionDto).setSource(((RelationDescription) desc).getSource());
-            ((RelationDescriptionDto) descriptionDto).setTarget(((RelationDescription) desc).getTarget());
-        } else {
-            descriptionDto = new EntityDescriptionDto();
-        }
-        descriptionDto.setName(desc.getName());
-        descriptionDto.setType(desc.getTypeName());
-        descriptionDto.setInput(desc.isInput());
-        descriptionDto.setOutput(desc.isOutput());
-        final List<InputPropertyDto> inputProperties = new ArrayList<>();
-        final List<OutputPropertyDto> outputProperties = new ArrayList<>();
-        for (InputProperty p : desc.getInputProperties()) {
-            InputPropertyDto inputPropertyDto = new InputPropertyDto();
-            String property = p.getProperty().getCode();
-            inputPropertyDto.setProperty(property);
-            inputPropertyDto.setComparator(p.getComparator());
-            inputPropertyDto.setComparisonValue(p.getComparisonValue());
-            inputPropertyDto.setDefaultValue(p.getDefaultValue());
-            inputPropertyDto.setRequired(p.isRequired());
-            inputProperties.add(inputPropertyDto);
-        }
-        for (OutputProperty p : desc.getOutputProperties()) {
-            OutputPropertyDto outputPropertyDto = new OutputPropertyDto();
-            String property = p.getProperty().getCode();
-            outputPropertyDto.setProperty(property);
-            outputPropertyDto.setTrustness(p.getTrustness());
-            outputProperties.add(outputPropertyDto);
-        }
-        descriptionDto.setInputProperties(inputProperties);
-        descriptionDto.setOutputProperties(outputProperties);
-        return descriptionDto;
-    }
-
-    private Description toDescription(TechnicalService technicalService, InputOutputDescriptionDto dto) throws EntityDoesNotExistsException {
+    private Description toDescription(TechnicalService technicalService, InputOutputDescription dto) throws EntityDoesNotExistsException {
         Description description;
         String code;
         String appliesTo;
-        if (dto instanceof EntityDescriptionDto) {
+        if (dto instanceof ProcessEntityDescription) {
             description = new EntityDescription();
             ((EntityDescription) description).setName(dto.getName());
             final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(dto.getType());
@@ -144,8 +100,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             appliesTo = customEntityTemplate.getAppliesTo();
         } else {
             description = new RelationDescription();
-            ((RelationDescription) description).setSource(((RelationDescriptionDto) dto).getSource());
-            ((RelationDescription) description).setTarget(((RelationDescriptionDto) dto).getTarget());
+            ((RelationDescription) description).setSource(((ProcessRelationDescription) dto).getSource());
+            ((RelationDescription) description).setTarget(((ProcessRelationDescription) dto).getTarget());
             final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(dto.getType());
             if (customRelationshipTemplate == null) {
                 throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getType());
@@ -193,15 +149,15 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
 
     private List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
         List<Description> descriptions = new ArrayList<>();
-        for (InputOutputDescriptionDto descDto : postData.getDescriptions()) {
+        for (InputOutputDescription descDto : postData.getDescriptions()) {
             descriptions.add(toDescription(service, descDto));
         }
         return descriptions;
     }
 
-    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescriptionDto> dtos) throws EntityDoesNotExistsException {
+    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException {
         List<Description> descriptions = new ArrayList<>();
-        for (InputOutputDescriptionDto descDto : dtos) {
+        for (InputOutputDescription descDto : dtos) {
             descriptions.add(toDescription(service, descDto));
         }
         return descriptions;
@@ -439,7 +395,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
      * @return The description of the specified service
      * @throws EntityDoesNotExistsException If service does not exists
      */
-    public List<InputOutputDescriptionDto> description(String name, Integer version) throws EntityDoesNotExistsException {
+    public List<InputOutputDescription> description(String name, Integer version) throws EntityDoesNotExistsException {
         // First, retrieve code of the technical service
         if (version == null) {
             // Use latest version if version is not provided
@@ -448,7 +404,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         }
         final Integer finalVersion = version;
         List<Description> description = technicalServiceService().description(buildCode(name, finalVersion));
-        return toDescriptionsDto(description);
+        return InputOutputDescription.fromDescriptions(description);
     }
 
     /**
