@@ -15,7 +15,7 @@
         <releaseOption/>
     </properties>
     <scm>
-        <connection>scm:git@git.assembla.com:web-drone/webdrone-iep-kbstudio.meveo.git</connection>
+        <connection>scm:git:https://git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo.git</connection>
         <url>https://git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo.git</url>
     </scm>
     <modules>
