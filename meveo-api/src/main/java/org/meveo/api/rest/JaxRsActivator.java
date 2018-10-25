@@ -29,18 +29,13 @@ public class JaxRsActivator extends Application {
         Reflections reflections = new Reflections("org.meveo.api.rest");
         Set<Class<? extends BaseRs>> allClasses = reflections.getSubTypesOf(BaseRs.class);
         
-        Reflections iepReflections = new Reflections("org.iep.api.rest.impl");
-        Set<Class<? extends BaseRs>> iepAllClasses = iepReflections.getSubTypesOf(BaseRs.class);
-
-        
-
         log.debug("Documenting {} rest services...", allClasses.size());
 
         resources.addAll(allClasses);
-        resources.addAll(iepAllClasses);
         resources.add(RESTCorsRequestFilter.class);
         resources.add(RESTCorsResponseFilter.class);
         resources.add(JaxRsExceptionMapper.class);
+        resources.add(JacksonJsonProvider.class);
 
         return resources;
     }

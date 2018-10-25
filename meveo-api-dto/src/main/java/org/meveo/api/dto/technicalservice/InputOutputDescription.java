@@ -29,10 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.meveo.api.dto.ProcessEntityDescription.ENTITY_DESCRIPTION;
+import static org.meveo.api.dto.technicalservice.ProcessRelationDescription.RELATION_DESCRIPTION;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "descriptionType")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ProcessEntityDescription.class, name = "EntityDescription"),
-        @JsonSubTypes.Type(value = ProcessRelationDescription.class, name = "RelationDescription")
+        @JsonSubTypes.Type(value = ProcessEntityDescription.class, name = ENTITY_DESCRIPTION),
+        @JsonSubTypes.Type(value = ProcessRelationDescription.class, name = RELATION_DESCRIPTION)
 })
 public abstract class InputOutputDescription {
 

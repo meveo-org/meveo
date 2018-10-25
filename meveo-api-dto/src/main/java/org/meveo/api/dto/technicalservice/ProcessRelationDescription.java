@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProcessRelationDescription extends InputOutputDescription {
 
+    public static final String RELATION_DESCRIPTION = "RelationDescription";
+
     @JsonProperty(required = true)
     private String source;
     @JsonProperty(required = true)
@@ -43,7 +45,10 @@ public class ProcessRelationDescription extends InputOutputDescription {
     }
 
     @Override
-    public void setName(String name) {
+    public void setName(String name) {}
+
+    public String getDescriptionType(){
+        return RELATION_DESCRIPTION;
     }
 
 }
