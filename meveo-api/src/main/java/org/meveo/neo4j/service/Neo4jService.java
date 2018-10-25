@@ -136,11 +136,16 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<Object, Object> fieldValues,
-                           User user) {
-
+    public Long addCetNode(String cetCode, Map<Object, Object> fieldValues, User user) {
         return addCetNode(cetCode, fieldValues, false, user);
+    }
 
+    public Long addCetNodeInSameTransaction(String cetCode, Map<Object, Object> fieldValues, User user) throws BusinessException {
+        return addCetNode(cetCode, fieldValues, false,user);
+    }
+
+    public void addCRTinSameTransaction(String crtCode, Map<Object, Object> fieldValues, User user) throws BusinessException {
+        addCRT(crtCode, fieldValues, false, user);
     }
 
     /**
