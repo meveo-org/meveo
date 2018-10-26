@@ -26,9 +26,4 @@
         <artifact name="com.fasterxml.jackson.core:jackson-annotations:2.7.4"/>
     </resources>
 
-    <!--<dependencies>-->
-        <!--<module name="javax.api"/>-->
-        <!--<module name="com.fasterxml.jackson.core.jackson-annotations"/>-->
-        <!--<module name="com.fasterxml.jackson.core.jackson-core"/>-->
-    <!--</dependencies>-->
 </module>

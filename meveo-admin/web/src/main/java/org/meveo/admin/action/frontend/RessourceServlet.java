@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.meveo.commons.utils.ParamBeanFactory;
-import org.meveo.service.crm.impl.ProviderService;
 import org.slf4j.Logger;
 
 /* originally from @author BalusC in LGPL licence
@@ -39,9 +38,6 @@ public class RessourceServlet extends HttpServlet {
 
     @Inject
     private Logger log;
-
-    @Inject
-    ProviderService providerService;
 
     /** paramBeanFactory */
     @Inject

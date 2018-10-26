@@ -6,6 +6,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 
 import javax.persistence.Column;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 

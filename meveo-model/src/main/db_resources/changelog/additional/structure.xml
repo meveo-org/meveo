@@ -3,10 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
-    
     <changeSet id="#1102_20160823" author="rachidAityaazza">
-        <createSequence sequenceName="CUST_CRT_SEQ"/>
-
         <createTable tableName="CUST_CRT">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" />
@@ -24,7 +21,6 @@
             <column name="provider_id" type="BIGINT" />
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
-
             <column name="name" type="VARCHAR(100)" />
             <column name="direction" type="VARCHAR(100)" />
             <column name="start_node_id" type="BIGINT" />
@@ -32,7 +28,7 @@
             <column name="start_node_keys" type="VARCHAR(100)" />
             <column name="end_node_keys" type="VARCHAR(100)" />
         </createTable>
-
+        <createSequence sequenceName="cust_crt_seq"/>
         <addPrimaryKey columnNames="id" constraintName="cust_crt_pkey"
             tableName="cust_crt" />
 
@@ -65,55 +61,6 @@
     <changeSet id="#2289_20170203" author="rachidAityaazza"> 
         <modifyDataType tableName="CUST_CEI" columnName="CODE" newDataType="VARCHAR(250)"/>
     </changeSet>
-    <changeSet id="#2290_20170524" author="pbach">
-        <createSequence sequenceName="IEP_REGION_SEQ"/>
-
-        <createTable tableName="IEP_REGION">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false" />
-            </column>
-            <column name="version" type="INT4" />
-            <column name="created" type="datetime">
-                <constraints nullable="false" />
-            </column>
-            <column name="updated" type="datetime" />
-            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
-            <column name="region_code" type="VARCHAR(50)" />
-            <column name="description_en" type="VARCHAR(100)" />
-            <column name="description_fr" type="VARCHAR(100)" />
-            <column name="creator" type="varchar(100)" />
-            <column name="updater" type="varchar(100)" />
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="iep_region_pkey"
-                       tableName="IEP_REGION" />
-
-        <createTable tableName="IEP_REGION_COUNTRY">
-            <column name="region_id" type="BIGINT">
-                <constraints nullable="false" />
-            </column>
-            <column name="country_id" type="BIGINT">
-                <constraints nullable="false" />
-            </column>
-        </createTable>
-        <addPrimaryKey columnNames="region_id, country_id" constraintName="iep_region_country_pkey" tableName="IEP_REGION_COUNTRY" />
-        <addForeignKeyConstraint baseColumnNames="region_id" baseTableName="IEP_REGION_COUNTRY" constraintName="fk_iep_region_country_region" deferrable="false"
-                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="IEP_REGION" />
-        <addForeignKeyConstraint baseColumnNames="country_id" baseTableName="IEP_REGION_COUNTRY" constraintName="fk_iep_region_country_country" deferrable="false"
-                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ADM_COUNTRY" />
-
-         <!--<sql>-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (1, 0, '2017-05-24 07:46:20.404', NULL, 'AS', 'Asia', 'Asie', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (2, 0, '2017-05-24 07:46:20.404', NULL, 'NA,', 'North America,', 'Amérique du nord', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (3, 0, '2017-05-24 07:46:20.404', NULL, 'SA', 'South America', 'Amérique du sud', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (4, 0, '2017-05-24 07:46:20.404', NULL, 'EU', 'Europe', 'Europe', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (5, 0, '2017-05-24 07:46:20.404', NULL, 'AF', 'Africa', 'Afrique', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (6, 0, '2017-05-24 07:46:20.404', NULL, 'AN', 'Antarctica', 'Antarctique', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (7, 0, '2017-05-24 07:46:20.404', NULL, 'AU', 'Australia', 'Australie', 1, NULL);-->
-            <!--INSERT INTO IEP_REGION (id, version, created, updated, region_code, description_en, description_fr, creator, updater) VALUES (8, 0, '2017-05-24 07:46:20.404', NULL, 'OC', 'Oceania', 'Océanie', 1, NULL);-->
-        <!--</sql>-->
-    </changeSet>
     <changeSet id="technical_services" author="Clément Bareth">
         <!-- Technical Services -->
         <createSequence sequenceName="technical_services_seq"/>
@@ -134,7 +81,7 @@
             <column name="updater" type="varchar(100)" />
             <column name="description" type="varchar(255)" />
             <column name="code" type="varchar(255)" />
-            <column name="script" type="${type.longtext}">
+            <column name="script" type="text">
                 <constraints nullable="false" />
             </column>
             <column name="name" type="varchar(255)">
@@ -210,5 +157,30 @@
                                  constraintName="fk_prop_desc_desc_id" referencedTableName="technical_services_description"
                                  referencedColumnNames="id"/>
     </changeSet>
-
+    <changeSet id="sequence_if_mysql" author="Clement Bareth" dbms="mysql">
+        <createTable tableName="cust_crt_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cust_crt_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}cust_crt_seq values(1)</sql>
+        <createTable tableName="technical_services_description_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="technical_services_description_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}technical_services_description_seq values(1)</sql>
+        <createTable tableName="property_description_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="property_description_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}property_description_seq values(1)</sql>
+        <createTable tableName="technical_services_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="technical_services_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}technical_services_seq values(1)</sql>
+    </changeSet>
 </databaseChangeLog>
