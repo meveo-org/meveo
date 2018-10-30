@@ -1,5 +1,6 @@
 package org.meveo.model.customEntities;
 
+import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
@@ -49,8 +50,23 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
      * Json list type. ex : ["firstName","lastName","birthDate"]
      */
     @Column(name = "END_NODE_KEYS", length = 100)
-    private String endNodeKeys; 
-    
+    private String endNodeKeys;
+
+    /**
+     * Whether the relation is used for unicity of nodes
+     */
+    @Column(name = "is_unique")
+    @Type(type="numeric_boolean")
+    private boolean isUnique;
+
+    public boolean isUnique() {
+        return isUnique;
+    }
+
+    public void setUnique(boolean unique) {
+        isUnique = unique;
+    }
+
     public String getName() {
         return name;
     }
