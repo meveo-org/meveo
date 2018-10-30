@@ -5,7 +5,6 @@
     <system-properties>
         <property name="jboss.as.management.blocking.timeout" value="900"/>
         <property name="meveo.instance.name" value="demo"/>
-        <property name="swarm.bind.address" value="127.0.0.1"/>
         <property name="java.net.preferIPv4Stack" value="true"/>
     </system-properties>
 

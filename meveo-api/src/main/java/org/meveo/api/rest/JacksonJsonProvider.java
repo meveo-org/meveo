@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 
 import javax.ws.rs.ext.Provider;
 
@@ -17,7 +16,6 @@ public class JacksonJsonProvider extends com.fasterxml.jackson.jaxrs.json.Jackso
 	
 	@SuppressWarnings("deprecation")
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-			.registerModule(new GuavaModule())
 			.setSerializationInclusion(JsonInclude.Include.ALWAYS)
 			.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, true)
 			.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false)
