@@ -23,6 +23,9 @@ import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -57,14 +60,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public void create(CustomRelationshipTemplate cet) throws BusinessException {
         super.create(cet);
-       // customFieldsCache.addUpdateCustomEntityTemplate(cet);
-
-       // elasticClient.createCETMapping(cet);
-
         try {
             permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -73,12 +71,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
         CustomRelationshipTemplate cetUpdated = super.update(cet);
-        //customFieldsCache.addUpdateCustomEntityTemplate(cet);
-
         try {
             permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -88,48 +83,28 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Override
     public void remove(Long id) throws BusinessException {
-
         CustomRelationshipTemplate cet = findById(id);
-
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
         super.remove(id);
-
-       // customFieldsCache.removeCustomEntityTemplate(cet);
     }
 
-    @Override
-    public List<CustomRelationshipTemplate> list(Boolean active) {
-
-//        boolean useCache = Boolean.parseBoolean(paramBean.getProperty("cache.cacheCET", "true"));
-//        if (useCache && (active == null || active)) {
-//
-//            List<CustomRelationshipTemplate> cets = new ArrayList<CustomRelationshipTemplate>();
-//            cets.addAll(customFieldsCache.getCustomEntityTemplates(provider));
-//            return cets;
-//
-//        } else {
-            return super.list(active);
-//        }
-    }
-
-    @Override
-    public List<CustomRelationshipTemplate> list(PaginationConfiguration config) {
-
-//        boolean useCache = Boolean.parseBoolean(paramBean.getProperty("cache.cacheCET", "true"));
-//        if (useCache
-//                && (config.getFilters() == null || config.getFilters().isEmpty() || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config
-//                    .getFilters().get("disabled")))) {
-//            List<CustomEntityTemplate> cets = new ArrayList<CustomEntityTemplate>();
-//            cets.addAll(customFieldsCache.getCustomEntityTemplates(getCurrentProvider()));
-//            return cets;
-//
-//        } else {
-            return super.list(config);
-//        }
+    /**
+     * Whether the relation is unique
+     *
+     * @param code Code of the relationship template
+     * @return {@code true} if the relationship is unique
+     */
+    public boolean isUnique(String code){
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
+        Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
+        query.select(root.get("isUnique"));
+        query.where(cb.equal(root.get("code"), code));
+        query.distinct(true);
+        return getEntityManager().createQuery(query).getSingleResult();
     }
 
     /**
