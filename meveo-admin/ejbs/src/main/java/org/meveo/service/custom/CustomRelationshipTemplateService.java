@@ -21,14 +21,17 @@ package org.meveo.service.custom;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CacheKeyStr;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.admin.User;
@@ -54,6 +57,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Inject
     private ElasticClient elasticClient;
+
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/unique-crt")
+    private Cache<String, Boolean> uniqueRelations;
 
     private ParamBean paramBean = ParamBean.getInstance();
 
@@ -98,13 +104,15 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      * @return {@code true} if the relationship is unique
      */
     public boolean isUnique(String code){
-        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
-        Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
-        query.select(root.get("isUnique"));
-        query.where(cb.equal(root.get("code"), code));
-        query.distinct(true);
-        return getEntityManager().createQuery(query).getSingleResult();
+        return uniqueRelations.computeIfAbsent(code, key -> {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
+            Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
+            query.select(root.get("isUnique"));
+            query.where(cb.equal(root.get("code"), key));
+            query.distinct(true);
+            return getEntityManager().createQuery(query).getSingleResult();
+        });
     }
 
     /**
