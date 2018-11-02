@@ -32,10 +32,7 @@ import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.neo4j.base.Neo4jConnectionProvider;
-import org.meveo.security.CurrentUser;
-import org.meveo.security.MeveoUser;
 import org.meveo.service.base.ValueExpressionWrapper;
-import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -76,12 +73,6 @@ public class Neo4jService {
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
-//    @Inject
-//    private RegionService regionService;
-
-    @Inject
-    private CustomFieldInstanceService customFieldInstanceService;
-
     @Inject
     CountryUtils countryUtils;
 
@@ -96,6 +87,15 @@ public class Neo4jService {
     private final static String cetStatement = "Merge (n:${cetCode}${fieldKeys}) "
             + "ON CREATE SET n = ${fields}"
             + "ON MATCH SET n += ${fields} return ID(n)";
+
+    private final static StringBuffer findStartNodeId = new StringBuffer()
+            .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${uniqueFields})")
+            .append(" MERGE (startNode)")
+            .append(" RETURN ID(startNode)");
+
+    private final static StringBuffer updateNodeWithId = new StringBuffer()
+            .append(" MATCH (startNode) WHERE ID(startNode) = ${id}")
+            .append(" SET startNode += ${fields}");
 
     private final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
             + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
@@ -114,20 +114,8 @@ public class Neo4jService {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    private final static StringBuffer nearbyAddressesStatement = new StringBuffer("MATCH (a:Address ${starNodeKeys})")
-            .append(" MATCH (b:Address) ")
-            .append(" WITH distance(point({latitude: a.latitude, longitude: a.longitude}), point({latitude: b.latitude, longitude: b.longitude})) AS distance ")
-            .append(" distance <=${value}")
-            .append(" MERGE (a)-[:close_to${fields}]->(b)");
-
-    public final static String START_NODE_KEY_SUFFIX = "-source";
-    public final static String END_NODE_KEY_SUFFIX = "-target";
     public final static String START_NODE_ALIAS = "start";
     public final static String END_NODE_ALIAS = "end";
-
-    @Inject
-    @CurrentUser
-    protected MeveoUser meveoUser;
 
     /**
      * @param cetCode
@@ -258,14 +246,14 @@ public class Neo4jService {
         Map<Object, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true, user);
         log.info("addCRT startNodeFieldValues:" + startNodeFieldValues);
 
-        Map<Object, Object> startNodeKeysMap = getNodeKeys(crtCode, customRelationshipTemplate.getStartNode().getAppliesTo(),
+        Map<Object, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(),
                 startNodeFieldValues);
 
         Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService
                 .findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
         Map<Object, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true, user);
 
-        Map<Object, Object> endNodeKeysMap = getNodeKeys(crtCode, customRelationshipTemplate.getEndNode().getAppliesTo(),
+        Map<Object, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(),
                 endNodeFieldValues);
 
         log.info("startNodeKeysMap:" + startNodeKeysMap);
@@ -273,68 +261,78 @@ public class Neo4jService {
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<Object, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true, user);
             // crtFields.put(CETConstants.CET_UPDATE_DATE_FIELD, System.currentTimeMillis());
-            saveCRT2Neo4j(crtCode, customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, isTemporaryCET);
+            saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, isTemporaryCET);
         }
     }
 
     /**
-     * @param crtCode
-     * @param startFieldValues
-     * @param endFieldValues
-     * @param user
-     * @throws BusinessException
+     * Persist an instance of {@link CustomRelationshipTemplate}
+     *
+     * @param crtCode          Code of the CustomRelationshipTemplate instance
+     * @param crtValues        Properties of the link
+     * @param startFieldValues Filters on start node
+     * @param endFieldValues   Filters on end node
+     * @param user             User executing the query
+     * @throws BusinessException If error happens
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<Object, Object> startFieldValues, Map<Object, Object> endFieldValues, User user)
+    public void addCRT(String crtCode, Map<Object, Object> crtValues, Map<Object, Object> startFieldValues, Map<Object, Object> endFieldValues, User user)
             throws BusinessException {
-        log.info("crtCode={}", crtCode);
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService
-                .findByCode(crtCode);
 
+        log.info("Persisting link with crtCode = {}", crtCode);
+
+        /* Try to retrieve the associated CRT */
+        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
         if (customRelationshipTemplate == null) {
-            throw new ElementNotFoundException(crtCode,
-                    CustomRelationshipTemplate.class.getName());
+            log.error("Can't find CRT with code {}", crtCode);
+            throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
         }
 
-        Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getAppliesTo());
+        /* Recuperation of the custom fields of the CRT */
+        Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
+        log.info("Custom fields are : ", crtCustomFields);
 
-        log.info("crtCustomFields=", crtCustomFields);
-        log.info("addCRT startFieldValues size:" + startFieldValues.size());
-        Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
+        /* Recuperation of the custom fields of the source node */
+        Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
         Map<Object, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, startFieldValues, null, true, user);
-        log.info("addCRT startNodeFieldValues:" + startNodeFieldValues);
+        log.info("Filters on start node :" + startNodeFieldValues);
+        Map<Object, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), startNodeFieldValues);
 
-        Map<Object, Object> startNodeKeysMap = getNodeKeys(crtCode, customRelationshipTemplate.getStartNode().getAppliesTo(), startNodeFieldValues);
-
-        Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
+        /* Recuperation of the custom fields of the target node */
+        Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
         Map<Object, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, endFieldValues, null, true, user);
-
-        Map<Object, Object> endNodeKeysMap = getNodeKeys(crtCode, customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeFieldValues);
+        log.info("Filters on end node : " + startNodeFieldValues);
+        Map<Object, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeFieldValues);
 
         log.info("startNodeKeysMap:" + startNodeKeysMap);
         log.info("endNodeKeysMap:" + endNodeKeysMap);
+
+        /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<Object, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, startFieldValues, null, true, user);
-            Map<Object, Object> endCrtFields = validateAndConvertCustomFields(crtCustomFields, endFieldValues, null, true, user);
-            crtFields.putAll(endCrtFields);
-            saveCRT2Neo4j(crtCode, customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
+            Map<Object, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true, user);
+            saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
+
+    }
+
+    @JpaAmpNewTx
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void addCRT(String crtCode, Map<Object, Object> startFieldValues, Map<Object, Object> endFieldValues, User user) throws BusinessException {
+        Map<Object, Object> crtValues = new HashMap<>();
+        crtValues.putAll(startFieldValues);
+        crtValues.putAll(endFieldValues);
+        addCRT(crtCode, crtValues, startFieldValues, endFieldValues, user);
     }
 
     /**
      * Save CRT to Neo4j
-     *
-     * @param crtCode
-     * @param customRelationshipTemplate
+     *  @param customRelationshipTemplate
      * @param startNodeKeysMap
      * @param endNodeKeysMap
      * @param crtFields
      */
-    private void saveCRT2Neo4j(String crtCode, CustomRelationshipTemplate customRelationshipTemplate, Map<Object, Object> startNodeKeysMap,
+    private void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<Object, Object> startNodeKeysMap,
                                Map<Object, Object> endNodeKeysMap, Map<Object, Object> crtFields, boolean isTemporaryCET) {
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("startAlias", START_NODE_ALIAS);
@@ -347,39 +345,68 @@ public class Neo4jService {
         valuesMap.put("updateDate", isTemporaryCET ? -1 : System.currentTimeMillis());
         valuesMap.put("fields", Values.value(crtFields));
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        String resolvedStatement = sub.replace(crtStatement);
-        log.info("resolvedStatement:{}", resolvedStatement);
-        resolvedStatement = resolvedStatement.replace('"', '\'');
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
-        String result = response.readEntity(String.class);
+        String result = callNeo4jWithStatement(crtStatement, valuesMap);
         log.info("addCRT result={}", result);
     }
 
     /**
+     * Persist a source node of an unique relationship.
+     * If a relationship that targets the target node exists, then we merge the fields of the start in parameter to
+     * the fields of the source node of the relationship.
+     * If such a relation does not exists, we create the source node with it fields.
+     *
      * @param crtCode
+     * @param endNodeValues
+     */
+    @JpaAmpNewTx
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void addSourceNodeUniqueCrt(String crtCode, Map<Object, Object> startNodeValues, Map<Object, Object> endNodeValues){
+
+        /* Get relationship template */
+        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+
+        /* Extract unique fields values for the start node */
+        final Map<Object, Object> endNodeUniqueFields = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), endNodeValues);
+
+        /* Map the variables declared in the statement */
+        Map<String, Object> valuesMap = new HashMap<>();
+        valuesMap.put("cetCode", customRelationshipTemplate.getStartNode().getCode());
+        valuesMap.put("endCetCode", customRelationshipTemplate.getEndNode().getCode());
+        valuesMap.put("uniqueFields", Values.value(endNodeUniqueFields));
+        valuesMap.put("sourceNodeFields", Values.value(startNodeValues));
+
+        /* Save the source node to Neo4j */
+//        String result = callNeo4jWithStatement(uniqueCrtSourceNodeStatement, valuesMap);
+//        log.info("addSourceNodeUniqueCrt result= {} ", result);
+    }
+
+    public String callNeo4jWithStatement(StringBuffer statement, Map<String, Object> values){
+        StrSubstitutor sub = new StrSubstitutor(values);
+        String resolvedStatement = sub.replace(statement);
+        log.info("resolvedStatement : {}", resolvedStatement);
+        resolvedStatement = resolvedStatement.replace('"', '\'');
+        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
+        return response.readEntity(String.class);
+    }
+
+    /**
      * @param appliesTo
      * @param convertedFieldValues
      * @return
      */
 
-    private Map<Object, Object> getNodeKeys(String crtCode, String appliesTo, Map<Object, Object> convertedFieldValues) {
+    private Map<Object, Object> getNodeKeys(String appliesTo, Map<Object, Object> convertedFieldValues) {
         Map<Object, Object> nodeKeysMap = new HashMap<Object, Object>();
         List<CustomFieldTemplate> retrievedCft = customFieldTemplateService.findCftUniqueFieldsByApplies(appliesTo);
         for (CustomFieldTemplate cf : retrievedCft) {
             if (!StringUtils.isBlank(convertedFieldValues.get(cf.getDescription()))) {
                 if (cf.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-                    if ("PersonEmail".equalsIgnoreCase(crtCode) && "email".equalsIgnoreCase(cf.getCode())) {
-                        nodeKeysMap.put("emailPrefix", convertedFieldValues.get("emailPrefix"));
-                    } else {
                         nodeKeysMap.put(cf.getCode() + "_IDX", convertedFieldValues.get(cf.getCode() + "_IDX"));
-                    }
                 } else {
                     nodeKeysMap.put(cf.getDescription(), convertedFieldValues.get(cf.getDescription()));
                 }
-
             }
         }
-
         return nodeKeysMap;
     }
 
@@ -636,24 +663,6 @@ public class Neo4jService {
         String inGoingsRelResult = inGoingsRelResponse.readEntity(String.class);
         log.info("mergeNodes InGoingRelStatement result={}", inGoingsRelResult);
 
-    }
-
-    private void addNearbyAddresses(Map<Object, Object> fields, Long distance) {
-        Map<String, Object> valuesMap = new HashMap<>();
-        Map<Object, Object> property = new HashMap<>();
-
-        property.put("distance", distance);
-        valuesMap.put("starNodeKeys", Values.value(fields));
-        valuesMap.put("value", distance);
-        valuesMap.put("fields", Values.value(property));
-        StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        String resolvedStatement = sub.replace(nearbyAddressesStatement);
-        log.info("mergeNodes resolvedStatement:{}", resolvedStatement);
-
-        String statement = "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\",\"resultDataContents\":[\"row\"]}]}";
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), statement);
-        String result = response.readEntity(String.class);
-        log.info("addNearbyAddresses result={}", result);
     }
 
     public String getNeo4jData(String query, boolean getOnlyFirstElement) {
