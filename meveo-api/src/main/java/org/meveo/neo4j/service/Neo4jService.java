@@ -1,5 +1,6 @@
 package org.meveo.neo4j.service;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.httpclient.util.HttpURLConnection;
@@ -37,7 +38,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.ApplicationProvider;
-import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,9 @@ import java.util.regex.PatternSyntaxException;
 public class Neo4jService {
 
     private static final Logger log = LoggerFactory.getLogger(Neo4jService.class);
+    public static final String FIELD_KEYS = "fieldKeys";
+    public static final String FIELDS = "fields";
+    public static final String ID = "id";
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -84,17 +88,17 @@ public class Neo4jService {
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")
             .append(" MERGE (${startAlias})-[:${relationType}${fields}]->(${endAlias}) set ${startAlias}.internal_updateDate=${updateDate}, ${endAlias}.internal_updateDate=${updateDate}");
 
-    private final static String cetStatement = "Merge (n:${cetCode}${fieldKeys}) "
-            + "ON CREATE SET n = ${fields}"
-            + "ON MATCH SET n += ${fields} return ID(n)";
+    private final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
+            .append("ON CREATE SET n = ${fields}")
+            .append("ON MATCH SET n += ${fields} return ID(n) as id");
 
     private final static StringBuffer findStartNodeId = new StringBuffer()
-            .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${uniqueFields})")
+            .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
             .append(" MERGE (startNode)")
             .append(" RETURN ID(startNode)");
 
     private final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append(" MATCH (startNode) WHERE ID(startNode) = ${id}")
+            .append(" MATCH (startNode) WHERE ID(startNode) = {id}")
             .append(" SET startNode += ${fields}");
 
     private final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
@@ -189,8 +193,8 @@ public class Neo4jService {
                 String rowData = null;
                 Map<String, Object> valuesMap = new HashMap<>();
                 valuesMap.put("cetCode", cetCode);
-                valuesMap.put("fieldKeys", Values.value(uniqueFields));
-                valuesMap.put("fields", Values.value(fields));
+                valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
+                valuesMap.put(FIELDS, Values.value(fields));
                 StrSubstitutor sub = new StrSubstitutor(valuesMap);
                 String resolvedStatement = sub.replace(cetStatement);
                 resolvedStatement = resolvedStatement.replace('"', '\'');
@@ -343,7 +347,7 @@ public class Neo4jService {
         valuesMap.put("starNodeKeys", Values.value(startNodeKeysMap));
         valuesMap.put("endNodeKeys", Values.value(endNodeKeysMap));
         valuesMap.put("updateDate", isTemporaryCET ? -1 : System.currentTimeMillis());
-        valuesMap.put("fields", Values.value(crtFields));
+        valuesMap.put(FIELDS, Values.value(crtFields));
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         String result = callNeo4jWithStatement(crtStatement, valuesMap);
         log.info("addCRT result={}", result);
@@ -355,8 +359,9 @@ public class Neo4jService {
      * the fields of the source node of the relationship.
      * If such a relation does not exists, we create the source node with it fields.
      *
-     * @param crtCode
-     * @param endNodeValues
+     * @param crtCode Code of the source node to update or create
+     * @param startNodeValues Values to assign to the start node
+     * @param endNodeValues Filters on the target node values
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -372,12 +377,59 @@ public class Neo4jService {
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", customRelationshipTemplate.getStartNode().getCode());
         valuesMap.put("endCetCode", customRelationshipTemplate.getEndNode().getCode());
-        valuesMap.put("uniqueFields", Values.value(endNodeUniqueFields));
-        valuesMap.put("sourceNodeFields", Values.value(startNodeValues));
 
-        /* Save the source node to Neo4j */
-//        String result = callNeo4jWithStatement(uniqueCrtSourceNodeStatement, valuesMap);
-//        log.info("addSourceNodeUniqueCrt result= {} ", result);
+        /* Prepare the key maps for unique fields and start node fields*/
+        Map<String, String> endNodeUniqueFieldsKeys = getKeysMap(endNodeUniqueFields);
+        Map<String, String> startNodeValuesKeys = getKeysMap(endNodeUniqueFields);
+
+        /* Assign the keys names */
+        valuesMap.put(FIELD_KEYS, Values.value(endNodeUniqueFieldsKeys));
+        valuesMap.put(FIELDS, Values.value(startNodeValuesKeys));
+
+        /* Create the substitutor */
+        StrSubstitutor sub = new StrSubstitutor(valuesMap);
+
+        /* Values of the keys defined in valuesMap */
+        Map<String, Object> parametersValues =  new HashMap<>(ImmutableMap.of(FIELD_KEYS, endNodeUniqueFields, FIELDS, startNodeValues));
+
+        final Transaction transaction = neo4jSessionFactory.getSession().beginTransaction();
+
+        /* Try to find the id of the source node */
+        String findStartNodeStatement = getStatement(sub, findStartNodeId);
+        final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
+        final Record idRecord = run.single();
+        final Value id = idRecord.get(ID);
+
+        /* If source node does not exists, we create it, otherwise we update it */
+        if(id.isNull()){
+
+            /* Create the source node */
+            String createStatement = getStatement(sub, cetStatement);
+            transaction.run(createStatement, parametersValues);
+
+        }else{
+
+            /* Update the source node with the found id */
+            parametersValues.put(ID, id);
+            String updateStatement = getStatement(sub, updateNodeWithId);
+            transaction.run(updateStatement, parametersValues);
+
+        }
+
+        transaction.close();
+
+    }
+
+    private Map<String, String> getKeysMap(Map<Object, Object> endNodeUniqueFields) {
+        Map<String, String> startNodeValuesKeys = new HashMap<>();
+        for (Entry<Object, Object> e : endNodeUniqueFields.entrySet()) {
+            startNodeValuesKeys.put((String) e.getKey(), "{" + e.getKey() + "}");
+        }
+        return startNodeValuesKeys;
+    }
+
+    private static String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
+        return sub.replace(findStartNodeId).replace('"', '\'');
     }
 
     public String callNeo4jWithStatement(StringBuffer statement, Map<String, Object> values){
