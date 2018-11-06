@@ -28,6 +28,9 @@
             <column name="end_node_id" type="BIGINT" />
             <column name="start_node_keys" type="VARCHAR(100)" />
             <column name="end_node_keys" type="VARCHAR(100)" />
+            <column name="IS_UNIQUE" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
         </createTable>
         <createSequence sequenceName="cust_crt_seq"/>
         <addPrimaryKey columnNames="id" constraintName="cust_crt_pkey"
