@@ -39,6 +39,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 /**
  * @author Rachid AITYAAZZA
@@ -92,9 +94,11 @@ public class Neo4jService {
             .append("ON CREATE SET n = ${fields}")
             .append("ON MATCH SET n += ${fields} return ID(n) as id");
 
+    private final static StringBuffer createCet = new StringBuffer("CREATE (n:${cetCode}) ")
+            .append("SET n = ${fields}");
+
     private final static StringBuffer findStartNodeId = new StringBuffer()
             .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
-            .append(" MERGE (startNode)")
             .append(" RETURN ID(startNode)");
 
     private final static StringBuffer updateNodeWithId = new StringBuffer()
@@ -176,7 +180,7 @@ public class Neo4jService {
             }
             log.info("cetFields:" + cetFields);
             Map<Object, Object> uniqueFields = new HashMap<>();
-            Map<Object, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true, user);
+            Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true, user);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             fields.put(CETConstants.CET_UPDATE_DATE_FIELD, isTemporaryCET ? -1 : System.currentTimeMillis());
@@ -247,23 +251,23 @@ public class Neo4jService {
         log.info("addCRT fieldValues:" + fieldValues);
         Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService
                 .findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
-        Map<Object, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true, user);
+        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true, user);
         log.info("addCRT startNodeFieldValues:" + startNodeFieldValues);
 
-        Map<Object, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(),
+        Map<String, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(),
                 startNodeFieldValues);
 
         Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService
                 .findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
-        Map<Object, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true, user);
+        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true, user);
 
-        Map<Object, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(),
+        Map<String, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(),
                 endNodeFieldValues);
 
         log.info("startNodeKeysMap:" + startNodeKeysMap);
         log.info("endNodeKeysMap:" + endNodeKeysMap);
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<Object, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true, user);
+            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true, user);
             // crtFields.put(CETConstants.CET_UPDATE_DATE_FIELD, System.currentTimeMillis());
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, isTemporaryCET);
         }
@@ -299,22 +303,22 @@ public class Neo4jService {
 
         /* Recuperation of the custom fields of the source node */
         Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
-        Map<Object, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, startFieldValues, null, true, user);
+        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, startFieldValues, null, true, user);
         log.info("Filters on start node :" + startNodeFieldValues);
-        Map<Object, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), startNodeFieldValues);
+        Map<String, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), startNodeFieldValues);
 
         /* Recuperation of the custom fields of the target node */
         Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
-        Map<Object, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, endFieldValues, null, true, user);
+        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, endFieldValues, null, true, user);
         log.info("Filters on end node : " + startNodeFieldValues);
-        Map<Object, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeFieldValues);
+        Map<String, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeFieldValues);
 
         log.info("startNodeKeysMap:" + startNodeKeysMap);
         log.info("endNodeKeysMap:" + endNodeKeysMap);
 
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<Object, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true, user);
+            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true, user);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
 
@@ -336,8 +340,8 @@ public class Neo4jService {
      * @param endNodeKeysMap
      * @param crtFields
      */
-    private void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<Object, Object> startNodeKeysMap,
-                               Map<Object, Object> endNodeKeysMap, Map<Object, Object> crtFields, boolean isTemporaryCET) {
+    private void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
+                               Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("startAlias", START_NODE_ALIAS);
         valuesMap.put("endAlias", END_NODE_ALIAS);
@@ -365,54 +369,69 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addSourceNodeUniqueCrt(String crtCode, Map<Object, Object> startNodeValues, Map<Object, Object> endNodeValues){
+    public void addSourceNodeUniqueCrt(String crtCode, Map<String, Object> startNodeValues, Map<String, Object> endNodeValues) throws BusinessException {
 
         /* Get relationship template */
         final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
 
         /* Extract unique fields values for the start node */
-        final Map<Object, Object> endNodeUniqueFields = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), endNodeValues);
+        final Map<String, Object> endNodeUniqueFields = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeValues);
 
         /* Map the variables declared in the statement */
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", customRelationshipTemplate.getStartNode().getCode());
-        valuesMap.put("endCetCode", customRelationshipTemplate.getEndNode().getCode());
+        valuesMap.put("crtCode", crtCode);
+        valuesMap.put("endCetcode", customRelationshipTemplate.getEndNode().getCode());
 
         /* Prepare the key maps for unique fields and start node fields*/
         Map<String, String> endNodeUniqueFieldsKeys = getKeysMap(endNodeUniqueFields);
-        Map<String, String> startNodeValuesKeys = getKeysMap(endNodeUniqueFields);
+        Map<String, String> startNodeValuesKeys = getKeysMap(startNodeValues);
+        final String uniqueFieldStatements = endNodeUniqueFieldsKeys.keySet()
+                .stream()
+                .map(s -> s + ": $" + s)
+                .collect(Collectors.joining(", "));
+        final String startNodeValuesStatements = startNodeValuesKeys.keySet()
+                .stream()
+                .map(s -> s + ": $" + s)
+                .collect(Collectors.joining(", "));
+
+        /* No unique fields has been found */
+        if(endNodeUniqueFieldsKeys.isEmpty()){
+            throw new BusinessException("At least one unique field must be provided for target entity");
+        }
 
         /* Assign the keys names */
-        valuesMap.put(FIELD_KEYS, Values.value(endNodeUniqueFieldsKeys));
-        valuesMap.put(FIELDS, Values.value(startNodeValuesKeys));
+        valuesMap.put(FIELD_KEYS, "{ " + uniqueFieldStatements + " }");
+        valuesMap.put(FIELDS, "{ " + startNodeValuesStatements + " }");
 
         /* Create the substitutor */
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
 
         /* Values of the keys defined in valuesMap */
-        Map<String, Object> parametersValues =  new HashMap<>(ImmutableMap.of(FIELD_KEYS, endNodeUniqueFields, FIELDS, startNodeValues));
+        Map<String, Object> parametersValues =  new HashMap<>();
+        parametersValues.putAll(startNodeValues);
+        parametersValues.putAll(endNodeValues);
 
         final Transaction transaction = neo4jSessionFactory.getSession().beginTransaction();
 
         /* Try to find the id of the source node */
         String findStartNodeStatement = getStatement(sub, findStartNodeId);
         final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
-        final Record idRecord = run.single();
-        final Value id = idRecord.get(ID);
 
-        /* If source node does not exists, we create it, otherwise we update it */
-        if(id.isNull()){
-
-            /* Create the source node */
-            String createStatement = getStatement(sub, cetStatement);
-            transaction.run(createStatement, parametersValues);
-
-        }else{
+        try{
 
             /* Update the source node with the found id */
+            final Record idRecord = run.single();
+            final Value id = idRecord.get(ID);
             parametersValues.put(ID, id);
             String updateStatement = getStatement(sub, updateNodeWithId);
             transaction.run(updateStatement, parametersValues);
+
+        }catch (NoSuchRecordException e){
+
+            /* Create the source node */
+            String createStatement = getStatement(sub, createCet);
+            transaction.run(createStatement, parametersValues);
 
         }
 
@@ -420,10 +439,10 @@ public class Neo4jService {
 
     }
 
-    private Map<String, String> getKeysMap(Map<Object, Object> endNodeUniqueFields) {
+    private Map<String, String> getKeysMap(Map<String, Object> endNodeUniqueFields) {
         Map<String, String> startNodeValuesKeys = new HashMap<>();
-        for (Entry<Object, Object> e : endNodeUniqueFields.entrySet()) {
-            startNodeValuesKeys.put((String) e.getKey(), "{" + e.getKey() + "}");
+        for (Entry<String, Object> e : endNodeUniqueFields.entrySet()) {
+            startNodeValuesKeys.put(e.getKey(), "$" + e.getKey());
         }
         return startNodeValuesKeys;
     }
@@ -447,16 +466,16 @@ public class Neo4jService {
      * @return
      */
 
-    private Map<Object, Object> getNodeKeys(String appliesTo, Map<Object, Object> convertedFieldValues) {
-        Map<Object, Object> nodeKeysMap = new HashMap<Object, Object>();
+    private Map<String, Object> getNodeKeys(String appliesTo, Map<String, Object> convertedFieldValues) {
+        Map<String, Object> nodeKeysMap = new HashMap<>();
         List<CustomFieldTemplate> retrievedCft = customFieldTemplateService.findCftUniqueFieldsByApplies(appliesTo);
         for (CustomFieldTemplate cf : retrievedCft) {
             if (!StringUtils.isBlank(convertedFieldValues.get(cf.getDescription()))) {
-                if (cf.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-                        nodeKeysMap.put(cf.getCode() + "_IDX", convertedFieldValues.get(cf.getCode() + "_IDX"));
-                } else {
+//                if (cf.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
+//                        nodeKeysMap.put(cf.getCode() + "_IDX", convertedFieldValues.get(cf.getCode() + "_IDX"));
+//                } else {
                     nodeKeysMap.put(cf.getDescription(), convertedFieldValues.get(cf.getDescription()));
-                }
+//                }
             }
         }
         return nodeKeysMap;
@@ -487,8 +506,8 @@ public class Neo4jService {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<Object, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<Object, Object> fieldValues, Map<Object, Object> uniqueFields, boolean checkCustomFields, User currentUser) throws BusinessException {
-        Map<Object, Object> convertedFields = new HashMap<Object, Object>();
+    public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<Object, Object> fieldValues, Map<Object, Object> uniqueFields, boolean checkCustomFields, User currentUser) throws BusinessException {
+        Map<String, Object> convertedFields = new HashMap<>();
         List<CustomFieldTemplate> expressionFields = new ArrayList<>();
         Iterator<Entry<String, CustomFieldTemplate>> customFieldTemplatesEntries = customFieldTemplates.entrySet().iterator();
         while (customFieldTemplatesEntries.hasNext()) {
@@ -552,20 +571,6 @@ public class Neo4jService {
                         if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
                             convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(stringValue));
                         }
-                        if (cft.getCode().equals("country")) {
-                            String countryCode = countryUtils.getCountryIsoCode(Locale.US, stringValue.toLowerCase());
-                            if (countryCode == null) {
-                                countryCode = countryUtils.getCountryIsoCode(Locale.FRANCE, stringValue.toLowerCase());
-                            }
-                            convertedFields.put("countryCode", countryCode);
-
-                        } else if (cft.getCode().equals("countryCode")) {
-                            String countryName = countryUtils.getCountryName(Locale.US, stringValue.toLowerCase());
-                            if (countryName == null) {
-                                countryName = countryUtils.getCountryName(Locale.FRANCE, stringValue.toLowerCase());
-                            }
-                            convertedFields.put("country", countryName);
-                        }
                         if (cft.getMaxValue() == null) {
                             cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
                         }
@@ -593,9 +598,11 @@ public class Neo4jService {
                         }
 
                     } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-                        Long longValue = null;
+                        Long longValue;
                         if (valueToCheck instanceof Integer) {
                             longValue = ((Integer) valueToCheck).longValue();
+                        } else if(valueToCheck instanceof String){
+                            longValue = Long.parseLong((String) valueToCheck);
                         } else {
                             longValue = (Long) valueToCheck;
                         }
@@ -611,9 +618,11 @@ public class Neo4jService {
                                     + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                         }
                     } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-                        Double doubleValue = null;
+                        Double doubleValue;
                         if (valueToCheck instanceof Integer) {
                             doubleValue = ((Integer) valueToCheck).doubleValue();
+                        } else if(valueToCheck instanceof String){
+                            doubleValue = Double.parseDouble((String) valueToCheck);
                         } else {
                             doubleValue = (Double) valueToCheck;
                         }
@@ -652,7 +661,7 @@ public class Neo4jService {
         return convertedFields;
     }
 
-    private Object setExpressionField(Map<Object, Object> fieldValues, CustomFieldTemplate cft, Map<Object, Object> convertedFields) throws BusinessException {
+    private Object setExpressionField(Map<Object, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException {
 
         Object evaluatedExpression = ValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues,
                 String.class);
