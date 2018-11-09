@@ -15,6 +15,7 @@
             <column name="created" type="datetime">
                 <constraints nullable="false" />
             </column>
+            <column name="is_unique" type="${type.boolean}" />
             <column name="updated" type="datetime" />
             <column name="description" type="VARCHAR(100)" />
             <column name="code" type="VARCHAR(50)" />
@@ -55,10 +56,10 @@
             <column name="expression_separator" type="VARCHAR(100)"/>
 		</addColumn>
 	</changeSet>
-	<changeSet id="#2289_20170202" author="rachidAityaazza"> 
+	<changeSet id="#2289_20170202" author="rachidAityaazza">
         <modifyDataType tableName="CRM_CUSTOM_FIELD_TMPL" columnName="INDEX_TYPE" newDataType="VARCHAR(250)"/>
-    </changeSet> 
-    <changeSet id="#2289_20170203" author="rachidAityaazza"> 
+    </changeSet>
+    <changeSet id="#2289_20170203" author="rachidAityaazza">
         <modifyDataType tableName="CUST_CEI" columnName="CODE" newDataType="VARCHAR(250)"/>
     </changeSet>
     <changeSet id="technical_services" author="Clément Bareth">
