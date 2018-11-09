@@ -31,6 +31,9 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlAttribute(required = true)
     private String name;
 
+	@XmlAttribute(required = true)
+	private boolean isUnique;
+
     @XmlAttribute()
     private String description;
 
@@ -174,7 +177,13 @@ public class CustomRelationshipTemplateDto extends BaseDto {
 		this.endNodeKeys = endNodeKeys;
 	}
 
+	public boolean isUnique() {
+		return isUnique;
+	}
 
+	public void setUnique(boolean unique) {
+		isUnique = unique;
+	}
 
 	/**
      * Convert CustomRelationshipTemplate instance to CustomRelationshipTemplateDto object including the fields and actions
@@ -189,6 +198,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
+        dto.setUnique(cet.isUnique());
 
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
@@ -219,6 +229,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setName(dto.getName());
         crt.setDescription(dto.getDescription());
         crt.setDirection(dto.getDirection());
+        crt.setUnique(dto.isUnique());
 
         return crt;
     }

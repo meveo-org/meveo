@@ -1,6 +1,5 @@
 package org.meveo.neo4j.service;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.httpclient.util.HttpURLConnection;
@@ -86,45 +85,6 @@ public class Neo4jService {
     @ApplicationProvider
     protected Provider appProvider;
 
-    private final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
-            .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")
-            .append(" MERGE (${startAlias})-[:${relationType}${fields}]->(${endAlias}) set ${startAlias}.internal_updateDate=${updateDate}, ${endAlias}.internal_updateDate=${updateDate}");
-
-    private final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
-            .append("ON CREATE SET n = ${fields}")
-            .append("ON MATCH SET n += ${fields} return ID(n) as id");
-
-    private final static StringBuffer createCet = new StringBuffer("CREATE (n:${cetCode}) ")
-            .append("SET n = ${fields}");
-
-    private final static StringBuffer findStartNodeId = new StringBuffer()
-            .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
-            .append(" RETURN ID(startNode)");
-
-    private final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append(" MATCH (startNode) WHERE ID(startNode) = {id}")
-            .append(" SET startNode += ${fields}");
-
-    private final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
-            + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
-            + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
-            + "UNWIND relTypes AS relType "
-            + "CALL apoc.create.relationship(b, relType, {}, c) YIELD rel "
-            + "DELETE r  "
-            + "SET a.internal_active=FALSE "
-            + "RETURN rel";
-    private final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where ID(a) =${originNodeId} "
-            + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
-            + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
-            + "UNWIND relTypes AS relType "
-            + "CALL apoc.create.relationship(c, relType, {}, b) YIELD rel "
-            + "DELETE r  "
-            + "SET a.internal_active=FALSE "
-            + "RETURN rel";
-
-    public final static String START_NODE_ALIAS = "start";
-    public final static String END_NODE_ALIAS = "end";
-
     /**
      * @param cetCode
      * @param fieldValues
@@ -200,7 +160,7 @@ public class Neo4jService {
                 valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
                 valuesMap.put(FIELDS, Values.value(fields));
                 StrSubstitutor sub = new StrSubstitutor(valuesMap);
-                String resolvedStatement = sub.replace(cetStatement);
+                String resolvedStatement = sub.replace(Neo4JRequests.cetStatement);
                 resolvedStatement = resolvedStatement.replace('"', '\'');
                 log.info("addCetNode resolvedStatement:{}", resolvedStatement);
 
@@ -343,8 +303,8 @@ public class Neo4jService {
     private void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
                                Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("startAlias", START_NODE_ALIAS);
-        valuesMap.put("endAlias", END_NODE_ALIAS);
+        valuesMap.put("startAlias", Neo4JRequests.START_NODE_ALIAS);
+        valuesMap.put("endAlias", Neo4JRequests.END_NODE_ALIAS);
         valuesMap.put("startNode", customRelationshipTemplate.getStartNode().getCode());
         valuesMap.put("endNode", customRelationshipTemplate.getEndNode().getCode());
         valuesMap.put("relationType", customRelationshipTemplate.getName());
@@ -353,7 +313,7 @@ public class Neo4jService {
         valuesMap.put("updateDate", isTemporaryCET ? -1 : System.currentTimeMillis());
         valuesMap.put(FIELDS, Values.value(crtFields));
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        String result = callNeo4jWithStatement(crtStatement, valuesMap);
+        String result = callNeo4jWithStatement(Neo4JRequests.crtStatement, valuesMap);
         log.info("addCRT result={}", result);
     }
 
@@ -379,30 +339,23 @@ public class Neo4jService {
 
         /* Map the variables declared in the statement */
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", customRelationshipTemplate.getStartNode().getCode());
+        final String cetCode = customRelationshipTemplate.getStartNode().getCode();
+        valuesMap.put("cetCode", cetCode);
         valuesMap.put("crtCode", crtCode);
         valuesMap.put("endCetcode", customRelationshipTemplate.getEndNode().getCode());
 
         /* Prepare the key maps for unique fields and start node fields*/
-        Map<String, String> endNodeUniqueFieldsKeys = getKeysMap(endNodeUniqueFields);
-        Map<String, String> startNodeValuesKeys = getKeysMap(startNodeValues);
-        final String uniqueFieldStatements = endNodeUniqueFieldsKeys.keySet()
-                .stream()
-                .map(s -> s + ": $" + s)
-                .collect(Collectors.joining(", "));
-        final String startNodeValuesStatements = startNodeValuesKeys.keySet()
-                .stream()
-                .map(s -> s + ": $" + s)
-                .collect(Collectors.joining(", "));
+        final String uniqueFieldStatements = getFieldsString(endNodeUniqueFields.keySet());
+        final String startNodeValuesStatements = getFieldsString(startNodeValues.keySet());
 
         /* No unique fields has been found */
-        if(endNodeUniqueFieldsKeys.isEmpty()){
+        if(endNodeUniqueFields.isEmpty()){
             throw new BusinessException("At least one unique field must be provided for target entity");
         }
 
         /* Assign the keys names */
-        valuesMap.put(FIELD_KEYS, "{ " + uniqueFieldStatements + " }");
-        valuesMap.put(FIELDS, "{ " + startNodeValuesStatements + " }");
+        valuesMap.put(FIELD_KEYS, uniqueFieldStatements);
+        valuesMap.put(FIELDS, startNodeValuesStatements);
 
         /* Create the substitutor */
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -412,39 +365,99 @@ public class Neo4jService {
         parametersValues.putAll(startNodeValues);
         parametersValues.putAll(endNodeValues);
 
-        final Transaction transaction = neo4jSessionFactory.getSession().beginTransaction();
+        final Session session = neo4jSessionFactory.getSession();
+        final Transaction transaction = session.beginTransaction();
 
         /* Try to find the id of the source node */
-        String findStartNodeStatement = getStatement(sub, findStartNodeId);
+        String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
         final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
 
-        try{
+        try {
+            try {
 
-            /* Update the source node with the found id */
-            final Record idRecord = run.single();
-            final Value id = idRecord.get(ID);
-            parametersValues.put(ID, id);
-            String updateStatement = getStatement(sub, updateNodeWithId);
-            transaction.run(updateStatement, parametersValues);
+                /* Update the source node with the found id */
+                final Record idRecord = run.single();
+                final Value id = idRecord.get(ID);
+                parametersValues.put(ID, id);
+                String updateStatement = getStatement(sub, Neo4JRequests.updateNodeWithId);
+                transaction.run(updateStatement, parametersValues);
 
-        }catch (NoSuchRecordException e){
+            } catch (NoSuchRecordException e) {
 
-            /* Create the source node */
-            String createStatement = getStatement(sub, createCet);
-            transaction.run(createStatement, parametersValues);
+                /* Create the source node */
+                String createStatement = getStatement(sub, Neo4JRequests.createCet);
+                transaction.run(createStatement, parametersValues);
+
+            }
+
+            transaction.success();
+
+        }catch (Exception e){
+
+            transaction.failure();
+            log.error("Transaction for persisting entity with code {} and fields {} was rolled back due to exception : {}", cetCode, startNodeValues, e);
+
+        }finally {
+
+            session.close();
+            transaction.close();
 
         }
-
-        transaction.close();
 
     }
 
-    private Map<String, String> getKeysMap(Map<String, Object> endNodeUniqueFields) {
-        Map<String, String> startNodeValuesKeys = new HashMap<>();
-        for (Entry<String, Object> e : endNodeUniqueFields.entrySet()) {
-            startNodeValuesKeys.put(e.getKey(), "$" + e.getKey());
+    private String getFieldsString(Set<String> strings) {
+        return "{ " + strings
+                .stream()
+                .map(s -> s + ": $" + s)
+                .collect(Collectors.joining(", ")) + " }";
+    }
+
+    public void deleteEntity(String cetCode, Map<String, Object> values) throws BusinessException {
+
+        /* Get entity template */
+        final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+
+        /* Extract unique fields values for node */
+        final Map<String, Object> uniqueFields = getNodeKeys(customEntityTemplate.getAppliesTo(), values);
+
+        /* No unique fields has been found */
+        if(uniqueFields.isEmpty()){
+            throw new BusinessException("At least one unique field must be provided for cet to delete");
         }
-        return startNodeValuesKeys;
+
+        final String uniqueFieldStatement = getFieldsString(uniqueFields.keySet());
+
+        /* Map the variables declared in the statement */
+        Map<String, Object> valuesMap = new HashMap<>();
+        valuesMap.put("cetCode", cetCode);
+        valuesMap.put("uniqueFields", uniqueFieldStatement);
+
+        String deleteStatement = getStatement(new StrSubstitutor(valuesMap), Neo4JRequests.deleteCet);
+
+        /* Start transaction */
+        Session session = neo4jSessionFactory.getSession();
+        Transaction transaction = session.beginTransaction();
+
+        try{
+
+            /* Delete the node and all its associated relationships */
+            transaction.run(deleteStatement, values);
+            transaction.success();
+
+        }catch (Exception e){
+
+            log.error("Cannot delete node with code {} and values {} for reason : {}", cetCode, values, e);
+            transaction.failure();
+
+        }finally {
+
+            /* End transaction */
+            session.close();
+            transaction.close();
+
+        }
+
     }
 
     private static String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
@@ -568,9 +581,10 @@ public class Neo4jService {
                         stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
                         stringValue = stringValue.replaceAll("\n", " ");
 
-                        if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-                            convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(stringValue));
-                        }
+//                        if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
+//                            convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(stringValue));
+//                        }
+
                         if (cft.getMaxValue() == null) {
                             cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
                         }
@@ -710,14 +724,14 @@ public class Neo4jService {
         valuesMap.put("targetNodeId", targetNodeId);
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
 
-        String resolvedOutGoingRelStatement = sub.replace(mergeOutGoingRelStatement);
+        String resolvedOutGoingRelStatement = sub.replace(Neo4JRequests.mergeOutGoingRelStatement);
         log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedOutGoingRelStatement);
         String statement = "{\"statements\":[{\"statement\":\"" + resolvedOutGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
         Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), statement);
         String result = response.readEntity(String.class);
         log.info("mergeNodes OutGoingRelStatement result={}", result);
 
-        String resolvedInGoingRelStatement = sub.replace(mergeInGoingRelStatement);
+        String resolvedInGoingRelStatement = sub.replace(Neo4JRequests.mergeInGoingRelStatement);
         log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedInGoingRelStatement);
         String inGoingsReltatement = "{\"statements\":[{\"statement\":\"" + resolvedInGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
         Response inGoingsRelResponse = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), inGoingsReltatement);
