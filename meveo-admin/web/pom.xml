@@ -359,7 +359,7 @@
 		<profile>
 			<id>thorntail</id>
 			<properties>
-				<version.thorntail>2.2.0.Final</version.thorntail>
+				<version.thorntail>2.2.1.Final</version.thorntail>
 			</properties>
 			<activation>
 				<property>
@@ -372,7 +372,7 @@
 					<plugin>
 			        	<groupId>io.thorntail</groupId>
 				        <artifactId>thorntail-maven-plugin</artifactId>
-				        <version>2.2.0.Final</version>
+				        <version>${version.thorntail}</version>
 				        <configuration>
 				        	<fractionDetectMode>force</fractionDetectMode>
 				        	<fractions>
@@ -501,7 +501,7 @@
 						<artifactId>maven-war-plugin</artifactId>
 						<version>3.2.2</version>
 						<configuration>
-							<packagingExcludes>**/import*.sql, WEB-INF/classes/META-INF/*, **/web.xml</packagingExcludes>
+							<packagingExcludes>**/import*.sql, WEB-INF/classes/META-INF/*, **/web.xml, **/keycloak.json</packagingExcludes>
 							<failOnMissingWebXml>false</failOnMissingWebXml>
 							<classifier>front</classifier>
 						</configuration>
