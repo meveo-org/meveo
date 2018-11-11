@@ -15,7 +15,6 @@
             <column name="created" type="datetime">
                 <constraints nullable="false" />
             </column>
-            <column name="is_unique" type="${type.boolean}" />
             <column name="updated" type="datetime" />
             <column name="description" type="VARCHAR(100)" />
             <column name="code" type="VARCHAR(50)" />
@@ -28,7 +27,7 @@
             <column name="end_node_id" type="BIGINT" />
             <column name="start_node_keys" type="VARCHAR(100)" />
             <column name="end_node_keys" type="VARCHAR(100)" />
-            <column name="IS_UNIQUE" type="${type.boolean}" defaultValueNumeric="0">
+            <column name="is_unique" type="${type.boolean}" defaultValueNumeric="0">
                 <constraints nullable="false" />
             </column>
         </createTable>
