@@ -23,11 +23,11 @@ public class Neo4JRequests {
             .append("SET n = ${fields}");
 
     protected final static StringBuffer findStartNodeId = new StringBuffer()
-            .append(" MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
+            .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
             .append(" RETURN ID(startNode)");
 
     protected final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append(" MATCH (startNode) WHERE ID(startNode) = {id}")
+            .append("MATCH (startNode) WHERE ID(startNode) = $id")
             .append(" SET startNode += ${fields}");
 
     protected final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "

@@ -395,6 +395,9 @@ public class CustomFieldTemplateApi extends BaseApi {
         if (dto.getLanguageDescriptions() != null) {
             cft.setDescriptionI18n(convertMultiLanguageToMapOfValues(dto.getLanguageDescriptions(), cft.getDescriptionI18n()));
         }
+
+        cft.setUnique(dto.isUnique());
+
         return cft;
     }
 

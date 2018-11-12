@@ -15,7 +15,6 @@ import org.meveo.api.dto.neo4j.Neo4jQueryResultDto;
 import org.meveo.api.dto.neo4j.Result;
 import org.meveo.api.dto.neo4j.SearchResultDTO;
 import org.meveo.api.services.CountryUtils;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.export.RemoteAuthenticationException;
@@ -92,16 +91,16 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<Object, Object> fieldValues, User user) {
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, User user) {
         return addCetNode(cetCode, fieldValues, false, user);
     }
 
-    public Long addCetNodeInSameTransaction(String cetCode, Map<Object, Object> fieldValues, User user) throws BusinessException {
+    public Long addCetNodeInSameTransaction(String cetCode, Map<String, Object> fieldValues, User user) throws BusinessException {
         return addCetNode(cetCode, fieldValues, false,user);
     }
 
-    public void addCRTinSameTransaction(String crtCode, Map<Object, Object> fieldValues, User user) throws BusinessException {
-        addCRT(crtCode, fieldValues, false, user);
+    public void addCRTinSameTransaction(String crtCode, Map<String, Object> fieldValues) throws BusinessException {
+        addCRT(crtCode, fieldValues, false);
     }
 
     /**
@@ -112,13 +111,11 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<Object, Object> fieldValues, boolean isTemporaryCET, User user) {
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, User user) {
 
         Long nodeId = null;
         boolean isMerged = false;
-        log.info("addCetNode cetCode={},isTemporaryCET={},fieldValues={}", cetCode, isTemporaryCET, fieldValues);
         try {
-            String excludedPrefixes = ParamBean.getInstance().getProperty("Email.excludedPrefixes", "contact@,info@");
             CustomEntityTemplate cetEntity = customEntityTemplateService
                     .findByCode(cetCode);
             if (cetEntity == null) {
@@ -126,21 +123,8 @@ public class Neo4jService {
             }
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService
                     .findByAppliesTo(cetEntity.getAppliesTo());
-            if ("Email".equals(cetCode)) {
-                String email = (String) fieldValues.get("email");
-                if (!StringUtils.isBlank(email)) {
-                    String prefixAt = email.substring(0, email.indexOf("@") + 1);
-                    if (!excludedPrefixes.contains(prefixAt)) {
-                        String prefix = email.substring(0, email.indexOf("@"));
-                        String domainName = email.substring(email.indexOf("@") + 1);
-                        fieldValues.put("emailPrefix", prefix);
-                        fieldValues.put("emailDomain", domainName);
-                    }
-                }
-            }
-            log.info("cetFields:" + cetFields);
-            Map<Object, Object> uniqueFields = new HashMap<>();
-            Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true, user);
+            Map<String, Object> uniqueFields = new HashMap<>();
+            Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             fields.put(CETConstants.CET_UPDATE_DATE_FIELD, isTemporaryCET ? -1 : System.currentTimeMillis());
@@ -162,11 +146,9 @@ public class Neo4jService {
                 StrSubstitutor sub = new StrSubstitutor(valuesMap);
                 String resolvedStatement = sub.replace(Neo4JRequests.cetStatement);
                 resolvedStatement = resolvedStatement.replace('"', '\'');
-                log.info("addCetNode resolvedStatement:{}", resolvedStatement);
 
                 response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
                 results = response.readEntity(String.class);
-                log.info("addCetNode results={}", results);
                 rowData = getNeo4jRowData(results);
                 if (!StringUtils.isBlank(rowData) && CETUtils.isParsableAsLong(rowData)) {
                     nodeId = Long.valueOf(rowData);
@@ -176,26 +158,19 @@ public class Neo4jService {
         } catch (BusinessException e) {
             log.error("addCetNode cetCode={}, errorMsg={}", cetCode, e.getMessage(), e);
         }
-        log.info("addCetNode cetCode={},nodeId={},isMerged={}", cetCode, nodeId, isMerged);
         return nodeId;
 
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<Object, Object> fieldValues, User user) throws BusinessException {
-        addCRT(crtCode, fieldValues, false, user);
+    public void addCRT(String crtCode, Map<String, Object> fieldValues) throws BusinessException {
+        addCRT(crtCode, fieldValues, false);
     }
 
-    /**
-     * @param crtCode
-     * @param fieldValues
-     * @param user
-     * @throws BusinessException
-     */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<Object, Object> fieldValues, boolean isTemporaryCET, User user) throws BusinessException {
+    public void addCRT(String crtCode, Map<String, Object> fieldValues, boolean isTemporaryCET) throws BusinessException {
         log.info("crtCode={}", crtCode);
         CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
 
@@ -211,7 +186,7 @@ public class Neo4jService {
         log.info("addCRT fieldValues:" + fieldValues);
         Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService
                 .findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
-        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true, user);
+        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true);
         log.info("addCRT startNodeFieldValues:" + startNodeFieldValues);
 
         Map<String, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(),
@@ -219,7 +194,7 @@ public class Neo4jService {
 
         Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService
                 .findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
-        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true, user);
+        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true);
 
         Map<String, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(),
                 endNodeFieldValues);
@@ -227,8 +202,7 @@ public class Neo4jService {
         log.info("startNodeKeysMap:" + startNodeKeysMap);
         log.info("endNodeKeysMap:" + endNodeKeysMap);
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true, user);
-            // crtFields.put(CETConstants.CET_UPDATE_DATE_FIELD, System.currentTimeMillis());
+            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, isTemporaryCET);
         }
     }
@@ -245,7 +219,7 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<Object, Object> crtValues, Map<Object, Object> startFieldValues, Map<Object, Object> endFieldValues, User user)
+    public void addCRT(String crtCode, Map<String, Object> crtValues, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user)
             throws BusinessException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -263,14 +237,14 @@ public class Neo4jService {
 
         /* Recuperation of the custom fields of the source node */
         Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
-        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, startFieldValues, null, true, user);
+        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, startFieldValues, null, true);
         log.info("Filters on start node :" + startNodeFieldValues);
         Map<String, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(), startNodeFieldValues);
 
         /* Recuperation of the custom fields of the target node */
         Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
-        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, endFieldValues, null, true, user);
-        log.info("Filters on end node : " + startNodeFieldValues);
+        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, endFieldValues, null, true);
+        log.info("Filters on end node : " + endNodeFieldValues);
         Map<String, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeFieldValues);
 
         log.info("startNodeKeysMap:" + startNodeKeysMap);
@@ -278,7 +252,7 @@ public class Neo4jService {
 
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true, user);
+            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
 
@@ -286,8 +260,8 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<Object, Object> startFieldValues, Map<Object, Object> endFieldValues, User user) throws BusinessException {
-        Map<Object, Object> crtValues = new HashMap<>();
+    public void addCRT(String crtCode, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user) throws BusinessException {
+        Map<String, Object> crtValues = new HashMap<>();
         crtValues.putAll(startFieldValues);
         crtValues.putAll(endFieldValues);
         addCRT(crtCode, crtValues, startFieldValues, endFieldValues, user);
@@ -335,7 +309,13 @@ public class Neo4jService {
         final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
 
         /* Extract unique fields values for the start node */
-        final Map<String, Object> endNodeUniqueFields = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(), endNodeValues);
+
+        Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
+        Map<String, CustomFieldTemplate> startNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
+        final Map<String, Object> endNodeUniqueFields = new HashMap<>();
+        Map<String, Object> endNodeConvertedValues = validateAndConvertCustomFields(endNodeCfts, endNodeValues, endNodeUniqueFields, true);
+        Map<String, Object> startNodeConvertedValues = validateAndConvertCustomFields(startNodeCfts, startNodeValues, null, true);
+
 
         /* Map the variables declared in the statement */
         Map<String, Object> valuesMap = new HashMap<>();
@@ -345,12 +325,14 @@ public class Neo4jService {
         valuesMap.put("endCetcode", customRelationshipTemplate.getEndNode().getCode());
 
         /* Prepare the key maps for unique fields and start node fields*/
-        final String uniqueFieldStatements = getFieldsString(endNodeUniqueFields.keySet());
-        final String startNodeValuesStatements = getFieldsString(startNodeValues.keySet());
+        final String uniqueFieldStatements = getFieldsString(endNodeConvertedValues.keySet());
+        final String startNodeValuesStatements = getFieldsString(startNodeConvertedValues.keySet());
 
         /* No unique fields has been found */
         if(endNodeUniqueFields.isEmpty()){
-            throw new BusinessException("At least one unique field must be provided for target entity");
+            log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
+                    "Unique fields are : {}", cetCode, endNodeValues, endNodeUniqueFields);
+            throw new BusinessException("Une field must be provided");
         }
 
         /* Assign the keys names */
@@ -362,8 +344,8 @@ public class Neo4jService {
 
         /* Values of the keys defined in valuesMap */
         Map<String, Object> parametersValues =  new HashMap<>();
-        parametersValues.putAll(startNodeValues);
-        parametersValues.putAll(endNodeValues);
+        parametersValues.putAll(startNodeConvertedValues);
+        parametersValues.putAll(endNodeConvertedValues);
 
         final Session session = neo4jSessionFactory.getSession();
         final Transaction transaction = session.beginTransaction();
@@ -377,7 +359,7 @@ public class Neo4jService {
 
                 /* Update the source node with the found id */
                 final Record idRecord = run.single();
-                final Value id = idRecord.get(ID);
+                final Value id = idRecord.get(0);
                 parametersValues.put(ID, id);
                 String updateStatement = getStatement(sub, Neo4JRequests.updateNodeWithId);
                 transaction.run(updateStatement, parametersValues);
@@ -483,12 +465,8 @@ public class Neo4jService {
         Map<String, Object> nodeKeysMap = new HashMap<>();
         List<CustomFieldTemplate> retrievedCft = customFieldTemplateService.findCftUniqueFieldsByApplies(appliesTo);
         for (CustomFieldTemplate cf : retrievedCft) {
-            if (!StringUtils.isBlank(convertedFieldValues.get(cf.getDescription()))) {
-//                if (cf.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-//                        nodeKeysMap.put(cf.getCode() + "_IDX", convertedFieldValues.get(cf.getCode() + "_IDX"));
-//                } else {
-                    nodeKeysMap.put(cf.getDescription(), convertedFieldValues.get(cf.getDescription()));
-//                }
+            if (!StringUtils.isBlank(convertedFieldValues.get(cf.getCode()))) {
+                    nodeKeysMap.put(cf.getCode(), convertedFieldValues.get(cf.getCode()));
             }
         }
         return nodeKeysMap;
@@ -519,7 +497,7 @@ public class Neo4jService {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<Object, Object> fieldValues, Map<Object, Object> uniqueFields, boolean checkCustomFields, User currentUser) throws BusinessException {
+    public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<String, Object> fieldValues, Map<String, Object> uniqueFields, boolean checkCustomFields) throws BusinessException {
         Map<String, Object> convertedFields = new HashMap<>();
         List<CustomFieldTemplate> expressionFields = new ArrayList<>();
         Iterator<Entry<String, CustomFieldTemplate>> customFieldTemplatesEntries = customFieldTemplates.entrySet().iterator();
@@ -535,7 +513,9 @@ public class Neo4jService {
             // Validate that value is not empty when field is mandatory
             boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
             if (cft.isValueRequired() && isEmpty) {
-                throw new InvalidCustomFieldException("CFT with code " + cft.getCode() + " does not exist");
+                final String message = "CFT with code " + cft.getCode() + " is not provided";
+                log.error(message);
+                throw new InvalidCustomFieldException(message);
             }
             // Validate that value is valid (min/max, regexp). When
             // value is a list or a map, check separately each value
@@ -562,7 +542,6 @@ public class Neo4jService {
                 } else {
                     valuesToCheck.add(fieldValue);
                 }
-                log.info("validateAndConvertCustomFields fieldValue0={}", fieldValue);
                 for (Object valueToCheck : valuesToCheck) {
                     if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
                         String stringValue = null;
@@ -572,7 +551,6 @@ public class Neo4jService {
                             GsonBuilder builder = new GsonBuilder();
                             Gson gson = builder.create();
                             String mapToJson = gson.toJson(valueToCheck).replaceAll("'", "’").replaceAll("\"", "");
-                            log.info("validateAndConvertCustomFields mapToJson={}", mapToJson);
                             convertedFields.put(cft.getCode(), mapToJson);
                             continue;
                         } else {
@@ -580,10 +558,6 @@ public class Neo4jService {
                         }
                         stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
                         stringValue = stringValue.replaceAll("\n", " ");
-
-//                        if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-//                            convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(stringValue));
-//                        }
 
                         if (cft.getMaxValue() == null) {
                             cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
@@ -606,9 +580,6 @@ public class Neo4jService {
                         }
                         if (fieldValue instanceof String) {
                             fieldValue = ((String) fieldValue).trim().replaceAll("'", "’").replaceAll("\"", "").trim();
-                            if (cft.getCode().equals("city")) {
-                                fieldValue = ((String) fieldValue).replaceAll("[0-9]", "");
-                            }
                         }
 
                     } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
@@ -651,35 +622,35 @@ public class Neo4jService {
                         }
                     }
                     if (cft.isUnique() && uniqueFields != null) {
-                        uniqueFields.put(cft.getDescription(), fieldValue);
+                        uniqueFields.put(cft.getCode(), fieldValue);
                     }
-                    convertedFields.put(cft.getDescription(), fieldValue);
+                    convertedFields.put(cft.getCode(), fieldValue);
                 }
             }
             if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
                 fieldValue = setExpressionField(fieldValues, cft, convertedFields);
-                convertedFields.put(cft.getDescription(), fieldValue);
+                convertedFields.put(cft.getCode(), fieldValue);
                 if (cft.isUnique() && uniqueFields != null) {
-                    uniqueFields.put(cft.getDescription(), fieldValue);
+                    uniqueFields.put(cft.getCode(), fieldValue);
                 }
             }
+            //TODO: Handle DATE customfield type
         }
         //loop CFT a second time to set expression fields that are composed by other expressionFields
         for (CustomFieldTemplate cft : expressionFields) {
             Object fieldValue = setExpressionField(fieldValues, cft, convertedFields);
-            convertedFields.put(cft.getDescription(), fieldValue);
+            convertedFields.put(cft.getCode(), fieldValue);
             if (cft.isUnique() && uniqueFields != null) {
-                uniqueFields.put(cft.getDescription(), fieldValue);
+                uniqueFields.put(cft.getCode(), fieldValue);
             }
         }
         return convertedFields;
     }
 
-    private Object setExpressionField(Map<Object, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException {
+    private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException {
+        Object evaluatedExpression = ValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)), String.class);
 
-        Object evaluatedExpression = ValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues,
-                String.class);
-        //fieldValues.put(cft.getCode(), fieldValue);
         log.info("validateAndConvertCustomFields {} ExpressionFieldValue1={}", cft.getCode(), evaluatedExpression);
 
         evaluatedExpression = evaluatedExpression.toString().replaceAll("'", "’").replaceAll("\"", "").replaceAll("-null", "").replaceAll("-", "");
