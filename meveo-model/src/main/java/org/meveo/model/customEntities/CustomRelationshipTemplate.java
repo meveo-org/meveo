@@ -1,5 +1,6 @@
 package org.meveo.model.customEntities;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -57,14 +58,15 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
      */
     @Column(name = "is_unique")
     @Type(type="numeric_boolean")
-    private boolean isUnique;
+    @ColumnDefault("0")
+    private boolean unique;
 
     public boolean isUnique() {
-        return isUnique;
+        return unique;
     }
 
     public void setUnique(boolean unique) {
-        isUnique = unique;
+        this.unique = unique;
     }
 
     public String getName() {
