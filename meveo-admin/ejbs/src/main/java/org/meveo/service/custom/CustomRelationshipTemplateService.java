@@ -108,7 +108,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
             Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
-            query.select(root.get("isUnique"));
+            query.select(root.get("unique"));
             query.where(cb.equal(root.get("code"), key));
             query.distinct(true);
             return getEntityManager().createQuery(query).getSingleResult();
