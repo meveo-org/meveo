@@ -331,8 +331,8 @@ public class Neo4jService {
         /* No unique fields has been found */
         if(endNodeUniqueFields.isEmpty()){
             log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
-                    "Unique fields are : {}", cetCode, endNodeValues, endNodeUniqueFields);
-            throw new BusinessException("Une field must be provided");
+                    "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
+            throw new BusinessException("Unique field must be provided");
         }
 
         /* Assign the keys names */
