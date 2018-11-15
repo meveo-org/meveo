@@ -14,6 +14,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.XmlUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.filter.Filter;
 import org.meveo.service.base.local.IPersistenceService;
@@ -50,7 +51,7 @@ public class FilterBean extends BaseBean<Filter> {
 
 	@Override
     @ActionMethod
-	public String saveOrUpdate(boolean killConversation) throws BusinessException {
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
 		String inputXml = entity.getInputXml();
 

@@ -66,6 +66,7 @@ public class WFActionBean extends BaseBean<WFAction> {
      * Factory method for entity to edit. If objectId param set load that entity from database, otherwise create new.
      * @return work flow action  
      */
+    @Override
     public WFAction initEntity() {
         if (dunningPlan != null && dunningPlan.getId() == null) {
             try {

@@ -143,6 +143,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
         return response;
     }
 
+    @Override
     public Response names(){
         ServerResponse response = new ServerResponse();
         try {
@@ -156,6 +157,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
         return response;
     }
 
+    @Override
     public Response versions(String name){
         ServerResponse response = new ServerResponse();
         try {

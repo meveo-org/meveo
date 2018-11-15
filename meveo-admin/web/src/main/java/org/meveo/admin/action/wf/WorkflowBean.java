@@ -41,6 +41,7 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.wf.DecisionRuleTypeEnum;
 import org.meveo.model.wf.WFAction;
@@ -138,7 +139,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         super.saveOrUpdate(killConversation);
         return "workflowDetail";
     }

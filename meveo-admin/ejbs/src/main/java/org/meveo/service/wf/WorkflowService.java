@@ -41,6 +41,7 @@ import org.meveo.admin.wf.IWorkflowType;
 import org.meveo.admin.wf.WorkflowTypeClass;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
@@ -49,7 +50,7 @@ import org.meveo.model.wf.WorkflowHistory;
 import org.meveo.model.wf.WorkflowHistoryAction;
 import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 
@@ -312,7 +313,7 @@ public class WorkflowService extends BusinessService<Workflow> {
         }
     }
 
-    private boolean matchExpression(String expression, Object object) throws BusinessException {
+    private boolean matchExpression(String expression, Object object) throws ELException {
 
         if (StringUtils.isBlank(expression)) {
             return true;
@@ -322,16 +323,16 @@ public class WorkflowService extends BusinessService<Workflow> {
             userMap.put("entity", object);
         }
 
-        return ValueExpressionWrapper.evaluateToBooleanOneVariable(expression, "entity", object);
+        return MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(expression, "entity", object);
 
     }
 
-    private Object executeExpression(String expression, Object object) throws BusinessException {
+    private Object executeExpression(String expression, Object object) throws ELException {
 
         Map<Object, Object> userMap = new HashMap<Object, Object>();
         userMap.put("entity", object);
 
-        return ValueExpressionWrapper.evaluateExpression(expression, userMap, Object.class);
+        return MeveoValueExpressionWrapper.evaluateExpression(expression, userMap, Object.class);
     }
 
     public synchronized void duplicate(Workflow entity) throws BusinessException {

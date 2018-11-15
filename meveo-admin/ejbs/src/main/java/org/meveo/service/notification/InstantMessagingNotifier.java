@@ -16,7 +16,7 @@ import org.meveo.model.notification.InstantMessagingNotification;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.slf4j.Logger;
 
 import com.skype.Skype;
@@ -61,9 +61,9 @@ public class InstantMessagingNotifier {
                 imIdSet = new HashSet<String>();
             }
             if (!StringUtils.isBlank(notification.getIdEl())) {
-                imIdSet.add((String) ValueExpressionWrapper.evaluateExpression(notification.getIdEl(), userMap, String.class));
+                imIdSet.add((String) MeveoValueExpressionWrapper.evaluateExpression(notification.getIdEl(), userMap, String.class));
             }
-            String message = (String) ValueExpressionWrapper.evaluateExpression(notification.getMessage(), userMap, String.class);
+            String message = (String) MeveoValueExpressionWrapper.evaluateExpression(notification.getMessage(), userMap, String.class);
 
             switch (notification.getImProvider()) {
             case SKYPE:

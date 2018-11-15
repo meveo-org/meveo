@@ -4,6 +4,7 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -82,9 +83,8 @@ public abstract class BackingCustomBean <T extends BusinessEntity> extends BaseB
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         super.saveOrUpdate(killConversation);
-
         return getEditViewName();
     }
 

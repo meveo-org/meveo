@@ -15,6 +15,7 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.finance.ReportExtract;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
@@ -158,7 +159,7 @@ public class ReportExtractApi extends BaseApi {
         return target;
     }
 
-    public void runReportExtract(RunReportExtractDto postData) throws BusinessException {
+    public void runReportExtract(RunReportExtractDto postData) throws BusinessException, ELException {
         ReportExtract reportExtract = reportExtractService.findByCode(postData.getCode());
         reportExtractService.runReport(reportExtract, postData.getParams());
     }

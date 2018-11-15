@@ -53,7 +53,7 @@
     <c:set var="cfValueHolder" value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />
     <c:set var="edit" value="#{edit and backingBean.canUserUpdateEntity()}" />
 
-    <o:importFunctions type="org.meveo.service.base.ValueExpressionWrapper" var="exp" />
+    <o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
     <f:event listener="#{customFieldDataEntryBean.validateCustomFields(entity)}" type="postValidate" />
 

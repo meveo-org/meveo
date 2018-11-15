@@ -28,7 +28,7 @@
 
 
     <o:importFunctions type="org.meveo.model.crm.custom.CustomFieldValue" var="cfv" />
-    <o:importFunctions type="org.meveo.service.base.ValueExpressionWrapper" var="exp" />
+    <o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
     <h:outputText value="#{''}" />
     <c:set var="cfValueHolder" value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />

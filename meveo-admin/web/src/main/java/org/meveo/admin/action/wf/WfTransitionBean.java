@@ -36,6 +36,7 @@ import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.admin.wf.types.OrderWF;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.order.OrderStatusEnum;
@@ -134,6 +135,7 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
      * Factory method for entity to edit. If objectId param set load that entity from database, otherwise create new.
      * @return workflow transition 
      */
+    @Override
     public WFTransition initEntity() {
         entity = super.initEntity();
         if (entity.getId() != null) {
@@ -147,7 +149,8 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
      * 
      * @see org.meveo.admin.action.BaseBean#saveOrUpdate(boolean)
      */
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    @Override
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         List<WFDecisionRule> wfDecisionRules = new ArrayList<>();
         boolean isUniqueNameValue = workflowBean.checkAndPopulateDecisionRules(selectedRules, wfDecisionRules);
         if (!isUniqueNameValue) {
@@ -595,6 +598,7 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
     /**
      * @see org.meveo.admin.action.BaseBean#getFormFieldsToFetch()
      */
+    @Override
     protected List<String> getFormFieldsToFetch() {
         return Arrays.asList("wfDecisionRules", "wfActions");
     }
@@ -602,6 +606,7 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
     /**
      * @see org.meveo.admin.action.BaseBean#getListFieldsToFetch()
      */
+    @Override
     protected List<String> getListFieldsToFetch() {
         return Arrays.asList("wfDecisionRules", "wfActions");
     }

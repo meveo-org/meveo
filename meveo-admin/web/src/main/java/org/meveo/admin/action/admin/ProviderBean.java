@@ -21,6 +21,7 @@ package org.meveo.admin.action.admin;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.Provider;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.ProviderService;
@@ -92,7 +93,7 @@ public class ProviderBean extends CustomFieldBean<Provider> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         String returnTo = super.saveOrUpdate(killConversation);
 
         if ("appConfiguration".equals(mode)) {

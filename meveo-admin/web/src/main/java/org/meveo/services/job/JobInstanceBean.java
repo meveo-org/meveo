@@ -17,6 +17,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.JobRunningStatusEnum;
 import org.meveo.commons.utils.EjbUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
@@ -115,11 +116,13 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         return getEditViewName();
     }
 
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    @Override
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         super.saveOrUpdate(killConversation);
         return getEditViewName();
     }
 
+    @Override
     protected String getListViewName() {
         return "jobInstances";
     }
@@ -212,6 +215,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         customFieldDataEntryBean.refreshFieldsAndActions(entity);
     }
     
+    @Override
     protected List<String> getFormFieldsToFetch() {
         return Arrays.asList("executionResults");
     }

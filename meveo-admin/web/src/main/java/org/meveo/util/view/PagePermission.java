@@ -13,7 +13,7 @@ import org.meveo.admin.web.filter.config.Page;
 import org.meveo.admin.web.filter.config.Param;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class PagePermission {
 
             if ((currentUser != null && page != null)) { // && currentUser.isLoggedIn()
                 Map<Object, Object> parameters = fetchParameters(page, request, currentUser);
-                allow = ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(page.getExpression(type), parameters);
+                allow = MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(page.getExpression(type), parameters);
             }
 		} else {
 			allow = true;

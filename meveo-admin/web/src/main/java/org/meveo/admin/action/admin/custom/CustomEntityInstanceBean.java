@@ -11,6 +11,7 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.base.local.IPersistenceService;
@@ -69,7 +70,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if (StringUtils.isBlank(entity.getCetCode())) {
             messages.error(new BundleKey("messages", "customEntityInstance.noCetCodeSet"));
             return null;

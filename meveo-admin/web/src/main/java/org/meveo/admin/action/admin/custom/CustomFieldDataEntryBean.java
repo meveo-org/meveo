@@ -30,6 +30,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ICustomFieldEntity;
@@ -48,7 +49,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -206,6 +207,7 @@ public class CustomFieldDataEntryBean implements Serializable {
     private static <K, V> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new LinkedList<>(map.entrySet());
         Collections.sort(list, new Comparator<Object>() {
+            @Override
             @SuppressWarnings("unchecked")
             public int compare(Object o1, Object o2) {
                 return ((Comparable<V>) ((Map.Entry<K, V>) (o1)).getValue()).compareTo(((Map.Entry<K, V>) (o2)).getValue());
@@ -610,7 +612,7 @@ public class CustomFieldDataEntryBean implements Serializable {
             // Ignore the validation on a field when creating entity and CFT.hideOnNew=true or editing entity and CFT.allowEdit=false or when CFT.applicableOnEL expression
             // evaluates to false
             if (cft.isDisabled() || !cft.isValueRequired() || (isNewEntity && cft.isHideOnNew()) || (!isNewEntity && !cft.isAllowEdit())
-                    || !ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
+                    || !MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
                 continue;
 
                 // Single field's mandatory requirement are taken care in GUI level, new values are not available yet here at validation stage
@@ -945,13 +947,13 @@ public class CustomFieldDataEntryBean implements Serializable {
      * @return CustomFieldValue Map
      * @throws BusinessException
      */
-    public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, boolean isNewEntity) throws BusinessException {
+    public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, boolean isNewEntity) throws BusinessException, ELException {
         String uuid = entity.getUuid();
         return saveCustomFieldsToEntity(entity, uuid, false, isNewEntity);
     }
 
     public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity)
-            throws BusinessException {
+            throws BusinessException, ELException {
         return saveCustomFieldsToEntity(entity, uuid, duplicateCFI, isNewEntity, false);
     }
 
@@ -967,7 +969,7 @@ public class CustomFieldDataEntryBean implements Serializable {
      * @throws BusinessException
      */
     public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity,
-            boolean removedOriginalCFI) throws BusinessException {
+            boolean removedOriginalCFI) throws BusinessException, ELException {
 
         Map<String, List<CustomFieldValue>> newValuesByCode = new HashMap<>();
 
@@ -1011,7 +1013,7 @@ public class CustomFieldDataEntryBean implements Serializable {
                     // Also don't save if CFT does not apply in a given entity lifecycle or because cft.applicableOnEL evaluates to false
                     if ((cfValue.isValueEmptyForGui() && (cft.getDefaultValue() == null || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) && !cft.isVersionable())
                             || ((isNewEntity && cft.isHideOnNew())
-                                    || (entity != null && !ValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)))) {
+                                    || (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)))) {
                         log.trace("Will ommit from saving cfi {}", cfValue);
 
                         // Existing value update
@@ -1250,7 +1252,7 @@ public class CustomFieldDataEntryBean implements Serializable {
      * @param childEntityFieldDefinition Custom field template
      * @throws BusinessException
      */
-    private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition) throws BusinessException {
+    private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition) throws BusinessException, ELException {
         if (childEntityFieldDefinition.getFieldType() != CustomFieldTypeEnum.CHILD_ENTITY) {
             return;
         }

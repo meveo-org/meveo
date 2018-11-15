@@ -32,6 +32,7 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.security.Role;
@@ -154,7 +155,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         String code = CustomScriptService.getFullClassname(entity.getScript());
 
@@ -186,9 +187,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         String result = super.saveOrUpdate(killConversation);
 
         if (entity.isError().booleanValue()) {
-            // if (entity.isError()) {
-            // messages.error(new BundleKey("messages", "scriptInstance.compilationFailed"));
-            // }
             result = null;
         }
         if (killConversation) {

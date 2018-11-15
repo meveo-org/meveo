@@ -27,6 +27,7 @@ public class TimerEntityBean extends BaseBean<TimerEntity> {
         return timerEntityservice;
     }
 
+    @Override
     protected String getListViewName() {
         return "timerEntities";
     }

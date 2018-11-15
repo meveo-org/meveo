@@ -17,7 +17,7 @@ import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.communication.impl.EmailSender;
 import org.slf4j.Logger;
 
@@ -60,17 +60,17 @@ public class EmailNotifier {
             userMap.put("event", entityOrEvent);
             userMap.put("context", context);
             log.debug("event[{}], context[{}]", entityOrEvent, context);
-            String subject = (String) ValueExpressionWrapper.evaluateExpression(notification.getSubject(), userMap, String.class);
+            String subject = (String) MeveoValueExpressionWrapper.evaluateExpression(notification.getSubject(), userMap, String.class);
             String htmlBody = null, body = null;
             if (!StringUtils.isBlank(notification.getHtmlBody())) {
-                htmlBody = (String) ValueExpressionWrapper.evaluateExpression(notification.getHtmlBody(), userMap, String.class);
+                htmlBody = (String) MeveoValueExpressionWrapper.evaluateExpression(notification.getHtmlBody(), userMap, String.class);
             } else {
-                body = (String) ValueExpressionWrapper.evaluateExpression(notification.getBody(), userMap, String.class);
+                body = (String) MeveoValueExpressionWrapper.evaluateExpression(notification.getBody(), userMap, String.class);
             }
             List<String> to = new ArrayList<String>();
 
             if (!StringUtils.isBlank(notification.getEmailToEl())) {
-                to.add((String) ValueExpressionWrapper.evaluateExpression(notification.getEmailToEl(), userMap, String.class));
+                to.add((String) MeveoValueExpressionWrapper.evaluateExpression(notification.getEmailToEl(), userMap, String.class));
             }
             if (notification.getEmails() != null) {
                 to.addAll(notification.getEmails());

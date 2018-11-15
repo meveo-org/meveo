@@ -14,11 +14,12 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.finance.ReportExtract;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.BusinessService;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.finance.ReportExtractScript;
 
@@ -36,12 +37,12 @@ public class ReportExtractService extends BusinessService<ReportExtract> {
     @Inject
     private ScriptInstanceService scriptInstanceService;
 
-    public void runReport(ReportExtract entity) throws BusinessException {
+    public void runReport(ReportExtract entity) throws BusinessException, ELException {
         runReport(entity, null);
     }
 
     @SuppressWarnings("rawtypes")
-    public void runReport(ReportExtract entity, Map<String, String> mapParams) throws BusinessException {
+    public void runReport(ReportExtract entity, Map<String, String> mapParams) throws BusinessException, ELException {
         Map<String, Object> context = new HashMap<>();
 
         // use params parameter if set, otherwise use the set from entity
@@ -151,7 +152,7 @@ public class ReportExtractService extends BusinessService<ReportExtract> {
         return (List<Long>) getEntityManager().createNamedQuery("ReportExtract.listIds").getResultList();
     }
 
-    private String evaluateStringExpression(String expression, ReportExtract re) throws BusinessException {
+    private String evaluateStringExpression(String expression, ReportExtract re) throws BusinessException, ELException {
         if (!expression.startsWith("#{")) {
             return expression;
         }
@@ -164,7 +165,7 @@ public class ReportExtractService extends BusinessService<ReportExtract> {
         Map<Object, Object> userMap = new HashMap<>();
         userMap.put("re", re);
 
-        Object res = ValueExpressionWrapper.evaluateExpression(expression, userMap, String.class);
+        Object res = MeveoValueExpressionWrapper.evaluateExpression(expression, userMap, String.class);
         try {
             result = (String) res;
         } catch (Exception e) {

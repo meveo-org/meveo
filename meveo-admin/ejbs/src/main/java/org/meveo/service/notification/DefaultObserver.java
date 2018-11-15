@@ -18,6 +18,7 @@ import org.meveo.admin.ftp.event.FileRename;
 import org.meveo.admin.ftp.event.FileUpload;
 import org.meveo.audit.logging.annotations.MeveoAudit;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.event.CounterPeriodEvent;
 import org.meveo.event.IEvent;
@@ -51,7 +52,7 @@ import org.meveo.model.notification.WebHook;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.billing.impl.CounterValueInsufficientException;
 import org.meveo.service.script.Script;
@@ -99,7 +100,7 @@ public class DefaultObserver {
     @CurrentUser
     protected MeveoUser currentUser;
 
-    private boolean matchExpression(String expression, Object entityOrEvent) throws BusinessException {
+    private boolean matchExpression(String expression, Object entityOrEvent) throws BusinessException, ELException {
         Boolean result = true;
         if (StringUtils.isBlank(expression)) {
             return result;
@@ -107,7 +108,7 @@ public class DefaultObserver {
         Map<Object, Object> userMap = new HashMap<Object, Object>();
         userMap.put("event", entityOrEvent);
 
-        Object res = ValueExpressionWrapper.evaluateExpression(expression, userMap, Boolean.class);
+        Object res = MeveoValueExpressionWrapper.evaluateExpression(expression, userMap, Boolean.class);
         try {
             result = (Boolean) res;
         } catch (Exception e) {
@@ -116,7 +117,7 @@ public class DefaultObserver {
         return result == null ? false : result;
     }
 
-    private void executeScript(ScriptInstance scriptInstance, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException {
+    private void executeScript(ScriptInstance scriptInstance, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException, ELException {
         log.debug("execute notification script: {}", scriptInstance.getCode());
 
         try {
@@ -125,7 +126,7 @@ public class DefaultObserver {
             userMap.put("event", entityOrEvent);
             userMap.put("manager", manager);
             for (Map.Entry<String, String> entry : params.entrySet()) {
-                context.put(entry.getKey(), ValueExpressionWrapper.evaluateExpression(entry.getValue(), userMap, Object.class));
+                context.put(entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression(entry.getValue(), userMap, Object.class));
             }
             scriptInterface.init(context);
             scriptInterface.execute(context);

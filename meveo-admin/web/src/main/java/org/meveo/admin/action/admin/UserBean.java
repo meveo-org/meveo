@@ -28,6 +28,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.DetailedSecuredEntity;
 import org.meveo.model.admin.SecuredEntity;
@@ -169,7 +170,7 @@ public class UserBean extends CustomFieldBean<User> {
      */
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         log.debug("saving new user={}", entity.getUserName());
 
         if (getObjectId() != null) {
@@ -205,6 +206,7 @@ public class UserBean extends CustomFieldBean<User> {
     /**
      * @see org.meveo.admin.action.BaseBean#getFormFieldsToFetch()
      */
+    @Override
     protected List<String> getFormFieldsToFetch() {
         return Arrays.asList("roles", "userLevel");
     }
@@ -212,6 +214,7 @@ public class UserBean extends CustomFieldBean<User> {
     /**
      * @see org.meveo.admin.action.BaseBean#getListFieldsToFetch()
      */
+    @Override
     protected List<String> getListFieldsToFetch() {
         return Arrays.asList("roles", "userLevel");
     }
@@ -628,7 +631,7 @@ public class UserBean extends CustomFieldBean<User> {
      * @throws BusinessException
      */
     @ActionMethod
-    public void deleteSecuredEntity(SecuredEntity selectedSecuredEntity) throws BusinessException {
+    public void deleteSecuredEntity(SecuredEntity selectedSecuredEntity) throws BusinessException, ELException {
         for (SecuredEntity securedEntity : entity.getSecuredEntities()) {
             if (securedEntity.equals(selectedSecuredEntity)) {
                 entity.getSecuredEntities().remove(selectedSecuredEntity);
@@ -654,7 +657,7 @@ public class UserBean extends CustomFieldBean<User> {
      * @throws BusinessException
      */
     @ActionMethod
-    public void saveSecuredEntity(SelectEvent event) throws BusinessException {
+    public void saveSecuredEntity(SelectEvent event) throws BusinessException, ELException {
         log.debug("saveSecuredEntity: {}", this.selectedEntity);
         if (this.selectedEntity != null) {
             List<SecuredEntity> securedEntities = getEntity().getSecuredEntities();

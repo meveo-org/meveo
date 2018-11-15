@@ -36,6 +36,7 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarDateInterval;
@@ -91,6 +92,7 @@ public class CalendarBean extends BaseBean<Calendar> {
         super(Calendar.class);
     }
 
+    @Override
     public Calendar getInstance() throws InstantiationException, IllegalAccessException {
 
         Calendar calendar = CalendarYearly.class.newInstance();
@@ -313,7 +315,7 @@ public class CalendarBean extends BaseBean<Calendar> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         if (entity instanceof CalendarYearly) {
             if (((CalendarYearly) getEntity()).getDays() == null) {

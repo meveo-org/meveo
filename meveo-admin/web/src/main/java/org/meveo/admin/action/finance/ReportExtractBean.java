@@ -8,6 +8,7 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.UpdateMapTypeFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.finance.ReportExtract;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 import org.meveo.service.base.local.IPersistenceService;
@@ -60,7 +61,7 @@ public class ReportExtractBean extends UpdateMapTypeFieldBean<ReportExtract> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if (entity.getScriptType().equals(ReportExtractScriptTypeEnum.SQL)) {
             entity.setScriptInstance(null);
         } else {
@@ -81,6 +82,8 @@ public class ReportExtractBean extends UpdateMapTypeFieldBean<ReportExtract> {
         } catch (BusinessException e) {
             log.error("Failed running report: {}", e.getMessage());
             messages.error(e.getMessage());
+        } catch (ELException e) {
+            log.error("Error evaluating EL : ", e);
         }
 
         return result;
@@ -97,6 +100,8 @@ public class ReportExtractBean extends UpdateMapTypeFieldBean<ReportExtract> {
         } catch (BusinessException e) {
             log.error("Failed running report: {}", e.getMessage());
             messages.error(e.getMessage());
+        } catch (ELException e) {
+            log.error("Error evaluating EL : ", e);
         }
 
         return result;

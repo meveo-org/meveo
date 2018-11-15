@@ -1,4 +1,4 @@
-package org.meveo.service.base;
+package org.meveo.elresolver;
 
 import java.util.HashMap;
 import java.util.Map;

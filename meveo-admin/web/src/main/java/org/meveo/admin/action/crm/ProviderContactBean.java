@@ -30,6 +30,7 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.ProviderContact;
 import org.meveo.model.shared.Address;
 import org.meveo.service.base.PersistenceService;
@@ -95,7 +96,7 @@ public class ProviderContactBean extends BaseBean<ProviderContact> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if (StringUtils.isBlank(entity.getEmail()) && StringUtils.isBlank(entity.getGenericMail()) && StringUtils.isBlank(entity.getPhone())
                 && StringUtils.isBlank(entity.getMobile())) {
             messages.error(new BundleKey("messages", "providerContact.contactInformation.required"));

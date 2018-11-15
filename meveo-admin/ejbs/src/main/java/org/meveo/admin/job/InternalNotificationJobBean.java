@@ -23,7 +23,7 @@ import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.notification.Notification;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.notification.NotificationService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -107,7 +107,7 @@ public class InternalNotificationJobBean {
                 userMap.put("event", res);
                 userMap.put("manager", manager);
                 if (!StringUtils.isBlank(notification.getElFilter())) {
-                    Object o = ValueExpressionWrapper.evaluateExpression(notification.getElFilter(), userMap, Boolean.class);
+                    Object o = MeveoValueExpressionWrapper.evaluateExpression(notification.getElFilter(), userMap, Boolean.class);
                     try {
                         if (!(Boolean) o) {
                             result.registerSucces();
@@ -121,7 +121,7 @@ public class InternalNotificationJobBean {
                     if (notification.getScriptInstance() != null) {
                         Map<String, Object> paramsEvaluated = new HashMap<String, Object>();
                         for (Map.Entry entry : notification.getParams().entrySet()) {
-                            paramsEvaluated.put((String) entry.getKey(), ValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
+                            paramsEvaluated.put((String) entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
                         }
                         scriptInstanceService.execute(notification.getScriptInstance().getCode(), paramsEvaluated);
                         result.registerSucces();

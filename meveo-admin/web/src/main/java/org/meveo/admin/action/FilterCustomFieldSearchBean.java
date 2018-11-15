@@ -10,6 +10,7 @@ import javax.inject.Named;
 import org.jboss.seam.international.status.Messages;
 import org.meveo.admin.action.admin.custom.CustomFieldDataEntryBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.filter.Filter;
@@ -46,7 +47,7 @@ public class FilterCustomFieldSearchBean implements Serializable {
         }
     }
 
-    public void saveOrUpdateFilter(Filter filter) throws BusinessException {
+    public void saveOrUpdateFilter(Filter filter) throws BusinessException, ELException {
         boolean isNew = filter.isTransient();
         customFieldDataEntryBean.saveCustomFieldsToEntity((ICustomFieldEntity) filter, isNew);
     }

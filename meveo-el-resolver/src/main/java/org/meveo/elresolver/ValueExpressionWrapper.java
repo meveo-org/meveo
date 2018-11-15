@@ -1,4 +1,4 @@
-package org.meveo.service.base;
+package org.meveo.elresolver;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,10 +17,6 @@ import javax.el.ValueExpression;
 import javax.el.VariableMapper;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.commons.utils.EjbUtils;
-import org.meveo.model.crm.Provider;
-import org.meveo.service.crm.impl.ProviderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +32,7 @@ public class ValueExpressionWrapper {
 
     static protected Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
 
-    static HashMap<String, ValueExpressionWrapper> valueExpressionWrapperMap = new HashMap<String, ValueExpressionWrapper>();
+    static HashMap<String, ValueExpressionWrapper> valueExpressionWrapperMap = new HashMap<>();
 
     /**
      * Evaluate expression.
@@ -44,9 +40,9 @@ public class ValueExpressionWrapper {
      * @param expression Expression to evaluate
      * @param contextMap Context of values
      * @return A value that expression evaluated to
-     * @throws BusinessException business exception.
+     * @throws ELException business exception.
      */
-    public static boolean evaluateToBoolean(String expression, Map<Object, Object> contextMap) throws BusinessException {
+    public static boolean evaluateToBoolean(String expression, Map<Object, Object> contextMap) throws ELException {
 
         Object value = evaluateExpression(expression, contextMap, Boolean.class);
         if (value instanceof Boolean) {
@@ -67,7 +63,7 @@ public class ValueExpressionWrapper {
     public static boolean evaluateToBooleanIgnoreErrors(String expression, Map<Object, Object> contextMap) {
         try {
             return evaluateToBoolean(expression, contextMap);
-        } catch (BusinessException e) {
+        } catch (ELException e) {
             log.error("Failed to evaluate expression {} on variable {}", expression, contextMap, e);
             return false;
         }
@@ -80,9 +76,9 @@ public class ValueExpressionWrapper {
      * @param variableName Variable name to give to a variable in context
      * @param variable Variable to make available in context
      * @return A boolean value expression evaluates to. An empty expression evaluates to true;
-     * @throws BusinessException business exception.
+     * @throws ELException business exception.
      */
-    public static boolean evaluateToBooleanOneVariable(String expression, String variableName, Object variable) throws BusinessException {
+    public static boolean evaluateToBooleanOneVariable(String expression, String variableName, Object variable) throws ELException {
 
         boolean result = evaluateToBooleanMultiVariable(expression, variableName, variable);
         return result;
@@ -99,7 +95,7 @@ public class ValueExpressionWrapper {
     public static boolean evaluateToBooleanIgnoreErrors(String expression, String variableName, Object variable) {
         try {
             return evaluateToBooleanMultiVariable(expression, variableName, variable);
-        } catch (BusinessException e) {
+        } catch (ELException e) {
             log.error("Failed to evaluate expression {} on variable {}/{}", expression, variableName, variable, e);
             return false;
         }
@@ -111,9 +107,9 @@ public class ValueExpressionWrapper {
      * @param expression Expression to evaluate
      * @param contextVarNameAndValue An array of context variables and their names in the following order: variable 1 name, variable 1, variable 2 name, variable2, etc..
      * @return A boolean value expression evaluates to. An empty expression evaluates to true;
-     * @throws BusinessException business exception.
+     * @throws ELException business exception.
      */
-    public static boolean evaluateToBooleanMultiVariable(String expression, Object... contextVarNameAndValue) throws BusinessException {
+    public static boolean evaluateToBooleanMultiVariable(String expression, Object... contextVarNameAndValue) throws ELException {
         if (StringUtils.isBlank(expression)) {
             return true;
         }
@@ -143,7 +139,7 @@ public class ValueExpressionWrapper {
     public static String evaluateToStringIgnoreErrors(String expression, String variableName, Object variable) {
         try {
             return evaluateToStringMultiVariable(expression, variableName, variable);
-        } catch (BusinessException e) {
+        } catch (ELException e) {
             log.error("Failed to evaluate expression {} on variable {}/{}", expression, variableName, variable, e);
             return null;
         }
@@ -155,9 +151,9 @@ public class ValueExpressionWrapper {
      * @param expression Expression to evaluate
      * @param contextVarNameAndValue An array of context variables and their names in the following order: variable 1 name, variable 1, variable 2 name, variable2, etc..
      * @return A boolean value expression evaluates to. An empty expression evaluates to true;
-     * @throws BusinessException business exception
+     * @throws ELException business exception
      */
-    public static String evaluateToStringMultiVariable(String expression, Object... contextVarNameAndValue) throws BusinessException {
+    public static String evaluateToStringMultiVariable(String expression, Object... contextVarNameAndValue) throws ELException {
         if (StringUtils.isBlank(expression)) {
             return null;
         }
@@ -185,9 +181,9 @@ public class ValueExpressionWrapper {
      * @param userMap Context of values
      * @param resultClass An expected result class
      * @return A value that expression evaluated to
-     * @throws BusinessException business exception.
+     * @throws ELException business exception.
      */
-    public static Object evaluateExpression(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) throws BusinessException {
+    public static Object evaluateExpression(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) throws ELException {
         Object result = null;
         if (StringUtils.isBlank(expression)) {
             return null;
@@ -214,7 +210,7 @@ public class ValueExpressionWrapper {
 
         } catch (Exception e) {
             log.warn("EL {} throw error with variables {}", expression, userMap, e);
-            throw new BusinessException("Error while evaluating expression " + expression + " : " + e.getMessage());
+            throw new ELException("Error while evaluating expression " + expression + " : " + e.getMessage());
         }
         return result;
     }
@@ -230,14 +226,20 @@ public class ValueExpressionWrapper {
         return result.getValue(userMap);
     }
 
-    private ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
-        if (userMap != null && expression.contains("appProvider")) {
-            Provider appProvider = ((ProviderService) EjbUtils.getServiceInterface("ProviderService")).getProvider();
-            userMap.put("appProvider", appProvider);
-        }
+    protected Map<String,Object> getAdditionalSources(String expression, Map<Object, Object> userMap){
+        return new HashMap<>();
+    }
+
+    protected FunctionMapper getMapper(){
+        return context.getFunctionMapper();
+    }
+
+    protected ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
+        Map<String, Object> additionalSources = getAdditionalSources(expression, userMap);
+        userMap.putAll(additionalSources);
         simpleELResolver = new SimpleELResolver(userMap);
         final VariableMapper variableMapper = new SimpleVariableMapper();
-        final MeveoFunctionMapper functionMapper = new MeveoFunctionMapper();
+        final FunctionMapper functionMapper = getMapper();
         final CompositeELResolver compositeELResolver = new CompositeELResolver();
         compositeELResolver.add(simpleELResolver);
         compositeELResolver.add(new ArrayELResolver());

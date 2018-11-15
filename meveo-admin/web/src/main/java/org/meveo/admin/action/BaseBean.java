@@ -30,6 +30,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
@@ -321,33 +322,19 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.entity = entity;
     }
 
-    // /**
-    // * Refresh entities data model and removes search filters.
-    // */
-    // public void clean() {
-    // if (entities == null) {
-    // entities = new PaginationDataModel<T>(getPersistenceService());
-    // }
-    // filters.clear();
-    // entities.addFilters(filters);
-    // entities.addFetchFields(getListFieldsToFetch());
-    // entities.forceRefresh();
-    // }
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation, String objectName, Long objectId) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation, String objectName, Long objectId) throws BusinessException, ELException {
         String outcome = saveOrUpdate(killConversation);
 
         if (killConversation) {
             endConversation();
         }
 
-        // return objectId == null ? outcome : (outcome + "&" + objectName + "="
-        // + objectId + "&cid=" + conversation.getId());
         return outcome;
     }
 
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         String message = entity.isTransient() ? "save.successful" : "update.successful";
 
@@ -380,7 +367,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * @throws BusinessException business exception
      */
     @ActionMethod
-    public void saveOrUpdateForPopup() throws BusinessException {
+    public void saveOrUpdateForPopup() throws BusinessException, ELException {
         String result = saveOrUpdate(false);
         if (result == null) {
             FacesContext.getCurrentInstance().validationFailed();

@@ -38,7 +38,7 @@ import org.meveo.model.filter.OrderCondition;
 import org.meveo.model.filter.PrimitiveFilterCondition;
 import org.meveo.model.filter.Projector;
 import org.meveo.service.base.BusinessService;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
@@ -165,7 +165,7 @@ public class FilterService extends BusinessService<Filter> {
 
     public boolean isMatch(NativeFilterCondition filter, Map<Object, Object> params) {
 
-        return ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(filter.getEl(), params);
+        return MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(filter.getEl(), params);
     }
 
     public String serializeEntities(XStream xstream, Filter filter, List<? extends IEntity> entities) {

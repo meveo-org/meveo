@@ -21,13 +21,14 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
@@ -345,7 +346,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @throws BusinessException business logic is violated
      */
 	public EntityCustomizationDto listELFiltered(String appliesTo, String entityCode)
-			throws MissingParameterException, BusinessException {
+            throws MissingParameterException, BusinessException, ELException {
 		EntityCustomizationDto result = new EntityCustomizationDto();
 		log.debug("IPIEL: listELFiltered");
 
@@ -381,7 +382,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		// evaluate the CFT againsts the entity
 		List<CustomFieldTemplateDto> evaluatedCFTDto = new ArrayList<>();
 		for (CustomFieldTemplateDto cft : result.getFields()) {
-			if (ValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entityInstance)) {
+			if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entityInstance)) {
 				evaluatedCFTDto.add(cft);
 			}
 		}
@@ -390,7 +391,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         // evaluate the CA againsts the entity
         List<EntityCustomActionDto> evaluatedCA = new ArrayList<>();
         for (EntityCustomActionDto eca : result.getActions()) {
-            if (ValueExpressionWrapper.evaluateToBooleanOneVariable(eca.getApplicableOnEl(), "entity", entityInstance)) {
+            if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(eca.getApplicableOnEl(), "entity", entityInstance)) {
                 evaluatedCA.add(eca);
             }
         }

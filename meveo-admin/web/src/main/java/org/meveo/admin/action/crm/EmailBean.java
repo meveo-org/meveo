@@ -66,7 +66,8 @@ public class EmailBean extends BaseBean<Email> {
 	/**
 	 * @see org.meveo.admin.action.BaseBean#getFormFieldsToFetch()
 	 */
-	protected List<String> getFormFieldsToFetch() {
+	@Override
+    protected List<String> getFormFieldsToFetch() {
 		return Arrays.asList("reports");
 	}
 

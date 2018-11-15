@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 
 public class GroupedCustomField implements Serializable {
 
@@ -278,10 +278,10 @@ public class GroupedCustomField implements Serializable {
                 CustomFieldTemplate cft = (CustomFieldTemplate) cfFieldOrOrg.getData();
                 try {
                     if ((!cft.isDisabled() || (cft.isDisabled() && !cfValueHolder.isAnyFieldEmptyForGui(cft))) && (!newEntity || (newEntity && !cft.isHideOnNew()))
-                            && ValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)) {
+                            && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)) {
                         hasVisibleCustomFields = true;
                     }
-                } catch (BusinessException e) {
+                } catch (ELException e) {
                     continue;
                 }
             } else if (cfFieldOrOrg.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup)) {
@@ -289,11 +289,11 @@ public class GroupedCustomField implements Serializable {
                     CustomFieldTemplate cft = (CustomFieldTemplate) cfField.getData();
                     try {
                         if ((!cft.isDisabled() || (cft.isDisabled() && !cfValueHolder.isAnyFieldEmptyForGui(cft))) && (!newEntity || (newEntity && !cft.isHideOnNew()))
-                                && ValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)) {
+                                && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)) {
                             hasVisibleCustomFields = true;
                             return hasVisibleCustomFields;
                         }
-                    } catch (BusinessException e) {
+                    } catch (ELException e) {
                         continue;
                     }
                 }

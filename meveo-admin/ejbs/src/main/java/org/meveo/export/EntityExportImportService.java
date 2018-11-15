@@ -89,6 +89,7 @@ import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.XStreamCDATAConverter;
+import org.meveo.elresolver.ELException;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.jpa.MeveoJpa;
@@ -102,7 +103,7 @@ import org.meveo.model.security.Permission;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.PersistenceUtils;
 import org.primefaces.model.LazyDataModel;
@@ -818,9 +819,11 @@ public class EntityExportImportService implements Serializable {
         final Set<String> ignoredFields = new HashSet<String>();
 
         XStream xstream = new XStream() {
+            @Override
             protected MapperWrapper wrapMapper(MapperWrapper next) {
                 return new MapperWrapper(next) {
 
+                    @Override
                     @SuppressWarnings("rawtypes")
                     public boolean shouldSerializeMember(Class definedIn, String fieldName) {
                         if (getImplicitCollectionDefForFieldName(definedIn, fieldName) != null) {
@@ -1301,7 +1304,7 @@ public class EntityExportImportService implements Serializable {
                 }
                 // If entity is managed, then continue on unless detached. Update value in a map with a new value.
                 // already
-                isManaged = getEntityManager().contains((IEntity) singleValue);// ((IEntity) singleValue).getId() != null;
+                isManaged = getEntityManager().contains(singleValue);// ((IEntity) singleValue).getId() != null;
                 if (!isManaged) {
 
                     log.debug("Persisting non-managed map's child field {}.{}'s (cascaded={}, id={}) value {}", clazz.getSimpleName(), field.getName(), isCascadedField,
@@ -1346,7 +1349,7 @@ public class EntityExportImportService implements Serializable {
                     continue;
                 }
                 // If entity is not managed, then save it.
-                isManaged = getEntityManager().contains((IEntity) singleValue);// ((IEntity) singleValue).getId() != null;
+                isManaged = getEntityManager().contains(singleValue);// ((IEntity) singleValue).getId() != null;
                 if (!isManaged) {
                     log.debug("Persisting non-managed collection's child field {}.{}'s (cascaded={}, id={}) value {}", clazz.getSimpleName(), field.getName(), isCascadedField,
                         ((IEntity) singleValue).getId(), singleValue);
@@ -1385,7 +1388,7 @@ public class EntityExportImportService implements Serializable {
 
             // If entity is not managed, then save it.
             // filled already for an entity this this .getId() != null would always be true
-            isManaged = getEntityManager().contains((IEntity) fieldValue);// ((IEntity) fieldValue).getId() != null;
+            isManaged = getEntityManager().contains(fieldValue);// ((IEntity) fieldValue).getId() != null;
             if (!isManaged) {
                 log.debug("Persisting non-managed single value child field {}.{}'s (cascaded={}, id={}) value {}", clazz.getSimpleName(), field.getName(), isCascadedField,
                     ((IEntity) fieldValue).getId(), fieldValue);
@@ -1975,7 +1978,7 @@ public class EntityExportImportService implements Serializable {
 
             // Check if applies based on condition
             if (relatedEntityInfo.getCondition() != null
-                    && !ValueExpressionWrapper.evaluateToBooleanMultiVariable(relatedEntityInfo.getCondition(), "entity", entity, "mainEntity", mainEntity)) {
+                    && !MeveoValueExpressionWrapper.evaluateToBooleanMultiVariable(relatedEntityInfo.getCondition(), "entity", entity, "mainEntity", mainEntity)) {
                 return null;
             }
 
@@ -2000,7 +2003,7 @@ public class EntityExportImportService implements Serializable {
                 TypedQuery<IEntity> query = getEntityManager().createQuery(selectionSql, IEntity.class);
 
                 for (Entry<String, String> param : relatedEntityInfo.getParameters().entrySet()) {
-                    Object paramValue = ValueExpressionWrapper.evaluateExpression(param.getValue(), elContext, Object.class);
+                    Object paramValue = MeveoValueExpressionWrapper.evaluateExpression(param.getValue(), elContext, Object.class);
                     query.setParameter(param.getKey(), paramValue);
                 }
                 return query.getResultList();
@@ -2018,16 +2021,15 @@ public class EntityExportImportService implements Serializable {
      * @param stringToAnalyze String to analyze for EL expressions
      * @param elContext EL variables
      * @return String with EL replaced by values
-     * @throws BusinessException
      */
-    private String resolveElExpressionsInString(String stringToAnalyze, Map<Object, Object> elContext) throws BusinessException {
+    private String resolveElExpressionsInString(String stringToAnalyze, Map<Object, Object> elContext) throws ELException {
 
         int pos = stringToAnalyze.indexOf('#');
         while (pos > 0) {
 
             int endPos = stringToAnalyze.indexOf('}', pos);
 
-            Object value = ValueExpressionWrapper.evaluateExpression(stringToAnalyze.substring(pos, endPos + 1), elContext, Object.class);
+            Object value = MeveoValueExpressionWrapper.evaluateExpression(stringToAnalyze.substring(pos, endPos + 1), elContext, Object.class);
             stringToAnalyze = stringToAnalyze.substring(0, pos) + value + stringToAnalyze.substring(endPos + 1);
 
             pos = stringToAnalyze.indexOf('#');
@@ -2115,6 +2117,7 @@ public class EntityExportImportService implements Serializable {
         private ReferenceByIdMarshaller marshaller;
         private ReferenceByIdUnmarshaller unmarshaller;
 
+        @Override
         public void marshal(HierarchicalStreamWriter writer, Object obj, ConverterLookup converterLookup, Mapper mapper, DataHolder dataHolder) {
             if (marshaller == null) {
                 marshaller = new ReferenceByIdMarshaller(writer, converterLookup, mapper);
@@ -2122,6 +2125,7 @@ public class EntityExportImportService implements Serializable {
             marshaller.start(obj, dataHolder);
         }
 
+        @Override
         public Object unmarshal(Object root, HierarchicalStreamReader reader, DataHolder dataHolder, ConverterLookup converterLookup, Mapper mapper) {
             if (unmarshaller == null) {
                 unmarshaller = new ReferenceByIdUnmarshaller(root, reader, converterLookup, mapper);

@@ -44,6 +44,7 @@ import org.meveo.api.dto.BaseDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.module.MeveoModule;
@@ -345,7 +346,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         MeveoModule moduleDuplicate = meveoModuleService.findByCode(entity.getCode());
         if (moduleDuplicate != null && !moduleDuplicate.getId().equals(entity.getId())) {

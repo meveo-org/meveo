@@ -27,7 +27,7 @@
     <c:set var="newEntity" value="#{entity.transient}" />
     <c:set var="cfValueHolder" value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />
 
-    <o:importFunctions type="org.meveo.service.base.ValueExpressionWrapper" var="exp" />
+    <o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
     <!--     <f:event listener="#{customFieldDataEntryBean.validateCustomFields(entity)}" type="postValidate" /> -->
 

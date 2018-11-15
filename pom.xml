@@ -25,6 +25,7 @@
         <module>meveo-api</module>
         <module>meveo-api-dto</module>
         <module>meveo-json-schema</module>
+        <module>meveo-el-resolver</module>
     </modules>
     <repositories>
         <repository>

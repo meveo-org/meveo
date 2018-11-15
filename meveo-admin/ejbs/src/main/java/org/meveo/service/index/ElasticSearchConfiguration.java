@@ -23,7 +23,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.util.ApplicationProvider;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -262,7 +262,7 @@ public class ElasticSearchConfiguration implements Serializable {
                 String type = typeMap.get(clazz.getSimpleName());
 
                 if (type.startsWith("#")) {
-                    return ValueExpressionWrapper.evaluateToStringIgnoreErrors(type, "cetCode", ElasticClient.cleanUpCode(cetCode));
+                    return MeveoValueExpressionWrapper.evaluateToStringIgnoreErrors(type, "cetCode", ElasticClient.cleanUpCode(cetCode));
 
                 } else {
                     return type;
@@ -363,7 +363,7 @@ public class ElasticSearchConfiguration implements Serializable {
     public String getCustomFieldMapping(CustomFieldTemplate cft) {
 
         for (Entry<String, String> fieldTemplate : customFieldTemplates.entrySet()) {
-            if (ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(fieldTemplate.getKey(), "cft", cft)) {
+            if (MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(fieldTemplate.getKey(), "cft", cft)) {
 
                 // Change index property to "no" from "analyzed" or "not_analyzed"
                 if (cft.getIndexType().isStoreOnly()) {

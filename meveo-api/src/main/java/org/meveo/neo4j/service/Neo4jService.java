@@ -14,8 +14,8 @@ import org.meveo.api.dto.neo4j.Datum;
 import org.meveo.api.dto.neo4j.Neo4jQueryResultDto;
 import org.meveo.api.dto.neo4j.Result;
 import org.meveo.api.dto.neo4j.SearchResultDTO;
-import org.meveo.api.services.CountryUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -31,7 +31,7 @@ import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.neo4j.base.Neo4jConnectionProvider;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -78,9 +78,6 @@ public class Neo4jService {
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
-    CountryUtils countryUtils;
-
-    @Inject
     @ApplicationProvider
     protected Provider appProvider;
 
@@ -99,7 +96,7 @@ public class Neo4jService {
         return addCetNode(cetCode, fieldValues, false,user);
     }
 
-    public void addCRTinSameTransaction(String crtCode, Map<String, Object> fieldValues) throws BusinessException {
+    public void addCRTinSameTransaction(String crtCode, Map<String, Object> fieldValues) throws BusinessException, ELException {
         addCRT(crtCode, fieldValues, false);
     }
 
@@ -157,6 +154,8 @@ public class Neo4jService {
             }
         } catch (BusinessException e) {
             log.error("addCetNode cetCode={}, errorMsg={}", cetCode, e.getMessage(), e);
+        } catch (ELException e) {
+            log.error("Error while resolving EL : ", e);
         }
         return nodeId;
 
@@ -164,13 +163,13 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> fieldValues) throws BusinessException {
+    public void addCRT(String crtCode, Map<String, Object> fieldValues) throws BusinessException, ELException {
         addCRT(crtCode, fieldValues, false);
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> fieldValues, boolean isTemporaryCET) throws BusinessException {
+    public void addCRT(String crtCode, Map<String, Object> fieldValues, boolean isTemporaryCET) throws BusinessException, ELException {
         log.info("crtCode={}", crtCode);
         CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
 
@@ -220,7 +219,7 @@ public class Neo4jService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addCRT(String crtCode, Map<String, Object> crtValues, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user)
-            throws BusinessException {
+            throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
 
@@ -260,7 +259,7 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user) throws BusinessException {
+    public void addCRT(String crtCode, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user) throws BusinessException, ELException {
         Map<String, Object> crtValues = new HashMap<>();
         crtValues.putAll(startFieldValues);
         crtValues.putAll(endFieldValues);
@@ -303,7 +302,7 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addSourceNodeUniqueCrt(String crtCode, Map<String, Object> startNodeValues, Map<String, Object> endNodeValues) throws BusinessException {
+    public void addSourceNodeUniqueCrt(String crtCode, Map<String, Object> startNodeValues, Map<String, Object> endNodeValues) throws BusinessException, ELException {
 
         /* Get relationship template */
         final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
@@ -497,7 +496,7 @@ public class Neo4jService {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<String, Object> fieldValues, Map<String, Object> uniqueFields, boolean checkCustomFields) throws BusinessException {
+    public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<String, Object> fieldValues, Map<String, Object> uniqueFields, boolean checkCustomFields) throws BusinessException, ELException {
         Map<String, Object> convertedFields = new HashMap<>();
         List<CustomFieldTemplate> expressionFields = new ArrayList<>();
         Iterator<Entry<String, CustomFieldTemplate>> customFieldTemplatesEntries = customFieldTemplates.entrySet().iterator();
@@ -647,8 +646,8 @@ public class Neo4jService {
         return convertedFields;
     }
 
-    private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException {
-        Object evaluatedExpression = ValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
+    private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException, ELException {
+        Object evaluatedExpression = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue)), String.class);
 
         log.info("validateAndConvertCustomFields {} ExpressionFieldValue1={}", cft.getCode(), evaluatedExpression);

@@ -19,12 +19,13 @@ import javax.inject.Inject;
 import org.apache.commons.codec.binary.Base64;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 import org.meveo.model.notification.WebHook;
 import org.meveo.model.notification.WebHookMethodEnum;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
 
@@ -47,21 +48,21 @@ public class WebHookNotifier {
     @Inject
     private CurrentUserProvider currentUserProvider;
 
-    private String evaluate(String expression, Object entityOrEvent, Map<String, Object> context) throws BusinessException {
+    private String evaluate(String expression, Object entityOrEvent, Map<String, Object> context) throws ELException {
         HashMap<Object, Object> userMap = new HashMap<Object, Object>();
         userMap.put("event", entityOrEvent);
         userMap.put("context", context);
-        return (String) ValueExpressionWrapper.evaluateExpression(expression, userMap, String.class);
+        return (String) MeveoValueExpressionWrapper.evaluateExpression(expression, userMap, String.class);
     }
 
-    private Map<String, String> evaluateMap(Map<String, String> map, Object entityOrEvent, Map<String, Object> context) throws BusinessException {
+    private Map<String, String> evaluateMap(Map<String, String> map, Object entityOrEvent, Map<String, Object> context) throws BusinessException, ELException {
         Map<String, String> result = new HashMap<String, String>();
         HashMap<Object, Object> userMap = new HashMap<Object, Object>();
         userMap.put("event", entityOrEvent);
         userMap.put("context", context);
 
         for (String key : map.keySet()) {
-            result.put(key, (String) ValueExpressionWrapper.evaluateExpression(map.get(key), userMap, String.class));
+            result.put(key, (String) MeveoValueExpressionWrapper.evaluateExpression(map.get(key), userMap, String.class));
         }
 
         return result;
@@ -176,7 +177,7 @@ public class WebHookNotifier {
 
                         for (@SuppressWarnings("rawtypes")
                         Map.Entry entry : webHook.getParams().entrySet()) {
-                            paramsEvaluated.put((String) entry.getKey(), ValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
+                            paramsEvaluated.put((String) entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
                         }
                         paramsEvaluated.put("response", result);
                         scriptInstanceService.execute(webHook.getScriptInstance().getCode(), paramsEvaluated);

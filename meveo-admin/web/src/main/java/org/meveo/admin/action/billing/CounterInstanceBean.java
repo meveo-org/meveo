@@ -66,7 +66,8 @@ public class CounterInstanceBean extends BaseBean<CounterInstance> {
 	 * from database, otherwise create new.
 	 * @return counter instance
 	 */
-	public CounterInstance initEntity() {
+	@Override
+    public CounterInstance initEntity() {
 		super.initEntity();
 		return entity;
 	}

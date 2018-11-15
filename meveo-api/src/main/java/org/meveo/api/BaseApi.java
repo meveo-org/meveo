@@ -64,8 +64,8 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.PersistenceService;
-import org.meveo.service.base.ValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.ApplicationProvider;
@@ -245,7 +245,7 @@ public abstract class BaseApi {
                 // or editing entity and CFT.allowEdit=false or when
                 // CFT.applicableOnEL expression evaluates to false
                 if ((isNewEntity && cft.isHideOnNew()) || (!isNewEntity && !cft.isAllowEdit())
-                        || !ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
+                        || !MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
                     // log.debug("Custom field value not applicable for this
                     // state of entity lifecycle: code={} for entity {}
                     // transient{}. Value will be ignored.", cfDto.getCode(),
@@ -313,7 +313,7 @@ public abstract class BaseApi {
 
             // Does not apply at this moment
             if ((isNewEntity && cft.isHideOnNew()) || (!isNewEntity && !cft.isAllowEdit())
-                    || !ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
+                    || !MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
                 continue;
             }
 
@@ -398,7 +398,7 @@ public abstract class BaseApi {
             // editing entity and CFT.allowEdit=false or when CFT.applicableOnEL
             // expression evaluates to false
             if ((isNewEntity && cft.isHideOnNew()) || (!isNewEntity && !cft.isAllowEdit())
-                    || !ValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
+                    || !MeveoValueExpressionWrapper.evaluateToBooleanIgnoreErrors(cft.getApplicableOnEl(), "entity", entity)) {
                 log.debug("Custom field value not applicable for this state of entity lifecycle: code={} for entity {} transient{}. Value will be ignored.", cfDto.getCode(),
                     entity.getClass(), isNewEntity);
                 continue;

@@ -21,6 +21,7 @@ package org.meveo.service.billing.impl;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.CounterValueChangeInfo;
 import org.meveo.model.billing.CounterInstance;
@@ -30,7 +31,7 @@ import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.catalog.CounterTypeEnum;
 import org.meveo.model.notification.Notification;
 import org.meveo.service.base.PersistenceService;
-import org.meveo.service.base.ValueExpressionWrapper;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -116,7 +117,7 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
      */
     // we must make sure the counter period is persisted in db before storing it in cache
     // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) - problem with MariaDB. See #2393 - Issue with counter period creation in MariaDB
-    public CounterPeriod createPeriod(CounterInstance counterInstance, Date chargeDate, Date initDate) throws BusinessException {
+    public CounterPeriod createPeriod(CounterInstance counterInstance, Date chargeDate, Date initDate) throws BusinessException, ELException {
 
         CounterTemplate counterTemplate = counterInstance.getCounterTemplate();
 
@@ -140,7 +141,7 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
      * @throws BusinessException Business exception
      */
     public CounterPeriod instantiateCounterPeriod(CounterTemplate counterTemplate, Date chargeDate, Date initDate)
-            throws BusinessException {
+            throws BusinessException, ELException {
 
         CounterPeriod counterPeriod = new CounterPeriod();
         Calendar cal = counterTemplate.getCalendar();
@@ -179,7 +180,7 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
      * @return Found or created counter period
      * @throws BusinessException business exception
      */
-    public CounterPeriod getOrCreateCounterPeriod(CounterInstance counterInstance, Date date, Date initDate) throws BusinessException {
+    public CounterPeriod getOrCreateCounterPeriod(CounterInstance counterInstance, Date date, Date initDate) throws BusinessException, ELException {
         Query query = getEntityManager().createNamedQuery("CounterPeriod.findByPeriodDate");
         query.setParameter("counterInstance", counterInstance);
         query.setParameter("date", date, TemporalType.TIMESTAMP);
@@ -233,7 +234,7 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
      * @throws CounterValueInsufficientException counter value insufficient exception.
      * @throws BusinessException business exception
      */
-    public BigDecimal deduceCounterValue(CounterInstance counterInstance, Date date, Date initDate, BigDecimal value) throws CounterValueInsufficientException, BusinessException {
+    public BigDecimal deduceCounterValue(CounterInstance counterInstance, Date date, Date initDate, BigDecimal value) throws CounterValueInsufficientException, BusinessException, ELException {
 
         CounterPeriod counterPeriod = getOrCreateCounterPeriod(counterInstance, date, initDate);
 
@@ -304,14 +305,14 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
         return qb.find(getEntityManager());
     }
 
-    public BigDecimal evaluateCeilingElExpression(String expression) throws BusinessException {
+    public BigDecimal evaluateCeilingElExpression(String expression) throws BusinessException, ELException {
         BigDecimal result = null;
         if (StringUtils.isBlank(expression)) {
             return result;
         }
         Map<Object, Object> userMap = new HashMap<Object, Object>();
 
-        Object res = ValueExpressionWrapper.evaluateExpression(expression, userMap, BigDecimal.class);
+        Object res = MeveoValueExpressionWrapper.evaluateExpression(expression, userMap, BigDecimal.class);
         try {
             result = (BigDecimal) res;
         } catch (Exception e) {

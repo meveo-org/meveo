@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.catalog.CounterTypeEnum;
 import org.meveo.service.base.local.IPersistenceService;
@@ -75,7 +76,7 @@ public class CounterTemplateBean extends BaseBean<CounterTemplate> {
     }
 
     @Override
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         String notificationLevels = entity.getNotificationLevels();
         if (!StringUtils.isBlank(notificationLevels)) {

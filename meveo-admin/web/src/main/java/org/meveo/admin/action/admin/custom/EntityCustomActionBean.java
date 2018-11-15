@@ -10,6 +10,7 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.action.catalog.ScriptInstanceBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.EntityCustomActionService;
@@ -33,7 +34,7 @@ public class EntityCustomActionBean extends BaseBean<EntityCustomAction> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         EntityCustomAction actionDuplicate = entityActionScriptService.findByCodeAndAppliesTo(entity.getCode(), entity.getAppliesTo());
         if (actionDuplicate != null && !actionDuplicate.getId().equals(entity.getId())) {

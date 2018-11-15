@@ -23,6 +23,7 @@ import org.meveo.admin.exception.RejectedImportException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.CsvBuilder;
 import org.meveo.commons.utils.CsvReader;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.model.notification.StrategyImportTypeEnum;
@@ -103,7 +104,7 @@ public class WebHookBean extends BaseNotificationBean<WebHook> {
 
     @Override
     @ActionMethod
-    public String saveOrUpdate(boolean killConversation) throws BusinessException {
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         updateMapTypeFieldInEntity(entity.getHeaders(), "headers");
         updateMapTypeFieldInEntity(entity.getParams(), "params");
