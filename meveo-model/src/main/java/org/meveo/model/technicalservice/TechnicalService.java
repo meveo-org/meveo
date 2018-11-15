@@ -18,6 +18,7 @@
 package org.meveo.model.technicalservice;
 
 import java.util.List;
+import java.util.Map;
 import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -39,7 +40,7 @@ import org.meveo.model.scripts.Executable;
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "service_type")
-public class TechnicalService extends Executable {
+public abstract class TechnicalService extends Executable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -97,4 +98,10 @@ public class TechnicalService extends Executable {
     public void setServiceVersion(Integer serviceVersion) {
         this.serviceVersion = serviceVersion;
     }
+
+    /**
+     * @param contextMap Context map of the current execution
+     * @return {@code true} if the service can be used for the given context
+     */
+    public abstract boolean isApplicable(Map<String, Object> contextMap);
 }
