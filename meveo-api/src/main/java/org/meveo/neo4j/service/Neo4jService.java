@@ -82,6 +82,18 @@ public class Neo4jService {
     protected Provider appProvider;
 
     /**
+     * @param labels Additional labels defined for the CET / CRT
+     * @return The labels give to the created entity
+     */
+    private String buildLabels(List<String> labels){
+        StringBuilder labelsString = new StringBuilder();
+        for (String label : labels){
+            labelsString.append(" :").append(label);
+        }
+        return labelsString.toString();
+    }
+
+    /**
      * @param cetCode
      * @param fieldValues
      * @param user
@@ -92,7 +104,7 @@ public class Neo4jService {
         return addCetNode(cetCode, fieldValues, false, user);
     }
 
-    public Long addCetNodeInSameTransaction(String cetCode, Map<String, Object> fieldValues, User user) throws BusinessException {
+    public Long addCetNodeInSameTransaction(String cetCode, Map<String, Object> fieldValues, User user) {
         return addCetNode(cetCode, fieldValues, false,user);
     }
 
@@ -133,17 +145,17 @@ public class Neo4jService {
                 }
             }
             if (!isMerged && fields != null) {
-                String results = null;
-                Response response = null;
-                String rowData = null;
+                String results;
+                Response response;
+                String rowData;
                 Map<String, Object> valuesMap = new HashMap<>();
                 valuesMap.put("cetCode", cetCode);
                 valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
                 valuesMap.put(FIELDS, Values.value(fields));
                 StrSubstitutor sub = new StrSubstitutor(valuesMap);
-                String resolvedStatement = sub.replace(Neo4JRequests.cetStatement);
+                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.cetStatement, cetEntity.getLabels(), "n", valuesMap);
+                String resolvedStatement = sub.replace(statement);
                 resolvedStatement = resolvedStatement.replace('"', '\'');
-
                 response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
                 results = response.readEntity(String.class);
                 rowData = getNeo4jRowData(results);
@@ -159,6 +171,25 @@ public class Neo4jService {
         }
         return nodeId;
 
+    }
+
+    /**
+     * If additional labels are defined, append a query to the base statement to add them to the node.
+     *
+     * @param statement Base statement to extend
+     * @param labels    Additional labels of the node
+     * @param alias     Alias to refer in the query
+     * @param valuesMap Map where are stored the statement's variables - Variables required for the query will be added to it
+     * @return A new {@link StringBuffer} representing the extended query
+     */
+    private StringBuffer appendAdditionalLabels(final StringBuffer statement, List<String> labels, String alias, Map<String, Object> valuesMap) {
+        StringBuffer copyStatement = new StringBuffer(statement);
+        if (!labels.isEmpty()) {
+            copyStatement.append(Neo4JRequests.additionalLabels);
+            valuesMap.put(Neo4JRequests.ADDITIONAL_LABELS, buildLabels(labels));
+            valuesMap.put(Neo4JRequests.ALIAS, alias);
+        }
+        return copyStatement;
     }
 
     @JpaAmpNewTx
@@ -360,13 +391,15 @@ public class Neo4jService {
                 final Record idRecord = run.single();
                 final Value id = idRecord.get(0);
                 parametersValues.put(ID, id);
-                String updateStatement = getStatement(sub, Neo4JRequests.updateNodeWithId);
+                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.updateNodeWithId, customRelationshipTemplate.getStartNode().getLabels(), "startNode", valuesMap);
+                String updateStatement = getStatement(sub, statement);
                 transaction.run(updateStatement, parametersValues);
 
             } catch (NoSuchRecordException e) {
 
                 /* Create the source node */
-                String createStatement = getStatement(sub, Neo4JRequests.createCet);
+                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.createCet, customRelationshipTemplate.getStartNode().getLabels(), "n", valuesMap);
+                String createStatement = getStatement(sub, statement);
                 transaction.run(createStatement, parametersValues);
 
             }
@@ -646,7 +679,7 @@ public class Neo4jService {
         return convertedFields;
     }
 
-    private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws BusinessException, ELException {
+    private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
         Object evaluatedExpression = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue)), String.class);
 

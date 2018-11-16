@@ -1,6 +1,13 @@
 package org.meveo.neo4j.service;
 
+import java.util.List;
+import java.util.Map;
+
 public class Neo4JRequests {
+
+    public static final String ADDITIONAL_LABELS = "labels";
+    public static final String ALIAS = "labels";
+
 
     /**
      * Delete a node with all its associated relations
@@ -18,6 +25,9 @@ public class Neo4JRequests {
     protected final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
             .append("ON CREATE SET n = ${fields}")
             .append("ON MATCH SET n += ${fields} return ID(n) as id");
+
+    protected final static StringBuffer additionalLabels = new StringBuffer("WITH ${alias} ")
+            .append("SET n ${labels}");
 
     protected final static StringBuffer createCet = new StringBuffer("CREATE (n:${cetCode}) ")
             .append("SET n = ${fields}");
