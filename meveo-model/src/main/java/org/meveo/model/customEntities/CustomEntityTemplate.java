@@ -1,12 +1,6 @@
 package org.meveo.model.customEntities;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -16,6 +10,10 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @ModuleItem
@@ -34,6 +32,22 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @Size(max = 100)
     @NotNull
     private String name;
+
+    /**
+     * Labels to apply to the template.
+     */
+    @ElementCollection
+    @CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
+	@Column(name = "label")
+    private List<String> labels;
+
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<String> labels) {
+        this.labels = labels;
+    }
 
     public String getName() {
         return name;

@@ -35,10 +35,11 @@
                 backingBean="#{customEntityTemplateBean}">
                 <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" validateUnique="true" />
                 <hftl:formField label="#{messages['customizedEntities.name']}" field="name" required="true" />
-                <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
+                <hftl:formField label="#{messages['BusinessEntity.labels']}" field="labels" />
                 <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!customEntityTemplateBean.entity.transient}">
                     <h:outputText value="#{customEntityTemplateBean.partOfModules}" />
                 </hftl:decorateFormField>
+                <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
             </hftl:formPanel>
         </h:panelGroup>
         <h:panelGroup rendered="#{! customEntityTemplateBean.customEntityTemplate}">
