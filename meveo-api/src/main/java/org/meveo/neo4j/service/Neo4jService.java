@@ -145,9 +145,6 @@ public class Neo4jService {
                 }
             }
             if (!isMerged && fields != null) {
-                String results;
-                Response response;
-                String rowData;
                 Map<String, Object> valuesMap = new HashMap<>();
                 valuesMap.put("cetCode", cetCode);
                 valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
@@ -156,20 +153,14 @@ public class Neo4jService {
                 StringBuffer statement = appendAdditionalLabels(Neo4JRequests.cetStatement, cetEntity.getLabels(), "n", valuesMap);
                 String resolvedStatement = sub.replace(statement);
                 resolvedStatement = resolvedStatement.replace('"', '\'');
-                response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
-                results = response.readEntity(String.class);
-                rowData = getNeo4jRowData(results);
-                if (!StringUtils.isBlank(rowData) && CETUtils.isParsableAsLong(rowData)) {
-                    nodeId = Long.valueOf(rowData);
-                }
-
+                callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
             }
         } catch (BusinessException e) {
             log.error("addCetNode cetCode={}, errorMsg={}", cetCode, e.getMessage(), e);
         } catch (ELException e) {
             log.error("Error while resolving EL : ", e);
         }
-        return nodeId;
+        return null;
 
     }
 
@@ -509,7 +500,7 @@ public class Neo4jService {
         try {
             ResteasyClient client = new ResteasyClientBuilder().build();
             ResteasyWebTarget target = client.target(baseurl + url);
-            log.info("callNeo4jRest {} with body:{}", baseurl + url, body);
+            log.info("callNeo4jRest {} with body : {}", baseurl + url, body);
             BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
             target.register(basicAuthentication);
             Response response = target.request().post(Entity.json(body));

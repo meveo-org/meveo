@@ -6,7 +6,7 @@ import java.util.Map;
 public class Neo4JRequests {
 
     public static final String ADDITIONAL_LABELS = "labels";
-    public static final String ALIAS = "labels";
+    public static final String ALIAS = "alias";
 
 
     /**
@@ -24,9 +24,9 @@ public class Neo4JRequests {
 
     protected final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
             .append("ON CREATE SET n = ${fields}")
-            .append("ON MATCH SET n += ${fields} return ID(n) as id");
+            .append("ON MATCH SET n += ${fields}");
 
-    protected final static StringBuffer additionalLabels = new StringBuffer("WITH ${alias} ")
+    protected final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
             .append("SET n ${labels}");
 
     protected final static StringBuffer createCet = new StringBuffer("CREATE (n:${cetCode}) ")
