@@ -8,6 +8,8 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 
+import java.util.List;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -32,6 +34,22 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "START_NODE_ID")
     private CustomEntityTemplate startNode;
+    
+    /**
+     * Labels to apply to the template.
+     */
+    @ElementCollection
+    @CollectionTable(name = "crt_labels", joinColumns = { @JoinColumn(name = "crt_id") })
+	@Column(name = "label")
+    private List<String> labels;
+    
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<String> labels) {
+        this.labels = labels;
+    }
     
     @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "END_NODE_ID")

@@ -187,6 +187,7 @@
         <sql>insert into ${db.schema.adapted}technical_services_seq values(1)</sql>
     </changeSet>
     <changeSet id="cet_crt_labels" author="Clement Bareth">
+		<!--     Cet labels  -->
         <createTable tableName="cet_labels">
             <column name="cet_id" type="BIGINT">
                 <constraints nullable="false" foreignKeyName=""/>
@@ -198,5 +199,17 @@
         <addForeignKeyConstraint constraintName="cet_id_fk" baseTableName="cet_labels" baseColumnNames="cet_id"
             referencedTableName="cust_cet" referencedColumnNames="id"/>
         <addPrimaryKey tableName="cet_labels" columnNames="cet_id, label" constraintName="cet_label_pk"/>
+     	<!--     Crt labels  -->
+        <createTable tableName="crt_labels">
+            <column name="crt_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName=""/>
+            </column>
+            <column name="label" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="crt_id_fk" baseTableName="crt_labels" baseColumnNames="crt_id"
+            referencedTableName="cust_crt" referencedColumnNames="id"/>
+        <addPrimaryKey tableName="crt_labels" columnNames="crt_id, label" constraintName="crt_label_pk"/>
     </changeSet>
 </databaseChangeLog>
