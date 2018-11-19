@@ -1,13 +1,9 @@
 package org.meveo.neo4j.service;
 
-import java.util.List;
-import java.util.Map;
-
 public class Neo4JRequests {
 
     public static final String ADDITIONAL_LABELS = "labels";
     public static final String ALIAS = "alias";
-
 
     /**
      * Delete a node with all its associated relations
@@ -16,18 +12,25 @@ public class Neo4JRequests {
      * - uniqueFields : unique fields that identify the node
      */
     protected final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields})")
-            .append(" DETACH DELETE n");
+            .append(" WITH n, properties(n) as properties,  labels(n) as labels, ID(n) as id ")
+            .append(" DETACH DELETE n")
+            .append(" RETURN properties");
 
     protected final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")
-            .append(" MERGE (${startAlias})-[:${relationType}${fields}]->(${endAlias}) set ${startAlias}.internal_updateDate=${updateDate}, ${endAlias}.internal_updateDate=${updateDate}");
+            .append(" MERGE (${startAlias})-[relationship:${relationType}${fields}]->(${endAlias}) ")
+            .append(" ON MATCH SET ${startAlias}.internal_updateDate=${updateDate}, ${endAlias}.internal_updateDate=${updateDate}, relationship.update_date = ${updateDate}")
+            .append(" ON CREATE SET relationship.creation_date = ${updateDate}");
+
 
     protected final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
-            .append("ON CREATE SET n = ${fields}")
-            .append("ON MATCH SET n += ${fields}");
+            .append("ON CREATE SET n = ${fields}, n.internal_updateDate = timestamp()")
+            .append("ON MATCH SET n += ${fields}, n.creation_date = timestamp()");
 
     protected final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
-            .append("SET n ${labels}");
+            .append("SET ${alias} ${labels}");
+
+    protected final static StringBuffer returnStatement = new StringBuffer(" RETURN ${alias} ");
 
     protected final static StringBuffer createCet = new StringBuffer("CREATE (n:${cetCode}) ")
             .append("SET n = ${fields}");
