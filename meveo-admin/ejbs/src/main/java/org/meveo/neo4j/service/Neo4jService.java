@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Rachid AITYAAZZA
+ * @author Clement BARETH
  */
 @Stateless
 public class Neo4jService {

@@ -63,6 +63,7 @@ public class MeasurableQuantityAggregationJob extends Job {
             report.append(",").append(mq.getCode());
         }
         Object[] mvObject = mqService.executeMeasurableQuantitySQL(mq);
+        //TODO: merge with cypher query result
 
         try {
             if (mvObject != null && mvObject.length > 0) {

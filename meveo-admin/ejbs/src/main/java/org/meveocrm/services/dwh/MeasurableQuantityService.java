@@ -4,15 +4,21 @@ import java.util.Date;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.Query;
 
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.dwh.MeasurableQuantity;
+import org.meveo.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.base.BusinessService;
+import org.neo4j.driver.v1.*;
 
 @Stateless
 public class MeasurableQuantityService extends BusinessService<MeasurableQuantity> {
+	
+    @Inject
+    private Neo4jConnectionProvider neo4jSessionFactory;
 
     public Object[] executeMeasurableQuantitySQL(MeasurableQuantity mq) {
         try {
@@ -21,6 +27,22 @@ public class MeasurableQuantityService extends BusinessService<MeasurableQuantit
         } catch (Exception e) {
             log.error("failed run {} - {}", mq.getSqlQuery(), e.getMessage());
         }
+        return null;
+    }
+    
+    public Object[] executeMeasurableQuantityCYPHER(MeasurableQuantity mq) {
+//        try {
+//        	// Begin transaction
+//        	Session session = neo4jSessionFactory.getSession();
+//        	Transaction tx = session.beginTransaction();
+//        	StatementResult result = tx.run(mq.getCypherQuery());
+//            final List<Record> recordList = result.list();
+//            final Object[] = recordList.stream().map(Record::new).
+//            Query q = getEntityManager().createNativeQuery(mq.getSqlQuery());
+//            return (Object[]) q.getSingleResult();
+//        } catch (Exception e) {
+//            log.error("failed run {} - {}", mq.getCypherQuery(), e.getMessage());
+//        }
         return null;
     }
 

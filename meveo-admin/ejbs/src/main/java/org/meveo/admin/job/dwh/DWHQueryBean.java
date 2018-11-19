@@ -2,10 +2,7 @@ package org.meveo.admin.job.dwh;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -27,13 +24,15 @@ import org.meveo.model.dwh.MeasurableQuantity;
 import org.meveo.model.dwh.MeasuredValue;
 import org.meveo.model.dwh.MeasurementPeriodEnum;
 import org.meveo.model.jobs.JobExecutionResultImpl;
+import org.meveo.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.job.JobExecutionService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
+import org.neo4j.driver.v1.*;
 import org.slf4j.Logger;
 
 @Stateless
-public class DWHQueryBean {
+class DWHQueryBean {
 
     @Inject
     private MeasurableQuantityService mqService;
@@ -51,14 +50,17 @@ public class DWHQueryBean {
     @Inject
     private JobExecutionService jobExecutionService;
 
+    @Inject
+    private Neo4jConnectionProvider neo4jSessionFactory;
+
     // iso 8601 date and datetime format
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
+    private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
-    public void executeQuery(JobExecutionResultImpl result, String parameter) throws BusinessException {
+    @Interceptors({JobLoggingInterceptor.class, PerformanceInterceptor.class})
+    void executeQuery(JobExecutionResultImpl result, String parameter) {
 
         String measurableQuantityCode = parameter;
         Date toDate = new Date();
@@ -96,96 +98,152 @@ public class DWHQueryBean {
             mqList.add(mq);
         }
         result.setNbItemsToProcess(mqList.size());
-        
-        
-        EntityManager em = emWrapper.getEntityManager();
-        
         for (MeasurableQuantity mq : mqList) {
+
             if (!jobExecutionService.isJobRunningOnThis(result.getJobInstance().getId())) {
                 break;
             }
+
             if (StringUtils.isBlank(mq.getSqlQuery())) {
                 result.registerError("Measurable quantity with code " + measurableQuantityCode + " has no SQL query set.");
                 log.info("Measurable quantity with code {} has no SQL query set.", measurableQuantityCode);
                 continue;
             }
 
+            mq.increaseMeasureDate();
+            result.registerSucces();
             try {
-                if (mq.getLastMeasureDate() == null) {
-                    mq.setLastMeasureDate(mq.getPreviousDate(toDate));
-                }
-
-                while (mq.getNextMeasureDate().before(toDate)) {
-                    log.debug("resolve query:{}, nextMeasureDate={}, lastMeasureDate={}", mq.getSqlQuery(), mq.getNextMeasureDate(), mq.getLastMeasureDate());
-                    String queryStr = mq.getSqlQuery().replaceAll("#\\{date\\}", df.format(mq.getLastMeasureDate()));
-                    queryStr = queryStr.replaceAll("#\\{dateTime\\}", tf.format(mq.getLastMeasureDate()));
-                    queryStr = queryStr.replaceAll("#\\{nextDate\\}", df.format(mq.getNextMeasureDate()));
-                    queryStr = queryStr.replaceAll("#\\{nextDateTime\\}", tf.format(mq.getNextMeasureDate()));
-                    log.debug("execute query:{}", queryStr);
-                    Query query = em.createNativeQuery(queryStr);
-                    @SuppressWarnings("unchecked")
-                    List<Object> results = query.getResultList();
-                    for (Object res : results) {
-                        MeasurementPeriodEnum mve = (mq.getMeasurementPeriod() != null) ? mq.getMeasurementPeriod() : MeasurementPeriodEnum.DAILY;
-                        BigDecimal value = BigDecimal.ZERO;
-                        Date date = mq.getLastMeasureDate();
-                        String dimension1 = mq.getDimension1();
-                        String dimension2 = mq.getDimension2();
-                        String dimension3 = mq.getDimension3();
-                        String dimension4 = mq.getDimension4();
-                        if (res instanceof Object[]) {
-                            Object[] resTab = (Object[]) res;
-                            value = new BigDecimal("" + resTab[0]);
-                            int i = 1;
-                            if (resTab.length > i) {
-                                try {
-                                    date = (Date) resTab[1];
-                                    i++;
-                                } catch (Exception e) {
-                                }
-                                if (resTab.length > i) {
-                                    dimension1 = resTab[i] == null ? "" : resTab[i].toString();
-                                    i++;
-                                    if (resTab.length > i) {
-                                        dimension2 = resTab[i] == null ? "" : resTab[i].toString();
-                                        i++;
-                                        if (resTab.length > i) {
-                                            dimension3 = resTab[i] == null ? "" : resTab[i].toString();
-                                            i++;
-                                            if (resTab.length > i) {
-                                                dimension4 = resTab[i] == null ? "" : resTab[i].toString();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            value = new BigDecimal("" + res);
-                        }
-                        date = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
-                        MeasuredValue mv = mvService.getByDate(em, date, mve, mq);
-                        if (mv == null) {
-                            mv = new MeasuredValue();
-                        }
-                        mv.setMeasurableQuantity(mq);
-                        mv.setMeasurementPeriod(mve);
-                        mv.setValue(value);
-                        mv.setDate(date);
-                        mv.setDimension1(dimension1);
-                        mv.setDimension2(dimension2);
-                        mv.setDimension3(dimension3);
-                        mv.setDimension4(dimension4);
-                        if (mv.getId() == null) {
-                            mvService.create(mv);
-                        }
+                for (MeasuredValue measuredValue : getMeasuredValues(mq, toDate)) {
+                    if (measuredValue.getId() == null) {
+                        mvService.create(measuredValue);
                     }
-                    mq.increaseMeasureDate();
-                    result.registerSucces();
                 }
             } catch (Exception e) {
                 result.registerError("Measurable quantity with code " + measurableQuantityCode + " contain invalid SQL query: " + e.getMessage());
-                log.error("Measurable quantity with code " + measurableQuantityCode + " contain invalid SQL query", e);
             }
         }
+    }
+
+    private List<MeasuredValue> getMeasuredValues(MeasurableQuantity mq, Date toDate) throws Exception {
+        EntityManager em = emWrapper.getEntityManager();
+        try {
+
+            if (mq.getLastMeasureDate() == null) {
+                mq.setLastMeasureDate(mq.getPreviousDate(toDate));
+            }
+
+            List<Object> results = new ArrayList<>();   // List of query results
+
+            while (mq.getNextMeasureDate().before(toDate)) {
+
+                // Execute and get results of sql query if defined
+                if (!StringUtils.isBlank(mq.getSqlQuery())) {
+                    results.addAll(sqlResults(mq, em));
+                }
+
+                // Execute and get result of cypher query if defined
+                if (!StringUtils.isBlank(mq.getCypherQuery())) {
+                    results.addAll(cypherResults(mq));
+                }
+            }
+
+            return extractMeasuredValues(em, mq, results);
+
+        } catch (Exception e) {
+            log.error("Measurable quantity with code " + mq.getCode() + " contain invalid SQL query", e);
+            throw new Exception(e);
+        }
+    }
+
+    private List<Object> cypherResults(MeasurableQuantity mq) throws BusinessException {
+        List<Object> results = new ArrayList<>();   // List of query results
+        String cypherQuery = formatQuery(mq, mq.getCypherQuery());  // Cypher query template to execute
+        log.debug("resolve query:{}, nextMeasureDate={}, lastMeasureDate={}", mq.getCypherQuery(), mq.getNextMeasureDate(), mq.getLastMeasureDate());
+        log.debug("execute query:{}", cypherQuery);
+
+        /* Start transaction */
+        Session session = neo4jSessionFactory.getSession();
+        Transaction transaction = session.beginTransaction();
+
+        try {
+            // Execute query
+            final StatementResult statementResult = transaction.run(cypherQuery);
+            List<Record> recordList = statementResult.list();
+            recordList.forEach(record -> {
+                Object[] recordObject = {
+                        record.get(0),  // Date
+                        record.get(1),  // Value
+                        record.get(2),  // Dimension 1
+                        record.get(3),  // Dimension 2
+                        record.get(4),  // Dimension 3
+                        record.get(5)   // Dimension 4
+                };
+                results.add(recordObject);
+            });
+            transaction.success();
+        } catch (Exception e) {
+            throw new BusinessException(e);
+        } finally {
+            session.close();
+            transaction.close();
+        }
+        return results;
+    }
+
+    private List<Object> sqlResults(MeasurableQuantity mq, EntityManager em) {
+        List<Object> results = new ArrayList<>();   // List of query results
+        String sqlQuery = formatQuery(mq, mq.getSqlQuery());        // SQL Query template to execute
+        log.debug("resolve query:{}, nextMeasureDate={}, lastMeasureDate={}", mq.getSqlQuery(), mq.getNextMeasureDate(), mq.getLastMeasureDate());
+        log.debug("execute query:{}", sqlQuery);
+        Query query = em.createNativeQuery(sqlQuery);
+        results.addAll(query.getResultList());
+        return results;
+    }
+
+    private List<MeasuredValue> extractMeasuredValues(EntityManager em, MeasurableQuantity mq, List<Object> results) {
+        List<MeasuredValue> measuredValues = new ArrayList<>();
+        for (Object res : results) {
+            MeasurementPeriodEnum mve = (mq.getMeasurementPeriod() != null) ? mq.getMeasurementPeriod() : MeasurementPeriodEnum.DAILY;
+            BigDecimal value;
+            Date date = mq.getLastMeasureDate();
+            String dimension1 = mq.getDimension1();
+            String dimension2 = mq.getDimension2();
+            String dimension3 = mq.getDimension3();
+            String dimension4 = mq.getDimension4();
+            if (res instanceof Object[]) {
+                Object[] resTab = (Object[]) res;
+                value = new BigDecimal("" + resTab[0]);
+                date = (Date) resTab[1];
+                dimension1 = resTab[2] == null ? "" : resTab[2].toString();
+                dimension2 = resTab[3] == null ? "" : resTab[3].toString();
+                dimension3 = resTab[4] == null ? "" : resTab[4].toString();
+                dimension4 = resTab[5] == null ? "" : resTab[5].toString();
+            } else {
+                value = new BigDecimal("" + res);
+            }
+            date = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
+            MeasuredValue mv = mvService.getByDate(em, date, mve, mq);
+            if (mv == null) {
+                mv = new MeasuredValue();
+            }
+            mv.setMeasurableQuantity(mq);
+            mv.setMeasurementPeriod(mve);
+            mv.setValue(value);
+            mv.setDate(date);
+            mv.setDimension1(dimension1);
+            mv.setDimension2(dimension2);
+            mv.setDimension3(dimension3);
+            mv.setDimension4(dimension4);
+            measuredValues.add(mv);
+        }
+        return measuredValues;
+    }
+
+    private String formatQuery(MeasurableQuantity mq, String queryStr) {
+        queryStr = queryStr.replaceAll("#\\{date\\}", df.format(mq.getLastMeasureDate()));
+        queryStr = queryStr.replaceAll("#\\{dateTime\\}", tf.format(mq.getLastMeasureDate()));
+        queryStr = queryStr.replaceAll("#\\{nextDate\\}", df.format(mq.getNextMeasureDate()));
+        queryStr = queryStr.replaceAll("#\\{nextDateTime\\}", tf.format(mq.getNextMeasureDate()));
+        return queryStr;
     }
 }
