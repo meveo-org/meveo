@@ -155,6 +155,7 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
         mq.setEditable(dto.isEditable());
         mq.setAdditive(dto.isAdditive());
         mq.setSqlQuery(dto.getSqlQuery());
+        mq.setCypherQuery(dto.getCypherQuery());
         mq.setMeasurementPeriod(dto.getMeasurementPeriod());
         mq.setLastMeasureDate(dto.getLastMeasureDate());
 

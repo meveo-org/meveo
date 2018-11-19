@@ -61,12 +61,16 @@ public class MeasurableQuantity extends BusinessEntity {
 	@Type(type="numeric_boolean")
     @Column(name = "additive")
 	private boolean additive;
+	
 	/**
 	 * expect to return a list of (Date measureDate, Long value) that will be
 	 * used to create measuredValue. 
 	 */
 	@Column(name = "sql_query", columnDefinition = "text")
 	private String sqlQuery;
+	
+	@Column(name = "cypher_query", columnDefinition = "text")
+	private String cypherQuery;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "measurement_period")
@@ -207,5 +211,15 @@ public class MeasurableQuantity extends BusinessEntity {
 	public void setAdditive(boolean additive) {
 		this.additive = additive;
 	}
+
+	public String getCypherQuery() {
+		return cypherQuery;
+	}
+
+	public void setCypherQuery(String cypherQuery) {
+		this.cypherQuery = cypherQuery;
+	}
+	
+	
 	
 }

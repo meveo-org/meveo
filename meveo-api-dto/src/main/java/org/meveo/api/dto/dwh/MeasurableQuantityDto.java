@@ -50,6 +50,9 @@ public class MeasurableQuantityDto extends BusinessDto {
     /** The sql query. */
     private String sqlQuery;
     
+    /** The cypher query. */
+    private String cypherQuery;
+    
     /** The measurement period. */
     private MeasurementPeriodEnum measurementPeriod;
     
@@ -64,10 +67,25 @@ public class MeasurableQuantityDto extends BusinessDto {
      */
     public boolean isCodeOnly() {
         return StringUtils.isBlank(getDescription()) && StringUtils.isBlank(theme) && StringUtils.isBlank(dimension1) && StringUtils.isBlank(dimension2)
-                && StringUtils.isBlank(dimension3) && StringUtils.isBlank(dimension4) && StringUtils.isBlank(sqlQuery) && measurementPeriod == null && lastMeasureDate == null;
+                && StringUtils.isBlank(dimension3) && StringUtils.isBlank(dimension4) && StringUtils.isBlank(sqlQuery) && StringUtils.isBlank(cypherQuery)
+                && measurementPeriod == null && lastMeasureDate == null;
     }
+    
+    
 
-    /**
+    public String getCypherQuery() {
+		return cypherQuery;
+	}
+
+
+
+	public void setCypherQuery(String cypherQuery) {
+		this.cypherQuery = cypherQuery;
+	}
+
+
+
+	/**
      * Instantiates a new measurable quantity dto.
      */
     public MeasurableQuantityDto() {
@@ -277,7 +295,7 @@ public class MeasurableQuantityDto extends BusinessDto {
     @Override
     public String toString() {
         return String.format(
-            "MeasurableQuantityDto [code=%s, description=%s, theme=%s, dimension1=%s, dimension2=%s, dimension3=%s, dimension4=%s, editable=%s, additive=%s, sqlQuery=%s, measurementPeriod=%s, lastMeasureDate=%s]",
-            getCode(), getDescription(), theme, dimension1, dimension2, dimension3, dimension4, editable, additive, sqlQuery, measurementPeriod, lastMeasureDate);
+            "MeasurableQuantityDto [code=%s, description=%s, theme=%s, dimension1=%s, dimension2=%s, dimension3=%s, dimension4=%s, editable=%s, additive=%s, sqlQuery=%s, cypherQuery=%s, measurementPeriod=%s, lastMeasureDate=%s]",
+            getCode(), getDescription(), theme, dimension1, dimension2, dimension3, dimension4, editable, additive, sqlQuery, cypherQuery, measurementPeriod, lastMeasureDate);
     }
 }

@@ -1989,6 +1989,7 @@
             <column name="last_measure_date" type="datetime" />
             <column name="measurement_period" type="varchar(255)" />
             <column name="sql_query" type="varchar(2000)" />
+            <column name="cypher_query" type="varchar(2000)" />
             <column name="theme" type="varchar(255)" />
 
             <column name="creator" type="varchar(100)" />
