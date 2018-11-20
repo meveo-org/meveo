@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -73,9 +73,10 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
     private static final int DIMENSION_3 = 3;
     private static final int DIMENSION_4 = 4;
     private static final int SQL_QUERY = 5;
-    private static final int MEASUREMENT_PERIOD = 6;
-    private static final int LAST_MEASURE_DATE = 7;
-    private static final int EDITABLE = 8;
+    private static final int CYPHER_QUERY = 6;
+    private static final int MEASUREMENT_PERIOD = 7;
+    private static final int LAST_MEASURE_DATE = 8;
+    private static final int EDITABLE = 9;
 
     public MeasurableQuantityBean() {
         super(MeasurableQuantity.class);
@@ -91,7 +92,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
         return "measurableQuantities";
     }
 
-    public void exportToFile() throws Exception {
+    public void exportToFile() {
 
         CsvBuilder csv = new CsvBuilder();
 
@@ -100,7 +101,8 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
         csv.appendValue("Dimension 2");
         csv.appendValue("Dimension 3");
         csv.appendValue("Dimension 4");
-        csv.appendValue("SQL Query ");
+        csv.appendValue("SQL Query");
+        csv.appendValue("Cypher Query");
         csv.appendValue("Measurement period");
         csv.appendValue("Last measure date");
         csv.appendValue("Editable");
@@ -112,6 +114,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
             csv.appendValue(measurableQuantity.getDimension3());
             csv.appendValue(measurableQuantity.getDimension4());
             csv.appendValue(measurableQuantity.getSqlQuery());
+            csv.appendValue(measurableQuantity.getCypherQuery());
             csv.appendValue(measurableQuantity.getMeasurementPeriod() != null ? measurableQuantity.getMeasurementPeriod() + "" : null);
             csv.appendValue(DateUtils.formatDateWithPattern(measurableQuantity.getLastMeasureDate(), "dd/MM/yyyy"));
             csv.appendValue(measurableQuantity.isEditable() + "");
@@ -121,7 +124,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
         csv.download(inputStream, "MeasurableQuantity.csv");
     }
 
-    public void handleFileUpload(FileUploadEvent event) throws Exception {
+    public void handleFileUpload(FileUploadEvent event) {
         try {
             file = event.getFile();
             log.debug("File uploaded " + file.getFileName());
@@ -160,6 +163,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
                 measurableQuantity.setDimension2(values[DIMENSION_2]);
                 measurableQuantity.setDimension3(values[DIMENSION_3]);
                 measurableQuantity.setDimension4(values[DIMENSION_4]);
+                measurableQuantity.setCypherQuery(values[CYPHER_QUERY]);
                 measurableQuantity.setSqlQuery(values[SQL_QUERY]);
                 if (!StringUtils.isBlank(values[MEASUREMENT_PERIOD])) {
                     measurableQuantity.setMeasurementPeriod(MeasurementPeriodEnum.valueOf(values[MEASUREMENT_PERIOD]));
@@ -181,6 +185,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
             existingEntity.setDimension2(values[DIMENSION_2]);
             existingEntity.setDimension3(values[DIMENSION_3]);
             existingEntity.setDimension4(values[DIMENSION_4]);
+            existingEntity.setCypherQuery(values[CYPHER_QUERY]);
             existingEntity.setSqlQuery(values[SQL_QUERY]);
             if (!StringUtils.isBlank(values[MEASUREMENT_PERIOD])) {
                 existingEntity.setMeasurementPeriod(MeasurementPeriodEnum.valueOf(values[MEASUREMENT_PERIOD]));
@@ -197,7 +202,8 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
                 csv.appendValue("Dimension 2");
                 csv.appendValue("Dimension 3");
                 csv.appendValue("Dimension 4");
-                csv.appendValue("SQL Query ");
+                csv.appendValue("SQL Query");
+                csv.appendValue("CYPHER Query");
                 csv.appendValue("Measurement period");
                 csv.appendValue("Last measure date");
                 csv.appendValue("Editable");
@@ -209,6 +215,7 @@ public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
             csv.appendValue(values[DIMENSION_3]);
             csv.appendValue(values[DIMENSION_4]);
             csv.appendValue(values[SQL_QUERY]);
+            csv.appendValue(values[CYPHER_QUERY]);
             csv.appendValue(values[MEASUREMENT_PERIOD]);
             csv.appendValue(values[LAST_MEASURE_DATE]);
             csv.appendValue(values[EDITABLE]);
