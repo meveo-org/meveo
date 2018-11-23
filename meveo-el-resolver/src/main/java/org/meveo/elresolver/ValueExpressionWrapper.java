@@ -221,7 +221,7 @@ public class ValueExpressionWrapper {
     }
 
     protected FunctionMapper getMapper(){
-        return new StandardELContext(expressionFactory).getFunctionMapper();
+        return new MeveoDefaultFunctionMapper();
     }
 
     protected ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
