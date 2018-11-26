@@ -34,6 +34,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -48,7 +49,9 @@ import org.meveo.service.index.ElasticClient;
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
 
-    @Inject
+    private static final String ASSET_CFT_VALUE = "value";
+
+	@Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
@@ -78,12 +81,28 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         elasticClient.createCETMapping(cet);
-
+        
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
             /* If cet is an asset, create custom field of corresponding type */
+            if(cet.isAsset()) {
+	            // Define CFT
+	            final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
+	            customFieldTemplate.setActive(true);			// Always active
+	            customFieldTemplate.setAllowEdit(false);		// CFT can't be updated
+	            customFieldTemplate.setAppliesTo(cet.getAppliesTo());
+	            customFieldTemplate.setFieldType(cet.getAssetType().getCftType());
+	            customFieldTemplate.setUnique(true);			// Must be unique
+	            customFieldTemplate.setCode(ASSET_CFT_VALUE);	// Code is 'value'
+	            customFieldTemplate.setFilter(true);			// Can be used as filter
+	            customFieldTemplate.setValueRequired(true);		// Always required
+	            customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+	            
+	            // Create CFT
+	            customFieldTemplateService.create(customFieldTemplate);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

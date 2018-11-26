@@ -10,32 +10,34 @@ public enum AssetTypeEnum {
 	 /**
      * String value
      */
-    STRING(String.class),
+    STRING(String.class, CustomFieldTypeEnum.STRING),
 
     /**
      * Date value
      */
-    DATE(Date.class),
+    DATE(Date.class, CustomFieldTypeEnum.DATE),
 
     /**
      * Long value
      */
-    LONG(Long.class),
+    LONG(Long.class, CustomFieldTypeEnum.LONG),
 
     /**
      * Double value
      */
-    DOUBLE(Double.class);
+    DOUBLE(Double.class, CustomFieldTypeEnum.DOUBLE);
 
 
     /**
      * Corresponding class to field type for conversion to json
      */
     @SuppressWarnings("rawtypes")
-    private Class dataClass;
+    private final Class dataClass;
+	private final CustomFieldTypeEnum cftType;
 
-    AssetTypeEnum(@SuppressWarnings("rawtypes") Class dataClass) {
+    AssetTypeEnum(@SuppressWarnings("rawtypes") Class dataClass, CustomFieldTypeEnum matchingCftType) {
         this.dataClass = dataClass;
+        this.cftType = matchingCftType;
     }
 
     public String getLabel() {
@@ -46,4 +48,9 @@ public enum AssetTypeEnum {
     public Class getDataClass() {
         return dataClass;
     }
+
+	public CustomFieldTypeEnum getCftType() {
+		return cftType;
+	}
+    
 }
