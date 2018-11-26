@@ -62,6 +62,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
+        checkAsset(dto);
+
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -94,6 +96,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     }
 
     public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+
+        checkAsset(dto);
 
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
@@ -137,7 +141,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public CustomEntityTemplateDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public CustomEntityTemplateDto find(String code) throws MeveoApiException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
@@ -343,10 +347,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @param entityCode code of the entity
      * @return an object with a list of custom fields and actions
      * @throws MissingParameterException when there is a missing parameter
-     * @throws BusinessException business logic is violated
      */
 	public EntityCustomizationDto listELFiltered(String appliesTo, String entityCode)
-            throws MissingParameterException, BusinessException, ELException {
+            throws MissingParameterException, ELException {
 		EntityCustomizationDto result = new EntityCustomizationDto();
 		log.debug("IPIEL: listELFiltered");
 
@@ -399,5 +402,26 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 		return result;
 	}
+
+
+    /**
+     * If the CET is an asset :  <br>
+     * - No CF must be defined <br>
+     * - Type of asset should not be null  <br>
+     *
+     * @param dto The CET dto to validate
+     * @return
+     */
+    private void checkAsset(CustomEntityTemplateDto dto) throws BusinessException {
+        if(!dto.isAsset()){
+            return; // If not an asset, skip tests
+        }
+        if(!dto.getFields().isEmpty()){
+            throw new BusinessException("An asset should not have custom fields");
+        }
+        if(dto.getAssetType() == null){
+            throw new BusinessException("Asset type must be defined");
+        }
+    }
 
 }

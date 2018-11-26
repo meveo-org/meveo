@@ -90,14 +90,15 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             if(cet.isAsset()) {
 	            // Define CFT
 	            final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
-	            customFieldTemplate.setActive(true);			// Always active
-	            customFieldTemplate.setAllowEdit(false);		// CFT can't be updated
+	            customFieldTemplate.setActive(true);			       	// Always active
+	            customFieldTemplate.setAllowEdit(false);		       	// CFT can't be updated
 	            customFieldTemplate.setAppliesTo(cet.getAppliesTo());
 	            customFieldTemplate.setFieldType(cet.getAssetType().getCftType());
-	            customFieldTemplate.setUnique(true);			// Must be unique
-	            customFieldTemplate.setCode(ASSET_CFT_VALUE);	// Code is 'value'
-	            customFieldTemplate.setFilter(true);			// Can be used as filter
-	            customFieldTemplate.setValueRequired(true);		// Always required
+	            customFieldTemplate.setUnique(true);			       	// Must be unique
+	            customFieldTemplate.setCode(ASSET_CFT_VALUE);	        // Code is 'value'
+                customFieldTemplate.setDescription(ASSET_CFT_VALUE);	// Label is 'value'
+                customFieldTemplate.setFilter(true);			        // Can be used as filter
+	            customFieldTemplate.setValueRequired(true);		        // Always required
 	            customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
 	            
 	            // Create CFT

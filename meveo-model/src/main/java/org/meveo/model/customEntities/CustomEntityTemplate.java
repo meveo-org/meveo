@@ -66,7 +66,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
      */
     @Column(name = "asset_type", nullable = true, updatable = false)
     @Enumerated(EnumType.STRING)
-    @NotNull
     private AssetTypeEnum assetType;
 
     public List<String> getLabels() {

@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.AssetTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
@@ -41,6 +42,14 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private String description;
 
+    /** Whether the CET is an asset. */
+    @XmlAttribute()
+    private boolean asset = false;
+
+    /** Type of the asset */
+    @XmlAttribute(required = false)
+    private AssetTypeEnum assetType;
+
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
@@ -56,6 +65,22 @@ public class CustomEntityTemplateDto extends BaseDto {
      */
     public CustomEntityTemplateDto() {
 
+    }
+
+    public boolean isAsset() {
+        return asset;
+    }
+
+    public void setAsset(boolean asset) {
+        this.asset = asset;
+    }
+
+    public AssetTypeEnum getAssetType() {
+        return assetType;
+    }
+
+    public void setAssetType(AssetTypeEnum assetType) {
+        this.assetType = assetType;
     }
 
     /**
@@ -161,6 +186,8 @@ public class CustomEntityTemplateDto extends BaseDto {
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
+        dto.setAsset(cet.isAsset());
+        dto.setAssetType(cet.getAssetType());
 
         if (cetFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
@@ -196,7 +223,8 @@ public class CustomEntityTemplateDto extends BaseDto {
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
-
+        cet.setAsset(dto.isAsset());
+        cet.setAssetType(dto.getAssetType());
         return cet;
     }
 
