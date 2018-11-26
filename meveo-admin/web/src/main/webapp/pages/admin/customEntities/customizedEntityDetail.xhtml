@@ -29,6 +29,8 @@
 
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+        <o:importConstants type="org.meveo.model.crm.custom.AssetTypeEnum" />
+        
 
         <h:panelGroup rendered="#{customEntityTemplateBean.customEntityTemplate}">
             <hftl:formPanel formId="cetForm" label="#{messages['customizedEntities.detail'].concat(customEntityTemplateBean.entity.code!=null?(' - '.concat(customEntityTemplateBean.entity.code)):'')}"
@@ -40,6 +42,16 @@
                     <h:outputText value="#{customEntityTemplateBean.partOfModules}" />
                 </hftl:decorateFormField>
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
+                <hftl:formField label="#{messages['BusinessEntity.asset']}" field="asset" allowEdit="false"
+                listenerUpdate="assetType, cfFields" />
+                
+                <!--  If asset is checked, ask for asset type -->
+                <h:panelGroup id="assetType">
+	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.asset}"
+	               	 	label="#{messages['BusinessEntity.asset']}" allowEdit="false" field="assetType" />
+                </h:panelGroup>
+
+                
             </hftl:formPanel>
         </h:panelGroup>
         <h:panelGroup rendered="#{! customEntityTemplateBean.customEntityTemplate}">
@@ -47,9 +59,13 @@
             </hftl:decorateFormPanel>
         </h:panelGroup>
 
-
-        <ui:include src="customFieldsAndActions.xhtml">
-        </ui:include>
+		<!--  Render custom fields only if entity is not an asset -->
+		<h:panelGroup id="cfFields">
+			<c:if test="#{!customEntityTemplateBean.entity.asset}">
+	        	<ui:include src="customFieldsAndActions.xhtml"/>
+	       	</c:if>
+        </h:panelGroup>
+ 
 
         <h:form>
             <p:panel width="100">

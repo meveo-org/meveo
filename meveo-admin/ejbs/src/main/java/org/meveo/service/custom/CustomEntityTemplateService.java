@@ -83,6 +83,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
+            /* If cet is an asset, create custom field of corresponding type */
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

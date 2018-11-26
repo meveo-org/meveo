@@ -63,6 +63,7 @@ public abstract class BaseRs implements IBaseRs {
 
     protected final String RESPONSE_DELIMITER = " - ";
 
+    @Override
     public ActionStatus index() {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "Meveo Rest API version " + Version.appVersion + " commit " + Version.buildNumber);
         return result;

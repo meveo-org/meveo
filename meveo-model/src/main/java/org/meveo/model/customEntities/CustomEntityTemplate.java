@@ -1,19 +1,31 @@
 package org.meveo.model.customEntities;
 
-import javax.persistence.*;
+import java.util.List;
+
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.meveo.model.crm.custom.AssetTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
 @Entity
 @ModuleItem
@@ -40,12 +52,44 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
     private List<String> labels;
+    
+    /**
+     * Whether the CET is an asset.
+     * An asset is an entity containing only one property named "value"
+     */
+    @Column(name = "asset", updatable = false)
+    @Type(type = "numeric_boolean")
+    private boolean asset;
+    
+    /**
+     * The type of the asset, if entity is an asset.
+     */
+    @Column(name = "asset_type", nullable = true, updatable = false)
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private AssetTypeEnum assetType;
 
     public List<String> getLabels() {
         return labels;
     }
 
-    public void setLabels(List<String> labels) {
+    public boolean isAsset() {
+		return asset;
+	}
+
+	public void setAsset(boolean asset) {
+		this.asset = asset;
+	}
+
+	public AssetTypeEnum getAssetType() {
+		return assetType;
+	}
+
+	public void setAssetType(AssetTypeEnum assetType) {
+		this.assetType = assetType;
+	}
+
+	public void setLabels(List<String> labels) {
         this.labels = labels;
     }
 
