@@ -2,18 +2,14 @@ package org.meveo.neo4j.base;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.neo4j.service.Neo4JRequests;
-import org.meveo.neo4j.service.Neo4jService;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -25,17 +21,12 @@ import java.util.stream.Collectors;
 
 public class Neo4jDao {
 
-    private static final Logger log = LoggerFactory.getLogger(Neo4jDao.class);
-    public static final String FIELD_KEYS = "fieldKeys";
-    public static final String FIELDS = "fields";
+    private static final String FIELD_KEYS = "fieldKeys";
+    private static final String FIELDS = "fields";
     public static final String ID = "id";
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
-
-    @Inject
-    @Removed
-    private Event<Node> nodeRemovedEvent;
 
     @Inject
     @Updated
@@ -90,7 +81,7 @@ public class Neo4jDao {
             final Node node = result.single().get(alias).asNode();
 
             //  If node has been created, fire creation event. If it was updated, fire update event.
-            if(node.containsKey("internal_updateDate")){
+            if(node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
                 nodeUpdatedEvent.fire(node);
             }else{
                 nodeCreatedEvent.fire(node);
@@ -129,7 +120,7 @@ public class Neo4jDao {
             final Relationship relationship = result.single().get("relationship").asRelationship();
 
             //  If relationship has been created, fire creation event. If it was updated, fire update event.
-            if(relationship.containsKey("internal_updateDate")){
+            if(relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
                 edgeUpdatedEvent.fire(relationship);
             }else{
                 edgeCreatedEvent.fire(relationship);
@@ -179,7 +170,7 @@ public class Neo4jDao {
      * @param labels Additional labels defined for the CET / CRT
      * @return The labels give to the created entity
      */
-    public String buildLabels(List<String> labels){
+    private String buildLabels(List<String> labels){
         StringBuilder labelsString = new StringBuilder();
         for (String label : labels){
             labelsString.append(" :").append(label);

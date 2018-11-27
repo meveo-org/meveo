@@ -71,6 +71,8 @@ public class Neo4jService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     public static final String RELATIONSHIP_PREFIX = "HAS_";
+    public static final String SOURCE_TYPE = "sourceType";
+    public static final String SOURCE_ID = "sourceId";
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -86,10 +88,6 @@ public class Neo4jService {
 
     @Inject
     private Neo4jDao neo4jDao;
-
-    @Inject
-    @Created
-    private Event<org.neo4j.driver.v1.types.Node> nodeCreatedEvent;
 
     @Inject
     @Removed
@@ -113,13 +111,13 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, String srcType, String srcId) {
-        return addCetNode(cetCode, fieldValues, false, srcType, srcId);
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, String sourceType, String sourceId) {
+        return addCetNode(cetCode, fieldValues, false, sourceType, sourceId);
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, String srcType, String srcId) {
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, String sourceType, String sourceId) {
 
         Long nodeId = null; // Id of the created node
 
@@ -158,7 +156,7 @@ public class Neo4jService {
                     createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());
                 }else{
                     @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
-                    createNodeId = addCetNode(referencedCetCode, valueMap, srcType, srcId);
+                    createNodeId = addCetNode(referencedCetCode, valueMap, sourceType, sourceId);
                 }
                 if(createNodeId != null){
                     relationshipsToCreate.put(RELATIONSHIP_PREFIX +referencedCetCode, createNodeId);
@@ -180,8 +178,8 @@ public class Neo4jService {
             /* Create relationships collected in the relationshipsToCreate map */
             if(nodeId != null){
                 final Map<String, Object> values = new HashMap<>();
-                values.put("srcType", srcType);
-                values.put("srcId", srcId);
+                values.put(SOURCE_TYPE, sourceType);
+                values.put(SOURCE_ID, sourceId);
                 relationshipsToCreate.forEach((label, targetId) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
             }
 
@@ -210,8 +208,8 @@ public class Neo4jService {
                        Map<String, Object> crtValues,
                        Map<String, Object> startFieldValues,
                        Map<String, Object> endFieldValues,
-                       String srcType,
-                       String srcId)
+                       String sourceType,
+                       String sourceId)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -245,8 +243,8 @@ public class Neo4jService {
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
-            crtFields.put("srcType", srcType);
-            crtFields.put("srcId", srcId);
+            crtFields.put(SOURCE_TYPE, sourceType);
+            crtFields.put(SOURCE_ID, sourceId);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
 
@@ -328,8 +326,8 @@ public class Neo4jService {
     public void addSourceNodeUniqueCrt(String crtCode,
                                        Map<String, Object> startNodeValues,
                                        Map<String, Object> endNodeValues,
-                                       String srcType,
-                                       String srcId) throws BusinessException, ELException {
+                                       String sourceType,
+                                       String sourceId) throws BusinessException, ELException {
 
         // Get relationship template
         final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
@@ -405,7 +403,7 @@ public class Neo4jService {
 
                 /* Create the source node */
 
-                addCetNode(cetCode, startNodeValues, srcType, srcId);
+                addCetNode(cetCode, startNodeValues, sourceType, sourceId);
 
             }
 

@@ -7,7 +7,7 @@ package org.meveo.model.customEntities;
 public class CETConstants {
 
 
-    public static final String CET_UPDATE_DATE_FIELD = "internal_updateDate";
+    public static final String CET_UPDATE_DATE_FIELD = "updateDate";
     public static final String CET_INTERNAL_IDENTIFIER_FIELD = "internal_identifier";
     public static final String CET_ACTIVE_FIELD = "internal_active";
     public static final String CET_PROVIDER_FIELD = "provider";

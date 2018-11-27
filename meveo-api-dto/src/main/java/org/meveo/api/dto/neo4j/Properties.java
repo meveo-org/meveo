@@ -17,7 +17,7 @@ public class Properties {
     @SerializedName("completName")
     @Expose
     private String completName;
-    @SerializedName("internal_updateDate")
+    @SerializedName("updateDate")
     @Expose
     private Long internalUpdateDate;
     @SerializedName("internal_active")

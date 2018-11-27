@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class Properties_ {
 
-    @SerializedName("internal_updateDate")
+    @SerializedName("updateDate")
     @Expose
     private Integer internalUpdateDate;
     
