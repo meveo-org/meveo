@@ -22,7 +22,6 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.jpa.JpaAmpNewTx;
-import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
@@ -114,13 +113,13 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, User user) {
-        return addCetNode(cetCode, fieldValues, false, user);
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, String srcType, String srcId) {
+        return addCetNode(cetCode, fieldValues, false, srcType, srcId);
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, User user) {
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, String srcType, String srcId) {
 
         Long nodeId = null; // Id of the created node
 
@@ -158,8 +157,8 @@ public class Neo4jService {
                     Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
                     createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());
                 }else{
-                    Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
-                    createNodeId = addCetNode(referencedCetCode, valueMap, new User());
+                    @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
+                    createNodeId = addCetNode(referencedCetCode, valueMap, srcType, srcId);
                 }
                 if(createNodeId != null){
                     relationshipsToCreate.put(RELATIONSHIP_PREFIX +referencedCetCode, createNodeId);
@@ -180,7 +179,10 @@ public class Neo4jService {
 
             /* Create relationships collected in the relationshipsToCreate map */
             if(nodeId != null){
-                relationshipsToCreate.forEach((label, targetId) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId));
+                final Map<String, Object> values = new HashMap<>();
+                values.put("srcType", srcType);
+                values.put("srcId", srcId);
+                relationshipsToCreate.forEach((label, targetId) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
             }
 
         } catch (BusinessException e) {
@@ -200,12 +202,16 @@ public class Neo4jService {
      * @param crtValues        Properties of the link
      * @param startFieldValues Filters on start node
      * @param endFieldValues   Filters on end node
-     * @param user             User executing the query
      * @throws BusinessException If error happens
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> crtValues, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user)
+    public void addCRT(String crtCode,
+                       Map<String, Object> crtValues,
+                       Map<String, Object> startFieldValues,
+                       Map<String, Object> endFieldValues,
+                       String srcType,
+                       String srcId)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -239,6 +245,8 @@ public class Neo4jService {
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
+            crtFields.put("srcType", srcType);
+            crtFields.put("srcId", srcId);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
 
@@ -267,7 +275,9 @@ public class Neo4jService {
         valuesMap.put("starNodeKeys", Values.value(startNodeKeysMap));
         valuesMap.put("endNodeKeys", Values.value(endNodeKeysMap));
         valuesMap.put("updateDate", isTemporaryCET ? -1 : System.currentTimeMillis());
-        valuesMap.put(FIELDS, Values.value(crtFields));
+        final String fieldsString = neo4jDao.getFieldsString(crtFields.keySet());
+        valuesMap.put(FIELDS, fieldsString);
+        valuesMap.putAll(crtFields);
 
         // Build the statement
         StringBuffer statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatement, relationshipAlias, valuesMap);
@@ -282,7 +292,7 @@ public class Neo4jService {
             /* Execute query and parse result inside a relationship.
             If relationship was created fire creation event, fire update event when updated. */
 
-            final StatementResult result = transaction.run(resolvedStatement);  // Execute query
+            final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 
             // Fire notification for each relation created or updated
             for (Record record : result.list()){
@@ -315,7 +325,11 @@ public class Neo4jService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addSourceNodeUniqueCrt(String crtCode, Map<String, Object> startNodeValues, Map<String, Object> endNodeValues) throws BusinessException, ELException {
+    public void addSourceNodeUniqueCrt(String crtCode,
+                                       Map<String, Object> startNodeValues,
+                                       Map<String, Object> endNodeValues,
+                                       String srcType,
+                                       String srcId) throws BusinessException, ELException {
 
         // Get relationship template
         final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
@@ -335,8 +349,8 @@ public class Neo4jService {
         valuesMap.put("endCetcode", customRelationshipTemplate.getEndNode().getCode());
 
         // Prepare the key maps for unique fields and start node fields
-        final String uniqueFieldStatements = getFieldsString(endNodeConvertedValues.keySet());
-        final String startNodeValuesStatements = getFieldsString(startNodeConvertedValues.keySet());
+        final String uniqueFieldStatements = neo4jDao.getFieldsString(endNodeConvertedValues.keySet());
+        final String startNodeValuesStatements = neo4jDao.getFieldsString(startNodeConvertedValues.keySet());
 
         // No unique fields has been found
         if(endNodeUniqueFields.isEmpty()){
@@ -391,18 +405,7 @@ public class Neo4jService {
 
                 /* Create the source node */
 
-                final String alias = "n";   // Alias to use in the query
-
-                // Create statement to execute
-                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.createCet, customRelationshipTemplate.getStartNode().getLabels(), alias, valuesMap);
-                statement = neo4jDao.appendReturnStatement(statement, alias, valuesMap);
-                String createStatement = getStatement(sub, statement);
-
-                final StatementResult result = transaction.run(createStatement, parametersValues);  // Execute query
-
-                // Fire node creation event
-                org.neo4j.driver.v1.types.Node startNode = result.single().get(alias).asNode(); // Result parsing
-                nodeCreatedEvent.fire(startNode);                                               // Fire notification
+                addCetNode(cetCode, startNodeValues, srcType, srcId);
 
             }
 
@@ -423,12 +426,6 @@ public class Neo4jService {
 
     }
 
-    private String getFieldsString(Set<String> strings) {
-        return "{ " + strings
-                .stream()
-                .map(s -> s + ": $" + s)
-                .collect(Collectors.joining(", ")) + " }";
-    }
 
     public void deleteEntity(String cetCode, Map<String, Object> values) throws BusinessException {
 
@@ -443,7 +440,7 @@ public class Neo4jService {
             throw new BusinessException("At least one unique field must be provided for cet to delete");
         }
 
-        final String uniqueFieldStatement = getFieldsString(uniqueFields.keySet());
+        final String uniqueFieldStatement = neo4jDao.getFieldsString(uniqueFields.keySet());
 
         /* Map the variables declared in the statement */
         Map<String, Object> valuesMap = new HashMap<>();

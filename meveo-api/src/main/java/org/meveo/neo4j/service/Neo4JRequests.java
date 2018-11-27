@@ -16,7 +16,7 @@ public class Neo4JRequests {
             .append("WITH startNode ")
             .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId ")
             .append("WITH startNode, endNode ")
-            .append("MERGE (startNode)-[relationship:${relationshipLabel}]->(endNode)")
+            .append("MERGE (startNode)-[relationship :${relationshipLabel} ${fields}]->(endNode)")
             .append("ON CREATE SET relationship.creation_date = timestamp()")
             .append("ON MATCH SET relationship.internal_updateDate = timestamp()")
             .append("RETURN relationship");
@@ -34,7 +34,7 @@ public class Neo4JRequests {
 
     public final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")
-            .append(" MERGE (${startAlias})-[relationship:${relationType}${fields}]->(${endAlias}) ")
+            .append(" MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) ")
             .append(" ON MATCH SET ${startAlias}.internal_updateDate=${updateDate}, ${endAlias}.internal_updateDate=${updateDate}, relationship.update_date = ${updateDate}")
             .append(" ON CREATE SET relationship.creation_date = ${updateDate}");
 

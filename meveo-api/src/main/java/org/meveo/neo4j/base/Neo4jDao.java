@@ -20,6 +20,8 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Neo4jDao {
 
@@ -104,13 +106,16 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void createRealtionBetweenNodes(Long startNodeId, String label, Long endNodeId){
+    public void createRealtionBetweenNodes(Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
         values.put("startNodeId", startNodeId);
         values.put("relationshipLabel", label);
         values.put("endNodeId", endNodeId);
+        final String fieldsString = getFieldsString(fields.keySet());
+        values.put(FIELDS, fieldsString);
+        values.putAll(fields);
 
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.createRelationship);
@@ -180,5 +185,12 @@ public class Neo4jDao {
             labelsString.append(" :").append(label);
         }
         return labelsString.toString();
+    }
+
+    public String getFieldsString(Set<String> strings) {
+        return "{ " + strings
+                .stream()
+                .map(s -> s + ": $" + s)
+                .collect(Collectors.joining(", ")) + " }";
     }
 }
