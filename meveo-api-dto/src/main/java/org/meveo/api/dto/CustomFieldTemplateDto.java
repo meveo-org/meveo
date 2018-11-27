@@ -151,6 +151,9 @@ public class CustomFieldTemplateDto extends BaseDto {
     @XmlElement
     protected boolean isFilter;
     
+    @XmlElement
+    private String relationshipName;
+    
     
     @XmlElement
     protected String expressionSeparator;
@@ -225,6 +228,7 @@ public class CustomFieldTemplateDto extends BaseDto {
         minValue = cf.getMinValue();
         maxValue = cf.getMaxValue();
         regExp = cf.getRegExp();
+        relationshipName = cf.getRelationshipName();
         // cacheValue = cf.isCacheValue();
         // cacheValueTimeperiod = cf.getCacheValueTimeperiod();
         guiPosition = cf.getGuiPosition();
@@ -248,8 +252,18 @@ public class CustomFieldTemplateDto extends BaseDto {
         }
 
     }
+    
+    
 
-    /**
+    public String getRelationshipName() {
+		return relationshipName;
+	}
+
+	public void setRelationshipName(String relationshipName) {
+		this.relationshipName = relationshipName;
+	}
+
+	/**
      * Gets the code.
      *
      * @return the code

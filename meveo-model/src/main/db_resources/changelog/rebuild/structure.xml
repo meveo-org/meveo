@@ -1569,6 +1569,8 @@
             <column name="field_type" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
+        	<column name="relationship_name" type="varchar(100)"/>
+            
             <column name="value_required" type="${type.boolean}" defaultValueNumeric="0">
                 <constraints nullable="false" />
             </column>

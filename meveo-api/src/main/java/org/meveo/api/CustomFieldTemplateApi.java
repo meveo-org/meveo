@@ -301,6 +301,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         if (dto.getDescription() != null) {
             cft.setDescription(dto.getDescription());
         }
+        
+        cft.setRelationshipName(dto.getRelationshipName());
 
         if (dto.getDefaultValue() != null) {
             cft.setDefaultValue(dto.getDefaultValue());

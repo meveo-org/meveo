@@ -166,6 +166,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "applicable_on_el", length = 2000)
     @Size(max = 2000)
     private String applicableOnEl;
+    
+    @Column(name = "relationship_name", nullable = true, updatable = false)
+    private String relationshipName;
 
     // @Type(type = "numeric_boolean")
     // @Column(name = "cache_value")
@@ -211,8 +214,16 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "EXPRESSION_SEPARATOR", length = 2)
     @Size(max = 2)
     private String expressionSeparator;
+    
+    public String getRelationshipName() {
+		return relationshipName;
+	}
 
-    public CustomFieldTypeEnum getFieldType() {
+	public void setRelationshipName(String relationshipName) {
+		this.relationshipName = relationshipName;
+	}
+
+	public CustomFieldTypeEnum getFieldType() {
         return fieldType;
     }
 
