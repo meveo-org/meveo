@@ -34,6 +34,7 @@ import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.neo4j.base.Neo4jConnectionProvider;
+import org.meveo.neo4j.base.Neo4jDao;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -42,7 +43,6 @@ import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +68,10 @@ import java.util.stream.Collectors;
 public class Neo4jService {
 
     private static final Logger log = LoggerFactory.getLogger(Neo4jService.class);
-    public static final String FIELD_KEYS = "fieldKeys";
-    public static final String FIELDS = "fields";
+    private static final String FIELD_KEYS = "fieldKeys";
+    private static final String FIELDS = "fields";
     public static final String ID = "id";
+    public static final String RELATIONSHIP_PREFIX = "HAS_";
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -83,6 +84,9 @@ public class Neo4jService {
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+
+    @Inject
+    private Neo4jDao neo4jDao;
 
     @Inject
     @Created
@@ -108,60 +112,60 @@ public class Neo4jService {
     @ApplicationProvider
     protected Provider appProvider;
 
-    /**
-     * @param labels Additional labels defined for the CET / CRT
-     * @return The labels give to the created entity
-     */
-    private String buildLabels(List<String> labels){
-        StringBuilder labelsString = new StringBuilder();
-        for (String label : labels){
-            labelsString.append(" :").append(label);
-        }
-        return labelsString.toString();
-    }
-
-    /**
-     * @param cetCode
-     * @param fieldValues
-     * @param user
-     */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Long addCetNode(String cetCode, Map<String, Object> fieldValues, User user) {
         return addCetNode(cetCode, fieldValues, false, user);
     }
 
-    public Long addCetNodeInSameTransaction(String cetCode, Map<String, Object> fieldValues, User user) {
-        return addCetNode(cetCode, fieldValues, false,user);
-    }
-
-    public void addCRTinSameTransaction(String crtCode, Map<String, Object> fieldValues) throws BusinessException, ELException {
-        addCRT(crtCode, fieldValues, false);
-    }
-
-    /**
-     * @param cetCode
-     * @param fieldValues
-     * @param user
-     * @throws BusinessException
-     */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, User user) {
 
-        Long nodeId = null;
+        Long nodeId = null; // Id of the created node
+
         try {
+
+            /* Retrieve corresponding CET or throw an error */
             CustomEntityTemplate cetEntity = customEntityTemplateService.findByCode(cetCode);
             if (cetEntity == null) {
                 throw new ElementNotFoundException(cetCode, CustomEntityTemplate.class.getName());
             }
-            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService
-                    .findByAppliesTo(cetEntity.getAppliesTo());
+
+            /* Find unique fields and validate data */
+            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cetEntity.getAppliesTo());
             Map<String, Object> uniqueFields = new HashMap<>();
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             fields.put(CETConstants.CET_UPDATE_DATE_FIELD, isTemporaryCET ? -1 : System.currentTimeMillis());
+
+            /* Collect entity references */
+            final List<CustomFieldTemplate> entityReferences = cetFields.values().stream()
+                    .filter(customFieldTemplate -> customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY))   // Entity references
+                    .filter(customFieldTemplate -> fieldValues.get(customFieldTemplate.getCode()) != null)                  // Value is provided
+                    .collect(Collectors.toList());
+
+            /* Create referenced nodes and collect relationships to create */
+            Map<String, Long> relationshipsToCreate = new HashMap<>();  // Map where the label of relationship is the key and the target node id is the value
+            for (CustomFieldTemplate entityReference : entityReferences){
+                Object referencedCetValue = fieldValues.get(entityReference.getCode());
+                String referencedCetCode = entityReference.getEntityClazz();
+                CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
+                Long createNodeId;
+                if(referencedCet.isAsset()){    // If the CET is an asset, copy value in current node's value
+                    fields.put(entityReference.getCode(), referencedCetValue);
+                    Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
+                    createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());
+                }else{
+                    Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
+                    createNodeId = addCetNode(referencedCetCode, valueMap, new User());
+                }
+                if(createNodeId != null){
+                    relationshipsToCreate.put(RELATIONSHIP_PREFIX +referencedCetCode, createNodeId);
+                }
+            }
+
             if (CETConstants.QUERY_CATEGORY_CODE.equals(cetCode)) {
                 String isSuperCategory = (String) fields.get("isSuperCategory");
                 if (isSuperCategory != null && Boolean.valueOf(isSuperCategory)) {
@@ -169,131 +173,24 @@ public class Neo4jService {
                     uniqueFields.remove(CETConstants.CET_ACTIVE_FIELD);
                 }
             }
-            if (fields != null) {
-                final String alias = "n";   // Alias to use in query
 
-                // Build values map
-                Map<String, Object> valuesMap = new HashMap<>();
-                valuesMap.put("cetCode", cetCode);
-                valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
-                valuesMap.put(FIELDS, Values.value(fields));
+            final List<String> labels = cetEntity.getLabels();
+            final Long createNodeId = neo4jDao.createNode(cetCode, uniqueFields, fields, labels);
+            nodeId = createNodeId;
 
-                // Build statement
-                StrSubstitutor sub = new StrSubstitutor(valuesMap);
-                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.cetStatement, cetEntity.getLabels(), alias, valuesMap);
-                statement = appendReturnStatement(statement, alias, valuesMap);
-                String resolvedStatement = sub.replace(statement);
-                resolvedStatement = resolvedStatement.replace('"', '\'');
-
-                // Begin transaction
-                Session session = neo4jSessionFactory.getSession();
-                final Transaction transaction = session.beginTransaction();
-
-                try {
-                    // Execute query and parse results
-                    final StatementResult result = transaction.run(resolvedStatement);
-                    final Node node = result.single().get(alias).asNode();
-
-                    //  If node has been created, fire creation event. If it was updated, fire update event.
-                    if(node.containsKey("internal_updateDate")){
-                        nodeUpdatedEvent.fire(node);
-                    }else{
-                        nodeCreatedEvent.fire(node);
-                    }
-
-                    nodeId = node.id();
-
-                    transaction.success();  // Commit transaction
-                } finally {
-                    // End session and transaction
-                    transaction.close();
-                    session.close();
-                }
+            /* Create relationships collected in the relationshipsToCreate map */
+            if(nodeId != null){
+                relationshipsToCreate.forEach((label, targetId) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId));
             }
+
         } catch (BusinessException e) {
             log.error("addCetNode cetCode={}, errorMsg={}", cetCode, e.getMessage(), e);
         } catch (ELException e) {
             log.error("Error while resolving EL : ", e);
         }
+        /* Create relationships to referenced nodes */
+
         return nodeId;
-
-    }
-
-    /**
-     * If additional labels are defined, append a query to the base statement to add them to the node.
-     *
-     * @param statement Base statement to extend
-     * @param labels    Additional labels of the node
-     * @param alias     Alias to refer in the query
-     * @param valuesMap Map where are stored the statement's variables - Variables required for the query will be added to it
-     * @return A new {@link StringBuffer} representing the extended query
-     */
-    private StringBuffer appendAdditionalLabels(final StringBuffer statement, List<String> labels, String alias, Map<String, Object> valuesMap) {
-        StringBuffer copyStatement = new StringBuffer(statement);
-        if (!labels.isEmpty()) {
-            copyStatement.append(Neo4JRequests.additionalLabels);
-            valuesMap.put(Neo4JRequests.ADDITIONAL_LABELS, buildLabels(labels));
-            valuesMap.put(Neo4JRequests.ALIAS, alias);
-        }
-        return copyStatement;
-    }
-
-    /**
-     * Append a return statement for the given query
-     *
-     * @param statement Base statement to extend
-     * @param alias     Alias to refer in the query
-     * @param valuesMap Map where are stored the statement's variables - Variables required for the query will be added to it
-     * @return A new {@link StringBuffer} representing the extended query
-     */
-    private StringBuffer appendReturnStatement(final StringBuffer statement, String alias, Map<String, Object> valuesMap){
-        valuesMap.put(Neo4JRequests.ALIAS, alias);
-        return new StringBuffer(statement).append(Neo4JRequests.returnStatement);
-    }
-
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> fieldValues) throws BusinessException, ELException {
-        addCRT(crtCode, fieldValues, false);
-    }
-
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> fieldValues, boolean isTemporaryCET) throws BusinessException, ELException {
-        log.info("crtCode={}", crtCode);
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
-
-        if (customRelationshipTemplate == null) {
-            throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
-        }
-
-        Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getAppliesTo());
-
-        log.info("crtCustomFields={}", crtCustomFields);
-        log.info("addCRT fieldValues size:" + fieldValues.size());
-        log.info("addCRT fieldValues:" + fieldValues);
-        Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
-        Map<String, Object> startNodeFieldValues = validateAndConvertCustomFields(startNodeFields, fieldValues, null, true);
-        log.info("addCRT startNodeFieldValues:" + startNodeFieldValues);
-
-        Map<String, Object> startNodeKeysMap = getNodeKeys(customRelationshipTemplate.getStartNode().getAppliesTo(),
-                startNodeFieldValues);
-
-        Map<String, CustomFieldTemplate> endNodeFields = customFieldTemplateService
-                .findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
-        Map<String, Object> endNodeFieldValues = validateAndConvertCustomFields(endNodeFields, fieldValues, null, true);
-
-        Map<String, Object> endNodeKeysMap = getNodeKeys(customRelationshipTemplate.getEndNode().getAppliesTo(),
-                endNodeFieldValues);
-
-        log.info("startNodeKeysMap:" + startNodeKeysMap);
-        log.info("endNodeKeysMap:" + endNodeKeysMap);
-        if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
-            Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, fieldValues, null, true);
-            saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, isTemporaryCET);
-        }
     }
 
     /**
@@ -347,15 +244,6 @@ public class Neo4jService {
 
     }
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRT(String crtCode, Map<String, Object> startFieldValues, Map<String, Object> endFieldValues, User user) throws BusinessException, ELException {
-        Map<String, Object> crtValues = new HashMap<>();
-        crtValues.putAll(startFieldValues);
-        crtValues.putAll(endFieldValues);
-        addCRT(crtCode, crtValues, startFieldValues, endFieldValues, user);
-    }
-
     /**
      * Save CRT to Neo4j
      *
@@ -382,7 +270,7 @@ public class Neo4jService {
         valuesMap.put(FIELDS, Values.value(crtFields));
 
         // Build the statement
-        StringBuffer statement = appendReturnStatement(Neo4JRequests.crtStatement, relationshipAlias, valuesMap);
+        StringBuffer statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatement, relationshipAlias, valuesMap);
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         String resolvedStatement = sub.replace(statement);
 
@@ -489,8 +377,8 @@ public class Neo4jService {
                 parametersValues.put(ID, id);
 
                 // Create statement
-                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.updateNodeWithId, customRelationshipTemplate.getStartNode().getLabels(), startNodeAlias, valuesMap);
-                statement = appendReturnStatement(statement, startNodeAlias, valuesMap);
+                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, customRelationshipTemplate.getStartNode().getLabels(), startNodeAlias, valuesMap);
+                statement = neo4jDao.appendReturnStatement(statement, startNodeAlias, valuesMap);
                 String updateStatement = getStatement(sub, statement);
 
                 final StatementResult result = transaction.run(updateStatement, parametersValues);  // Execute query
@@ -506,8 +394,8 @@ public class Neo4jService {
                 final String alias = "n";   // Alias to use in the query
 
                 // Create statement to execute
-                StringBuffer statement = appendAdditionalLabels(Neo4JRequests.createCet, customRelationshipTemplate.getStartNode().getLabels(), alias, valuesMap);
-                statement = appendReturnStatement(statement, alias, valuesMap);
+                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.createCet, customRelationshipTemplate.getStartNode().getLabels(), alias, valuesMap);
+                statement = neo4jDao.appendReturnStatement(statement, alias, valuesMap);
                 String createStatement = getStatement(sub, statement);
 
                 final StatementResult result = transaction.run(createStatement, parametersValues);  // Execute query
@@ -612,12 +500,6 @@ public class Neo4jService {
         Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
         return response.readEntity(String.class);
     }
-
-    /**
-     * @param appliesTo
-     * @param convertedFieldValues
-     * @return
-     */
 
     private Map<String, Object> getNodeKeys(String appliesTo, Map<String, Object> convertedFieldValues) {
         Map<String, Object> nodeKeysMap = new HashMap<>();

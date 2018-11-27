@@ -416,7 +416,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if(!dto.isAsset()){
             return; // If not an asset, skip tests
         }
-        if(!dto.getFields().isEmpty()){
+        if(dto.getFields() != null && !dto.getFields().isEmpty()){
             throw new BusinessException("An asset should not have custom fields");
         }
         if(dto.getAssetType() == null){
