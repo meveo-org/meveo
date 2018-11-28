@@ -70,7 +70,6 @@ public class Neo4jService {
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
     public static final String ID = "id";
-    public static final String RELATIONSHIP_PREFIX = "HAS_";
     public static final String SOURCE_TYPE = "sourceType";
     public static final String SOURCE_ID = "sourceId";
 
@@ -159,7 +158,9 @@ public class Neo4jService {
                     createNodeId = addCetNode(referencedCetCode, valueMap, sourceType, sourceId);
                 }
                 if(createNodeId != null){
-                    relationshipsToCreate.put(RELATIONSHIP_PREFIX +referencedCetCode, createNodeId);
+                    String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
+                            .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+                    relationshipsToCreate.put(relationshipName, createNodeId);
                 }
             }
 
