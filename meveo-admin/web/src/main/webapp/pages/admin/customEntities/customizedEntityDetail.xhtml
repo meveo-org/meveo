@@ -29,7 +29,7 @@
 
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
-        <o:importConstants type="org.meveo.model.crm.custom.AssetTypeEnum" />
+        <o:importConstants type="org.meveo.model.crm.custom.PrimitiveTypeEnum" />
         
 
         <h:panelGroup rendered="#{customEntityTemplateBean.customEntityTemplate}">
@@ -42,13 +42,16 @@
                     <h:outputText value="#{customEntityTemplateBean.partOfModules}" />
                 </hftl:decorateFormField>
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
-                <hftl:formField label="#{messages['BusinessEntity.asset']}" field="asset" allowEdit="false"
-                listenerUpdate="assetType, cfFields" />
                 
-                <!--  If asset is checked, ask for asset type -->
-                <h:panelGroup id="assetType">
-	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.asset}"
-	               	 	label="#{messages['BusinessEntity.assetType']}" allowEdit="false" required="true" field="assetType" />
+                <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
+	            <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
+	                allowEdit="#{customEntityTemplateBean.entity.primitiveEntity}"
+	                listenerUpdate="@this primitiveType cfFields" />
+                
+                <!--  If primitive, ask for primitive type class -->
+                <h:panelGroup id="primitiveType">
+	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
+	               	 	label="#{messages['BusinessEntity.primitiveType']}" allowEdit="false" required="true" field="primitiveType" />
                 </h:panelGroup>
 
                 
@@ -59,9 +62,9 @@
             </hftl:decorateFormPanel>
         </h:panelGroup>
 
-		<!--  Render custom fields only if entity is not an asset -->
+		<!--  Render custom fields only if entity is not a primitive type -->
 		<h:panelGroup id="cfFields">
-			<c:if test="#{!customEntityTemplateBean.entity.asset}">
+			<c:if test="#{!customEntityTemplateBean.entity.primitiveEntity}">
 	        	<ui:include src="customFieldsAndActions.xhtml"/>
 	       	</c:if>
         </h:panelGroup>

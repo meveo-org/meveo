@@ -24,7 +24,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.crm.custom.AssetTypeEnum;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
 @Entity
@@ -54,38 +54,38 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     private List<String> labels;
     
     /**
-     * Whether the CET is an asset.
-     * An asset is an entity containing only one property named "value"
+     * Whether the CET is primitive.
+     * A primitive entity is an entity containing only one property named "value"
      */
-    @Column(name = "asset", updatable = false)
+    @Column(name = "primitive_entity", updatable = false)
     @Type(type = "numeric_boolean")
-    private boolean asset;
+    private boolean primitiveEntity;
     
     /**
-     * The type of the asset, if entity is an asset.
+     * The primitive type, if entity is primitive.
      */
-    @Column(name = "asset_type", nullable = true, updatable = false)
+    @Column(name = "primitive_type", nullable = true, updatable = false)
     @Enumerated(EnumType.STRING)
-    private AssetTypeEnum assetType;
+    private PrimitiveTypeEnum primitiveType;
 
     public List<String> getLabels() {
         return labels;
     }
 
-    public boolean isAsset() {
-		return asset;
+	public boolean isPrimitiveEntity() {
+		return primitiveEntity;
 	}
 
-	public void setAsset(boolean asset) {
-		this.asset = asset;
+	public void setPrimitiveEntity(boolean primitiveEntity) {
+		this.primitiveEntity = primitiveEntity;
 	}
 
-	public AssetTypeEnum getAssetType() {
-		return assetType;
+	public PrimitiveTypeEnum getPrimitiveType() {
+		return primitiveType;
 	}
 
-	public void setAssetType(AssetTypeEnum assetType) {
-		this.assetType = assetType;
+	public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
+		this.primitiveType = primitiveType;
 	}
 
 	public void setLabels(List<String> labels) {

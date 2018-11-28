@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.AssetTypeEnum;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
@@ -42,13 +42,13 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private String description;
 
-    /** Whether the CET is an asset. */
+    /** Whether the CET is an primitiveEntity. */
     @XmlAttribute()
-    private boolean asset = false;
+    private boolean primitiveEntity = false;
 
-    /** Type of the asset */
+    /** Type of the primitiveEntity */
     @XmlAttribute(required = false)
-    private AssetTypeEnum assetType;
+    private PrimitiveTypeEnum primitiveType;
 
     /** The fields. */
     @XmlElementWrapper(name = "fields")
@@ -67,20 +67,20 @@ public class CustomEntityTemplateDto extends BaseDto {
 
     }
 
-    public boolean isAsset() {
-        return asset;
+    public boolean isPrimitiveEntity() {
+        return primitiveEntity;
     }
 
-    public void setAsset(boolean asset) {
-        this.asset = asset;
+    public void setPrimitiveEntity(boolean primitiveEntity) {
+        this.primitiveEntity = primitiveEntity;
     }
 
-    public AssetTypeEnum getAssetType() {
-        return assetType;
+    public PrimitiveTypeEnum getPrimitiveType() {
+        return primitiveType;
     }
 
-    public void setAssetType(AssetTypeEnum assetType) {
-        this.assetType = assetType;
+    public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
+        this.primitiveType = primitiveType;
     }
 
     /**
@@ -186,8 +186,8 @@ public class CustomEntityTemplateDto extends BaseDto {
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
-        dto.setAsset(cet.isAsset());
-        dto.setAssetType(cet.getAssetType());
+        dto.setPrimitiveEntity(cet.isPrimitiveEntity());
+        dto.setPrimitiveType(cet.getPrimitiveType());
 
         if (cetFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
@@ -223,8 +223,8 @@ public class CustomEntityTemplateDto extends BaseDto {
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
-        cet.setAsset(dto.isAsset());
-        cet.setAssetType(dto.getAssetType());
+        cet.setPrimitiveEntity(dto.isPrimitiveEntity());
+        cet.setPrimitiveType(dto.getPrimitiveType());
         return cet;
     }
 

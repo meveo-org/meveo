@@ -49,7 +49,7 @@ import org.meveo.service.index.ElasticClient;
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
 
-    private static final String ASSET_CFT_VALUE = "value";
+    private static final String PRIMITIVE_CFT_VALUE = "value";
 
 	@Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -86,20 +86,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
-            /* If cet is an asset, create custom field of corresponding type */
-            if(cet.isAsset()) {
+            /* If cet is a primitive type, create custom field of corresponding type */
+            if(cet.isPrimitiveEntity()) {
 	            // Define CFT
 	            final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
 	            customFieldTemplate.setActive(true);			       	// Always active
 	            customFieldTemplate.setAllowEdit(false);		       	// CFT can't be updated
 	            customFieldTemplate.setAppliesTo(cet.getAppliesTo());
-	            if(cet.getAssetType() == null) {
-	            	throw new IllegalArgumentException("Asset type must be provided");
+	            if(cet.getPrimitiveType() == null) {
+	            	throw new IllegalArgumentException("Primitive type class must be provided");
 	            }
-	            customFieldTemplate.setFieldType(cet.getAssetType().getCftType());
+	            customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
 	            customFieldTemplate.setUnique(true);			       	// Must be unique
-	            customFieldTemplate.setCode(ASSET_CFT_VALUE);	        // Code is 'value'
-                customFieldTemplate.setDescription(ASSET_CFT_VALUE);	// Label is 'value'
+	            customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);	        // Code is 'value'
+                customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);	// Label is 'value'
                 customFieldTemplate.setFilter(true);			        // Can be used as filter
 	            customFieldTemplate.setValueRequired(true);		        // Always required
 	            customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);

@@ -2439,10 +2439,10 @@
             <column name="updated" type="datetime" />
             <column name="description" type="varchar(255)" />
             <column name="code" type="varchar(255)" />
-			<column name="asset" type = "${type.boolean}" defaultValueNumeric="0">
+			<column name="primitive_entity" type = "${type.boolean}" defaultValueNumeric="0">
 				<constraints nullable="false" />
 			</column>
-			<column name="asset_type" type="varchar(100)"/>
+			<column name="primitive_type" type="varchar(100)"/>
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
             <column name="name" type="varchar(100)">

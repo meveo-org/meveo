@@ -149,7 +149,7 @@ public class Neo4jService {
                 String referencedCetCode = entityReference.getEntityClazz();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
                 Long createNodeId;
-                if(referencedCet.isAsset()){    // If the CET is an asset, copy value in current node's value
+                if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
                     fields.put(entityReference.getCode(), referencedCetValue);
                     Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
                     createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());

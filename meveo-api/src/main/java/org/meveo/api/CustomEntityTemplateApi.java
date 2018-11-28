@@ -17,7 +17,6 @@ import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.EntityCustomizationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -62,7 +61,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
-        checkAsset(dto);
+        checkPrimitiveEntity(dto);
 
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
@@ -97,7 +96,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
-        checkAsset(dto);
+        checkPrimitiveEntity(dto);
 
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
@@ -405,22 +404,22 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 
     /**
-     * If the CET is an asset :  <br>
+     * If the CET is a primitive type :  <br>
      * - No CF must be defined <br>
-     * - Type of asset should not be null  <br>
+     * - Type of primitive should not be null  <br>
      *
      * @param dto The CET dto to validate
      * @return
      */
-    private void checkAsset(CustomEntityTemplateDto dto) throws BusinessException {
-        if(!dto.isAsset()){
-            return; // If not an asset, skip tests
+    private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
+        if(!dto.isPrimitiveEntity()){
+            return; // If not a primitive type, skip tests
         }
         if(dto.getFields() != null && !dto.getFields().isEmpty()){
-            throw new BusinessException("An asset should not have custom fields");
+            throw new BusinessException("A primitive entity should not have custom fields");
         }
-        if(dto.getAssetType() == null){
-            throw new BusinessException("Asset type must be defined");
+        if(dto.getPrimitiveType() == null){
+            throw new BusinessException("Primitive type must be defined");
         }
     }
 
