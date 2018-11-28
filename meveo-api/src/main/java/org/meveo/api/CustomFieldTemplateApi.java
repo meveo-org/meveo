@@ -61,6 +61,10 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
         if (postData.getStorageType() == CustomFieldStorageTypeEnum.MATRIX && (postData.getMatrixColumns() == null || postData.getMatrixColumns().isEmpty())) {
             missingParameters.add("matrixColumns");
+            
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getRelationshipName() == null){
+        	 missingParameters.add("relationshipName");
+        }
 
         } else if (postData.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
             for (CustomFieldMatrixColumnDto columnDto : postData.getMatrixColumns()) {
@@ -118,6 +122,10 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
         if (appliesTo == null && StringUtils.isBlank(postData.getAccountLevel()) && StringUtils.isBlank(postData.getAppliesTo())) {
             missingParameters.add("appliesTo");
+        }
+        
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getRelationshipName() == null){
+       	 	missingParameters.add("relationshipName");
         }
 
         if (postData.getMatrixColumns() != null) {
