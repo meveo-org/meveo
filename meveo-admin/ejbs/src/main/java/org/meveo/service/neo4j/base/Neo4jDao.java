@@ -204,7 +204,7 @@ public class Neo4jDao {
     }
 
     public void removeIndexLabelByProperty(String label, String property) {
-        String statement = String.format("REMOVE INDEX ON :%s(%s)", label, property);
+        String statement = String.format("DROP INDEX ON :%s(%s)", label, property);
         // Begin transaction
         Session session = neo4jSessionFactory.getSession();
         final Transaction transaction = session.beginTransaction();
