@@ -1,9 +1,9 @@
-package org.meveo.neo4j.base;
+package org.meveo.service.neo4j.base;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
-import org.meveo.neo4j.service.Neo4JRequests;
+import org.meveo.service.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
@@ -183,5 +183,40 @@ public class Neo4jDao {
                 .stream()
                 .map(s -> s + ": $" + s)
                 .collect(Collectors.joining(", ")) + " }";
+    }
+
+    public void createIndexLabelByProperty(String label, String property) {
+
+        String statement = String.format("CREATE INDEX ON :%s(%s)", label, property);
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession();
+        final Transaction transaction = session.beginTransaction();
+
+        try {
+            // Execute query and parse results
+            final StatementResult result = transaction.run(statement);
+            transaction.success();  // Commit transaction
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
+    }
+
+    public void removeIndexLabelByProperty(String label, String property) {
+        String statement = String.format("REMOVE INDEX ON :%s(%s)", label, property);
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession();
+        final Transaction transaction = session.beginTransaction();
+
+        try {
+            // Execute query and parse results
+            final StatementResult result = transaction.run(statement);
+            transaction.success();  // Commit transaction
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
     }
 }
