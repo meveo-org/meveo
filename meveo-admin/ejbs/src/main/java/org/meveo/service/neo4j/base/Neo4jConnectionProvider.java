@@ -1,4 +1,4 @@
-package org.meveo.neo4j.base;
+package org.meveo.service.neo4j.base;
 
 import org.meveo.commons.utils.ParamBean;
 import org.neo4j.driver.v1.AuthTokens;

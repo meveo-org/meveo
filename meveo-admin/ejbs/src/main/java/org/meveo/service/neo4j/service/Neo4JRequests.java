@@ -1,4 +1,4 @@
-package org.meveo.neo4j.service;
+package org.meveo.service.neo4j.service;
 
 public class Neo4JRequests {
 
@@ -30,12 +30,12 @@ public class Neo4JRequests {
      * - cetCode : code of the node to delete <br>
      * - uniqueFields : unique fields that identify the node
      */
-    final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields})")
+    public final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields})")
             .append(" WITH n, properties(n) as properties,  labels(n) as labels, ID(n) as id ")
             .append(" DETACH DELETE n")
             .append(" RETURN properties");
 
-    final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
+    public final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")
             .append(" MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) ")
             .append(" ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, ${endAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, relationship." + INTERNAL_UPDATE_DATE + " = ${updateDate}")
@@ -51,15 +51,15 @@ public class Neo4JRequests {
 
     public final static StringBuffer returnStatement = new StringBuffer(" RETURN ${alias} ");
 
-    final static StringBuffer findStartNodeId = new StringBuffer()
+    public final static StringBuffer findStartNodeId = new StringBuffer()
             .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
             .append(" RETURN ID(startNode)");
 
-    final static StringBuffer updateNodeWithId = new StringBuffer()
+    public final static StringBuffer updateNodeWithId = new StringBuffer()
             .append("MATCH (startNode) WHERE ID(startNode) = $id")
             .append(" SET startNode += ${fields}");
 
-    final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
+    public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
             + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
@@ -68,7 +68,7 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where ID(a) =${originNodeId} "
+    public final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where ID(a) =${originNodeId} "
             + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
@@ -77,6 +77,6 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    final static String START_NODE_ALIAS = "start";
-    final static String END_NODE_ALIAS = "end";
+    public final static String START_NODE_ALIAS = "start";
+    public final static String END_NODE_ALIAS = "end";
 }

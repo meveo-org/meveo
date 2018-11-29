@@ -127,5 +127,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
     public static String getModifyPermission(String code) {
         return "CE_" + code + "-modify";
-    } 
+    }
+
+    public static String getCodeFromAppliesTo(String appliesTo) {
+       String splitAppliesTo = appliesTo.substring(3);
+       return splitAppliesTo;
+    }
 }

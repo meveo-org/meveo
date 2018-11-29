@@ -16,6 +16,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.PersistenceUtils;
@@ -42,6 +44,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private ElasticClient elasticClient;
+
+    @Inject
+    private Neo4jDao neo4jDao;
 
     static boolean useCFTCache = true;
 
@@ -195,7 +200,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                 || !cft.isVersionable() || cft.getCalendar() == null)) {
             throw new ValidationException("invoice_adjustement_sequence CF must be versionnable, Long, Single value and must have a Calendar");
         }
+
         super.create(cft);
+        if (cft.isUnique()) {
+            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
+        }
 
         customFieldsCache.addUpdateCustomFieldTemplate(cft);
         elasticClient.updateCFMapping(cft);
@@ -212,8 +222,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                 || !cft.isVersionable() || cft.getCalendar() == null)) {
             throw new ValidationException("invoice_adjustement_sequence CF must be versionnable, Long, Single value and must have a Calendar");
         }
+        CustomFieldTemplate cftBefore = super.findById(cft.getId());
         CustomFieldTemplate cftUpdated = super.update(cft);
-
+        if (cftBefore.isUnique() && !cftUpdated.isUnique()) {
+            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
+        } else if (!cftBefore.isUnique() && cftUpdated.isUnique()) {
+            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
+        }
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
 
@@ -222,8 +239,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Override
     public void remove(CustomFieldTemplate cft) throws BusinessException {
+        CustomFieldTemplate cftBefore = super.findById(cft.getId());
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
+        if (cftBefore.isUnique()) {
+            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
+        }
     }
 
     @Override
