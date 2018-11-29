@@ -194,7 +194,7 @@ public class Neo4jDao {
 
         try {
             // Execute query and parse results
-            final StatementResult result = transaction.run(statement);
+            transaction.run(statement);
             transaction.success();  // Commit transaction
         } finally {
             // End session and transaction
@@ -211,7 +211,7 @@ public class Neo4jDao {
 
         try {
             // Execute query and parse results
-            final StatementResult result = transaction.run(statement);
+            transaction.run(statement);
             transaction.success();  // Commit transaction
         } finally {
             // End session and transaction

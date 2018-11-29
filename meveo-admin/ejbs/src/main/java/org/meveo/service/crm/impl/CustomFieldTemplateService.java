@@ -46,13 +46,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     private ElasticClient elasticClient;
 
     @Inject
-    private CustomFieldTemplate customFieldTemplate;
-
-    @Inject
     private Neo4jDao neo4jDao;
-
-    @Inject
-    private CustomEntityTemplate customEntityTemplate;
 
     static boolean useCFTCache = true;
 
