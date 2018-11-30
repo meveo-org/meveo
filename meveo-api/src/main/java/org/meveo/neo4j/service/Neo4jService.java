@@ -145,7 +145,7 @@ public class Neo4jService {
                     .collect(Collectors.toList());
 
             /* Create referenced nodes and collect relationships to create */
-            Map<String, Long> relationshipsToCreate = new HashMap<>();  // Map where the label of relationship is the key and the target node id is the value
+            Map<Long, String> relationshipsToCreate = new HashMap<>();  // Map where the id of the target node is the key and the label of relationship is the value
             for (CustomFieldTemplate entityReference : entityReferences){
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazz();
@@ -162,7 +162,7 @@ public class Neo4jService {
                 if(createNodeId != null){
                     String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
                             .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
-                    relationshipsToCreate.put(relationshipName, createNodeId);
+                    relationshipsToCreate.put(createNodeId, relationshipName);
                 }
             }
 
@@ -183,7 +183,7 @@ public class Neo4jService {
                 final Map<String, Object> values = new HashMap<>();
                 values.put(SOURCE_TYPE, sourceType);
                 values.put(SOURCE_ID, sourceId);
-                relationshipsToCreate.forEach((label, targetId) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
+                relationshipsToCreate.forEach((targetId, label) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
             }
 
         } catch (BusinessException e) {
