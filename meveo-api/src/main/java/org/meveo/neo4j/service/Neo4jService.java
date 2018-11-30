@@ -210,13 +210,13 @@ public class Neo4jService {
                        Map<String, Object> startFieldValues,
                        Map<String, Object> endFieldValues,
                        String sourceType,
-                       String sourceId)
+                       String sourceId,String startCode, String endCode)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
 
         /* Try to retrieve the associated CRT */
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(crtCode, startCode, endCode);
         if (customRelationshipTemplate == null) {
             log.error("Can't find CRT with code {}", crtCode);
             throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
@@ -328,10 +328,12 @@ public class Neo4jService {
                                        Map<String, Object> startNodeValues,
                                        Map<String, Object> endNodeValues,
                                        String sourceType,
-                                       String sourceId) throws BusinessException, ELException {
+                                       String sourceId,
+                                       String startCode,
+                                       String endCode) throws BusinessException, ELException {
 
         // Get relationship template
-        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(crtCode, startCode, endCode);
 
         // Extract unique fields values for the start node
         Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());

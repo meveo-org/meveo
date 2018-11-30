@@ -140,8 +140,8 @@ public class JSONSchemaGenerator {
 		return generateSchema(schemaLocation, entityTemplateService.findByCode(templateCode));
 	}
 	
-	public String generateRelationshipTemplateSchema(String schemaLocation, String templateCode) {
-		return generateSchema(schemaLocation, relationshipTemplateService.findByCode(templateCode));
+	public String generateRelationshipTemplateSchema(String schemaLocation, String startNode, String templateCode, String endNode ) {
+		return generateSchema(schemaLocation, relationshipTemplateService.findByStartAndEndCodes(templateCode,startNode,endNode));
 	}
 	
 	public String generateSchema(String schemaLocation, CustomEntityTemplate template) {
