@@ -15,7 +15,7 @@ import javax.validation.constraints.Size;
 @Entity
 @ModuleItem
 @ExportIdentifier({ "code"})
-@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = { "CODE","START_NODE_ID","END_NODE_ID"}))
+@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code","start_node_id","end_node_id"}))
 @SequenceGenerator(name = "ID_GENERATOR", sequenceName = "CUST_CRT_SEQ")
 @NamedQueries({ @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  ") })
 public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {

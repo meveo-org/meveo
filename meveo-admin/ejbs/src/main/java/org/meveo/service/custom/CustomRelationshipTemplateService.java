@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -129,9 +130,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      * @param code Code to match
      * @return A single entity matching code
      */
-    public CustomRelationshipTemplate findByStartAndEndCodes(String code, String startCode, String endCode) {
+    public CustomRelationshipTemplate findByStartAndEndCodes(String code, String startCode, String endCode) throws BusinessException {
         if (code == null || startCode == null || endCode == null) {
-            return null;
+            throw new BusinessException();
         }
 
         TypedQuery<CustomRelationshipTemplate> query = getEntityManager().createQuery("select crt from "
@@ -144,7 +145,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
             return query.getSingleResult();
         } catch (NoResultException e) {
             log.debug("No {} of code {} and startCode {} and endCode {} found", getEntityClass().getSimpleName(), code, startCode, endCode);
-            return null;
         }
+        return null;
     }
 }

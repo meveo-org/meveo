@@ -26,6 +26,7 @@ import org.everit.json.schema.RelationSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.json.schema.RootCombinedSchema;
 import org.meveo.json.schema.RootObjectSchema;
 import org.meveo.json.schema.RootRelationSchema;
@@ -140,7 +141,7 @@ public class JSONSchemaGenerator {
 		return generateSchema(schemaLocation, entityTemplateService.findByCode(templateCode));
 	}
 	
-	public String generateRelationshipTemplateSchema(String schemaLocation, String startNode, String templateCode, String endNode ) {
+	public String generateRelationshipTemplateSchema(String schemaLocation, String startNode, String templateCode, String endNode ) throws BusinessException{
 		return generateSchema(schemaLocation, relationshipTemplateService.findByStartAndEndCodes(templateCode,startNode,endNode));
 	}
 	

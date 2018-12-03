@@ -3,6 +3,8 @@ package org.meveo.admin.action.admin.custom;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.jsf.converter.CustomFieldAppliesToConverter;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -12,9 +14,11 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,15 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     public CustomRelationshipTemplateBean() {
         super(CustomRelationshipTemplate.class);
         entityClass = CustomRelationshipTemplate.class;
+    }
+
+    @Override
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        CustomRelationshipTemplate customRelationshipTemplate = this.entity;
+        if (!validateUniqueFields(this.entity)) {
+            return getEditViewName();
+        }
+        return super.saveOrUpdate(killConversation);
     }
 
     public List<CustomEntityTemplate> getCustomEntityTemplates() {
@@ -267,6 +280,74 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         } catch (BusinessException e) {
             log.error("Failed to move down {}", node, e);
             messages.error(new BundleKey("messages", "error.unexpected"));
+        }
+    }
+
+    public boolean validateUniqueFields(CustomRelationshipTemplate customRelationshipTemplate) throws  BusinessException{
+        if (entity.isTransient()) {
+            CustomRelationshipTemplate customRelationshipTemplateNew = customRelationshipTemplateService.findByStartAndEndCodes(customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getCode(), customRelationshipTemplate.getEndNode().getCode());
+            if (customRelationshipTemplateNew != null) {
+                messages.error(new BundleKey("messages", "customRelationshipEntity.unqueFields"), new Object[] { customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getName(), customRelationshipTemplate.getEndNode().getName()});
+                FacesContext.getCurrentInstance().validationFailed();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public class RuleNameValue implements Serializable {
+
+        private static final long serialVersionUID = 3694377290046737073L;
+        private String name;
+        private String value;
+
+        public RuleNameValue() {
+        }
+
+        public RuleNameValue(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            RuleNameValue nameValue = (RuleNameValue) o;
+
+            if (!name.equals(nameValue.name))
+                return false;
+            if (!value.equals(nameValue.value))
+                return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name.hashCode();
+            result = 31 * result + value.hashCode();
+            return result;
         }
     }
 

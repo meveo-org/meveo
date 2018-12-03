@@ -142,7 +142,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         }
     }
 
-    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code,String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException {
+    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code,String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
