@@ -148,4 +148,16 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         }
         return null;
     }
+
+    /**
+     * Find entity by code
+     *
+     * @param code Code to match
+     * @return
+     */
+    @Deprecated
+    @Override
+    public CustomRelationshipTemplate findByCode(String code){
+        return super.findByCode(code);
+    }
 }
