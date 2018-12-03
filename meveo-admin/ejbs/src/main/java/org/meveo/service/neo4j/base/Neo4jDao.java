@@ -1,13 +1,18 @@
 package org.meveo.service.neo4j.base;
 
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.service.neo4j.service.Neo4JRequests;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 
@@ -18,12 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Neo4jDao {
 
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
     public static final String ID = "id";
+
+    Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -43,6 +52,32 @@ public class Neo4jDao {
     @Inject
     @Created
     private Event<org.neo4j.driver.v1.types.Node> nodeCreatedEvent;
+
+    public List<Map> executeGraphQLQuery(String query, Map<String,Object> variables, String operationName){
+
+        /* Build values map */
+        final Map<String, Object> values = new HashMap<>();
+        values.put("query", query);
+        values.put("variables", (variables!=null) ? variables : new HashMap<>());
+        values.put("operationName", (operationName!=null) ? operationName : "");
+
+        StringBuffer statement = new StringBuffer("call graphql.execute($query,$variables,$operationName)");
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession();
+        final Transaction transaction = session.beginTransaction();
+
+        try {
+            // Execute query and parse results
+            final StatementResult result = transaction.run(statement.toString(), values);
+            transaction.success();  // Commit transaction
+            return result.list().stream().map(r -> r.asMap()).collect(Collectors.toList());
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
+
+    }
 
     /**
      * Create a Neo4J node
