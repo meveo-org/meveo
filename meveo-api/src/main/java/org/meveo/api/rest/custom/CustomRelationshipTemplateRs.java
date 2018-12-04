@@ -52,8 +52,10 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      * @return
      */
     @DELETE
-    @Path("/relationship/{customCustomRelationshipTemplateCode}")
-    public ActionStatus removeCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode);
+    @Path("/relationship/{customCustomRelationshipTemplateCode}/{startCustomEntityTemplateCode}/{endCustomEntityTemplateCode}")
+    public ActionStatus removeCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode,
+                                                         @PathParam("startCustomEntityTemplateCode") String startCustomEntityTemplateCode,
+                                                         @PathParam("endCustomEntityTemplateCode") String endCustomEntityTemplateCode);
 
     /**
      * Get custom relationship template definition including its fields 
@@ -62,8 +64,10 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      * @return
      */
     @GET
-    @Path("/relationship/{customCustomRelationshipTemplateCode}")
-    public CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode);
+    @Path("/relationship/{customCustomRelationshipTemplateCode}/{startCustomEntityTemplateCode}/{endCustomEntityTemplateCode}")
+    public CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode,
+                                                                                @PathParam("startCustomEntityTemplateCode") String startCustomEntityTemplateCode,
+                                                                                @PathParam("endCustomEntityTemplateCode") String endCustomEntityTemplateCode);
 
     /**
      * List custom relationship templates.

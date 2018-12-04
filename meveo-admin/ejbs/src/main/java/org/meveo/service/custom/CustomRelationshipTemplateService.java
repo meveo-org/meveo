@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -24,19 +25,18 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.cache.CacheKeyStr;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.Provider;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -122,5 +122,42 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      */
     public List<CustomRelationshipTemplate> getCETForCache() {
         return getEntityManager().createNamedQuery("CustomRelationshipTemplate.getCRTForCache", CustomRelationshipTemplate.class).getResultList();
+    }
+
+    /**
+     * Find entity by startCode,code,endCode- strict match.
+     *
+     * @param code Code to match
+     * @return A single entity matching code
+     */
+    public CustomRelationshipTemplate findByStartAndEndCodes(String code, String startCode, String endCode) throws BusinessException {
+        if (code == null || startCode == null || endCode == null) {
+            throw new BusinessException();
+        }
+
+        TypedQuery<CustomRelationshipTemplate> query = getEntityManager().createQuery("select crt from "
+                + entityClass.getSimpleName() + " crt left join crt.startNode startNode left join crt.endNode endNode where upper(crt.code)=:code and upper(startNode.code)=:startCode "
+                +"and upper(endNode.code)=:endCode ", entityClass)
+                .setParameter("code", code.toUpperCase())
+                .setParameter("startCode", startCode.toUpperCase())
+                .setParameter("endCode", endCode.toUpperCase()).setMaxResults(1);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            log.debug("No {} of code {} and startCode {} and endCode {} found", getEntityClass().getSimpleName(), code, startCode, endCode);
+        }
+        return null;
+    }
+
+    /**
+     * Find entity by code
+     *
+     * @param code Code to match
+     * @return
+     */
+    @Deprecated
+    @Override
+    public CustomRelationshipTemplate findByCode(String code){
+        return super.findByCode(code);
     }
 }

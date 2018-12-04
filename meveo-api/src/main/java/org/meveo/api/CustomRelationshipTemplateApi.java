@@ -16,7 +16,6 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
-import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -88,7 +87,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
         handleMissingParameters();
 
-        if (customRelationshipTemplateService.findByCode(dto.getCode()) != null) {
+        if (customRelationshipTemplateService.findByStartAndEndCodes(dto.getCode(), dto.getStartNodeCode(), dto.getEndNodeCode()) != null) {
             throw new EntityAlreadyExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
@@ -111,7 +110,8 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
         handleMissingParameters();
 
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCode());
+        CustomRelationshipTemplate crt = customRelationshipTemplateService
+                                   .findByStartAndEndCodes(dto.getCode(), dto.getStartNodeCode(), dto.getEndNodeCode());
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
@@ -126,14 +126,14 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
     }
 
-    public void removeCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    public void removeCustomRelationshipTemplate(String code, String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
 
         handleMissingParameters();
 
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(code, startCode, endCode);
         if (crt != null) {
             // Related custom field templates will be removed along with CET
             customRelationshipTemplateService.remove(crt);
@@ -142,14 +142,14 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         }
     }
 
-    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException {
+    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code,String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
 
         handleMissingParameters();
 
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(code, startCode, endCode);
 
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
@@ -161,7 +161,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
     }
 
     public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData) throws MeveoApiException, BusinessException {
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(postData.getCode());
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(postData.getCode(), postData.getStartNodeCode(), postData.getEndNodeCode());
         if (crt == null) {
             createCustomRelationshipTemplate(postData);
         } else {

@@ -49,6 +49,14 @@ public abstract class InputOutputDescription {
     @NotNull
     private String type;
 
+    @JsonProperty(required = true)
+    @NotNull
+    private String startNodeCode;
+
+    @JsonProperty(required = true)
+    @NotNull
+    private String endNodeCode;
+
     @JsonProperty
     private boolean input;
 
@@ -107,6 +115,32 @@ public abstract class InputOutputDescription {
      */
     public void setType(String type) {
         this.type = type;
+    }
+
+    /**
+     * Custom entity template code that the object describe.
+     *
+     * @return The code of the start CET described
+     */
+    public String getStartNodeCode() {
+        return startNodeCode;
+    }
+
+    public void setStartNodeCode(String startNodeCode) {
+        this.startNodeCode = startNodeCode;
+    }
+
+    /**
+     * Custom entity template code that the object describe.
+     *
+     * @return The code of the end CET described
+     */
+    public String getEndNodeCode() {
+        return endNodeCode;
+    }
+
+    public void setEndNodeCode(String endNodeCode) {
+        this.endNodeCode = endNodeCode;
     }
 
     /**

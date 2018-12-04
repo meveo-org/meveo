@@ -69,7 +69,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return dto;
     }
 
-    private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+    private T fromDto(TechnicalServiceDto postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
         List<Description> descriptions = fromDescriptionsDto(technicalService, postData);
@@ -84,7 +84,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return InputOutputDescription.fromDescriptions(technicalService.getDescriptions());
     }
 
-    private Description toDescription(TechnicalService technicalService, InputOutputDescription dto) throws EntityDoesNotExistsException {
+    private Description toDescription(TechnicalService technicalService, InputOutputDescription dto) throws EntityDoesNotExistsException, BusinessException {
         Description description;
         String code;
         String appliesTo;
@@ -102,7 +102,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             description = new RelationDescription();
             ((RelationDescription) description).setSource(((ProcessRelationDescription) dto).getSource());
             ((RelationDescription) description).setTarget(((ProcessRelationDescription) dto).getTarget());
-            final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(dto.getType());
+            final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(dto.getType(), dto.getStartNodeCode(), dto.getEndNodeCode());
             if (customRelationshipTemplate == null) {
                 throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getType());
             }
@@ -147,7 +147,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return description;
     }
 
-    private List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+    private List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException, BusinessException {
         List<Description> descriptions = new ArrayList<>();
         for (InputOutputDescription descDto : postData.getDescriptions()) {
             descriptions.add(toDescription(service, descDto));
@@ -155,7 +155,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return descriptions;
     }
 
-    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException {
+    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException, BusinessException{
         List<Description> descriptions = new ArrayList<>();
         for (InputOutputDescription descDto : dtos) {
             descriptions.add(toDescription(service, descDto));
