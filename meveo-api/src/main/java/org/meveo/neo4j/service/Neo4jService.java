@@ -184,7 +184,6 @@ public class Neo4jService {
                 values.put(SOURCE_TYPE, sourceType);
                 values.put(SOURCE_ID, sourceId);
                 relationshipsToCreate.forEach((targetId, label) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
-                neo4jDao.createSourceNodeStatement(sourceType, sourceId, values);
             }
 
         } catch (BusinessException e) {
@@ -250,7 +249,6 @@ public class Neo4jService {
             crtFields.put(SOURCE_TYPE, sourceType);
             crtFields.put(SOURCE_ID, sourceId);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
-            neo4jDao.createSourceNodeStatement(sourceType, sourceId, crtValues);
         }
 
     }

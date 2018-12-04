@@ -77,13 +77,6 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    public final static StringBuffer createSourceNodeStatement = new StringBuffer("MERGE (source:Source { id: ${id} })")
-            .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType}")
-            .append("WITH source")
-            .append("MERGE (node)-[:HAS_SOURCE]->(source)")
-            .append("WHERE ID(node) = ${nodeId}")
-            .append("RETURN source");
-
     public final static String START_NODE_ALIAS = "start";
     public final static String END_NODE_ALIAS = "end";
 }
