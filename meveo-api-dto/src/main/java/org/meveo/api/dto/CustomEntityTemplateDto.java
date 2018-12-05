@@ -34,6 +34,10 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute(required = true)
     private String code;
 
+    /** Additional labels */
+    @XmlAttribute()
+    private List<String> labels;
+
     /** The name. */
     @XmlAttribute(required = true)
     private String name;
@@ -65,6 +69,14 @@ public class CustomEntityTemplateDto extends BaseDto {
      */
     public CustomEntityTemplateDto() {
 
+    }
+
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<String> labels) {
+        this.labels = labels;
     }
 
     public boolean isPrimitiveEntity() {
@@ -188,6 +200,7 @@ public class CustomEntityTemplateDto extends BaseDto {
         dto.setDescription(cet.getDescription());
         dto.setPrimitiveEntity(cet.isPrimitiveEntity());
         dto.setPrimitiveType(cet.getPrimitiveType());
+        dto.setLabels(cet.getLabels());
 
         if (cetFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
@@ -225,6 +238,7 @@ public class CustomEntityTemplateDto extends BaseDto {
         cet.setDescription(dto.getDescription());
         cet.setPrimitiveEntity(dto.isPrimitiveEntity());
         cet.setPrimitiveType(dto.getPrimitiveType());
+        cet.setLabels(dto.getLabels());
         return cet;
     }
 
