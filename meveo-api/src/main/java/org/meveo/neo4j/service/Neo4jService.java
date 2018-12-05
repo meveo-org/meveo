@@ -462,15 +462,16 @@ public class Neo4jService {
 
             // Execute query
             final StatementResult result = transaction.run(deleteStatement, values);
-            Record record = result.single();
-            transaction.success();
+            for(Record record : result.list()) {
 
-            // Fire deletion event
-            final Map<String, Value> properties = record.get("properties").asMap(e -> e);   // Parse properties
-            final List<String> labels = record.get("labels").asList(Value::asString);       // Parse labels
-            final long id = record.get("id").asLong();                                      // Parse id
-            final InternalNode internalNode = new InternalNode(id, labels, properties);     // Create Node object
-            nodeRemovedEvent.fire(internalNode);                                            // Fire notification
+                // Fire deletion event
+                final Map<String, Value> properties = record.get("properties").asMap(e -> e);   // Parse properties
+                final List<String> labels = record.get("labels").asList(Value::asString);       // Parse labels
+                final long id = record.get("id").asLong();                                      // Parse id
+                final InternalNode internalNode = new InternalNode(id, labels, properties);     // Create Node object
+                nodeRemovedEvent.fire(internalNode);                                            // Fire notification
+            }
+            transaction.success();
 
         } catch (Exception e) {
 
