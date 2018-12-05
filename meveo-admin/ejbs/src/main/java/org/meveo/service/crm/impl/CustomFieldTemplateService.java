@@ -202,10 +202,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
 
         super.create(cft);
-        if (cft.isUnique()) {
-            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
-        }
+//        if (cft.isUnique()) {
+//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+//            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
+//        }
 
         customFieldsCache.addUpdateCustomFieldTemplate(cft);
         elasticClient.updateCFMapping(cft);
@@ -224,13 +224,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         CustomFieldTemplate cftBefore = super.findById(cft.getId());
         CustomFieldTemplate cftUpdated = super.update(cft);
-        if (cftBefore.isUnique() && !cftUpdated.isUnique()) {
-            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
-        } else if (!cftBefore.isUnique() && cftUpdated.isUnique()) {
-            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
-        }
+//        if (cftBefore.isUnique() && !cftUpdated.isUnique()) {
+//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+//            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
+//        } else if (!cftBefore.isUnique() && cftUpdated.isUnique()) {
+//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+//            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
+//        }
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
 
@@ -242,10 +242,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         CustomFieldTemplate cftBefore = super.findById(cft.getId());
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
-        if (cftBefore.isUnique()) {
-            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
-        }
+//        if (cftBefore.isUnique()) {
+//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+//            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
+//        }
     }
 
     @Override
