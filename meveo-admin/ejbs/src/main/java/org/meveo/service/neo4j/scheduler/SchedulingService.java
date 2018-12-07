@@ -1,4 +1,4 @@
-package org.meveo.neo4j.scheduler;
+package org.meveo.service.neo4j.scheduler;
 
 import org.meveo.api.dto.neo4j.Entity;
 import org.meveo.api.dto.neo4j.EntityOrRelation;

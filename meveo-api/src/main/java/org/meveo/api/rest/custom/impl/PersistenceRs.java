@@ -9,12 +9,12 @@ import org.meveo.api.dto.neo4j.EntityOrRelation;
 import org.meveo.api.dto.neo4j.EntityRelation;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.neo4j.HTTPGraphQLRequest;
-import org.meveo.neo4j.scheduler.CyclicDependencyException;
-import org.meveo.neo4j.scheduler.AtomicPersistencePlan;
-import org.meveo.neo4j.scheduler.ScheduledPersistenceService;
-import org.meveo.neo4j.scheduler.SchedulingService;
-import org.meveo.neo4j.service.GraphQLService;
-import org.meveo.neo4j.service.Neo4jService;
+import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
+import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
+import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
+import org.meveo.service.neo4j.scheduler.SchedulingService;
+import org.meveo.service.neo4j.service.GraphQLService;
+import org.meveo.service.neo4j.service.Neo4jService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

@@ -1,8 +1,8 @@
-package org.meveo.neo4j.scheduler;
+package org.meveo.service.neo4j.scheduler;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
-import org.meveo.neo4j.service.Neo4jService;
+import org.meveo.service.neo4j.service.Neo4jService;
 
 import javax.inject.Inject;
 import java.util.Iterator;

@@ -1,4 +1,4 @@
-package org.meveo.neo4j.service;
+package org.meveo.service.neo4j.service;
 
 import java.util.List;
 import java.util.Map;

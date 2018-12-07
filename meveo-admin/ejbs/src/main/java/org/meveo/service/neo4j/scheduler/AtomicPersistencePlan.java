@@ -1,4 +1,4 @@
-package org.meveo.neo4j.scheduler;
+package org.meveo.service.neo4j.scheduler;
 
 import java.util.*;
 
