@@ -8,6 +8,7 @@ import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
@@ -55,9 +56,12 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.billing.impl.CounterValueInsufficientException;
+import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
+import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 
 @Singleton
@@ -95,6 +99,9 @@ public class DefaultObserver {
 
     @Inject
     private JobTriggerLauncher jobTriggerLauncher;
+
+    @Inject
+    private Neo4jDao neo4jDao;
 
     @Inject
     @CurrentUser
@@ -349,4 +356,23 @@ public class DefaultObserver {
         checkEvent(NotificationEventTypeEnum.COUNTER_DEDUCED, event);
     }
 
+    public void nodeCreated(@Observes @Created Node e) throws BusinessException {
+        log.debug("Defaut observer : Node {} with id {} created", e.labels(), e.id());
+        checkEvent(NotificationEventTypeEnum.CREATED, e);
+    }
+
+    public void nodeUpdated(@Observes @Updated Node e) throws  BusinessException {
+        log.debug("Defaut observer : Node {} with id {} updated", e.labels(), e.id());
+        checkEvent(NotificationEventTypeEnum.UPDATED, e);
+    }
+
+    public  void relationshipCreated(@Observes @Created Relationship e) throws  BusinessException {
+        log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} created", e.startNodeId(), e.endNodeId(), e.type(), e.id());
+        checkEvent(NotificationEventTypeEnum.CREATED, e);
+    }
+
+    public  void relationshipUpdated(@Observes @Updated Relationship e) throws  BusinessException {
+        log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} updated", e.startNodeId(), e.endNodeId(), e.type(), e.id());
+        checkEvent(NotificationEventTypeEnum.UPDATED, e);
+    }
 }
