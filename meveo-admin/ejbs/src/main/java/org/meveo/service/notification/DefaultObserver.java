@@ -59,6 +59,8 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Relationship;
 
 @Singleton
 @Startup
@@ -349,4 +351,23 @@ public class DefaultObserver {
         checkEvent(NotificationEventTypeEnum.COUNTER_DEDUCED, event);
     }
 
+    public void nodeCreated(@Observes @Created Node e) throws BusinessException {
+        log.debug("Defaut observer : Node {} with id {} created", e.labels(), e.id());
+        checkEvent(NotificationEventTypeEnum.CREATED, e);
+    }
+
+    public void nodeUpdated(@Observes @Updated Node e) throws  BusinessException {
+        log.debug("Defaut observer : Node {} with id {} updated", e.labels(), e.id());
+        checkEvent(NotificationEventTypeEnum.UPDATED, e);
+    }
+
+    public  void relationshipCreated(@Observes @Created Relationship e) throws  BusinessException {
+        log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} created", e.startNodeId(), e.endNodeId(), e.type(), e.id());
+        checkEvent(NotificationEventTypeEnum.CREATED, e);
+    }
+
+    public  void relationshipUpdated(@Observes @Updated Relationship e) throws  BusinessException {
+        log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} updated", e.startNodeId(), e.endNodeId(), e.type(), e.id());
+        checkEvent(NotificationEventTypeEnum.UPDATED, e);
+    }
 }
