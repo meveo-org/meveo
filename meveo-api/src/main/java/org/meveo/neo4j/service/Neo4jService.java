@@ -72,8 +72,6 @@ public class Neo4jService {
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
     public static final String ID = "id";
-    public static final String SOURCE_TYPE = "sourceType";
-    public static final String SOURCE_ID = "sourceId";
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -112,13 +110,13 @@ public class Neo4jService {
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, String sourceType, String sourceId) {
-        return addCetNode(cetCode, fieldValues, false, sourceType, sourceId);
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues) {
+        return addCetNode(cetCode, fieldValues, false);
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET, String sourceType, String sourceId) {
+    public Long addCetNode(String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET) {
 
         Long nodeId = null; // Id of the created node
 
@@ -157,7 +155,7 @@ public class Neo4jService {
                     createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());
                 }else{
                     @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
-                    createNodeId = addCetNode(referencedCetCode, valueMap, sourceType, sourceId);
+                    createNodeId = addCetNode(referencedCetCode, valueMap);
                 }
                 if(createNodeId != null){
                     String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
@@ -181,8 +179,6 @@ public class Neo4jService {
             /* Create relationships collected in the relationshipsToCreate map */
             if(nodeId != null){
                 final Map<String, Object> values = new HashMap<>();
-                values.put(SOURCE_TYPE, sourceType);
-                values.put(SOURCE_ID, sourceId);
                 relationshipsToCreate.forEach((targetId, label) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
             }
 
@@ -211,8 +207,7 @@ public class Neo4jService {
                        Map<String, Object> crtValues,
                        Map<String, Object> startFieldValues,
                        Map<String, Object> endFieldValues,
-                       String sourceType,
-                       String sourceId,String startCode, String endCode)
+                       String startCode, String endCode)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -246,8 +241,6 @@ public class Neo4jService {
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
-            crtFields.put(SOURCE_TYPE, sourceType);
-            crtFields.put(SOURCE_ID, sourceId);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
         }
 
@@ -329,8 +322,6 @@ public class Neo4jService {
     public void addSourceNodeUniqueCrt(String crtCode,
                                        Map<String, Object> startNodeValues,
                                        Map<String, Object> endNodeValues,
-                                       String sourceType,
-                                       String sourceId,
                                        String startCode,
                                        String endCode) throws BusinessException, ELException {
 
@@ -408,7 +399,7 @@ public class Neo4jService {
 
                 /* Create the source node */
 
-                addCetNode(cetCode, startNodeValues, sourceType, sourceId);
+                addCetNode(cetCode, startNodeValues);
 
             }
 
