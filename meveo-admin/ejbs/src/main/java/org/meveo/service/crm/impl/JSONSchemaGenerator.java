@@ -1,13 +1,7 @@
 package org.meveo.service.crm.impl;
 
 import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -15,21 +9,13 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.everit.json.schema.ArraySchema;
-import org.everit.json.schema.EnumSchema;
-import org.everit.json.schema.FormatValidator;
-import org.everit.json.schema.NumberSchema;
-import org.everit.json.schema.ObjectSchema;
-import org.everit.json.schema.ReferenceSchema;
-import org.everit.json.schema.ReferenceViewSchema;
-import org.everit.json.schema.RelationSchema;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.StringSchema;
+import org.everit.json.schema.*;
 import org.everit.json.schema.internal.JSONPrinter;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.json.schema.RootCombinedSchema;
 import org.meveo.json.schema.RootObjectSchema;
 import org.meveo.json.schema.RootRelationSchema;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
@@ -55,7 +41,8 @@ public class JSONSchemaGenerator {
 		Set<String> primary = new HashSet<>();
 		
 		// Entity templates
-		processCustomEnitytTemplates(schemaLocation, activeTemplatesOnly, primary, processed);
+		processCustomEntityTemplates(schemaLocation, activeTemplatesOnly, primary, processed);
+
 		// Relationship templates
 		processCustomRelationshipTemplates(schemaLocation, activeTemplatesOnly, primary, processed);
 
@@ -78,7 +65,7 @@ public class JSONSchemaGenerator {
 		Set<String> primary = new HashSet<>();
 		
 		// Entity templates
-		processCustomEnitytTemplates(schemaLocation, activeTemplatesOnly, primary, processed);
+		processCustomEntityTemplates(schemaLocation, activeTemplatesOnly, primary, processed);
 
 		RootCombinedSchema.Builder builder = RootCombinedSchema
 				.builder()
@@ -115,8 +102,8 @@ public class JSONSchemaGenerator {
 		return out.toString();
 	}
 	
-	private void processCustomEnitytTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed) {
-		Collection<CustomEntityTemplate> templates = entityTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : (Boolean)null);
+	private void processCustomEntityTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed) {
+		Collection<CustomEntityTemplate> templates = entityTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
 		primary.addAll(
 			templates
@@ -127,7 +114,7 @@ public class JSONSchemaGenerator {
 	}
 	
 	private void processCustomRelationshipTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed) {
-		Collection<CustomRelationshipTemplate> templates = relationshipTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : (Boolean)null);
+		Collection<CustomRelationshipTemplate> templates = relationshipTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
 		primary.addAll(
 			templates
@@ -145,15 +132,15 @@ public class JSONSchemaGenerator {
 		return generateSchema(schemaLocation, relationshipTemplateService.findByStartAndEndCodes(templateCode,startNode,endNode));
 	}
 	
-	public String generateSchema(String schemaLocation, CustomEntityTemplate template) {
+	private String generateSchema(String schemaLocation, CustomEntityTemplate template) {
 		return generateSchema(schemaLocation, processorOf(template));
 	}
 	
-	public String generateSchema(String schemaLocation, CustomRelationshipTemplate template) {
+	private String generateSchema(String schemaLocation, CustomRelationshipTemplate template) {
 		return generateSchema(schemaLocation, processorOf(template));
 	}
 	
-	protected String generateSchema(String schemaLocation, CustomTemplateProcessor template) {
+	private String generateSchema(String schemaLocation, CustomTemplateProcessor template) {
 		Map<String, Schema> processed = new HashMap<>();	
 		ObjectSchema root = createSchema(schemaLocation, template, processed);
 		processed.remove(template.code());
@@ -167,40 +154,37 @@ public class JSONSchemaGenerator {
 		return out.toString();
 	}
 	
-	protected ObjectSchema createSchema(String schemaLocation, CustomTemplateProcessor template, Map<String, Schema> processed) {
+	private ObjectSchema createSchema(String schemaLocation, CustomTemplateProcessor template, Map<String, Schema> processed) {
 		Set<String> ownRefs = new HashSet<>();
-		ObjectSchema result = createSchema(schemaLocation, template, ownRefs);
-		//template.getParentEntityType() -- set parent via allOf ???
+		ObjectSchema result = buildSchema(schemaLocation, template, ownRefs);
 		processed.put(template.code(), result);
-		while (true) {
-			ownRefs.removeAll(processed.keySet());
-			if (ownRefs.isEmpty()) {
-				return result;
-			}
-			ownRefs = new HashSet<>();
-			for (String c : ownRefs) {
-				// Enlisted refs are always CustomEntityTemplate and never CustomRelationTemplate
-				CustomTemplateProcessor refTemplate = processorOf(entityTemplateService.findByCode(c));
-				Schema refSchema = createSchema(schemaLocation, refTemplate, ownRefs);
-				processed.put(refTemplate.code(), refSchema);
-			}
-		}
+		ownRefs.removeAll(processed.keySet());
+		return result;
 	}
 	
-	protected ObjectSchema createSchema(String schemaLocation, CustomTemplateProcessor template, Set<String> allRefs) {
+	private ObjectSchema buildSchema(String schemaLocation, CustomTemplateProcessor template, Set<String> allRefs) {
 		ObjectSchema.Builder result = template.createJsonSchemaBuilder(schemaLocation, allRefs);
 		Map<String, CustomFieldTemplate> fields = template.fields();
-		fields.entrySet().stream().forEach(e -> {
-			CustomFieldTemplate field = e.getValue();
-			result.addPropertySchema(e.getKey(), createFieldSchema(schemaLocation, template, e.getValue(), allRefs).build());	
+		fields.forEach((key, field) -> {
+			result.addPropertySchema(key, createFieldSchema(schemaLocation, template, field, allRefs).build());
 			if (field.isValueRequired()) {
 				result.addRequiredProperty(field.getCode());
 			}
 		});
+
+		// If has super template
+		if(template.parentTemplate() != null){
+			ReferenceSchema.Builder referenceSchema = ReferenceSchema.builder();
+			referenceSchema.refValue(DEFINITIONS_PREFIX + template.parentTemplate().code());
+			final CombinedSchema combinedSchema = CombinedSchema.allOf(Collections.singletonList(referenceSchema.build()))
+					.build();
+			return CombinedObjectSchema.Factory.get(result, combinedSchema);
+		}
+
 		return result.build();
 	}
 	
-	protected Schema.Builder<?> createFieldSchema(String schemaLocation, CustomTemplateProcessor template, CustomFieldTemplate field, Set<String> allRefs) {
+	private Schema.Builder<?> createFieldSchema(String schemaLocation, CustomTemplateProcessor template, CustomFieldTemplate field, Set<String> allRefs) {
 		Schema.Builder<?> result;
 		switch (field.getStorageType()) {
 			case SINGLE:
@@ -335,7 +319,7 @@ public class JSONSchemaGenerator {
 		field.getMatrixColumns()
 			.stream()
 			.filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_KEY)
-			.sorted((c1, c2) -> c1.getPosition() - c2.getPosition())
+			.sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition))
 			.forEach(keyColumnProcessor)
 		;
 		
@@ -368,14 +352,13 @@ public class JSONSchemaGenerator {
 	    				.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_value_" + c.getCode())
 	    				.title(template.code() + "." + field.getCode() + " Value column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
 	    				.schemaLocation(schemaLocation)
-	    				//.nullable(false)
 	    			;
 	    			valuesBuilder.addPropertySchema(c.getCode(), b.build());
 	    		};
 	    		field.getMatrixColumns()
 					.stream()
 					.filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_VALUE)
-					.sorted((c1, c2) -> c1.getPosition() - c2.getPosition())
+					.sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition))
 					.forEach(valueColumnProcessor)
 				;
 	    		valueBuilder = valuesBuilder;
@@ -460,7 +443,7 @@ public class JSONSchemaGenerator {
 		@SuppressWarnings("unchecked")
 		final Map<Object, String> enumKeyVal = (Map<Object, String>)(Map<?, String>)field.getListValues();
 		if (null != enumKeyVal) {
-			result.possibleValues((Set<Object>)enumKeyVal.keySet());
+			result.possibleValues(enumKeyVal.keySet());
 		}
 		return result;		
 	}
@@ -504,10 +487,15 @@ public class JSONSchemaGenerator {
 			Map<String, CustomFieldTemplate> fields() {
 				return fieldService.findByAppliesTo(entityTemplate.getAppliesTo());
 			}
-			
+
+			@Override
+			CustomTemplateProcessor parentTemplate(){
+				return entityTemplate.getSuperTemplate() != null ? processorOf(entityTemplate.getSuperTemplate()) : null;
+			}
+
 			@Override
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
-				return (ObjectSchema.Builder)ObjectSchema.builder()
+				return (ObjectSchema.Builder) ObjectSchema.builder()
 					.requiresObject(true)
 					.id(schemaLocation + '#' + entityTemplate.getCode())
 					.title(entityTemplate.getName())
@@ -516,6 +504,7 @@ public class JSONSchemaGenerator {
 					;
 			}
 			
+			@Override
 			ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies) {
 				RootObjectSchema.Builder builder = RootObjectSchema
 						.builder()
@@ -523,7 +512,7 @@ public class JSONSchemaGenerator {
 						.specificationVersion(JSON_SCHEMA_VERSION)
 						;
 					
-				dependencies.forEach((k, v) -> builder.addDefinition(k, v));
+				dependencies.forEach(builder::addDefinition);
 				return builder;
 			}
 
@@ -542,6 +531,11 @@ public class JSONSchemaGenerator {
 			Map<String, CustomFieldTemplate> fields() {
 				return fieldService.findByAppliesTo(relationshipTemplate.getAppliesTo());
 			}
+
+			@Override
+			CustomTemplateProcessor parentTemplate(){
+				return relationshipTemplate.getSuperTemplate() != null ? processorOf(relationshipTemplate.getSuperTemplate()) : null;
+			}
 			
 			@Override
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
@@ -557,18 +551,19 @@ public class JSONSchemaGenerator {
 				
 				node = relationshipTemplate.getStartNode();
 				if (node != null) {
-					result.source(createReference(node, relationshipTemplate.getStartNodeKeys()));
+					result.source(createReference(node));
 					allRefs.add(node.getCode());
 				}
 				
 				node = relationshipTemplate.getEndNode();
 				if (node != null) {
-					result.target(createReference(node, relationshipTemplate.getEndNodeKeys()));
+					result.target(createReference(node));
 					allRefs.add(node.getCode());
 				}
 				return result;
 			}
 			
+			@Override
 			ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies) {
 				RootRelationSchema.Builder builder = RootRelationSchema
 						.builder()
@@ -576,11 +571,11 @@ public class JSONSchemaGenerator {
 						.specificationVersion(JSON_SCHEMA_VERSION)
 						;
 					
-				dependencies.forEach((k, v) -> builder.addDefinition(k, v));
+				dependencies.forEach(builder::addDefinition);
 				return builder;
 			}
 			
-			private ReferenceSchema createReference(CustomEntityTemplate node, String nodeKeys) {
+			private ReferenceSchema createReference(CustomEntityTemplate node) {
 				ReferenceSchema.Builder r = ReferenceSchema.builder()
 					.refValue(DEFINITIONS_PREFIX + node.getCode());
 				return r.build();
@@ -596,14 +591,14 @@ public class JSONSchemaGenerator {
 						.fields()
 						.values()
 						.stream()
-						.filter(f -> f.isUnique())
-						.map(f -> f.getCode())
+						.filter(CustomFieldTemplate::isUnique)
+						.map(BusinessEntity::getCode)
 						.collect(Collectors.toList())
 					;
 				}
 				ReferenceViewSchema.Builder r = ReferenceViewSchema.builder()
 					.refValue(DEFINITIONS_PREFIX + node.getCode());
-				actualKeys.stream().forEach(p -> r.addRefProperty(p.trim()));
+				actualKeys.forEach(p -> r.addRefProperty(p.trim()));
 				return r.build();
 			}
 			
@@ -612,6 +607,7 @@ public class JSONSchemaGenerator {
 	
 	abstract static class CustomTemplateProcessor {
 		abstract String code();
+		abstract CustomTemplateProcessor parentTemplate();
 		abstract Map<String, CustomFieldTemplate> fields();
 		abstract ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs);
 		abstract ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies);
