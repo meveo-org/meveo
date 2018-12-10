@@ -2,18 +2,7 @@ package org.meveo.model.customEntities;
 
 import java.util.List;
 
-import javax.persistence.Cacheable;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -52,6 +41,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
     private List<String> labels;
+
+    /**
+     * Template that current template inherits from
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "super_template_id")
+    private CustomEntityTemplate superTemplate;
     
     /**
      * Whether the CET is primitive.
@@ -132,5 +128,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     public static String getCodeFromAppliesTo(String appliesTo) {
        String splitAppliesTo = appliesTo.substring(3);
        return splitAppliesTo;
+    }
+
+    public CustomEntityTemplate getSuperTemplate() {
+        return superTemplate;
+    }
+
+    public void setSuperTemplate(CustomEntityTemplate superTemplate) {
+        this.superTemplate = superTemplate;
     }
 }

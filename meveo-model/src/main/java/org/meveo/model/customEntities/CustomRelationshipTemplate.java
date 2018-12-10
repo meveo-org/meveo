@@ -45,6 +45,13 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
 
     /**
+     * Template that current template inherits from
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "super_template_id")
+    private CustomRelationshipTemplate superTemplate;
+
+    /**
      * Json list type. ex : ["firstName","lastName","birthDate"]
      */
     @Column(name = "START_NODE_KEYS", length = 100)
@@ -150,5 +157,13 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 
     public static String getPermissionResourceName(String code) {
         return "CRT_" + code;
+    }
+
+    public CustomRelationshipTemplate getSuperTemplate() {
+        return superTemplate;
+    }
+
+    public void setSuperTemplate(CustomRelationshipTemplate superTemplate) {
+        this.superTemplate = superTemplate;
     }
 }

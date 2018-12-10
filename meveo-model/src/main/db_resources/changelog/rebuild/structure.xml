@@ -2448,6 +2448,7 @@
             <column name="name" type="varchar(100)">
                 <constraints nullable="false" />
             </column>
+            <column name="super_template_id" type="bigint"/>
         </createTable>
     </changeSet>
     <changeSet author="AndriusKarpavicius" id="rebuild-str-tbl-299">

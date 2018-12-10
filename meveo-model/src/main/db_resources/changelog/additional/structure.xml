@@ -30,6 +30,7 @@
             <column name="is_unique" type="${type.boolean}" defaultValueNumeric="0">
                 <constraints nullable="false" />
             </column>
+            <column name="super_template_id" type="bigint"/>
         </createTable>
         <createSequence sequenceName="cust_crt_seq"/>
         <addPrimaryKey columnNames="id" constraintName="cust_crt_pkey"
