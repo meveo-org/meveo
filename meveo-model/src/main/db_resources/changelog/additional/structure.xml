@@ -50,6 +50,11 @@
             baseTableName="cust_crt" constraintName="fk_cust_crt_end_node"
             deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
             onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cet"/>
+            
+       <addForeignKeyConstraint baseColumnNames="super_template_id"
+            baseTableName="cust_crt" constraintName="fk_cust_crt_super_template_id"
+            deferrable="false" initiallyDeferred="false" onDelete="SET NULL"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_crt"/>
 
     </changeSet>
     <changeSet id="#1150_20161010" author="rachidAityaazza" failOnError="false">

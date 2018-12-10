@@ -1,5 +1,12 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
+
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -13,18 +20,12 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import javax.faces.view.ViewScoped;
-import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 @Named
 @ViewScoped
 public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
 
     private static final long serialVersionUID = 1187554162639618526L;
-
+    
     /**
      * Object being customized in case customization corresponds to a non CustomEntityTemplate class instance
      */
@@ -40,11 +41,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
 
     private EntityCustomAction selectedEntityAction;
+    
+    private List<CustomEntityTemplate> customEntityTemplates;
 
 
     public CustomEntityTemplateBean() {
         super(CustomEntityTemplate.class);
         entityClass = CustomEntityTemplate.class;
+        customEntityTemplates = customEntityTemplateService.list();
     }
 
     @Override
@@ -55,9 +59,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     public boolean isCustomEntityTemplate() {
         return entityClassName == null || CustomEntityTemplate.class.getName().equals(entityClassName);
     }
+    
+    public List<CustomEntityTemplate> getCustomEntityTemplates() {
+        return customEntityTemplates;
+    }
 
-    /**
-     * Prepare to show entity customozation for a particular class - To be used from GUI action button/link
+	/**
+     * Prepare to show entity customization for a particular class - To be used from GUI action button/link
      * 
      * @param entityClassName Entity class
      */

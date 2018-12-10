@@ -2450,6 +2450,10 @@
             </column>
             <column name="super_template_id" type="bigint"/>
         </createTable>
+        <addForeignKeyConstraint baseColumnNames="super_template_id"
+            baseTableName="cust_cet" constraintName="fk_cust_cet_super_template_id"
+            deferrable="false" initiallyDeferred="false" onDelete="SET NULL"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cet"/>
     </changeSet>
     <changeSet author="AndriusKarpavicius" id="rebuild-str-tbl-299">
         <createTable tableName="adm_script_notification">

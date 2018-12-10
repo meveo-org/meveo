@@ -39,10 +39,25 @@
                 <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" />
                 <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
+                
+                <!-- Inheritance -->
+				<hftl:decorateFormField field="superTemplate" componentWidth="150"
+					label="#{messages['BusinessEntity.superTemplate']}">
+					<p:selectOneMenu value="#{customRelationshipTemplateBean.entity.superTemplate}" style="width:150px;">
+						<f:selectItem
+							itemLabel="#{messages['customizedRelationships.selectCRT']}"
+							itemValue="" noSelectionOption="true" />
+						<f:selectItems
+							value="#{customRelationshipTemplateBean.customRelationshipTemplates}"
+							var="crt" itemLabel="#{crt.name}"
+							itemValue="${#crt}" />
+						<hftl:objectConverter />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+				
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <p:selectOneMenu id="startNode" value="#{customRelationshipTemplateBean.entity.startNode}" required="true" style="width:150px;">
-                            <p:ajax process="@form" event="change" partialSubmit="true"/>
                             <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{customRelationshipTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" />
                             <hftl:objectConverter/>
@@ -50,7 +65,6 @@
                     </hftl:decorateFormField>
                     <hftl:decorateFormField field = "endNode" fieldId="endNode" componentWidth="150" label="#{messages['customizedRelationships.endEntity']}">
                         <p:selectOneMenu id="endNode" value="#{customRelationshipTemplateBean.entity.endNode}" required="true" style="width:150px;">
-                            <p:ajax process="@form" event="change" partialSubmit="true"/>
                             <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{customRelationshipTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" />
                             <hftl:objectConverter/>

@@ -1,9 +1,18 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.jsf.converter.CustomFieldAppliesToConverter;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
@@ -13,15 +22,6 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
-
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @Named
 @ViewScoped
@@ -36,7 +36,9 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     private SortedTreeNode groupedFields;
 
-    private List<CustomEntityTemplate> customEntityTemplates = new ArrayList<>();
+    private List<CustomEntityTemplate> customEntityTemplates;
+    
+    private List<CustomRelationshipTemplate> customRelationshipTemplates;
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
@@ -44,11 +46,12 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     public CustomRelationshipTemplateBean() {
         super(CustomRelationshipTemplate.class);
         entityClass = CustomRelationshipTemplate.class;
+        customRelationshipTemplates = customRelationshipTemplateService.list();
+        customEntityTemplates = customEntityTemplateService.list();
     }
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        CustomRelationshipTemplate customRelationshipTemplate = this.entity;
         if (!validateUniqueFields(this.entity)) {
             return getEditViewName();
         }
@@ -56,14 +59,14 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     }
 
     public List<CustomEntityTemplate> getCustomEntityTemplates() {
-        return customEntityTemplateService.list();
+        return customEntityTemplates;
     }
 
-    public void setCustomEntityTemplates(List<CustomEntityTemplate> customEntityTemplates) {
-        this.customEntityTemplates = customEntityTemplates;
-    }
+    public List<CustomRelationshipTemplate> getCustomRelationshipTemplates() {
+    	return customRelationshipTemplates;
+	}
 
-    @Override
+	@Override
     protected CustomRelationshipTemplateService getPersistenceService() {
         return customRelationshipTemplateService;
     }
@@ -287,7 +290,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         if (entity.isTransient()) {
             CustomRelationshipTemplate customRelationshipTemplateNew = customRelationshipTemplateService.findByStartAndEndCodes(customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getCode(), customRelationshipTemplate.getEndNode().getCode());
             if (customRelationshipTemplateNew != null) {
-                messages.error(new BundleKey("messages", "customRelationshipEntity.unqueFields"), new Object[] { customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getName(), customRelationshipTemplate.getEndNode().getName()});
+                messages.error(new BundleKey("messages", "customRelationshipEntity.unqueFields"), customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getName(), customRelationshipTemplate.getEndNode().getName());
                 FacesContext.getCurrentInstance().validationFailed();
                 return false;
             }
@@ -337,10 +340,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
             if (!name.equals(nameValue.name))
                 return false;
-            if (!value.equals(nameValue.value))
-                return false;
-
-            return true;
+            return value.equals(nameValue.value);
         }
 
         @Override

@@ -54,8 +54,22 @@
 	               	 	label="#{messages['BusinessEntity.primitiveType']}" allowEdit="false" required="true" field="primitiveType" />
                 </h:panelGroup>
 
-                
-            </hftl:formPanel>
+                <!-- Inheritance -->
+				<hftl:decorateFormField field="superTemplate" componentWidth="150"
+					label="#{messages['BusinessEntity.superTemplate']}">
+					<p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}" style="width:150px;">
+						<f:selectItem
+							itemLabel="#{messages['customizedRelationships.selectCETEntity']}"
+							itemValue="" noSelectionOption="true" />
+						<f:selectItems
+							value="#{customEntityTemplateBean.customEntityTemplates}"
+							var="cetEntity" itemLabel="#{cetEntity.name}"
+							itemValue="#{cetEntity}" />
+						<hftl:objectConverter />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+
+			</hftl:formPanel>
         </h:panelGroup>
         <h:panelGroup rendered="#{! customEntityTemplateBean.customEntityTemplate}">
             <hftl:decorateFormPanel label="#{messages['customizedEntities.detail']} - #{customEntityTemplateBean.customizedEntity.classnameToDisplayHuman}">

@@ -44,7 +44,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     /**
      * Description of super template
      */
-    @XmlAttribute()
+    @XmlElement()
     private CustomRelationshipTemplateDto superTemplate;
 
     @XmlAttribute(required = true)

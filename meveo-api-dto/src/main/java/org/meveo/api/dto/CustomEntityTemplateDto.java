@@ -38,8 +38,8 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private List<String> labels;
 
-    @XmlAttribute()
-    private CustomEntityTemplateDto superTemplate;
+    @XmlElement()
+	private CustomEntityTemplateDto superTemplate;
 
     /** The name. */
     @XmlAttribute(required = true)
