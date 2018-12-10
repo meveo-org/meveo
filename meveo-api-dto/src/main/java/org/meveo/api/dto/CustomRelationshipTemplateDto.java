@@ -41,12 +41,6 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlElement(name = "field")
     private List<CustomFieldTemplateDto> fields = new ArrayList<>();
 
-    /**
-     * Description of super template
-     */
-    @XmlElement()
-    private CustomRelationshipTemplateDto superTemplate;
-
     @XmlAttribute(required = true)
     private String startNodeCode;
 
@@ -64,14 +58,6 @@ public class CustomRelationshipTemplateDto extends BaseDto {
 
     public String getCode() {
         return code;
-    }
-
-    public CustomRelationshipTemplateDto getSuperTemplate() {
-        return superTemplate;
-    }
-
-    public void setSuperTemplate(CustomRelationshipTemplateDto superTemplate) {
-        this.superTemplate = superTemplate;
     }
 
     public void setCode(String code) {
@@ -179,9 +165,6 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setUnique(cet.isUnique());
-        if(cet.getSuperTemplate() != null){
-            dto.setSuperTemplate(toDTO(cet.getSuperTemplate(), null));  //TODO: Find super template fields
-        }
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {
@@ -211,9 +194,6 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setDescription(dto.getDescription());
         crt.setDirection(dto.getDirection());
         crt.setUnique(dto.isUnique());
-        if(dto.getSuperTemplate() != null){
-            crt.setSuperTemplate(fromDTO(dto.getSuperTemplate(), crt.getSuperTemplate()));
-        }
         return crt;
     }
 

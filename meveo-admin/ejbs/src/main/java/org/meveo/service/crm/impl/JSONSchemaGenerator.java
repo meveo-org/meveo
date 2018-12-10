@@ -534,7 +534,7 @@ public class JSONSchemaGenerator {
 
 			@Override
 			CustomTemplateProcessor parentTemplate(){
-				return relationshipTemplate.getSuperTemplate() != null ? processorOf(relationshipTemplate.getSuperTemplate()) : null;
+				return null;
 			}
 			
 			@Override

@@ -40,21 +40,6 @@
                 <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
                 
-                <!-- Inheritance -->
-				<hftl:decorateFormField field="superTemplate" componentWidth="150"
-					label="#{messages['BusinessEntity.superTemplate']}">
-					<p:selectOneMenu value="#{customRelationshipTemplateBean.entity.superTemplate}" style="width:150px;">
-						<f:selectItem
-							itemLabel="#{messages['customizedRelationships.selectCRT']}"
-							itemValue="" noSelectionOption="true" />
-						<f:selectItems
-							value="#{customRelationshipTemplateBean.customRelationshipTemplates}"
-							var="crt" itemLabel="#{crt.name}"
-							itemValue="${#crt}" />
-						<hftl:objectConverter />
-					</p:selectOneMenu>
-				</hftl:decorateFormField>
-				
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <p:selectOneMenu id="startNode" value="#{customRelationshipTemplateBean.entity.startNode}" required="true" style="width:150px;">
