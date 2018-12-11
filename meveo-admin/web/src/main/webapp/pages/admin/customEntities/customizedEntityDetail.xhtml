@@ -45,7 +45,7 @@
                 
                 <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
 	            <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
-	                allowEdit="#{customEntityTemplateBean.entity.primitiveEntity}"
+	                allowEdit="false"
 	                listenerUpdate="@this primitiveType cfFields" />
                 
                 <!--  If primitive, ask for primitive type class -->
@@ -53,7 +53,6 @@
 	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
 	               	 	label="#{messages['BusinessEntity.primitiveType']}" allowEdit="false" required="true" field="primitiveType" />
                 </h:panelGroup>
-
                 
             </hftl:formPanel>
         </h:panelGroup>
