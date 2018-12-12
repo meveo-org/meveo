@@ -148,14 +148,15 @@ public class DefaultObserver {
             return false;
         }
 
-        IEntity entity = null;
+        IEntity entity;
         if (entityOrEvent instanceof IEntity) {
             entity = (IEntity) entityOrEvent;
+            log.debug("Fire Notification for notif with {} and entity with id={}", notif, entity.getId());
         } else if (entityOrEvent instanceof IEvent) {
             entity = ((IEvent) entityOrEvent).getEntity();
+            log.debug("Fire Notification for notif with {} and entity with id={}", notif, entity.getId());
         }
 
-        log.debug("Fire Notification for notif with {} and entity with id={}", notif, entity.getId());
         try {
             if (!matchExpression(notif.getElFilter(), entityOrEvent)) {
                 log.debug("Expression {} does not match", notif.getElFilter());

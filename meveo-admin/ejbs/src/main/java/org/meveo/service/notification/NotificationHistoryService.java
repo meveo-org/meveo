@@ -31,7 +31,9 @@ public class NotificationHistoryService extends PersistenceService<NotificationH
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public NotificationHistory create(Notification notification, Object entityOrEvent, String result, NotificationHistoryStatusEnum status) throws BusinessException {
+
         IEntity entity = null;
+
         if (entityOrEvent instanceof IEntity) {
             entity = (IEntity) entityOrEvent;
         } else if (entityOrEvent instanceof IEvent) {
@@ -40,10 +42,15 @@ public class NotificationHistoryService extends PersistenceService<NotificationH
 
         NotificationHistory history = new NotificationHistory();
         history.setNotification(getEntityManager().getReference(Notification.class, notification.getId()));
-        history.setEntityClassName(entity.getClass().getName());
-        history.setSerializedEntity(entity.getId() == null ? entity.toString() : entity.getId().toString());
+        history.setEntityClassName(entityOrEvent.getClass().getName());
         history.setResult(result);
         history.setStatus(status);
+
+        if(entity != null){
+            history.setSerializedEntity(entity.getId() == null ? entity.toString() : entity.getId().toString());
+        }else{
+            history.setSerializedEntity(entityOrEvent.toString());
+        }
 
         create(history);
 

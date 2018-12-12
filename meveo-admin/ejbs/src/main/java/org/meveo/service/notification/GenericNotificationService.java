@@ -1,7 +1,9 @@
 package org.meveo.service.notification;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -55,7 +57,7 @@ public class GenericNotificationService extends BusinessService<Notification> {
             List<Notification> notifications = notificationCacheContainerProvider.getApplicableNotifications(eventType, entityOrEvent);
 
             // Populate cache if no record was found in cache
-            if (notifications == null) {
+            if (notifications == null || notifications.isEmpty()) {
 
                 notifications = getApplicableNotificationsNoCache(eventType, entityOrEvent);
                 if (notifications.isEmpty()) {
@@ -84,9 +86,9 @@ public class GenericNotificationService extends BusinessService<Notification> {
 
         Object entity = null;
         if (entityOrEvent instanceof IEntity) {
-            entity = (IEntity) entityOrEvent;
+            entity = entityOrEvent;
         } else if (entityOrEvent instanceof IEvent) {
-            entity = (IEntity) ((IEvent) entityOrEvent).getEntity();
+            entity = ((IEvent) entityOrEvent).getEntity();
         } else {
             entity = entityOrEvent;
         }
@@ -100,10 +102,17 @@ public class GenericNotificationService extends BusinessService<Notification> {
                 && !entityClass.isAssignableFrom(AuditableEntity.class) && !entityClass.isAssignableFrom(Object.class)) {
 
             classNames.add(ReflectionUtils.getCleanClassName(entityClass.getName()));
+            List<String> interfaces = Arrays.stream(entityClass.getInterfaces())
+                    .map(Class::getCanonicalName)
+                    .collect(Collectors.toList());
+
+            classNames.addAll(interfaces);
             entityClass = entityClass.getSuperclass();
         }
 
-        return getEntityManager().createNamedQuery("Notification.getActiveNotificationsByEventAndClasses", Notification.class).setParameter("eventTypeFilter", eventType)
-            .setParameter("classNameFilter", classNames).getResultList();
+        return getEntityManager().createNamedQuery("Notification.getActiveNotificationsByEventAndClasses", Notification.class)
+                .setParameter("eventTypeFilter", eventType)
+                .setParameter("classNameFilter", classNames)
+                .getResultList();
     }
 }

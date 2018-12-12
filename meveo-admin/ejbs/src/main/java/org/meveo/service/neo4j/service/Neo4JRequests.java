@@ -42,8 +42,8 @@ public class Neo4JRequests {
             .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate}");
 
 
-    public final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) ")
-            .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp()")
+    public final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) \n")
+            .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp() \n")
             .append("ON MATCH SET n += ${fields}, n." + INTERNAL_UPDATE_DATE + " = timestamp()");
 
     public final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
