@@ -128,9 +128,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         if (groupedFields != null || cetPrefix == null) {
             return groupedFields;
         }
+        
+        CustomEntityTemplate entityTemplate = customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(cetPrefix));
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(cetPrefix);
 
+        if(entityTemplate.isPrimitiveEntity()) {
+        	fields.remove("value");
+        }
+        
         GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(),
             CustomEntityTemplate.class.isAssignableFrom(entityClass) ? entity.getName() : "Custom fields", true);
 

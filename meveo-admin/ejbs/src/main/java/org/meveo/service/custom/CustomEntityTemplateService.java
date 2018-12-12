@@ -88,33 +88,68 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
             /* If cet is a primitive type, create custom field of corresponding type */
             if(cet.isPrimitiveEntity()) {
-	            // Define CFT
-	            final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
-	            customFieldTemplate.setActive(true);			       	// Always active
-	            customFieldTemplate.setAllowEdit(false);		       	// CFT can't be updated
-	            customFieldTemplate.setAppliesTo(cet.getAppliesTo());
-	            if(cet.getPrimitiveType() == null) {
-	            	throw new IllegalArgumentException("Primitive type class must be provided");
-	            }
-	            customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
-	            customFieldTemplate.setUnique(true);			       	// Must be unique
-	            customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);	        // Code is 'value'
-                customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);	// Label is 'value'
-                customFieldTemplate.setFilter(true);			        // Can be used as filter
-	            customFieldTemplate.setValueRequired(true);		        // Always required
-	            customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
-	            
-	            // Create CFT
-	            customFieldTemplateService.create(customFieldTemplate);
+                createPrimitiveCft(cet);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    private void createPrimitiveCft(CustomEntityTemplate cet) throws BusinessException {
+        // Define CFT
+        final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
+        turnIntoPrimitive(cet, customFieldTemplate);
+        // Create CFT
+        customFieldTemplateService.create(customFieldTemplate);
+    }
+
+    private void turnIntoPrimitive(CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
+        customFieldTemplate.setActive(true);			       	    // Always active
+        customFieldTemplate.setAllowEdit(false);		       	    // CFT can't be updated
+        customFieldTemplate.setAppliesTo(cet.getAppliesTo());
+        if(cet.getPrimitiveType() == null) {
+            throw new IllegalArgumentException("Primitive type class must be provided");
+        }
+        customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
+        customFieldTemplate.setUnique(true);			       	    // Must be unique
+        customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);	        // Code is 'value'
+        customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);	// Label is 'value'
+        customFieldTemplate.setFilter(true);			            // Can be used as filter
+        customFieldTemplate.setValueRequired(true);		            // Always required
+        customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+    }
+
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
         ParamBean paramBean = paramBeanFactory.getInstance();
+        CustomEntityTemplate cetBefore = this.findByCode(cet.getCode());
+
+        /* Primitive entity and type management */
+
+        if(cetBefore.isPrimitiveEntity() || cet.isPrimitiveEntity()){
+            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            final CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
+            // Primitive type has changed
+            if(cetBefore.isPrimitiveEntity() && cet.isPrimitiveEntity() && (cetBefore.getPrimitiveType() != cet.getPrimitiveType())){
+                valueCft.setFieldType(cet.getPrimitiveType().getCftType());
+                customFieldTemplateService.update(valueCft);
+            // Cet become non-primitive
+            }else if(cetBefore.isPrimitiveEntity() && !cet.isPrimitiveEntity()){
+                cet.setPrimitiveType(null);
+            // Cet become primitive
+            }else if(!cetBefore.isPrimitiveEntity() && cet.isPrimitiveEntity() && cet.getPrimitiveType() != null){
+                if(valueCft != null){
+                    turnIntoPrimitive(cet, valueCft);
+                    customFieldTemplateService.update(valueCft);
+                }else{
+                    createPrimitiveCft(cet);
+                }
+            }
+        }
+
+
+        /* Update */
+
         CustomEntityTemplate cetUpdated = super.update(cet);
 
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -122,10 +157,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+
 
         return cetUpdated;
     }

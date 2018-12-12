@@ -44,14 +44,14 @@
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
                 
                 <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
-	            <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
-	                allowEdit="#{customEntityTemplateBean.entity.primitiveEntity}"
-	                listenerUpdate="@this primitiveType cfFields" />
+                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
+                                listenerUpdate="@this primitiveType"/>
                 
                 <!--  If primitive, ask for primitive type class -->
                 <h:panelGroup id="primitiveType">
-	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
-	               	 	label="#{messages['BusinessEntity.primitiveType']}" allowEdit="false" required="true" field="primitiveType" />
+                    <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
+                                    label="#{messages['BusinessEntity.primitiveType']}" required="true"
+                                    field="primitiveType"/>
                 </h:panelGroup>
 
                 <!-- Inheritance -->
@@ -78,9 +78,7 @@
 
 		<!--  Render custom fields only if entity is not a primitive type -->
 		<h:panelGroup id="cfFields">
-			<c:if test="#{!customEntityTemplateBean.entity.primitiveEntity}">
-	        	<ui:include src="customFieldsAndActions.xhtml"/>
-	       	</c:if>
+            <ui:include src="customFieldsAndActions.xhtml"/>
         </h:panelGroup>
  
 
