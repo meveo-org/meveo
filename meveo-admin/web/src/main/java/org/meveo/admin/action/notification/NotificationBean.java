@@ -216,7 +216,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     /**
      * Autocomplete method for class filter field - search entity type classes with @ObservableEntity annotation
-     * 
+     *
      * @param query A partial class name (including a package)
      * @return A list of classnames
      */
@@ -239,7 +239,8 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
                 classNames.add(clazz.getName());
             }
         }
-
+        classNames.add("org.neo4j.driver.v1.types.Node");
+        classNames.add("org.neo4j.driver.v1.types.Relationship");
         Collections.sort(classNames);
         return classNames;
     }
@@ -254,7 +255,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     /**
      * Remove a value from a map type field attribute used to gather field values in GUI
-     * 
+     *
      * @param fieldName Field name
      * @param valueInfo Value to remove
      */
@@ -264,7 +265,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     /**
      * Add a value to a map type field attribute used to gather field values in GUI
-     * 
+     *
      * @param fieldName Field name
      */
     public void addMapTypeFieldValue(String fieldName) {
@@ -276,7 +277,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     /**
      * Extract values from a Map type field in an entity to mapTypeFieldValues attribute used to gather field values in GUI
-     * 
+     *
      * @param entityField Entity field
      * @param fieldName Field name
      */
@@ -298,7 +299,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     /**
      * Update Map type field in an entity from mapTypeFieldValues attribute used to gather field values in GUI
-     * 
+     *
      * @param entityField Entity field
      * @param fieldName Field name
      */
