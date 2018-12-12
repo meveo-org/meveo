@@ -284,34 +284,4 @@ public class Neo4jDao {
             session.close();
         }
     }
-    /**
-     * Create source node
-     *
-     * @param sourceType
-     * @param sourceId
-     * @param fields
-     */
-    public void createSourceNodeStatement(String sourceType, String sourceId, Map<String, Object> fields) {
-        final Map<String, Object> values = new HashMap<>();
-        String id = getId(sourceType, sourceId);
-        values.put("id", id);
-        values.put("sourceType", sourceType);
-        values.put("sourceId", sourceId);
-        // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
-        final Transaction transaction = session.beginTransaction();
-
-        StrSubstitutor sub = new StrSubstitutor(values);
-        String createSourceNodeStatement = sub.replace(Neo4JRequests.createSourceNodeStatement);
-
-        try {
-            // Execute query and parse results
-            final StatementResult result = transaction.run(createSourceNodeStatement, values);
-            transaction.success();  // Commit transaction
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
-        }
-    }
 }

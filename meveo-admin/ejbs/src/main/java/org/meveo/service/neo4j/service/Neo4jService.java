@@ -179,7 +179,6 @@ public class Neo4jService {
             if(nodeId != null){
                 final Map<String, Object> values = new HashMap<>();
                 relationshipsToCreate.forEach((targetId, label) -> neo4jDao.createRealtionBetweenNodes(createNodeId, label, targetId, values));
-                neo4jDao.createSourceNodeStatement(sourceType, sourceId, values);
             }
 
         } catch (BusinessException e) {
@@ -241,7 +240,6 @@ public class Neo4jService {
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
             saveCRT2Neo4j(customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
-            neo4jDao.createSourceNodeStatement(sourceType, sourceId, crtValues);
         }
 
     }
