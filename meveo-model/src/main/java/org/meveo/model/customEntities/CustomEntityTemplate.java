@@ -1,5 +1,6 @@
 package org.meveo.model.customEntities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
@@ -40,7 +41,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @ElementCollection
     @CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
-    private List<String> labels;
+    private List<String> labels = new ArrayList<>();
 
     /**
      * Template that current template inherits from

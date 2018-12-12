@@ -150,7 +150,8 @@ public class Neo4jService {
                 if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
                     fields.put(entityReference.getCode(), referencedCetValue);
                     Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
-                    createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, referencedCet.getLabels());
+                    List<String> additionalLabels = getAdditionalLabels(referencedCet);
+                    createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, additionalLabels);
                 }else{
                     @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
                     createNodeId = addCetNode(referencedCetCode, valueMap);
@@ -170,7 +171,7 @@ public class Neo4jService {
                 }
             }
 
-            final List<String> labels = cetEntity.getLabels();
+            final List<String> labels = getAdditionalLabels(cetEntity);
             final Long createNodeId = neo4jDao.createNode(cetCode, uniqueFields, fields, labels);
             nodeId = createNodeId;
 
@@ -251,7 +252,7 @@ public class Neo4jService {
      * @param endNodeKeysMap             Unique fields values of the start node
      * @param crtFields                  Fields values of the relationship
      */
-    private void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
+    public void saveCRT2Neo4j(CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
                                Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
@@ -380,7 +381,9 @@ public class Neo4jService {
                 parametersValues.put(ID, id);
 
                 // Create statement
-                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, customRelationshipTemplate.getStartNode().getLabels(), startNodeAlias, valuesMap);
+                CustomEntityTemplate startCet = customRelationshipTemplate.getStartNode();
+                List<String> additionalLabels = getAdditionalLabels(startCet);
+                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, additionalLabels, startNodeAlias, valuesMap);
                 statement = neo4jDao.appendReturnStatement(statement, startNodeAlias, valuesMap);
                 String updateStatement = getStatement(sub, statement);
 
@@ -413,6 +416,12 @@ public class Neo4jService {
 
         }
 
+    }
+
+    private List<String> getAdditionalLabels(CustomEntityTemplate cet) {
+        List<String> additionalLabels = cet.getLabels();
+        additionalLabels.addAll(getAllSuperTemplateLabels(cet));
+        return additionalLabels;
     }
 
 
@@ -475,6 +484,16 @@ public class Neo4jService {
 
     }
 
+    private List<String> getAllSuperTemplateLabels(CustomEntityTemplate customEntityTemplate){
+        List<String> labels = new ArrayList<>();
+        CustomEntityTemplate parent = customEntityTemplate.getSuperTemplate();
+        while (parent != null){
+            labels.add(parent.getCode());
+            parent = parent.getSuperTemplate();
+        }
+        return labels;
+    }
+
     private static String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
         return sub.replace(findStartNodeId).replace('"', '\'');
     }
@@ -526,11 +545,7 @@ public class Neo4jService {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<String, Object> fieldValues, Map<String, Object> uniqueFields, boolean checkCustomFields) throws BusinessException, ELException {
         Map<String, Object> convertedFields = new HashMap<>();
-        List<CustomFieldTemplate> expressionFields = new ArrayList<>();
-        Iterator<Entry<String, CustomFieldTemplate>> customFieldTemplatesEntries = customFieldTemplates.entrySet().iterator();
-        while (customFieldTemplatesEntries.hasNext()) {
-            Entry<String, CustomFieldTemplate> cftEntry = customFieldTemplatesEntries
-                    .next();
+        for (Entry<String, CustomFieldTemplate> cftEntry : customFieldTemplates.entrySet()) {
             CustomFieldTemplate cft = cftEntry.getValue();
             if (checkCustomFields && cft == null) {
                 log.error("No custom field template found with code={} for entity {}. Value will be ignored.", cftEntry.getKey(), CustomFieldTemplate.class);
@@ -571,7 +586,7 @@ public class Neo4jService {
                 }
                 for (Object valueToCheck : valuesToCheck) {
                     if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
-                        String stringValue = null;
+                        String stringValue;
                         if (valueToCheck instanceof Integer) {
                             stringValue = ((Integer) valueToCheck).toString();
                         } else if (valueToCheck instanceof Map) {
@@ -592,7 +607,7 @@ public class Neo4jService {
                         // Validate String length
                         if (stringValue.length() > cft.getMaxValue()) {
                             throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " length is longer then " + cft.getMaxValue() + " symbols");
-                        // Validate String regExp
+                            // Validate String regExp
                         } else if (cft.getRegExp() != null) {
                             try {
                                 Pattern pattern = Pattern.compile(cft.getRegExp());
@@ -613,7 +628,7 @@ public class Neo4jService {
                         Long longValue;
                         if (valueToCheck instanceof Integer) {
                             longValue = ((Integer) valueToCheck).longValue();
-                        } else if(valueToCheck instanceof String){
+                        } else if (valueToCheck instanceof String) {
                             longValue = Long.parseLong((String) valueToCheck);
                         } else {
                             longValue = (Long) valueToCheck;
@@ -633,7 +648,7 @@ public class Neo4jService {
                         Double doubleValue;
                         if (valueToCheck instanceof Integer) {
                             doubleValue = ((Integer) valueToCheck).doubleValue();
-                        } else if(valueToCheck instanceof String){
+                        } else if (valueToCheck instanceof String) {
                             doubleValue = Double.parseDouble((String) valueToCheck);
                         } else {
                             doubleValue = (Double) valueToCheck;
@@ -661,46 +676,43 @@ public class Neo4jService {
                     uniqueFields.put(cft.getCode(), fieldValue);
                 }
             }
-            //TODO: Handle DATE customfield type
-        }
-        //loop CFT a second time to set expression fields that are composed by other expressionFields
-        for (CustomFieldTemplate cft : expressionFields) {
-            Object fieldValue = setExpressionField(fieldValues, cft, convertedFields);
-            convertedFields.put(cft.getCode(), fieldValue);
-            if (cft.isUnique() && uniqueFields != null) {
-                uniqueFields.put(cft.getCode(), fieldValue);
-            }
         }
         return convertedFields;
     }
 
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
+
         Object evaluatedExpression = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue)), String.class);
 
-        log.info("validateAndConvertCustomFields {} ExpressionFieldValue1={}", cft.getCode(), evaluatedExpression);
+        if (evaluatedExpression != null) {
 
-        evaluatedExpression = evaluatedExpression.toString().replaceAll("'", "’").replaceAll("\"", "").replaceAll("-null", "").replaceAll("-", "");
-        evaluatedExpression = evaluatedExpression.toString().replaceAll("\n", " ");
-        if (cft.getExpressionSeparator() != null) {
-            String duplicateSeparator = cft.getExpressionSeparator() + cft.getExpressionSeparator();
-            while (evaluatedExpression.toString().contains(duplicateSeparator)) {
-                evaluatedExpression = evaluatedExpression.toString().replaceAll(duplicateSeparator, cft.getExpressionSeparator());
+            log.info("validateAndConvertCustomFields {} ExpressionFieldValue1={}", cft.getCode(), evaluatedExpression);
+
+            evaluatedExpression = evaluatedExpression.toString().replaceAll("'", "’").replaceAll("\"", "").replaceAll("-null", "").replaceAll("-", "");
+            evaluatedExpression = evaluatedExpression.toString().replaceAll("\n", " ");
+            if (cft.getExpressionSeparator() != null) {
+                String duplicateSeparator = cft.getExpressionSeparator() + cft.getExpressionSeparator();
+                while (evaluatedExpression.toString().contains(duplicateSeparator)) {
+                    evaluatedExpression = evaluatedExpression.toString().replaceAll(duplicateSeparator, cft.getExpressionSeparator());
+                }
+                evaluatedExpression = evaluatedExpression.toString().endsWith(cft.getExpressionSeparator()) ? evaluatedExpression.toString().substring(0, evaluatedExpression.toString().length() - 1) : evaluatedExpression.toString();
+                evaluatedExpression = evaluatedExpression.toString().startsWith(cft.getExpressionSeparator()) ? evaluatedExpression.toString().substring(1) : evaluatedExpression.toString();
             }
-            evaluatedExpression = evaluatedExpression.toString().endsWith(cft.getExpressionSeparator()) ? evaluatedExpression.toString().substring(0, evaluatedExpression.toString().length() - 1) : evaluatedExpression.toString();
-            evaluatedExpression = evaluatedExpression.toString().startsWith(cft.getExpressionSeparator()) ? evaluatedExpression.toString().substring(1) : evaluatedExpression.toString();
-        }
-        log.info("validateAndConvertCustomFields {} ExpressionFieldValue2={}", cft.getCode(), evaluatedExpression);
-        Object fieldValue = !StringUtils.isBlank(evaluatedExpression) ? evaluatedExpression : fieldValues.get(cft.getCode());
-        if (fieldValue != null) {
-            if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
-                convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(fieldValue.toString().toLowerCase()));
-            } else if (cft.isUnique()) {
-                fieldValue = CETUtils.stripAndFormatFields(fieldValue.toString());
+            log.info("validateAndConvertCustomFields {} ExpressionFieldValue2={}", cft.getCode(), evaluatedExpression);
+            Object fieldValue = !StringUtils.isBlank(evaluatedExpression) ? evaluatedExpression : fieldValues.get(cft.getCode());
+            if (fieldValue != null) {
+                if (cft.getIndexType() == CustomFieldIndexTypeEnum.INDEX_NEO4J) {
+                    convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(fieldValue.toString().toLowerCase()));
+                } else if (cft.isUnique()) {
+                    fieldValue = CETUtils.stripAndFormatFields(fieldValue.toString());
+                }
+                fieldValues.put(cft.getCode(), fieldValue);
             }
-            fieldValues.put(cft.getCode(), fieldValue);
+            return fieldValue;
+        } else {
+            return null;
         }
-        return fieldValue;
     }
 
     public String executeQuery(String query, Map<String, Object> valuesMap) {
@@ -739,7 +751,7 @@ public class Neo4jService {
     }
 
     public String getNeo4jData(String query, boolean getOnlyFirstElement) {
-        StringBuffer result = null;
+        StringBuffer result;
         Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/cypher", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), query);
         String jsonResult = response.readEntity(String.class);
         GsonBuilder builder = new GsonBuilder();
@@ -771,12 +783,12 @@ public class Neo4jService {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         Neo4jQueryResultDto iepSearchResultDTO = gson.fromJson(jsonResult, Neo4jQueryResultDto.class);
-        return iepSearchResultDTO != null && iepSearchResultDTO.getData() != null && !iepSearchResultDTO.getData().isEmpty() ? iepSearchResultDTO.getData().get(0) : new ArrayList<String>();
+        return iepSearchResultDTO != null && iepSearchResultDTO.getData() != null && !iepSearchResultDTO.getData().isEmpty() ? iepSearchResultDTO.getData().get(0) : new ArrayList<>();
     }
 
     public String getNeo4jRowData(String jsonResult) {
         log.info("getNeo4jRowData jsonResult={}", jsonResult);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         try {
             GsonBuilder builder = new GsonBuilder();
             Gson gson = builder.create();
