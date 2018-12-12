@@ -178,7 +178,7 @@ public class DefaultObserver {
             }
 
             Map<String, Object> context = new HashMap<String, Object>();
-            // Rethink notif and script - maybe create pre and post script
+            // TODO: Rethink notif and script - maybe create pre and post script
             if (!(notif instanceof WebHook)) {
                 if (notif.getScriptInstance() != null) {
                     executeScript(notif.getScriptInstance(), entityOrEvent, notif.getParams(), context);
