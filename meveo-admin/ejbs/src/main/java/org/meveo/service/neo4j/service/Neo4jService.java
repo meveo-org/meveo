@@ -132,7 +132,6 @@ public class Neo4jService {
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
             uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
-            fields.put(CETConstants.CET_UPDATE_DATE_FIELD, isTemporaryCET ? -1 : System.currentTimeMillis());
 
             /* Collect entity references */
             final List<CustomFieldTemplate> entityReferences = cetFields.values().stream()

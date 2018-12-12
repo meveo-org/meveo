@@ -42,8 +42,10 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends ExecutableService<T, SI> {
 
@@ -171,17 +173,50 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
                 File deploymentDir = realFile.getParentFile().getParentFile();
 
-                for (File physicalLibDir : deploymentDir.listFiles()) {
+                Set<String> classPathEntries = new HashSet<>();
+
+                for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
                     if (physicalLibDir.isDirectory()) {
                         for (File f : FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
-                            classpath += f.getCanonicalPath() + File.pathSeparator;
+                            classPathEntries.add(f.getCanonicalPath());
                         }
                     }
                 }
+
+                /* Fallback when thorntail is used */
+                if(classPathEntries.isEmpty()){
+                    for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
+                        if (physicalLibDir.isDirectory()) {
+                            for(File subLib : Objects.requireNonNull(physicalLibDir.listFiles())){
+                                if(subLib.isDirectory()){
+                                    final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar")
+                                            .stream()
+                                            .map(this::getFilePath)
+                                            .collect(Collectors.toList());
+                                    classPathEntries.addAll(jars);
+                                    if(subLib.getName().equals("classes")){
+                                        classPathEntries.add(subLib.getCanonicalPath());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                classpath = String.join(File.pathSeparator, classPathEntries);
+
             }
         }
         log.info("compileAll classpath={}", classpath);
 
+    }
+
+    private String getFilePath(File jar) {
+        try {
+            return jar.getCanonicalPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

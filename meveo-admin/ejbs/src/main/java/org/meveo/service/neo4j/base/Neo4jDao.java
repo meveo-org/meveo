@@ -116,8 +116,10 @@ public class Neo4jDao {
 
         try {
             // Execute query and parse results
+            LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement);
             final Node node = result.single().get(alias).asNode();
+            transaction.success();  // Commit transaction
 
             //  If node has been created, fire creation event. If it was updated, fire update event.
             if(node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
@@ -127,7 +129,6 @@ public class Neo4jDao {
             }
 
             nodeId = node.id();
-            transaction.success();  // Commit transaction
         } catch(Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
