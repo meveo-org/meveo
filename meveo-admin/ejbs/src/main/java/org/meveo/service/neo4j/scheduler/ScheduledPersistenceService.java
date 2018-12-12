@@ -34,8 +34,7 @@ public class ScheduledPersistenceService {
                     final SourceNode sourceNode = (SourceNode) entityToPersist;
                     neo4jService.addSourceNodeUniqueCrt(sourceNode.getRelation().getCode(),
                             sourceNode.getValues(),
-                            sourceNode.getRelation().getEndNode().getValues(),
-                            sourceNode.getCode(), sourceNode.getRelation().getEndNode().getCode());
+                            sourceNode.getRelation().getEndNode().getValues());
 
                 } else if (entityToPersist instanceof Node) {
 
@@ -50,8 +49,7 @@ public class ScheduledPersistenceService {
                     neo4jService.addCRT(relation.getCode(),
                             relation.getValues(),
                             relation.getStartNode().getValues(),
-                            relation.getEndNode().getValues(),
-                            relation.getStartNode().getCode(), relation.getEndNode().getCode());
+                            relation.getEndNode().getValues());
                 }
             }
 

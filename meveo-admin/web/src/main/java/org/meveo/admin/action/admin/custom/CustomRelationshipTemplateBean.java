@@ -286,9 +286,9 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         }
     }
 
-    public boolean validateUniqueFields(CustomRelationshipTemplate customRelationshipTemplate) throws  BusinessException{
+    public boolean validateUniqueFields(CustomRelationshipTemplate customRelationshipTemplate) {
         if (entity.isTransient()) {
-            CustomRelationshipTemplate customRelationshipTemplateNew = customRelationshipTemplateService.findByStartAndEndCodes(customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getCode(), customRelationshipTemplate.getEndNode().getCode());
+            CustomRelationshipTemplate customRelationshipTemplateNew = customRelationshipTemplateService.findByCode(customRelationshipTemplate.getCode());
             if (customRelationshipTemplateNew != null) {
                 messages.error(new BundleKey("messages", "customRelationshipEntity.unqueFields"), customRelationshipTemplate.getCode(), customRelationshipTemplate.getStartNode().getName(), customRelationshipTemplate.getEndNode().getName());
                 FacesContext.getCurrentInstance().validationFailed();

@@ -125,37 +125,11 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     }
 
     /**
-     * Find entity by startCode,code,endCode- strict match.
-     *
-     * @param code Code to match
-     * @return A single entity matching code
-     */
-    public CustomRelationshipTemplate findByStartAndEndCodes(String code, String startCode, String endCode) throws BusinessException {
-        if (code == null || startCode == null || endCode == null) {
-            throw new BusinessException();
-        }
-
-        TypedQuery<CustomRelationshipTemplate> query = getEntityManager().createQuery("select crt from "
-                + entityClass.getSimpleName() + " crt left join crt.startNode startNode left join crt.endNode endNode where upper(crt.code)=:code and upper(startNode.code)=:startCode "
-                +"and upper(endNode.code)=:endCode ", entityClass)
-                .setParameter("code", code.toUpperCase())
-                .setParameter("startCode", startCode.toUpperCase())
-                .setParameter("endCode", endCode.toUpperCase()).setMaxResults(1);
-        try {
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            log.debug("No {} of code {} and startCode {} and endCode {} found", getEntityClass().getSimpleName(), code, startCode, endCode);
-        }
-        return null;
-    }
-
-    /**
      * Find entity by code
      *
      * @param code Code to match
      * @return
      */
-    @Deprecated
     @Override
     public CustomRelationshipTemplate findByCode(String code){
         return super.findByCode(code);

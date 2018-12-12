@@ -16,7 +16,7 @@ import javax.validation.constraints.Size;
 @Entity
 @ModuleItem
 @ExportIdentifier({ "code"})
-@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code","start_node_id","end_node_id"}))
+@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
         parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
 )

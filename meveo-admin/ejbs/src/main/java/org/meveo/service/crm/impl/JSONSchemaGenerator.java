@@ -128,8 +128,8 @@ public class JSONSchemaGenerator {
 		return generateSchema(schemaLocation, entityTemplateService.findByCode(templateCode));
 	}
 	
-	public String generateRelationshipTemplateSchema(String schemaLocation, String startNode, String templateCode, String endNode ) throws BusinessException{
-		return generateSchema(schemaLocation, relationshipTemplateService.findByStartAndEndCodes(templateCode,startNode,endNode));
+	public String generateRelationshipTemplateSchema(String schemaLocation, String templateCode) throws BusinessException{
+		return generateSchema(schemaLocation, relationshipTemplateService.findByCode(templateCode));
 	}
 	
 	private String generateSchema(String schemaLocation, CustomEntityTemplate template) {
@@ -255,7 +255,7 @@ public class JSONSchemaGenerator {
 			.nullable(!field.isValueRequired())
 		;
 		result
-			.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode())
+			.id(field.getAppliesTo() + '_' + field.getCode())
 			.title(template.code() + "." + field.getCode())
 			.description(field.getDescription())
 			.schemaLocation(schemaLocation);
@@ -283,7 +283,7 @@ public class JSONSchemaGenerator {
 		return result
 			//.readOnly(!field.isAllowEdit())
 			//.nullable(!field.isValueRequired())
-			.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_$element")
+			.id(field.getAppliesTo() + '_' + field.getCode() + "_$element")
 			.title(template.code() + "." + field.getCode() + " Element")
 			//.description(field.getDescription())
 			.schemaLocation(schemaLocation)
@@ -296,7 +296,7 @@ public class JSONSchemaGenerator {
 			.requiresObject(true)
 			//.readOnly(!field.isAllowEdit())
 			//.nullable(!field.isValueRequired())
-			.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_$element")
+			.id(field.getAppliesTo() + '_' + field.getCode() + "_$element")
 			.title(template.code() + "." + field.getCode() + " Element")
 			//.description(field.getDescription())
 			.schemaLocation(schemaLocation);
@@ -308,7 +308,7 @@ public class JSONSchemaGenerator {
 				b.pattern("^(\\d+)?\\.\\.(\\d+)?$");
 			}
 			b
-				.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_key_" + c.getCode())
+				.id(field.getAppliesTo() + '_' + field.getCode() + "_key_" + c.getCode())
 				.title(template.code() + "." + field.getCode() + " Key column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
 				.schemaLocation(schemaLocation)
 				.nullable(false)
@@ -349,7 +349,7 @@ public class JSONSchemaGenerator {
 	    					b = StringSchema.builder().requiresString(true);
 	    			}
 	    			b
-	    				.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_value_" + c.getCode())
+	    				.id(field.getAppliesTo() + '_' + field.getCode() + "_value_" + c.getCode())
 	    				.title(template.code() + "." + field.getCode() + " Value column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
 	    				.schemaLocation(schemaLocation)
 	    			;
@@ -367,7 +367,7 @@ public class JSONSchemaGenerator {
 	        	valueBuilder = createStringSchema(field); break;
 		}
 		valueBuilder
-			.id(schemaLocation + '#' + field.getAppliesTo() + '_' + field.getCode() + "_value")
+			.id(field.getAppliesTo() + '_' + field.getCode() + "_value")
 			.title(template.code() + "." + field.getCode() + " Value")
 			.schemaLocation(schemaLocation)
 		;
@@ -497,7 +497,7 @@ public class JSONSchemaGenerator {
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
 				return (ObjectSchema.Builder) ObjectSchema.builder()
 					.requiresObject(true)
-					.id(schemaLocation + '#' + entityTemplate.getCode())
+					.id(entityTemplate.getCode())
 					.title(entityTemplate.getName())
 					.description(entityTemplate.getDescription())
 					.schemaLocation(schemaLocation)					
@@ -541,7 +541,7 @@ public class JSONSchemaGenerator {
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
 				RelationSchema.Builder result = RelationSchema.builder()
 					.requiresRelation(true)
-					.id(schemaLocation + '#' + relationshipTemplate.getCode())
+					.id(relationshipTemplate.getCode())
 					.title(relationshipTemplate.getName())
 					.description(relationshipTemplate.getDescription())
 					.schemaLocation(schemaLocation)					

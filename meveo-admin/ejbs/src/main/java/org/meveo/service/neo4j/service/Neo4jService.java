@@ -204,14 +204,13 @@ public class Neo4jService {
     public void addCRT(String crtCode,
                        Map<String, Object> crtValues,
                        Map<String, Object> startFieldValues,
-                       Map<String, Object> endFieldValues,
-                       String startCode, String endCode)
+                       Map<String, Object> endFieldValues)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
 
         /* Try to retrieve the associated CRT */
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(crtCode, startCode, endCode);
+        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
         if (customRelationshipTemplate == null) {
             log.error("Can't find CRT with code {}", crtCode);
             throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
@@ -319,12 +318,10 @@ public class Neo4jService {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addSourceNodeUniqueCrt(String crtCode,
                                        Map<String, Object> startNodeValues,
-                                       Map<String, Object> endNodeValues,
-                                       String startCode,
-                                       String endCode) throws BusinessException, ELException {
+                                       Map<String, Object> endNodeValues) throws BusinessException, ELException {
 
         // Get relationship template
-        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(crtCode, startCode, endCode);
+        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
 
         // Extract unique fields values for the start node
         Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
