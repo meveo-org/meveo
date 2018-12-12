@@ -102,7 +102,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             description = new RelationDescription();
             ((RelationDescription) description).setSource(((ProcessRelationDescription) dto).getSource());
             ((RelationDescription) description).setTarget(((ProcessRelationDescription) dto).getTarget());
-            final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByStartAndEndCodes(dto.getType(), dto.getStartNodeCode(), dto.getEndNodeCode());
+            final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(dto.getType());
             if (customRelationshipTemplate == null) {
                 throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getType());
             }

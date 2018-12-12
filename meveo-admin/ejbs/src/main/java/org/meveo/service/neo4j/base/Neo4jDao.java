@@ -71,6 +71,10 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(statement.toString(), values);
             transaction.success();  // Commit transaction
             return result.list().stream().map(r -> r.asMap()).collect(Collectors.toList());
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+            return null;
         } finally {
             // End session and transaction
             transaction.close();
@@ -124,6 +128,10 @@ public class Neo4jDao {
 
             nodeId = node.id();
             transaction.success();  // Commit transaction
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+            return null;
         } finally {
             // End session and transaction
             transaction.close();
@@ -162,6 +170,9 @@ public class Neo4jDao {
             }
 
             transaction.success();  // Commit transaction
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
         } finally {
             // End session and transaction
             transaction.close();
@@ -244,6 +255,9 @@ public class Neo4jDao {
             // Execute query and parse results
             transaction.run(statement);
             transaction.success();  // Commit transaction
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
         } finally {
             // End session and transaction
             transaction.close();
@@ -261,6 +275,9 @@ public class Neo4jDao {
             // Execute query and parse results
             transaction.run(statement);
             transaction.success();  // Commit transaction
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
         } finally {
             // End session and transaction
             transaction.close();

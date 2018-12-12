@@ -10,11 +10,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.api.dto.CustomEntityTemplateDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
-import org.meveo.api.dto.EntityCustomActionDto;
-import org.meveo.api.dto.EntityCustomizationDto;
+import org.meveo.api.dto.*;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
@@ -411,16 +407,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @param dto The CET dto to validate
      * @return
      */
-    private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
+     private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
+
+
         if(!dto.isPrimitiveEntity()){
             return; // If not a primitive type, skip tests
-        }
-        if(dto.getFields() != null && !dto.getFields().isEmpty()){
-            throw new BusinessException("A primitive entity should not have custom fields");
         }
         if(dto.getPrimitiveType() == null){
             throw new BusinessException("Primitive type must be defined");
         }
-    }
-
+     }
 }

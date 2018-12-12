@@ -44,18 +44,32 @@
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
                 
                 <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
-	            <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
-	                allowEdit="#{customEntityTemplateBean.entity.primitiveEntity}"
-	                listenerUpdate="@this primitiveType cfFields" />
+                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
+                                listenerUpdate="@this primitiveType"/>
                 
                 <!--  If primitive, ask for primitive type class -->
                 <h:panelGroup id="primitiveType">
-	                 <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
-	               	 	label="#{messages['BusinessEntity.primitiveType']}" allowEdit="false" required="true" field="primitiveType" />
+                    <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
+                                    label="#{messages['BusinessEntity.primitiveType']}" required="true"
+                                    field="primitiveType"/>
                 </h:panelGroup>
 
-                
-            </hftl:formPanel>
+                <!-- Inheritance -->
+				<hftl:decorateFormField field="superTemplate" componentWidth="150"
+					label="#{messages['BusinessEntity.superTemplate']}">
+					<p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}" style="width:150px;">
+						<f:selectItem
+							itemLabel="#{messages['customizedRelationships.selectCETEntity']}"
+							itemValue="" noSelectionOption="true" />
+						<f:selectItems
+							value="#{customEntityTemplateBean.customEntityTemplates}"
+							var="cetEntity" itemLabel="#{cetEntity.name}"
+							itemValue="#{cetEntity}" />
+						<hftl:objectConverter />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+
+			</hftl:formPanel>
         </h:panelGroup>
         <h:panelGroup rendered="#{! customEntityTemplateBean.customEntityTemplate}">
             <hftl:decorateFormPanel label="#{messages['customizedEntities.detail']} - #{customEntityTemplateBean.customizedEntity.classnameToDisplayHuman}">
@@ -64,9 +78,7 @@
 
 		<!--  Render custom fields only if entity is not a primitive type -->
 		<h:panelGroup id="cfFields">
-			<c:if test="#{!customEntityTemplateBean.entity.primitiveEntity}">
-	        	<ui:include src="customFieldsAndActions.xhtml"/>
-	       	</c:if>
+            <ui:include src="customFieldsAndActions.xhtml"/>
         </h:panelGroup>
  
 

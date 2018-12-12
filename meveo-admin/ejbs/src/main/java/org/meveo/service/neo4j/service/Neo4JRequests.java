@@ -33,7 +33,7 @@ public class Neo4JRequests {
     public final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields})")
             .append(" WITH n, properties(n) as properties,  labels(n) as labels, ID(n) as id ")
             .append(" DETACH DELETE n")
-            .append(" RETURN properties");
+            .append(" RETURN properties, labels, id");
 
     public final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys})")
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys})")

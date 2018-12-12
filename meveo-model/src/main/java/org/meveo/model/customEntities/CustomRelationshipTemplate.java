@@ -1,6 +1,7 @@
 package org.meveo.model.customEntities;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -15,8 +16,10 @@ import javax.validation.constraints.Size;
 @Entity
 @ModuleItem
 @ExportIdentifier({ "code"})
-@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code","start_node_id","end_node_id"}))
-@SequenceGenerator(name = "ID_GENERATOR", sequenceName = "CUST_CRT_SEQ")
+@Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+        parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
+)
 @NamedQueries({ @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  ") })
 public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {
 
@@ -148,4 +151,5 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     public static String getPermissionResourceName(String code) {
         return "CRT_" + code;
     }
+
 }

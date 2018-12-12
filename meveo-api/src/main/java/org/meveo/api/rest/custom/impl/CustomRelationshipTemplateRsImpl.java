@@ -73,13 +73,12 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
 	}
 
 	@Override
-	public ActionStatus removeCustomRelationshipTemplate(
-			String customCustomRelationshipTemplateCode, String customCustomRelationshipTemplateStartCode, String customCustomRelationshipTemplateEndCode) {
+	public ActionStatus removeCustomRelationshipTemplate(String customCustomRelationshipTemplateCode) {
 	       ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
 	        try {
 	            customRelationshipTemplateApi
-                        .removeCustomRelationshipTemplate(customCustomRelationshipTemplateCode,customCustomRelationshipTemplateStartCode,customCustomRelationshipTemplateEndCode);
+                        .removeCustomRelationshipTemplate(customCustomRelationshipTemplateCode);
 	        } catch (MeveoApiException e) {
 	            result.setErrorCode(e.getErrorCode());
 	            result.setStatus(ActionStatusEnum.FAIL);
@@ -95,19 +94,18 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
 	}
 
 	@Override
-	public CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(
-			String customCustomRelationshipTemplateCode,String customEntityTemplateStartCode, String customEntityTemplateEndCode) {
+	public CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(String customCustomRelationshipTemplateCode) {
 		CustomRelationshipTemplateResponseDto result = new CustomRelationshipTemplateResponseDto();
 
 	        try {
-	            result.setCustomRelationshipTemplate(customRelationshipTemplateApi.findCustomRelationshipTemplate(customCustomRelationshipTemplateCode,customEntityTemplateStartCode, customEntityTemplateEndCode));
+	            result.setCustomRelationshipTemplate(customRelationshipTemplateApi.findCustomRelationshipTemplate(customCustomRelationshipTemplateCode));
 	        } catch (MeveoApiException e) {
 	            result.getActionStatus().setErrorCode(e.getErrorCode());
 	            result.getActionStatus().setStatus(ActionStatusEnum.FAIL);
 	            result.getActionStatus().setMessage(e.getMessage());
 	        } catch (Exception e) {
 	            log.error("Failed to execute API", e);
-	            result.getActionStatus().setErrorCode(e instanceof BusinessException ? MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION : MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION);
+	            result.getActionStatus().setErrorCode(MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION);
 	            result.getActionStatus().setStatus(ActionStatusEnum.FAIL);
 	            result.getActionStatus().setMessage(e.getMessage());
 	        }
@@ -125,7 +123,7 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
 
 	       } catch (Exception e) {
 	            log.error("Failed to execute API", e);
-	            result.getActionStatus().setErrorCode(e instanceof BusinessException ? MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION : MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION);
+	            result.getActionStatus().setErrorCode(MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION);
 	            result.getActionStatus().setStatus(ActionStatusEnum.FAIL);
 	            result.getActionStatus().setMessage(e.getMessage());
 	        }

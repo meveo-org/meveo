@@ -87,7 +87,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
         handleMissingParameters();
 
-        if (customRelationshipTemplateService.findByStartAndEndCodes(dto.getCode(), dto.getStartNodeCode(), dto.getEndNodeCode()) != null) {
+        if (customRelationshipTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
@@ -111,7 +111,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         handleMissingParameters();
 
         CustomRelationshipTemplate crt = customRelationshipTemplateService
-                                   .findByStartAndEndCodes(dto.getCode(), dto.getStartNodeCode(), dto.getEndNodeCode());
+                                   .findByCode(dto.getCode());
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
@@ -126,14 +126,14 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
     }
 
-    public void removeCustomRelationshipTemplate(String code, String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    public void removeCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
 
         handleMissingParameters();
 
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(code, startCode, endCode);
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
         if (crt != null) {
             // Related custom field templates will be removed along with CET
             customRelationshipTemplateService.remove(crt);
@@ -142,14 +142,14 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         }
     }
 
-    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code,String startCode, String endCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
 
         handleMissingParameters();
 
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(code, startCode, endCode);
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
 
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
@@ -161,7 +161,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
     }
 
     public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData) throws MeveoApiException, BusinessException {
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByStartAndEndCodes(postData.getCode(), postData.getStartNodeCode(), postData.getEndNodeCode());
+        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(postData.getCode());
         if (crt == null) {
             createCustomRelationshipTemplate(postData);
         } else {
@@ -173,14 +173,14 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
     public List<CustomRelationshipTemplateDto> listCustomRelationshipTemplates(String code) {
 
-        List<CustomRelationshipTemplate> cets = null;
+        List<CustomRelationshipTemplate> cets;
         if (StringUtils.isBlank(code)) {
             cets = customRelationshipTemplateService.list();
         } else {
             cets = customRelationshipTemplateService.findByCodeLike(code);
         }
 
-        List<CustomRelationshipTemplateDto> cetDtos = new ArrayList<CustomRelationshipTemplateDto>();
+        List<CustomRelationshipTemplateDto> cetDtos = new ArrayList<>();
 
         for (CustomRelationshipTemplate crt : cets) {
 
@@ -199,7 +199,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(appliesTo);
 
         // Create, update or remove fields as necessary
-        List<CustomFieldTemplate> cftsToRemove = new ArrayList<CustomFieldTemplate>();
+        List<CustomFieldTemplate> cftsToRemove = new ArrayList<>();
         if (fields != null && !fields.isEmpty()) {
 
             for (CustomFieldTemplate cft : cetFields.values()) {

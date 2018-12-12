@@ -600,9 +600,7 @@ public class DateUtils {
             }
 
             // Period end or start within the dates
-            if ((periodEnd.compareTo(checkEnd) <= 0 && periodEnd.compareTo(checkStart) > 0) || (periodStart.compareTo(checkEnd) < 0 && periodStart.compareTo(checkStart) >= 0)) {
-                return true;
-            }
+            return (periodEnd.compareTo(checkEnd) <= 0 && periodEnd.compareTo(checkStart) > 0) || (periodStart.compareTo(checkEnd) < 0 && periodStart.compareTo(checkStart) >= 0);
         }
         return false;
     }
@@ -619,5 +617,21 @@ public class DateUtils {
         }
 
         return !dateToCheck.before(startDate) && !dateToCheck.after(endDate);
+    }
+
+    public static String formatToSireneDatePattern(String date, String pattern){
+        if (date != null && date.length() >= 8) {
+            Date parsedDate=DateUtils.parseDateWithPattern(date, pattern);
+            return DateUtils.formatDateWithPattern(parsedDate, "dd/MM/yyyy");
+        }
+        return date;
+    }
+
+    public static String formatFromSireneDatePattern(String date, String targetPattern){
+        if (date != null && date.length() >= 8) {
+            Date parsedDate=DateUtils.parseDateWithPattern(date, "dd/MM/yyyy");
+            return DateUtils.formatDateWithPattern(parsedDate,targetPattern );
+        }
+        return date;
     }
 }
