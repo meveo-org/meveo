@@ -1,21 +1,19 @@
 package org.meveo.service.neo4j.base;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.service.neo4j.service.Neo4JRequests;
-import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.summary.ResultSummary;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -23,9 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Stateless
 public class Neo4jDao {
 
     private static final String FIELD_KEYS = "fieldKeys";
