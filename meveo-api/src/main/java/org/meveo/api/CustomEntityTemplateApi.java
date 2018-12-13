@@ -1,9 +1,6 @@
 package org.meveo.api;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -32,8 +29,9 @@ import org.meveo.util.EntityCustomizationUtils;
 /**
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
- **/
+ * @author Clement Bareth
+ * @lastModifiedVersion 6.0.4
+ */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
 
@@ -73,6 +71,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         CustomEntityTemplate cet = CustomEntityTemplateDto.fromDTO(dto, null);
+
+        setSuperTemplate(dto, cet);
+
         customEntityTemplateService.create(cet);
 
         if (dto.getFields() != null) {
@@ -88,6 +89,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         return cet;
+    }
+
+    private void setSuperTemplate(CustomEntityTemplateDto dto, CustomEntityTemplate cet) {
+        if(dto.getSuperTemplate() != null){
+            CustomEntityTemplate superTemplate = customEntityTemplateService.findByCode(dto.getSuperTemplate());
+            cet.setSuperTemplate(superTemplate);
+        }
     }
 
     public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
@@ -109,6 +117,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         cet = CustomEntityTemplateDto.fromDTO(dto, cet);
+
+        setSuperTemplate(dto, cet);
+
         cet = customEntityTemplateService.update(cet);
 
         synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
@@ -167,14 +178,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     public List<CustomEntityTemplateDto> listCustomEntityTemplates(String code) {
 
-        List<CustomEntityTemplate> cets = null;
+        List<CustomEntityTemplate> cets;
         if (StringUtils.isBlank(code)) {
             cets = customEntityTemplateService.list();
         } else {
             cets = customEntityTemplateService.findByCodeLike(code);
         }
 
-        List<CustomEntityTemplateDto> cetDtos = new ArrayList<CustomEntityTemplateDto>();
+        List<CustomEntityTemplateDto> cetDtos = new ArrayList<>();
 
         for (CustomEntityTemplate cet : cets) {
 
@@ -214,7 +225,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
 
         // Create, update or remove fields as necessary
-        List<CustomFieldTemplate> cftsToRemove = new ArrayList<CustomFieldTemplate>();
+        List<CustomFieldTemplate> cftsToRemove = new ArrayList<>();
         if (fields != null && !fields.isEmpty()) {
 
             for (CustomFieldTemplate cft : cetFields.values()) {
@@ -247,7 +258,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         Map<String, EntityCustomAction> cetActions = entityActionScriptService.findByAppliesTo(appliesTo);
 
         // Create, update or remove fields as necessary
-        List<EntityCustomAction> actionsToRemove = new ArrayList<EntityCustomAction>();
+        List<EntityCustomAction> actionsToRemove = new ArrayList<>();
         if (actions != null && !actions.isEmpty()) {
 
             for (EntityCustomAction action : cetActions.values()) {
@@ -345,7 +356,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      */
 	public EntityCustomizationDto listELFiltered(String appliesTo, String entityCode)
             throws MissingParameterException, ELException {
-		EntityCustomizationDto result = new EntityCustomizationDto();
+        new EntityCustomizationDto();
+        EntityCustomizationDto result = new EntityCustomizationDto();
 		log.debug("IPIEL: listELFiltered");
 
 		if (StringUtils.isBlank(appliesTo)) {
@@ -369,31 +381,34 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			}
 		}
 
-		// search for custom field entity filtered by type and code
-		ICustomFieldEntity entityInstance = customEntityTemplateService.findByClassAndCode(entityClass, entityCode);
 
-		// custom fields that applies to an entity type, eg. OFFER
-		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(appliesTo);
-		Map<String, EntityCustomAction> caFields = entityCustomActionService.findByAppliesTo(appliesTo);
-		result = EntityCustomizationDto.toDTO(entityClass, cetFields.values(), caFields.values());
+        if (entityClass != null) {
+            // search for custom field entity filtered by type and code
+            ICustomFieldEntity entityInstance = customEntityTemplateService.findByClassAndCode(entityClass, entityCode);
 
-		// evaluate the CFT againsts the entity
-		List<CustomFieldTemplateDto> evaluatedCFTDto = new ArrayList<>();
-		for (CustomFieldTemplateDto cft : result.getFields()) {
-			if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entityInstance)) {
-				evaluatedCFTDto.add(cft);
-			}
-		}
-		result.setFields(evaluatedCFTDto);
-		
-        // evaluate the CA againsts the entity
-        List<EntityCustomActionDto> evaluatedCA = new ArrayList<>();
-        for (EntityCustomActionDto eca : result.getActions()) {
-            if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(eca.getApplicableOnEl(), "entity", entityInstance)) {
-                evaluatedCA.add(eca);
+            // custom fields that applies to an entity type, eg. OFFER
+            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(appliesTo);
+            Map<String, EntityCustomAction> caFields = entityCustomActionService.findByAppliesTo(appliesTo);
+            result = EntityCustomizationDto.toDTO(entityClass, cetFields.values(), caFields.values());
+
+            // evaluate the CFT againsts the entity
+            List<CustomFieldTemplateDto> evaluatedCFTDto = new ArrayList<>();
+            for (CustomFieldTemplateDto cft : result.getFields()) {
+                if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entityInstance)) {
+                    evaluatedCFTDto.add(cft);
+                }
             }
+            result.setFields(evaluatedCFTDto);
+
+            // evaluate the CA againsts the entity
+            List<EntityCustomActionDto> evaluatedCA = new ArrayList<>();
+            for (EntityCustomActionDto eca : result.getActions()) {
+                if (MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(eca.getApplicableOnEl(), "entity", entityInstance)) {
+                    evaluatedCA.add(eca);
+                }
+            }
+            result.setActions(evaluatedCA);
         }
-        result.setActions(evaluatedCA);
 
 		return result;
 	}
@@ -405,7 +420,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * - Type of primitive should not be null  <br>
      *
      * @param dto The CET dto to validate
-     * @return
      */
      private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
 

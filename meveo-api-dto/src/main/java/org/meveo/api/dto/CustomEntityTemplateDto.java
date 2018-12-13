@@ -39,7 +39,7 @@ public class CustomEntityTemplateDto extends BaseDto {
     private List<String> labels;
 
     @XmlElement()
-	private CustomEntityTemplateDto superTemplate;
+	private String superTemplate;
 
     /** The name. */
     @XmlAttribute(required = true)
@@ -107,11 +107,11 @@ public class CustomEntityTemplateDto extends BaseDto {
         return code;
     }
 
-    public CustomEntityTemplateDto getSuperTemplate() {
+    public String getSuperTemplate() {
         return superTemplate;
     }
 
-    public void setSuperTemplate(CustomEntityTemplateDto superTemplate) {
+    public void setSuperTemplate(String superTemplate) {
         this.superTemplate = superTemplate;
     }
 
@@ -212,9 +212,6 @@ public class CustomEntityTemplateDto extends BaseDto {
         dto.setPrimitiveEntity(cet.isPrimitiveEntity());
         dto.setPrimitiveType(cet.getPrimitiveType());
         dto.setLabels(cet.getLabels());
-        if(cet.getSuperTemplate() != null){
-            dto.setSuperTemplate(toDTO(cet.getSuperTemplate(), null, null));    //TODO: Find super tempalte field and actions
-        }
         if (cetFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
             for (CustomFieldTemplate cft : cetFields) {
@@ -252,9 +249,6 @@ public class CustomEntityTemplateDto extends BaseDto {
         cet.setPrimitiveEntity(dto.isPrimitiveEntity());
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
-        if(dto.getSuperTemplate() != null){
-            cet.setSuperTemplate(fromDTO(dto.getSuperTemplate(), cet.getSuperTemplate()));
-        }
         return cet;
     }
 
