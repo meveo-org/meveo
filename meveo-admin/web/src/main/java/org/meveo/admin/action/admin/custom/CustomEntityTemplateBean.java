@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -44,10 +45,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     
     private List<CustomEntityTemplate> customEntityTemplates;
 
-
     public CustomEntityTemplateBean() {
         super(CustomEntityTemplate.class);
         entityClass = CustomEntityTemplate.class;
+    }
+
+    @PostConstruct
+    public void init(){
         customEntityTemplates = customEntityTemplateService.list();
     }
 

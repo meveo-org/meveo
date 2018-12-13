@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -46,6 +47,10 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     public CustomRelationshipTemplateBean() {
         super(CustomRelationshipTemplate.class);
         entityClass = CustomRelationshipTemplate.class;
+    }
+
+    @PostConstruct
+    public void init(){
         customRelationshipTemplates = customRelationshipTemplateService.list();
         customEntityTemplates = customEntityTemplateService.list();
     }
