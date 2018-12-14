@@ -521,4 +521,8 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
         super.clear(scriptCode);
         allScriptInterfaces.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
+
+    public void clearCompiledScripts() {
+        allScriptInterfaces.clear();
+    }
 }

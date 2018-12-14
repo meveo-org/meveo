@@ -279,6 +279,8 @@ public class Neo4jService {
         final Session session = neo4jSessionFactory.getSession();
         final Transaction transaction = session.beginTransaction();
 
+        List<Record> recordList = new ArrayList<>();
+
         try {
             /* Execute query and parse result inside a relationship.
             If relationship was created fire creation event, fire update event when updated. */
@@ -286,21 +288,28 @@ public class Neo4jService {
             final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 
             // Fire notification for each relation created or updated
-            for (Record record : result.list()){
-                final Relationship relationship = record.get(relationshipAlias).asRelationship();  // Parse relationship
-
-                if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
-                    edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
-                } else {
-                    edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
-                }
-            }
+            recordList = result.list();
 
             transaction.success();  // Commit transaction
+
+        } catch(Exception e){
+
+            log.error(e.getMessage());
+            transaction.failure();
 
         } finally {
             transaction.close();    // Close Neo4J transaction
             session.close();        // Close Neo4J session
+        }
+
+        for (Record record : recordList){
+            final Relationship relationship = record.get(relationshipAlias).asRelationship();  // Parse relationship
+
+            if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
+                edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
+            } else {
+                edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
+            }
         }
     }
 
@@ -367,6 +376,8 @@ public class Neo4jService {
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
         final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
 
+        org.neo4j.driver.v1.types.Node startNode = null;
+
         try {
             try {
 
@@ -389,8 +400,7 @@ public class Neo4jService {
                 final StatementResult result = transaction.run(updateStatement, parametersValues);  // Execute query
 
                 // Fire node update event
-                org.neo4j.driver.v1.types.Node startNode = result.single().get(startNodeAlias).asNode();
-                nodeUpdatedEvent.fire(startNode);
+                startNode = result.single().get(startNodeAlias).asNode();
 
             } catch (NoSuchRecordException e) {
 
@@ -413,6 +423,10 @@ public class Neo4jService {
             session.close();
             transaction.close();
 
+        }
+
+        if(startNode != null) {
+            nodeUpdatedEvent.fire(startNode);
         }
 
     }
@@ -450,6 +464,8 @@ public class Neo4jService {
         Session session = neo4jSessionFactory.getSession();
         Transaction transaction = session.beginTransaction();
 
+        InternalNode internalNode = null;
+
         try {
 
             /* Delete the node and all its associated relationships and fire node deletion event */
@@ -462,8 +478,7 @@ public class Neo4jService {
                 final Map<String, Value> properties = record.get("properties").asMap(e -> e);   // Parse properties
                 final List<String> labels = record.get("labels").asList(Value::asString);       // Parse labels
                 final long id = record.get("id").asLong();                                      // Parse id
-                final InternalNode internalNode = new InternalNode(id, labels, properties);     // Create Node object
-                nodeRemovedEvent.fire(internalNode);                                            // Fire notification
+                internalNode = new InternalNode(id, labels, properties);     // Create Node object
             }
             transaction.success();
 
@@ -479,6 +494,10 @@ public class Neo4jService {
             session.close();
             transaction.close();
 
+        }
+        
+        if(internalNode != null){
+            nodeRemovedEvent.fire(internalNode);    // Fire notification
         }
 
     }

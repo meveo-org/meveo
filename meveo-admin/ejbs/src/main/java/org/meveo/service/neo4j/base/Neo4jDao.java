@@ -92,7 +92,7 @@ public class Neo4jDao {
     public Long createNode(String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
-        Long nodeId;        // Id of the created node
+        Long nodeId = null;        // Id of the created node
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
@@ -116,30 +116,33 @@ public class Neo4jDao {
         Session session = neo4jSessionFactory.getSession();
         final Transaction transaction = session.beginTransaction();
 
+        Node node = null;
+
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement);
-            final Node node = result.single().get(alias).asNode();
+            node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
+            nodeId = node.id();
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
 
+        if(node != null){
             //  If node has been created, fire creation event. If it was updated, fire update event.
             if(node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
                 nodeUpdatedEvent.fire(node);
             }else{
                 nodeCreatedEvent.fire(node);
             }
-
-            nodeId = node.id();
-        } catch(Exception e) {
-            transaction.failure();
-            LOGGER.error(e.getMessage());
-            return null;
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
+
         return nodeId;
     }
 
@@ -159,18 +162,12 @@ public class Neo4jDao {
         // Begin transaction
         Session session = neo4jSessionFactory.getSession();
         final Transaction transaction = session.beginTransaction();
+        Relationship relationship = null;
 
         try {
             // Execute query and parse results
             final StatementResult result = transaction.run(statement, values);
-            final Relationship relationship = result.single().get("relationship").asRelationship();
-
-            //  If relationship has been created, fire creation event. If it was updated, fire update event.
-            if(relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
-                edgeUpdatedEvent.fire(relationship);
-            }else{
-                edgeCreatedEvent.fire(relationship);
-            }
+            relationship = result.single().get("relationship").asRelationship();
 
             transaction.success();  // Commit transaction
         } catch(Exception e) {
@@ -180,6 +177,15 @@ public class Neo4jDao {
             // End session and transaction
             transaction.close();
             session.close();
+        }
+
+        if(relationship != null){
+            //  If relationship has been created, fire creation event. If it was updated, fire update event.
+            if(relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
+                edgeUpdatedEvent.fire(relationship);
+            }else{
+                edgeCreatedEvent.fire(relationship);
+            }
         }
     }
 
