@@ -137,7 +137,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(cetPrefix);
 
-        if(entityTemplate.isPrimitiveEntity()) {
+        if(entityTemplate != null && entityTemplate.isPrimitiveEntity()) {
         	fields.remove("value");
         }
         

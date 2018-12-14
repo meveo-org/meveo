@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PersistenceDto {
@@ -35,7 +36,7 @@ public class PersistenceDto {
      * Properties to attach to the object, key references the CFT code.
      * Can be single-valuated or multi-valuated (defined in ontology).
      */
-    private Map<String, Object> properties;
+    private Map<String, Object> properties = new HashMap<>();
 
     public String getDiscriminator() {
         return discriminator;

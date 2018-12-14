@@ -102,7 +102,12 @@ public class Neo4jDao {
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        StringBuffer statement = appendAdditionalLabels(Neo4JRequests.cetStatement, labels, alias, valuesMap);
+        StringBuffer statement = Neo4JRequests.cetStatement;
+
+        if(labels != null){
+            statement = appendAdditionalLabels(statement, labels, alias, valuesMap);
+        }
+
         statement = appendReturnStatement(statement, alias, valuesMap);
         String resolvedStatement = sub.replace(statement);
         resolvedStatement = resolvedStatement.replace('"', '\'');
