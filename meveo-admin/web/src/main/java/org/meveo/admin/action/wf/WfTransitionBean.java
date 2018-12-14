@@ -585,16 +585,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
         this.disabledOrderWF = disabledOrderWF;
     }
 
-    @Override
-    protected String getListViewName() {
-        return "mm_workflows";
-    }
-
-    @Override
-    public String getEditViewName() {
-        return "mm_workflowDetail";
-    }
-
     /**
      * @see org.meveo.admin.action.BaseBean#getFormFieldsToFetch()
      */
