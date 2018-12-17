@@ -17,9 +17,11 @@
  */
 package org.meveo.api.rest.technicalservice.impl;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.resteasy.core.ServerResponse;
 import org.meveo.api.TechnicalServiceApi;
 import org.meveo.api.dto.ActionStatus;
+import org.meveo.api.dto.TechnicalServicesDto;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
 import org.meveo.api.dto.technicalservice.InputOutputDescription;
@@ -37,6 +39,8 @@ import javax.interceptor.Interceptors;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -109,14 +113,16 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     }
 
     @Override
-    public ListTechnicalServiceResponse list(TechnicalServiceFilters filters) {
-        ListTechnicalServiceResponse result = new ListTechnicalServiceResponse();
-        try {
-            result.setConnectors(technicalServiceApi().list(filters));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
+    public Response list(TechnicalServiceFilters filters, Date sinceDate) {
+        ServerResponse response = new ServerResponse();
+        TechnicalServicesDto technicalServicesDto = technicalServiceApi().findByNewerThan(filters,sinceDate);
+        if(technicalServicesDto != null && CollectionUtils.isNotEmpty(technicalServicesDto.geTechnicalServiceDtos())) {
+            response.setEntity(technicalServicesDto);
+            response.setStatus(200);
+        } else {
+            response.setStatus(304);
         }
-        return result;
+        return response;
     }
 
     @Override
