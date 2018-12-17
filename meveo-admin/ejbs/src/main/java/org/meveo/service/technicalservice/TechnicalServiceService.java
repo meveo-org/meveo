@@ -230,14 +230,16 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return qb;
     }
 
-    private QueryBuilder queryBuilder(TechnicalServiceFilters filters,Date sinceDate) {
+    private QueryBuilder queryBuilder(TechnicalServiceFilters filters, Date sinceDate) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
         if(filters.getName() != null){
             qb.addCriterion("service.name", "=", filters.getName(), true);
         }else if(filters.getLikeName() != null){
             qb.addCriterion("service.name", "like", filters.getName(), true);
         }
-        qb.addCriterion("service.auditable.created", ">=", sinceDate, true);
+        if (sinceDate != null) {
+            qb.addCriterion("service.auditable.created", ">=", sinceDate, true);
+        }
         return qb;
     }
 }
