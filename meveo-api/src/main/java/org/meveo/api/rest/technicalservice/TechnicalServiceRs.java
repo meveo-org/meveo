@@ -29,6 +29,7 @@ import org.meveo.api.rest.IBaseRs;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Date;
 
 /**
  * Technical service rest service
@@ -130,7 +131,7 @@ public interface TechnicalServiceRs extends IBaseRs {
      */
     @Path("/")
     @GET
-    ListTechnicalServiceResponse list(@Form TechnicalServiceFilters filters);
+    Response list(@Form TechnicalServiceFilters filters, @HeaderParam("If-Modified-Since") Date sinceDate);
 
     /**
      * Retrieves the names of all technical services

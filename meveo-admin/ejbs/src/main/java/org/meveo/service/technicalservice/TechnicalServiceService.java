@@ -31,7 +31,9 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -202,6 +204,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return qb.count(getEntityManager());
     }
 
+    public List<T> findByNewerThan(TechnicalServiceFilters filters, Date sinceDate) {
+        QueryBuilder qb = queryBuilder(filters,sinceDate);
+        return (List<T>) qb.getQuery(getEntityManager()).getSingleResult();
+    }
+
     @Override
     protected void afterUpdateOrCreate(T executable) {}
 
@@ -223,4 +230,14 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
         return qb;
     }
 
+    private QueryBuilder queryBuilder(TechnicalServiceFilters filters,Date sinceDate) {
+        QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
+        if(filters.getName() != null){
+            qb.addCriterion("service.name", "=", filters.getName(), true);
+        }else if(filters.getLikeName() != null){
+            qb.addCriterion("service.name", "like", filters.getName(), true);
+        }
+        qb.addCriterion("service.auditable.created", ">=", sinceDate, true);
+        return qb;
+    }
 }

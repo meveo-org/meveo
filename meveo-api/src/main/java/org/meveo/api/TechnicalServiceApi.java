@@ -34,10 +34,7 @@ import org.meveo.service.technicalservice.TechnicalServiceService;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -289,6 +286,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         return new TechnicalServicesDto(customEntityInstanceDTOs);
     }
 
+    public TechnicalServicesDto findByNewerThan(TechnicalServiceFilters filters, Date sinceDate) {
+        List<T> list = technicalServiceService().findByNewerThan(filters, sinceDate);
+        List<TechnicalServiceDto> customEntityInstanceDTOs = list.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+        return new TechnicalServicesDto(customEntityInstanceDTOs);
+    }
     /**
      * List all the technical services present in database
      *
@@ -406,6 +410,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         List<Description> description = technicalServiceService().description(buildCode(name, finalVersion));
         return InputOutputDescription.fromDescriptions(description);
     }
+
+
 
     /**
      * @param name    Name of the service to find
