@@ -65,7 +65,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     }
     
     public List<CustomEntityTemplate> getCustomEntityTemplates() {
-        return customEntityTemplates;
+        String query = (String) filters.get("entityName");
+        if(query == null) {
+            return customEntityTemplates;
+        } else {
+            return customEntityTemplateService.findByCodeLike(query);
+        }
     }
 
 	/**

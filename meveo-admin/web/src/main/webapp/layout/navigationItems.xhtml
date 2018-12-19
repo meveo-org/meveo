@@ -25,7 +25,10 @@
 			value="#{messages['menu.userGroupHierarchy']}"
 			outcome="userGroupHierarchy"
 			rendered="#{currentUser.hasRole('administrationVisualization')}" />
-		</p:submenu>
+        <p:menuitem id="menuConfiguration" value="#{messages['menu.menuConfiguration']}"
+            outcome="menuConfiguration"
+            rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        </p:submenu>
 		<p:submenu id="trading" label="#{messages['menu.trading']}"
 			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
 			<p:menuitem id="multiLanguageFields" outcome="multiLanguageFields"
@@ -161,5 +164,4 @@
             value="#{messages['menu.tenants']}"
             rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />            
 	</p:submenu>
-
 </ui:composition>
