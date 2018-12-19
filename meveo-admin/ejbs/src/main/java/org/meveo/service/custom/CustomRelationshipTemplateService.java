@@ -21,6 +21,7 @@ package org.meveo.service.custom;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
@@ -105,13 +106,17 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      */
     public boolean isUnique(String code){
         return uniqueRelations.computeIfAbsent(code, key -> {
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
-            Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
-            query.select(root.get("unique"));
-            query.where(cb.equal(root.get("code"), key));
-            query.distinct(true);
-            return getEntityManager().createQuery(query).getSingleResult();
+            try {
+                CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+                CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
+                Root<CustomRelationshipTemplate> root = query.from(getEntityClass());
+                query.select(root.get("unique"));
+                query.where(cb.equal(root.get("code"), key));
+                query.distinct(true);
+                return getEntityManager().createQuery(query).getSingleResult();
+            } catch (NoResultException e) {
+                return false;
+            }
         });
     }
 
