@@ -16,6 +16,7 @@ import org.meveo.cache.CacheContainerProvider;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.Provider;
 import org.meveo.security.MeveoUser;
@@ -64,6 +65,9 @@ public class ApplicationInitializer {
 
     @Inject
     private JobCacheContainerProvider jobCache;
+
+    @Inject
+    protected ParamBeanFactory paramBeanFactory;
 
     @Inject
     private ElasticClient elasticClient;
@@ -120,7 +124,10 @@ public class ApplicationInitializer {
         jobInstanceService.registerJobs();
 
         // Initialize scripts
-        scriptInstanceService.compileAll();
+        boolean compileAllScripts = Boolean.parseBoolean(paramBeanFactory.getInstance().getProperty("scripts.compileAll", "true"));
+        if(compileAllScripts){
+            scriptInstanceService.compileAll();
+        }
 
         // Initialize caches
         notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
