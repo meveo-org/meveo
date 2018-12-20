@@ -158,10 +158,26 @@
             rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement') || currentUser.hasRole('administrationVisualization')}">
             <p:menuitem id="ESSearch" rendered="#{currentUser.hasRole('administrationVisualization')}" outcome="fullTextSearch" value="#{messages['menu.fullTextSearch.search']}" />
             <p:menuitem id="reindexES" rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement')}" outcome="indexing" value="#{messages['menu.fullTextSearch.index']}" />
-        </p:submenu>            
-            
+        </p:submenu>
+
         <p:menuitem id="providers" outcome="providers"
             value="#{messages['menu.tenants']}"
-            rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />            
+            rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />
 	</p:submenu>
+    <c:set var="cetIndex" value="0"/>
+    <c:forEach items="#{customEntityReferenceBean.customEntityTemplates}" var="cet">
+        <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+            <p:submenu id="cet_configuration_#{cetIndex}" outcome="customEntities"
+                       label="#{cet.code}">
+                <c:set var="cetIndexSub" value="0"/>
+                <c:forEach items="#{cet.subTemplates}" var="cetSub">
+                    <p:menuitem outcome="customEntities" value ="#{cetSub.code}">
+                        <f:param name="cet" value="#{cetSub.code}"></f:param>
+                    </p:menuitem>
+                    <c:set var="cetIndexSub" value="#{cetIndexSub + 1}" />
+                </c:forEach>
+            </p:submenu>
+            <c:set var="cetIndex" value="#{cetIndex + 1}" />
+        </c:if>
+    </c:forEach>
 </ui:composition>

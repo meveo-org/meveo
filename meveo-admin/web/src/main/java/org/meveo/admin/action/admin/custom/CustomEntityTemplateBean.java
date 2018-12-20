@@ -52,7 +52,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
     @PostConstruct
     public void init(){
-        customEntityTemplates = customEntityTemplateService.list();
+        customEntityTemplates = customEntityTemplateService.getCETForConfiguration();
     }
 
     @Override

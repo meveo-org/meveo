@@ -77,6 +77,7 @@
         <createSequence sequenceName="wf_history_action_seq" />
         <createSequence sequenceName="audit_log_seq" />
         <createSequence sequenceName="dwh_chart_seq" />
+        <createSequence sequenceName="cet_ref_seq" />
     </changeSet>
 
     <changeSet id="rebuild-str-seq-2" author="AndriusKarpavicius" dbms="mysql">
@@ -385,6 +386,14 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cust_cet_seq_pk" />
             </column>
         </createTable>
+
+        <sql>insert into ${db.schema.adapted}cet_ref_seq values(1)</sql>
+        <createTable tableName="cet_ref_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cet_ref_seq_pk" />
+            </column>
+        </createTable>
+
         <sql>insert into ${db.schema.adapted}cust_cet_seq values(1)</sql>
         <createTable tableName="cust_cei_seq">
             <column name="next_val" type="BIGINT">

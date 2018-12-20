@@ -23,7 +23,8 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 @ExportIdentifier({ "code"})
 @Table(name = "cust_cet", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "cust_cet_seq"), })
-@NamedQueries({ @NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name ") })
+@NamedQueries({ @NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
+                @NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet left join fetch cet.subTemplates where cet.disabled=false order by cet.name")})
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
 
     private static final long serialVersionUID = 8281478284763353310L;
@@ -49,7 +50,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "super_template_id")
     private CustomEntityTemplate superTemplate;
-    
+
+    @OneToMany(mappedBy = "superTemplate", fetch = FetchType.LAZY)
+    private List<CustomEntityTemplate> subTemplates;
+
     /**
      * Whether the CET is primitive.
      * A primitive entity is an entity containing only one property named "value"
@@ -137,5 +141,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
     public void setSuperTemplate(CustomEntityTemplate superTemplate) {
         this.superTemplate = superTemplate;
+    }
+
+    public List<CustomEntityTemplate> getSubTemplates() {
+        return subTemplates;
+    }
+
+    public void setSubTemplates(List<CustomEntityTemplate> subTemplates) {
+        this.subTemplates = subTemplates;
     }
 }
