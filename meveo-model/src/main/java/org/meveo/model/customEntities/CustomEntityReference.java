@@ -5,6 +5,7 @@ import org.meveo.model.AuditableEntity;
 import org.meveo.model.ModuleItem;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -19,11 +20,13 @@ import javax.persistence.Table;
 @Table(name = "cet_ref")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @org.hibernate.annotations.Parameter(name = "sequence_name", value = "cet_ref_seq"), })
-@NamedQueries({@NamedQuery(name = "CustomEntityReference.getCER", query = "SELECT cer from CustomEntityReference cer join fetch cer.customEntityTemplate cet join fetch cet.subTemplates")})
+@NamedQueries({@NamedQuery(name = "CustomEntityReference.getCER", query = "SELECT distinct cer from CustomEntityReference cer join fetch cer.customEntityTemplate"),
+        @NamedQuery(name = "CustomEntityReference.getExistingCET", query = "SELECT distinct cer from CustomEntityReference cer join fetch cer.customEntityTemplate cet where cet.id =:cetId"),
+        @NamedQuery(name = "CustomEntityReference.getExistingUpdateCET", query = "SELECT distinct cer from CustomEntityReference cer join cer.customEntityTemplate cet where cet.id =:cetId and cer.id<>:id")})
 public class CustomEntityReference extends AuditableEntity {
     private static final long serialVersionUID = 8281478284763353310L;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "cet_id")
     private CustomEntityTemplate customEntityTemplate;
 

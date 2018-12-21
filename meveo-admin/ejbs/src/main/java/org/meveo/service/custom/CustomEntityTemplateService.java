@@ -267,11 +267,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     /**
-     * Get a list of custom entity templates for cache
+     * Get a list of custom entity templates for Configuration
      *
      * @return A list of custom entity templates
      */
     public List<CustomEntityTemplate> getCETForConfiguration() {
         return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
+    }
+
+    /**
+     * Get a list of custom entity templates not in Configuration menu
+     *
+     * @return A list of custom entity templates
+     */
+    public List<CustomEntityTemplate> getCETNotInConfiguration() {
+        return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETNotInConfiguration", CustomEntityTemplate.class).getResultList();
     }
 }

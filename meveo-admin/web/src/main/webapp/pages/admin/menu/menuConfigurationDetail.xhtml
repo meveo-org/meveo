@@ -4,7 +4,7 @@
 
     <ui:define name="metadata">
         <f:metadata>
-            <f:event type="preRenderView" listener="#{customEntityTemplateBean.preRenderView}" />
+            <f:viewParam name="objectId" value="#{customEntityReferenceBean.objectId}" />
         </f:metadata>
     </ui:define>
     <ui:define name="body">
@@ -13,12 +13,12 @@
         <p:breadCrumb homeDisplay="text" id="crumbmenu">
             <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
             <p:menuitem outcome="menuConfiguration" value="#{messages['menu.menuConfiguration']}" />
-            <p:menuitem outcome="menuConfiguration" value="#{messages['menu.newMenuConfiguration']}" />
+            <p:menuitem value="#{messages['menu.newMenuConfiguration']}" />
         </p:breadCrumb>
     </h:form>
     <hftl:formPanel label="#{messages['menuConfiguration.CustomEntityTemplate']}"
                     backingBean="#{customEntityReferenceBean}">
-        <hftl:formField id="customCET" width="30%" label="#{messages['menuConfiguration.code']}" fkToEntity="false" field="customEntityTemplate" valueLabelField="code"  listBean="#{customEntityTemplateBean}"/>
+        <hftl:formField id="customCET" width="30%" required="true" label="#{messages['menuConfiguration.code']}" fkToEntity="false" field="customEntityTemplate" valueLabelField="code"  listBean="#{customEntityTemplateBean}"/>
     </hftl:formPanel>
     </ui:define>
 </ui:composition>

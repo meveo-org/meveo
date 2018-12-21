@@ -4,7 +4,8 @@
 
     <ui:define name="metadata">
         <f:metadata>
-            <f:event type="preRenderView" listener="#{customEntityTemplateBean.preRenderView}" />
+            <f:event type="preRenderView"
+                     listener="#{customEntityReferenceBean.preRenderView}" />
         </f:metadata>
     </ui:define>
     <ui:define name="body">
@@ -23,7 +24,7 @@
         </hftl:searchPanel>
 
         <hftl:dataList backingBean="#{customEntityReferenceBean}">
-            <hftl:column label="#{messages['menuConfiguration.code']}" 	field="customEntityTemplate.code" width="50%" entityView="customEntityDetail" valueIdField="id"/>
+            <hftl:column label="#{messages['menuConfiguration.code']}" 	field="customEntityTemplate.code" width="50%" entityView="menuConfigurationDetail" valueIdField="id"/>
             <hftl:actionsColumn	permission="#{currentUser.hasRole('superAdminManagement')}" />
         </hftl:dataList>
     </ui:define>

@@ -1366,6 +1366,12 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             </to-view-id>
             <redirect include-view-params="true"/>
         </navigation-case>
+
+        <navigation-case>
+            <from-outcome>menuConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/menu/menuConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
 
 </faces-config>

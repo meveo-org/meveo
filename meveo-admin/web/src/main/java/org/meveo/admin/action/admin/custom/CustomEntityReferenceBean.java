@@ -1,8 +1,11 @@
 package org.meveo.admin.action.admin.custom;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.FilterCustomFieldSearchBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -32,6 +35,9 @@ public class CustomEntityReferenceBean extends BaseBean<CustomEntityReference> {
 
     @Inject
     private CustomEntityReferenceService referenceService;
+
+    @Inject
+    private FilterCustomFieldSearchBean filterCustomFieldSearchBean;
 
     public CustomEntityReferenceBean() {
         super(CustomEntityReference.class);
@@ -70,7 +76,23 @@ public class CustomEntityReferenceBean extends BaseBean<CustomEntityReference> {
         this.customEntityTemplates = customEntityTemplates;
     }
 
-   /* public String save() throws BusinessException {
-        referenceService.
-    }*/
+    @Override
+    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        if (entity.isTransient()) {
+            if (!referenceService.checkExistingCET(entity.getCustomEntityTemplate().getId())) {
+                super.saveOrUpdate(killConversation);
+            } else {
+                messages.error(new BundleKey("messages", "menuConfiguration.validationCode"), entity.getCustomEntityTemplate().getCode());
+                return getNewViewName();
+            }
+        } else {
+            if (!referenceService.checkExistingForUpdateCET(entity.getCustomEntityTemplate().getId(), entity.getId())) {
+                super.saveOrUpdate(killConversation);
+            } else {
+                messages.error(new BundleKey("messages", "menuConfiguration.validationCode"), entity.getCustomEntityTemplate().getCode());
+                return getEditViewName();
+            }
+        }
+        return getListViewName();
+    }
 }

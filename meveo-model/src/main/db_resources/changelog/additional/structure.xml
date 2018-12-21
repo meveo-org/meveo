@@ -207,6 +207,12 @@
             <column name="cet_id" type="BIGINT">
                 <constraints nullable="false" foreignKeyName=""/>
             </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
         </createTable>
         <addForeignKeyConstraint constraintName="cet_id_fk" baseTableName="cet_ref" baseColumnNames="cet_id"
                                  referencedTableName="cust_cet" referencedColumnNames="id"/>
