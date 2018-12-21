@@ -213,6 +213,7 @@
             <column name="updated" type="datetime" />
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
+            <column name="version" type="INT4" />
         </createTable>
         <addForeignKeyConstraint constraintName="cet_id_fk" baseTableName="cet_ref" baseColumnNames="cet_id"
                                  referencedTableName="cust_cet" referencedColumnNames="id"/>
