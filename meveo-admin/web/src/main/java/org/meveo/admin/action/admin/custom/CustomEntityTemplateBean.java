@@ -45,14 +45,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     
     private List<CustomEntityTemplate> customEntityTemplates;
 
+    private List<CustomEntityTemplate> cetConfigurations;
+
     public CustomEntityTemplateBean() {
         super(CustomEntityTemplate.class);
         entityClass = CustomEntityTemplate.class;
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         customEntityTemplates = customEntityTemplateService.list();
+        cetConfigurations = customEntityTemplateService.getCETForConfiguration();
     }
 
     @Override
@@ -68,7 +71,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         return customEntityTemplates;
     }
 
-	/**
+    public List<CustomEntityTemplate> getCetConfigurations() {
+        return cetConfigurations;
+    }
+
+    /**
      * Prepare to show entity customization for a particular class - To be used from GUI action button/link
      * 
      * @param entityClassName Entity class

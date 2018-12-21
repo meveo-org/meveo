@@ -199,4 +199,24 @@
             referencedTableName="cust_cet" referencedColumnNames="id"/>
         <addPrimaryKey tableName="cet_labels" columnNames="cet_id, label" constraintName="cet_label_pk"/>
     </changeSet>
+    <changeSet id="cet_ref" author="Hien Bach">
+        <createTable tableName="cet_ref">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="cet_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName=""/>
+            </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+            <column name="version" type="INT4" />
+        </createTable>
+        <addForeignKeyConstraint constraintName="cet_id_fk" baseTableName="cet_ref" baseColumnNames="cet_id"
+                                 referencedTableName="cust_cet" referencedColumnNames="id"/>
+        <addPrimaryKey tableName="cet_ref" columnNames="id" constraintName="cet_ref_pk"/>
+    </changeSet>
 </databaseChangeLog>

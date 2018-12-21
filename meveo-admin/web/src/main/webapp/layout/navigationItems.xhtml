@@ -25,7 +25,10 @@
 			value="#{messages['menu.userGroupHierarchy']}"
 			outcome="userGroupHierarchy"
 			rendered="#{currentUser.hasRole('administrationVisualization')}" />
-		</p:submenu>
+        <p:menuitem id="menuConfiguration" value="#{messages['menu.menuConfiguration']}"
+            outcome="menuConfiguration"
+            rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        </p:submenu>
 		<p:submenu id="trading" label="#{messages['menu.trading']}"
 			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
 			<p:menuitem id="multiLanguageFields" outcome="multiLanguageFields"
@@ -155,11 +158,28 @@
             rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement') || currentUser.hasRole('administrationVisualization')}">
             <p:menuitem id="ESSearch" rendered="#{currentUser.hasRole('administrationVisualization')}" outcome="fullTextSearch" value="#{messages['menu.fullTextSearch.search']}" />
             <p:menuitem id="reindexES" rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement')}" outcome="indexing" value="#{messages['menu.fullTextSearch.index']}" />
-        </p:submenu>            
-            
+        </p:submenu>
+
         <p:menuitem id="providers" outcome="providers"
             value="#{messages['menu.tenants']}"
-            rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />            
+            rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />
 	</p:submenu>
-
+    <c:set var="cetIndex" value="0"/>
+    <c:forEach items="#{customEntityTemplateBean.cetConfigurations}" var="cet">
+        <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+            <p:submenu outcome="customEntities" label="#{cet.code}">
+                <c:set var="cetIndexSub" value="0"/>
+                <p:menuitem outcome="customEntities" value ="#{cet.code}">
+                    <f:param name="cet" value="#{cet.code}"></f:param>
+                </p:menuitem>
+                <c:forEach items="#{cet.subTemplates}" var="cetSub">
+                    <p:menuitem outcome="customEntities" value ="#{cetSub.code}">
+                        <f:param name="cet" value="#{cetSub.code}"></f:param>
+                    </p:menuitem>
+                    <c:set var="cetIndexSub" value="#{cetIndexSub + 1}" />
+                </c:forEach>
+            </p:submenu>
+            <c:set var="cetIndex" value="#{cetIndex + 1}" />
+        </c:if>
+    </c:forEach>
 </ui:composition>

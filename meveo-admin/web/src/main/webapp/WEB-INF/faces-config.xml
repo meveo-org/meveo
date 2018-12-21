@@ -1347,6 +1347,31 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             <redirect include-view-params="true"/>
         </navigation-case>
 
+        <navigation-case>
+            <from-outcome>menuConfiguration</from-outcome>
+            <to-view-id>/pages/admin/menu/menuConfigurations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>customEntityDetail</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customizedEntityDetail.xhtml
+            </to-view-id>
+            <redirect include-view-params="true"/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>customEntities</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customizedEntityDetail.xhtml
+            </to-view-id>
+            <redirect include-view-params="true"/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>menuConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/menu/menuConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
 
 </faces-config>
