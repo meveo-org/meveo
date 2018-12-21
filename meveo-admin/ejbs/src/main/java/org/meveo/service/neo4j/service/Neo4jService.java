@@ -145,21 +145,24 @@ public class Neo4jService {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazz();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
-                Long createNodeId;
-                if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
-                    fields.put(entityReference.getCode(), referencedCetValue);
-                    Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
-                    List<String> additionalLabels = getAdditionalLabels(referencedCet);
-                    createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, additionalLabels);
+
+                // If CFT is multivalued
+                if(entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)){
+
+                    //noinspection unchecked
+                    ((Collection) referencedCetValue).forEach(value -> {
+                        try {
+                            final Map<Long, String> foreignNode = createForeignNode(fields, entityReference, value, referencedCetCode, referencedCet);
+                            relationshipsToCreate.putAll(foreignNode);
+                        } catch (BusinessException e) {
+                            e.printStackTrace();
+                        }
+                    });
+
                 }else{
-                    @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
-                    createNodeId = addCetNode(referencedCetCode, valueMap);
-                }
-                if(createNodeId != null){
-                    String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
-                            .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
-                    relationshipsToCreate.put(createNodeId, relationshipName);
-                }
+                    final Map<Long, String> foreignNode = createForeignNode(fields, entityReference, referencedCetValue, referencedCetCode, referencedCet);
+                    relationshipsToCreate.putAll(foreignNode);                }
+
             }
 
             if (CETConstants.QUERY_CATEGORY_CODE.equals(cetCode)) {
@@ -188,6 +191,26 @@ public class Neo4jService {
         /* Create relationships to referenced nodes */
 
         return nodeId;
+    }
+
+    private Map<Long, String> createForeignNode(Map<String, Object> fields, CustomFieldTemplate entityReference, Object referencedCetValue, String referencedCetCode, CustomEntityTemplate referencedCet) throws BusinessException {
+        Map<Long, String> relationshipsToCreate = new HashMap<>();
+        Long createNodeId;
+        if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
+            fields.put(entityReference.getCode(), referencedCetValue);
+            Map<String, Object> valueMap = Collections.singletonMap("value", referencedCetValue);
+            List<String> additionalLabels = getAdditionalLabels(referencedCet);
+            createNodeId = neo4jDao.createNode(referencedCetCode, valueMap, valueMap, additionalLabels);
+        }else{
+            @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) referencedCetValue;
+            createNodeId = addCetNode(referencedCetCode, valueMap);
+        }
+        if(createNodeId != null){
+            String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
+                    .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+            relationshipsToCreate.put(createNodeId, relationshipName);
+        }
+        return relationshipsToCreate;
     }
 
     /**
