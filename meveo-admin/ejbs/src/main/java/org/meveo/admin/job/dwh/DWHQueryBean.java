@@ -32,7 +32,7 @@ import org.neo4j.driver.v1.*;
 import org.slf4j.Logger;
 
 @Stateless
-class DWHQueryBean {
+public class DWHQueryBean {
 
     @Inject
     private MeasurableQuantityService mqService;
