@@ -165,7 +165,7 @@
             rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />
 	</p:submenu>
     <c:set var="cetIndex" value="0"/>
-    <c:forEach items="#{customEntityTemplateBean.customEntityTemplates}" var="cet">
+    <c:forEach items="#{customEntityTemplateBean.cetConfigurations}" var="cet">
         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
             <p:submenu outcome="customEntities" label="#{cet.code}">
                 <c:set var="cetIndexSub" value="0"/>
