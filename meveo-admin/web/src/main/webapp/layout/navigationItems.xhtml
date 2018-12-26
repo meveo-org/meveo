@@ -169,7 +169,7 @@
         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
             <p:submenu outcome="customEntities" label="#{cet.code}">
                 <c:set var="cetIndexSub" value="0"/>
-                <p:menuitem outcome="customEntities" value ="#{cet.code}">
+                <p:menuitem outcome="customEntities" value ="#{cet.code}" rendered="#{!cet.entityReference.displaySub}">
                     <f:param name="cet" value="#{cet.code}"></f:param>
                 </p:menuitem>
                 <c:forEach items="#{cet.subTemplates}" var="cetSub">

@@ -19,6 +19,7 @@
     <hftl:formPanel label="#{messages['menuConfiguration.CustomEntityTemplate']}"
                     backingBean="#{customEntityReferenceBean}">
         <hftl:formField id="customCET" width="30%" required="true" label="#{messages['menuConfiguration.code']}" fkToEntity="false" field="customEntityTemplate" valueLabelField="code"  listBean="#{customEntityTemplateBean}"/>
+        <hftl:formField label ="#{messages['menuConfiguration.displayCER']}" field="displaySub"/>
     </hftl:formPanel>
     </ui:define>
 </ui:composition>
