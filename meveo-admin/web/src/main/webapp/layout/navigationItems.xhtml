@@ -102,7 +102,7 @@
 			value="#{messages['menu.meveoModules']}" />
 		<p:menuitem id="customizedEntities" outcome="customizedEntities"
 			value="#{messages['menu.customizedEntities']}" />
-	   <p:menuitem id="customizedRelationships" outcome="customizedRelationships" value="#{messages['menu.customizedRelationships']}" />
+	    <p:menuitem id="customizedRelationships" outcome="customizedRelationships" value="#{messages['menu.customizedRelationships']}" />
 		<p:menuitem id="scriptInstances" outcome="scriptInstances"
 			value="#{messages['menu.scriptInstances']}" />
 		<p:menuitem id="filters" outcome="filters"
@@ -167,9 +167,9 @@
     <c:set var="cetIndex" value="0"/>
     <c:forEach items="#{customEntityTemplateBean.cetConfigurations}" var="cet">
         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
-            <p:submenu outcome="customEntities" label="#{cet.code}">
+            <p:submenu outcome="customEntities" label="#{cet.entityReference.labelCet}">
                 <c:set var="cetIndexSub" value="0"/>
-                <p:menuitem outcome="customEntities" value ="#{cet.code}" rendered="#{!cet.entityReference.displaySub}">
+                <p:menuitem outcome="customEntities" value ="#{cet.code}" rendered="#{cet.entityReference.displaySub}">
                     <f:param name="cet" value="#{cet.code}"></f:param>
                 </p:menuitem>
                 <c:forEach items="#{cet.subTemplates}" var="cetSub">

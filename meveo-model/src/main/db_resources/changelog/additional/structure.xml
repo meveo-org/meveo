@@ -215,6 +215,7 @@
             <column name="updater" type="varchar(100)" />
             <column name="version" type="INT4" />
             <column name="displaySub" defaultValue="false" type="boolean"/>
+            <column name="labelCet" type="varchar(100)"/>
         </createTable>
         <addForeignKeyConstraint constraintName="cet_id_fk" baseTableName="cet_ref" baseColumnNames="cet_id"
                                  referencedTableName="cust_cet" referencedColumnNames="id"/>

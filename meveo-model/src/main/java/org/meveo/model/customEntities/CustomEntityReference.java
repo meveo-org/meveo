@@ -38,9 +38,12 @@ public class CustomEntityReference extends AuditableEntity {
         this.displaySub = displaySub;
     }
 
-    @Column(name = "displaySub", updatable = false)
+    @Column(name = "displaySub")
     @Type(type = "numeric_boolean")
     private boolean displaySub;
+
+    @Column(name = "labelCet")
+    private String labelCet;
 
     public CustomEntityTemplate getCustomEntityTemplate() {
         return customEntityTemplate;
@@ -50,4 +53,11 @@ public class CustomEntityReference extends AuditableEntity {
         this.customEntityTemplate = customEntityTemplate;
     }
 
+    public String getLabelCet() {
+        return labelCet;
+    }
+
+    public void setLabelCet(String labelCet) {
+        this.labelCet = labelCet;
+    }
 }
