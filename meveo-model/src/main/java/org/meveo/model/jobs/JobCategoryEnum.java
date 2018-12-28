@@ -28,7 +28,8 @@ public enum JobCategoryEnum {
 	    ACCOUNT_RECEIVABLES(5,"jobCategoryEnum.accountReceivables"),
 	    WALLET(6, "jobCategoryEnum.wallet"),
 	    UTILS(7, "jobCategoryEnum.utils"),
-	    MEDIATION(8, "jobCategoryEnum.mediation");
+	    MEDIATION(8, "jobCategoryEnum.mediation"),
+			WEBDRONE_WIDGET_EXPORT(9,"jobCategoryEnum.webdroneWidgetExport");
 	    
 
 	    private Integer id;
