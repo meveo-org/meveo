@@ -3,10 +3,13 @@ package org.meveo.service.neo4j.base;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
@@ -19,6 +22,7 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -81,7 +85,7 @@ public class Neo4jDao {
     }
 
     /**
-     * Create a Neo4J node
+     * Merge a Neo4J node based on its unique fields
      *
      * @param neo4JConfiguration Neo4J coordinates
      * @param cetCode Code of the corresponding CustomEntityTemplate
@@ -90,7 +94,7 @@ public class Neo4jDao {
      * @param labels Additionnal labels of the node
      * @return the id of the created node, or null if it has failed
      */
-    public Long createNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
+    public Long mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
         Long nodeId = null;        // Id of the created node
@@ -103,9 +107,9 @@ public class Neo4jDao {
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        StringBuffer statement = Neo4JRequests.cetStatement;
+        StringBuffer statement = Neo4JRequests.mergeCetStatement;
 
-        if(labels != null){
+        if (labels != null) {
             statement = appendAdditionalLabels(statement, labels, alias, valuesMap);
         }
 
@@ -135,7 +139,7 @@ public class Neo4jDao {
             session.close();
         }
 
-        if(node != null){
+        if (node != null) {
             //  If node has been created, fire creation event. If it was updated, fire update event.
             if(node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
                 nodeUpdatedEvent.fire(node);
@@ -147,7 +151,141 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void createRealtionBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
+    public Long createNode(String neo4JConfiguration, String cetCode, Map<String, Object> fields, List<String> labels) {
+
+        String alias = "n"; // Alias to use in query
+        Long nodeId = null;        // Id of the created node
+
+        // Build values map
+        Map<String, Object> valuesMap = new HashMap<>();
+        valuesMap.put("cetCode", cetCode);
+        valuesMap.put(FIELDS, Values.value(fields));
+
+        // Build statement
+        StrSubstitutor sub = new StrSubstitutor(valuesMap);
+        StringBuffer statement = Neo4JRequests.createCetStatement;
+
+        if (labels != null) {
+            statement = appendAdditionalLabels(statement, labels, alias, valuesMap);
+        }
+
+        statement = appendReturnStatement(statement, alias, valuesMap);
+        String resolvedStatement = sub.replace(statement);
+        resolvedStatement = resolvedStatement.replace('"', '\'');
+
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
+        final Transaction transaction = session.beginTransaction();
+
+        Node node = null;
+
+        try {
+            // Execute query and parse results
+            LOGGER.info(resolvedStatement + "\n");
+            final StatementResult result = transaction.run(resolvedStatement);
+            node = result.single().get(alias).asNode();
+            transaction.success();  // Commit transaction
+            nodeId = node.id();
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
+
+        if (node != null) {
+            nodeCreatedEvent.fire(node);
+        }
+
+        return nodeId;
+    }
+
+    public Long updateNodeByNodeId(String neo4JConfiguration, Long nodeId, Map<String, Object> fields) {
+
+        String alias = "startNode"; // Alias to use in query
+
+        // Build values map
+        Map<String, Object> valuesMap = new HashMap<>();
+        valuesMap.put(ID, nodeId);
+        valuesMap.put(FIELDS, Values.value(fields));
+
+        // Build statement
+        StrSubstitutor sub = new StrSubstitutor(valuesMap);
+        StringBuffer statement = Neo4JRequests.updateNodeWithId;
+
+        statement = appendReturnStatement(statement, alias, valuesMap);
+        String resolvedStatement = sub.replace(statement);
+        resolvedStatement = resolvedStatement.replace('"', '\'');
+
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
+        final Transaction transaction = session.beginTransaction();
+
+        Node node = null;
+
+        try {
+            // Execute query and parse results
+            LOGGER.info(resolvedStatement + "\n");
+            final StatementResult result = transaction.run(resolvedStatement);
+            node = result.single().get(alias).asNode();
+            transaction.success();  // Commit transaction
+            nodeId = node.id();
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
+
+        if (node != null) {
+            nodeUpdatedEvent.fire(node);
+        }
+
+        return nodeId;
+    }
+
+    public Optional<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields) {
+        // Build values map
+        Map<String, Object> valuesMap = new HashMap<>();
+        valuesMap.put("cetCode", CustomEntityTemplate.getCodeFromAppliesTo(uniqueConstraint.getAppliesTo()));
+        valuesMap.put(FIELDS, Values.value(fields));
+
+        // Build statement
+        StringBuffer statement = new StringBuffer(uniqueConstraint.getCypherQuery());
+        StrSubstitutor sub = new StrSubstitutor(valuesMap);
+        String resolvedStatement = sub.replace(statement);
+        resolvedStatement = resolvedStatement.replace('"', '\'');
+
+        // Begin transaction
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
+        final Transaction transaction = session.beginTransaction();
+
+        try {
+            // Execute query and parse results
+            LOGGER.info(resolvedStatement + "\n");
+            final StatementResult result = transaction.run(resolvedStatement);
+            Value value = result.single().get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME);
+            if (!value.isNull()) {
+                return Optional.of(value.asLong());
+            }
+            transaction.success();
+        } catch(Exception e) {
+            transaction.failure();
+            LOGGER.error(e.getMessage());
+        } finally {
+            // End session and transaction
+            transaction.close();
+            session.close();
+        }
+
+        return Optional.empty();
+    }
+
+    public void createRelationBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();

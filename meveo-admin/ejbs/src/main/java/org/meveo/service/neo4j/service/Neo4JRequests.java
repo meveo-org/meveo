@@ -42,9 +42,13 @@ public class Neo4JRequests {
             .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate}");
 
 
-    public final static StringBuffer cetStatement = new StringBuffer("Merge (n:${cetCode}${fieldKeys}) \n")
+    public final static StringBuffer mergeCetStatement = new StringBuffer("MERGE (n:${cetCode}${fieldKeys}) \n")
             .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp() \n")
             .append("ON MATCH SET n += ${fields}, n." + INTERNAL_UPDATE_DATE + " = timestamp()");
+
+    public final static StringBuffer createCetStatement = new StringBuffer()
+            .append("CREATE (n:${cetCode}${fields}) \n")
+            .append("SET n." + CREATION_DATE + " = timestamp()");
 
     public final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
             .append("SET ${alias} ${labels}");
@@ -57,7 +61,7 @@ public class Neo4JRequests {
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
             .append("MATCH (startNode) WHERE ID(startNode) = $id")
-            .append(" SET startNode += ${fields}");
+            .append(" SET startNode += ${fields}, startNode.\" + INTERNAL_UPDATE_DATE + \" = timestamp()");
 
     public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
             + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
