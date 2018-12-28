@@ -241,4 +241,33 @@
         <renameColumn tableName="technical_services" oldColumnName="service_version" newColumnName="function_version"/>
     </changeSet>
 
+    <changeSet author="Aurélien PONÇON" id="cust_cet_unique_constraint#3394">
+        <createSequence sequenceName="cust_cet_unique_constraint_seq"/>
+        <createTable tableName="cust_cet_unique_constraint">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="version" type="int4" />
+            <column name="disabled" type="${type.boolean}">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="VARCHAR(100)" />
+            <column name="code" type="VARCHAR(50)" />
+
+            <column name="applies_to" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="cypher_query" type="text">
+                <constraints nullable="false" />
+            </column>
+            <column name="trust_score" type="int4">
+                <constraints nullable="false" />
+            </column>
+            <column name="applicable_on_el" type="varchar(2000)" />
+        </createTable>
+        <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="id" constraintName="cust_cet_unique_constraint_pk"/>
+        <addUniqueConstraint columnNames="applies_to, code" constraintName="cust_cet_unique_constraint_applies_to_code_idx"
+                             deferrable="false" disabled="false" initiallyDeferred="false"
+                             tableName="cust_cet_unique_constraint"/>
+    </changeSet>
 </databaseChangeLog>
