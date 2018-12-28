@@ -15,7 +15,6 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
@@ -42,8 +41,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
      * Labels to apply to the template.
      */
     @ElementCollection
-    @CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
-	@Column(name = "label")
+    @CollectionTable(name = "cet_labels", joinColumns = {@JoinColumn(name = "cet_id")})
+    @Column(name = "label")
     private List<String> labels = new ArrayList<>();
 
     /**
@@ -66,7 +65,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @Column(name = "primitive_entity", updatable = false)
     @Type(type = "numeric_boolean")
     private boolean primitiveEntity;
-    
+
     /**
      * The primitive type, if entity is primitive.
      */
@@ -93,23 +92,23 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
         return labels;
     }
 
-	public boolean isPrimitiveEntity() {
-		return primitiveEntity;
-	}
+    public boolean isPrimitiveEntity() {
+        return primitiveEntity;
+    }
 
-	public void setPrimitiveEntity(boolean primitiveEntity) {
-		this.primitiveEntity = primitiveEntity;
-	}
+    public void setPrimitiveEntity(boolean primitiveEntity) {
+        this.primitiveEntity = primitiveEntity;
+    }
 
-	public PrimitiveTypeEnum getPrimitiveType() {
-		return primitiveType;
-	}
+    public PrimitiveTypeEnum getPrimitiveType() {
+        return primitiveType;
+    }
 
-	public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
-		this.primitiveType = primitiveType;
-	}
+    public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
+        this.primitiveType = primitiveType;
+    }
 
-	public void setLabels(List<String> labels) {
+    public void setLabels(List<String> labels) {
         this.labels = labels;
     }
 
@@ -124,7 +123,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     public String getAppliesTo() {
         return CFT_PREFIX + "_" + getCode();
     }
-    
+
     public static String getAppliesTo(String code) {
         return CFT_PREFIX + "_" + code;
     }
@@ -151,8 +150,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     }
 
     public static String getCodeFromAppliesTo(String appliesTo) {
-       String splitAppliesTo = appliesTo.substring(3);
-       return splitAppliesTo;
+        String splitAppliesTo = appliesTo.substring(3);
+        return splitAppliesTo;
     }
 
     public CustomEntityTemplate getSuperTemplate() {
