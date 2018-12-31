@@ -17,6 +17,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -24,6 +25,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateUniqueConstraintService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -47,9 +49,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
-    private EntityCustomActionService entityActionScriptService;
-
-    @Inject
     private EntityCustomActionApi entityCustomActionApi;
     
     @Inject
@@ -57,6 +56,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+
+    @Inject
+    private CustomEntityTemplateUniqueConstraintService customEntityTemplateUniqueConstraintService;
+
+    @Inject
+    private CustomEntityTemplateUniqueConstraintApi customEntityTemplateUniqueConstraintApi;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -90,6 +95,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (dto.getActions() != null) {
             for (EntityCustomActionDto actionDto : dto.getActions()) {
                 entityCustomActionApi.createOrUpdate(actionDto, cet.getAppliesTo());
+            }
+        }
+
+        if (dto.getUniqueConstraints() != null) {
+            for (CustomEntityTemplateUniqueConstraintDto uniqueConstraintDto : dto.getUniqueConstraints()) {
+                customEntityTemplateUniqueConstraintApi.createOrUpdate(uniqueConstraintDto, cet.getAppliesTo());
             }
         }
 
@@ -166,9 +177,11 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
-        Map<String, EntityCustomAction> cetActions = entityActionScriptService.findByAppliesTo(cet.getAppliesTo());
+        Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
-        return CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values());
+        Map<String, CustomEntityTemplateUniqueConstraint> cetUniqueConstraints = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
+
+        return CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values(), cetUniqueConstraints.values());
     }
     
     @Override
@@ -195,9 +208,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         for (CustomEntityTemplate cet : cets) {
 
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            Map<String, EntityCustomAction> cetActions = entityActionScriptService.findByAppliesTo(cet.getAppliesTo());
+            Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
+            Map<String, CustomEntityTemplateUniqueConstraint> cetUniqueConstraints = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
 
-            cetDtos.add(CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values()));
+            cetDtos.add(CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values(), cetUniqueConstraints.values()));
         }
 
         return cetDtos;
@@ -260,7 +274,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             customFieldTemplateService.remove(cft.getId());
         }
 
-        Map<String, EntityCustomAction> cetActions = entityActionScriptService.findByAppliesTo(appliesTo);
+        Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(appliesTo);
 
         // Create, update or remove fields as necessary
         List<EntityCustomAction> actionsToRemove = new ArrayList<>();
@@ -290,7 +304,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         for (EntityCustomAction action : actionsToRemove) {
-            entityActionScriptService.remove(action.getId());
+            entityCustomActionService.remove(action.getId());
         }
     }
 
@@ -313,7 +327,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(appliesTo);
 
-        Map<String, EntityCustomAction> cetActions = entityActionScriptService.findByAppliesTo(appliesTo);
+        Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(appliesTo);
 
         return EntityCustomizationDto.toDTO(clazz, cetFields.values(), cetActions.values());
     }

@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -70,6 +71,11 @@ public class CustomEntityTemplateDto extends BaseDto {
     /** The pre-persist script instance code. */
     @XmlAttribute()
     private String prePersistScripCode;
+
+    /** The actions. */
+    @XmlElementWrapper(name = "uniqueConstraints")
+    @XmlElement(name = "uniqueConstraint")
+    private List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints;
 
     /**
      * Instantiates a new custom entity template dto.
@@ -209,6 +215,24 @@ public class CustomEntityTemplateDto extends BaseDto {
     }
 
     /**
+     * Gets the unique constraints.
+     *
+     * @return the unique constraints
+     */
+    public List<CustomEntityTemplateUniqueConstraintDto> getUniqueConstraints() {
+        return uniqueConstraints;
+    }
+
+    /**
+     * Sets the unique constraints.
+     *
+     * @param uniqueConstraints the new unique constraints
+     */
+    public void setUniqueConstraints(List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints) {
+        this.uniqueConstraints = uniqueConstraints;
+    }
+
+    /**
      * Convert CustomEntityTemplate instance to CustomEntityTemplateDto object including the fields and actions.
      *
      * @param cet CustomEntityTemplate object to convert
@@ -216,7 +240,7 @@ public class CustomEntityTemplateDto extends BaseDto {
      * @param cetActions Actions (EntityActionScript) available on CustomEntityTemplate
      * @return A CustomEntityTemplateDto object with fields set
      */
-    public static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions) {
+    public static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions, Collection<CustomEntityTemplateUniqueConstraint> cetUniqueConstraints) {
         CustomEntityTemplateDto dto = new CustomEntityTemplateDto();
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
@@ -243,6 +267,14 @@ public class CustomEntityTemplateDto extends BaseDto {
                 actions.add(new EntityCustomActionDto(action));
             }
             dto.setActions(actions);
+        }
+
+        if (cetUniqueConstraints!= null) {
+            List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints = new ArrayList<>();
+            for (CustomEntityTemplateUniqueConstraint uniqueConstraint : cetUniqueConstraints) {
+                uniqueConstraints.add(new CustomEntityTemplateUniqueConstraintDto(uniqueConstraint));
+            }
+            dto.setUniqueConstraints(uniqueConstraints);
         }
 
         return dto;
