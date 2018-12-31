@@ -41,6 +41,17 @@ public class Neo4JRequests {
             .append(" ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, ${endAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, relationship." + INTERNAL_UPDATE_DATE + " = ${updateDate}")
             .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate}");
 
+    public final static StringBuffer crtStatementByNodeIds = new StringBuffer()
+            .append("MATCH (${startAlias}:${startNode})")
+            .append("WHERE ID(${startAlias}) = $startNodeId")
+            .append("WITH ${startAlias}")
+            .append("MATCH (${endAlias}:${endNode})")
+            .append("WHERE ID(${endAlias}) = $endNodeId")
+            .append("WITH ${endAlias}")
+            .append("MERGE (${startAlias})-[relationship :${relationType} $fields]->(${endAlias}) ")
+            .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate")
+            .append("ON CREATE SET relationship." + CREATION_DATE + " = $updateDate");
+
 
     public final static StringBuffer mergeCetStatement = new StringBuffer("MERGE (n:${cetCode}${fieldKeys}) \n")
             .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp() \n")
