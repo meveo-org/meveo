@@ -1,5 +1,8 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.faces.view.ViewScoped;
@@ -12,15 +15,23 @@ import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.neo4j.service.Neo4jService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
 public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstance> {
+
+    Logger log = LoggerFactory.getLogger(CustomEntityInstanceBean.class);
 
     private static final long serialVersionUID = -459772193950603406L;
 
@@ -37,6 +48,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+
+    @Inject
+    private CustomFieldInstanceService customFieldInstanceService;
+
+    @Inject
+    private Neo4jService neo4jService;
 
     @Override
     protected IPersistenceService<CustomEntityInstance> getPersistenceService() {
@@ -83,7 +100,27 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
             messages.error(new BundleKey("messages", "commons.uniqueField.code"));
             return null;
         }
-        return super.saveOrUpdate(killConversation);
+        String listViewName =  super.saveOrUpdate(killConversation);
+        ceiSameCode = customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
+        Map<String, Object> fieldValues = new HashMap<>();
+        Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(ceiSameCode);
+        for (Iterator<CustomFieldTemplate> iterator = customFieldTemplates.values().iterator(); iterator.hasNext(); ) {
+            CustomFieldTemplate cft = iterator.next();
+            if (cft.getFieldType() != CustomFieldTypeEnum.CHILD_ENTITY) {
+                Object value = customFieldInstanceService.getCFValue(ceiSameCode, cft.getCode());
+                log.info("value : {}", value);
+                log.info("Code of cft : {}", cft.getCode());
+                fieldValues.put(cft.getCode(), value);
+            }
+        }
+
+        if (!fieldValues.isEmpty()) {
+            log.info("fieldValues : {}", fieldValues);
+            neo4jService.addCetNode(entity.getCetCode(), fieldValues);
+        }
+
+
+        return listViewName;
     }
 
     @Override
