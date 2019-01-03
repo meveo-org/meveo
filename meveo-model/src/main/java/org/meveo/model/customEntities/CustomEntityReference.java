@@ -38,11 +38,11 @@ public class CustomEntityReference extends AuditableEntity {
         this.displaySub = displaySub;
     }
 
-    @Column(name = "displaySub")
+    @Column(name = "display_sub")
     @Type(type = "numeric_boolean")
     private boolean displaySub;
 
-    @Column(name = "labelCet")
+    @Column(name = "label_cet")
     private String labelCet;
 
     public CustomEntityTemplate getCustomEntityTemplate() {

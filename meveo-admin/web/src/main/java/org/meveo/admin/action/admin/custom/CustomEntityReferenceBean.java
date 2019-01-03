@@ -79,20 +79,17 @@ public class CustomEntityReferenceBean extends BaseBean<CustomEntityReference> {
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if (entity.isTransient()) {
-            if (!referenceService.checkExistingCET(entity.getCustomEntityTemplate().getId())) {
-                super.saveOrUpdate(killConversation);
-            } else {
+            if (referenceService.checkExistingCET(entity.getCustomEntityTemplate().getId())) {
                 messages.error(new BundleKey("messages", "menuConfiguration.validationCode"), entity.getCustomEntityTemplate().getCode());
                 return getNewViewName();
             }
         } else {
-            if (!referenceService.checkExistingForUpdateCET(entity.getCustomEntityTemplate().getId(), entity.getId())) {
-                super.saveOrUpdate(killConversation);
-            } else {
+            if (referenceService.checkExistingForUpdateCET(entity.getCustomEntityTemplate().getId(), entity.getId())) {
                 messages.error(new BundleKey("messages", "menuConfiguration.validationCode"), entity.getCustomEntityTemplate().getCode());
                 return getEditViewName();
             }
         }
+        super.saveOrUpdate(killConversation);
         return getListViewName();
     }
 }
