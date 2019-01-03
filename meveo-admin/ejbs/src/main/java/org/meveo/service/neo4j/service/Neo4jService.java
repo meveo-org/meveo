@@ -38,6 +38,7 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.*;
@@ -81,6 +82,9 @@ public class Neo4jService {
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
+    private ScriptInstanceService scriptInstanceService;
+
+    @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
@@ -121,13 +125,18 @@ public class Neo4jService {
         try {
 
             /* Retrieve corresponding CET or throw an error */
-            CustomEntityTemplate cetEntity = customEntityTemplateService.findByCode(cetCode);
-            if (cetEntity == null) {
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+            if (cet == null) {
                 throw new ElementNotFoundException(cetCode, CustomEntityTemplate.class.getName());
             }
 
+            /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
+            if(cet.getPrePersistScript() != null){
+                scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
+            }
+
             /* Find unique fields and validate data */
-            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cetEntity.getAppliesTo());
+            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             Map<String, Object> uniqueFields = new HashMap<>();
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
@@ -173,7 +182,7 @@ public class Neo4jService {
                 }
             }
 
-            final List<String> labels = getAdditionalLabels(cetEntity);
+            final List<String> labels = getAdditionalLabels(cet);
             final Long createNodeId = neo4jDao.createNode(cetCode, uniqueFields, fields, labels);
             nodeId = createNodeId;
 

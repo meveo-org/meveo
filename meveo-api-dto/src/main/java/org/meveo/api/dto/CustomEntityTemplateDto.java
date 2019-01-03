@@ -66,6 +66,10 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlElementWrapper(name = "actions")
     @XmlElement(name = "action")
     private List<EntityCustomActionDto> actions;
+    
+    /** The pre-persist script instance code. */
+    @XmlAttribute()
+    private String prePersistScripCode;
 
     /**
      * Instantiates a new custom entity template dto.
@@ -73,8 +77,16 @@ public class CustomEntityTemplateDto extends BaseDto {
     public CustomEntityTemplateDto() {
 
     }
+    
+    public String getPrePersistScripCode() {
+		return prePersistScripCode;
+	}
 
-    public List<String> getLabels() {
+	public void setPrePersistScripCode(String prePersistScripCode) {
+		this.prePersistScripCode = prePersistScripCode;
+	}
+
+	public List<String> getLabels() {
         return labels;
     }
 
@@ -212,6 +224,11 @@ public class CustomEntityTemplateDto extends BaseDto {
         dto.setPrimitiveEntity(cet.isPrimitiveEntity());
         dto.setPrimitiveType(cet.getPrimitiveType());
         dto.setLabels(cet.getLabels());
+        
+        if(cet.getPrePersistScript() != null) {
+            dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
+        }
+        
         if (cetFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
             for (CustomFieldTemplate cft : cetFields) {
@@ -229,27 +246,6 @@ public class CustomEntityTemplateDto extends BaseDto {
         }
 
         return dto;
-    }
-
-    /**
-     * Convert CustomEntityTemplateDto to a CustomEntityTemplate instance. Note: does not convert custom fields that are part of DTO
-     * 
-     * @param dto CustomEntityTemplateDto object to convert
-     * @param cetToUpdate CustomEntityTemplate to update with values from dto, or if null create a new one
-     * @return A new or updated CustomEntityTemplate instance
-     */
-    public static CustomEntityTemplate fromDTO(CustomEntityTemplateDto dto, CustomEntityTemplate cetToUpdate) {
-        CustomEntityTemplate cet = new CustomEntityTemplate();
-        if (cetToUpdate != null) {
-            cet = cetToUpdate;
-        }
-        cet.setCode(dto.getCode());
-        cet.setName(dto.getName());
-        cet.setDescription(dto.getDescription());
-        cet.setPrimitiveEntity(dto.isPrimitiveEntity());
-        cet.setPrimitiveType(dto.getPrimitiveType());
-        cet.setLabels(dto.getLabels());
-        return cet;
     }
 
     /* (non-Javadoc)

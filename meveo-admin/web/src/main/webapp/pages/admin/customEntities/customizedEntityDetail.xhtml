@@ -30,11 +30,14 @@
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
         <o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
         <o:importConstants type="org.meveo.model.crm.custom.PrimitiveTypeEnum" />
-        
 
         <h:panelGroup rendered="#{customEntityTemplateBean.customEntityTemplate}">
-            <hftl:formPanel formId="cetForm" label="#{messages['customizedEntities.detail'].concat(customEntityTemplateBean.entity.code!=null?(' - '.concat(customEntityTemplateBean.entity.code)):'')}"
-                backingBean="#{customEntityTemplateBean}">
+
+            <hftl:formPanel formId="cetForm"
+                            label="#{messages['customizedEntities.detail'].concat(customEntityTemplateBean.entity.code!=null?(' - '.concat(customEntityTemplateBean.entity.code)):'')}"
+                            showEnableDisableButton="true"
+                            backingBean="#{customEntityTemplateBean}">
+
                 <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" validateUnique="true" />
                 <hftl:formField label="#{messages['customizedEntities.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.labels']}" field="labels" />
@@ -53,21 +56,41 @@
                                     label="#{messages['BusinessEntity.primitiveType']}" required="true"
                                     field="primitiveType"/>
                 </h:panelGroup>
-
+                
                 <!-- Inheritance -->
-				<hftl:decorateFormField field="superTemplate" componentWidth="150"
-					label="#{messages['BusinessEntity.superTemplate']}">
-					<p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}" style="width:150px;">
-						<f:selectItem
-							itemLabel="#{messages['customizedRelationships.selectCETEntity']}"
-							itemValue="" noSelectionOption="true" />
-						<f:selectItems
-							value="#{customEntityTemplateBean.customEntityTemplates}"
-							var="cetEntity" itemLabel="#{cetEntity.name}"
-							itemValue="#{cetEntity}" />
-						<hftl:objectConverter />
-					</p:selectOneMenu>
-				</hftl:decorateFormField>
+                <h:panelGroup>
+					<hftl:decorateFormField field="superTemplate" componentWidth="50"
+						label="#{messages['BusinessEntity.superTemplate']}">
+						<p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}"
+						 				 style="width:90%;">
+							<f:selectItem
+								itemLabel="#{messages['customizedRelationships.selectCETEntity']}"
+								itemValue="" noSelectionOption="true" size="100"/>
+							<f:selectItems
+								value="#{customEntityTemplateBean.customEntityTemplates}"
+								var="cetEntity" itemLabel="#{cetEntity.name}"
+								itemValue="#{cetEntity}" size="100"/>
+							<hftl:objectConverter />
+						</p:selectOneMenu>
+					</hftl:decorateFormField>
+				</h:panelGroup>
+				
+                <!-- Pre-persist script -->
+                <h:panelGroup>
+					<hftl:decorateFormField field="prePersistScript" componentWidth="50"
+						label="#{messages['BusinessEntity.prepersitScript']}">
+						<p:autoComplete value="#{customEntityTemplateBean.entity.prePersistScript}"
+						 				var="script"
+						 				size = "85"
+						 				forceSelection="true"
+						 				itemLabel="#{script.code}"
+						 				itemValue="#{script}"
+						 				dropdown="true"
+						 				completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
+							<hftl:objectConverter />
+		 				</p:autoComplete>
+					</hftl:decorateFormField>
+				</h:panelGroup>
 
 			</hftl:formPanel>
         </h:panelGroup>

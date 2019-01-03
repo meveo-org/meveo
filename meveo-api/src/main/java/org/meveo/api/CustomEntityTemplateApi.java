@@ -20,10 +20,12 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
 /**
@@ -52,6 +54,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private EntityCustomActionService entityCustomActionService;
+    
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -70,7 +75,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
 
-        CustomEntityTemplate cet = CustomEntityTemplateDto.fromDTO(dto, null);
+        CustomEntityTemplate cet = fromDTO(dto, null);
 
         setSuperTemplate(dto, cet);
 
@@ -116,7 +121,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
         }
 
-        cet = CustomEntityTemplateDto.fromDTO(dto, cet);
+        cet = fromDTO(dto, cet);
 
         setSuperTemplate(dto, cet);
 
@@ -412,6 +417,33 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 		return result;
 	}
+	
+    /**
+     * Convert CustomEntityTemplateDto to a CustomEntityTemplate instance. Note: does not convert custom fields that are part of DTO
+     * 
+     * @param dto CustomEntityTemplateDto object to convert
+     * @param cetToUpdate CustomEntityTemplate to update with values from dto, or if null create a new one
+     * @return A new or updated CustomEntityTemplate instance
+     */
+    private CustomEntityTemplate fromDTO(CustomEntityTemplateDto dto, CustomEntityTemplate cetToUpdate) {
+        CustomEntityTemplate cet = new CustomEntityTemplate();
+        if (cetToUpdate != null) {
+            cet = cetToUpdate;
+        }
+        cet.setCode(dto.getCode());
+        cet.setName(dto.getName());
+        cet.setDescription(dto.getDescription());
+        cet.setPrimitiveEntity(dto.isPrimitiveEntity());
+        cet.setPrimitiveType(dto.getPrimitiveType());
+        cet.setLabels(dto.getLabels());
+        
+        if(dto.getPrePersistScripCode() != null) {
+        	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
+        	cet.setPrePersistScript(scriptInstance);
+        }
+        
+        return cet;
+    }
 
 
     /**

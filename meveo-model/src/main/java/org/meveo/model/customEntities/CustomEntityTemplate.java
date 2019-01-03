@@ -16,6 +16,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
 @ModuleItem
@@ -72,6 +73,21 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
     @Column(name = "primitive_type", nullable = true, updatable = false)
     @Enumerated(EnumType.STRING)
     private PrimitiveTypeEnum primitiveType;
+
+    /**
+     * Script to execute before persisting the entity
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pre_persist_script")
+    private ScriptInstance prePersistScript;
+
+    public ScriptInstance getPrePersistScript() {
+        return prePersistScript;
+    }
+
+    public void setPrePersistScript(ScriptInstance prePersistScript) {
+        this.prePersistScript = prePersistScript;
+    }
 
     public List<String> getLabels() {
         return labels;

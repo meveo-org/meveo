@@ -18,15 +18,6 @@
  */
 package org.meveo.admin.action.catalog;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
@@ -40,9 +31,16 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
-import org.meveo.service.script.GenericScriptService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.model.DualListModel;
+
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Standard backing bean for {@link ScriptInstance} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -86,12 +84,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
         if (execRolesDM == null) {
             List<Role> perksSource = roleService.getAllRoles();
-            List<Role> perksTarget = new ArrayList<Role>();
+            List<Role> perksTarget = new ArrayList<>();
             if (getEntity().getExecutionRoles() != null) {
                 perksTarget.addAll(getEntity().getExecutionRoles());
             }
             perksSource.removeAll(perksTarget);
-            execRolesDM = new DualListModel<Role>(perksSource, perksTarget);
+            execRolesDM = new DualListModel<>(perksSource, perksTarget);
         }
         return execRolesDM;
     }
@@ -100,12 +98,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
         if (sourcRolesDM == null) {
             List<Role> perksSource = roleService.getAllRoles();
-            List<Role> perksTarget = new ArrayList<Role>();
+            List<Role> perksTarget = new ArrayList<>();
             if (getEntity().getSourcingRoles() != null) {
                 perksTarget.addAll(getEntity().getSourcingRoles());
             }
             perksSource.removeAll(perksTarget);
-            sourcRolesDM = new DualListModel<Role>(perksSource, perksTarget);
+            sourcRolesDM = new DualListModel<>(perksSource, perksTarget);
         }
         return sourcRolesDM;
     }
@@ -186,7 +184,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
         String result = super.saveOrUpdate(killConversation);
 
-        if (entity.isError().booleanValue()) {
+        if (entity.isError()) {
             result = null;
         }
         if (killConversation) {
@@ -229,6 +227,16 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (!entity.isError()) {
             messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
         }
+    }
+    
+    /**
+     * Autocomplete method for selecting a class that implement ICustomFieldEntity. Return a human readable class name. Used in conjunction with CustomFieldAppliesToConverter
+     * 
+     * @param query Partial class name to match
+     * @return
+     */
+    public List<ScriptInstance> autocompleteScriptsNames(String query) {
+        return scriptInstanceService.findByCodeLike(query);
     }
 
 }

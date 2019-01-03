@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.meveo.api.rest.custom.impl.PersistenceRs;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
 import org.meveo.api.rest.filter.RESTCorsResponseFilter;
 import org.meveo.api.rest.impl.BaseRs;
@@ -36,6 +37,7 @@ public class JaxRsActivator extends Application {
         resources.add(RESTCorsResponseFilter.class);
         resources.add(JaxRsExceptionMapper.class);
         resources.add(JacksonJsonProvider.class);
+        resources.add(PersistenceRs.class);
 
         return resources;
     }

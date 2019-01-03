@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import javax.ws.rs.Consumes;
@@ -23,7 +22,6 @@ public class JacksonJsonProvider extends JacksonJaxbJsonProvider {
 	
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 			.setSerializationInclusion(JsonInclude.Include.ALWAYS)
-			.registerModule(new Jdk8Module())
 			.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, true)
 			.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false)
 			.configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, false)

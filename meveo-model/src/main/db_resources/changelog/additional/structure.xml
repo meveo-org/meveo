@@ -219,4 +219,15 @@
                                  referencedTableName="cust_cet" referencedColumnNames="id"/>
         <addPrimaryKey tableName="cet_ref" columnNames="id" constraintName="cet_ref_pk"/>
     </changeSet>
+
+    <changeSet id="pre_persist_script" author="Clement Bareth">
+        <addColumn tableName="cust_cet">
+            <column name="pre_persist_script" type="BIGINT" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="pre_persist_script"
+                                 baseTableName="cust_cet" constraintName="fk_cust_cet_pre_persist_script"
+                                 deferrable="false" initiallyDeferred="false"
+                                 onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="meveo_script_instance" />
+    </changeSet>
+
 </databaseChangeLog>
