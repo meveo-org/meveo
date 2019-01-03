@@ -30,11 +30,34 @@ public class CustomEntityReference extends AuditableEntity {
     @JoinColumn(name = "cet_id")
     private CustomEntityTemplate customEntityTemplate;
 
+    public boolean isDisplaySub() {
+        return displaySub;
+    }
+
+    public void setDisplaySub(boolean displaySub) {
+        this.displaySub = displaySub;
+    }
+
+    @Column(name = "display_sub")
+    @Type(type = "numeric_boolean")
+    private boolean displaySub;
+
+    @Column(name = "label_cet")
+    private String labelCet;
+
     public CustomEntityTemplate getCustomEntityTemplate() {
         return customEntityTemplate;
     }
 
     public void setCustomEntityTemplate(CustomEntityTemplate customEntityTemplate) {
         this.customEntityTemplate = customEntityTemplate;
+    }
+
+    public String getLabelCet() {
+        return labelCet;
+    }
+
+    public void setLabelCet(String labelCet) {
+        this.labelCet = labelCet;
     }
 }
