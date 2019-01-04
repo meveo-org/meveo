@@ -16,12 +16,15 @@ public class GraphQLService {
 
   public List<Map> executeGraphQLRequest(HTTPGraphQLRequest httpGraphQLRequest){
 
-    return neo4jDao.executeGraphQLQuery(httpGraphQLRequest.getQuery(), httpGraphQLRequest.getVariables(),
+    return neo4jDao.executeGraphQLQuery(
+            httpGraphQLRequest.getNeo4jConfiguration(),
+            httpGraphQLRequest.getQuery(),
+            httpGraphQLRequest.getVariables(),
             httpGraphQLRequest.getOperationName());
   }
-  public List<Map> executeGraphQLRequest(String query){
+  public List<Map> executeGraphQLRequest(String query, String neo4jConfiguration){
 
-    return neo4jDao.executeGraphQLQuery(query, null, null);
+    return neo4jDao.executeGraphQLQuery(neo4jConfiguration, query, null, null);
   }
 }
 

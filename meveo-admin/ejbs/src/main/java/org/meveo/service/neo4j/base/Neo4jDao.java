@@ -50,7 +50,7 @@ public class Neo4jDao {
     @Created
     private Event<org.neo4j.driver.v1.types.Node> nodeCreatedEvent;
 
-    public List<Map> executeGraphQLQuery(String query, Map<String,Object> variables, String operationName){
+    public List<Map> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String,Object> variables, String operationName){
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
@@ -60,7 +60,7 @@ public class Neo4jDao {
 
         StringBuffer statement = new StringBuffer("call graphql.execute($query,$variables,$operationName)");
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
         final Transaction transaction = session.beginTransaction();
 
         try {
@@ -83,13 +83,14 @@ public class Neo4jDao {
     /**
      * Create a Neo4J node
      *
+     * @param neo4JConfiguration Neo4J coordinates
      * @param cetCode Code of the corresponding CustomEntityTemplate
      * @param uniqueFields Unique fields that identifies the node
      * @param fields Properties of the node
      * @param labels Additionnal labels of the node
      * @return the id of the created node, or null if it has failed
      */
-    public Long createNode(String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
+    public Long createNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
         Long nodeId = null;        // Id of the created node
@@ -113,7 +114,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
         final Transaction transaction = session.beginTransaction();
 
         Node node = null;
@@ -146,7 +147,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void createRealtionBetweenNodes(Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
+    public void createRealtionBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
@@ -160,7 +161,7 @@ public class Neo4jDao {
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.createRelationship);
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
+        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
         final Transaction transaction = session.beginTransaction();
         Relationship relationship = null;
 
@@ -233,19 +234,6 @@ public class Neo4jDao {
         return labelsString.toString();
     }
 
-    /**
-     * get Id from sourceType, sourceId
-     *
-     * @param sourceType
-     * @param sourceId
-     * @return
-     */
-    private String getId(String sourceType, String sourceId){
-        String [] sliptSourceType = sourceType.split("_");
-        String id = sliptSourceType[0] + sourceId;
-        return id;
-    }
-
     public String getFieldsString(Set<String> strings) {
         return "{ " + strings
                 .stream()
@@ -253,44 +241,4 @@ public class Neo4jDao {
                 .collect(Collectors.joining(", ")) + " }";
     }
 
-    public void createIndexLabelByProperty(String label, String property) {
-
-        String statement = String.format("CREATE INDEX ON :%s(%s)", label, property);
-        // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
-        final Transaction transaction = session.beginTransaction();
-
-        try {
-            // Execute query and parse results
-            transaction.run(statement);
-            transaction.success();  // Commit transaction
-        } catch(Exception e) {
-            transaction.failure();
-            LOGGER.error(e.getMessage());
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
-        }
-    }
-
-    public void removeIndexLabelByProperty(String label, String property) {
-        String statement = String.format("DROP INDEX ON :%s(%s)", label, property);
-        // Begin transaction
-        Session session = neo4jSessionFactory.getSession();
-        final Transaction transaction = session.beginTransaction();
-
-        try {
-            // Execute query and parse results
-            transaction.run(statement);
-            transaction.success();  // Commit transaction
-        } catch(Exception e) {
-            transaction.failure();
-            LOGGER.error(e.getMessage());
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
-        }
-    }
 }

@@ -40,13 +40,16 @@ public class PersistenceRs {
     @Inject
     protected GraphQLService graphQLService;
 
+    @QueryParam("neo4jConfiguration")
+    private String neo4jConfiguration;
+
     @DELETE
     public Response delete(Collection<PersistenceDto> dtos){
 
         for (PersistenceDto persistenceDto : dtos) {
             if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
                 try {
-                    neo4jService.deleteEntity(persistenceDto.getType(), persistenceDto.getProperties());
+                    neo4jService.deleteEntity(neo4jConfiguration, persistenceDto.getType(), persistenceDto.getProperties());
                 } catch (BusinessException e) {
                     Response.serverError();
                 }
@@ -60,8 +63,8 @@ public class PersistenceRs {
     @Path("/graphql")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public Response executeGraphQLRequest(@QueryParam("query") String graphQL){
-        List<Map> records = graphQLService.executeGraphQLRequest(graphQL);
+    public Response executeGraphQLRequest(@QueryParam("query") String graphQL, @QueryParam("neo4jConfiguration") String neo4jConfiguration){
+        List<Map> records = graphQLService.executeGraphQLRequest(graphQL, neo4jConfiguration);
         return Response.ok(records).build();
     }
 
@@ -72,7 +75,7 @@ public class PersistenceRs {
     public Response executeGraphQLRequest(@QueryParam("query") String graphQL, HTTPGraphQLRequest httpGraphQLRequest){
         List<Map> records;
         if(StringUtils.isNotEmpty(graphQL)) {
-            records = graphQLService.executeGraphQLRequest(graphQL);
+            records = graphQLService.executeGraphQLRequest(graphQL, neo4jConfiguration);
         }else{
             records = graphQLService.executeGraphQLRequest(httpGraphQLRequest);
         }
@@ -124,7 +127,7 @@ public class PersistenceRs {
         try {
 
             /* Persist the entities and return 201 created response */
-            scheduledPersistenceService.persist(atomicPersistencePlan);
+            scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
             return Response.status(201).build();
 
         } catch (BusinessException | ELException e) {
