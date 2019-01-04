@@ -147,7 +147,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      * 
      * @throws IOException
      */
-    private void constructClassPath() throws IOException {
+    public void constructClassPath() throws IOException {
 
         if (classpath.length() == 0) {
 
@@ -165,7 +165,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                     }
                 }
 
-                // War was deployed as compressed archive
+            // War was deployed as compressed archive
             } else {
 
                 org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
@@ -207,7 +207,6 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
             }
         }
-        log.info("compileAll classpath={}", classpath);
 
     }
 

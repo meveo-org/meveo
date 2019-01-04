@@ -1,5 +1,6 @@
 package org.meveo.admin.listener;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -127,6 +128,12 @@ public class ApplicationInitializer {
         boolean compileAllScripts = Boolean.parseBoolean(paramBeanFactory.getInstance().getProperty("scripts.compileAll", "true"));
         if(compileAllScripts){
             scriptInstanceService.compileAll();
+        }else{
+            try {
+                scriptInstanceService.constructClassPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         // Initialize caches
