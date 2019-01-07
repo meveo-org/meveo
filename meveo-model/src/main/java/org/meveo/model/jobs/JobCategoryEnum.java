@@ -29,7 +29,7 @@ public enum JobCategoryEnum {
 	    WALLET(6, "jobCategoryEnum.wallet"),
 	    UTILS(7, "jobCategoryEnum.utils"),
 	    MEDIATION(8, "jobCategoryEnum.mediation"),
-			WEBDRONE_WIDGET_EXPORT(9,"jobCategoryEnum.webdroneWidgetExport");
+			EXPORT(9,"jobCategoryEnum.export");
 	    
 
 	    private Integer id;
