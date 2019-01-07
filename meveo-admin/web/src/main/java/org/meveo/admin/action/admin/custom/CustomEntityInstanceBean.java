@@ -23,6 +23,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.neo4j.service.Neo4jService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
     @Inject
     private Neo4jService neo4jService;
+
+    @Inject
+    private Neo4jConnectionProvider neo4jConnectionProvider;
 
     @Override
     protected IPersistenceService<CustomEntityInstance> getPersistenceService() {
@@ -116,7 +120,15 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
         if (!fieldValues.isEmpty()) {
             log.info("fieldValues : {}", fieldValues);
-            neo4jService.addCetNode(entity.getCetCode(), fieldValues);
+
+            /*
+            * TODO: Add parameter to ask user in which repository he wants to put it.
+            * Could be :
+            * - One repository
+            * - All repostitories (default)
+            * - Default repository - Implemented
+            */
+            neo4jService.addCetNode(null, entity.getCetCode(), fieldValues);
         }
 
 

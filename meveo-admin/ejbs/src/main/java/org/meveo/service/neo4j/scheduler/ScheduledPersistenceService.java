@@ -2,6 +2,7 @@ package org.meveo.service.neo4j.scheduler;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.service.neo4j.service.Neo4jService;
 
 import javax.inject.Inject;
@@ -16,10 +17,11 @@ public class ScheduledPersistenceService {
     /**
      * Iterate over the persistence schedule and persist the provided entities
      *
+     * @param neo4JConfiguration Neo4J coordinates
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public void persist(AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException {
+    public void persist(String neo4JConfiguration, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException {
 
         /* Iterate over persistence schedule and persist the node */
 
@@ -32,7 +34,9 @@ public class ScheduledPersistenceService {
 
                     /* Node is a source node */
                     final SourceNode sourceNode = (SourceNode) entityToPersist;
-                    neo4jService.addSourceNodeUniqueCrt(sourceNode.getRelation().getCode(),
+                    neo4jService.addSourceNodeUniqueCrt(
+                            neo4JConfiguration,
+                            sourceNode.getRelation().getCode(),
                             sourceNode.getValues(),
                             sourceNode.getRelation().getEndNode().getValues());
 
@@ -40,13 +44,14 @@ public class ScheduledPersistenceService {
 
                     /* Node is target or leaf node */
                     final Node node = (Node) entityToPersist;
-                    neo4jService.addCetNode(node.getCode(), node.getValues());
+                    neo4jService.addCetNode(neo4JConfiguration, node.getCode(), node.getValues());
 
                 } else {
 
                     /* Item is a relation */
                     final Relation relation = (Relation) entityToPersist;
-                    neo4jService.addCRT(relation.getCode(),
+                    neo4jService.addCRT(neo4JConfiguration,
+                            relation.getCode(),
                             relation.getValues(),
                             relation.getStartNode().getValues(),
                             relation.getEndNode().getValues());
