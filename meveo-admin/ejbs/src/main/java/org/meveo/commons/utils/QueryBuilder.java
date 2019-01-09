@@ -315,7 +315,13 @@ public class QueryBuilder {
         } else {
             sql.append(field);
         }
-        sql.append(operator + ":" + param);
+        sql.append(" ");
+        if (value instanceof Collection) {
+            sql.append(operator + " (:" + param + ")");
+        } else {
+            sql.append(operator + " :" + param);
+        }
+        sql.append(" ");
 
         if (caseInsensitive && (value instanceof String)) {
             nvalue = ((String) value).toLowerCase();
