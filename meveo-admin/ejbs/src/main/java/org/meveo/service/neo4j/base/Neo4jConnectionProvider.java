@@ -77,6 +77,10 @@ public class Neo4jConnectionProvider {
         defaultConfiguration.setNeo4jUrl(neo4jUrl);
     }
 
+    public Session getSession() {
+        return getSession(null);
+    }
+
     public Session getSession(String neo4JConfigurationCode) {
 
         Neo4JConfiguration neo4JConfiguration = defaultConfiguration;

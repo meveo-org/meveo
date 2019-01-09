@@ -152,7 +152,7 @@ public class Neo4jService {
             Map<Long, String> relationshipsToCreate = new HashMap<>();  // Map where the id of the target node is the key and the label of relationship is the value
             for (CustomFieldTemplate entityReference : entityReferences){
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
-                String referencedCetCode = entityReference.getEntityClazz();
+                String referencedCetCode = entityReference.getEntityClazzCetCode();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
 
                 // If CFT is multivalued
