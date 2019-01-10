@@ -1,8 +1,6 @@
 package org.meveo.elresolver;
 
 
-import org.apache.commons.lang3.StringUtils;
-
 import javax.el.FunctionMapper;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -11,7 +9,7 @@ import java.util.Map;
 
 public class MeveoDefaultFunctionMapper extends FunctionMapper {
 
-    private Map<String, Method> functionMap = new HashMap<String, Method>();
+    private Map<String, Method> functionMap = new HashMap<>();
 
     public MeveoDefaultFunctionMapper(){
 
@@ -32,7 +30,7 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
 
     public void addFunction(String prefix, String localName, Method method) {
         int modifiers = method.getModifiers();
-        if (prefix == null || localName == null || method == null) {
+        if (prefix == null || localName == null) {
             throw new NullPointerException();
         }
         if (!Modifier.isPublic(modifiers)) {

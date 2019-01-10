@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 public class ValueExpressionWrapper {
 
+    private static final String MAPPER_CLASS_NAME = "mapper.class.name";
+
     static ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
 
     private SimpleELResolver simpleELResolver;
@@ -23,6 +25,8 @@ public class ValueExpressionWrapper {
     static protected Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
 
     static HashMap<String, ValueExpressionWrapper> valueExpressionWrapperMap = new HashMap<>();
+
+    private static FunctionMapper functionMapper = null;
 
     /**
      * Evaluate expression.
@@ -221,6 +225,20 @@ public class ValueExpressionWrapper {
     }
 
     protected FunctionMapper getMapper(){
+        final String mapperClassName = System.getProperty(MAPPER_CLASS_NAME);
+        if(mapperClassName != null) {
+            try {
+                Class<?> mapperClass = Class.forName(mapperClassName);
+                final Object mapper = mapperClass.newInstance();
+                if (mapper instanceof MeveoDefaultFunctionMapper) {
+                    log.info("Using {} as function mapper", mapperClassName);
+                    return (FunctionMapper) mapper;
+                }
+                log.warn("Class {} is not a sub-class of MeveoDefaultFunctionMapper, using default function mapper", mapperClassName);
+            } catch (Exception e) {
+                log.warn("{}\nUsing default function mapper", e.toString());
+            }
+        }
         return new MeveoDefaultFunctionMapper();
     }
 
@@ -229,7 +247,9 @@ public class ValueExpressionWrapper {
         userMap.putAll(additionalSources);
         simpleELResolver = new SimpleELResolver(userMap);
         final VariableMapper variableMapper = new SimpleVariableMapper();
-        final FunctionMapper functionMapper = getMapper();
+        if(functionMapper == null) {
+            functionMapper = getMapper();
+        }
         final CompositeELResolver compositeELResolver = new CompositeELResolver();
         compositeELResolver.add(simpleELResolver);
         compositeELResolver.add(new ArrayELResolver());

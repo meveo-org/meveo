@@ -1,23 +1,11 @@
 package org.meveo.service.base;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.el.FunctionMapper;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
+import org.meveo.elresolver.MeveoDefaultFunctionMapper;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.shared.DateUtils;
@@ -26,6 +14,17 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provides custom functions for Meveo application. The following functions are provided:
@@ -38,8 +37,8 @@ import org.slf4j.LoggerFactory;
  * @lastModifiedVersion 5.0
  * 
  */
-public class MeveoFunctionMapper extends FunctionMapper {
-    private Map<String, Method> functionMap = new HashMap<String, Method>();
+public class MeveoFunctionMapper extends MeveoDefaultFunctionMapper {
+    private Map<String, Method> functionMap = new HashMap<>();
 
     private static CustomFieldInstanceService customFieldInstanceService;
 
@@ -225,6 +224,7 @@ public class MeveoFunctionMapper extends FunctionMapper {
         return functionMap.get(key);
     }
 
+    @Override
     public void addFunction(String prefix, String localName, Method method) {
         if (prefix == null || localName == null || method == null) {
             throw new NullPointerException();
