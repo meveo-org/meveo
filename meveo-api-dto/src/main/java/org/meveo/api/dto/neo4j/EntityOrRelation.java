@@ -89,6 +89,10 @@ public abstract class EntityOrRelation implements Serializable {
 		});
 	}
 
+	public int getIndex() {
+		return index;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
