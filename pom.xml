@@ -14,10 +14,11 @@
         <dbtype>generic</dbtype>
         <releaseOption/>
     </properties>
+
     <scm>
-        <connection>scm:git:https://git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo.git</connection>
-        <url>https://git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo.git</url>
+        <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
     </scm>
+
     <modules>
         <module>meveo-security</module>
         <module>meveo-model</module>
