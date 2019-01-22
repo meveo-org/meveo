@@ -26,18 +26,18 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.IEntity;
-import org.meveo.model.scripts.Executable;
+import org.meveo.model.scripts.Function;
 import org.meveo.service.base.BusinessService;
 
 import javax.inject.Inject;
 import java.util.*;
 
 /**
- * @param <T> Type of executable (service, script ...)
+ * @param <T> Type of function (service, script ...)
  * @param <E> Type of engine
  * @author clement.bareth
  */
-public abstract class ExecutableService<T extends Executable, E extends ScriptInterface>
+public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
 
     @Inject
@@ -114,14 +114,14 @@ public abstract class ExecutableService<T extends Executable, E extends ScriptIn
     /**
      * Action to execute after the creation or the update of the executable
      *
-     * @param executable Executable that was just created or updated
+     * @param executable Function that was just created or updated
      */
     protected abstract void afterUpdateOrCreate(T executable);
 
     /**
      * Validates the executable
      *
-     * @param executable Executable to validate
+     * @param executable Function to validate
      * @throws BusinessException if the executable is not valid
      */
     protected abstract void validate(T executable) throws BusinessException;
@@ -129,7 +129,7 @@ public abstract class ExecutableService<T extends Executable, E extends ScriptIn
     /**
      * Build the code for the given executable
      *
-     * @param executable Executable to get code from
+     * @param executable Function to get code from
      * @return The code of the executable
      */
     protected abstract String getCode(T executable);
@@ -267,12 +267,12 @@ public abstract class ExecutableService<T extends Executable, E extends ScriptIn
      */
     public Map<String, Object> execute(String code, Map<String, Object> context)
             throws BusinessException {
-        log.trace("Executable {} to be executed with parameters {}", code, context);
+        log.trace("Function {} to be executed with parameters {}", code, context);
         E engine = getExecutionEngine(code);
         engine.init(context);
         engine.execute(context);
         engine.finalize(context);
-        log.trace("Executable {} executed with parameters {}", code, context);
+        log.trace("Function {} executed with parameters {}", code, context);
         return context;
     }
 

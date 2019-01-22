@@ -9,7 +9,7 @@ import java.util.List;
 
 @ExportIdentifier({ "code"})
 @MappedSuperclass
-public abstract class CustomScript extends Executable {
+public abstract class CustomScript extends Function {
 
     private static final long serialVersionUID = 8176170199770220430L;
 

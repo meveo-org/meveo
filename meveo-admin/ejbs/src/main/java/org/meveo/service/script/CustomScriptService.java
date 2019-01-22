@@ -47,7 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends ExecutableService<T, SI> {
+public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends FunctionService<T, SI> {
 
     @Inject
     private ResourceBundle resourceMessages;

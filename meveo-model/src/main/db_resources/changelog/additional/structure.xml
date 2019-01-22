@@ -232,4 +232,13 @@
                                  onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="meveo_script_instance" />
     </changeSet>
 
+    <changeSet id="rename_and_add_function_version" author="Clement Bareth">
+        <addColumn tableName="meveo_script_instance">
+            <column name="function_version" type="INT4">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <renameColumn tableName="technical_services" oldColumnName="service_version" newColumnName="function_version"/>
+    </changeSet>
+
 </databaseChangeLog>

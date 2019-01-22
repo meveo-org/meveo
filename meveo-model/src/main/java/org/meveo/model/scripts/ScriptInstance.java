@@ -57,10 +57,6 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<Role>();
 
-    public ScriptInstance() {
-
-    }
-
     /**
      * @return the executionRoles
      */
@@ -88,4 +84,5 @@ public class ScriptInstance extends CustomScript {
     public void setSourcingRoles(Set<Role> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
     }
+
 }

@@ -26,13 +26,13 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.Parameter;
-import org.meveo.model.scripts.Executable;
+import org.meveo.model.scripts.Function;
 
 /**
  * @author Clément Bareth
  */
 @Entity
-@Table(name = "technical_services",  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "service_version"}))
+@Table(name = "technical_services",  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "function_version"}))
 @GenericGenerator(
         name = "ID_GENERATOR",
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
@@ -40,7 +40,7 @@ import org.meveo.model.scripts.Executable;
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "service_type")
-public abstract class TechnicalService extends Executable {
+public abstract class TechnicalService extends Function {
 
 	private static final long serialVersionUID = 1L;
 
@@ -49,9 +49,6 @@ public abstract class TechnicalService extends Executable {
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     private List<Description> descriptions;
-
-    @Column(name = "service_version", nullable = false)
-    private Integer serviceVersion = 1;
 
     @Column(name = "service_type", insertable = false, updatable = false)
     private String serviceType;
@@ -89,14 +86,6 @@ public abstract class TechnicalService extends Executable {
      */
     public String getServiceType() {
         return serviceType;
-    }
-
-    public Integer getServiceVersion() {
-        return serviceVersion;
-    }
-
-    public void setServiceVersion(Integer serviceVersion) {
-        this.serviceVersion = serviceVersion;
     }
 
     /**

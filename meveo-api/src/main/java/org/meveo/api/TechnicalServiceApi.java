@@ -60,7 +60,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         List<InputOutputDescription> descriptionDtos = fromDescriptions(technicalService);
         dto.setDescriptions(descriptionDtos);
         dto.setName(technicalService.getName());
-        dto.setVersion(technicalService.getServiceVersion());
+        dto.setVersion(technicalService.getFunctionVersion());
         dto.setScript(technicalService.getScript());
         dto.setServiceType(technicalService.getServiceType());
         return dto;
@@ -72,7 +72,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         List<Description> descriptions = fromDescriptionsDto(technicalService, postData);
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
-        technicalService.setServiceVersion(postData.getVersion());
+        technicalService.setFunctionVersion(postData.getVersion());
         technicalService.setScript(postData.getScript());
         return technicalService;
     }
@@ -190,7 +190,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
             if (latestVersion.isPresent()) {
                 versionNumber = latestVersion.get() + 1;
             }
-            technicalService.setServiceVersion(versionNumber);
+            technicalService.setFunctionVersion(versionNumber);
         }
         technicalServiceService().create(technicalService);
     }
@@ -236,7 +236,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
         final List<T> technicalServices = technicalServiceService().findByName(oldName);
         for (T t : technicalServices) {
             t.setName(newName);
-            t.setCode(newName + "." + t.getServiceVersion());
+            t.setCode(newName + "." + t.getFunctionVersion());
             technicalServiceService().update(t);
         }
     }
@@ -253,8 +253,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService>
     public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
         final T service = technicalServiceService().findByNameAndVersion(name, oldVersion)
                 .orElseThrow(() -> new EntityDoesNotExistsException(name + "." + oldVersion));
-        service.setServiceVersion(newVersion);
-        service.setCode(name + "." + service.getServiceVersion());
+        service.setFunctionVersion(newVersion);
+        service.setCode(name + "." + service.getFunctionVersion());
         technicalServiceService().update(service);
     }
 
