@@ -115,7 +115,13 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     @Override
     public Response list(TechnicalServiceFilters filters, Date sinceDate) {
         ServerResponse response = new ServerResponse();
-        TechnicalServicesDto technicalServicesDto = technicalServiceApi().findByNewerThan(filters,sinceDate);
+
+        TechnicalServicesDto technicalServicesDto;
+        if (sinceDate == null) {
+            technicalServicesDto = technicalServiceApi().list(filters);
+        } else {
+            technicalServicesDto = technicalServiceApi().findByNewerThan(filters, sinceDate);
+        }
         if(technicalServicesDto != null && CollectionUtils.isNotEmpty(technicalServicesDto.geTechnicalServiceDtos())) {
             response.setEntity(technicalServicesDto);
             response.setStatus(200);
