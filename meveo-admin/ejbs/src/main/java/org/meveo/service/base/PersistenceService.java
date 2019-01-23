@@ -154,6 +154,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     /**
      * @see org.meveo.service.base.local.IPersistenceService#getEntityClass()
      */
+    @Override
     public Class<E> getEntityClass() {
         return entityClass;
     }
@@ -210,6 +211,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     /**
      * @see org.meveo.service.base.local.IPersistenceService#findById(java.lang.Long, java.util.List, boolean)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public E findById(Long id, List<String> fetchFields, boolean refresh) {
         log.debug("start of find {}/{} by id ..", getEntityClass().getSimpleName(), id);
@@ -351,6 +353,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     public E update(E entity) throws BusinessException {
         log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
+        beforeUpdateOrCreate(entity);
+
         if (entity instanceof IAuditable) {
             ((IAuditable) entity).updateAudit(currentUser);
         }
@@ -386,6 +390,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     @Override
     public void create(E entity) throws BusinessException {
         log.debug("start of create {} entity={}", entity.getClass().getSimpleName());
+
+        beforeUpdateOrCreate(entity);
 
         if (entity instanceof IAuditable) {
             ((IAuditable) entity).updateAudit(currentUser);
@@ -630,6 +636,13 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
         return refreshedEntities;
     }
+
+    /**
+     * Action to execute before update or create an entity
+     *
+     * @param entity The entity to create or update
+     */
+    protected void beforeUpdateOrCreate(E entity){}
 
     /**
      * Creates query to filter entities according data provided in pagination configuration.

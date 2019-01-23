@@ -247,6 +247,7 @@ public class User extends EnableEntity implements ICustomFieldEntity {
         this.uuid = uuid;
     }
 
+    @Override
     public CustomFieldValues getCfValues() {
         return cfValues;
     }

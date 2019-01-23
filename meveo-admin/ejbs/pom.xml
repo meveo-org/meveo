@@ -186,6 +186,11 @@
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.javaparser</groupId>
+			<artifactId>javaparser-core</artifactId>
+			<version>3.10.1</version>
+		</dependency>
 		<!-- Libraries included in Jboss -->
 		<dependency>
 			<groupId>org.jboss.spec.javax.servlet</groupId>

@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -33,12 +33,17 @@ import javax.persistence.Version;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.meveo.model.persistence.JsonBinaryType;
+import org.meveo.model.persistence.JsonListType;
 import org.meveo.model.persistence.JsonStringType;
 
 /**
  * Base class for all entity classes.
  */
-@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class), @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+@TypeDefs({
+        @TypeDef(name = "json", typeClass = JsonStringType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
+        @TypeDef(name = "jsonList", typeClass = JsonListType.class)
+})
 @MappedSuperclass
 public abstract class BaseEntity implements Serializable, IEntity, IJPAVersionedEntity {
     private static final long serialVersionUID = 1L;
@@ -57,22 +62,27 @@ public abstract class BaseEntity implements Serializable, IEntity, IJPAVersioned
     @Column(name = "version")
     private Integer version;
 
+    @Override
     public Long getId() {
         return id;
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
     }
 
+    @Override
     public Integer getVersion() {
         return version;
     }
 
+    @Override
     public void setVersion(Integer version) {
         this.version = version;
     }
 
+    @Override
     public boolean isTransient() {
         return id == null;
     }
@@ -84,7 +94,7 @@ public abstract class BaseEntity implements Serializable, IEntity, IJPAVersioned
 
     /**
      * Equals method must be overridden in concrete Entity class. Entities shouldn't be compared only by ID, because if entity is not persisted its ID is null.
-     * 
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override

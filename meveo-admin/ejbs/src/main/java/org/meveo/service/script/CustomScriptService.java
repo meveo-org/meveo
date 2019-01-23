@@ -19,16 +19,23 @@
  */
 package org.meveo.service.script;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.ElementNotFoundException;
-import org.meveo.admin.exception.InvalidScriptException;
-import org.meveo.admin.util.ResourceBundle;
-import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -37,18 +44,30 @@ import javax.persistence.NoResultException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.util.ResourceBundle;
+import org.meveo.cache.CacheKeyStr;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.GetterOrSetter;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
 
 public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends FunctionService<T, SI> {
 
+    private static final String SET = "set";
+    private static final String GET = "get";
+    private static final String IS = "is";
     @Inject
     private ResourceBundle resourceMessages;
 
@@ -119,15 +138,48 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     }
 
     @Override
-    public SI getExecutionEngine(String scriptCode) {
+    public SI getExecutionEngine(String scriptCode, Map<String, Object> context) {
         try {
-            return this.getScriptInstance(scriptCode);
-        } catch (ElementNotFoundException | InvalidScriptException e) {
+        	CustomScript script = this.findByCode(scriptCode);
+        	SI scriptInstance = this.getScriptInstance(scriptCode);
+
+        	// Call setters if those are provided
+        	for(GetterOrSetter setter : script.getSetters()) {
+        		Object setterValue = context.get(setter.getName());
+        		if(setterValue != null) {
+        			scriptInstance.getClass()
+        				.getMethod(setter.getMethodName(), setterValue.getClass())
+        				.invoke(scriptInstance, setterValue);
+        		}
+        	}
+
+            return scriptInstance;
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+    
+    
 
-    /**
+    @Override
+	protected Map<String, Object> buildResultMap(SI engine, Map<String, Object> context) {
+    	CustomScript script = this.findByCode(engine.getClass().getName());
+
+    	// Put getters' values to context
+    	for(GetterOrSetter getter : script.getGetters()) {
+			try {
+	    		Object getterValue = engine.getClass()
+						.getMethod(getter.getMethodName())
+						.invoke(engine);
+	    		context.put(getter.getName(), getterValue);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException(e);
+			}
+    	}
+		return super.buildResultMap(engine, context);
+	}
+
+	/**
      * Check full class name is existed class path or not.
      * 
      * @param fullClassName full class name
@@ -263,6 +315,77 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
+    }
+
+    /**
+     * Parse the java source code and extract getters and setters
+     *
+     * @param script Script to parse
+     */
+	@Override
+    protected void beforeUpdateOrCreate(T script) {
+        CompilationUnit compilationUnit = JavaParser.parse(script.getScript());
+        final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
+                .stream()
+                .filter(e -> e instanceof ClassOrInterfaceDeclaration)
+                .map(e -> (ClassOrInterfaceDeclaration) e)
+                .findFirst()
+                .get();
+
+        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+                .stream()
+                .filter(e -> e instanceof MethodDeclaration)
+                .map(e -> (MethodDeclaration) e)
+                .collect(Collectors.toList());
+
+        final List<GetterOrSetter> setters = methods.stream()
+                .filter(e -> e.getNameAsString().startsWith(SET))
+                .map(methodDeclaration -> {
+                    GetterOrSetter setter = new GetterOrSetter();
+                    String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+                    setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+                    setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
+                    setter.setMethodName(methodDeclaration.getNameAsString());
+                    methodDeclaration.getComment()
+                            .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+                                javadocComment.parse()
+                                        .getBlockTags()
+                                        .stream()
+                                        .filter(e -> e.getType() == JavadocBlockTag.Type.PARAM)
+                                        .findFirst()
+                                        .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
+                            }));
+                    return setter;
+                }).collect(Collectors.toList());
+
+        final List<GetterOrSetter> getters = methods.stream()
+                .filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
+                .map(methodDeclaration -> {
+                    GetterOrSetter getter = new GetterOrSetter();
+
+                    String accessorFieldName;
+                    if(methodDeclaration.getNameAsString().startsWith(GET)){
+                        accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+                    }else{
+                        accessorFieldName = methodDeclaration.getNameAsString().substring(2);
+                    }
+                    getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+                    getter.setMethodName(methodDeclaration.getNameAsString());
+                    getter.setType(methodDeclaration.getTypeAsString());
+                    methodDeclaration.getComment()
+                            .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+                                javadocComment.parse()
+                                        .getBlockTags()
+                                        .stream()
+                                        .filter(e -> e.getType() == JavadocBlockTag.Type.RETURN)
+                                        .findFirst()
+                                        .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
+                            }));
+                    return getter;
+                }).collect(Collectors.toList());
+
+        script.setGetters(getters);
+        script.setSetters(setters);
     }
 
     /**

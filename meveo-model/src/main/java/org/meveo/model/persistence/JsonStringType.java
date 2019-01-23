@@ -13,6 +13,7 @@ public class JsonStringType extends AbstractSingleColumnStandardBasicType<Object
         super(JsonStringSqlTypeDescriptor.INSTANCE, new JsonTypeDescriptor());
     }
 
+    @Override
     public String getName() {
         return "json";
     }
@@ -26,4 +27,6 @@ public class JsonStringType extends AbstractSingleColumnStandardBasicType<Object
     public void setParameterValues(Properties parameters) {
         ((JsonTypeDescriptor) getJavaTypeDescriptor()).setParameterValues(parameters);
     }
+
+
 }

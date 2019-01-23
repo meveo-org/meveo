@@ -240,6 +240,15 @@
         </addColumn>
         <renameColumn tableName="technical_services" oldColumnName="service_version" newColumnName="function_version"/>
     </changeSet>
+    
+     <changeSet id="setters_and_getters" author="Clement Bareth">
+        <addColumn tableName="meveo_script_instance">
+            <column name="getters" type="${type.json}"> </column>
+        </addColumn>
+         <addColumn tableName="meveo_script_instance">
+            <column name="setters" type="${type.json}"> </column>
+        </addColumn>
+    </changeSet>
 
     <changeSet author="Aurélien PONÇON" id="cust_cet_unique_constraint#3394">
         <createSequence sequenceName="cust_cet_unique_constraint_seq"/>

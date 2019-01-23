@@ -107,6 +107,7 @@ public class Currency extends AuditableEntity {
         return currencyCode;
     }
 
+    @Override
     public boolean isTransient() {
         return false;
     }

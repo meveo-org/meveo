@@ -93,25 +93,6 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     /**
-     * Execute an engine
-     *
-     * @param engine  Compiled script class
-     * @param context Method context
-     * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws BusinessException Any execution exception
-     */
-    protected Map<String, Object> execute(E engine, Map<String, Object> context)
-            throws BusinessException {
-        if (context == null) {
-            context = new HashMap<String, Object>();
-        }
-        engine.init(context);
-        engine.execute(context);
-        engine.finalize(context);
-        return context;
-    }
-
-    /**
      * Action to execute after the creation or the update of the executable
      *
      * @param executable Function that was just created or updated
@@ -175,7 +156,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param executableCode Code of the execution engine to retrieve
      * @return An instance of an execution engine for the executable with code
      */
-    public abstract E getExecutionEngine(String executableCode);
+    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context);
 
     /**
      * Add a log line for a script
@@ -215,8 +196,31 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
             allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
         }
     }
-
+    
     /**
+     * Execute an engine
+     *
+     * @param engine  Compiled script class
+     * @param context Method context
+     * @return Context parameters. Will not be null even if "context" parameter is null.
+     * @throws BusinessException Any execution exception
+     */
+    protected Map<String, Object> execute(E engine, Map<String, Object> context)
+            throws BusinessException {
+        if (context == null) {
+            context = new HashMap<String, Object>();
+        }
+        engine.init(context);
+        engine.execute(context);
+        engine.finalize(context);
+        return buildResultMap(engine, context);
+    }
+
+    protected Map<String, Object> buildResultMap(E engine, Map<String, Object> context) {
+		return context;
+	}
+
+	/**
      * Execute action on an entity.
      *
      * @param entity            Entity to execute action on
@@ -235,6 +239,21 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     /**
      * Execute action on an entity.
      *
+     * @param scriptCode        Script to execute, identified by a code
+     * @param encodedParameters Additional parameters encoded in URL like style
+     *                          param=value&amp;param=value
+     * @return Context parameters. Will not be null even if "context" parameter is null.
+     * @throws InvalidPermissionException Insufficient access to run the script
+     * @throws ElementNotFoundException   Script not found
+     * @throws BusinessException          Any execution exception
+     */
+    public Map<String, Object> execute(String scriptCode, String encodedParameters) throws BusinessException {
+        return execute(scriptCode, CustomScriptService.parseParameters(encodedParameters));
+    }
+
+    /**
+     * Execute action on an entity.
+     *
      * @param entity     Entity to execute action on
      * @param scriptCode Script to execute, identified by a code
      * @param context    Additional parameters
@@ -244,14 +263,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws InvalidPermissionException Insufficient access to run the script
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(IEntity entity, String scriptCode,
-                                       Map<String, Object> context) throws BusinessException {
+    public Map<String, Object> execute(IEntity entity, String scriptCode, Map<String, Object> context) throws BusinessException {
         if (context == null) {
             context = new HashMap<String, Object>();
         }
         context.put(Script.CONTEXT_ENTITY, entity);
-        Map<String, Object> result = execute(scriptCode, context);
-        return result;
+        return execute(scriptCode, context);
     }
 
     /**
@@ -265,26 +282,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws InvalidPermissionException Insufficient access to run the script
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(String code, Map<String, Object> context)
-            throws BusinessException {
-        log.trace("Function {} to be executed with parameters {}", code, context);
-        E engine = getExecutionEngine(code);
-        engine.init(context);
-        engine.execute(context);
-        engine.finalize(context);
-        log.trace("Function {} executed with parameters {}", code, context);
-        return context;
+    public Map<String, Object> execute(String code, Map<String, Object> context) throws BusinessException {
+        E engine = getExecutionEngine(code, context);
+        return execute(engine, context);
     }
-
-    public E getCachedExecutionEngine(String code) {
-        E engine = null;
-        engine = cachedExecutionEngines.get(new CacheKeyStr(currentUser.getProviderCode(), code));
-        if (engine == null) {
-            engine = getExecutionEngine(code);
-            cachedExecutionEngines.put(new CacheKeyStr(currentUser.getProviderCode(), code),
-                    engine);
-        }
-        return engine;
-    }
-
+    
 }

@@ -39,7 +39,6 @@ public abstract class BusinessCFEntity extends BusinessEntity implements ICustom
     @NotNull
     private String uuid = UUID.randomUUID().toString();
 
-    // @Type(type = "json")
     @Convert(converter = CustomFieldValuesConverter.class)
     @Column(name = "cf_values", columnDefinition = "text")
     private CustomFieldValues cfValues;
@@ -53,6 +52,7 @@ public abstract class BusinessCFEntity extends BusinessEntity implements ICustom
         this.uuid = uuid;
     }
 
+    @Override
     public CustomFieldValues getCfValues() {
         return cfValues;
     }

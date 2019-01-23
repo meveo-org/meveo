@@ -18,11 +18,41 @@ public abstract class CustomScript extends Function {
     private ScriptSourceTypeEnum sourceTypeEnum = ScriptSourceTypeEnum.JAVA;
 
     @Transient
-    private List<ScriptInstanceError> scriptErrors = new ArrayList<ScriptInstanceError>();
+    private List<ScriptInstanceError> scriptErrors = new ArrayList<>();
 
     @Type(type="numeric_boolean")
     @Column(name = "is_error")
     private Boolean error = false;
+
+    /**
+     * Setters defined for the script
+     */
+    @Type(type = "jsonList")
+    @Column(name = "setters", columnDefinition = "text")
+    private List<GetterOrSetter> setters = new ArrayList<>();
+
+    /**
+     * Getters defined for the script
+     */
+    @Type(type = "jsonList")
+    @Column(name = "getters", columnDefinition = "text")
+    private List<GetterOrSetter> getters = new ArrayList<>();
+
+    public List<GetterOrSetter> getSetters() {
+        return setters;
+    }
+
+    public void setSetters(List<GetterOrSetter> setters) {
+        this.setters = setters;
+    }
+
+    public List<GetterOrSetter> getGetters() {
+        return getters;
+    }
+
+    public void setGetters(List<GetterOrSetter> getters) {
+        this.getters = getters;
+    }
 
     /**
      * @return Script language
