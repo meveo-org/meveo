@@ -2,6 +2,7 @@ package org.meveo.model.crm;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Max;
@@ -24,7 +25,8 @@ public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
     @NotNull
     private String appliesTo;
 
-    @Column(name = "cypher_query", columnDefinition = "text")
+    @Lob
+    @Column(name = "cypher_query")
     @NotNull
     private String cypherQuery;
 
@@ -37,6 +39,11 @@ public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
     @Column(name = "applicable_on_el", length = 2000)
     @Size(max = 2000)
     private String applicableOnEl;
+
+    @Column(name = "order")
+    @Min(0)
+    @NotNull
+    private Integer order;
 
     public String getAppliesTo() {
         return appliesTo;
@@ -68,5 +75,13 @@ public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
 
     public void setApplicableOnEl(String applicableOnEl) {
         this.applicableOnEl = applicableOnEl;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setOrder(Integer order) {
+        this.order = order;
     }
 }

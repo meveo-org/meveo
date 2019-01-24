@@ -263,7 +263,7 @@
             <column name="description" type="VARCHAR(100)" />
             <column name="code" type="VARCHAR(50)" />
 
-            <column name="applies_to" type="BIGINT">
+            <column name="applies_to" type="VARCHAR(100)">
                 <constraints nullable="false" />
             </column>
             <column name="cypher_query" type="text">
@@ -273,6 +273,15 @@
                 <constraints nullable="false" />
             </column>
             <column name="applicable_on_el" type="varchar(2000)" />
+            <column name="order" type="int4">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
         </createTable>
         <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="id" constraintName="cust_cet_unique_constraint_pk"/>
         <addUniqueConstraint columnNames="applies_to, code" constraintName="cust_cet_unique_constraint_applies_to_code_idx"

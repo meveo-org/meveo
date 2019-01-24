@@ -1,10 +1,15 @@
 package org.meveo.api.dto;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 
+@XmlRootElement(name = "CustomEntityTemplateUniqueConstraint")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
     @XmlAttribute(required = true)
     private String code;
@@ -20,6 +25,8 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
     private String applicableOnEl;
     @XmlElement()
     private boolean disabled;
+    @XmlAttribute(required = true)
+    private Integer order;
 
     public CustomEntityTemplateUniqueConstraintDto() {
         super();
@@ -35,6 +42,7 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
         this.trustScore = cetUniqueConstraint.getTrustScore();
         this.applicableOnEl = cetUniqueConstraint.getApplicableOnEl();
         this.disabled = cetUniqueConstraint.isDisabled();
+        this.order = cetUniqueConstraint.getOrder();
     }
 
     public String getCode() {
@@ -91,5 +99,13 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setOrder(Integer order) {
+        this.order = order;
     }
 }
