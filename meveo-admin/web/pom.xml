@@ -518,5 +518,31 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>meveo-message-files</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-war-plugin</artifactId>
+						<version>3.2.2</version>
+						<configuration>
+							<packagingIncludes>**/messages_*.properties,**/help_*.properties</packagingIncludes>
+							<failOnMissingWebXml>false</failOnMissingWebXml>
+							<classifier>messages</classifier>
+						</configuration>
+						<executions>
+							<execution>
+								<id>prepare-war</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>exploded</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 </project>
