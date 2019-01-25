@@ -71,7 +71,7 @@ public class NotificationDto extends BusinessDto {
         classNameFilter = notification.getClassNameFilter();
         eventTypeFilter = notification.getEventTypeFilter();
         elFilter = notification.getElFilter();
-        scriptInstanceCode = notification.getScriptInstance() == null ? null : notification.getScriptInstance().getCode();
+        scriptInstanceCode = notification.getFunction() == null ? null : notification.getFunction().getCode();
         if (notification.getCounterTemplate() != null) {
             counterTemplate = notification.getCounterTemplate().getCode();
         }

@@ -1,11 +1,17 @@
 package org.meveo.model.scripts;
 
-import org.hibernate.annotations.Type;
-import org.meveo.model.ExportIdentifier;
-
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.Type;
+import org.meveo.model.ExportIdentifier;
 
 @ExportIdentifier({ "code"})
 @MappedSuperclass
@@ -102,4 +108,30 @@ public abstract class CustomScript extends Function {
     public void setError(Boolean error) {
         this.error = error;
     }
+
+	@Override
+	public List<FunctionInput> getInputs() {
+		if(setters == null) {
+			return new ArrayList<>();
+		}
+		return setters.stream().map(s -> {
+					FunctionInput inp = new FunctionInput();
+					inp.setDescription(s.getDescription());
+					inp.setName(s.getName());
+					inp.setType(s.getType());
+					return inp;
+				}).collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean hasInputs() {
+		if(setters == null || setters.isEmpty()) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+    
+    
 }

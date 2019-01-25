@@ -115,7 +115,7 @@ public class InstantMessagingNotificationBean extends BaseBean<InstantMessagingN
             csv.appendValue(imNotification.getClassNameFilter());
             csv.appendValue(imNotification.getEventTypeFilter() + "");
             csv.appendValue(imNotification.getElFilter());
-            csv.appendValue((imNotification.getScriptInstance() == null ? "" : imNotification.getScriptInstance().getCode()));
+            csv.appendValue((imNotification.getFunction() == null ? "" : imNotification.getFunction().getCode()));
             csv.appendValue(imNotification.isDisabled() + "");
             csv.appendValue(imNotification.getImProvider() + "");
             csv.appendValue(imNotification.getIdEl());
@@ -186,7 +186,7 @@ public class InstantMessagingNotificationBean extends BaseBean<InstantMessagingN
                 instMessNotif.setElFilter(values[EL_FILTER]);
                 if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    instMessNotif.setScriptInstance(scriptInstance);
+                    instMessNotif.setFunction(scriptInstance);
                 }
                 instMessNotif.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
                 instMessNotif.setImProvider(InstantMessagingProviderEnum.valueOf(values[IM_PROVIDER]));
@@ -238,7 +238,7 @@ public class InstantMessagingNotificationBean extends BaseBean<InstantMessagingN
             existingEntity.setElFilter(values[EL_FILTER]);
             if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                 ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setScriptInstance(scriptInstance);
+                existingEntity.setFunction(scriptInstance);
             }
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
             existingEntity.setImProvider(InstantMessagingProviderEnum.valueOf(values[IM_PROVIDER]));

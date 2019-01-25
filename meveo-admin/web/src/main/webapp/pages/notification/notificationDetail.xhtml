@@ -1,6 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" 
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 
@@ -25,15 +26,18 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:entityPopup id="scriptInstancePopup"
+		<hftl:entityPopup id="functionPopup"
 			header="#{messages['scriptInstance.title']}"
-			backingBean="#{scriptInstanceBean}"
+			backingBean="#{functionBean}"
 			searchField1Label="#{messages['BusinessEntity.code']}"
 			searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-			column1="code" selection="#{notificationBean.entity.scriptInstance}"
+			column1="code" selection="#{notificationBean.entity.function}"
 			column2Label="#{messages['BusinessEntity.description']}"
 			column2="description"
-			updateField=":notificationForm:scriptInstanceSelectId :notificationForm:scriptInstanceSelectId_text">
+			column3="class"
+			column3Child = "simpleName"
+			column3Label="Type"
+			updateField=":notificationForm:functionSelectId :notificationForm:functionSelectId_text :notificationForm:toto">
 		</hftl:entityPopup>
 
 		<hftl:formPanel formId="notificationForm"
@@ -57,27 +61,32 @@
 				componentWidth="50" newLine="true" />
 			<hftl:formField label="#{messages['notification.priority']}"
 				field="priority" />
-			<hftl:formField id="scriptInstanceSelectId"
+				
+			<!--  Function selection -->
+			<hftl:formField id="functionSelectId"
 				label="#{messages['entity.notification.scriptInstance']}"
-				field="scriptInstance" valueLabelField="code" required="true"
-				popup="true" popupId="scriptInstancePopup" />
-
-			<hftl:decorateFormField label="#{messages['entity.notification.scriptParams']}"  newLine="true"  componentWidth="100%">
-				<p:dataTable id="script_inputs"
-					value="${notificationBean.entity.scriptInstance.setters}"
-					resizableColumns="true" var="item" paginator="false"
-					styleClass="custom-grid" reflow="true">
-					<p:column headerText="#{messages['entity.notification.scriptParams.name']}">
-						<h:outputText value="#{item.name}" />
-					</p:column>
-					<p:column headerText="#{messages['entity.notification.scriptParams.type']}">
-						<h:outputText value="#{item.type}" />
-					</p:column>
-					<p:column headerText="#{messages['entity.notification.scriptParams.description']}">
-						<h:outputText value="#{item.description != null ? item.description : ''}" />
-					</p:column>
-				</p:dataTable>
-			</hftl:decorateFormField>
+				field="function" valueLabelField="code" required="true"
+				popup="true" popupId="functionPopup" />
+	
+			<!--  Summary of function inputs -->
+			<h:body id="toto48">
+				<hftl:decorateFormField id="functionInputs" label="#{messages['entity.notification.scriptParams']}"   newLine="true"  componentWidth="100%" rendered="#{notificationBean.entity.function.hasInputs()}">
+					<p:dataTable id="toto" value="${notificationBean.entity.function.inputs}"
+					   rendered="#{notificationBean.entity.function.hasInputs()}"
+						resizableColumns="true" var="item" paginator="false"
+						styleClass="custom-grid" reflow="true">
+						<p:column headerText="#{messages['entity.notification.scriptParams.name']}">
+							<h:outputText value="#{item.name}" />
+						</p:column>
+						<p:column headerText="#{messages['entity.notification.scriptParams.type']}">
+							<h:outputText value="#{item.type}" />
+						</p:column>
+						<p:column headerText="#{messages['entity.notification.scriptParams.description']}">
+							<h:outputText value="#{item.description != null ? item.description : ''}" />
+						</p:column>
+					</p:dataTable>
+				</hftl:decorateFormField>
+			</h:body>
 
 			<hftl:formField label="#{messages['entity.notification.params']}"
 				field="params" newLine="true" componentWidth="100%" />

@@ -88,7 +88,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         webHook.setCode(postData.getCode());
         webHook.setClassNameFilter(postData.getClassNameFilter());
         webHook.setEventTypeFilter(postData.getEventTypeFilter());
-        webHook.setScriptInstance(scriptInstance);
+        webHook.setFunction(scriptInstance);
         webHook.setParams(postData.getScriptParams());
         webHook.setElFilter(postData.getElFilter());
         webHook.setCounterTemplate(counterTemplate);
@@ -195,7 +195,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         webHook.setCode(StringUtils.isBlank(postData.getUpdatedCode()) ? postData.getCode() : postData.getUpdatedCode());
         webHook.setClassNameFilter(postData.getClassNameFilter());
         webHook.setEventTypeFilter(postData.getEventTypeFilter());
-        webHook.setScriptInstance(scriptInstance);
+        webHook.setFunction(scriptInstance);
         webHook.setParams(postData.getScriptParams());
         webHook.setElFilter(postData.getElFilter());
         webHook.setCounterTemplate(counterTemplate);

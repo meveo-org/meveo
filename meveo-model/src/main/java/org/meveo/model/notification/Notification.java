@@ -33,6 +33,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.billing.CounterInstance;
 import org.meveo.model.catalog.CounterTemplate;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.validation.constraint.ClassName;
 
@@ -76,8 +77,8 @@ public class Notification extends BusinessEntity {
     private CounterInstance counterInstance;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "script_instance_id")
-    private ScriptInstance scriptInstance;
+    @JoinColumn(name = "function_id")
+    private Function function;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "adm_notification_params")
@@ -131,22 +132,16 @@ public class Notification extends BusinessEntity {
     public void setCounterInstance(CounterInstance counterInstance) {
         this.counterInstance = counterInstance;
     }
+    
+    public Function getFunction() {
+		return function;
+	}
 
-    /**
-     * @return the scriptInstance
-     */
-    public ScriptInstance getScriptInstance() {
-        return scriptInstance;
-    }
+	public void setFunction(Function function) {
+		this.function = function;
+	}
 
-    /**
-     * @param scriptInstance the scriptInstance to set
-     */
-    public void setScriptInstance(ScriptInstance scriptInstance) {
-        this.scriptInstance = scriptInstance;
-    }
-
-    /**
+	/**
      * @return the params
      */
     public Map<String, String> getParams() {
@@ -163,7 +158,7 @@ public class Notification extends BusinessEntity {
     @Override
     public String toString() {
         return String.format("Notification [%s, classNameFilter=%s, eventTypeFilter=%s, elFilter=%s, scriptInstance=%s, counterTemplate=%s, counterInstance=%s]", super.toString(),
-            classNameFilter, eventTypeFilter, elFilter, scriptInstance != null ? scriptInstance.getId() : null, counterTemplate != null ? counterTemplate.getId() : null,
+            classNameFilter, eventTypeFilter, elFilter, function != null ? function.getId() : null, counterTemplate != null ? counterTemplate.getId() : null,
             counterInstance != null ? counterInstance.getId() : null);
     }
 

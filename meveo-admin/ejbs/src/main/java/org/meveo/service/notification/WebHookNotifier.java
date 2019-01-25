@@ -167,7 +167,7 @@ public class WebHookNotifier {
                     log.error("Failed to create webhook ", entityOrEvent);
                 }
             } else {
-                if (webHook.getScriptInstance() != null) {
+                if (webHook.getFunction() != null) {
                     HashMap<Object, Object> userMap = new HashMap<Object, Object>();
                     userMap.put("event", entityOrEvent);
                     userMap.put("response", result);
@@ -180,10 +180,10 @@ public class WebHookNotifier {
                             paramsEvaluated.put((String) entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
                         }
                         paramsEvaluated.put("response", result);
-                        scriptInstanceService.execute(webHook.getScriptInstance().getCode(), paramsEvaluated);
+                        scriptInstanceService.execute(webHook.getFunction().getCode(), paramsEvaluated);
 
                     } catch (Exception ee) {
-                        log.error("Failed to execute a script {}", webHook.getScriptInstance().getCode(), ee);
+                        log.error("Failed to execute a script {}", webHook.getFunction().getCode(), ee);
                     }
                 }
                 log.debug("webhook answer : " + result);

@@ -118,18 +118,18 @@ public class InternalNotificationJobBean {
                     }
                 }
                 try {
-                    if (notification.getScriptInstance() != null) {
+                    if (notification.getFunction() != null) {
                         Map<String, Object> paramsEvaluated = new HashMap<String, Object>();
                         for (Map.Entry entry : notification.getParams().entrySet()) {
                             paramsEvaluated.put((String) entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression((String) entry.getValue(), userMap, String.class));
                         }
-                        scriptInstanceService.execute(notification.getScriptInstance().getCode(), paramsEvaluated);
+                        scriptInstanceService.execute(notification.getFunction().getCode(), paramsEvaluated);
                         result.registerSucces();
                     } else {
                         log.debug("No script instance on this Notification");
                     }
                 } catch (Exception e) {
-                    result.registerError("Error execution " + notification.getScriptInstance() + " on " + res);
+                    result.registerError("Error execution " + notification.getFunction() + " on " + res);
                     throw new BusinessException("Expression " + notification.getElFilter() + " do not evaluate to boolean but " + res);
                 }
             }

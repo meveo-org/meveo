@@ -137,7 +137,7 @@ public class WebHookBean extends BaseNotificationBean<WebHook> {
             csv.appendValue(webHook.getEventTypeFilter() + "");
             csv.appendValue(webHook.getElFilter());
             csv.appendValue(webHook.isDisabled() + "");
-            csv.appendValue((webHook.getScriptInstance() == null ? "" : webHook.getScriptInstance().getCode()));
+            csv.appendValue((webHook.getFunction() == null ? "" : webHook.getFunction().getCode()));
             csv.appendValue(webHook.getHost());
             csv.appendValue(webHook.getPort() + "");
             csv.appendValue(webHook.getPage());
@@ -212,7 +212,7 @@ public class WebHookBean extends BaseNotificationBean<WebHook> {
                 webHook.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
                 if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    webHook.setScriptInstance(scriptInstance);
+                    webHook.setFunction(scriptInstance);
                 }
                 webHook.setHost(values[HOST]);
                 webHook.setPort(Integer.parseInt(values[PORT]));
@@ -265,7 +265,7 @@ public class WebHookBean extends BaseNotificationBean<WebHook> {
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
             if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                 ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setScriptInstance(scriptInstance);
+                existingEntity.setFunction(scriptInstance);
             }
             existingEntity.setHost(values[HOST]);
             existingEntity.setPort(Integer.parseInt(values[PORT]));

@@ -116,7 +116,7 @@ public class JobTriggerBean extends BaseNotificationBean<JobTrigger> {
             csv.appendValue(jobTrigger.getClassNameFilter());
             csv.appendValue(jobTrigger.getElFilter());
             csv.appendValue(jobTrigger.isDisabled() + "");
-            csv.appendValue((jobTrigger.getScriptInstance() == null ? "" : jobTrigger.getScriptInstance().getCode()));
+            csv.appendValue((jobTrigger.getFunction() == null ? "" : jobTrigger.getFunction().getCode()));
             csv.appendValue(jobTrigger.getEventTypeFilter() + "");
             csv.appendValue((jobTrigger.getJobInstance() == null ? "" : jobTrigger.getJobInstance().getCode()));
             csv.startNewLine();
@@ -166,7 +166,7 @@ public class JobTriggerBean extends BaseNotificationBean<JobTrigger> {
                 notif.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
                 if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    notif.setScriptInstance(scriptInstance);
+                    notif.setFunction(scriptInstance);
                 }
                 notif.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
                 if (!StringUtils.isBlank(values[JOB_INSTANCE_CODE])) {
@@ -188,7 +188,7 @@ public class JobTriggerBean extends BaseNotificationBean<JobTrigger> {
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
             if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                 ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setScriptInstance(scriptInstance);
+                existingEntity.setFunction(scriptInstance);
             }
             existingEntity.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
             jobTriggerService.update(existingEntity);

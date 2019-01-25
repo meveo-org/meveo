@@ -17,22 +17,30 @@
  */
 package org.meveo.model.technicalservice;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.*;
+import java.util.stream.Collectors;
+
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionInput;
 
 /**
  * @author Clément Bareth
  */
 @Entity
-@Table(name = "technical_services",  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "function_version"}))
+@Table(name = "technical_services"/*,  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "function_version"})*/)
 @GenericGenerator(
         name = "ID_GENERATOR",
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
@@ -40,7 +48,7 @@ import org.meveo.model.scripts.Function;
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "service_type")
-public abstract class TechnicalService extends Function {
+public class TechnicalService extends Function {
 
 	private static final long serialVersionUID = 1L;
 
@@ -92,5 +100,30 @@ public abstract class TechnicalService extends Function {
      * @param contextMap Context map of the current execution
      * @return {@code true} if the service can be used for the given context
      */
-    public abstract boolean isApplicable(Map<String, Object> contextMap);
+    public boolean isApplicable(Map<String, Object> contextMap) { 
+    	return true;
+    }
+    
+	@Override
+	public List<FunctionInput> getInputs() {
+		List<FunctionInput> inputs = new ArrayList<>();
+		descriptions.stream()
+			.filter(d -> d.isInput())
+			.forEach(d -> {
+				d.getInputProperties().forEach(prop -> {
+					FunctionInput inp = new FunctionInput();
+					inp.setName(d.getName()+"."+prop.getProperty().getCode());
+					inp.setDescription(prop.getProperty().getDescription());
+					inp.setType(prop.getProperty().getFieldType().toString());
+					inputs.add(inp);
+				});
+			});
+		return inputs;
+	}
+
+	@Override
+	public boolean hasInputs() {
+		return !descriptions.isEmpty();
+	}
+	
 }

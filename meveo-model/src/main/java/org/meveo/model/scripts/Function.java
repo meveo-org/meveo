@@ -1,18 +1,32 @@
 package org.meveo.model.scripts;
 
-import com.thoughtworks.xstream.annotations.XStreamConverter;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
-import org.meveo.model.security.Role;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Set;
+import com.thoughtworks.xstream.annotations.XStreamConverter;
 
 @ExportIdentifier({"code"})
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "meveo_function",  uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
+@GenericGenerator(
+        name = "ID_GENERATOR",
+        strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+        parameters = {@Parameter(name = "sequence_name", value = "meveo_function_seq")}
+)
 public abstract class Function extends BusinessEntity {
 
     private static final long serialVersionUID = -1615762108685208441L;
@@ -46,4 +60,8 @@ public abstract class Function extends BusinessEntity {
     public void setScript(String script) {
         this.script = script;
     }
+    
+    public abstract List<FunctionInput> getInputs();
+    
+    public abstract boolean hasInputs();
 }

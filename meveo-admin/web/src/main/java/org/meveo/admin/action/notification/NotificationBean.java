@@ -113,7 +113,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
             csv.appendValue(scriptNotification.getClassNameFilter());
             csv.appendValue(scriptNotification.getElFilter());
             csv.appendValue(scriptNotification.isDisabled() + "");
-            csv.appendValue((scriptNotification.getScriptInstance() == null ? "" : scriptNotification.getScriptInstance().getCode()));
+            csv.appendValue((scriptNotification.getFunction() == null ? "" : scriptNotification.getFunction().getCode()));
             csv.appendValue(scriptNotification.getEventTypeFilter() + "");
             csv.startNewLine();
         }
@@ -162,7 +162,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
                 notif.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
                 if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    notif.setScriptInstance(scriptInstance);
+                    notif.setFunction(scriptInstance);
                 }
                 notif.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
                 notificationService.create(notif);
@@ -180,7 +180,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
             if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                 ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setScriptInstance(scriptInstance);
+                existingEntity.setFunction(scriptInstance);
             }
             existingEntity.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
             notificationService.update(existingEntity);

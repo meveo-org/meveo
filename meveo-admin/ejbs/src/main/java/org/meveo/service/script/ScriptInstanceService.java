@@ -29,6 +29,7 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Default;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
@@ -38,11 +39,14 @@ import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
+@FunctionServiceFor(ScriptInstance.class)
 @Singleton
+@Default
 @Lock(LockType.READ)
 public class ScriptInstanceService extends CustomScriptService<ScriptInstance, ScriptInterface> {
 

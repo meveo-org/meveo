@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -11,6 +12,7 @@ import javax.ejb.Startup;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.ftp.event.FileDelete;
 import org.meveo.admin.ftp.event.FileDownload;
@@ -49,18 +51,17 @@ import org.meveo.model.notification.NotificationHistory;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 import org.meveo.model.notification.ScriptNotification;
 import org.meveo.model.notification.WebHook;
-import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.Function;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.billing.impl.CounterValueInsufficientException;
+import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.Script;
-import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.script.ScriptInterface;
-import org.slf4j.Logger;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
+import org.slf4j.Logger;
 
 @Singleton
 @Startup
@@ -93,7 +94,7 @@ public class DefaultObserver {
     private GenericNotificationService genericNotificationService;
 
     @Inject
-    private ScriptInstanceService scriptInstanceService;
+    private ConcreteFunctionService concreteFunctionService;
 
     @Inject
     private JobTriggerLauncher jobTriggerLauncher;
@@ -119,20 +120,17 @@ public class DefaultObserver {
         return result == null ? false : result;
     }
 
-    private void executeScript(ScriptInstance scriptInstance, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException, ELException {
-        log.debug("execute notification script: {}", scriptInstance.getCode());
+    private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException, ELException {
+        log.debug("execute notification script: {}", function.getCode());
 
         try {
-            ScriptInterface scriptInterface = scriptInstanceService.getScriptInstance(scriptInstance.getCode());
             Map<Object, Object> userMap = new HashMap<>();
             userMap.put("event", entityOrEvent);
             userMap.put("manager", manager);
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 context.put(entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression(entry.getValue(), userMap, Object.class));
             }
-            scriptInterface.init(context);
-            scriptInterface.execute(context);
-            scriptInterface.finalize(context);
+            concreteFunctionService.execute(function.getCode(), context);
         } catch (Exception e) {
             log.error("failed script execution", e);
             if (e instanceof BusinessException) {
@@ -180,8 +178,8 @@ public class DefaultObserver {
             Map<String, Object> context = new HashMap<String, Object>();
             // TODO: Rethink notif and script - maybe create pre and post script
             if (!(notif instanceof WebHook)) {
-                if (notif.getScriptInstance() != null) {
-                    executeScript(notif.getScriptInstance(), entityOrEvent, notif.getParams(), context);
+                if (notif.getFunction() != null) {
+                    executeFunction(notif.getFunction(), entityOrEvent, notif.getParams(), context);
                 }
             }
 

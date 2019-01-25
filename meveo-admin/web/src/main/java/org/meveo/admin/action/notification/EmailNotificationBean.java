@@ -130,7 +130,7 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
                 emailNotif.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
                 if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    emailNotif.setScriptInstance(scriptInstance);
+                    emailNotif.setFunction(scriptInstance);
                 }
                 emailNotif.setEmailFrom(values[SENT_FROM]);
                 emailNotif.setEmailToEl(values[SEND_TO_EL]);
@@ -170,7 +170,7 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
             if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
                 ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setScriptInstance(scriptInstance);
+                existingEntity.setFunction(scriptInstance);
             }
             existingEntity.setEmailFrom(values[SENT_FROM]);
             existingEntity.setEmailToEl(values[SEND_TO_EL]);

@@ -86,7 +86,7 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
         notif.setCode(postData.getCode());
         notif.setClassNameFilter(postData.getClassNameFilter());
         notif.setEventTypeFilter(postData.getEventTypeFilter());
-        notif.setScriptInstance(scriptInstance);
+        notif.setFunction(scriptInstance);
         notif.setParams(postData.getScriptParams());
         notif.setElFilter(postData.getElFilter());
         notif.setCounterTemplate(counterTemplate);
@@ -180,7 +180,7 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
         notif.setCode(StringUtils.isBlank(postData.getUpdatedCode()) ? postData.getCode() : postData.getUpdatedCode());
         notif.setClassNameFilter(postData.getClassNameFilter());
         notif.setEventTypeFilter(postData.getEventTypeFilter());
-        notif.setScriptInstance(scriptInstance);
+        notif.setFunction(scriptInstance);
         notif.setParams(postData.getScriptParams());
         notif.setElFilter(postData.getElFilter());
         notif.setCounterTemplate(counterTemplate);

@@ -40,7 +40,7 @@ import org.meveo.model.security.Role;
 @Entity
 @ModuleItem
 @Cacheable
-@Table(name = "meveo_script_instance", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
+@Table(name = "meveo_script_instance")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_script_instance_seq"), })
 @NamedQueries({ @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceOnError", query = "from ScriptInstance o where o.error=:isError "),

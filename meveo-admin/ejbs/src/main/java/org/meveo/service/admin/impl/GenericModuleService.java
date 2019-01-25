@@ -109,6 +109,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     }
 
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public T disable(T module) throws BusinessException {
 
@@ -161,6 +162,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         return super.disable(module);
     }
 
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public T enable(T module) throws BusinessException {
 
