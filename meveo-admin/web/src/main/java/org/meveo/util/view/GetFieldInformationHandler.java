@@ -140,10 +140,14 @@ public class GetFieldInformationHandler extends TagHandler {
         }
 
         if (entityClass == null && backingBean != null) {
-            BaseBean backingBeanObj = (BaseBean) executeExpressionInUIContext(context, backingBean);
-            if (backingBeanObj != null) {
-                entityClass = backingBeanObj.getClazz();
-            }
+            try {
+				BaseBean backingBeanObj = (BaseBean) executeExpressionInUIContext(context, backingBean);
+				if (backingBeanObj != null) {
+				    entityClass = backingBeanObj.getClazz();
+				}
+			} catch (ClassCastException e) {
+				
+			}
 
         }
 
