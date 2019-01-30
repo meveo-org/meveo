@@ -41,10 +41,7 @@ import java.util.Optional;
  *
  * @author Clément Bareth
  */
-public abstract class TechnicalServiceService<T extends TechnicalService>
-        extends FunctionService<T, TechnicalServiceEngine<T>> {
-
-    private final String serviceType = getEntityClass().getAnnotation(DiscriminatorValue.class).value();
+public abstract class TechnicalServiceService<T extends TechnicalService> extends FunctionService<T, TechnicalServiceEngine<T>> {
 
 
     /**
@@ -67,10 +64,9 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
      */
     public Optional<Integer> latestVersionNumber(String name) {
         String queryString = "Select max(service.functionVersion) from org.meveo.model.technicalservice.TechnicalService service \n" +
-                "where service.name = :name and service.serviceType = :service_type";
+                "where service.name = :name";
         Query q = getEntityManager().createQuery(queryString)
-                .setParameter("name", name)
-                .setParameter("service_type", serviceType);
+                .setParameter("name", name);
         try {
             return Optional.of((Integer) q.getSingleResult());
         } catch (NoResultException ignored) {
@@ -108,7 +104,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService>
             QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
             qb.addCriterion("service.name", "=", name, true);
             qb.addSql("service.functionVersion = (select max(ci.functionVersion) from org.meveo.model.technicalservice.TechnicalService ci where "
-                    + "ci.name = service.name and ci.serviceType = service.serviceType)");
+                    + "ci.name = service.name)");
             return Optional.of((T) qb.getQuery(getEntityManager()).getSingleResult());
         } catch (NoResultException e) {
             log.warn("No Technical service by name {} found", name);

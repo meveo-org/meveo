@@ -17,6 +17,8 @@
  */
 package org.meveo.api.dto.technicalservice;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.meveo.api.dto.BusinessDto;
 
 import javax.validation.constraints.Min;
@@ -35,6 +37,7 @@ import java.util.List;
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TechnicalServiceDto extends BusinessDto {
 
     private static final long serialVersionUID = 5579910176536059520L;
@@ -46,9 +49,6 @@ public class TechnicalServiceDto extends BusinessDto {
 
     @Min(value = 0, message = "Technical version cannot be lower than {value}")
     private Integer version;
-
-    @NotNull(message = "Source code must be provided")
-    private String script;
 
     private String serviceType;
 
@@ -98,20 +98,6 @@ public class TechnicalServiceDto extends BusinessDto {
      */
     public void setVersion(Integer version) {
         this.version = version;
-    }
-
-    /**
-     * @return Source code of the technical service
-     */
-    public String getScript() {
-        return script;
-    }
-
-    /**
-     * @param script Source code of the technical service
-     */
-    public void setScript(String script) {
-        this.script = script;
     }
 
     /**

@@ -20,34 +20,16 @@ package org.meveo.model.technicalservice;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionInput;
 
 /**
  * @author Clément Bareth
  */
-@Entity
-@Table(name = "technical_services"/*,  uniqueConstraints = @UniqueConstraint(columnNames = {"name", "function_version"})*/)
-@GenericGenerator(
-        name = "ID_GENERATOR",
-        strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-        parameters = {@Parameter(name = "sequence_name", value = "technical_services_seq")}
-)
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "service_type")
+@MappedSuperclass
 public class TechnicalService extends Function {
 
 	private static final long serialVersionUID = 1L;
@@ -58,9 +40,6 @@ public class TechnicalService extends Function {
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     private List<Description> descriptions;
 
-    @Column(name = "service_type", insertable = false, updatable = false)
-    private String serviceType;
-    
     /**
      * Description of the inputs and outputs of the connector
      */
@@ -90,13 +69,6 @@ public class TechnicalService extends Function {
     }
 
     /**
-     * @return Name of the service type defined by the administrator
-     */
-    public String getServiceType() {
-        return serviceType;
-    }
-
-    /**
      * @param contextMap Context map of the current execution
      * @return {@code true} if the service can be used for the given context
      */
@@ -108,13 +80,13 @@ public class TechnicalService extends Function {
 	public List<FunctionInput> getInputs() {
 		List<FunctionInput> inputs = new ArrayList<>();
 		descriptions.stream()
-			.filter(d -> d.isInput())
+			.filter(Description::isInput)
 			.forEach(d -> {
 				d.getInputProperties().forEach(prop -> {
 					FunctionInput inp = new FunctionInput();
-					inp.setName(d.getName()+"."+prop.getProperty().getCode());
-					inp.setDescription(prop.getProperty().getDescription());
-					inp.setType(prop.getProperty().getFieldType().toString());
+					inp.setName(d.getName()+"."+prop.getCet().getCode());
+					inp.setDescription(prop.getCet().getDescription());
+					inp.setType(prop.getCet().getFieldType().toString());
 					inputs.add(inp);
 				});
 			});
@@ -123,7 +95,11 @@ public class TechnicalService extends Function {
 
 	@Override
 	public boolean hasInputs() {
-		return !descriptions.isEmpty();
+		return descriptions.stream().anyMatch(d -> d.isInput() && !d.getInputProperties().isEmpty());
 	}
-	
+
+    @Override
+    public String getFunctionType() {
+        return "TechinalService";
+    }
 }

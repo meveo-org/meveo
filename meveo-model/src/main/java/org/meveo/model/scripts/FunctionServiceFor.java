@@ -13,6 +13,6 @@ import javax.inject.Qualifier;
 @Target(TYPE)
 public @interface FunctionServiceFor {
 
-	Class<? extends Function> value();
+	String value();
 	
 }

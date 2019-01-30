@@ -52,7 +52,7 @@ public class BigDecimalConverter implements Converter {
 			return null;
 		}
 		/*
-		 * if (!str.matches(paramBean.getProperty("bigDecimal.pattern"))) {
+		 * if (!str.matches(paramBean.getCet("bigDecimal.pattern"))) {
 		 * throw new ConverterException(resourceMessages.getString(
 		 * "javax.faces.converter.BigDecimalConverter.DECIMAL_detail")); }
 		 */

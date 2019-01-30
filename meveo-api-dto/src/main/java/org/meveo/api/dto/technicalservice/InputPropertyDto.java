@@ -16,6 +16,7 @@
 package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.meveo.interfaces.technicalservice.description.properties.InputPropertyDescription;
 import org.meveo.model.technicalservice.Comparator;
 
 /**
@@ -23,7 +24,7 @@ import org.meveo.model.technicalservice.Comparator;
  *
  * @author Clément Bareth
  */
-public class InputPropertyDto {
+public class InputPropertyDto implements InputPropertyDescription {
 
     @JsonProperty(required = true)
     private String property;
@@ -38,6 +39,7 @@ public class InputPropertyDto {
      *
      * @return Code of CustomEntityTemplate property
      */
+    @Override
     public String getProperty() {
         return property;
     }
@@ -110,6 +112,7 @@ public class InputPropertyDto {
      *
      * @return The default value.
      */
+    @Override
     public String getDefaultValue() {
         return defaultValue;
     }

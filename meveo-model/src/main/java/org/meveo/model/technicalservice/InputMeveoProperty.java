@@ -15,6 +15,8 @@
  */
 package org.meveo.model.technicalservice;
 
+import org.meveo.interfaces.technicalservice.description.properties.InputPropertyDescription;
+
 import javax.persistence.*;
 
 /**
@@ -22,9 +24,9 @@ import javax.persistence.*;
  *
  * @author Clément Bareth
  */
-@Entity(name = "InputProperty")
+@Entity(name = "InputMeveoProperty")
 @DiscriminatorValue("input")
-public class InputProperty extends PropertyDescription {
+public class InputMeveoProperty extends MeveoPropertyDescription implements InputPropertyDescription {
 
     private boolean required;
 
@@ -96,6 +98,7 @@ public class InputProperty extends PropertyDescription {
      *
      * @return The default value
      */
+    @Override
     public String getDefaultValue() {
         return defaultValue;
     }

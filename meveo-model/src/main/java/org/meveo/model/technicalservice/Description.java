@@ -20,6 +20,8 @@ package org.meveo.model.technicalservice;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Where;
+import org.meveo.interfaces.technicalservice.description.TechnicalServiceDescription;
+import org.meveo.model.scripts.Function;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -39,29 +41,29 @@ import java.util.List;
 @Table(name = "technical_services_description")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "description_type")
-public abstract class Description {
+public abstract class Description implements TechnicalServiceDescription {
 
     @Id
     @GeneratedValue(generator = "ID_GENERATOR", strategy = GenerationType.AUTO)
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "service_id")
     private TechnicalService service;
 
     /**
      * List of properties that are defined as inputs. Non empty list implies input = true.
      */
-    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "description", targetEntity = MeveoPropertyDescription.class, cascade = CascadeType.ALL)
     @Where(clause = "direction ='input'")
-    private List<InputProperty> inputProperties = new ArrayList<>();
+    private List<InputMeveoProperty> inputProperties = new ArrayList<>();
 
     /**
      * List of properties that are defined as outputs. Non empty list implies output = true.
      */
-    @OneToMany(mappedBy = "description", targetEntity = PropertyDescription.class, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "description", targetEntity = MeveoPropertyDescription.class, cascade = CascadeType.ALL)
     @Where(clause = "direction = 'output'")
-    private List<OutputProperty> outputProperties = new ArrayList<>();
+    private List<OutputMeveoProperty> outputProperties = new ArrayList<>();
 
     /**
      * Whether the variable is defined as input of the connector.
@@ -77,7 +79,8 @@ public abstract class Description {
      * List of properties that are defined as inputs. Non empty list implies input = true.
      * @return The list of the properties that are defined as inputs.
      */
-    public List<InputProperty> getInputProperties() {
+    @Override
+    public List<InputMeveoProperty> getInputProperties() {
         return inputProperties;
     }
 
@@ -85,7 +88,8 @@ public abstract class Description {
      * List of properties that are defined as outputs. Non empty list implies output = true.
      * @return The list of the properties that are defined as inputs.
      */
-    public List<OutputProperty> getOutputProperties() {
+    @Override
+    public List<OutputMeveoProperty> getOutputProperties() {
         return outputProperties;
     }
 
@@ -93,6 +97,7 @@ public abstract class Description {
      * Whether the variable is defined as input of the connector.
      * @return "true" if the variable is an input.
      */
+    @Override
     public boolean isOutput() {
         return output;
     }
@@ -101,6 +106,7 @@ public abstract class Description {
      * Whether the variable is defined as output of the connector.
      * @return "false" if the variable is an input.
      */
+    @Override
     public boolean isInput(){
         return input;
     }
@@ -109,6 +115,7 @@ public abstract class Description {
      * Name of the variable described
      * @return The name of the variable
      */
+    @Override
     public abstract String getName();
 
     /**
@@ -119,14 +126,14 @@ public abstract class Description {
     /**
      * @param inputProperties Input properties defined for the described entity
      */
-    public void setInputProperties(List<InputProperty> inputProperties) {
+    public void setInputProperties(List<InputMeveoProperty> inputProperties) {
         this.inputProperties = inputProperties;
     }
 
     /**
      * @param outputProperties Output properties defined for the described entity
      */
-    public void setOutputProperties(List<OutputProperty> outputProperties) {
+    public void setOutputProperties(List<OutputMeveoProperty> outputProperties) {
         this.outputProperties = outputProperties;
     }
 

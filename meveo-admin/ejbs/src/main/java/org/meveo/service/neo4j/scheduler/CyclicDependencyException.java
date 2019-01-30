@@ -1,6 +1,6 @@
 package org.meveo.service.neo4j.scheduler;
 
-import org.meveo.api.dto.neo4j.EntityOrRelation;
+import org.meveo.interfaces.EntityOrRelation;
 
 import java.util.Arrays;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package org.meveo.api.dto.neo4j;
+package org.meveo.interfaces;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

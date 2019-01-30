@@ -17,6 +17,8 @@
  */
 package org.meveo.model.technicalservice;
 
+import org.meveo.interfaces.technicalservice.description.properties.OutputPropertyDescription;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -25,9 +27,9 @@ import javax.persistence.Entity;
  *
  * @author Clément Bareth
  */
-@Entity(name = "OutputProperty")
+@Entity(name = "OutputMeveoProperty")
 @DiscriminatorValue("output")
-public class OutputProperty extends PropertyDescription{
+public class OutputMeveoProperty extends MeveoPropertyDescription implements OutputPropertyDescription, org.meveo.interfaces.technicalservice.description.properties.PropertyDescription {
 
     private int trustness;
 

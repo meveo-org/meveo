@@ -17,6 +17,7 @@
  */
 package org.meveo.model.technicalservice;
 
+import org.meveo.interfaces.technicalservice.description.RelationshipDescription;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 import javax.persistence.*;
@@ -28,7 +29,7 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("relation_description")
-public class RelationDescription extends Description{
+public class RelationDescription extends Description implements RelationshipDescription {
 
     @Column(name = "source_name")
     private String source;
@@ -43,7 +44,7 @@ public class RelationDescription extends Description{
     /**
      * @return The CustomRelationshipTemplate for the described relation
      */
-    public CustomRelationshipTemplate getType() {
+    public CustomRelationshipTemplate getCrt() {
         return type;
     }
 
@@ -57,6 +58,7 @@ public class RelationDescription extends Description{
     /**
      * @return Source entity instance name of the relation
      */
+    @Override
     public String getSource() {
         return this.source;
     }
@@ -72,6 +74,7 @@ public class RelationDescription extends Description{
     /**
      * Target entity instance name of the relation
      */
+    @Override
     public String getTarget() {
         return target;
     }
@@ -84,6 +87,11 @@ public class RelationDescription extends Description{
     }
 
     @Override
+    public String getType() {
+        return type.getCode();
+    }
+
+    @Override
     public String getName() {
         return source + "-" + target;
     }
@@ -92,5 +100,7 @@ public class RelationDescription extends Description{
     public String getTypeName() {
         return type.getCode();
     }
+
+
 
 }

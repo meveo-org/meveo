@@ -2,12 +2,13 @@ package org.meveo.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.meveo.api.dto.technicalservice.InputOutputDescription;
+import org.meveo.interfaces.technicalservice.description.EntityDescription;
 
 import javax.validation.constraints.NotNull;
 
-public class ProcessEntityDescription extends InputOutputDescription {
+public class ProcessEntityDescription extends InputOutputDescription  {
 
-    public static final String ENTITY_DESCRIPTION = "EntityDescription";
+    public static final String ENTITY_DESCRIPTION = "MeveoEntityDescription";
 
     @JsonProperty(required = true)
     @NotNull
@@ -18,6 +19,7 @@ public class ProcessEntityDescription extends InputOutputDescription {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }

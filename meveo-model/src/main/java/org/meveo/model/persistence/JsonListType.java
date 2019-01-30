@@ -6,6 +6,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,6 +24,7 @@ public class JsonListType implements UserType, DynamicParameterizedType {
 
     private static final int[] SQL_TYPES = new int[]{Types.LONGVARCHAR};
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonListType.class);
 
     private JavaType valueType = null;
     private Class<?> classType = null;
@@ -144,9 +147,14 @@ public class JsonListType implements UserType, DynamicParameterizedType {
             }
 
             if(property != null){
-                ParameterizedType listType = (ParameterizedType) property.getGenericType();
-                Class<?> listClass = (Class<?>) listType.getActualTypeArguments()[0];
-                valueType = OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, listClass);
+                try{
+                    ParameterizedType listType = (ParameterizedType) property.getGenericType();
+                    Class<?> listClass = (Class<?>) listType.getActualTypeArguments()[0];
+                    valueType = OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, listClass);
+                }catch (ClassCastException e){
+                    LOGGER.error(e.toString());
+                    valueType = OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, Object.class);
+                }
                 classType = List.class;
             }
 

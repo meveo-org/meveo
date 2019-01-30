@@ -1,8 +1,8 @@
 package org.meveo.service.neo4j.scheduler;
 
-import org.meveo.api.dto.neo4j.Entity;
-import org.meveo.api.dto.neo4j.EntityOrRelation;
-import org.meveo.api.dto.neo4j.EntityRelation;
+import org.meveo.interfaces.Entity;
+import org.meveo.interfaces.EntityOrRelation;
+import org.meveo.interfaces.EntityRelation;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 
 import javax.inject.Inject;

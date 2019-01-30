@@ -304,14 +304,14 @@ public class DefaultObserver {
         log.debug("BusinessExceptionEvent handler inactivated {}",
             bee);/*
                   * log.debug("Defaut observer : BusinessExceptionEvent {} ", bee); StringWriter errors = new StringWriter(); bee.getException().printStackTrace(new
-                  * PrintWriter(errors)); String meveoInstanceCode = ParamBean.getInstance().getProperty("monitoring.instanceCode", ""); int bodyMaxLegthByte =
-                  * Integer.parseInt(ParamBean.getInstance().getProperty("meveo.notifier.stackTrace.lengthInBytes", "9999")); String stackTrace = errors.toString(); String input =
+                  * PrintWriter(errors)); String meveoInstanceCode = ParamBean.getInstance().getCet("monitoring.instanceCode", ""); int bodyMaxLegthByte =
+                  * Integer.parseInt(ParamBean.getInstance().getCet("meveo.notifier.stackTrace.lengthInBytes", "9999")); String stackTrace = errors.toString(); String input =
                   * "{" + "      #meveoInstanceCode#: #" + meveoInstanceCode + "#," + "      #subject#: #" + bee.getException().getMessage() + "#," + "      #body#: #" +
                   * StringUtils.truncate(stackTrace, bodyMaxLegthByte, true) + "#," + "      #additionnalInfo1#: #" + LogExtractionService.getLogs( new Date(System.currentTimeMillis()
-                  * - Integer.parseInt(ParamBean.getInstance().getProperty("meveo.notifier.log.timeBefore_ms", "5000"))), new Date()) + "#," + "      #additionnalInfo2#: ##," +
+                  * - Integer.parseInt(ParamBean.getInstance().getCet("meveo.notifier.log.timeBefore_ms", "5000"))), new Date()) + "#," + "      #additionnalInfo2#: ##," +
                   * "      #additionnalInfo3#: ##," + "      #additionnalInfo4#: ##" + "}"; log.trace("Defaut observer : input {} ", input.replaceAll("#", "\""));
                   * remoteInstanceNotifier.invoke(input.replaceAll("\"", "'").replaceAll("#", "\"").replaceAll("\\[", "(").replaceAll("\\]", ")"),
-                  * ParamBean.getInstance().getProperty("inboundCommunication.url", "http://version.meveo.info/meveo-moni/api/rest/inboundCommunication"));
+                  * ParamBean.getInstance().getCet("inboundCommunication.url", "http://version.meveo.info/meveo-moni/api/rest/inboundCommunication"));
                   *
                   */
 

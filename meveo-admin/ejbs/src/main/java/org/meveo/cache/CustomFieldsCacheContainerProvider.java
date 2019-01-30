@@ -229,6 +229,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
      * @param cacheName Name of cache to populate or null to populate all caches
      */
     // @Override
+    @Asynchronous
     public void populateCache(String cacheName) {
 
         if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {

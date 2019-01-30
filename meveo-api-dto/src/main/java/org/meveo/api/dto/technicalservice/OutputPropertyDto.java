@@ -16,13 +16,14 @@
 package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
 
 /**
  * Description of an output property of an entity or relation.
  *
  * @author Clément Bareth
  */
-public class OutputPropertyDto {
+public class OutputPropertyDto implements PropertyDescription {
 
     @JsonProperty(required = true)
     private String property;
@@ -48,6 +49,7 @@ public class OutputPropertyDto {
     /**
      * @return The code of the CustomFieldTemplate linked to the CET
      */
+    @Override
     public String getProperty() {
         return property;
     }

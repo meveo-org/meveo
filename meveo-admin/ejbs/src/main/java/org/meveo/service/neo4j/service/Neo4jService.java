@@ -119,14 +119,10 @@ public class Neo4jService {
     @ApplicationProvider
     protected Provider appProvider;
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Set<NodeReference> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
         return addCetNode(neo4JConfiguration, cetCode, fieldValues, false);
     }
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Set<NodeReference> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET) {
 
         Set<NodeReference> nodeReferences = new HashSet<>();
@@ -440,7 +436,7 @@ public class Neo4jService {
         valuesMap.put("startNode", customRelationshipTemplate.getStartNode().getCode());
         valuesMap.put("endNode", customRelationshipTemplate.getEndNode().getCode());
         valuesMap.put("relationType", customRelationshipTemplate.getName());
-        valuesMap.put("starNodeId", startNodeId);
+        valuesMap.put("startNodeId", startNodeId);
         valuesMap.put("endNodeId", endNodeId);
         valuesMap.put("updateDate", isTemporaryCET ? -1 : System.currentTimeMillis());
         final String fieldsString = neo4jDao.getFieldsString(crtFields.keySet());
@@ -611,7 +607,7 @@ public class Neo4jService {
     }
 
     private List<String> getAdditionalLabels(CustomEntityTemplate cet) {
-        List<String> additionalLabels = cet.getLabels();
+        List<String> additionalLabels = new ArrayList<>(cet.getLabels());
         additionalLabels.addAll(getAllSuperTemplateLabels(cet));
         return additionalLabels;
     }
@@ -793,7 +789,7 @@ public class Neo4jService {
                             convertedFields.put(cft.getCode(), mapToJson);
                             continue;
                         } else {
-                            stringValue = (String) valueToCheck;
+                            stringValue = String.valueOf(valueToCheck);
                         }
                         stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
                         stringValue = stringValue.replaceAll("\n", " ");

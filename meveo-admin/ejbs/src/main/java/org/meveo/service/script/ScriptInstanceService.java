@@ -44,7 +44,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
-@FunctionServiceFor(ScriptInstance.class)
+@FunctionServiceFor(ScriptInstance.TYPE)
 @Singleton
 @Default
 @Lock(LockType.READ)
@@ -56,8 +56,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance, S
      * @return list of custom script.
      */
     public List<CustomScript> getScriptInstancesWithError() {
-        return ((List<CustomScript>) getEntityManager().createNamedQuery("CustomScript.getScriptInstanceOnError", CustomScript.class).setParameter("isError", Boolean.TRUE)
-            .getResultList());
+        return getEntityManager().createNamedQuery("CustomScript.getScriptInstanceOnError", CustomScript.class).setParameter("isError", Boolean.TRUE)
+            .getResultList();
     }
 
     /**
@@ -66,7 +66,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance, S
      * @return number of script instances with error.
      */
     public long countScriptInstancesWithError() {
-        return ((Long) getEntityManager().createNamedQuery("CustomScript.countScriptInstanceOnError", Long.class).setParameter("isError", Boolean.TRUE).getSingleResult());
+        return getEntityManager().createNamedQuery("CustomScript.countScriptInstanceOnError", Long.class).setParameter("isError", Boolean.TRUE).getSingleResult();
     }
 
     /**

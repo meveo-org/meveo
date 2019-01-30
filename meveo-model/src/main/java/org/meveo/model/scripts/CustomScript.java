@@ -9,8 +9,11 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
 
+import com.thoughtworks.xstream.annotations.XStreamConverter;
 import org.hibernate.annotations.Type;
+import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
 
 @ExportIdentifier({ "code"})
@@ -18,6 +21,12 @@ import org.meveo.model.ExportIdentifier;
 public abstract class CustomScript extends Function {
 
     private static final long serialVersionUID = 8176170199770220430L;
+    public static final String TYPE = "Script";
+
+    @Column(name = "script", nullable = false, columnDefinition = "TEXT")
+    @NotNull
+    @XStreamConverter(XStreamCDATAConverter.class)
+    private String script;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "src_type")
@@ -44,8 +53,22 @@ public abstract class CustomScript extends Function {
     @Column(name = "getters", columnDefinition = "text")
     private List<GetterOrSetter> getters = new ArrayList<>();
 
+    /**
+     * @return the script
+     */
+    public String getScript() {
+        return script;
+    }
+
+    /**
+     * @param script the script to set
+     */
+    public void setScript(String script) {
+        this.script = script;
+    }
+
     public List<GetterOrSetter> getSetters() {
-        return setters;
+        return setters != null ? setters : new ArrayList<>();
     }
 
     public void setSetters(List<GetterOrSetter> setters) {
@@ -130,8 +153,9 @@ public abstract class CustomScript extends Function {
 		}
 		return true;
 	}
-	
-	
-    
-    
+
+    @Override
+    public String getFunctionType() {
+        return TYPE;
+    }
 }

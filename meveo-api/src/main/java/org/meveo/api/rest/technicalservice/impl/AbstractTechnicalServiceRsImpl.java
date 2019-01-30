@@ -34,12 +34,12 @@ import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.technicalservice.TechnicalServiceRs;
 import org.meveo.model.technicalservice.TechnicalService;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.interceptor.Interceptors;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -48,9 +48,16 @@ import java.util.List;
  */
 @RequestScoped
 @Interceptors({WsRestApiInterceptor.class})
-public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService> extends BaseRs implements TechnicalServiceRs {
+public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseRs implements TechnicalServiceRs<D> {
 
-    protected abstract TechnicalServiceApi<T> technicalServiceApi();
+    private TechnicalServiceApi<T, D> tsApi;
+
+    protected abstract TechnicalServiceApi<T, D> technicalServiceApi();
+
+    @PostConstruct
+    private void init(){
+        tsApi = technicalServiceApi();
+    }
 
     @Override
     public ActionStatus index() {
@@ -58,10 +65,10 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     }
 
     @Override
-    public ActionStatus create(TechnicalServiceDto postData) {
+    public ActionStatus create(D postData) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().create(postData);
+            tsApi.create(postData);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -69,10 +76,10 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     }
 
     @Override
-    public ActionStatus update(TechnicalServiceDto postData) {
+    public ActionStatus update(D postData) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().update(postData);
+            tsApi.update(postData);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -83,7 +90,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public ActionStatus remove(String connectorName, Integer version) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().remove(connectorName, version);
+            tsApi.remove(connectorName, version);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -91,10 +98,10 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     }
 
     @Override
-    public ActionStatus createOrUpdate(TechnicalServiceDto postData) {
+    public ActionStatus createOrUpdate(D postData) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().createOrUpdate(postData);
+            tsApi.createOrUpdate(postData);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -105,7 +112,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public TechnicalServiceResponse findByNameAndVersionOrLatest(String connectorName, Integer version) {
         TechnicalServiceResponse result = new TechnicalServiceResponse();
         try {
-            result.setTechnicalService(technicalServiceApi().findByNameAndVersionOrLatest(connectorName, version));
+            result.setTechnicalService(tsApi.findByNameAndVersionOrLatest(connectorName, version));
         } catch (Exception e) {
             processException(e, result.getActionStatus());
         }
@@ -118,9 +125,9 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
 
         TechnicalServicesDto technicalServicesDto;
         if (sinceDate == null) {
-            technicalServicesDto = technicalServiceApi().list(filters);
+            technicalServicesDto = tsApi.list(filters);
         } else {
-            technicalServicesDto = technicalServiceApi().findByNewerThan(filters, sinceDate);
+            technicalServicesDto = tsApi.findByNewerThan(filters, sinceDate);
         }
         if(technicalServicesDto != null && CollectionUtils.isNotEmpty(technicalServicesDto.geTechnicalServiceDtos())) {
             response.setEntity(technicalServicesDto);
@@ -135,7 +142,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public ListTechnicalServiceResponse listByName(String connectorName) {
         ListTechnicalServiceResponse result = new ListTechnicalServiceResponse();
         try {
-            result.setConnectors(technicalServiceApi().listByName(connectorName));
+            result.setConnectors(tsApi.listByName(connectorName));
         } catch (Exception e) {
             processException(e, result.getActionStatus());
         }
@@ -146,7 +153,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response updateDescription(@PathParam("name") String name, @QueryParam("version") Integer version, ProcessDescriptionsDto dtos){
         ServerResponse response = new ServerResponse();
         try {
-            technicalServiceApi().updateDescription(name, version, dtos);
+            tsApi.updateDescription(name, version, dtos);
             response.setStatus(200);
         } catch (Exception e) {
             response.setStatus(500);
@@ -159,7 +166,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response names(){
         ServerResponse response = new ServerResponse();
         try {
-            List<String> names = technicalServiceApi().names();
+            List<String> names = tsApi.names();
             response.setStatus(200);
             response.setEntity(names);
         } catch (Exception e) {
@@ -173,7 +180,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response versions(String name){
         ServerResponse response = new ServerResponse();
         try {
-            List<Integer> names = technicalServiceApi().versions(name);
+            List<Integer> names = tsApi.versions(name);
             response.setStatus(200);
             response.setEntity(names);
         } catch (Exception e) {
@@ -187,7 +194,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response exists(String name, Integer version) {
         ServerResponse response = new ServerResponse();
         try {
-            boolean exists = technicalServiceApi().exists(name, version);
+            boolean exists = tsApi.exists(name, version);
             if(exists){
                 response.setStatus(200);
             }else{
@@ -204,7 +211,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response count(TechnicalServiceFilters filters) {
         ServerResponse response = new ServerResponse();
         try {
-            long count = technicalServiceApi().count(filters);
+            long count = tsApi.count(filters);
             response.setStatus(200);
             response.setEntity(count);
         } catch (Exception e) {
@@ -218,7 +225,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public Response description(String name, Integer version){
         ServerResponse response = new ServerResponse();
         try {
-            List<InputOutputDescription> desc = technicalServiceApi().description(name, version);
+            List<InputOutputDescription> desc = tsApi.description(name, version);
             response.setStatus(200);
             response.setEntity(desc);
         } catch(EntityDoesNotExistsException e){
@@ -235,7 +242,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public ActionStatus rename(String oldName, String newName) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().rename(oldName, newName);
+            tsApi.rename(oldName, newName);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -246,7 +253,7 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService>
     public ActionStatus renameVersion(String name, Integer oldVersion, Integer newVersion) {
         ActionStatus result = new ActionStatus();
         try {
-            technicalServiceApi().renameVersion(name, oldVersion, newVersion);
+            tsApi.renameVersion(name, oldVersion, newVersion);
         } catch (Exception e) {
             processException(e, result);
         }

@@ -6,6 +6,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import javax.validation.constraints.Null;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
@@ -33,16 +34,20 @@ public class InitializationListener implements ServletContextListener {
         ServletContext servletContext = contextEvent.getServletContext();
         // load page access rules from page-access.xml file
         String pageAccessFileName = servletContext.getRealPath(servletContext.getInitParameter(PAGE_ACCESS_FILE));
-        File pageAccessFile = new File(pageAccessFileName);
         try {
-            JAXBContext context = JAXBContext.newInstance(PageAccess.class);
-            PageAccess pageAccess = (PageAccess) context.createUnmarshaller().unmarshal(pageAccessFile);
-            if (pageAccess != null) {
-                String pagesDirectory = servletContext.getContextPath() + pageAccess.getPath();
-                PagePermission.getInstance().init(pagesDirectory, pageAccess.getPages());
+            File pageAccessFile = new File(pageAccessFileName);
+            try {
+                JAXBContext context = JAXBContext.newInstance(PageAccess.class);
+                PageAccess pageAccess = (PageAccess) context.createUnmarshaller().unmarshal(pageAccessFile);
+                if (pageAccess != null) {
+                    String pagesDirectory = servletContext.getContextPath() + pageAccess.getPath();
+                    PagePermission.getInstance().init(pagesDirectory, pageAccess.getPages());
+                }
+            } catch (JAXBException e) {
+                logger.error("Unable to unmarshall page-access rules.", e);
             }
-        } catch (JAXBException e) {
-            logger.error("Unable to unmarshall page-access rules.", e);
+        } catch (NullPointerException ignored){
+            logger.info("No page access rules defined.");
         }
         logger.info("Page access rules initialization complete.");
     }

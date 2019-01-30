@@ -1,16 +1,14 @@
-package org.meveo.api.dto.neo4j;
+package org.meveo.interfaces;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.meveo.api.dto.technicalservice.InputOutputDescription;
-import org.meveo.api.dto.technicalservice.ProcessRelationDescription;
 
 import java.io.Serializable;
 import java.util.*;
 
-import static org.meveo.api.dto.neo4j.EntityOrRelation.ENTITY;
-import static org.meveo.api.dto.neo4j.EntityOrRelation.RELATION;
+import static org.meveo.interfaces.EntityOrRelation.ENTITY;
+import static org.meveo.interfaces.EntityOrRelation.RELATION;
 
 /**
  * @author clement.bareth

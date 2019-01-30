@@ -19,9 +19,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.meveo.api.dto.ProcessEntityDescription;
+import org.meveo.interfaces.technicalservice.description.TechnicalServiceDescription;
+import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
 import org.meveo.model.technicalservice.Description;
-import org.meveo.model.technicalservice.InputProperty;
-import org.meveo.model.technicalservice.OutputProperty;
+import org.meveo.model.technicalservice.InputMeveoProperty;
+import org.meveo.model.technicalservice.OutputMeveoProperty;
 import org.meveo.model.technicalservice.RelationDescription;
 
 import javax.validation.constraints.NotNull;
@@ -37,7 +39,7 @@ import static org.meveo.api.dto.technicalservice.ProcessRelationDescription.RELA
         @JsonSubTypes.Type(value = ProcessEntityDescription.class, name = ENTITY_DESCRIPTION),
         @JsonSubTypes.Type(value = ProcessRelationDescription.class, name = RELATION_DESCRIPTION)
 })
-public abstract class InputOutputDescription {
+public abstract class InputOutputDescription implements TechnicalServiceDescription {
 
     @JsonProperty
     private List<InputPropertyDto> inputProperties = new ArrayList<>();
@@ -60,6 +62,7 @@ public abstract class InputOutputDescription {
      *
      * @return The list of the properties that are defined as inputs.
      */
+    @Override
     public List<InputPropertyDto> getInputProperties() {
         return inputProperties;
     }
@@ -78,6 +81,7 @@ public abstract class InputOutputDescription {
      *
      * @return The list of the properties that are defined as inputs.
      */
+    @Override
     public List<OutputPropertyDto> getOutputProperties() {
         return outputProperties;
     }
@@ -96,6 +100,7 @@ public abstract class InputOutputDescription {
      *
      * @return The code of the CET described
      */
+    @Override
     public String getType() {
         return type;
     }
@@ -114,6 +119,7 @@ public abstract class InputOutputDescription {
      *
      * @return "false" if the variable is not an output.
      */
+    @Override
     public boolean isOutput() {
         return output;
     }
@@ -132,6 +138,7 @@ public abstract class InputOutputDescription {
      *
      * @return "false" if the variable is not an input.
      */
+    @Override
     public boolean isInput() {
         return input;
     }
@@ -150,6 +157,7 @@ public abstract class InputOutputDescription {
      *
      * @return The instance name of the variable described
      */
+    @Override
     public abstract String getName();
 
     /**
@@ -174,9 +182,9 @@ public abstract class InputOutputDescription {
         descriptionDto.setOutput(desc.isOutput());
         final List<InputPropertyDto> inputProperties = new ArrayList<>();
         final List<OutputPropertyDto> outputProperties = new ArrayList<>();
-        for (InputProperty p : desc.getInputProperties()) {
+        for (InputMeveoProperty p : desc.getInputProperties()) {
             InputPropertyDto inputPropertyDto = new InputPropertyDto();
-            String property = p.getProperty().getCode();
+            String property = p.getCet().getCode();
             inputPropertyDto.setProperty(property);
             inputPropertyDto.setComparator(p.getComparator());
             inputPropertyDto.setComparisonValue(p.getComparisonValue());
@@ -184,9 +192,9 @@ public abstract class InputOutputDescription {
             inputPropertyDto.setRequired(p.isRequired());
             inputProperties.add(inputPropertyDto);
         }
-        for (OutputProperty p : desc.getOutputProperties()) {
+        for (OutputMeveoProperty p : desc.getOutputProperties()) {
             OutputPropertyDto outputPropertyDto = new OutputPropertyDto();
-            String property = p.getProperty().getCode();
+            String property = p.getCet().getCode();
             outputPropertyDto.setProperty(property);
             outputPropertyDto.setTrustness(p.getTrustness());
             outputProperties.add(outputPropertyDto);

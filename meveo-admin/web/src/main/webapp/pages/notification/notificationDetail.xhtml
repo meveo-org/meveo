@@ -37,7 +37,7 @@
 			column3="class"
 			column3Child = "simpleName"
 			column3Label="Type"
-			updateField=":notificationForm:functionSelectId :notificationForm:functionSelectId_text :notificationForm:toto">
+			updateField=":notificationForm:functionSelectId :notificationForm:functionSelectId_text notificationForm:functionInputs">
 		</hftl:entityPopup>
 
 		<hftl:formPanel formId="notificationForm"
@@ -69,10 +69,11 @@
 				popup="true" popupId="functionPopup" />
 	
 			<!--  Summary of function inputs -->
-			<h:body id="toto48">
-				<hftl:decorateFormField id="functionInputs" label="#{messages['entity.notification.scriptParams']}"   newLine="true"  componentWidth="100%" rendered="#{notificationBean.entity.function.hasInputs()}">
-					<p:dataTable id="toto" value="${notificationBean.entity.function.inputs}"
-					   rendered="#{notificationBean.entity.function.hasInputs()}"
+			<h:panelGroup id="functionInputs">
+				<hftl:decorateFormField label="#{messages['entity.notification.scriptParams']}"   
+					 rendered="#{notificationBean.entity.function.hasInputs()}"
+					 newLine="true"  componentWidth="100%" >
+					<p:dataTable id="inputs_table" value="${notificationBean.entity.function.inputs}"
 						resizableColumns="true" var="item" paginator="false"
 						styleClass="custom-grid" reflow="true">
 						<p:column headerText="#{messages['entity.notification.scriptParams.name']}">
@@ -86,7 +87,7 @@
 						</p:column>
 					</p:dataTable>
 				</hftl:decorateFormField>
-			</h:body>
+			</h:panelGroup>
 
 			<hftl:formField label="#{messages['entity.notification.params']}"
 				field="params" newLine="true" componentWidth="100%" />

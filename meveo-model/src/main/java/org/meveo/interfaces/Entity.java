@@ -1,4 +1,4 @@
-package org.meveo.api.dto.neo4j;
+package org.meveo.interfaces;
 
 import java.util.HashMap;
 import java.util.Map;

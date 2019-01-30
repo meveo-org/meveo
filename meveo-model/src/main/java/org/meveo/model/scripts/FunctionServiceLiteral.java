@@ -8,15 +8,15 @@ public class FunctionServiceLiteral extends AnnotationLiteral<FunctionServiceFor
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Class<? extends Function> value;
+	private String value;
 	
-	public FunctionServiceLiteral(Class<? extends Function> value) {
+	public FunctionServiceLiteral(String value) {
 		super();
 		this.value = value;
 	}
 
 	@Override
-	public Class<? extends Function> value() {
+	public String value() {
 		return this.value;
 	}
 

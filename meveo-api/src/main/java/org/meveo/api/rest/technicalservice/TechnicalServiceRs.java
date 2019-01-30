@@ -37,7 +37,7 @@ import java.util.Date;
  * @author Clément Bareth
  */
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-public interface TechnicalServiceRs extends IBaseRs {
+public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBaseRs {
 
     /**
      * Check if service exists
@@ -91,7 +91,7 @@ public interface TechnicalServiceRs extends IBaseRs {
     @Path("/")
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus create(TechnicalServiceDto postData);
+    ActionStatus create(D postData);
 
     /**
      * Update a technical service.
@@ -101,7 +101,7 @@ public interface TechnicalServiceRs extends IBaseRs {
     @Path("/")
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus update(TechnicalServiceDto postData);
+    ActionStatus update(D postData);
 
     /**
      * Create new or update an existing technical service.
@@ -112,7 +112,7 @@ public interface TechnicalServiceRs extends IBaseRs {
     @Path("/createOrUpdate")
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus createOrUpdate(TechnicalServiceDto postData);
+    ActionStatus createOrUpdate(D postData);
 
     /**
      * Search for technical service with a given name.

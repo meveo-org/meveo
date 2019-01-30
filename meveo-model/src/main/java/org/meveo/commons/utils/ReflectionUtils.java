@@ -456,7 +456,7 @@ public class ReflectionUtils {
     public static Object getPropertyValue(Object obj, String property) throws IllegalAccessException {
 
         // Logger log = LoggerFactory.getLogger(ReflectionUtils.class);
-        // log.error("AKK getProperty value {} {} {}", obj, property, obj.getClass());
+        // log.error("AKK getCet value {} {} {}", obj, property, obj.getClass());
 
         if (obj instanceof Collection) {
             List propertyValues = new ArrayList<>();

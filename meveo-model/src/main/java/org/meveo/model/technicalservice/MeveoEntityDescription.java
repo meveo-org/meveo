@@ -17,6 +17,7 @@
  */
 package org.meveo.model.technicalservice;
 
+import org.meveo.interfaces.technicalservice.description.EntityDescription;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
 import javax.persistence.*;
@@ -28,7 +29,7 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("entity_description")
-public class EntityDescription extends Description {
+public class MeveoEntityDescription extends Description implements EntityDescription {
 
     @Column(name = "entity_name")
     private String name;
@@ -56,8 +57,13 @@ public class EntityDescription extends Description {
      *
      * @return The CET described
      */
-    public CustomEntityTemplate getType() {
+    public CustomEntityTemplate getCet() {
         return type;
+    }
+
+    @Override
+    public String getType() {
+        return type.getCode();
     }
 
     /**

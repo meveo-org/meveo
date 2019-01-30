@@ -19,6 +19,7 @@ package org.meveo.model.technicalservice;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
 import org.meveo.model.crm.CustomFieldTemplate;
 
 import javax.persistence.*;
@@ -32,7 +33,7 @@ import javax.persistence.*;
 @Table(name = "property_description")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "direction")
-public abstract class PropertyDescription {
+public abstract class MeveoPropertyDescription implements PropertyDescription {
 
     @Id
     @GeneratedValue(generator = "ID_GENERATOR", strategy = GenerationType.AUTO)
@@ -50,7 +51,7 @@ public abstract class PropertyDescription {
      *
      * @return The CustomFieldTemplate object
      */
-    public CustomFieldTemplate getProperty() {
+    public CustomFieldTemplate getCet() {
         return property;
     }
 
@@ -87,4 +88,8 @@ public abstract class PropertyDescription {
         return id;
     }
 
+    @Override
+    public String getProperty() {
+        return property.getCode();
+    }
 }
