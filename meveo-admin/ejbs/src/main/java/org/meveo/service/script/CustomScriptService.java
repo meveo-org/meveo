@@ -45,6 +45,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 
+import com.github.javaparser.ast.Modifier;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -340,6 +341,8 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
         final List<GetterOrSetter> setters = methods.stream()
                 .filter(e -> e.getNameAsString().startsWith(SET))
+                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+                .filter(e -> e.getParameters().size() == 1)
                 .map(methodDeclaration -> {
                     GetterOrSetter setter = new GetterOrSetter();
                     String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
@@ -360,9 +363,10 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
         final List<GetterOrSetter> getters = methods.stream()
                 .filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
+                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+                .filter(e -> e.getParameters().isEmpty())
                 .map(methodDeclaration -> {
                     GetterOrSetter getter = new GetterOrSetter();
-
                     String accessorFieldName;
                     if(methodDeclaration.getNameAsString().startsWith(GET)){
                         accessorFieldName = methodDeclaration.getNameAsString().substring(3);
