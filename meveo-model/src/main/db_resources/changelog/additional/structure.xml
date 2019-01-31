@@ -288,4 +288,132 @@
                              deferrable="false" disabled="false" initiallyDeferred="false"
                              tableName="cust_cet_unique_constraint"/>
     </changeSet>
+
+
+    <changeSet id = "createmeveo_function" author = "Hien Bach">
+        <createSequence sequenceName="meveo_function_seq" />
+        <createTable tableName="meveo_function">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="version" type="INT4" />
+            <column name="disabled" type="${type.boolean}">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="code" type="varchar(100)" defaultValue="default">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(100)" defaultValue="default"/>
+            <column name="function_version" type="INT4" />
+            <column name="creator" type="varchar(100)" defaultValue="default"/>
+            <column name="updater" type="varchar(100)" defaultValue="default"/>
+        </createTable>
+        <addPrimaryKey tableName="meveo_function" columnNames="id"/>
+    </changeSet>
+    <changeSet id="insertmeveo_function" author = "Hien Bach">
+        <sql>
+            INSERT INTO meveo_function (creator, id, updated, updater, version, disabled, created, code, description, function_version)
+            SELECT creator, id, updated, updater, version, disabled, created, code, description, function_version
+            FROM meveo_script_instance;
+        </sql>
+        <sql>
+            INSERT INTO meveo_function (creator, id, updated, updater, version, disabled, created, code, description, function_version)
+            SELECT creator, id, updated, updater, version, disabled, created, code, description, function_version
+            FROM technical_services;
+        </sql>
+    </changeSet>
+
+    <changeSet id="selectmeveo_function_seq" author = "Clément Bareth">
+        <comment>Currently only works for postgres</comment>
+        <sql dbms="postgres">
+            SELECT setval('meveo_function_seq', COALESCE((SELECT MAX(id)+1 FROM meveo_function), 1), false);
+        </sql>
+    </changeSet>
+
+    <changeSet id="addColumnfunction_id" author = "Hien Bach">
+        <addColumn tableName="adm_notification">
+            <column name="function_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="updatecolumnfunction_id" author = "Hien Bach">
+        <update tableName="adm_notification">
+            <column name="function_id" type="varchar(255)" value = "script_instance_id"/>
+        </update>
+    </changeSet>
+
+    <changeSet id="foreignKeyfk_function_id" author = "Hien Bach">
+        <addForeignKeyConstraint baseTableName="adm_notification" baseColumnNames="function_id"
+                                 constraintName="fk_function_id" referencedTableName="meveo_function"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id = "extractor_connector" author = "Hien Bach">
+        <createTable tableName="extractor">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tree" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tree" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tree" type=" VARCHAR(255)"/>
+        </createTable>
+        <addPrimaryKey tableName="extractor" columnNames="id"/>
+
+        <createTable tableName="connector">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tree" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="connector" columnNames="id"/>
+    </changeSet>
+
+    <changeSet id = "deleteproperty_description" author = "Hien Bach">
+        <sql>
+            DELETE FROM property_description WHERE 1 = 1
+        </sql>
+        <sql>
+            DELETE FROM technical_services_description WHERE 1 = 1
+        </sql>
+    </changeSet>
+
+    <changeSet id="inserttechnical_services" author = "Hien Bach">
+        <sql>
+            INSERT INTO extractor (id, tree, name)
+            SELECT id, script as tree, name
+            FROM technical_services
+            WHERE service_type = 'Extractor'; -- After that, manually modify fields "parameters", "tree" and "applicable_when_el"
+        </sql>
+        <sql>
+            INSERT INTO connector (id, tree, name)
+            SELECT id, script as tree, name
+            FROM technical_services
+            WHERE service_type = 'Connector';
+        </sql>
+    </changeSet>
+
+    <changeSet id="dropForeignKeyConstrainttechnical" author = "Hien Bach">
+        <dropForeignKeyConstraint baseTableName="technical_services_description" constraintName="fk_ts_desc_service_id"/>
+    </changeSet>
+
+    <changeSet id="foreignKeyTechnical" author = "Hien Bach">
+        <addForeignKeyConstraint baseTableName="technical_services_description" baseColumnNames="service_id"
+                                 constraintName="fk_ts_desc_service_id" referencedTableName="meveo_function"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="droptabletechnical" author = "Hien Bach">
+        <dropTable tableName="technical_services"/>
+    </changeSet>
+
 </databaseChangeLog>
