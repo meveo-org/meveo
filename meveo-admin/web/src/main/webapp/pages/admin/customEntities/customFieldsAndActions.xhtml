@@ -17,9 +17,9 @@
                     <h:panelGroup styleClass="ui-icon ui-icon-contact inlineIcon" rendered="#{node.type == 'fieldGroup'}" />
                     <h:outputText value="#{entity.label}" rendered="#{node.type == 'tab' or node.type == 'fieldGroup'}" />
                 </p:column>
-                <p:column headerText="#{messages['customFieldTemplate.fieldLabel']}">
+                <p:column headerText="#{messages['customFieldTemplate.description']}">
                     <h:outputText value="#{entity.description}" rendered="#{node.type == 'field'}" />
-                    <h:outputText value="#{entity.label}" rendered="#{node.type == 'action'}" />
+                    <h:outputText value="#{entity.label}" rendered="#{node.type == 'action'}" size="56" maxlength="100" componentWidth="100"/>
                 </p:column>
                 <p:column headerText="#{messages['customFieldTemplate.fieldType']}" style="width: 8%">
                     <h:outputText value="#{messages[entity.fieldType.label]}" rendered="#{node.type == 'field'}" />
@@ -286,7 +286,7 @@
                 <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
                     <h:panelGroup>
                         <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" required="true" allowEdit="false" componentWidth="100" size="56" />
-                        <hftl:formLanguageFields label="#{messages['customFieldTemplate.fieldLabel']}" field="description" required="true" size="50" maxlength="100" componentWidth="100" />
+                        <hftl:formField label="#{messages['customFieldTemplate.description']}" field="description" required="true" size="56" maxlength="100" componentWidth="100" />
                     </h:panelGroup>
 
                     <h:panelGroup>

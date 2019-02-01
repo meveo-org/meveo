@@ -36,7 +36,7 @@
 
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.STRING}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
-        <p:inputText value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" size="30" maxlength="#{cft.maxValue}">
+        <p:inputText value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" size="30" maxlength="#{cft.maxValue}" placeholder="#{cft.description}">
             <c:if test="#{cft.regExp!=null}">
                 <f:validateRegex pattern="#{cft.regExp}" />
             </c:if>
@@ -45,7 +45,7 @@
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
         <c:if test="#{empty entity.id and !disabled}">
-            <p:inputTextarea value="#{field.stringValue}" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" />
+            <p:inputTextarea value="#{field.stringValue}" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" placeholder="#{cft.description}"/>
         </c:if>
         <c:if test="#{!empty entity.id and !disabled}">
             <pe:codeMirror theme="eclipse" mode="application/xml" value="#{field.stringValue}" lineNumbers="true" required="#{cft.valueRequired and !hasInheritedValue}" rendered="true"
@@ -57,11 +57,11 @@
             <f:convertDateTime type="date" pattern="#{datePattern}" />
         </h:outputText>
         <p:calendar showButtonPanel="true" pattern="#{datePattern}" value="#{field.dateValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}"
-            label="#{cft.description}" />
+            label="#{cft.description}" placeholder="#{cft.description}"/>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.DOUBLE}">
         <h:outputText value="#{field.doubleValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
-        <p:inputText value="#{field.doubleValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}">
+        <p:inputText value="#{field.doubleValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" placeholder="#{cft.description}">
             <f:convertNumber minFractionDigits="2" />
             <c:if test="#{cft.minValue!=null and cft.maxValue!=null}">
                 <f:validateLongRange minimum="#{cft.minValue}" maximum="#{cft.maxValue}" />
@@ -76,7 +76,7 @@
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LONG}">
         <h:outputText value="#{field.longValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
-        <p:inputText value="#{field.longValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}">
+        <p:inputText value="#{field.longValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" placeholder="#{cft.description}">
             <f:convertNumber integerOnly="true" />
             <c:if test="#{cft.minValue!=null and cft.maxValue!=null}">
                 <f:validateLongRange minimum="#{cft.minValue}" maximum="#{cft.maxValue}" />
@@ -91,7 +91,7 @@
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
         <h:outputText value="#{field.entityReferenceValueForGUI.code}" styleClass="field-value" rendered="#{!edit or disabled}" />
-        <p:autoComplete value="#{field.entityReferenceValueForGUI}" required="#{cft.valueRequired and !hasInheritedValue}" size="30" maxlength="60" dropdown="true" label="#{cft.description}"
+        <p:autoComplete value="#{field.entityReferenceValueForGUI}" required="#{cft.valueRequired and !hasInheritedValue}" size="30" maxlength="60" dropdown="true" label="#{cft.description}" placeholder="#{cft.description}"
             converter="org.jboss.seam.faces.conversion.ObjectConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" itemLabel="#{e.code}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
@@ -105,7 +105,7 @@
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">
         <h:outputText rendered="#{(!edit or disabled) and field.stringValue!=null}" value="#{cft.listValues[field.stringValue]} (#{field.stringValue})" styleClass="field-value" />
-        <p:selectOneMenu value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}">
+        <p:selectOneMenu value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" placeholder="#{cft.description}">
             <f:selectItem itemValue="#{null}" itemLabel="" />
             <f:selectItems value="#{cft.listValues.entrySet()}" var="listVal" itemValue="#{listVal.key}" itemLabel="#{listVal.value} (#{listVal.key})" />
         </p:selectOneMenu>
