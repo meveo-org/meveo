@@ -33,6 +33,7 @@ public class InputPropertyDto implements InputPropertyDescription {
     private Comparator comparator;
     private String comparisonValue;
     private String defaultValue;
+    private String descriptionName;
 
     /**
      * Code of CustomEntityTemplate property
@@ -126,4 +127,21 @@ public class InputPropertyDto implements InputPropertyDescription {
         this.defaultValue = defaultValue;
     }
 
+    /**
+     * Name of the description whose property belongs to
+     *
+     * @return Name of the input entity or relation
+     */
+    public String getDescriptionName() {
+        return descriptionName;
+    }
+
+    /**
+     * Name of the description whose property belongs to
+     *
+     * @param descriptionName Name of the the input entity or relation
+     */
+    public void setDescriptionName(String descriptionName) {
+        this.descriptionName = descriptionName;
+    }
 }

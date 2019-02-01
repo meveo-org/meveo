@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 public class ProcessEntityDescription extends InputOutputDescription  {
 
-    public static final String ENTITY_DESCRIPTION = "MeveoEntityDescription";
+    public static final String ENTITY_DESCRIPTION = "EntityDescription";
 
     @JsonProperty(required = true)
     @NotNull
