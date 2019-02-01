@@ -51,16 +51,16 @@
 
                 <c:set var="inheritedValue" value="#{customFieldDataEntryBean.getInheritedCFValue(cc.attrs.entity, cc.attrs.cft.code)}" />
 
-                <hftl:decorateFormField label="#{cc.attrs.cft.getDescription(customFieldDataEntryBean.currentLocale.ISO3Language)}#{cc.attrs.cft.valueRequired and inheritedValue ==null?' *':''}"
+                <hftl:decorateFormField label="#{cc.attrs.cft.getCode()}#{cc.attrs.cft.valueRequired and inheritedValue ==null?' *':''}"
                     componentWidth="25" displayOneLine="false">
                     <hftl:customFieldValueField edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" entity="#{cc.attrs.entity}"
-                        disabled="#{cc.attrs.disabled}" datePattern="#{cc.attrs.datePattern}" hasInheritedValue="#{inheritedValue !=null}" />
+                        disabled="#{cc.attrs.disabled}" datePattern="#{cc.attrs.datePattern}" hasInheritedValue="#{inheritedValue !=null}" placeholder ="#{cc.attrs.cft.getDescription(customFieldDataEntryBean.currentLocale.ISO3Language)}" />
                 </hftl:decorateFormField>
 
                 <c:if test="#{inheritedValue !=null}">
                     <hftl:decorateFormField fieldId="cfField_stringI"
-                        label="#{cc.attrs.cft.getDescription(customFieldDataEntryBean.currentLocale.ISO3Language)} #{messages['customField.inheritedValue']}" componentWidth="50" displayOneLine="false">
-                        <h:outputText id="cfField_stringI" value="#{cfv:getShortRepresentationOfValueObj(inheritedValue, cc.attrs.datePattern)}" styleClass="field-value" />
+                        label="#{cc.attrs.cft.getCode()} #{messages['customField.inheritedValue']}" componentWidth="50" displayOneLine="false">
+                        <h:outputText id="cfField_stringI" value="#{cfv:getShortRepresentationOfValueObj(inheritedValue, cc.attrs.datePattern)}" styleClass="field-value" placeholder="#{cc.attrs.cft.getDescription(customFieldDataEntryBean.currentLocale.ISO3Language)}"/>
                     </hftl:decorateFormField>
                 </c:if>
             </c:if>
