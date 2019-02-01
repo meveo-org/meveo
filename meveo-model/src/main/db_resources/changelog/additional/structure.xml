@@ -416,4 +416,78 @@
         <dropTable tableName="technical_services"/>
     </changeSet>
 
+    <changeSet id="service_endpoint" author="Clément Bareth">
+        <!-- Service endpoint -->
+        <createTable tableName="service_endpoint">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="version" type="int4"/>
+            <column name="disabled" type="int1" defaultValueNumeric="0"/>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="description" type="VARCHAR(255)" />
+            <column name="code" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="creator" type="varchar(255)"/>
+            <column name="updater" type="varchar(255)"/>
+            <column name="service_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="synchronous" type="int1" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="method" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Endpoint path parameter -->
+        <createTable tableName="endpoint_path_parameter">
+            <column name="endpoint_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameter_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="int4">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey constraintName="pk_endpoint_path_parameter" tableName="endpoint_path_parameter" columnNames="endpoint_id,parameter_id"/>
+        <sql>
+            ALTER TABLE endpoint_path_parameter
+            ADD CONSTRAINT endpoint_path_parameter_pos_gt_zero
+            CHECK (position > 0);
+        </sql>
+        <addForeignKeyConstraint baseTableName="endpoint_path_parameter" baseColumnNames="endpoint_id"
+                                 constraintName="fk_endpoint_path_parameter_endpoint_id" referencedTableName="service_endpoint"
+                                 referencedColumnNames="id" />
+        <addForeignKeyConstraint baseTableName="endpoint_path_parameter" baseColumnNames="parameter_id"
+                                 constraintName="fk_endpoint_path_parameter_parameter_id" referencedTableName="property_description"
+                                 referencedColumnNames="id" />
+        <!-- Parameters mapping -->
+        <createTable tableName="service_parameter_mapping">
+            <column name="endpoint_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameter_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameter_name" type="varchar(255)" />
+            <column name="default_value" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey constraintName="pk_service_parameter_mapping" tableName="service_parameter_mapping" columnNames="endpoint_id,parameter_id"/>
+        <addForeignKeyConstraint baseTableName="service_parameter_mapping" baseColumnNames="endpoint_id"
+                                 constraintName="fk_service_parameter_mapping_endpoint_id" referencedTableName="service_endpoint"
+                                 referencedColumnNames="id" />
+        <addForeignKeyConstraint baseTableName="service_parameter_mapping" baseColumnNames="parameter_id"
+                                 constraintName="fk_service_parameter_mapping_parameter_id" referencedTableName="property_description"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
 </databaseChangeLog>
