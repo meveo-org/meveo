@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2018-2019 Webdrone SAS (http://opencellsoft.com/) and contributors.
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
