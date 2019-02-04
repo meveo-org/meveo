@@ -22,6 +22,8 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.TechnicalService;
+import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
+import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import java.util.List;
@@ -35,6 +37,10 @@ import java.util.List;
 @Entity
 @Table(name = "service_endpoint")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "increment")
+@NoIntersectionBetween(
+        firstCollection = "pathParameters.endpointParameter.parameter",
+        secondCollection = "parametersMapping.endpointParameter.parameter"
+)
 public class Endpoint extends BusinessEntity {
 
     /**
@@ -42,7 +48,8 @@ public class Endpoint extends BusinessEntity {
      */
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "service_id", updatable = false, nullable = false)
-    private TechnicalService service;
+    @SubTypeOf(TechnicalService.class)
+    private Function service;
 
     /**
      * Whether the execution of the service will be syncrhonous.
@@ -82,11 +89,11 @@ public class Endpoint extends BusinessEntity {
         pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
     }
 
-    public TechnicalService getService() {
+    public Function getService() {
         return service;
     }
 
-    public void setService(TechnicalService service) {
+    public void setService(Function service) {
         this.service = service;
     }
 

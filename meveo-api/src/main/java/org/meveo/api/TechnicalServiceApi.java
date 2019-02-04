@@ -18,24 +18,24 @@
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.ProcessEntityDescription;
 import org.meveo.api.dto.TechnicalServicesDto;
-import org.meveo.api.dto.technicalservice.*;
+import org.meveo.api.dto.technicalservice.InputOutputDescription;
+import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
+import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
+import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.technicalservice.*;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.api.technicalservice.DescriptionApi;
+import org.meveo.model.technicalservice.Description;
+import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -46,13 +46,7 @@ import java.util.stream.Collectors;
 public abstract class TechnicalServiceApi<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseApi {
 
     @Inject
-    private CustomEntityTemplateService customEntityTemplateService;
-
-    @Inject
-    private CustomRelationshipTemplateService customRelationshipTemplateService;
-
-    @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
+    private DescriptionApi descriptionApi;
 
     private TechnicalServiceService<T> persistenceService;
 
@@ -64,7 +58,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     protected D toDto(T technicalService) {
         D dto = newDto();
         dto.setCode(technicalService.getCode());
-        List<InputOutputDescription> descriptionDtos = fromDescriptions(technicalService);
+        List<InputOutputDescription> descriptionDtos = descriptionApi.fromDescriptions(technicalService);
         dto.setDescriptions(descriptionDtos);
         dto.setName(technicalService.getName());
         dto.setVersion(technicalService.getFunctionVersion());
@@ -74,95 +68,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     protected T fromDto(D postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
-        List<Description> descriptions = fromDescriptionsDto(technicalService, postData);
+        List<Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, postData);
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
         technicalService.setFunctionVersion(postData.getVersion());
         return technicalService;
     }
 
-    private List<InputOutputDescription> fromDescriptions(TechnicalService technicalService) {
-        return InputOutputDescription.fromDescriptions(technicalService.getDescriptions());
-    }
-
-    private Description toDescription(TechnicalService technicalService, InputOutputDescription dto) throws EntityDoesNotExistsException {
-        Description description;
-        String code;
-        String appliesTo;
-        if (dto instanceof ProcessEntityDescription) {
-            description = new MeveoEntityDescription();
-            ((MeveoEntityDescription) description).setName(dto.getName());
-            final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(dto.getType());
-            if (customEntityTemplate == null) {
-                throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getType());
-            }
-            ((MeveoEntityDescription) description).setType(customEntityTemplate);
-            code = customEntityTemplate.getCode();
-            appliesTo = customEntityTemplate.getAppliesTo();
-        } else {
-            description = new RelationDescription();
-            ((RelationDescription) description).setSource(((ProcessRelationDescription) dto).getSource());
-            ((RelationDescription) description).setTarget(((ProcessRelationDescription) dto).getTarget());
-            final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(dto.getType());
-            if (customRelationshipTemplate == null) {
-                throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getType());
-            }
-            ((RelationDescription) description).setType(customRelationshipTemplate);
-            code = customRelationshipTemplate.getCode();
-            appliesTo = customRelationshipTemplate.getAppliesTo();
-        }
-        description.setService(technicalService);
-        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesTo(appliesTo);
-        description.setInput(dto.isInput());
-        description.setOutput(dto.isOutput());
-        final List<InputMeveoProperty> inputProperties = new ArrayList<>();
-        final List<OutputMeveoProperty> outputProperties = new ArrayList<>();
-        for (InputPropertyDto p : dto.getInputProperties()) {
-            InputMeveoProperty inputProperty = new InputMeveoProperty();
-            CustomFieldTemplate property = customFields.get(p.getProperty());
-            if (property == null) {
-                log.error("No custom field template for property {} of custom template {}", p.getProperty(), code);
-                throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, p.getProperty());
-            }
-            inputProperty.setDescription(description);
-            inputProperty.setProperty(property);
-            inputProperty.setComparator(p.getComparator());
-            inputProperty.setComparisonValue(p.getComparisonValue());
-            inputProperty.setDefaultValue(p.getDefaultValue());
-            inputProperty.setRequired(p.isRequired());
-            inputProperties.add(inputProperty);
-        }
-        description.setInputProperties(inputProperties);
-        for (OutputPropertyDto p : dto.getOutputProperties()) {
-            OutputMeveoProperty outputProperty = new OutputMeveoProperty();
-            CustomFieldTemplate property = customFields.get(p.getProperty());
-            if (property == null) {
-                throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, p.getProperty());
-            }
-            outputProperty.setProperty(property);
-            outputProperty.setDescription(description);
-            outputProperty.setTrustness(p.getTrustness());
-            outputProperties.add(outputProperty);
-        }
-        description.setOutputProperties(outputProperties);
-        return description;
-    }
-
-    private List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
-        List<Description> descriptions = new ArrayList<>();
-        for (InputOutputDescription descDto : postData.getDescriptions()) {
-            descriptions.add(toDescription(service, descDto));
-        }
-        return descriptions;
-    }
-
-    private List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException {
-        List<Description> descriptions = new ArrayList<>();
-        for (InputOutputDescription descDto : dtos) {
-            descriptions.add(toDescription(service, descDto));
-        }
-        return descriptions;
-    }
 
     /**
      * Service required for database operations
@@ -215,7 +127,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     protected T updateService(T service, D data) throws EntityDoesNotExistsException, BusinessException {
-        service.setDescriptions(fromDescriptionsDto(service, data));
+        service.setDescriptions(descriptionApi.fromDescriptionsDto(service, data));
         return service;
     }
 
@@ -231,7 +143,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(name, version);
         persistenceService.removeDescription(technicalService.getId());
-        technicalService.setDescriptions(fromDescriptionsDto(technicalService, descriptionsDto));
+        final List<Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
+        technicalService.setDescriptions(descriptions);
         persistenceService.update(technicalService);
     }
 

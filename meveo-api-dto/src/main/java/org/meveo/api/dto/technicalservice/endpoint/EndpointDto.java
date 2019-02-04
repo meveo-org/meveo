@@ -18,9 +18,12 @@
 package org.meveo.api.dto.technicalservice.endpoint;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.meveo.api.dto.BusinessDto;
 import org.meveo.api.dto.technicalservice.InputPropertyDto;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,30 +34,31 @@ import java.util.List;
  * @author clement.bareth
  * @since 01.02.2019
  */
-public class EndpointDto implements Serializable {
+@NoIntersectionBetween(firstCollection = "parameterMappings.serviceParameter", secondCollection = "pathParameters")
+public class EndpointDto extends BusinessDto implements Serializable {
 
     /**
      * Code of the technical service to update or create
      */
-    @JsonProperty(required = true)
+    @JsonProperty(required = true) @NotNull
     private String technicalServiceCode;
 
     /**
      * Whether the endpoint should be synchronous
      */
-    @JsonProperty(required = true)
+    @JsonProperty(required = true) @NotNull
     private boolean synchronous;
 
     /**
      * Method to use to access the endpoint
      */
-    @JsonProperty(required = true)
+    @JsonProperty(required = true) @NotNull
     private EndpointHttpMethod method;
 
     /**
      * Mapping for the technical service parameters that are not defined as path parameter
      */
-    @JsonProperty(required = true)
+    @JsonProperty(required = true) @NotNull
     private List<TSParameterMappingDto> parameterMappings;
 
     /**

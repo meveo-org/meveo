@@ -63,7 +63,7 @@ public class ConcreteFunctionService  extends FunctionService<Function, ScriptIn
 	}
 
 	@SuppressWarnings("unchecked")
-	private FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
+	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
 		final Function function = findByCode(executableCode);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);

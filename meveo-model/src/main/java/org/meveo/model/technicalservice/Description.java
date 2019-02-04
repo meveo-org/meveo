@@ -47,6 +47,9 @@ public abstract class Description implements TechnicalServiceDescription {
     @GeneratedValue(generator = "ID_GENERATOR", strategy = GenerationType.AUTO)
     private long id;
 
+    @Column(name = "entity_name")
+    private String name;
+
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "service_id")
     private TechnicalService service;
@@ -111,12 +114,19 @@ public abstract class Description implements TechnicalServiceDescription {
         return input;
     }
 
-    /**
-     * Name of the variable described
-     * @return The name of the variable
-     */
     @Override
-    public abstract String getName();
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Instance name of the variable described
+     *
+     * @param name Instance name of the variable described
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * @return Type name of the described entity

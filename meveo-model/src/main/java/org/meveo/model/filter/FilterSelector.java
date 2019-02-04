@@ -16,7 +16,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BaseEntity;
-import org.meveo.validation.constraint.ClassName;
+import org.meveo.validation.constraint.classname.ClassName;
 
 /**
  * @author Edward P. Legaspi

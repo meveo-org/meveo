@@ -41,6 +41,11 @@ public class RelationDescription extends Description implements RelationshipDesc
     @JoinColumn(name = "crt_id")
     private CustomRelationshipTemplate type;
 
+    @PrePersist @PreUpdate
+    private void prePersist(){
+        super.setName(this.getName());
+    }
+
     /**
      * @return The CustomRelationshipTemplate for the described relation
      */

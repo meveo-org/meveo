@@ -444,6 +444,9 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <addForeignKeyConstraint baseTableName="service_endpoint" baseColumnNames="service_id"
+                                 constraintName="fk_service_endpoint_service_id" referencedTableName="meveo_function"
+                                 referencedColumnNames="id" />
         <!-- Endpoint path parameter -->
         <createTable tableName="endpoint_path_parameter">
             <column name="endpoint_id" type="bigint">

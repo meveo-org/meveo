@@ -34,8 +34,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.billing.CounterInstance;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.validation.constraint.ClassName;
+import org.meveo.validation.constraint.classname.ClassName;
 
 @Entity
 @ModuleItem

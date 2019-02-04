@@ -48,7 +48,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return null;
         }
 
-        TypedQuery<P> query = getEntityManager().createQuery("select be from " + entityClass.getSimpleName() + " be where upper(code)=:code", entityClass)
+        TypedQuery<P> query = getEntityManager().createQuery("select be from " + entityClass.getName() + " be where upper(code)=:code", entityClass)
             .setParameter("code", code.toUpperCase()).setMaxResults(1);
 
         // if (entityClass.isAnnotationPresent(Cacheable.class)) {

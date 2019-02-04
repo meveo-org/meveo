@@ -31,26 +31,9 @@ import javax.persistence.*;
 @DiscriminatorValue("entity_description")
 public class MeveoEntityDescription extends Description implements EntityDescription {
 
-    @Column(name = "entity_name")
-    private String name;
-
     @JoinColumn(name = "cet_id")
     @ManyToOne
     private CustomEntityTemplate type;
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Instance name of the variable described
-     *
-     * @param name Instance name of the variable described
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
 
     /**
      * The CustomEntityTemplate described.

@@ -68,8 +68,6 @@ public class InputMeveoProperty extends MeveoPropertyDescription implements Inpu
 
     /**
      * Comparator that permit to constraints the value of the property.
-     *
-     * @return The comparator enumeration value.
      */
     public void setComparator(Comparator comparator) {
         this.comparator = comparator;
@@ -112,4 +110,17 @@ public class InputMeveoProperty extends MeveoPropertyDescription implements Inpu
         this.defaultValue = defaultValue;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+
+        if(obj == null){
+            return false;
+        }
+
+        if(obj instanceof InputMeveoProperty){
+            return ((InputMeveoProperty) obj).getId() == this.getId();
+        }else{
+            return false;
+        }
+    }
 }

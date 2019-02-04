@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.meveo.interfaces.technicalservice.description.properties.InputPropertyDescription;
 import org.meveo.model.technicalservice.Comparator;
 
+import java.util.Objects;
+
 /**
  * Description of an input property of an entity or relation.
  *
@@ -143,5 +145,18 @@ public class InputPropertyDto implements InputPropertyDescription {
      */
     public void setDescriptionName(String descriptionName) {
         this.descriptionName = descriptionName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InputPropertyDto that = (InputPropertyDto) o;
+        return property.equals(that.property) && descriptionName.equals(that.descriptionName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(property, descriptionName);
     }
 }
