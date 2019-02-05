@@ -47,7 +47,7 @@ public class Neo4JRequests {
             .append("WITH ${startAlias} \n")
             .append("MATCH (${endAlias}:${endNode}) \n")
             .append("WHERE ID(${endAlias}) = $endNodeId \n")
-            .append("WITH ${endAlias} \n")
+            .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
             .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
             .append("ON CREATE SET relationship." + CREATION_DATE + " = $updateDate \n");
