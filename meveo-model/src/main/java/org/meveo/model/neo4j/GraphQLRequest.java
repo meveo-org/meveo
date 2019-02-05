@@ -2,23 +2,14 @@ package org.meveo.model.neo4j;
 
 import java.util.Map;
 
-public class HTTPGraphQLRequest {
+public class GraphQLRequest {
 
   private String query;
   private String operationName;
   private Map<String,Object> variables;
-  private String neo4jConfiguration;
 
-  public HTTPGraphQLRequest(){
+  public GraphQLRequest(){
 
-  }
-
-  public String getNeo4jConfiguration() {
-    return neo4jConfiguration;
-  }
-
-  public void setNeo4jConfiguration(String neo4jConfiguration) {
-    this.neo4jConfiguration = neo4jConfiguration;
   }
 
   public String getQuery() {

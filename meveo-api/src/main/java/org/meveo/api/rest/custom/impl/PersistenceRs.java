@@ -1,27 +1,31 @@
 package org.meveo.api.rest.custom.impl;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
+import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
-import org.meveo.elresolver.ELException;
-import org.meveo.model.neo4j.HTTPGraphQLRequest;
-import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
 import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
+import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
 import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
 import org.meveo.service.neo4j.scheduler.SchedulingService;
-import org.meveo.service.neo4j.service.GraphQLService;
 import org.meveo.service.neo4j.service.Neo4jService;
-
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Path("/neo4j/persist")
 public class PersistenceRs {
@@ -36,9 +40,6 @@ public class PersistenceRs {
 
     @Inject
     protected Neo4jService neo4jService;
-
-    @Inject
-    protected GraphQLService graphQLService;
 
     @QueryParam("neo4jConfiguration")
     private String neo4jConfiguration;
@@ -57,29 +58,6 @@ public class PersistenceRs {
         }
 
         return Response.noContent().build();
-    }
-
-    @GET
-    @Path("/graphql")
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON })
-    public Response executeGraphQLRequest(@QueryParam("query") String graphQL, @QueryParam("neo4jConfiguration") String neo4jConfiguration){
-        List<Map> records = graphQLService.executeGraphQLRequest(graphQL, neo4jConfiguration);
-        return Response.ok(records).build();
-    }
-
-    @POST
-    @Path("/graphql")
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON })
-    public Response executeGraphQLRequest(@QueryParam("query") String graphQL, HTTPGraphQLRequest httpGraphQLRequest){
-        List<Map> records;
-        if(StringUtils.isNotEmpty(graphQL)) {
-            records = graphQLService.executeGraphQLRequest(graphQL, neo4jConfiguration);
-        }else{
-            records = graphQLService.executeGraphQLRequest(httpGraphQLRequest);
-        }
-        return Response.ok(records).build();
     }
 
     @POST

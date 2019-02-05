@@ -6,6 +6,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.neo4j.service.Neo4JRequests;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +57,7 @@ public class Neo4jDao {
     @Created
     private Event<org.neo4j.driver.v1.types.Node> nodeCreatedEvent;
 
-    public List<Map> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String,Object> variables, String operationName){
+    public Map<String, Object> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String,Object> variables, String operationName){
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
@@ -71,7 +74,12 @@ public class Neo4jDao {
             // Execute query and parse results
             final StatementResult result = transaction.run(statement.toString(), values);
             transaction.success();  // Commit transaction
-            return result.list().stream().map(r -> r.asMap()).collect(Collectors.toList());
+            return result.list()
+                .stream()
+                .map(record -> record.get("result"))
+                .map(Value::asMap)
+                .findFirst()
+                .orElseGet(Collections::emptyMap);
         } catch(Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
