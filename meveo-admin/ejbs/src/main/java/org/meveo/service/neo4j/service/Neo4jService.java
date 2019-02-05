@@ -201,8 +201,13 @@ public class Neo4jService {
 
             final List<String> labels = getAdditionalLabels(cet);
             if (uniqueConstraintMap.isEmpty()) {
-                Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
-                nodeReferences.add(new NodeReference(nodeId));
+                if (uniqueFields.isEmpty()) {
+                    Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                    nodeReferences.add(new NodeReference(nodeId));
+                } else {
+                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                    nodeReferences.add(new NodeReference(nodeId));
+                }
             } else {
                 Map<Object, Object> userMap = ImmutableMap.of("entity", fields);
 
