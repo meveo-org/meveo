@@ -406,7 +406,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             String cetCode = entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
             return cetCode;
         }
-        return null;
+        return entityClazz;
     }
 
     public Object getDefaultValueConverted() {
