@@ -22,6 +22,7 @@ import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.technicalservice.DescriptionApi;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.technicalservice.InputMeveoProperty;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -33,12 +34,10 @@ import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.*;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +57,71 @@ public class EndpointApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    /**
+     * Execute {@link EndpointApi#execute(Endpoint, List, Map)} asynchronously
+     * @see EndpointApi#execute(Endpoint, List, Map)
+     */
+    @Asynchronous
+    public Future<Map<String, Object>> executeAsync(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
+        final Map<String, Object> execute = execute(endpoint, pathParameters, parameters);
+        return new AsyncResult<>(execute);
+    }
+
+    /**
+     * Execute the technical service associated to the endpoint
+     *
+     * @param endpoint Endpoint to execute
+     * @param pathParameters Path parameters the endpoint was called with
+     * @param parameters Optional parameters the endpoint was called with
+     * @return The result of the execution
+     * @throws BusinessException if error occurs while execution
+     */
+    public Map<String, Object> execute(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
+        TechnicalService service = endpoint.getService();
+        Map<String, Object> parameterMap = new HashMap<>(parameters);
+
+        // Assign path parameters
+        for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+            parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+        }
+
+        // Assign query or post parameters
+        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+            Object parameterValue = parameters.get(tsParameterMapping.getParameterName());
+
+            // Use default value if parameter not provided
+            if(parameterValue == null){
+                parameterValue = tsParameterMapping.getDefaultValue();
+            }else{
+                // Handle cases where parameter is multivalued
+                final CustomFieldStorageTypeEnum storageType = tsParameterMapping.getEndpointParameter().getParameter().getCet().getStorageType();
+                if(parameterValue instanceof String[]){
+                    String[] arrValue = (String[]) parameterValue;
+                    if(storageType == CustomFieldStorageTypeEnum.LIST){
+                        parameterValue = new ArrayList<>(Arrays.asList(arrValue));
+                    }else if(arrValue.length == 1){
+                        parameterValue = arrValue[0];
+                    }else{
+                        throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+                    }
+                }else if(parameterValue instanceof Collection){
+                    Collection colValue = (Collection) parameterValue;
+                    if(storageType != CustomFieldStorageTypeEnum.LIST && colValue.size() == 1){
+                        parameterValue = colValue.iterator().next();
+                    }else{
+                        throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+                    }
+                }
+            }
+            String paramName = tsParameterMapping.getEndpointParameter().toString();
+            parameterMap.remove(tsParameterMapping.getParameterName());
+            parameterMap.put(paramName, parameterValue);
+        }
+
+        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+        return functionService.execute(service.getCode(), parameterMap);
+    }
 
     /**
      * Create an endpoint
@@ -163,7 +227,6 @@ public class EndpointApi {
         endpointDto.setSynchronous(endpoint.isSynchronous());
         List<InputPropertyDto> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
-        //TODO: Check order
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
             InputPropertyDto inputPropertyDto = descriptionApi.toInputPropertyDto(pathParameter.getEndpointParameter().getParameter());
             pathParameterDtos.add(inputPropertyDto);
@@ -173,9 +236,10 @@ public class EndpointApi {
         for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
             TSParameterMappingDto mappingDto = new TSParameterMappingDto();
             mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
-            mappingDto.setParameterName(mappingDto.getParameterName());
+            mappingDto.setParameterName(tsParameterMapping.getParameterName());
             InputPropertyDto inputPropertyDto = descriptionApi.toInputPropertyDto(tsParameterMapping.getEndpointParameter().getParameter());
             mappingDto.setServiceParameter(inputPropertyDto);
+            mappingDtos.add(mappingDto);
         }
         return endpointDto;
     }
@@ -214,6 +278,7 @@ public class EndpointApi {
             EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
             EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), pathParameter);
             endpointPathParameter.setEndpointParameter(endpointParameter);
+            endpointPathParameters.add(endpointPathParameter);
         }
         return endpointPathParameters;
     }
@@ -226,6 +291,7 @@ public class EndpointApi {
             tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
             EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), parameterMappingDto.getServiceParameter());
             tsParameterMapping.setEndpointParameter(endpointParameter);
+            tsParameterMappings.add(tsParameterMapping);
         }
         return tsParameterMappings;
     }

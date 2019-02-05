@@ -63,4 +63,9 @@ public class EndpointParameter implements Serializable {
     public void setParameter(InputMeveoProperty parameter) {
         this.parameter = parameter;
     }
+
+    @Override
+    public String toString() {
+        return parameter.getDescription().getName() + "." + parameter.getProperty();
+    }
 }

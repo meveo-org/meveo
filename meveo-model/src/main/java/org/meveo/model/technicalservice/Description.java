@@ -22,6 +22,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Where;
 import org.meveo.interfaces.technicalservice.description.TechnicalServiceDescription;
 import org.meveo.model.scripts.Function;
+import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -52,7 +53,8 @@ public abstract class Description implements TechnicalServiceDescription {
 
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "service_id")
-    private TechnicalService service;
+    @SubTypeOf(TechnicalService.class)
+    private Function service;
 
     /**
      * List of properties that are defined as inputs. Non empty list implies input = true.
@@ -164,7 +166,7 @@ public abstract class Description implements TechnicalServiceDescription {
     /**
      * @return Technical service that is described
      */
-    public TechnicalService getService() {
+    public Function getService() {
         return service;
     }
 

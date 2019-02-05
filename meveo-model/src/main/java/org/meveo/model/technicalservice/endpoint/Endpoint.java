@@ -46,10 +46,9 @@ public class Endpoint extends BusinessEntity {
     /**
      * Technical service associated to the endpoint
      */
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
+    @ManyToOne(fetch = FetchType.EAGER, targetEntity = Function.class)
     @JoinColumn(name = "service_id", updatable = false, nullable = false)
-    @SubTypeOf(TechnicalService.class)
-    private Function service;
+    private TechnicalService service;
 
     /**
      * Whether the execution of the service will be syncrhonous.
@@ -77,7 +76,7 @@ public class Endpoint extends BusinessEntity {
     /**
      * Mapping of the parameters that are not defined as path parameters
      */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "endpointParameter.endpoint", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<TSParameterMapping> parametersMapping;
 
     @Transient
@@ -89,11 +88,11 @@ public class Endpoint extends BusinessEntity {
         pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
     }
 
-    public Function getService() {
+    public TechnicalService getService() {
         return service;
     }
 
-    public void setService(Function service) {
+    public void setService(TechnicalService service) {
         this.service = service;
     }
 

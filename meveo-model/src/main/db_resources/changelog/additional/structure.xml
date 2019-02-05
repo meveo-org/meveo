@@ -463,7 +463,7 @@
         <sql>
             ALTER TABLE endpoint_path_parameter
             ADD CONSTRAINT endpoint_path_parameter_pos_gt_zero
-            CHECK (position > 0);
+            CHECK (position >= 0);
         </sql>
         <addForeignKeyConstraint baseTableName="endpoint_path_parameter" baseColumnNames="endpoint_id"
                                  constraintName="fk_endpoint_path_parameter_endpoint_id" referencedTableName="service_endpoint"

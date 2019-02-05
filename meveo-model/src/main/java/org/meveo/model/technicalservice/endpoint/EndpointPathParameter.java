@@ -48,8 +48,7 @@ public class EndpointPathParameter {
 
     @Override
     public String toString() {
-        final InputMeveoProperty parameter = endpointParameter.getParameter();
-        return parameter.getDescription().getName() + "." + parameter.getProperty();
+        return endpointParameter.toString();
     }
 
     public EndpointParameter getEndpointParameter() {

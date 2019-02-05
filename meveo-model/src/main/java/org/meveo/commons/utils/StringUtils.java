@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Utils class for working with strings.
@@ -54,6 +55,10 @@ public class StringUtils {
 
     public static boolean isBlank(Object value) {
         return ((value == null) || ((value instanceof String) && ((String) value).trim().length() == 0));
+    }
+
+    public static String readBuffer(BufferedReader reader){
+        return reader.lines().collect(Collectors.joining("\n"));
     }
 
     public static boolean isBlank(String value) {
