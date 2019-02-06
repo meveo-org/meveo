@@ -63,7 +63,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
      * @return The last version number or empty if the technical service does not exists
      */
     public Optional<Integer> latestVersionNumber(String name) {
-        String queryString = "Select max(service.functionVersion) from org.meveo.model.technicalservice.TechnicalService service \n" +
+        String queryString = "Select max(service.functionVersion) from "+getEntityClass().getName()+" service \n" +
                 "where service.name = :name";
         Query q = getEntityManager().createQuery(queryString)
                 .setParameter("name", name);
