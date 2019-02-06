@@ -156,6 +156,7 @@ public class EndpointServlet extends HttpServlet {
                 launchEndpoint(endpointExecution);
             }
         } catch (Exception e) {
+            log.error("Error while executing request", e);
             endpointExecution.getResp().setStatus(500);
             endpointExecution.getWriter().print(e.toString());
         } finally {
@@ -182,7 +183,13 @@ public class EndpointServlet extends HttpServlet {
                 } else {
                     final UUID id = UUID.randomUUID();
                     log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-                    final CompletableFuture<Map<String, Object>> execution = (CompletableFuture<Map<String, Object>>) endpointApi.executeAsync(endpoint, pathParameters, endpointExecution.getParameters());
+                    final CompletableFuture<Map<String, Object>> execution = CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                        } catch (BusinessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                     pendingExecutions.put(id.toString(), execution);
 
                     if(endpointExecution.getPersistenceContextId() != null){

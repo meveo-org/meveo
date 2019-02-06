@@ -1033,10 +1033,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         }
     }
 
-    /**
-     * Flush data to DB. NOTE: unlike the name suggest, no transaction commit is done
-     */
-    public void commit() {
+    @Override
+    public void flush() {
         getEntityManager().flush();
     }
 

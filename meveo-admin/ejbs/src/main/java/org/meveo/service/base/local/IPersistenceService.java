@@ -262,7 +262,7 @@ public interface IPersistenceService<E extends IEntity> {
      */
     Set<E> retrieveIfNotManaged(Set<E> entities);
     
-    void commit();
+    void flush();
 
     EntityManager getEntityManager();
 

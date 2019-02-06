@@ -59,6 +59,7 @@ public class EndpointRs extends BaseRs {
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Response list(@QueryParam("service") String serviceCode){
         List<EndpointDto> dtoList;
         if(serviceCode != null){

@@ -704,7 +704,7 @@ public class Neo4jService {
         String resolvedStatement = sub.replace(statement);
         log.info("resolvedStatement : {}", resolvedStatement);
         resolvedStatement = resolvedStatement.replace('"', '\'');
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
+        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
         return response.readEntity(String.class);
     }
 
@@ -938,14 +938,14 @@ public class Neo4jService {
         String resolvedOutGoingRelStatement = sub.replace(Neo4JRequests.mergeOutGoingRelStatement);
         log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedOutGoingRelStatement);
         String statement = "{\"statements\":[{\"statement\":\"" + resolvedOutGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), statement);
+        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), statement);
         String result = response.readEntity(String.class);
         log.info("mergeNodes OutGoingRelStatement result={}", result);
 
         String resolvedInGoingRelStatement = sub.replace(Neo4JRequests.mergeInGoingRelStatement);
         log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedInGoingRelStatement);
         String inGoingsReltatement = "{\"statements\":[{\"statement\":\"" + resolvedInGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
-        Response inGoingsRelResponse = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/commit", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), inGoingsReltatement);
+        Response inGoingsRelResponse = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), inGoingsReltatement);
         String inGoingsRelResult = inGoingsRelResponse.readEntity(String.class);
         log.info("mergeNodes InGoingRelStatement result={}", inGoingsRelResult);
 

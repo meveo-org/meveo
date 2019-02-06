@@ -37,8 +37,6 @@ import org.meveo.service.technicalservice.endpoint.EndpointService;
 import javax.ejb.*;
 import javax.inject.Inject;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -58,16 +56,6 @@ public class EndpointApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
-
-    /**
-     * Execute {@link EndpointApi#execute(Endpoint, List, Map)} asynchronously
-     * @see EndpointApi#execute(Endpoint, List, Map)
-     */
-    @Asynchronous
-    public Future<Map<String, Object>> executeAsync(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
-        final Map<String, Object> execute = execute(endpoint, pathParameters, parameters);
-        return CompletableFuture.completedFuture(execute);
-    }
 
     /**
      * Execute the technical service associated to the endpoint
@@ -205,6 +193,11 @@ public class EndpointApi {
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
 
+        endpoint.getParametersMapping().clear();
+        endpoint.getPathParameters().clear();
+
+        endpointService.flush();
+
         // Update synchronous
         endpoint.setSynchronous(endpointDto.isSynchronous());
 
@@ -212,10 +205,10 @@ public class EndpointApi {
         endpoint.setMethod(endpointDto.getMethod());
 
         // Update path parameters
-        endpoint.setPathParameters(getEndpointPathParameters(endpointDto,endpoint));
+        endpoint.getPathParameters().addAll(getEndpointPathParameters(endpointDto,endpoint));
 
         // Update parameters mappings
-        endpoint.setParametersMapping(getParameterMappings(endpointDto, endpoint));
+        endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
 
         endpointService.update(endpoint);
     }

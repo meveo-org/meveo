@@ -270,7 +270,7 @@ public class ProviderApi extends BaseApi {
 
         try {
             providerService.remove(provider);
-            providerService.commit();
+            providerService.flush();
         } catch (Exception e) {
             if (e.getMessage().indexOf("ConstraintViolationException") > -1) {
                 throw new DeleteReferencedEntityException(Provider.class, providerCode);
