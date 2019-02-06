@@ -236,6 +236,9 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                     }
                 }
 
+
+
+
                 /* Fallback when thorntail is used */
                 if(classPathEntries.isEmpty()){
                     for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
@@ -249,6 +252,37 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                                     classPathEntries.addAll(jars);
                                     if(subLib.getName().equals("classes")){
                                         classPathEntries.add(subLib.getCanonicalPath());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    File vfsDir = deploymentDir.getParentFile().getParentFile();
+                    for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
+                        if (!tempDir.isDirectory()) {
+                            continue;
+                        }
+
+                        for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
+                            if (!subTempDir.isDirectory()) {
+                                continue;
+                            }
+
+                            for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
+                                if (warDir.isDirectory()) {
+                                    continue;
+                                }
+
+                                for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
+                                    if (webInfDir.isDirectory()) {
+                                        continue;
+                                    }
+
+                                    for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
+                                        if (classesDir.isDirectory()) {
+                                            classPathEntries.add(classesDir.getCanonicalPath());
+                                        }
                                     }
                                 }
                             }
