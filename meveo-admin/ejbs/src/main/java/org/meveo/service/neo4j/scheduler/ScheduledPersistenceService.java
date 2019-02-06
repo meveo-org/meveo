@@ -11,6 +11,10 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.service.neo4j.service.Neo4jService;
 
+import javax.inject.Inject;
+import java.util.Iterator;
+import java.util.Set;
+
 public class ScheduledPersistenceService {
 
     @Inject
@@ -28,7 +32,7 @@ public class ScheduledPersistenceService {
         /* Iterate over persistence schedule and persist the node */
 
         SchedulerPersistenceContext context = new SchedulerPersistenceContext();
-        final Iterator<List<EntityToPersist>> iterator = atomicPersistencePlan.iterator();
+        final Iterator<Set<EntityToPersist>> iterator = atomicPersistencePlan.iterator();
 
         while (iterator.hasNext()) {
 

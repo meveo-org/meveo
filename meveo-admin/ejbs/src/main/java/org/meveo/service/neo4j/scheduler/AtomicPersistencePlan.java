@@ -10,25 +10,25 @@ public class AtomicPersistencePlan {
     Order would be : leaf => target => loop(source => link => source ... => link ..) => non unique relationships
  */
 
-    private List<List<EntityToPersist>> schedule = new ArrayList<>();
+    private List<Set<EntityToPersist>> schedule = new ArrayList<>();
 
-    public List<List<EntityToPersist>> getSchedule() {
+    public List<Set<EntityToPersist>> getSchedule() {
         return schedule;
     }
 
     public void addEntity(EntityToPersist e){
         if(e != null){
-            schedule.add(Collections.singletonList(e));
+            schedule.add(Collections.singleton(e));
         }
     }
 
-    public void addEntities(List<EntityToPersist> e){
+    public void addEntities(Set<EntityToPersist> e){
         if(!e.isEmpty()){
             schedule.add(e);
         }
     }
 
-    public List<EntityToPersist> get(int i){
+    public Set<EntityToPersist> get(int i){
         return schedule.get(i);
     }
 
@@ -46,7 +46,7 @@ public class AtomicPersistencePlan {
      * @return An iterator representing the persistence schedule. All the elements at each iteration
      * can be persisted at the same time.
      */
-    public Iterator<List<EntityToPersist>> iterator() {
+    public Iterator<Set<EntityToPersist>> iterator() {
         return schedule.listIterator();
     }
 

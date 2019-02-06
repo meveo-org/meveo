@@ -27,17 +27,17 @@ public class SchedulingService {
         AtomicPersistencePlan atomicPersistencePlan = new AtomicPersistencePlan();
 
         /* Extract leafs, add them to the leaf nodes and remove them from the initial list */
-        final List<Entity> leafs = getLeafs(entityOrRelations);
-        final List<EntityToPersist> leafNodes = leafs.stream()
+        final Set<Entity> leafs = getLeafs(entityOrRelations);
+        final Set<EntityToPersist> leafNodes = leafs.stream()
                 .map(SchedulingService::entityToNode)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         entityOrRelations.removeAll(leafs);
 
         /* Extract targets that are not source and add them to the leaf nodes*/
-        List<Entity> targetsNoSources = getTargetsNoSources(entityOrRelations);
-        final List<EntityToPersist> targetsNoSourcesNodes = targetsNoSources.stream()
+        Set<Entity> targetsNoSources = getTargetsNoSources(entityOrRelations);
+        final Set<EntityToPersist> targetsNoSourcesNodes = targetsNoSources.stream()
                 .map(SchedulingService::entityToNode)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         /* Initial targets only are considered as leafs */
         leafNodes.addAll(targetsNoSourcesNodes);
@@ -52,29 +52,27 @@ public class SchedulingService {
             final List<EntityRelation> relationsWithTargetsOnly = getRelationsWithTargetsOnly(entityOrRelations, targetsNoSources);
 
             /* Extract source nodes */
-            List<EntityToPersist> sourceNodeSet = relationsWithTargetsOnly
-                .stream()
-                .map(entityRelation -> {
-                    Relation r = entityRelationToRelation(entityRelation);
-                    Entity source = entityRelation.getSource();
-                    return new SourceNode(source.getType(), source.getCompoundName(), source.getProperties(), r);
-                })
-                .sorted(codeComparator)
-                .collect(Collectors.toList());
+            Set<EntityToPersist> sourceNodeSet = relationsWithTargetsOnly
+                    .stream()
+                    .map(entityRelation -> {
+                        Relation r = entityRelationToRelation(entityRelation);
+                        Entity source = entityRelation.getSource();
+                        return new SourceNode(source.getType(), source.getCompoundName(), source.getProperties(), r);
+                    }).collect(Collectors.toCollection(() -> new TreeSet<>(codeComparator)));
 
             atomicPersistencePlan.addEntities(sourceNodeSet);
 
             /* Persist unique relationships right after their targets */
-            List<EntityToPersist> relationsWithTargetsOnlyToPersist = relationsWithTargetsOnly.stream()
+            Set<EntityToPersist> relationsWithTargetsOnlyToPersist = relationsWithTargetsOnly.stream()
                     .map(SchedulingService::entityRelationToRelation)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
             atomicPersistencePlan.addEntities(relationsWithTargetsOnlyToPersist);
             entityOrRelations.removeAll(relationsWithTargetsOnly);
 
             /* Update the targetsNoSources */
             targetsNoSources = relationsWithTargetsOnly.stream()
                     .map(EntityRelation::getSource)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
         }
 
         /* Persist remaining relationships */
@@ -83,9 +81,9 @@ public class SchedulingService {
                 .map(EntityRelation.class::cast)
                 .collect(Collectors.toSet());
 
-        final List<EntityToPersist> relations = remainingRels.stream()
+        final Set<EntityToPersist> relations = remainingRels.stream()
                 .map(SchedulingService::entityRelationToRelation)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         atomicPersistencePlan.addEntities(relations);
         entityOrRelations.removeAll(remainingRels);
@@ -106,14 +104,14 @@ public class SchedulingService {
         return new Relation(e.getType(), e.getCompoundName(), e.getProperties(), entityToNode(e.getSource()), entityToNode(e.getTarget()));
     }
 
-    private List<EntityRelation> getRelationsWithTargetsOnly(Collection<EntityOrRelation> entityOrRelations, Collection<Entity> targetsNoSources) {
+    private List<EntityRelation> getRelationsWithTargetsOnly(Collection<EntityOrRelation> entityOrRelations, Set<Entity> targetsNoSources) {
         return getUniqueRelations(entityOrRelations)
                 .stream()
                 .filter(relation -> targetsNoSources.contains(relation.getTarget()))
                 .collect(Collectors.toList());
     }
 
-    private List<Entity> getTargetsNoSources(Collection<EntityOrRelation> entityOrRelations) {
+    private Set<Entity> getTargetsNoSources(Collection<EntityOrRelation> entityOrRelations) {
         List<Entity> sources = getUniqueRelations(entityOrRelations).stream()
                 .map(EntityRelation::getSource)
                 .collect(Collectors.toList());
@@ -122,10 +120,10 @@ public class SchedulingService {
                 .collect(Collectors.toList());
         return targets.stream()
                 .filter(entity -> !sources.contains(entity))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    private List<Entity> getLeafs(Collection<EntityOrRelation> entityOrRelations) {
+    private Set<Entity> getLeafs(Collection<EntityOrRelation> entityOrRelations) {
         List<Entity> sources = getUniqueRelations(entityOrRelations).stream()
                 .map(EntityRelation::getSource)
                 .collect(Collectors.toList());
@@ -136,7 +134,7 @@ public class SchedulingService {
                 .filter(Entity.class::isInstance)
                 .map(Entity.class::cast)
                 .filter(entity -> !sources.contains(entity) && !targets.contains(entity))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     private List<EntityRelation> getUniqueRelations(Collection<EntityOrRelation> entityOrRelations) {
