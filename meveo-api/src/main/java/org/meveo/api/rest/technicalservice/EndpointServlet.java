@@ -22,9 +22,15 @@ import com.google.common.cache.CacheBuilder;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
+import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
+import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
+import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
+import org.meveo.service.neo4j.scheduler.SchedulingService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.slf4j.Logger;
 
@@ -38,6 +44,8 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -47,21 +55,18 @@ import java.util.concurrent.TimeUnit;
  * The last part or the Uri corresponds to the path parameters of the endpoint.<br>
  * If the endpoint is configured as GET, it should be called via GET resquests and parameters should be in query.<br>
  * If the endpoint is configured as POST, it should be called via POST requests and parameters should be in body as a JSON map.<br>
- * Parameter "keep" indicates we don't want to remove the execution result from cache.<br>
- * Parameter "wait" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
- *
+ * Header "Keep-data" indicates we don't want to remove the execution result from cache.<br>
+ * Header "Wait-For-Finish" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
+ * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
+
  * @author clement.bareth
  */
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
 
-    private static final String KEEP = "keep";
-    private static final String WAIT = "wait";
-    private static final String FALSE = "false";
-
     private static final Cache<String, Future<Map<String, Object>>> pendingExecutions = CacheBuilder.newBuilder()
-        .expireAfterWrite(7, TimeUnit.DAYS)
-        .build();
+            .expireAfterWrite(7, TimeUnit.DAYS)
+            .build();
 
     @Inject
     private Logger log;
@@ -72,6 +77,12 @@ public class EndpointServlet extends HttpServlet {
     @Inject
     private EndpointService endpointService;
 
+    @Inject
+    private SchedulingService schedulingService;
+
+    @Inject
+    private ScheduledPersistenceService scheduledPersistenceService;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
@@ -79,18 +90,26 @@ public class EndpointServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         String[] pathInfo = req.getPathInfo().split("/");
-        if(pathInfo.length == 0){
+        if (pathInfo.length == 0) {
             throw new ServletException("Incomplete URL");
         }
 
-        final String firstUriPart = pathInfo[1];
-
         String requestBody = StringUtils.readBuffer(req.getReader());
         final Map<String, Object> parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
-        final boolean keep = (Boolean) parameters.getOrDefault(KEEP, false);
-        final boolean wait = (Boolean) parameters.getOrDefault(WAIT, false);
 
-        doRequest(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, EndpointHttpMethod.POST);
+        final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
+                .setParameters(parameters)
+                .setResponse(resp)
+                .setWriter(writer)
+                .setPathInfo(pathInfo)
+                .setFirstUriPart(pathInfo[1])
+                .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
+                .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
+                .setMethod(EndpointHttpMethod.POST)
+                .setPersistenceContextId(Headers.PERSISTENCE_CONTEXT_ID.getValue(req))
+                .createEndpointExecution();
+
+        doRequest(endpointExecution);
     }
 
     @Override
@@ -99,78 +118,122 @@ public class EndpointServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         String[] pathInfo = req.getPathInfo().split("/");
-        if(pathInfo.length == 0){
+        if (pathInfo.length == 0) {
             throw new ServletException("Incomplete URL");
         }
 
-        final String firstUriPart = pathInfo[1];
-        final String keepParam = Optional.ofNullable(req.getParameter(KEEP)).orElse(FALSE);
-        final String waitParam = Optional.ofNullable(req.getParameter(WAIT)).orElse(FALSE);
-        final boolean keep = Boolean.parseBoolean(keepParam);
-        final boolean wait = Boolean.parseBoolean(waitParam);
+        final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
+                .setParameters(new HashMap<>(req.getParameterMap()))
+                .setResponse(resp)
+                .setWriter(writer)
+                .setPathInfo(pathInfo)
+                .setFirstUriPart(pathInfo[1])
+                .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
+                .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
+                .setMethod(EndpointHttpMethod.GET)
+                .setPersistenceContextId(Headers.PERSISTENCE_CONTEXT_ID.getValue(req))
+                .createEndpointExecution();
 
-        doRequest(new HashMap<>(req.getParameterMap()), resp, writer, pathInfo, firstUriPart, keep, wait, EndpointHttpMethod.GET);
+        doRequest(endpointExecution);
     }
 
-    private void doRequest(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method) {
+    private void doRequest(EndpointExecution endpointExecution) {
         try {
-            final Future<Map<String, Object>> execResult = pendingExecutions.getIfPresent(firstUriPart);
-            if (execResult != null && method == EndpointHttpMethod.GET) {
-                if (execResult.isDone() || wait) {
-                    resp.setContentType(MediaType.APPLICATION_JSON);
-                    resp.setStatus(200);
-                    writer.print(JacksonUtil.toString(execResult.get()));
-                    if(!keep){
-                        log.info("Removing execution results with id {}", firstUriPart);
-                        pendingExecutions.invalidate(firstUriPart);
+            final Future<Map<String, Object>> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
+            if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
+                if (execResult.isDone() || endpointExecution.isWait()) {
+                    endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
+                    endpointExecution.getResp().setStatus(200);
+                    endpointExecution.getWriter().print(JacksonUtil.toString(execResult.get()));
+                    if (!endpointExecution.isKeep()) {
+                        log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
+                        pendingExecutions.invalidate(endpointExecution.getFirstUriPart());
                     }
                 } else {
-                    resp.setStatus(102);    // In progress
+                    endpointExecution.getResp().setStatus(102);    // In progress
                 }
             } else {
-                launchEndpoint(parameters, resp, writer, pathInfo, firstUriPart, method);
+                launchEndpoint(endpointExecution);
             }
         } catch (Exception e) {
-            resp.setStatus(500);
-            writer.print(e.toString());
+            endpointExecution.getResp().setStatus(500);
+            endpointExecution.getWriter().print(e.toString());
         } finally {
-            writer.flush();
-            writer.close();
+            endpointExecution.getWriter().flush();
+            endpointExecution.getWriter().close();
         }
     }
 
-    private void launchEndpoint(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String endpointCode, EndpointHttpMethod method) throws BusinessException {
+    private void launchEndpoint(EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {
         // Retrieve endpoint
-        final Endpoint endpoint = endpointService.findByCode(endpointCode);
-        if(endpoint != null){
-            if (endpoint.getMethod() == method) {
-                List<String> pathParameters = new ArrayList<>(Arrays.asList(pathInfo).subList(2, pathInfo.length));
+        final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
+        if (endpoint != null) {
+            if (endpoint.getMethod() == endpointExecution.getMethod()) {
+                List<String> pathParameters = new ArrayList<>(Arrays.asList(endpointExecution.getPathInfo()).subList(2, endpointExecution.getPathInfo().length));
                 // Execute service
                 if (endpoint.isSynchronous()) {
-                    final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, parameters);
-                    writer.print(JacksonUtil.toString(result));
-                    resp.setContentType(MediaType.APPLICATION_JSON);
-                    resp.setStatus(200);    // OK
+                    final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                    endpointExecution.getWriter().print(JacksonUtil.toString(result));
+                    endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
+                    endpointExecution.getResp().setStatus(200);    // OK
+                    if(endpointExecution.getPersistenceContextId() != null){
+                        saveResult(endpointExecution, result);
+                    }
                 } else {
                     final UUID id = UUID.randomUUID();
-                    log.info("Added pending execution number {} for endpoint {}", id, endpointCode);
-                    final Future<Map<String, Object>> execution = endpointApi.executeAsync(endpoint, pathParameters, parameters);
+                    log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
+                    final CompletableFuture<Map<String, Object>> execution = endpointApi.executeAsync(endpoint, pathParameters, endpointExecution.getParameters());
                     pendingExecutions.put(id.toString(), execution);
-                    writer.println(id.toString().trim());
-                    resp.setStatus(202);    // Accepted
+
+                    if(endpointExecution.getPersistenceContextId() != null){
+                        execution.thenAccept(map -> saveResult(endpointExecution, map));
+                    }
+
+                    /*
+                        If header wait was true, wait for execution of the service.
+                        If header keep was true, return the id of the execution and the result,
+                        if it was false, return only the results and remove the execution from the cache
+                    */
+                    if(endpointExecution.isWait()){
+                        endpointExecution.getResp().setStatus(200);    // Accepted
+                        final Map<String, Object> execResult = execution.get();
+                        if(endpointExecution.isKeep()){
+                            Map<String, Object> returnedValue = new HashMap<>();
+                            returnedValue.put("id", id.toString());
+                            returnedValue.put("data", execResult);
+                            endpointExecution.getWriter().println(JacksonUtil.toString(returnedValue));
+                        }else{
+                            endpointExecution.getWriter().println(JacksonUtil.toString(execResult));
+                            pendingExecutions.invalidate(id.toString());
+                        }
+
+                    }else{
+                        endpointExecution.getWriter().println(id.toString().trim());
+                        endpointExecution.getResp().setStatus(202);    // Accepted
+                    }
                 }
             } else {
-                resp.setStatus(400);
-                writer.print("Endpoint is not available for " + method + " requests");
+                endpointExecution.getResp().setStatus(400);
+                endpointExecution.getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
             }
-        }else{
-            resp.setStatus(404);    // Not found
+        } else {
+            endpointExecution.getResp().setStatus(404);    // Not found
             try {
-                UUID uuid = UUID.fromString(endpointCode);
-                writer.print("No results for execution id " + uuid.toString());
+                UUID uuid = UUID.fromString(endpointExecution.getFirstUriPart());
+                endpointExecution.getWriter().print("No results for execution id " + uuid.toString());
             } catch (IllegalArgumentException e) {
-                writer.print("No endpoint for " + endpointCode + " has been found");
+                endpointExecution.getWriter().print("No endpoint for " + endpointExecution.getFirstUriPart() + " has been found");
             }
+        }
+    }
+
+    private void saveResult(EndpointExecution endpointExecution, Map<String, Object> results){
+        final List<EntityOrRelation> resultsToSave = JacksonUtil.OBJECT_MAPPER .convertValue(results.get("results"), new TypeReference<List<EntityOrRelation>>() {});
+        try {
+            AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(resultsToSave);
+            scheduledPersistenceService.persist(endpointExecution.getPersistenceContextId(), atomicPersistencePlan);
+        } catch (CyclicDependencyException | BusinessException | ELException e) {
+            throw new RuntimeException(e);
         }
     }
 
