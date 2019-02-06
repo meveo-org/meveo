@@ -182,7 +182,7 @@ public class EndpointServlet extends HttpServlet {
                 } else {
                     final UUID id = UUID.randomUUID();
                     log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-                    final CompletableFuture<Map<String, Object>> execution = endpointApi.executeAsync(endpoint, pathParameters, endpointExecution.getParameters());
+                    final CompletableFuture<Map<String, Object>> execution = (CompletableFuture<Map<String, Object>>) endpointApi.executeAsync(endpoint, pathParameters, endpointExecution.getParameters());
                     pendingExecutions.put(id.toString(), execution);
 
                     if(endpointExecution.getPersistenceContextId() != null){

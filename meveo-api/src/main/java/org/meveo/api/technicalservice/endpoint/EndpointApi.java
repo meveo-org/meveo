@@ -38,6 +38,7 @@ import javax.ejb.*;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -63,7 +64,7 @@ public class EndpointApi {
      * @see EndpointApi#execute(Endpoint, List, Map)
      */
     @Asynchronous
-    public CompletableFuture<Map<String, Object>> executeAsync(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
+    public Future<Map<String, Object>> executeAsync(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
         final Map<String, Object> execute = execute(endpoint, pathParameters, parameters);
         return CompletableFuture.completedFuture(execute);
     }
