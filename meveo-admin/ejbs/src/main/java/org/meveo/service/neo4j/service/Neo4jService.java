@@ -163,6 +163,7 @@ public class Neo4jService {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazzCetCode();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
+                Map<String, CustomEntityTemplateUniqueConstraint> referencedUniqueConstraintMap = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
@@ -173,7 +174,7 @@ public class Neo4jService {
 
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
-                    if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
+                    if(referencedCet.isPrimitiveEntity() && referencedUniqueConstraintMap.isEmpty()){    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = Collections.singletonMap("value", value);
                         List<String> additionalLabels = getAdditionalLabels(referencedCet);
