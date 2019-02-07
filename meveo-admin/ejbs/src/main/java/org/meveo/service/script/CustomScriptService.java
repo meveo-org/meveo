@@ -258,6 +258,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                         }
                     }
                 } else {
+                    // vfs used by thorntail
                     File vfsDir = deploymentDir.getParentFile().getParentFile();
                     for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
                         if (!tempDir.isDirectory()) {
@@ -270,12 +271,12 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                             }
 
                             for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
-                                if (warDir.isDirectory()) {
+                                if (!warDir.isDirectory()) {
                                     continue;
                                 }
 
                                 for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
-                                    if (webInfDir.isDirectory()) {
+                                    if (!webInfDir.isDirectory()) {
                                         continue;
                                     }
 
