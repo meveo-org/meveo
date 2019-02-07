@@ -19,7 +19,7 @@ import org.meveo.model.ModuleItem;
 @Cacheable
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cec", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
-@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @Parameter(name = "sequence_name", value = "cust_cec_seq"), })
+@GenericGenerator(name = "ID_GENERATOR", strategy = "increment")
 public class CustomEntityCategory extends BusinessEntity {
 
 	private static final long serialVersionUID = -4264545157890676607L;
