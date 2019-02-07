@@ -360,7 +360,7 @@
             <column name="tree" type="text">
                 <constraints nullable="false"/>
             </column>
-            <column name="tree" type="text">
+			<column name="tree" type="text">
                 <constraints nullable="false"/>
             </column>
             <column name="tree" type=" VARCHAR(255)"/>
@@ -491,6 +491,37 @@
         <addForeignKeyConstraint baseTableName="service_parameter_mapping" baseColumnNames="parameter_id"
                                  constraintName="fk_service_parameter_mapping_parameter_id" referencedTableName="property_description"
                                  referencedColumnNames="id" />
+    </changeSet>
+    <changeSet id="#105_custom_entity_category" author="Luis Mance">
+        <createTable tableName="cust_cec">
+            <column name="id" type="bigint" autoIncrement="${id.auto}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cust_cec_pkey" />
+            </column>
+            <column name="version" type="int4" />
+            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="description" type="varchar(255)" />
+            <column name="code" type="varchar(255)" />
+            
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+            
+            <column name="name" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addColumn tableName="cust_cet">
+            <column name="custom_entity_category" type="BIGINT" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="custom_entity_category"
+            baseTableName="cust_cet" constraintName="fk_cust_custom_entity_category_id"
+            deferrable="false" initiallyDeferred="false" onDelete="SET NULL"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cec"/>
     </changeSet>
 
 </databaseChangeLog>
