@@ -63,6 +63,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.javadoc.JavadocBlockTag;
+import org.meveo.model.scripts.test.ExpectedOutput;
 
 public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends FunctionService<T, SI> {
 
@@ -685,5 +686,10 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
     public void clearCompiledScripts() {
         allScriptInterfaces.clear();
+    }
+
+    @Override
+    public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
+        return null;
     }
 }

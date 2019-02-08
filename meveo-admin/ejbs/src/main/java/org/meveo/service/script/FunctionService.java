@@ -27,6 +27,7 @@ import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.IEntity;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.base.BusinessService;
 
 import javax.inject.Inject;
@@ -286,5 +287,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         E engine = getExecutionEngine(code, context);
         return execute(engine, context);
     }
+
+    public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
     
 }

@@ -19,6 +19,7 @@ package org.meveo.service.script;
 
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionServiceLiteral;
+import org.meveo.model.scripts.test.ExpectedOutput;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -27,6 +28,7 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,5 +71,9 @@ public class ConcreteFunctionService  extends FunctionService<Function, ScriptIn
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
 		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
-    
+
+	@Override
+	public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
+		return null;
+	}
 }

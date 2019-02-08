@@ -17,15 +17,17 @@
 package org.meveo.api.rest;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
-import org.meveo.model.scripts.Function;
-import org.meveo.service.script.ConcreteFunctionService;
+import org.xml.sax.SAXException;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
 import java.util.Map;
 
 @Stateless
@@ -33,15 +35,15 @@ import java.util.Map;
 public class FunctionRs extends BaseRs {
 
     @Inject
-    private ConcreteFunctionService concreteFunctionService;
+    private FunctionApi functionApi;
 
     @PathParam("code")
     private String code;
 
     @Path("/execute")
     @POST @Produces(MediaType.APPLICATION_JSON)
-    private Map<String, Object> execute(Map<String, Object> inputs) throws BusinessException {
-        return concreteFunctionService.getFunctionService(code).execute(code, inputs);
+    public Map<String, Object> execute(Map<String, Object> inputs) throws BusinessException {
+        return functionApi.execute(code, inputs);
     }
 
     @Path("/test")
@@ -52,21 +54,18 @@ public class FunctionRs extends BaseRs {
     public class TestRs {
 
         @POST @Produces(MediaType.APPLICATION_JSON)
-        private Response executeTest() {
-            return Response.ok().build();
+        public Response executeTest() throws Exception {
+            return functionApi.executeTest(code);
         }
 
         @GET
-        private String getTest(String file) {
-            final Function function = concreteFunctionService.findByCode(code);
-            return function.getTestSuite();
+        public String getTest() {
+            return functionApi.getTest(code);
         }
 
         @PUT
-        private void updateTest(String file) throws BusinessException {
-            final Function function = concreteFunctionService.findByCode(code);
-            function.setTestSuite(file);
-            concreteFunctionService.update(function);
+        public void updateTest(String file) throws BusinessException {
+            functionApi.updateTest(code, file);
         }
     }
 
