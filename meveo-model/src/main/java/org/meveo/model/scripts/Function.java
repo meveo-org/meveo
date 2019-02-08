@@ -2,6 +2,7 @@ package org.meveo.model.scripts;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 
@@ -24,6 +25,10 @@ public abstract class Function extends BusinessEntity {
     @Column(name = "function_version", nullable = false)
     private Integer functionVersion = 1;
 
+    @Column(name = "test_suite", columnDefinition = "TEXT")
+    @Type(type = "json")
+    private String testSuite;
+
     public Integer getFunctionVersion() {
         return functionVersion;
     }
@@ -40,6 +45,13 @@ public abstract class Function extends BusinessEntity {
 
     public abstract boolean hasOutputs();
 
+    public String getTestSuite() {
+        return testSuite;
+    }
+
+    public void setTestSuite(String testSuite) {
+        this.testSuite = testSuite;
+    }
 
     public abstract String getFunctionType();
 }

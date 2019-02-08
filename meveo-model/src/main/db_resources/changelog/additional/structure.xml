@@ -523,5 +523,10 @@
             deferrable="false" initiallyDeferred="false" onDelete="SET NULL"
             onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cec"/>
     </changeSet>
+    <changeSet id="Add_TestSuites" author="Clément Bareth">
+        <addColumn tableName="meveo_function">
+            <column name="test_suite" type="TEXT"/>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

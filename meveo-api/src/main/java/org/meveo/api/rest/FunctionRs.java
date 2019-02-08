@@ -18,14 +18,17 @@ package org.meveo.api.rest;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.model.scripts.Function;
 import org.meveo.service.script.ConcreteFunctionService;
 
+import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
+@Stateless
 @Path("/function/{code}")
 public class FunctionRs extends BaseRs {
 
@@ -35,8 +38,37 @@ public class FunctionRs extends BaseRs {
     @PathParam("code")
     private String code;
 
-    @Path("/execute") @POST
+    @Path("/execute")
+    @POST @Produces(MediaType.APPLICATION_JSON)
     private Map<String, Object> execute(Map<String, Object> inputs) throws BusinessException {
         return concreteFunctionService.getFunctionService(code).execute(code, inputs);
     }
+
+    @Path("/test")
+    public TestRs testRs(){
+        return new TestRs();
+    }
+
+    public class TestRs {
+
+        @POST @Produces(MediaType.APPLICATION_JSON)
+        private Response executeTest() {
+            return Response.ok().build();
+        }
+
+        @GET
+        private String getTest(String file) {
+            final Function function = concreteFunctionService.findByCode(code);
+            return function.getTestSuite();
+        }
+
+        @PUT
+        private void updateTest(String file) throws BusinessException {
+            final Function function = concreteFunctionService.findByCode(code);
+            function.setTestSuite(file);
+            concreteFunctionService.update(function);
+        }
+    }
+
+
 }
