@@ -41,6 +41,22 @@
                 <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" validateUnique="true" />
                 <hftl:formField label="#{messages['customizedEntities.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.labels']}" field="labels" />
+                
+                <hftl:decorateFormField field="customEntityCategory" componentWidth="50"
+						label="#{messages['BusinessEntity.customEntityCategory']}">
+					<p:selectOneMenu value="#{customEntityTemplateBean.entity.customEntityCategory}"
+					 				 style="width:90%;">
+						<f:selectItem
+							itemLabel="#{messages['customizedRelationships.selectCECEntity']}"
+							itemValue="" noSelectionOption="true" size="100"/>
+						<f:selectItems
+							value="#{customEntityTemplateBean.customEntityCategories}"
+							var="cecEntity" itemLabel="#{cecEntity.name}"
+							itemValue="#{cecEntity}" size="100"/>
+						<hftl:objectConverter />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+					
                 <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!customEntityTemplateBean.entity.transient}">
                     <h:outputText value="#{customEntityTemplateBean.partOfModules}" />
                 </hftl:decorateFormField>

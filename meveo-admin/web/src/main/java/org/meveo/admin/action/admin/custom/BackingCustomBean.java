@@ -9,6 +9,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.service.custom.EntityCustomActionService;
@@ -34,6 +35,9 @@ public abstract class BackingCustomBean <T extends BusinessEntity> extends BaseB
 
     @Inject
     protected CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    protected CustomEntityCategoryService customEntityCategoryService;
 
     @Inject
     protected EntityCustomActionService entityActionScriptService;

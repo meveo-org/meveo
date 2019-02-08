@@ -375,6 +375,18 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             <redirect include-view-params="true"/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>customEntityCategoryDetail</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customEntityCategoryDetail.xhtml
+            </to-view-id>
+            <redirect include-view-params="true"/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>customEntityCategorys</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customEntityCategories.xhtml
+            </to-view-id>
+            <redirect include-view-params="true"/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>meveoModules</from-outcome>
             <to-view-id>/pages/admin/module/modules.xhtml
             </to-view-id>
