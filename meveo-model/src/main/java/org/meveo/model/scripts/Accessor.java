@@ -1,6 +1,6 @@
 package org.meveo.model.scripts;
 
-public class GetterOrSetter {
+public class Accessor {
 
     /**
      * Name of the property

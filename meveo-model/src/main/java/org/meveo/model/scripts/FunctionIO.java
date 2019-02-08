@@ -1,6 +1,6 @@
 package org.meveo.model.scripts;
 
-public class FunctionInput {
+public class FunctionIO {
 	
 	/**
      * Name of the property

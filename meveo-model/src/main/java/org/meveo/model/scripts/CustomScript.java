@@ -44,14 +44,14 @@ public abstract class CustomScript extends Function {
      */
     @Type(type = "jsonList")
     @Column(name = "setters", columnDefinition = "text")
-    private List<GetterOrSetter> setters = new ArrayList<>();
+    private List<Accessor> setters = new ArrayList<>();
 
     /**
      * Getters defined for the script
      */
     @Type(type = "jsonList")
     @Column(name = "getters", columnDefinition = "text")
-    private List<GetterOrSetter> getters = new ArrayList<>();
+    private List<Accessor> getters = new ArrayList<>();
 
     /**
      * @return the script
@@ -67,19 +67,19 @@ public abstract class CustomScript extends Function {
         this.script = script;
     }
 
-    public List<GetterOrSetter> getSetters() {
+    public List<Accessor> getSetters() {
         return setters != null ? setters : new ArrayList<>();
     }
 
-    public void setSetters(List<GetterOrSetter> setters) {
+    public void setSetters(List<Accessor> setters) {
         this.setters = setters;
     }
 
-    public List<GetterOrSetter> getGetters() {
+    public List<Accessor> getGetters() {
         return getters;
     }
 
-    public void setGetters(List<GetterOrSetter> getters) {
+    public void setGetters(List<Accessor> getters) {
         this.getters = getters;
     }
 
@@ -133,12 +133,12 @@ public abstract class CustomScript extends Function {
     }
 
 	@Override
-	public List<FunctionInput> getInputs() {
+	public List<FunctionIO> getInputs() {
 		if(setters == null) {
 			return new ArrayList<>();
 		}
 		return setters.stream().map(s -> {
-					FunctionInput inp = new FunctionInput();
+					FunctionIO inp = new FunctionIO();
 					inp.setDescription(s.getDescription());
 					inp.setName(s.getName());
 					inp.setType(s.getType());
@@ -146,13 +146,29 @@ public abstract class CustomScript extends Function {
 				}).collect(Collectors.toList());
 	}
 
-	@Override
+    @Override
+    public List<FunctionIO> getOutputs() {
+        if(setters == null) {
+            return new ArrayList<>();
+        }
+        return getters.stream().map(s -> {
+            FunctionIO inp = new FunctionIO();
+            inp.setDescription(s.getDescription());
+            inp.setName(s.getName());
+            inp.setType(s.getType());
+            return inp;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
 	public boolean hasInputs() {
-		if(setters == null || setters.isEmpty()) {
-			return false;
-		}
-		return true;
-	}
+        return setters != null && !setters.isEmpty();
+    }
+
+    @Override
+    public boolean hasOutputs() {
+        return getters != null && !getters.isEmpty();
+    }
 
     @Override
     public String getFunctionType() {

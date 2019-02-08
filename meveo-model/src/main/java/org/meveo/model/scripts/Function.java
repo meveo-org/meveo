@@ -32,9 +32,14 @@ public abstract class Function extends BusinessEntity {
         this.functionVersion = functionVersion;
     }
 
-    public abstract List<FunctionInput> getInputs();
+    public abstract List<FunctionIO> getInputs();
     
     public abstract boolean hasInputs();
+
+    public abstract List<FunctionIO> getOutputs();
+
+    public abstract boolean hasOutputs();
+
 
     public abstract String getFunctionType();
 }

@@ -54,7 +54,7 @@ import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.GetterOrSetter;
+import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 
@@ -145,7 +145,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
         	SI scriptInstance = this.getScriptInstance(scriptCode);
 
         	// Call setters if those are provided
-        	for(GetterOrSetter setter : script.getSetters()) {
+        	for(Accessor setter : script.getSetters()) {
         		Object setterValue = context.get(setter.getName());
         		if(setterValue != null) {
         			scriptInstance.getClass()
@@ -167,7 +167,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     	CustomScript script = this.findByCode(engine.getClass().getName());
 
     	// Put getters' values to context
-    	for(GetterOrSetter getter : script.getGetters()) {
+    	for(Accessor getter : script.getGetters()) {
 			try {
 	    		Object getterValue = engine.getClass()
 						.getMethod(getter.getMethodName())
@@ -374,12 +374,12 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                 .map(e -> (MethodDeclaration) e)
                 .collect(Collectors.toList());
 
-        final List<GetterOrSetter> setters = methods.stream()
+        final List<Accessor> setters = methods.stream()
                 .filter(e -> e.getNameAsString().startsWith(SET))
                 .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
                 .filter(e -> e.getParameters().size() == 1)
                 .map(methodDeclaration -> {
-                    GetterOrSetter setter = new GetterOrSetter();
+                    Accessor setter = new Accessor();
                     String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
                     setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
                     setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
@@ -396,12 +396,12 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                     return setter;
                 }).collect(Collectors.toList());
 
-        final List<GetterOrSetter> getters = methods.stream()
+        final List<Accessor> getters = methods.stream()
                 .filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
                 .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
                 .filter(e -> e.getParameters().isEmpty())
                 .map(methodDeclaration -> {
-                    GetterOrSetter getter = new GetterOrSetter();
+                    Accessor getter = new Accessor();
                     String accessorFieldName;
                     if(methodDeclaration.getNameAsString().startsWith(GET)){
                         accessorFieldName = methodDeclaration.getNameAsString().substring(3);

@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.persistence.*;
 
 import org.meveo.model.scripts.Function;
-import org.meveo.model.scripts.FunctionInput;
+import org.meveo.model.scripts.FunctionIO;
 
 /**
  * @author Clément Bareth
@@ -77,13 +77,13 @@ public class TechnicalService extends Function {
     }
     
 	@Override
-	public List<FunctionInput> getInputs() {
-		List<FunctionInput> inputs = new ArrayList<>();
+	public List<FunctionIO> getInputs() {
+		List<FunctionIO> inputs = new ArrayList<>();
 		descriptions.stream()
 			.filter(Description::isInput)
 			.forEach(d -> {
 				d.getInputProperties().forEach(prop -> {
-					FunctionInput inp = new FunctionInput();
+					FunctionIO inp = new FunctionIO();
 					inp.setName(d.getName()+"."+prop.getCet().getCode());
 					inp.setDescription(prop.getCet().getDescription());
 					inp.setType(prop.getCet().getFieldType().toString());
@@ -93,10 +93,32 @@ public class TechnicalService extends Function {
 		return inputs;
 	}
 
+    @Override
+    public List<FunctionIO> getOutputs() {
+        List<FunctionIO> inputs = new ArrayList<>();
+        descriptions.stream()
+                .filter(Description::isInput)
+                .forEach(d -> {
+                    d.getOutputProperties().forEach(prop -> {
+                        FunctionIO inp = new FunctionIO();
+                        inp.setName(d.getName()+"."+prop.getCet().getCode());
+                        inp.setDescription(prop.getCet().getDescription());
+                        inp.setType(prop.getCet().getFieldType().toString());
+                        inputs.add(inp);
+                    });
+                });
+        return inputs;
+    }
+
 	@Override
 	public boolean hasInputs() {
 		return descriptions.stream().anyMatch(d -> d.isInput() && !d.getInputProperties().isEmpty());
 	}
+
+    @Override
+    public boolean hasOutputs() {
+        return descriptions.stream().anyMatch(d -> d.isOutput() && !d.getInputProperties().isEmpty());
+    }
 
     @Override
     public String getFunctionType() {
