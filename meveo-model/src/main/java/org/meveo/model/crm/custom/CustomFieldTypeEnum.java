@@ -57,7 +57,14 @@ public enum CustomFieldTypeEnum {
     /**
      * Boolean value
      */
-    BOOLEAN(false, Boolean.class);
+    BOOLEAN(false, Boolean.class),
+	
+	 /**
+     * EMBEDDED_ENTITY value
+     */
+    
+	EMBEDDED_ENTITY(true, EntityReferenceWrapper.class);
+
 
     /**
      * Is value stored in a serialized form in DB

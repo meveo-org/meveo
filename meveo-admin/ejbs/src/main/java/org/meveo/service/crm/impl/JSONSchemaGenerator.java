@@ -198,6 +198,7 @@ public class JSONSchemaGenerator {
 							", storageType = " + field.getStorageType()
 						);
 					case TEXT_AREA:
+					case EMBEDDED_ENTITY:
 					case STRING:  result = createStringSchema(field); break;
 					case LIST:    result = createEnumSchema(field); break;
 					case LONG:    result = createLongSchema(field); break;

@@ -36,7 +36,7 @@
             </p:inputText>
         </c:if>
     </c:if>
-    <c:if test="#{(cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA)}">
+    <c:if test="#{(cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA || cft.fieldType eq CustomFieldTypeEnum.EMBEDDED_ENTITY)}">
         <c:if test="#{! edit}">
             <h:outputText value="#{field}" />
         </c:if>

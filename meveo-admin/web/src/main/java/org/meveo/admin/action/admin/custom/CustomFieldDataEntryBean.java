@@ -120,6 +120,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
     /** Logger. */
     private Logger log = LoggerFactory.getLogger(this.getClass());
+    private final  String SEGMENT_TREE = "segmentTree";
 
     /**
      * Explicitly refresh fields and action definitions. Should be used on some field value change event when that field is used to determine what fields and actions apply. E.g.
@@ -1592,5 +1593,30 @@ public class CustomFieldDataEntryBean implements Serializable {
             return componentId.substring(0, index);
         }
         return componentId;
+    }
+    
+    public boolean isEmbeddedEntity(ICustomFieldEntity entity){
+    	Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
+    	 for (CustomFieldTemplate cft : customFieldTemplates.values()) {
+            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){
+            	return true;
+            }
+         }
+    	return false;
+    }
+      
+    public String getSegmentTree(ICustomFieldEntity entity){ 
+    	String segmentTreeValue=null;
+    	Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
+    	 for (CustomFieldTemplate cft : customFieldTemplates.values()) {
+            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){
+             segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, SEGMENT_TREE);
+             if(segmentTreeValue==null){
+            	 segmentTreeValue="{}";
+             }
+             log.info("getSegmentTree segmentValue={}",segmentTreeValue);
+            }
+         }
+    	return segmentTreeValue;
     }
 }

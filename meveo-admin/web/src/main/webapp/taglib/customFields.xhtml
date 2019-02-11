@@ -86,6 +86,18 @@
 
         </p:tab>
     </c:forEach>
+       <p:tab title="#{messages['customFieldTemplate.cfTab.treeEditor']}" rendered="#{customFieldDataEntryBean.isEmbeddedEntity(entity)}"> 
+		<div id="tree_container"></div>
+		<script type="text/javascript">
+		TreeEditor.init({
+		container:"tree_container",
+		width: "1400",
+		height: "400",
+                segmentTree: #{customFieldDataEntryBean.getSegmentTree(entity)},
+                segmentTreeEle: "treeTitle"
+		});
+		</script> 
+        </p:tab>
 
 </ui:composition>
 </html>

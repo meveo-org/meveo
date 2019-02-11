@@ -365,6 +365,7 @@ public class CustomFieldDto {
             case LIST:
             case STRING:
             case TEXT_AREA:
+            case EMBEDDED_ENTITY:	
                 return stringValue == null;
             case ENTITY:
                 return entityReferenceValue == null || entityReferenceValue.isEmpty();

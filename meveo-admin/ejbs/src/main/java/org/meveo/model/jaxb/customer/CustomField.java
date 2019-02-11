@@ -221,6 +221,7 @@ public class CustomField {
             case LIST:
             case STRING:
             case TEXT_AREA:
+            case EMBEDDED_ENTITY:	
                 return stringValue == null;
             case BOOLEAN:
                 return booleanValue == false;    
