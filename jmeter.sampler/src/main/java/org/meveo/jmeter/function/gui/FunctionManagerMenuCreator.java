@@ -14,30 +14,39 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.api.rest;
+package org.meveo.jmeter.function.gui;
 
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
+import org.apache.jmeter.gui.plugin.MenuCreator;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import java.util.List;
+import javax.swing.*;
 
-@Stateless
-@Path("/function")
-public class FunctionRs extends BaseRs {
+public class FunctionManagerMenuCreator implements MenuCreator {
 
-    @Inject
-    private FunctionApi functionApi;
-
-    @GET
-    public List<FunctionDto> getFunctions(){
-        return functionApi.list();
+    @Override
+    public JMenuItem[] getMenuItemsAtLocation(MENU_LOCATION location) {
+        if (location == MENU_LOCATION.FILE) {
+            try {
+                return new JMenuItem[]{new FunctionManagerMenu()};
+            } catch (Throwable e) {
+                return new JMenuItem[0];
+            }
+        } else {
+            return new JMenuItem[0];
+        }
     }
 
+    @Override
+    public javax.swing.JMenu[] getTopLevelMenus() {
+        return new javax.swing.JMenu[0];
+    }
 
+    @Override
+    public boolean localeChanged(javax.swing.MenuElement menu) {
+        return false;
+    }
+
+    @Override
+    public void localeChanged() {
+    }
 
 }

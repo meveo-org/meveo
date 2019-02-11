@@ -17,6 +17,7 @@
 package org.meveo.api.function;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.jmeter.JMXFileParser;
 import org.meveo.model.scripts.test.TestConfiguration;
 import org.meveo.model.scripts.Function;
@@ -34,7 +35,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Stateless
 public class FunctionApi {
@@ -51,6 +54,16 @@ public class FunctionApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    public List<FunctionDto> list(){
+        final List<Function> functions = concreteFunctionService.list();
+        return functions.stream().map(e -> {
+            final FunctionDto functionDto = new FunctionDto();
+            functionDto.setCode(e.getCode());
+            functionDto.setTestSuite(e.getTestSuite());
+            return functionDto;
+        }).collect(Collectors.toList());
+    }
 
     public Map<String, Object> execute(String code, Map<String, Object> inputs) throws BusinessException {
         return concreteFunctionService.getFunctionService(code).execute(code, inputs);

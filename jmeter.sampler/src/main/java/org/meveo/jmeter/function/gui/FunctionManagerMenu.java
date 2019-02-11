@@ -14,30 +14,26 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.api.rest;
+package org.meveo.jmeter.function.gui;
 
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import java.util.List;
+public class FunctionManagerMenu extends JMenuItem implements ActionListener {
 
-@Stateless
-@Path("/function")
-public class FunctionRs extends BaseRs {
+    private static FunctionManagerDialog dialog;
 
-    @Inject
-    private FunctionApi functionApi;
-
-    @GET
-    public List<FunctionDto> getFunctions(){
-        return functionApi.list();
+    public FunctionManagerMenu(){
+        super("Load / create function test");
+        addActionListener(this);
     }
 
-
-
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(dialog == null){
+            dialog = new FunctionManagerDialog();
+        }
+        dialog.setVisible(true);
+    }
 }

@@ -14,30 +14,29 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.api.rest;
+package org.meveo.api.dto.function;
 
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
+import java.io.Serializable;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import java.util.List;
+public class FunctionDto implements Serializable {
 
-@Stateless
-@Path("/function")
-public class FunctionRs extends BaseRs {
+    private String code;
 
-    @Inject
-    private FunctionApi functionApi;
+    private String testSuite;
 
-    @GET
-    public List<FunctionDto> getFunctions(){
-        return functionApi.list();
+    public String getCode() {
+        return code;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
 
+    public String getTestSuite() {
+        return testSuite;
+    }
 
+    public void setTestSuite(String testSuite) {
+        this.testSuite = testSuite;
+    }
 }

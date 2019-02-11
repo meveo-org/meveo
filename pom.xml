@@ -27,6 +27,7 @@
         <module>meveo-api-dto</module>
         <module>meveo-json-schema</module>
         <module>meveo-el-resolver</module>
+        <module>jmeter.sampler</module>
     </modules>
     <repositories>
         <repository>
