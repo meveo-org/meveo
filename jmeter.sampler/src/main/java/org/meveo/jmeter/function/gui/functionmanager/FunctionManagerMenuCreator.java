@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui;
+package org.meveo.jmeter.function.gui.functionmanager;
 
 import org.apache.jmeter.gui.plugin.MenuCreator;
 
@@ -26,7 +26,8 @@ public class FunctionManagerMenuCreator implements MenuCreator {
     public JMenuItem[] getMenuItemsAtLocation(MENU_LOCATION location) {
         if (location == MENU_LOCATION.FILE) {
             try {
-                return new JMenuItem[]{new FunctionManagerMenu()};
+                final FunctionManagerMenu functionManagerMenu = new FunctionManagerMenu();
+                return new JMenuItem[]{functionManagerMenu};
             } catch (Throwable e) {
                 return new JMenuItem[0];
             }

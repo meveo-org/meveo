@@ -14,31 +14,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.api.rest;
+package org.apache.jmeter.gui.action;
 
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
+import java.awt.event.ActionEvent;
+import java.io.File;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
+public class Loader {
 
-@Stateless
-@Path("/function")
-public class FunctionRs extends BaseRs {
-
-    @Inject
-    private FunctionApi functionApi;
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<FunctionDto> getFunctions(){
-        return functionApi.list();
+    public static void load(ActionEvent e, File f){
+        Load.loadProjectFile(e, f, false);
     }
-
 }

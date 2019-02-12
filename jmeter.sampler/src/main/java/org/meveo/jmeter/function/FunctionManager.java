@@ -20,21 +20,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SchemeSocketFactory;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -43,14 +36,14 @@ import org.meveo.api.dto.function.FunctionDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,15 +65,15 @@ public class FunctionManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(FunctionManager.class);
 
-    private String token;
-    private int loginAttempts = 0;
-    private CompletableFuture<List<FunctionDto>> functions;
+    private static String token;
+    private static int loginAttempts = 0;
+    private static CompletableFuture<List<FunctionDto>> functions;
 
-    public FunctionManager(){
+    static {
         refresh();
     }
 
-    public List<FunctionDto> getFunctions() {
+    public static List<FunctionDto> getFunctions() {
         try {
             return functions.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -88,13 +81,13 @@ public class FunctionManager {
         }
     }
 
-    public synchronized void refresh(){
+    public static synchronized void refresh(){
         if(functions == null || functions.isDone()) {
-            functions = CompletableFuture.supplyAsync(this::download);
+            functions = CompletableFuture.supplyAsync(FunctionManager::download);
         }
     }
 
-    private void login() throws IOException {
+    private static void login() throws IOException {
         try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
             HttpPost post = new HttpPost(LOGGING_URL);
@@ -126,7 +119,7 @@ public class FunctionManager {
         }
     }
 
-    private List<FunctionDto> download() {
+    private static List<FunctionDto> download() {
 
         try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
@@ -168,7 +161,7 @@ public class FunctionManager {
                 .loadTrustMaterial(new TrustSelfSignedStrategy())
                 .build();
 
-        // we can optionally disable hostname verification.
+        // we can optionally setEnable hostname verification.
         // if you don't want to further weaken the security, you don't have to include this.
         HostnameVerifier allowAllHosts = new NoopHostnameVerifier();
 

@@ -14,26 +14,19 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui;
+package org.meveo.jmeter.function.gui.utils;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 
-public class FunctionManagerMenu extends JMenuItem implements ActionListener {
+public class SwingUtils {
 
-    private static FunctionManagerDialog dialog;
-
-    public FunctionManagerMenu(){
-        super("Load / create function test");
-        addActionListener(this);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if(dialog == null){
-            dialog = new FunctionManagerDialog();
+    public static void setEnable(Component component, boolean isEnabled){
+        component.setEnabled(isEnabled);
+        if(component instanceof Container){
+            for (Component comp : ((Container) component).getComponents()) {
+                setEnable(comp, isEnabled);
+            }
         }
-        dialog.setVisible(true);
     }
 }
