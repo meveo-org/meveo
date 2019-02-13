@@ -44,7 +44,12 @@ public class Waiting {
     }
 
     public Waiting(JPanel panel, String position){
+        this(panel, position, true);
+    }
+
+    public Waiting(JPanel panel, String position, boolean visible){
         panel.add(jProgressBar, position);
+        jProgressBar.setVisible(visible);
     }
 
     public void start(){

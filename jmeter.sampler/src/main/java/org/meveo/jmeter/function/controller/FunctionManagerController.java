@@ -18,6 +18,8 @@ package org.meveo.jmeter.function.controller;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.control.gui.TestPlanGui;
+import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.gui.MainFrame;
 import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.Loader;
 import org.apache.jmeter.save.SaveService;
@@ -56,8 +58,10 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
     }
 
     public void show(){
+        final MainFrame currentGui = GuiPackage.getInstance().getMainFrame();
         populateList();
         dialog.pack();
+        dialog.setLocationRelativeTo(currentGui);
         dialog.setVisible(true);
     }
 

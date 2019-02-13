@@ -35,6 +35,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.jmeter.util.JMeterUtils;
 import org.meveo.api.dto.function.FunctionDto;
+import org.meveo.jmeter.login.model.Host;
+import org.meveo.jmeter.login.model.HostConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +58,6 @@ public class FunctionManager {
     private static final String LOGGING_URL = JMeterUtils.getProperty("meveo.logging.url");
     private static final String SECRET = JMeterUtils.getProperty("meveo.logging.secret");
     private static final String CLIENT_ID = JMeterUtils.getProperty("meveo.logging.client-id");
-    private static final String LOGIN = JMeterUtils.getProperty("meveo.logging.login");
-    private static final String PASSWORD = JMeterUtils.getProperty("meveo.logging.password");
     private static final String GRANT_TYPE = "password";
 
     public static final String ENDPOINT_URL = JMeterUtils.getProperty("meveo.function.endpoint");
@@ -69,25 +69,17 @@ public class FunctionManager {
 
     private static String token;
     private static String refresh_token;
-    private static int loginAttempts = 0;
     private static CompletableFuture<List<FunctionDto>> functions;
     private static long loginTimeout;
     private static ScheduledFuture<?> refreshTask;
+    private static Host currentHost;
 
-    static {
-        refresh();
-    }
-
-    public static void upload(String functionCode, File testSuite){
-        CompletableFuture.runAsync(() -> {
+    public static CompletableFuture upload(String functionCode, File testSuite){
+        return CompletableFuture.runAsync(() -> {
             try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
-                String uploadUrl = String.format(UPLOAD_URL, functionCode);
+                String uploadUrl = String.format(getHostUri() + UPLOAD_URL, functionCode);
                 HttpPatch patch = new HttpPatch(uploadUrl);
-
-                if(token == null){
-                    login();
-                }
 
                 patch.addHeader("Authorization", "Bearer " + token);
                 patch.addHeader("Content-Type", "application/octet-stream");
@@ -121,21 +113,20 @@ public class FunctionManager {
     public static synchronized void refresh(){
         if(functions == null || functions.isDone()) {
             functions = CompletableFuture.supplyAsync(FunctionManager::download);
-            if(token != null){
-                refreshTokenThread();
-            }
         }
     }
 
-    private static void login() throws IOException {
+    public static boolean login(HostConnection hostConnection){
+        currentHost = hostConnection.getHost();
+
         try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
-            HttpPost post = new HttpPost(LOGGING_URL);
+            HttpPost post = new HttpPost(getHostUri() + LOGGING_URL);
 
             ArrayList<NameValuePair> postParameters = new ArrayList<>();
             postParameters.add(new BasicNameValuePair("client_id", CLIENT_ID));
-            postParameters.add(new BasicNameValuePair("username", LOGIN));
-            postParameters.add(new BasicNameValuePair("password", PASSWORD));
+            postParameters.add(new BasicNameValuePair("username", hostConnection.getUserName()));
+            postParameters.add(new BasicNameValuePair("password", hostConnection.getPassword()));
             postParameters.add(new BasicNameValuePair("grant_type", GRANT_TYPE));
             postParameters.add(new BasicNameValuePair("client_secret", SECRET));
 
@@ -144,42 +135,48 @@ public class FunctionManager {
 
             if (response.getStatusLine().getStatusCode() == 200) {
                 final TypeReference mapTypeRef = new TypeReference<Map<String, String>>() {};
+
                 Map<String, String> responseBody = OBJECT_MAPPER.readValue(response.getEntity().getContent(), mapTypeRef);
                 token = responseBody.get("access_token");
                 refresh_token = responseBody.get("refresh_token");
                 loginTimeout = Long.parseLong(responseBody.get("expires_in"));
-                refreshTokenThread();
-                loginAttempts = 0;
+
+                functions = CompletableFuture.supplyAsync(FunctionManager::download);
+
+                return true;
             }else {
-                LOG.error("Cannot log in. Login attempts = {}. Server answered with {} ", ++loginAttempts, response.getEntity().getContent());
+                LOG.error("Cannot log in. Server answered with {} ", response.getEntity().getContent());
             }
 
             response.close();
-        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException  e) {
+
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | IOException e) {
             LOG.error("Cannot log in", e);
         }
+
+        return false;
+    }
+
+    private static String getHostUri() {
+        return currentHost.getProtocol() + "://" + currentHost.getHostName() + ":" + currentHost.getPortNumber();
     }
 
     private static List<FunctionDto> download() {
 
         try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
-            HttpGet httpGet = new HttpGet(ENDPOINT_URL);
-
-            if(token == null){
-                login();
-            }
+            HttpGet httpGet = new HttpGet(getHostUri() + ENDPOINT_URL);
 
             httpGet.addHeader("Authorization", "Bearer " + token);
 
             CloseableHttpResponse response = client.execute(httpGet);
 
-            if (response.getStatusLine().getStatusCode() == 404 && loginAttempts < 5) {
-                login();
-                download();
-            } else if (response.getStatusLine().getStatusCode() == 200) {
+            if (response.getStatusLine().getStatusCode() == 200) {
                 final TypeReference dtoListTypeRef = new TypeReference<List<FunctionDto>>() {};
                 String result = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
+                if(token != null){
+                    refreshTokenThread();
+                }
                 return OBJECT_MAPPER.readValue(result, dtoListTypeRef);
             } else {
                 LOG.error("Cannot retrieve functions from meveo");
@@ -208,7 +205,7 @@ public class FunctionManager {
     private static long getRefreshToken() {
         try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
 
-            HttpPost post = new HttpPost(LOGGING_URL);
+            HttpPost post = new HttpPost(getHostUri() + LOGGING_URL);
 
             ArrayList<NameValuePair> postParameters = new ArrayList<>();
             postParameters.add(new BasicNameValuePair("client_id", CLIENT_ID));
