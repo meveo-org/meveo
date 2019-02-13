@@ -14,40 +14,30 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui.functionmanager;
+package org.meveo.jmeter.function.gui.menu;
 
-import org.apache.jmeter.gui.plugin.MenuCreator;
+import org.meveo.jmeter.function.controller.FunctionManagerController;
+import org.meveo.jmeter.function.gui.functionmanager.FunctionManagerDialog;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class FunctionManagerMenuCreator implements MenuCreator {
+public class LoadFunctionManagerMenu extends JMenuItem implements ActionListener {
+
+    private FunctionManagerController functionManagerController;
+
+    public LoadFunctionManagerMenu() {
+        super("Load or create function test");
+        addActionListener(this);
+    }
 
     @Override
-    public JMenuItem[] getMenuItemsAtLocation(MENU_LOCATION location) {
-        if (location == MENU_LOCATION.FILE) {
-            try {
-                final FunctionManagerMenu functionManagerMenu = new FunctionManagerMenu();
-                return new JMenuItem[]{functionManagerMenu};
-            } catch (Throwable e) {
-                return new JMenuItem[0];
-            }
-        } else {
-            return new JMenuItem[0];
+    public void actionPerformed(ActionEvent e) {
+        if (functionManagerController == null) {
+            functionManagerController = new FunctionManagerController(new FunctionManagerDialog());
         }
-    }
-
-    @Override
-    public javax.swing.JMenu[] getTopLevelMenus() {
-        return new javax.swing.JMenu[0];
-    }
-
-    @Override
-    public boolean localeChanged(javax.swing.MenuElement menu) {
-        return false;
-    }
-
-    @Override
-    public void localeChanged() {
+        functionManagerController.show();
     }
 
 }

@@ -16,16 +16,17 @@
 
 package org.meveo.api.rest;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Stateless
@@ -39,6 +40,13 @@ public class FunctionRs extends BaseRs {
     @Produces(MediaType.APPLICATION_JSON)
     public List<FunctionDto> getFunctions(){
         return functionApi.list();
+    }
+
+    @Path("/{code}/test")
+    @PATCH
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
+        functionApi.updateTest(code, testSuite);
     }
 
 }

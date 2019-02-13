@@ -23,10 +23,12 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -47,8 +49,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 public class FunctionManager {
 
@@ -60,17 +61,53 @@ public class FunctionManager {
     private static final String GRANT_TYPE = "password";
 
     public static final String ENDPOINT_URL = JMeterUtils.getProperty("meveo.function.endpoint");
+    public static final String UPLOAD_URL = JMeterUtils.getProperty("meveo.function.upload");
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Logger LOG = LoggerFactory.getLogger(FunctionManager.class);
 
     private static String token;
+    private static String refresh_token;
     private static int loginAttempts = 0;
     private static CompletableFuture<List<FunctionDto>> functions;
+    private static long loginTimeout;
+    private static ScheduledFuture<?> refreshTask;
 
     static {
         refresh();
+    }
+
+    public static void upload(String functionCode, File testSuite){
+        CompletableFuture.runAsync(() -> {
+            try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
+
+                String uploadUrl = String.format(UPLOAD_URL, functionCode);
+                HttpPatch patch = new HttpPatch(uploadUrl);
+
+                if(token == null){
+                    login();
+                }
+
+                patch.addHeader("Authorization", "Bearer " + token);
+                patch.addHeader("Content-Type", "application/octet-stream");
+                patch.setEntity(new FileEntity(testSuite));
+
+                CloseableHttpResponse response = client.execute(patch);
+
+                final int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode == 204 || statusCode == 200) {
+                    LOG.info("Test for function {} successfully uploaded", functionCode);
+                    refresh();
+                } else {
+                    LOG.error("Error while uploading test");
+                }
+
+                response.close();
+            } catch (IOException | KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+                LOG.error("Error while uploading test", e);
+            }
+        });
     }
 
     public static List<FunctionDto> getFunctions() {
@@ -84,6 +121,9 @@ public class FunctionManager {
     public static synchronized void refresh(){
         if(functions == null || functions.isDone()) {
             functions = CompletableFuture.supplyAsync(FunctionManager::download);
+            if(token != null){
+                refreshTokenThread();
+            }
         }
     }
 
@@ -106,11 +146,12 @@ public class FunctionManager {
                 final TypeReference mapTypeRef = new TypeReference<Map<String, String>>() {};
                 Map<String, String> responseBody = OBJECT_MAPPER.readValue(response.getEntity().getContent(), mapTypeRef);
                 token = responseBody.get("access_token");
-                LOG.info("[Meveo] Logged in");
-                LOG.info("Access token : {}", token);
+                refresh_token = responseBody.get("refresh_token");
+                loginTimeout = Long.parseLong(responseBody.get("expires_in"));
+                refreshTokenThread();
                 loginAttempts = 0;
             }else {
-                LOG.error("Cannot log in. Login attempts = {}. Server answered with : ", ++loginAttempts, response.getEntity().getContent());
+                LOG.error("Cannot log in. Login attempts = {}. Server answered with {} ", ++loginAttempts, response.getEntity().getContent());
             }
 
             response.close();
@@ -150,6 +191,51 @@ public class FunctionManager {
         }
 
         return null;
+    }
+
+    private static void refreshTokenThread(){
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        if(refreshTask != null){
+            refreshTask.cancel(false);
+        }
+        Runnable task = () -> {
+            loginTimeout = getRefreshToken();
+            refreshTokenThread();
+        };
+        refreshTask = scheduler.schedule(task, loginTimeout, TimeUnit.SECONDS);
+    }
+
+    private static long getRefreshToken() {
+        try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()){
+
+            HttpPost post = new HttpPost(LOGGING_URL);
+
+            ArrayList<NameValuePair> postParameters = new ArrayList<>();
+            postParameters.add(new BasicNameValuePair("client_id", CLIENT_ID));
+            postParameters.add(new BasicNameValuePair("grant_type", "refresh_token"));
+            postParameters.add(new BasicNameValuePair("refresh_token", refresh_token));
+            postParameters.add(new BasicNameValuePair("client_secret", SECRET));
+
+            post.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
+            CloseableHttpResponse response = client.execute(post);
+
+            if (response.getStatusLine().getStatusCode() == 200) {
+                final TypeReference mapTypeRef = new TypeReference<Map<String, String>>() {};
+                Map<String, String> responseBody = OBJECT_MAPPER.readValue(response.getEntity().getContent(), mapTypeRef);
+                token = responseBody.get("access_token");
+                refresh_token = responseBody.get("refresh_token");
+                return Long.parseLong(responseBody.get("expires_in"));
+            }else {
+                String responseString = OBJECT_MAPPER.readValue(response.getEntity().getContent(), String.class);
+                LOG.error("Cannot refresh token. Server answered with {} ", responseString);
+            }
+
+            response.close();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | IOException e) {
+            LOG.error("Cannot log in", e);
+        }
+
+        return 3600;
     }
 
     private static CloseableHttpClient createAcceptSelfSignedCertificateClient()

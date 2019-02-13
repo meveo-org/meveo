@@ -23,6 +23,11 @@
         <groupId>org.meveo</groupId>
         <version>6.0.5-SNAPSHOT</version>
     </parent>
+
+    <properties>
+        <apache.jmeter.home/>
+    </properties>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jmeter.sampler</artifactId>
@@ -36,7 +41,7 @@
         <dependency>
             <groupId>org.meveo</groupId>
             <artifactId>meveo-api-dto</artifactId>
-            <version>6.0.5-SNAPSHOT</version>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -54,6 +59,8 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>meveo-plugin</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
@@ -61,6 +68,23 @@
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install-plugin</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <tasks>
+                                <copy file="./target/meveo-plugin.jar" todir="${apache.jmeter.home}"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>
