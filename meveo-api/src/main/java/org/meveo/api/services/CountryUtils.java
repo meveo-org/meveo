@@ -25,6 +25,7 @@ public class CountryUtils implements Serializable{
 	 Map<String, String> countriesFR = new HashMap<>();
 	 Map<String, String> countriesIsoEN = new HashMap<>();
 	 Map<String, String> countriesIsoFR = new HashMap<>();
+	 Map<String, String> languagesMap = new HashMap<>();
 	 
 	 @PostConstruct
 	 public void init(){
@@ -66,4 +67,16 @@ public class CountryUtils implements Serializable{
 		 
 		 return null;
 	 }
+	 
+	  public String getNativeCountryName(String countryCode) {
+	        Locale locale = null;
+	        if (languagesMap.get(countryCode) == null) {
+	            locale = new Locale("", countryCode);
+	        } else {
+	            //create a Locale with own country's languages
+	            locale = new Locale(languagesMap.get(countryCode), countryCode);
+	        }
+
+	        return locale.getDisplayCountry(locale);
+	    }
 }

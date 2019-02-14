@@ -90,6 +90,10 @@ public class User extends EnableEntity implements ICustomFieldEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hierarchy_level_id")
     private UserHierarchyLevel userLevel;
+    
+    @Transient
+    private String currentMissionType;
+
 
     public UserHierarchyLevel getUserLevel() {
         return userLevel;
@@ -289,4 +293,14 @@ public class User extends EnableEntity implements ICustomFieldEntity {
         this.lastLoginDate = lastLoginDate;
     }
 
+	public String getCurrentMissionType() {
+		return currentMissionType;
+	}
+
+	public void setCurrentMissionType(String currentMissionType) {
+		this.currentMissionType = currentMissionType;
+	}
+
+    
+    
 }
