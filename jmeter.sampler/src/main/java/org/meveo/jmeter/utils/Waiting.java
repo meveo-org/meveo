@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui.utils;
+package org.meveo.jmeter.utils;
 
 import javax.swing.*;
 import java.awt.*;

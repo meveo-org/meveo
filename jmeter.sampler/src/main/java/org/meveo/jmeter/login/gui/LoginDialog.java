@@ -18,8 +18,8 @@ package org.meveo.jmeter.login.gui;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jorphan.gui.ComponentUtil;
-import org.meveo.jmeter.function.gui.utils.SwingUtils;
-import org.meveo.jmeter.function.gui.utils.Waiting;
+import org.meveo.jmeter.utils.SwingUtils;
+import org.meveo.jmeter.utils.Waiting;
 
 import javax.swing.*;
 import java.awt.*;

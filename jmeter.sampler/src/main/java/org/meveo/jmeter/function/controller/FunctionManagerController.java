@@ -30,8 +30,11 @@ import org.apache.jorphan.collections.ListedHashTree;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.jmeter.function.FunctionManager;
 import org.meveo.jmeter.function.gui.functionmanager.FunctionManagerDialog;
+import org.meveo.jmeter.sampler.gui.MeveoSamplerGui;
+import org.meveo.jmeter.sampler.model.MeveoSampler;
 import org.meveo.jmeter.threadgroup.gui.MeveoThreadGroupGui;
 import org.meveo.jmeter.threadgroup.model.MeveoThreadGroup;
+import org.meveo.jmeter.utils.MeveoJmeterUtils;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -106,12 +109,18 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
                 meveoThreadGroup.setPeriodicity(7);
                 meveoThreadGroup.setTimeUnit(TimeUnit.DAYS);
 
+                // MeveoSampler
+                MeveoSampler meveoSampler = new MeveoSampler();
+                meveoSampler.setArguments(MeveoJmeterUtils.getDefaultInputs(functionCode));
+                meveoSampler.setName("Execute function");
+                meveoSampler.setProperty(TestElement.GUI_CLASS, MeveoSamplerGui.class.getName());
+                meveoSampler.setProperty(TestElement.TEST_CLASS, MeveoSampler.class.getName());
+
                 // Create TestPlan hash tree
                 HashTree testPlanHashTree = new ListedHashTree();
-                testPlanHashTree.add(testPlan);
-
-                HashTree threadGroupHashTree = new HashTree();
-                threadGroupHashTree = testPlanHashTree.add(testPlan, meveoThreadGroup);
+                testPlanHashTree.add(testPlan)
+                    .add(meveoThreadGroup)
+                    .add(meveoSampler);
 
                 SaveService.saveTree(testPlanHashTree, new FileOutputStream("tempTreeFile.jmx"));
             }

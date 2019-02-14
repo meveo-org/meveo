@@ -24,6 +24,7 @@ import org.apache.jorphan.collections.SearchByClass;
 import org.meveo.jmeter.function.FunctionManager;
 import org.meveo.jmeter.function.controller.FunctionManagerController;
 import org.meveo.jmeter.function.gui.functionmanager.FunctionManagerDialog;
+import org.meveo.jmeter.utils.MeveoJmeterUtils;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -44,17 +45,7 @@ public class UploadFunctionMenu extends JMenuItem implements ActionListener {
         final GuiPackage instance = GuiPackage.getInstance();
         final String testPlanFile = instance.getTestPlanFile();
         File tempFile = new File(testPlanFile);
-        SearchByClass<TestPlan> testPlans = new SearchByClass<>(TestPlan.class);
-        try {
-            HashTree tree = SaveService.loadTree(tempFile);
-            tree.traverse(testPlans);
-            Collection testPlansRes = testPlans.getSearchResults();
-            TestPlan testPlan = (TestPlan) testPlansRes.toArray()[0];
-            FunctionManager.upload(testPlan.getName(), tempFile);
-        } catch (IOException e1) {
-            throw new RuntimeException(e1);
-        }
-
+        FunctionManager.upload(MeveoJmeterUtils.getTestPlanName(tempFile), tempFile);
     }
 
 }
