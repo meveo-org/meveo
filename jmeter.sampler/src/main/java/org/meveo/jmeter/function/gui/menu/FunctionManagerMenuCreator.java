@@ -14,9 +14,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui;
+package org.meveo.jmeter.function.gui.menu;
 
 import org.apache.jmeter.gui.plugin.MenuCreator;
+import org.meveo.jmeter.login.controller.LoginController;
 
 import javax.swing.*;
 
@@ -26,7 +27,12 @@ public class FunctionManagerMenuCreator implements MenuCreator {
     public JMenuItem[] getMenuItemsAtLocation(MENU_LOCATION location) {
         if (location == MENU_LOCATION.FILE) {
             try {
-                return new JMenuItem[]{new FunctionManagerMenu()};
+                final LoginMenu loginMenu = new LoginMenu();
+                final LoadFunctionManagerMenu loadFunctionManagerMenu = new LoadFunctionManagerMenu();
+                final UploadFunctionMenu uploadFunctionMenu = new UploadFunctionMenu();
+                LoginController.setLoadFunctionManagerMenu(loadFunctionManagerMenu);
+                LoginController.setUploadFunctionMenu(uploadFunctionMenu);
+                return new JMenuItem[]{loginMenu, loadFunctionManagerMenu, uploadFunctionMenu};
             } catch (Throwable e) {
                 return new JMenuItem[0];
             }

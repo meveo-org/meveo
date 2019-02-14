@@ -14,39 +14,21 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.api.rest;
+package org.apache.jmeter.gui.action;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
-@Stateless
-@Path("/function")
-public class FunctionRs extends BaseRs {
+public class Loader {
 
-    @Inject
-    private FunctionApi functionApi;
+    private static String functionCode;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<FunctionDto> getFunctions(){
-        return functionApi.list();
+    public static void load(String code, ActionEvent e, File f){
+        Load.loadProjectFile(e, f, false);
+        functionCode = code;
     }
 
-    @Path("/{code}/test")
-    @PATCH
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
-        functionApi.updateTest(code, testSuite);
+    public static String getFunctionCode() {
+        return functionCode;
     }
-
 }

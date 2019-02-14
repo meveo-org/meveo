@@ -16,14 +16,66 @@
 
 package org.meveo.jmeter.threadgroup.gui;
 
+import org.apache.jmeter.gui.util.HorizontalPanel;
+import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.threads.ThreadGroup;
 import org.apache.jmeter.threads.gui.AbstractThreadGroupGui;
+import org.meveo.jmeter.threadgroup.model.MeveoThreadGroup;
 
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.concurrent.TimeUnit;
 
 public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemListener {
+
+    private static final int LABEL_WIDTH = 100;
+    private static final int PANEL_HEIGHT = 25;
+
+    private final JTextField peridicity;
+    private final JComboBox<TimeUnit> timeUnit;
+
+    public MeveoThreadGroupGui() {
+
+        super();
+
+        removeAll();
+
+        Box box = Box.createVerticalBox();
+
+        VerticalPanel titlePanel = new VerticalPanel();
+        titlePanel.add(createTitleLabel());
+
+        box.add(titlePanel);
+        add(box, BorderLayout.NORTH);
+
+        /* Periodcity */
+        JPanel bottomPanel = new HorizontalPanel();
+        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, PANEL_HEIGHT));
+
+        JLabel peridicityLabel = new JLabel("Periodicity : ");
+        peridicityLabel.setPreferredSize(new Dimension(LABEL_WIDTH, PANEL_HEIGHT));
+        bottomPanel.add(peridicityLabel);
+
+        peridicity = new JTextField();
+        peridicity.setName("Periodicity");
+        peridicityLabel.setLabelFor(peridicity);
+        bottomPanel.add(peridicity);
+
+        TimeUnit[] availableTimeUnits = {TimeUnit.HOURS, TimeUnit.DAYS};
+        timeUnit = new JComboBox<>(availableTimeUnits);
+        timeUnit.setSelectedItem(TimeUnit.DAYS);
+        bottomPanel.add(timeUnit);
+
+        /* Test properties */
+        VerticalPanel panel = new VerticalPanel();
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Test properties"));
+        panel.add(bottomPanel);
+
+        add(panel, BorderLayout.CENTER);
+
+    }
 
     @Override
     public String getLabelResource() {
@@ -35,16 +87,9 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
         return "Meveo - Function Test";
     }
 
-    private static final long serialVersionUID = 240L;
-
-    public MeveoThreadGroupGui() {
-        init();
-        initGui();
-    }
-
     @Override
     public TestElement createTestElement() {
-        ThreadGroup tg = new ThreadGroup();
+        MeveoThreadGroup tg = new MeveoThreadGroup();
         modifyTestElement(tg);
         return tg;
     }
@@ -57,29 +102,27 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
     @Override
     public void modifyTestElement(TestElement tg) {
         super.configureTestElement(tg);
-
+        final MeveoThreadGroup meveoThreadGroup = (MeveoThreadGroup) tg;
+        meveoThreadGroup.setTimeUnit((TimeUnit) timeUnit.getSelectedItem());
+        meveoThreadGroup.setPeriodicity(Integer.parseInt(peridicity.getText()));
     }
 
     @Override
     public void configure(TestElement tg) {
         super.configure(tg);
+        final MeveoThreadGroup meveoThreadGroup = (MeveoThreadGroup) tg;
+        peridicity.setText(meveoThreadGroup.getPeriodicity().toString());
+        timeUnit.setSelectedItem(meveoThreadGroup.getTimeUnit());
     }
 
     @Override
     public void itemStateChanged(ItemEvent ie) {
+        System.out.println(ie);
     }
 
     @Override
     public void clearGui(){
         super.clearGui();
-        initGui();
     }
 
-    // Initialise the gui field values
-    private void initGui(){
-    }
-
-    private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
-        // THREAD PROPERTIES
-    }
 }

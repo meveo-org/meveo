@@ -16,6 +16,8 @@
 
 package org.meveo.api.function;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.jmeter.JMXFileParser;
@@ -34,6 +36,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +77,10 @@ public class FunctionApi {
         return function.getTestSuite();
     }
 
-    public void updateTest(String code, String file) throws BusinessException {
+    public void updateTest(String code, File file) throws BusinessException, IOException {
+        final String testSuite = FileUtils.readFileToString(file, "UTF-8");
         final Function function = concreteFunctionService.findByCode(code);
-        function.setTestSuite(file);
+        function.setTestSuite(testSuite);
         concreteFunctionService.update(function);
     }
 
