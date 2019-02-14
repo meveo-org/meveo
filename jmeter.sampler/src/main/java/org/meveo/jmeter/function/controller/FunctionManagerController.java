@@ -30,6 +30,8 @@ import org.apache.jorphan.collections.ListedHashTree;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.jmeter.function.FunctionManager;
 import org.meveo.jmeter.function.gui.functionmanager.FunctionManagerDialog;
+import org.meveo.jmeter.threadgroup.gui.MeveoThreadGroupGui;
+import org.meveo.jmeter.threadgroup.model.MeveoThreadGroup;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -44,6 +46,7 @@ import java.text.Collator;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class FunctionManagerController extends MouseAdapter implements ActionListener {
@@ -94,14 +97,26 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
                 testPlan.setUserDefinedVariables(new Arguments());
                 testPlan.setTestPlanClasspath("");
 
+                // ThreadGroup
+                MeveoThreadGroup meveoThreadGroup = new MeveoThreadGroup();
+                meveoThreadGroup.setProperty(TestElement.GUI_CLASS, MeveoThreadGroupGui.class.getName());
+                meveoThreadGroup.setProperty(TestElement.TEST_CLASS, MeveoThreadGroup.class.getName());
+                meveoThreadGroup.setName("Meveo - Function Test");
+                meveoThreadGroup.setFunctionCode(functionCode);
+                meveoThreadGroup.setPeriodicity(7);
+                meveoThreadGroup.setTimeUnit(TimeUnit.DAYS);
+
                 // Create TestPlan hash tree
                 HashTree testPlanHashTree = new ListedHashTree();
                 testPlanHashTree.add(testPlan);
 
+                HashTree threadGroupHashTree = new HashTree();
+                threadGroupHashTree = testPlanHashTree.add(testPlan, meveoThreadGroup);
+
                 SaveService.saveTree(testPlanHashTree, new FileOutputStream("tempTreeFile.jmx"));
             }
             ActionEvent loadEvent = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, ActionNames.EDIT);
-            Loader.load(loadEvent, new File("tempTreeFile.jmx").getAbsoluteFile());
+            Loader.load(functionCode, loadEvent, new File("tempTreeFile.jmx").getAbsoluteFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

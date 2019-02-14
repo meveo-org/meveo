@@ -97,6 +97,7 @@ public class LoginDialog extends JDialog {
 
         /* Login */
         loginButton = new JButton("Login");
+        getRootPane().setDefaultButton(loginButton);
 
         JPanel loginPanel = new JPanel(new BorderLayout());
         loginPanel.add(loginButton, BorderLayout.EAST);

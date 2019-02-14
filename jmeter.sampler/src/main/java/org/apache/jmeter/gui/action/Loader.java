@@ -21,7 +21,14 @@ import java.io.File;
 
 public class Loader {
 
-    public static void load(ActionEvent e, File f){
+    private static String functionCode;
+
+    public static void load(String code, ActionEvent e, File f){
         Load.loadProjectFile(e, f, false);
+        functionCode = code;
+    }
+
+    public static String getFunctionCode() {
+        return functionCode;
     }
 }
