@@ -64,6 +64,8 @@ public class FunctionApi {
             final FunctionDto functionDto = new FunctionDto();
             functionDto.setCode(e.getCode());
             functionDto.setTestSuite(e.getTestSuite());
+            functionDto.setInputs(e.getInputs());
+            functionDto.setOutputs(e.getOutputs());
             return functionDto;
         }).collect(Collectors.toList());
     }

@@ -16,13 +16,37 @@
 
 package org.meveo.api.dto.function;
 
+import org.meveo.model.scripts.FunctionIO;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FunctionDto implements Serializable {
 
     private String code;
 
     private String testSuite;
+
+    private List<FunctionIO> inputs = new ArrayList<>();
+
+    private List<FunctionIO> outputs = new ArrayList<>();
+
+    public List<FunctionIO> getInputs() {
+        return inputs;
+    }
+
+    public void setInputs(List<FunctionIO> inputs) {
+        this.inputs = inputs;
+    }
+
+    public List<FunctionIO> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<FunctionIO> outputs) {
+        this.outputs = outputs;
+    }
 
     public String getCode() {
         return code;
