@@ -22,11 +22,13 @@ import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.meveo.jmeter.sampler.model.MeveoSampler;
+import org.meveo.jmeter.utils.MeveoJmeterUtils;
 
 import javax.swing.*;
 import java.awt.*;
 
 import static org.meveo.jmeter.utils.MeveoJmeterUtils.getDefaultInputs;
+import static org.meveo.jmeter.utils.MeveoJmeterUtils.getTestPlanName;
 
 public class MeveoSamplerGui extends AbstractSamplerGui {
 
@@ -56,6 +58,10 @@ public class MeveoSamplerGui extends AbstractSamplerGui {
     public TestElement createTestElement() {
         final MeveoSampler meveoSampler = new MeveoSampler();
         meveoSampler.setArguments(getDefaultInputs());
+        meveoSampler.setName("Execute function");
+        meveoSampler.setFunction(getTestPlanName());
+        meveoSampler.setProperty(TestElement.GUI_CLASS, MeveoSamplerGui.class.getName());
+        meveoSampler.setProperty(TestElement.TEST_CLASS, MeveoSampler.class.getName());
         return meveoSampler;
     }
 

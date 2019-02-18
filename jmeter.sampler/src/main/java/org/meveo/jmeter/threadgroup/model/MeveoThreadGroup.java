@@ -16,6 +16,7 @@
 
 package org.meveo.jmeter.threadgroup.model;
 
+import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
 import org.apache.jmeter.testelement.property.IntegerProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
@@ -29,6 +30,13 @@ public class MeveoThreadGroup extends ThreadGroup {
     private static final String FUNCTION_CODE = "functionCode";
     private static final String PERIODICITY = "periodicity";
     private static final String TIME_UNIT = "timeUnit";
+
+    public MeveoThreadGroup(){
+        setNumThreads(1);
+        LoopController loopController = new LoopController();
+        loopController.setLoops(1);
+        setSamplerController(loopController);
+    }
 
     public String getFunctionCode() {
         return getPropertyAsString(FUNCTION_CODE);

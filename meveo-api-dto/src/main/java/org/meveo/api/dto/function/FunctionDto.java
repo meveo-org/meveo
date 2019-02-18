@@ -16,6 +16,7 @@
 
 package org.meveo.api.dto.function;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.meveo.model.scripts.FunctionIO;
 
 import java.io.Serializable;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FunctionDto implements Serializable {
+
+    public static final TypeReference<List<FunctionDto>> DTO_LIST_TYPE_REF = new TypeReference<List<FunctionDto>>() {};
 
     private String code;
 

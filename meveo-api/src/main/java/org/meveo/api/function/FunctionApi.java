@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 public class FunctionApi {
 
     private static final DocumentBuilder builder;
+    public static final String TEST_MODE = "test-mode";
 
     static {
         try {

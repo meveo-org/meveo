@@ -16,18 +16,30 @@
 
 package org.meveo.jmeter.sampler.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.NullProperty;
+import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.meveo.jmeter.function.FunctionManager;
+import org.meveo.model.scripts.Function;
+
+import java.awt.*;
+import java.util.Map;
 
 public class MeveoSampler extends AbstractSampler {
 
     public static final String ARGUMENTS = "arguments";
+    public static final String CODE = "code";
 
+    public void setFunction(String code){
+        setProperty(new StringProperty(CODE, code));
+    }
     public void setArguments(Arguments args) {
         setProperty(new TestElementProperty(ARGUMENTS, args));
     }
@@ -40,9 +52,33 @@ public class MeveoSampler extends AbstractSampler {
         return (Arguments) property.getObjectValue();
     }
 
+    public String getFunction(){
+        return getPropertyAsString(CODE);
+    }
+
     @Override
-    public SampleResult sample(Entry e) {
-        return null;
+    public SampleResult sample(Entry entry) {
+
+        final SampleResult sampleResult = new SampleResult();
+
+        sampleResult.sampleStart();
+
+        final Map<String, Object> results = FunctionManager.test(getFunction(), getArguments());
+
+        try {
+            final String serializedResults = new ObjectMapper().writeValueAsString(results);
+            sampleResult.setSuccessful(true);
+            sampleResult.setDataType(SampleResult.TEXT);
+            sampleResult.setResponseData(serializedResults, "UTF-8");
+            sampleResult.setSampleLabel(getName());
+            sampleResult.sampleEnd();
+        } catch (JsonProcessingException e) {
+            sampleResult.sampleEnd();
+            sampleResult.setSuccessful(false);
+            throw new RuntimeException(e);
+        }
+
+        return sampleResult;
     }
 
 }

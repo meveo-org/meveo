@@ -27,7 +27,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Stateless
 @Path("/function")
@@ -38,7 +41,7 @@ public class FunctionRs extends BaseRs {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FunctionDto> getFunctions(){
+    public List<FunctionDto> getFunctions() {
         return functionApi.list();
     }
 
@@ -47,6 +50,20 @@ public class FunctionRs extends BaseRs {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
         functionApi.updateTest(code, testSuite);
+    }
+
+    @Path("/{code}/test")
+    @POST
+    @Consumes("application/json; charset=UTF-8")
+    @Produces("application/json; charset=UTF-8")
+    public Map<String, Object> test(@PathParam("code") String code, Map<String, Object> params) throws BusinessException {
+        if (params == null) {
+            params = new HashMap<>();
+        }
+
+        params.put(FunctionApi.TEST_MODE, true);
+        final Map<String, Object> execute = functionApi.execute(code, params);
+        return execute;
     }
 
 }

@@ -113,6 +113,7 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
                 MeveoSampler meveoSampler = new MeveoSampler();
                 meveoSampler.setArguments(MeveoJmeterUtils.getDefaultInputs(functionCode));
                 meveoSampler.setName("Execute function");
+                meveoSampler.setFunction(functionCode);
                 meveoSampler.setProperty(TestElement.GUI_CLASS, MeveoSamplerGui.class.getName());
                 meveoSampler.setProperty(TestElement.TEST_CLASS, MeveoSampler.class.getName());
 
