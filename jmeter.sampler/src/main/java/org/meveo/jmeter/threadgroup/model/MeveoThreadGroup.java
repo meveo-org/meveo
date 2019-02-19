@@ -29,7 +29,6 @@ public class MeveoThreadGroup extends ThreadGroup {
 
     private static final String FUNCTION_CODE = "functionCode";
     private static final String PERIODICITY = "periodicity";
-    private static final String TIME_UNIT = "timeUnit";
 
     public MeveoThreadGroup(){
         setNumThreads(1);
@@ -52,14 +51,6 @@ public class MeveoThreadGroup extends ThreadGroup {
 
     public void setPeriodicity(Integer periodicity) {
         setProperty(new IntegerProperty(PERIODICITY, periodicity));
-    }
-
-    public TimeUnit getTimeUnit() {
-        return TimeUnit.valueOf(getPropertyAsString(TIME_UNIT));
-    }
-
-    public void setTimeUnit(TimeUnit timeUnit) {
-        setProperty(new StringProperty(TIME_UNIT, timeUnit.toString()));
     }
 
 }

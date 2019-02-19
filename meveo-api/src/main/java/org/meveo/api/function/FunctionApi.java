@@ -17,25 +17,20 @@
 package org.meveo.api.function;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.jmeter.JMXFileParser;
-import org.meveo.model.scripts.test.TestConfiguration;
+import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.scripts.Function;
+import org.meveo.service.job.JobExecutionService;
+import org.meveo.service.job.JobInstanceService;
+import org.meveo.service.job.TimerEntityService;
 import org.meveo.service.script.ConcreteFunctionService;
-import org.meveo.service.script.FunctionService;
-import org.meveo.service.script.ScriptInterface;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
+import javax.ws.rs.PathParam;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -45,21 +40,21 @@ import java.util.stream.Collectors;
 @Stateless
 public class FunctionApi {
 
-    private static final DocumentBuilder builder;
     public static final String TEST_MODE = "test-mode";
 
-    static {
-        try {
-            builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            throw new RuntimeException(e);  // Should never happen
-        }
-    }
+    @Inject
+    private JobInstanceService jobService;
+
+    @Inject
+    private JobExecutionService jobExecutionService;
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
 
-    public List<FunctionDto> list(){
+    @Inject
+    private TimerEntityService timerEntityService;
+
+    public List<FunctionDto> list() {
         final List<Function> functions = concreteFunctionService.list();
         return functions.stream().map(e -> {
             final FunctionDto functionDto = new FunctionDto();
@@ -80,27 +75,47 @@ public class FunctionApi {
         return function.getTestSuite();
     }
 
+    /**
+     * Update test suite and schedule or re-schedule execution
+     *
+     * @param code Code of the function to update
+     * @param file Test Suite content
+     * @throws IOException if the file cannot be read
+     */
     public void updateTest(String code, File file) throws BusinessException, IOException {
         final String testSuite = FileUtils.readFileToString(file, "UTF-8");
         final Function function = concreteFunctionService.findByCode(code);
         function.setTestSuite(testSuite);
         concreteFunctionService.update(function);
+
+        final String testJobCode = getTestJobCode(code);
+        JobInstance jobInstance = jobService.findByCode(testJobCode);
+
+        // If job does not exists, create it, otherwise re-schedule it
+        if (jobInstance == null) {
+            jobInstance = new JobInstance();
+            jobInstance.setJobCategoryEnum(JobCategoryEnum.TEST);
+            jobInstance.setJobTemplate("FunctionTestJob");
+            jobInstance.setCode(testJobCode);
+            jobInstance.setParametres(code);
+
+            TimerEntity timerEntity = timerEntityService.findByCode("Daily-midnight");
+            jobInstance.setTimerEntity(timerEntity);
+            jobService.create(jobInstance);
+        }else{
+            jobService.scheduleUnscheduleJob(jobInstance.getId());
+        }
+
     }
 
-    public Response executeTest(String code) throws Exception {
-        final Function function = concreteFunctionService.findByCode(code);
-        final TestConfiguration testConfiguration = buildTestConfiguration(function.getTestSuite());
-        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(code);
-        final Map<String, Object> execute = functionService.execute(code, testConfiguration.getTestInputs());
-        return Response.ok().build();
+    public void startJob(@PathParam("code") String fnCode) throws BusinessException {
+        JobInstance jobInstance = jobService.findByCode(getTestJobCode(fnCode));
+        jobExecutionService.executeJob(jobInstance, null);
     }
 
-    private static TestConfiguration buildTestConfiguration(String jmxFile) throws IOException, SAXException, XPathExpressionException {
-        Document xmlDocument = builder.parse(jmxFile);
-        TestConfiguration testConfiguration = new TestConfiguration();
-        testConfiguration.setExpectedOutputs(JMXFileParser.extractExpectedOutputs(xmlDocument));
-        testConfiguration.setTestInputs(JMXFileParser.extractParameters(xmlDocument));
-        return testConfiguration;
+    private static String getTestJobCode(String functionCode) {
+        return "FunctionTestJob_" + functionCode;
     }
+
 
 }

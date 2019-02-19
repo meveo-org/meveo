@@ -49,7 +49,6 @@ import java.text.Collator;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class FunctionManagerController extends MouseAdapter implements ActionListener {
@@ -106,8 +105,6 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
                 meveoThreadGroup.setProperty(TestElement.TEST_CLASS, MeveoThreadGroup.class.getName());
                 meveoThreadGroup.setName("Meveo - Function Test");
                 meveoThreadGroup.setFunctionCode(functionCode);
-                meveoThreadGroup.setPeriodicity(7);
-                meveoThreadGroup.setTimeUnit(TimeUnit.DAYS);
 
                 // MeveoSampler
                 MeveoSampler meveoSampler = new MeveoSampler();

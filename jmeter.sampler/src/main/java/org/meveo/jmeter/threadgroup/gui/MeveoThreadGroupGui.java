@@ -21,6 +21,7 @@ import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.gui.AbstractThreadGroupGui;
 import org.meveo.jmeter.threadgroup.model.MeveoThreadGroup;
+import org.meveo.jmeter.utils.SwingUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -60,13 +61,16 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
 
         peridicity = new JTextField();
         peridicity.setName("Periodicity");
+        peridicity.setText("1");
+        peridicity.setEnabled(false);
         peridicityLabel.setLabelFor(peridicity);
         bottomPanel.add(peridicity);
 
-        TimeUnit[] availableTimeUnits = {TimeUnit.HOURS, TimeUnit.DAYS};
+        TimeUnit[] availableTimeUnits = {TimeUnit.DAYS};
         timeUnit = new JComboBox<>(availableTimeUnits);
         timeUnit.setSelectedItem(TimeUnit.DAYS);
         bottomPanel.add(timeUnit);
+        SwingUtils.setEnable(timeUnit, false);
 
         /* Test properties */
         VerticalPanel panel = new VerticalPanel();
@@ -94,25 +98,9 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
         return tg;
     }
 
-    /**
-     * Modifies a given TestElement to mirror the data in the gui components.
-     *
-     * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
-     */
     @Override
-    public void modifyTestElement(TestElement tg) {
-        super.configureTestElement(tg);
-        final MeveoThreadGroup meveoThreadGroup = (MeveoThreadGroup) tg;
-        meveoThreadGroup.setTimeUnit((TimeUnit) timeUnit.getSelectedItem());
-        meveoThreadGroup.setPeriodicity(Integer.parseInt(peridicity.getText()));
-    }
+    public void modifyTestElement(TestElement element) {
 
-    @Override
-    public void configure(TestElement tg) {
-        super.configure(tg);
-        final MeveoThreadGroup meveoThreadGroup = (MeveoThreadGroup) tg;
-        peridicity.setText(meveoThreadGroup.getPeriodicity().toString());
-        timeUnit.setSelectedItem(meveoThreadGroup.getTimeUnit());
     }
 
     @Override
