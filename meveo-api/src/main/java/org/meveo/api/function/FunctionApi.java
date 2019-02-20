@@ -28,6 +28,7 @@ import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
 import org.meveo.service.script.ConcreteFunctionService;
 
+import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.ws.rs.PathParam;
@@ -108,6 +109,7 @@ public class FunctionApi {
 
     }
 
+    @Asynchronous
     public void startJob(@PathParam("code") String fnCode) throws BusinessException {
         JobInstance jobInstance = jobService.findByCode(getTestJobCode(fnCode));
         jobExecutionService.executeJob(jobInstance, null);

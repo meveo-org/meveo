@@ -200,7 +200,7 @@ public class EmailSender {
             msg.setContent(multipart);
             Transport.send(msg);
         } catch (Exception e) {
-            throw new BusinessException(e.getMessage());
+            throw new BusinessException(e);
         }
     }
 }
