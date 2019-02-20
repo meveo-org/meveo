@@ -51,6 +51,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private List<CustomEntityCategory> customEntityCategories;
 
+    private List<CustomEntityCategory> customEntityCategoryMenus;
+
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
@@ -61,6 +63,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
+        customEntityCategoryMenus = customEntityCategoryService.getCustomEntityCategories();
 	}
 
 	@Override
@@ -84,7 +87,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return customEntityCategories;
 	}
 
-	/**
+    public List<CustomEntityCategory> getCustomEntityCategoryMenus() {
+        return customEntityCategoryMenus;
+    }
+
+    /**
 	 * Prepare to show entity customization for a particular class - To be used from
 	 * GUI action button/link
 	 * 

@@ -36,31 +36,25 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	@Override
 	public void refreshFields() {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void newTab() {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void newFieldGroup(TreeNode parentNode) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void saveUpdateFieldGrouping() {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void cancelFieldGrouping() {
 		// TODO Auto-generated method stub
-
 	}
-
 }
