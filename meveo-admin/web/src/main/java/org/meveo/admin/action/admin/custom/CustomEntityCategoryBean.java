@@ -6,6 +6,8 @@ import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.primefaces.model.TreeNode;
@@ -21,6 +23,12 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	public CustomEntityCategoryBean() {
 		super(CustomEntityCategory.class);
 		entityClass = CustomEntityCategory.class;
+	}
+
+	@Override
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+		super.saveOrUpdate(killConversation);
+		return getListViewName();
 	}
 
 	@PostConstruct
