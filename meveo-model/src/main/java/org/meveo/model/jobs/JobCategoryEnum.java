@@ -29,7 +29,8 @@ public enum JobCategoryEnum {
 	    WALLET(6, "jobCategoryEnum.wallet"),
 	    UTILS(7, "jobCategoryEnum.utils"),
 	    MEDIATION(8, "jobCategoryEnum.mediation"),
-			EXPORT(9,"jobCategoryEnum.export");
+		EXPORT(9,"jobCategoryEnum.export"),
+		TEST(10, "jobCategoryEnum.test");
 	    
 
 	    private Integer id;

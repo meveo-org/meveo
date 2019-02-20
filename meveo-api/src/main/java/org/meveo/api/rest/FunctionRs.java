@@ -20,6 +20,8 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -30,11 +32,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Stateless
 @Path("/function")
 public class FunctionRs extends BaseRs {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FunctionRs.class);
 
     @Inject
     private FunctionApi functionApi;
@@ -47,14 +50,22 @@ public class FunctionRs extends BaseRs {
 
     @Path("/{code}/test")
     @PATCH
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
+
         functionApi.updateTest(code, testSuite);
+
     }
 
+    /**
+     * Execute function and return result
+     *
+     * @param code Code of the function
+     * @param params Parameters to execute the function with
+     * @return result of the fucnction execution
+     * @throws BusinessException
+     */
     @Path("/{code}/test")
     @POST
-    @Consumes("application/json; charset=UTF-8")
     @Produces("application/json; charset=UTF-8")
     public Map<String, Object> test(@PathParam("code") String code, Map<String, Object> params) throws BusinessException {
         if (params == null) {
@@ -62,8 +73,21 @@ public class FunctionRs extends BaseRs {
         }
 
         params.put(FunctionApi.TEST_MODE, true);
+        LOG.info("Starting test execution for function " + code);
         final Map<String, Object> execute = functionApi.execute(code, params);
+        LOG.info("Ended test execution for function " + code);
         return execute;
+    }
+
+    /**
+     * Execute the associated test job for given function
+     *
+     * @param code Code of the function
+     */
+    @Path("/{code}/job/start")
+    @POST
+    public void startJob(@PathParam("code") String code) throws BusinessException {
+        functionApi.startJob(code);
     }
 
 }

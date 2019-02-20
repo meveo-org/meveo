@@ -14,30 +14,31 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.jmeter.function.gui.menu;
+package org.meveo.service.script.test;
 
-import org.apache.jmeter.gui.GuiPackage;
-import org.meveo.jmeter.function.FunctionManager;
-import org.meveo.jmeter.utils.MeveoJmeterUtils;
+public class SampleResult {
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
+    private boolean success;
+    private String failureMessage;
 
-public class UploadFunctionMenu extends JMenuItem implements ActionListener {
-
-    public UploadFunctionMenu() {
-        super("Upload current test");
-        addActionListener(this);
+    public SampleResult(boolean success, String failureMessage) {
+        this.success = success;
+        this.failureMessage = failureMessage;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        final GuiPackage instance = GuiPackage.getInstance();
-        final String testPlanFile = instance.getTestPlanFile();
-        File tempFile = new File(testPlanFile);
-        FunctionManager.upload(MeveoJmeterUtils.getTestPlanName(tempFile), tempFile);
+    public boolean isSuccess() {
+        return success;
     }
 
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getFailureMessage() {
+        return failureMessage;
+    }
+
+    public void setFailureMessage(String failureMessage) {
+        this.failureMessage = failureMessage;
+    }
 }

@@ -33,7 +33,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.oro.text.regex.Pattern;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.jmeter.login.model.Host;
 import org.meveo.jmeter.login.model.HostConnection;
@@ -67,14 +66,31 @@ public class FunctionManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(FunctionManager.class);
 
-    private static String token;
+    private static String token = System.getProperty("token");
     private static String refresh_token;
     private static CompletableFuture<List<FunctionDto>> functions;
     private static long loginTimeout;
     private static ScheduledFuture<?> refreshTask;
     private static Host currentHost;
 
+    static {
+        String hostName = System.getProperty("hostName");
+        String portNumber = System.getProperty("portNumber");
+        String protocol = System.getProperty("protocol");
+
+        if(hostName != null && portNumber != null && protocol != null){
+            currentHost = new Host();
+            currentHost.setProtocol(protocol);
+            currentHost.setPortNumber(portNumber);
+            currentHost.setHostName(hostName);
+        }
+    }
+
     public static Map<String, Object> test(String functionCode, Arguments arguments) {
+
+        if(token == null){
+            throw new IllegalArgumentException("Authorization token must not be null");
+        }
 
         return doRequest(() -> {
             String serialiazedArgs = OBJECT_MAPPER.writeValueAsString(arguments.getArgumentsAsMap());
