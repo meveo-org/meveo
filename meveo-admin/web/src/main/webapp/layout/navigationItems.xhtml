@@ -67,21 +67,17 @@
 
 	<p:submenu id="customEntites"
 		label="#{messages['menu.customEntities']}"
-		rendered="#{!empty(customEntityTemplateBean.customEntityCategoryMenus) and currentUser.hasRole('administrationVisualization')}">
+		rendered="#{!empty(customEntityTemplateBean.listAll()) and currentUser.hasRole('administrationVisualization')}">
 		<c:set var="cetIndex" value="0" />
-		<c:forEach items="#{customEntityTemplateBean.customEntityCategoryMenus}" var="cec">
-            <p:submenu label="#{cec.name}">
-                <c:forEach items="#{cec.customEntityTemplates}" var="cet">
-                    <c:if test="#{currentUser.hasRole(cet.readPermission) }">
-                        <p:menuitem id="cet_#{cetIndex}" outcome="customEntities"
-                            value="#{cet.name}">
-                            <f:param name="cet" value="#{cet.code}"></f:param>
-                        </p:menuitem>
-                        <c:set var="cetIndex" value="#{cetIndex + 1}" />
-                    </c:if>
-                </c:forEach>
-            </p:submenu>
-        </c:forEach>
+		<c:forEach items="#{customEntityTemplateBean.listAll()}" var="cet">
+			<c:if test="#{currentUser.hasRole(cet.readPermission) }">
+				<p:menuitem id="cet_#{cetIndex}" outcome="customEntities"
+					value="#{cet.name}">
+					<f:param name="cet" value="#{cet.code}"></f:param>
+				</p:menuitem>
+				<c:set var="cetIndex" value="#{cetIndex + 1}" />
+			</c:if>
+		</c:forEach>
 	</p:submenu>
 
 	<p:submenu label="#{messages['menu.myCompany']}"
