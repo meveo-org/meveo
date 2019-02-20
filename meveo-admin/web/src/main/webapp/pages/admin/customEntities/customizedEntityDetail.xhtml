@@ -42,10 +42,10 @@
                 <hftl:formField label="#{messages['customizedEntities.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.labels']}" field="labels" />
                 
-                <hftl:decorateFormField field="customEntityCategory" componentWidth="50"
-						label="#{messages['BusinessEntity.customEntityCategory']}">
-					<p:selectOneMenu value="#{customEntityTemplateBean.entity.customEntityCategory}"
-					 				 style="width:90%;">
+                <hftl:decorateFormField fieldId="#{messages['BusinessEntity.customEntityCategory']}" id="#{messages['BusinessEntity.customEntityCategory']}" field="customEntityCategory" componentWidth="50"
+						label="#{messages['BusinessEntity.customEntityCategory']}" required="true" >
+					<p:selectOneMenu id="#{messages['BusinessEntity.customEntityCategory']}" value="#{customEntityTemplateBean.entity.customEntityCategory}"
+					 				 style="width:90%;" required="true">
 						<f:selectItem
 							itemLabel="#{messages['customizedRelationships.selectCECEntity']}"
 							itemValue="" noSelectionOption="true" size="100"/>
