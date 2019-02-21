@@ -528,5 +528,8 @@
             <column name="test_suite" type="TEXT"/>
         </addColumn>
     </changeSet>
+    <changeSet id="add_custom_entity_category" author="Phu Bach">
+        <createSequence sequenceName="cust_cec_seq"/>
+    </changeSet>
 
 </databaseChangeLog>
