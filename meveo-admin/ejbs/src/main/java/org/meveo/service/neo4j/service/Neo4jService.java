@@ -176,8 +176,12 @@ public class Neo4jService {
                     Set<NodeReference> relatedNodeReferences;
                     if(referencedCet.isPrimitiveEntity() && referencedUniqueConstraintMap.isEmpty()){    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
-                        Map<String, Object> valueMap = Collections.singletonMap("value", value);
+                        Map<String, Object> valueMap = new HashMap<>();
+                        valueMap.put("value", value);
                         List<String> additionalLabels = getAdditionalLabels(referencedCet);
+                        if(referencedCet.getPrePersistScript() != null){
+                            scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+                        }
                         Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, additionalLabels);
                         relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
                     }else{
