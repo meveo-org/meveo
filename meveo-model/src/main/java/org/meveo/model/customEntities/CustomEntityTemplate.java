@@ -24,8 +24,7 @@ import org.meveo.model.scripts.ScriptInstance;
 @Table(name = "cust_cet", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @Parameter(name = "sequence_name", value = "cust_cet_seq"), })
 @NamedQueries({@NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
-		       @NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name"),
-		       @NamedQuery(name = "CustomEntityTemplate.getCETNotInConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet left join cet.entityReference cef where cet.disabled=false AND cef.customEntityTemplate.id is null order by cet.name") })
+		       @NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name")})
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 8281478284763353310L;
@@ -83,7 +82,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 

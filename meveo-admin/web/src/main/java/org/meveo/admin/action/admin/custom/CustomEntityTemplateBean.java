@@ -1,6 +1,7 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +52,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private List<CustomEntityCategory> customEntityCategories;
 
-    private List<CustomEntityCategory> customEntityCategoryMenus;
-
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
@@ -63,7 +62,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
-        customEntityCategoryMenus = customEntityCategoryService.getCustomEntityCategories();
 	}
 
 	@Override
@@ -87,8 +85,35 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return customEntityCategories;
 	}
 
-    public List<CustomEntityCategory> getCustomEntityCategoryMenus() {
-        return customEntityCategoryMenus;
+    public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
+        Map<String, List<CustomEntityTemplate>> listMap = new HashMap<>();
+        List<CustomEntityTemplate> list = customEntityTemplateService.list();
+        for (CustomEntityTemplate customEntityTemplate : list) {
+            if (customEntityTemplate.getCustomEntityCategory() != null) {
+                String name = customEntityTemplate.getCustomEntityCategory().getName();
+                if (listMap.containsKey(name)) {
+                    List<CustomEntityTemplate> customEntityTemplates = listMap.get(name);
+                    customEntityTemplates.add(customEntityTemplate);
+                    listMap.put(name, customEntityTemplates);
+                } else {
+                    List<CustomEntityTemplate> customEntityTemplates = new ArrayList<>();
+                    customEntityTemplates.add(customEntityTemplate);
+                    listMap.put(name, customEntityTemplates);
+                }
+            } else {
+                if (listMap.containsKey(null)) {
+                    List<CustomEntityTemplate> customEntityTemplates = listMap.get(null);
+                    customEntityTemplates.add(customEntityTemplate);
+                    listMap.put(null, customEntityTemplates);
+                } else {
+                    List<CustomEntityTemplate> customEntityTemplates = new ArrayList<>();
+                    customEntityTemplates.add(customEntityTemplate);
+                    listMap.put(null, customEntityTemplates);
+                }
+            }
+        }
+
+        return listMap;
     }
 
     /**
