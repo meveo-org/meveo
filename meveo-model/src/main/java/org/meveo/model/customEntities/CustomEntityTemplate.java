@@ -39,7 +39,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Labels to apply to the template.
 	 */
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
 	private List<String> labels = new ArrayList<>();
@@ -61,14 +61,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * Whether the CET is primitive. A primitive entity is an entity containing only
 	 * one property named "value"
 	 */
-	@Column(name = "primitive_entity", updatable = false)
+	@Column(name = "primitive_entity")
 	@Type(type = "numeric_boolean")
 	private boolean primitiveEntity;
 
 	/**
 	 * The primitive type, if entity is primitive.
 	 */
-	@Column(name = "primitive_type", nullable = true, updatable = false)
+	@Column(name = "primitive_type")
 	@Enumerated(EnumType.STRING)
 	private PrimitiveTypeEnum primitiveType;
 
