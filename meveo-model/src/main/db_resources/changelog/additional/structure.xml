@@ -531,5 +531,10 @@
     <changeSet id="add_custom_entity_category" author="Phu Bach">
         <createSequence sequenceName="cust_cec_seq"/>
     </changeSet>
+    <changeSet id="delete_code_created_updated_from_meveo_script_instance" author="Clément Bareth">
+        <dropColumn tableName="meveo_script_instance" columnName="code"/>
+        <dropColumn tableName="meveo_script_instance" columnName="created"/>
+        <dropColumn tableName="meveo_script_instance" columnName="updated"/>
+    </changeSet>
 
 </databaseChangeLog>
