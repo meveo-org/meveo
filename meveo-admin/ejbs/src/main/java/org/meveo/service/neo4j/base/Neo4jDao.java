@@ -256,10 +256,10 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public Optional<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields) {
+    public Optional<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", CustomEntityTemplate.getCodeFromAppliesTo(uniqueConstraint.getAppliesTo()));
+        valuesMap.put("cetCode", cetCode);
         valuesMap.put(FIELDS, Values.value(fields));
 
         // Build statement

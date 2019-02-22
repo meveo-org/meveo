@@ -232,54 +232,6 @@ public class CustomEntityTemplateDto extends BaseDto {
         this.uniqueConstraints = uniqueConstraints;
     }
 
-    /**
-     * Convert CustomEntityTemplate instance to CustomEntityTemplateDto object including the fields and actions.
-     *
-     * @param cet CustomEntityTemplate object to convert
-     * @param cetFields Fields (CustomFieldTemplate) that are part of CustomEntityTemplate
-     * @param cetActions Actions (EntityActionScript) available on CustomEntityTemplate
-     * @return A CustomEntityTemplateDto object with fields set
-     */
-    public static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions, Collection<CustomEntityTemplateUniqueConstraint> cetUniqueConstraints) {
-        CustomEntityTemplateDto dto = new CustomEntityTemplateDto();
-        dto.setCode(cet.getCode());
-        dto.setName(cet.getName());
-        dto.setDescription(cet.getDescription());
-        dto.setPrimitiveEntity(cet.isPrimitiveEntity());
-        dto.setPrimitiveType(cet.getPrimitiveType());
-        dto.setLabels(cet.getLabels());
-        
-        if(cet.getPrePersistScript() != null) {
-            dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
-        }
-        
-        if (cetFields != null) {
-            List<CustomFieldTemplateDto> fields = new ArrayList<CustomFieldTemplateDto>();
-            for (CustomFieldTemplate cft : cetFields) {
-                fields.add(new CustomFieldTemplateDto(cft));
-            }
-            dto.setFields(fields);
-        }
-
-        if (cetActions != null) {
-            List<EntityCustomActionDto> actions = new ArrayList<EntityCustomActionDto>();
-            for (EntityCustomAction action : cetActions) {
-                actions.add(new EntityCustomActionDto(action));
-            }
-            dto.setActions(actions);
-        }
-
-        if (cetUniqueConstraints!= null) {
-            List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints = new ArrayList<>();
-            for (CustomEntityTemplateUniqueConstraint uniqueConstraint : cetUniqueConstraints) {
-                uniqueConstraints.add(new CustomEntityTemplateUniqueConstraintDto(uniqueConstraint));
-            }
-            dto.setUniqueConstraints(uniqueConstraints);
-        }
-
-        return dto;
-    }
-
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */

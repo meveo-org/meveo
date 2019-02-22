@@ -14,6 +14,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
 
@@ -53,6 +54,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	@OneToMany(mappedBy = "superTemplate", fetch = FetchType.LAZY)
 	private List<CustomEntityTemplate> subTemplates;
+
+	/**
+	 * Unique constraint to be applied when persisiting custom entities
+	 */
+	@OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@OrderColumn(name = "position")
+	private List<CustomEntityTemplateUniqueConstraint> uniqueConstraints = new ArrayList<>();
 
 	@OneToOne(mappedBy = "customEntityTemplate", fetch = FetchType.LAZY)
 	private CustomEntityReference entityReference;
@@ -156,8 +164,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	}
 
 	public static String getCodeFromAppliesTo(String appliesTo) {
-		String splitAppliesTo = appliesTo.substring(3);
-		return splitAppliesTo;
+		return appliesTo.substring(3);
 	}
 
 	public CustomEntityTemplate getSuperTemplate() {
@@ -190,6 +197,18 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
 		this.customEntityCategory = customEntityCategory;
+	}
+
+	public List<CustomEntityTemplateUniqueConstraint> getUniqueConstraints() {
+		return uniqueConstraints;
+	}
+
+	public void setUniqueConstraints(List<CustomEntityTemplateUniqueConstraint> uniqueConstraints) {
+		if(uniqueConstraints == null){
+			this.uniqueConstraints.clear();
+		}else{
+			this.uniqueConstraints = uniqueConstraints;
+		}
 	}
 
 }
