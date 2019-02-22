@@ -440,11 +440,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
 
-        final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
-                .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
-                .collect(Collectors.toList());
+        if(dto.getUniqueConstraints() != null){
+            final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
+                    .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
+                    .collect(Collectors.toList());
 
-        cet.getUniqueConstraints().addAll(constraintList);
+            cet.getUniqueConstraints().addAll(constraintList);
+        }
+
 
         if(dto.getPrePersistScripCode() != null) {
         	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
