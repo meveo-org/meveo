@@ -25,6 +25,10 @@ public class CetUcPk implements Serializable {
     private String code;
     private CustomEntityTemplate customEntityTemplate;
 
+    public CetUcPk(){
+
+    }
+
     public CetUcPk(String code, CustomEntityTemplate customEntityTemplate) {
         this.code = code;
         this.customEntityTemplate = customEntityTemplate;

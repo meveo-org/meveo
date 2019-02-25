@@ -431,7 +431,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         final CustomEntityTemplate cet = cetToUpdate != null ? cetToUpdate : new CustomEntityTemplate();
         if (cetToUpdate != null) {
             cet.getUniqueConstraints().clear();
-//            customEntityTemplateService.flush();
         }
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
