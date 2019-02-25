@@ -537,4 +537,22 @@
         <dropColumn tableName="meveo_script_instance" columnName="updated"/>
     </changeSet>
 
+    <changeSet id="fix_unique_cet_constraint" author="Clément Bareth">
+        <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code" constraintName="cust_cet_unique_constraint_pkey"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="applies_to"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="created"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="updated"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="creator"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="updater"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="version"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="id"/>
+        <dropColumn tableName="cust_cet_unique_constraint" columnName="disabled"/>
+        <renameColumn tableName="cust_cet_unique_constraint" oldColumnName="order" newColumnName="position"/>
+        <addColumn tableName="cust_cet_unique_constraint">
+            <column name="cet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

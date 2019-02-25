@@ -1,6 +1,7 @@
 package org.meveo.api;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -25,7 +26,6 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateUniqueConstraintService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -34,7 +34,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi
  * @author Clement Bareth
- * @lastModifiedVersion 6.0.4
+ * @lastModifiedVersion 6.0.5
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -57,11 +57,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     @Inject
     private ScriptInstanceService scriptInstanceService;
 
-    @Inject
-    private CustomEntityTemplateUniqueConstraintService customEntityTemplateUniqueConstraintService;
-
-    @Inject
-    private CustomEntityTemplateUniqueConstraintApi customEntityTemplateUniqueConstraintApi;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -98,12 +93,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             }
         }
 
-        if (dto.getUniqueConstraints() != null) {
-            for (CustomEntityTemplateUniqueConstraintDto uniqueConstraintDto : dto.getUniqueConstraints()) {
-                customEntityTemplateUniqueConstraintApi.createOrUpdate(uniqueConstraintDto, cet.getAppliesTo());
-            }
-        }
-
         return cet;
     }
 
@@ -132,9 +121,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
         }
 
-        cet = fromDTO(dto, cet);
 
         setSuperTemplate(dto, cet);
+
+        cet = fromDTO(dto, cet);
 
         cet = customEntityTemplateService.update(cet);
 
@@ -179,9 +169,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
-        Map<String, CustomEntityTemplateUniqueConstraint> cetUniqueConstraints = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
 
-        return CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values(), cetUniqueConstraints.values());
+        return toDTO(cet, cetFields.values(), cetActions.values());
     }
     
     @Override
@@ -209,9 +198,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
-            Map<String, CustomEntityTemplateUniqueConstraint> cetUniqueConstraints = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
 
-            cetDtos.add(CustomEntityTemplateDto.toDTO(cet, cetFields.values(), cetActions.values(), cetUniqueConstraints.values()));
+            cetDtos.add(toDTO(cet, cetFields.values(), cetActions.values()));
         }
 
         return cetDtos;
@@ -440,9 +428,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @return A new or updated CustomEntityTemplate instance
      */
     private CustomEntityTemplate fromDTO(CustomEntityTemplateDto dto, CustomEntityTemplate cetToUpdate) {
-        CustomEntityTemplate cet = new CustomEntityTemplate();
+        final CustomEntityTemplate cet = cetToUpdate != null ? cetToUpdate : new CustomEntityTemplate();
         if (cetToUpdate != null) {
-            cet = cetToUpdate;
+            cet.getUniqueConstraints().clear();
+//            customEntityTemplateService.flush();
         }
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
@@ -450,7 +439,16 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setPrimitiveEntity(dto.isPrimitiveEntity());
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
-        
+
+        if(dto.getUniqueConstraints() != null){
+            final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
+                    .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
+                    .collect(Collectors.toList());
+
+            cet.getUniqueConstraints().addAll(constraintList);
+        }
+
+
         if(dto.getPrePersistScripCode() != null) {
         	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
         	cet.setPrePersistScript(scriptInstance);
@@ -459,10 +457,30 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         return cet;
     }
 
+    private CustomEntityTemplateUniqueConstraint fromConstraintDto(CustomEntityTemplateUniqueConstraintDto dto, CustomEntityTemplate cet){
+        CustomEntityTemplateUniqueConstraint constraint = new CustomEntityTemplateUniqueConstraint();
+        constraint.setTrustScore(dto.getTrustScore());
+        constraint.setApplicableOnEl(dto.getApplicableOnEl());
+        constraint.setCypherQuery(dto.getCypherQuery());
+        constraint.setPosition(dto.getOrder());
+        constraint.setCode(dto.getCode());
+        constraint.setCustomEntityTemplate(cet);
+        return constraint;
+    }
+
+    private static CustomEntityTemplateUniqueConstraintDto toConstraintDto(CustomEntityTemplateUniqueConstraint constraint){
+        CustomEntityTemplateUniqueConstraintDto constraintDto = new CustomEntityTemplateUniqueConstraintDto();
+        constraintDto.setTrustScore(constraint.getTrustScore());
+        constraintDto.setApplicableOnEl(constraint.getApplicableOnEl());
+        constraintDto.setCode(constraint.getCode());
+        constraintDto.setCypherQuery(constraint.getCypherQuery());
+        constraintDto.setOrder(constraint.getPosition());
+        return constraintDto;
+    }
+
 
     /**
      * If the CET is a primitive type :  <br>
-     * - No CF must be defined <br>
      * - Type of primitive should not be null  <br>
      *
      * @param dto The CET dto to validate
@@ -477,4 +495,51 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new BusinessException("Primitive type must be defined");
         }
      }
+
+    /**
+     * Convert CustomEntityTemplate instance to CustomEntityTemplateDto object including the fields and actions.
+     *
+     * @param cet CustomEntityTemplate object to convert
+     * @param cetFields Fields (CustomFieldTemplate) that are part of CustomEntityTemplate
+     * @param cetActions Actions (EntityActionScript) available on CustomEntityTemplate
+     * @return A CustomEntityTemplateDto object with fields set
+     */
+    public static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions) {
+        CustomEntityTemplateDto dto = new CustomEntityTemplateDto();
+        dto.setCode(cet.getCode());
+        dto.setName(cet.getName());
+        dto.setDescription(cet.getDescription());
+        dto.setPrimitiveEntity(cet.isPrimitiveEntity());
+        dto.setPrimitiveType(cet.getPrimitiveType());
+        dto.setLabels(cet.getLabels());
+
+        if(cet.getPrePersistScript() != null) {
+            dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
+        }
+
+        if (cetFields != null) {
+            List<CustomFieldTemplateDto> fields = new ArrayList<>();
+            for (CustomFieldTemplate cft : cetFields) {
+                fields.add(new CustomFieldTemplateDto(cft));
+            }
+            dto.setFields(fields);
+        }
+
+        if (cetActions != null) {
+            List<EntityCustomActionDto> actions = new ArrayList<>();
+            for (EntityCustomAction action : cetActions) {
+                actions.add(new EntityCustomActionDto(action));
+            }
+            dto.setActions(actions);
+        }
+
+        List<CustomEntityTemplateUniqueConstraintDto> constraintDtoList = cet.getUniqueConstraints()
+                .stream()
+                .map(CustomEntityTemplateApi::toConstraintDto)
+                .collect(Collectors.toList());
+
+        dto.setUniqueConstraints(constraintDtoList);
+
+        return dto;
+    }
 }

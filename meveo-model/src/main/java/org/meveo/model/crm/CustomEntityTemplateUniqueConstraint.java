@@ -1,10 +1,6 @@
 package org.meveo.model.crm;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -13,20 +9,23 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 
 @Entity
 @Table(name = "cust_cet_unique_constraint", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "cust_cet_unique_constraint_seq")})
-public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
+public class CustomEntityTemplateUniqueConstraint {
     public static final String RETURNED_ID_PROPERTY_NAME = "id";
 
-    @Column(name = "applies_to", nullable = false, length = 100)
-    @Size(max = 100)
+    @Id
+    @Column(name = "code")
     @NotNull
-    private String appliesTo;
+    private String code;
 
-    @Lob
-    @Column(name = "cypher_query")
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "cypher_query", columnDefinition = "TEXT")
     @NotNull
     private String cypherQuery;
 
@@ -40,18 +39,14 @@ public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
     @Size(max = 2000)
     private String applicableOnEl;
 
-    @Column(name = "order")
+    @Column(name = "position")
     @Min(0)
     @NotNull
-    private Integer order;
+    private Integer position;
 
-    public String getAppliesTo() {
-        return appliesTo;
-    }
-
-    public void setAppliesTo(String appliesTo) {
-        this.appliesTo = appliesTo;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cet_id")
+    private CustomEntityTemplate customEntityTemplate;
 
     public String getCypherQuery() {
         return cypherQuery;
@@ -77,11 +72,31 @@ public class CustomEntityTemplateUniqueConstraint extends BusinessEntity {
         this.applicableOnEl = applicableOnEl;
     }
 
-    public Integer getOrder() {
-        return order;
+    public Integer getPosition() {
+        return position;
     }
 
-    public void setOrder(Integer order) {
-        this.order = order;
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public void setCustomEntityTemplate(CustomEntityTemplate customEntityTemplate) {
+        this.customEntityTemplate = customEntityTemplate;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

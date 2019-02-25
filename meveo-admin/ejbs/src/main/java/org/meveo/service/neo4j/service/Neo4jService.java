@@ -34,8 +34,6 @@ import org.meveo.model.customEntities.CETConstants;
 import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.neo4j.Neo4JConfiguration;
-import org.meveo.service.custom.CustomEntityTemplateUniqueConstraintService;
 import org.meveo.service.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
@@ -94,9 +92,6 @@ public class Neo4jService {
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
-    private CustomEntityTemplateUniqueConstraintService customEntityTemplateUniqueConstraintService;
-
-    @Inject
     private Neo4jDao neo4jDao;
 
     @Inject
@@ -140,8 +135,6 @@ public class Neo4jService {
                 scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
             }
 
-            Map<String, CustomEntityTemplateUniqueConstraint> uniqueConstraintMap = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
-
             /* Find unique fields and validate data */
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             Map<String, Object> uniqueFields = new HashMap<>();
@@ -163,7 +156,6 @@ public class Neo4jService {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazzCetCode();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
-                Map<String, CustomEntityTemplateUniqueConstraint> referencedUniqueConstraintMap = customEntityTemplateUniqueConstraintService.findByAppliesTo(cet.getAppliesTo());
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
@@ -174,7 +166,7 @@ public class Neo4jService {
 
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
-                    if(referencedCet.isPrimitiveEntity() && referencedUniqueConstraintMap.isEmpty()){    // If the CET is primitive, copy value in current node's value
+                    if(referencedCet.isPrimitiveEntity() && referencedCet.getUniqueConstraints().isEmpty()){    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = new HashMap<>();
                         valueMap.put("value", value);
@@ -207,7 +199,7 @@ public class Neo4jService {
             }
 
             final List<String> labels = getAdditionalLabels(cet);
-            if (uniqueConstraintMap.isEmpty()) {
+            if (cet.getUniqueConstraints().isEmpty()) {
                 if (uniqueFields.isEmpty()) {
                     Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
@@ -218,7 +210,7 @@ public class Neo4jService {
             } else {
                 Map<Object, Object> userMap = ImmutableMap.of("entity", fields);
 
-                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : uniqueConstraintMap.values()) {
+                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : cet.getUniqueConstraints()) {
                     if (!StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())) {
                         Object o = MeveoValueExpressionWrapper.evaluateExpression(uniqueConstraint.getApplicableOnEl(), userMap, Boolean.class);
                         if (o != null && !(o instanceof Boolean)) {
@@ -229,7 +221,7 @@ public class Neo4jService {
                         }
                     }
 
-                    Optional<Long> optionalId = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields);
+                    Optional<Long> optionalId = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
                     if (optionalId.isPresent()) {
                         if (uniqueConstraint.getTrustScore() < 100) {
                             // If the trust rating is lower than 100%, we create the entity and create a relationship between the found one and the created one

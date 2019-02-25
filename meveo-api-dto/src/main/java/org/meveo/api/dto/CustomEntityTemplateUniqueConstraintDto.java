@@ -10,7 +10,7 @@ import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 
 @XmlRootElement(name = "CustomEntityTemplateUniqueConstraint")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
+public class CustomEntityTemplateUniqueConstraintDto {
     @XmlAttribute(required = true)
     private String code;
     @XmlAttribute()
@@ -23,8 +23,6 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
     private Integer trustScore;
     @XmlElement()
     private String applicableOnEl;
-    @XmlElement()
-    private boolean disabled;
     @XmlAttribute(required = true)
     private Integer order;
 
@@ -36,13 +34,11 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
         super();
 
         this.code = cetUniqueConstraint.getCode();
-        this.appliesTo = cetUniqueConstraint.getAppliesTo();
         this.description = cetUniqueConstraint.getDescription();
         this.cypherQuery = cetUniqueConstraint.getCypherQuery();
         this.trustScore = cetUniqueConstraint.getTrustScore();
         this.applicableOnEl = cetUniqueConstraint.getApplicableOnEl();
-        this.disabled = cetUniqueConstraint.isDisabled();
-        this.order = cetUniqueConstraint.getOrder();
+        this.order = cetUniqueConstraint.getPosition();
     }
 
     public String getCode() {
@@ -91,14 +87,6 @@ public class CustomEntityTemplateUniqueConstraintDto extends BaseDto {
 
     public void setApplicableOnEl(String applicableOnEl) {
         this.applicableOnEl = applicableOnEl;
-    }
-
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
     }
 
     public Integer getOrder() {
