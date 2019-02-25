@@ -119,8 +119,7 @@ public class CustomFieldDataEntryBean implements Serializable {
     protected Messages messages;
 
     /** Logger. */
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private final  String SEGMENT_TREE = "segmentTree";
+    private Logger log = LoggerFactory.getLogger(this.getClass()); 
 
     /**
      * Explicitly refresh fields and action definitions. Should be used on some field value change event when that field is used to determine what fields and actions apply. E.g.
@@ -1609,8 +1608,8 @@ public class CustomFieldDataEntryBean implements Serializable {
     	String segmentTreeValue=null;
     	Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
     	 for (CustomFieldTemplate cft : customFieldTemplates.values()) {
-            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){
-             segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, SEGMENT_TREE);
+            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){ 
+             segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, cft.getCode());
              if(segmentTreeValue==null){
             	 segmentTreeValue="{}";
              }
