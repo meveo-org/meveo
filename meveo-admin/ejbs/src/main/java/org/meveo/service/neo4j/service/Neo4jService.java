@@ -448,7 +448,13 @@ public class Neo4jService {
         valuesMap.putAll(crtFields);
 
         // Build the statement
-        StringBuffer statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatementByNodeIds, relationshipAlias, valuesMap);
+        StringBuffer statement;
+
+        if(customRelationshipTemplate.isUnique()){
+            statement = neo4jDao.appendReturnStatement(Neo4JRequests.uniqueCrtStatementByNodeIds, relationshipAlias, valuesMap);
+        }else{
+            statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatementByNodeIds, relationshipAlias, valuesMap);
+        }
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         String resolvedStatement = sub.replace(statement);
 
@@ -461,6 +467,7 @@ public class Neo4jService {
         try {
             /* Execute query and parse result inside a relationship.
             If relationship was created fire creation event, fire update event when updated. */
+            LOGGER.info(resolvedStatement);
 
             final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 
