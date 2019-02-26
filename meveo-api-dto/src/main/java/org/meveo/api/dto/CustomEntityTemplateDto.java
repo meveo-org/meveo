@@ -1,7 +1,5 @@
 package org.meveo.api.dto;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -11,11 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
-import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 
 
 /**
@@ -76,6 +70,10 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlElementWrapper(name = "uniqueConstraints")
     @XmlElement(name = "uniqueConstraint")
     private List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints;
+
+    /** Category the CET belgongs to */
+    @XmlAttribute()
+    private String customEntityCategoryCode;
 
     /**
      * Instantiates a new custom entity template dto.
@@ -230,6 +228,14 @@ public class CustomEntityTemplateDto extends BaseDto {
      */
     public void setUniqueConstraints(List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints) {
         this.uniqueConstraints = uniqueConstraints;
+    }
+
+    public String getCustomEntityCategoryCode() {
+        return customEntityCategoryCode;
+    }
+
+    public void setCustomEntityCategoryCode(String customEntityCategoryCode) {
+        this.customEntityCategoryCode = customEntityCategoryCode;
     }
 
     /* (non-Javadoc)
