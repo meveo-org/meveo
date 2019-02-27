@@ -5,10 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.*;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
@@ -120,6 +117,7 @@ public class DefaultObserver {
         return result == null ? false : result;
     }
 
+    @Asynchronous
     private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException, ELException {
         log.debug("execute notification script: {}", function.getCode());
 
