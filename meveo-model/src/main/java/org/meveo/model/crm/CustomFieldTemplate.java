@@ -43,7 +43,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     private static final long serialVersionUID = -1403961759495272885L;
 
-    public static long DEFAULT_MAX_LENGTH_STRING = 50L;
+    public static long DEFAULT_MAX_LENGTH_STRING = Long.MAX_VALUE;
 
     public static String ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR = " - ";
 
