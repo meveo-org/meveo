@@ -131,11 +131,6 @@ public class DefaultObserver {
             concreteFunctionService.execute(function.getCode(), context);
         } catch (Exception e) {
             log.error("failed script execution", e);
-            if (e instanceof BusinessException) {
-                throw e;
-            } else {
-                throw new BusinessException(e);
-            }
         }
     }
 
