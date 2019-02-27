@@ -11,6 +11,7 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -22,6 +23,8 @@ import org.meveo.service.job.Job;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
@@ -34,6 +37,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	 * CustomEntityTemplate class instance
 	 */
 	private CustomizedEntity customizedEntity;
+
+    Logger logger = LoggerFactory.getLogger(CustomEntityTemplateBean.class);
 
 	/**
 	 * Prefix to apply to custom field templates (appliesTo value)
@@ -51,6 +56,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private List<CustomEntityTemplate> cetConfigurations;
 
 	private List<CustomEntityCategory> customEntityCategories;
+
+    private List<CustomEntityTemplateUniqueConstraint> customEntityTemplateUniqueConstraints;
+
+    private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -520,6 +529,36 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			}
 		}
 	}
+
+    public List<CustomEntityTemplateUniqueConstraint> getCustomEntityTemplateUniqueConstraints() {
+        if (entity != null && entity.getUniqueConstraints() != null) {
+            customEntityTemplateUniqueConstraints = entity.getUniqueConstraints();
+        }
+        return customEntityTemplateUniqueConstraints;
+    }
+
+    public CustomEntityTemplateUniqueConstraint getCustomEntityTemplateUniqueConstraint() {
+        return customEntityTemplateUniqueConstraint;
+    }
+
+    public void setCustomEntityTemplateUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
+        this.customEntityTemplateUniqueConstraint = customEntityTemplateUniqueConstraint;
+    }
+
+    public void addUniqueConstraint() {
+        customEntityTemplateUniqueConstraint.setCustomEntityTemplate(entity);
+        customEntityTemplateUniqueConstraints.add(customEntityTemplateUniqueConstraint);
+        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+        String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
+        customEntityTemplateUniqueConstraints.remove(customEntityTemplateUniqueConstraint);
+        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+        String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
 
 	public class SortedTreeNode extends DefaultTreeNode {
 

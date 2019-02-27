@@ -65,7 +65,8 @@
                 <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
                 <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity"
                                 listenerUpdate="@this primitiveType"/>
-                
+                                listenerUpdate="@this primitiveType"/>
+
                 <!--  If primitive, ask for primitive type class -->
                 <h:panelGroup id="primitiveType">
                     <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}"
@@ -118,6 +119,10 @@
 		<!--  Render custom fields only if entity is not a primitive type -->
 		<h:panelGroup id="cfFields">
             <ui:include src="customFieldsAndActions.xhtml"/>
+        </h:panelGroup>
+
+        <h:panelGroup id="cfUniqueConstraint">
+            <ui:include src="customEntityTemplateUniqueConstaint.xhtml"/>
         </h:panelGroup>
  
 
