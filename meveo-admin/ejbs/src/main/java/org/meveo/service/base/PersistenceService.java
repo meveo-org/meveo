@@ -417,6 +417,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
         }
 
+        afterUpdate(entity);
+
         log.trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
     }
 
@@ -643,6 +645,13 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @param entity The entity to create or update
      */
     protected void beforeUpdateOrCreate(E entity){}
+
+    /**
+     * Action to execute after update of an entity
+     *
+     * @param entity The entity to create or update
+     */
+    protected void afterUpdate(E entity) throws BusinessException {}
 
     /**
      * Creates query to filter entities according data provided in pagination configuration.

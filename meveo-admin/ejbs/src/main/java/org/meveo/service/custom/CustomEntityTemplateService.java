@@ -120,32 +120,21 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     @Override
-    public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
-        ParamBean paramBean = paramBeanFactory.getInstance();
-        CustomEntityTemplate cetBefore = this.findByCode(cet.getCode());
-
+    protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
         /* Primitive entity and type management */
-
-        if(cetBefore.isPrimitiveEntity() || cet.isPrimitiveEntity()){
+        if(cet.isPrimitiveEntity() && cet.getPrimitiveType() != null){
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             final CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
-            // Primitive type has changed
-            if(cetBefore.isPrimitiveEntity() && cet.isPrimitiveEntity() && (cetBefore.getPrimitiveType() != cet.getPrimitiveType())){
-                valueCft.setFieldType(cet.getPrimitiveType().getCftType());
-                customFieldTemplateService.update(valueCft);
-            // Cet become non-primitive
-            }else if(cetBefore.isPrimitiveEntity() && !cet.isPrimitiveEntity()){
-                cet.setPrimitiveType(null);
-            // Cet become primitive
-            }else if(!cetBefore.isPrimitiveEntity() && cet.isPrimitiveEntity() && cet.getPrimitiveType() != null){
-                if(valueCft != null){
-                    turnIntoPrimitive(cet, valueCft);
-                    customFieldTemplateService.update(valueCft);
-                }else{
-                    createPrimitiveCft(cet);
-                }
-            }
+            valueCft.setFieldType(cet.getPrimitiveType().getCftType());
+            customFieldTemplateService.update(valueCft);
+        }else {
+            cet.setPrimitiveType(null);
         }
+    }
+
+    @Override
+    public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
+        ParamBean paramBean = paramBeanFactory.getInstance();
 
 
         /* Update */

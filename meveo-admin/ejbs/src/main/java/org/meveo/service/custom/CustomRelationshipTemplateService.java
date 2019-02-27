@@ -139,4 +139,13 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     public CustomRelationshipTemplate findByCode(String code){
         return super.findByCode(code);
     }
+
+    public List<CustomRelationshipTemplate> findByStartEndAndName(String startCode, String endCode, String name){
+        return getEntityManager().createNamedQuery("CustomRelationshipTemplate.findByStartEndAndName", CustomRelationshipTemplate.class)
+                .setParameter("startCode", startCode)
+                .setParameter("endCode", endCode)
+                .setParameter("name", name)
+                .getResultList();
+
+    }
 }

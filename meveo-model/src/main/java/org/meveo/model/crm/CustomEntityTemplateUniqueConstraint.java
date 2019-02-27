@@ -14,6 +14,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 @Entity
 @Table(name = "cust_cet_unique_constraint", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "cust_cet_unique_constraint_seq")})
+@IdClass(CetUcPk.class)
 public class CustomEntityTemplateUniqueConstraint {
     public static final String RETURNED_ID_PROPERTY_NAME = "id";
 
@@ -46,6 +47,7 @@ public class CustomEntityTemplateUniqueConstraint {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cet_id")
+    @Id
     private CustomEntityTemplate customEntityTemplate;
 
     public String getCypherQuery() {

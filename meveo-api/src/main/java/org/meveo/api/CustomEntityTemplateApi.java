@@ -21,10 +21,12 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -56,6 +58,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+
+    @Inject
+    private CustomEntityCategoryService customEntityCategoryService;
 
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
@@ -431,7 +436,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         final CustomEntityTemplate cet = cetToUpdate != null ? cetToUpdate : new CustomEntityTemplate();
         if (cetToUpdate != null) {
             cet.getUniqueConstraints().clear();
-//            customEntityTemplateService.flush();
         }
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
@@ -453,7 +457,22 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
         	cet.setPrePersistScript(scriptInstance);
         }
-        
+
+        if(dto.getCustomEntityCategoryCode() != null){
+            CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
+            if(customEntityCategory == null){
+                customEntityCategory = new CustomEntityCategory();
+                customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
+                customEntityCategory.setName(dto.getCustomEntityCategoryCode());
+                try {
+                    customEntityCategoryService.create(customEntityCategory);
+                } catch (BusinessException e) {
+                    log.error("Cannot create category", e);
+                }
+            }
+            cet.setCustomEntityCategory(customEntityCategory);
+        }
+
         return cet;
     }
 

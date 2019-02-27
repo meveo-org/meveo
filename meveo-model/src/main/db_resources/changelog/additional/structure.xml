@@ -538,7 +538,6 @@
     </changeSet>
 
     <changeSet id="fix_unique_cet_constraint" author="Clément Bareth">
-        <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code" constraintName="cust_cet_unique_constraint_pkey"/>
         <dropColumn tableName="cust_cet_unique_constraint" columnName="applies_to"/>
         <dropColumn tableName="cust_cet_unique_constraint" columnName="created"/>
         <dropColumn tableName="cust_cet_unique_constraint" columnName="updated"/>
@@ -553,6 +552,7 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+        <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code, cet_id" constraintName="cust_cet_unique_constraint_pkey"/>
     </changeSet>
 
 </databaseChangeLog>
