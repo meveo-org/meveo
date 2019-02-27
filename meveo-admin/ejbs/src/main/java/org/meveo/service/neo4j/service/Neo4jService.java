@@ -198,8 +198,13 @@ public class Neo4jService {
                 }
             }
 
+            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getUniqueConstraints()
+                    .stream()
+                    .filter(uniqueConstraint ->  isApplicableConstraint(fields, uniqueConstraint))
+                    .collect(Collectors.toList());
+
             final List<String> labels = getAdditionalLabels(cet);
-            if (cet.getUniqueConstraints().isEmpty()) {
+            if (applicableConstraints.isEmpty()) {
                 if (uniqueFields.isEmpty()) {
                     Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
@@ -208,24 +213,14 @@ public class Neo4jService {
                     nodeReferences.add(new NodeReference(nodeId));
                 }
             } else {
-                Map<Object, Object> userMap = ImmutableMap.of("entity", fields);
-
-                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : cet.getUniqueConstraints()) {
-                    if (!StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())) {
-                        Object o = MeveoValueExpressionWrapper.evaluateExpression(uniqueConstraint.getApplicableOnEl(), userMap, Boolean.class);
-                        if (o != null && !(o instanceof Boolean)) {
-                            throw new BusinessException("Expression " + uniqueConstraint.getApplicableOnEl() + " do not evaluate to boolean but " + o.getClass());
-                        }
-                        if (Boolean.FALSE.equals(o)) {
-                            continue;
-                        }
-                    }
-
+                /* Apply unique constraints */
+                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
                     Optional<Long> optionalId = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
                     if (optionalId.isPresent()) {
                         if (uniqueConstraint.getTrustScore() < 100) {
                             // If the trust rating is lower than 100%, we create the entity and create a relationship between the found one and the created one
                             // XXX: Update the found node too?
+                            //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
                             Long createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                             neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", optionalId.get(), ImmutableMap.of(
                                 "trustScore", uniqueConstraint.getTrustScore(),
@@ -238,9 +233,6 @@ public class Neo4jService {
                             nodeReferences.add(new NodeReference(optionalId.get()));
                         }
                         break;
-                    } else {
-                        Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
-                        nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
             }
@@ -270,6 +262,31 @@ public class Neo4jService {
         /* Create relationships to referenced nodes */
 
         return nodeReferences;
+    }
+
+    private boolean isApplicableConstraint(Map<String, Object> fields, CustomEntityTemplateUniqueConstraint uniqueConstraint) {
+
+        Map<Object, Object> userMap = new HashMap<>();
+        userMap.put("entity", fields);
+
+        if(StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())){
+            return true;
+        }
+
+        try {
+            Object isApplicable = MeveoValueExpressionWrapper.evaluateExpression(uniqueConstraint.getApplicableOnEl(), userMap, Boolean.class);
+            if (isApplicable != null && !(isApplicable instanceof Boolean)) {
+                LOGGER.error("Expression " + uniqueConstraint.getApplicableOnEl() + " do not evaluate to boolean but " + isApplicable.getClass());
+                return false;
+            }else if(isApplicable != null){
+                return (boolean) isApplicable;
+            }
+        } catch (ELException e) {
+            LOGGER.error("Cannot evaluate expression", e);
+            return false;
+        }
+
+        return false;
     }
 
     /**
