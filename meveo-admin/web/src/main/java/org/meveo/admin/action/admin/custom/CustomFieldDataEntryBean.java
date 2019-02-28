@@ -1100,8 +1100,6 @@ public class CustomFieldDataEntryBean implements Serializable {
             return;
         }
 
-        log.info("Phu bach test saveChildEntity {}");
-
         // check that CEI code is unique
         CustomEntityInstance ceiSameCode = customEntityInstanceService.findByCodeByCet(cei.getCetCode(), cei.getCode());
         if ((cei.isTransient() && ceiSameCode != null) || (!cei.isTransient() && cei.getId().longValue() != ceiSameCode.getId().longValue())) {
@@ -1163,7 +1161,6 @@ public class CustomFieldDataEntryBean implements Serializable {
      * @param childEntityFieldDefinition Custom field template of child entity type, definition, corresponding to cfv
      */
     public void attachChildEntity(CustomFieldValueHolder mainEntityValueHolder, CustomFieldValue mainEntityCfv, CustomFieldTemplate childEntityFieldDefinition) {
-        log.info("Phu bach test attachChildEntity {}", entityInstance.getId());
         CustomEntityInstance cei = customEntityInstanceService.findById(entityInstance.getId());
         cei.setCetCode(CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz()));
         cei.setParentEntityUuid(mainEntityValueHolder.getEntityUuid());
@@ -1675,6 +1672,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
     public void initializeCustomEntityTemplateCode(String entityClazz) {
         customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
+        customEntityInstanceCode = null;
         entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
 
@@ -1687,7 +1685,6 @@ public class CustomFieldDataEntryBean implements Serializable {
     }
 
     public void search() {
-        log.info("phu bach searchCHEInstances");
         entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
 

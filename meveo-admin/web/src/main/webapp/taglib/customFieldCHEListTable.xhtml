@@ -37,8 +37,6 @@
 
         <p:dataTable id="childEntityTable" lazy="false" value="#{field.childEntityValuesForGUI}" var="childEntityValueHolder" reflow="true" resizableColumns="true"
             rowIndexVar="rowIndex">
-
-
             <p:columns value="#{cft.childEntityFieldsAsList}" var="fieldCode">
                 <f:facet name="header">
                     <h:outputText value="#{messages['businessEntity.'.concat(fieldCode)]}" rendered="#{fieldCode eq 'code' or fieldCode eq 'description'}" />
@@ -122,17 +120,15 @@
             </ui:define>
         </hftl:decorateFormPanel>
     </p:dialog>
-    <p:dialog header="#{cft.description}" widgetVar="#{fieldPrefix}attachChildEntityDialogWidget" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+    <p:dialog widgetVar="#{fieldPrefix}attachChildEntityDialogWidget" header="#{cft.description}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
         <h:form id="dlg_#{fieldPrefix}ChildEntityForm">
             <h:panelGroup layout="block" styleClass="search-panel">
-                <p:messages />
                 <p:outputPanel styleClass="search-panel-fields">
                     <p:inputText id="ceiCode" value="#{customFieldDataEntryBean.customEntityInstanceCode}">
                         <c:if test="#{not empty converter}">
                             <f:converter converterId="#{converter}" />
                         </c:if>
                     </p:inputText>
-
                 </p:outputPanel>
                 <h:panelGroup layout="block" styleClass="search-panel-actions">
                     <p:commandButton id="buttonSearch" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" partialSubmit="true" action="#{customFieldDataEntryBean.search}" value="#{messages['commons.search']}" update="@form" />
@@ -140,7 +136,7 @@
                 </h:panelGroup>
             </h:panelGroup>
 
-            <p:dataTable id="#{fieldPrefix}datatable" var="e" paginator="true" resizableColumns="true" value="#{customFieldDataEntryBean.entityInstances}" rows="10" selection="#{customFieldDataEntryBean.entityInstance}"
+            <p:dataTable id="resultSearchEntityTable" var="e" paginator="true" resizableColumns="true" value="#{customFieldDataEntryBean.entityInstances}" rows="10" selection="#{customFieldDataEntryBean.entityInstance}"
                          rowKey="#{e.id}" lazy="#{lazy}">
                 <p:column selectionMode="single" style="width:16px;text-align:center"/>
                 <p:column>
@@ -161,7 +157,7 @@
                          oncomplete="if (args &amp;&amp; !args.validationFailed) PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()"
                          action="#{customFieldDataEntryBean.attachChildEntity(cfValueHolder, field, cft)}" rendered="#{edit and !disabled}" />
                     <p:commandButton value="#{messages['commons.close']}" update="@this :#{clientGuiId}:childEntityTable"
-                                     oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()">
+                         oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()">
                         <p:resetInput target="@form" />
                     </p:commandButton>
                 </f:facet>
