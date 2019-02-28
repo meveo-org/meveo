@@ -198,9 +198,14 @@ public class Neo4jService {
                 }
             }
 
+            // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
+            Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
+                .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
+                .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
             List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getUniqueConstraints()
                     .stream()
                     .filter(uniqueConstraint ->  isApplicableConstraint(fields, uniqueConstraint))
+                    .sorted(comparator)
                     .collect(Collectors.toList());
 
             final List<String> labels = getAdditionalLabels(cet);
@@ -214,25 +219,50 @@ public class Neo4jService {
                 }
             } else {
                 /* Apply unique constraints */
+                boolean appliedUniqueConstraint = false;
                 for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
-                    Optional<Long> optionalId = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
-                    if (optionalId.isPresent()) {
+                    Set<Long> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
+
+                    if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
+                        String joinedIds = ids.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})",
+                            uniqueConstraint.getCode(), joinedIds);
+                    }
+
+                    for (Long id : ids) {
+                        appliedUniqueConstraint = true;
+
                         if (uniqueConstraint.getTrustScore() < 100) {
                             // If the trust rating is lower than 100%, we create the entity and create a relationship between the found one and the created one
                             // XXX: Update the found node too?
                             //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
                             Long createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
-                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", optionalId.get(), ImmutableMap.of(
+                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
                                 "trustScore", uniqueConstraint.getTrustScore(),
                                 "constraintCode", uniqueConstraint.getCode()
                             ));
                             nodeReferences.add(new NodeReference(createdNodeId));
-                            nodeReferences.add(new NodeReference(optionalId.get(), uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
+                            nodeReferences.add(new NodeReference(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
                         } else {
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, optionalId.get(), fields);
-                            nodeReferences.add(new NodeReference(optionalId.get()));
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, fields);
+                            nodeReferences.add(new NodeReference(id));
                         }
+                    }
+
+                    if (appliedUniqueConstraint) {
                         break;
+                    }
+                }
+
+                if (!appliedUniqueConstraint) {
+                    if (uniqueFields.isEmpty()) {
+                        Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                        nodeReferences.add(new NodeReference(nodeId));
+                    } else {
+                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                        nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
             }
