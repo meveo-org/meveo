@@ -118,6 +118,14 @@ public class CustomFieldDataEntryBean implements Serializable {
     @Inject
     protected Messages messages;
 
+    private String customEntityTemplateCode;
+
+    private String customEntityInstanceCode;
+
+    private List<CustomEntityInstance> entityInstances;
+
+    private CustomEntityInstance entityInstance;
+
     /** Logger. */
     private Logger log = LoggerFactory.getLogger(this.getClass()); 
 
@@ -1092,6 +1100,8 @@ public class CustomFieldDataEntryBean implements Serializable {
             return;
         }
 
+        log.info("Phu bach test saveChildEntity {}");
+
         // check that CEI code is unique
         CustomEntityInstance ceiSameCode = customEntityInstanceService.findByCodeByCet(cei.getCetCode(), cei.getCode());
         if ((cei.isTransient() && ceiSameCode != null) || (!cei.isTransient() && cei.getId().longValue() != ceiSameCode.getId().longValue())) {
@@ -1143,6 +1153,26 @@ public class CustomFieldDataEntryBean implements Serializable {
         mainEntityCfv.getChildEntityValuesForGUI().remove(selectedChildEntity);
         fieldsValues.remove(selectedChildEntity.getEntityUuid());
         messages.info(new BundleKey("messages", "customFieldInstance.childEntity.delete.successful"));
+    }
+
+    /**
+     * Prepare new child entity record for data entry
+     *
+     * @param mainEntityValueHolder Entity custom field value holder
+     * @param mainEntityCfv Main entity's custom field value containing child entities
+     * @param childEntityFieldDefinition Custom field template of child entity type, definition, corresponding to cfv
+     */
+    public void attachChildEntity(CustomFieldValueHolder mainEntityValueHolder, CustomFieldValue mainEntityCfv, CustomFieldTemplate childEntityFieldDefinition) {
+        log.info("Phu bach test attachChildEntity {}", entityInstance.getId());
+        CustomEntityInstance cei = customEntityInstanceService.findById(entityInstance.getId());
+        cei.setCetCode(CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz()));
+        cei.setParentEntityUuid(mainEntityValueHolder.getEntityUuid());
+
+        initFields(cei);
+
+        CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(cei.getUuid());
+        mainEntityValueHolder.setSelectedChildEntity(childEntityValueHolder);
+        saveChildEntity(mainEntityValueHolder, mainEntityCfv, childEntityFieldDefinition);
     }
 
     /**
@@ -1617,5 +1647,52 @@ public class CustomFieldDataEntryBean implements Serializable {
             }
          }
     	return segmentTreeValue;
+    }
+
+    public String getCustomEntityTemplateCode() {
+        return customEntityTemplateCode;
+    }
+
+    public void setCustomEntityTemplateCode(String customEntityTemplateCode) {
+        this.customEntityTemplateCode = customEntityTemplateCode;
+    }
+
+    public String getCustomEntityInstanceCode() {
+        return customEntityInstanceCode;
+    }
+
+    public void setCustomEntityInstanceCode(String customEntityInstanceCode) {
+        this.customEntityInstanceCode = customEntityInstanceCode;
+    }
+
+    public CustomEntityInstance getEntityInstance() {
+        return entityInstance;
+    }
+
+    public void setEntityInstance(CustomEntityInstance entityInstance) {
+        this.entityInstance = entityInstance;
+    }
+
+    public void initializeCustomEntityTemplateCode(String entityClazz) {
+        customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+    }
+
+    public List<CustomEntityInstance> getEntityInstances() {
+        return entityInstances;
+    }
+
+    public void setEntityInstances(List<CustomEntityInstance> entityInstances) {
+        this.entityInstances = entityInstances;
+    }
+
+    public void search() {
+        log.info("phu bach searchCHEInstances");
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+    }
+
+    public void clean() {
+        customEntityInstanceCode = null;
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
 }
