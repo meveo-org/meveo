@@ -198,8 +198,18 @@ public class Neo4jService {
                 }
             }
 
+            // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
+            Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
+                .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
+                .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
+            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getUniqueConstraints()
+                    .stream()
+                    .filter(uniqueConstraint ->  isApplicableConstraint(fields, uniqueConstraint))
+                    .sorted(comparator)
+                    .collect(Collectors.toList());
+
             final List<String> labels = getAdditionalLabels(cet);
-            if (cet.getUniqueConstraints().isEmpty()) {
+            if (applicableConstraints.isEmpty()) {
                 if (uniqueFields.isEmpty()) {
                     Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
@@ -208,38 +218,50 @@ public class Neo4jService {
                     nodeReferences.add(new NodeReference(nodeId));
                 }
             } else {
-                Map<Object, Object> userMap = ImmutableMap.of("entity", fields);
+                /* Apply unique constraints */
+                boolean appliedUniqueConstraint = false;
+                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
+                    Set<Long> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
 
-                for (CustomEntityTemplateUniqueConstraint uniqueConstraint : cet.getUniqueConstraints()) {
-                    if (!StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())) {
-                        Object o = MeveoValueExpressionWrapper.evaluateExpression(uniqueConstraint.getApplicableOnEl(), userMap, Boolean.class);
-                        if (o != null && !(o instanceof Boolean)) {
-                            throw new BusinessException("Expression " + uniqueConstraint.getApplicableOnEl() + " do not evaluate to boolean but " + o.getClass());
-                        }
-                        if (Boolean.FALSE.equals(o)) {
-                            continue;
-                        }
+                    if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
+                        String joinedIds = ids.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})",
+                            uniqueConstraint.getCode(), joinedIds);
                     }
 
-                    Optional<Long> optionalId = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
-                    if (optionalId.isPresent()) {
+                    for (Long id : ids) {
+                        appliedUniqueConstraint = true;
+
                         if (uniqueConstraint.getTrustScore() < 100) {
                             // If the trust rating is lower than 100%, we create the entity and create a relationship between the found one and the created one
                             // XXX: Update the found node too?
+                            //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
                             Long createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
-                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", optionalId.get(), ImmutableMap.of(
+                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
                                 "trustScore", uniqueConstraint.getTrustScore(),
                                 "constraintCode", uniqueConstraint.getCode()
                             ));
                             nodeReferences.add(new NodeReference(createdNodeId));
-                            nodeReferences.add(new NodeReference(optionalId.get(), uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
+                            nodeReferences.add(new NodeReference(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
                         } else {
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, optionalId.get(), fields);
-                            nodeReferences.add(new NodeReference(optionalId.get()));
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, fields);
+                            nodeReferences.add(new NodeReference(id));
                         }
+                    }
+
+                    if (appliedUniqueConstraint) {
                         break;
-                    } else {
+                    }
+                }
+
+                if (!appliedUniqueConstraint) {
+                    if (uniqueFields.isEmpty()) {
                         Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                        nodeReferences.add(new NodeReference(nodeId));
+                    } else {
+                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
@@ -270,6 +292,31 @@ public class Neo4jService {
         /* Create relationships to referenced nodes */
 
         return nodeReferences;
+    }
+
+    private boolean isApplicableConstraint(Map<String, Object> fields, CustomEntityTemplateUniqueConstraint uniqueConstraint) {
+
+        Map<Object, Object> userMap = new HashMap<>();
+        userMap.put("entity", fields);
+
+        if(StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())){
+            return true;
+        }
+
+        try {
+            Object isApplicable = MeveoValueExpressionWrapper.evaluateExpression(uniqueConstraint.getApplicableOnEl(), userMap, Boolean.class);
+            if (isApplicable != null && !(isApplicable instanceof Boolean)) {
+                LOGGER.error("Expression " + uniqueConstraint.getApplicableOnEl() + " do not evaluate to boolean but " + isApplicable.getClass());
+                return false;
+            }else if(isApplicable != null){
+                return (boolean) isApplicable;
+            }
+        } catch (ELException e) {
+            LOGGER.error("Cannot evaluate expression", e);
+            return false;
+        }
+
+        return false;
     }
 
     /**
@@ -448,7 +495,13 @@ public class Neo4jService {
         valuesMap.putAll(crtFields);
 
         // Build the statement
-        StringBuffer statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatementByNodeIds, relationshipAlias, valuesMap);
+        StringBuffer statement;
+
+        if(customRelationshipTemplate.isUnique()){
+            statement = neo4jDao.appendReturnStatement(Neo4JRequests.uniqueCrtStatementByNodeIds, relationshipAlias, valuesMap);
+        }else{
+            statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatementByNodeIds, relationshipAlias, valuesMap);
+        }
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         String resolvedStatement = sub.replace(statement);
 
@@ -461,6 +514,7 @@ public class Neo4jService {
         try {
             /* Execute query and parse result inside a relationship.
             If relationship was created fire creation event, fire update event when updated. */
+            LOGGER.info(resolvedStatement);
 
             final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 

@@ -256,7 +256,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public Optional<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
+    public Set<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", cetCode);
@@ -276,11 +276,16 @@ public class Neo4jDao {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement);
-            Value value = result.single().get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME);
-            if (!value.isNull()) {
-                return Optional.of(value.asLong());
-            }
+            Set<Long> ids = result.list()
+                .stream()
+                .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
+                .filter(value -> !value.isNull())
+                .map(Value::asLong)
+                .collect(Collectors.toSet());
+
             transaction.success();
+
+            return ids;
         } catch(Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
@@ -290,7 +295,7 @@ public class Neo4jDao {
             session.close();
         }
 
-        return Optional.empty();
+        return Collections.emptySet();
     }
 
     public void createRelationBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
