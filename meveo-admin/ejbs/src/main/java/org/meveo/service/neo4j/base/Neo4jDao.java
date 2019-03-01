@@ -275,7 +275,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, fields);
             Set<Long> ids = result.list()
                 .stream()
                 .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
