@@ -57,7 +57,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private List<CustomEntityCategory> customEntityCategories;
 
-    private List<CustomEntityTemplateUniqueConstraint> customEntityTemplateUniqueConstraints;
+    private List<CustomEntityTemplateUniqueConstraint> customEntityTemplateUniqueConstraints = new ArrayList<>();
 
     private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 
@@ -553,14 +553,18 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         messages.info(new BundleKey("messages", message));
     }
 
-    public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
-        customEntityTemplateUniqueConstraints.remove(customEntityTemplateUniqueConstraint);
-        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+    public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
+        for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
+            if (uniqueConstraint != null && uniqueConstraint.equals(selectedUniqueConstraint)) {
+                entity.getUniqueConstraints().remove(selectedUniqueConstraint);
+                break;
+            }
+        }
         String message = "customFieldInstance.childEntity.save.successful";
         messages.info(new BundleKey("messages", message));
     }
 
-	public class SortedTreeNode extends DefaultTreeNode {
+    public class SortedTreeNode extends DefaultTreeNode {
 
 		private static final long serialVersionUID = 3694377290046737073L;
 

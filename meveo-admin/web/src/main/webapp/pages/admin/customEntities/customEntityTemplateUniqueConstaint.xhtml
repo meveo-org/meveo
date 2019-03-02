@@ -5,7 +5,7 @@
     <h:form id="uniqueConstraintsForm">
         <p:panel width="100" header="#{messages['customizedEntities.uniqueConstraint']}">
             <h:panelGroup id="uniqueConstraintsPanel">
-                <p:messages />
+                <p:messages/>
                 <p:dataTable id="uniqueConstaintsDatatable" value="#{customEntityTemplateBean.customEntityTemplateUniqueConstraints}" var="uniqueConstraint" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
                              paginator="true" rows="30" resizableColumns="true"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
@@ -29,7 +29,7 @@
                         <h:outputText value="#{uniqueConstraint['position']}" />
                     </p:column>
                     <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
-                        <p:commandButton action="#{customEntityTemplateBean.removeUniqueConstraint}" icon="ui-icon-trash" update=":uniqueConstraintsForm:uniqueConstraintsPanel" />
+                        <p:commandButton action="#{customEntityTemplateBean.removeUniqueConstraint(uniqueConstraint)}" icon="ui-icon-trash" update=":uniqueConstraintsForm:uniqueConstraintsPanel" />
                     </p:column>
                     <f:facet name="footer">
                         <p:commandButton id="addUniqueConstraints" value="#{messages['customUniqueConstraint.add']}" oncomplete="PF('uniqueConstraintsDialog').show()"  update=":uniqueConstraintsDialogForm"></p:commandButton>
