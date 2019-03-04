@@ -61,6 +61,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
     private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 
+    private Boolean isUpdate = false;
+
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
@@ -546,11 +548,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     }
 
     public void addUniqueConstraint() {
-        customEntityTemplateUniqueConstraint.setCustomEntityTemplate(entity);
-        customEntityTemplateUniqueConstraints.add(customEntityTemplateUniqueConstraint);
-        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
-        String message = "customFieldInstance.childEntity.save.successful";
-        messages.info(new BundleKey("messages", message));
+        isUpdate = false;
+        customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
+        customEntityTemplateUniqueConstraint.setTrustScore(100);
     }
 
     public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
@@ -562,6 +562,40 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         }
         String message = "customFieldInstance.childEntity.save.successful";
         messages.info(new BundleKey("messages", message));
+    }
+
+    public void editUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
+        isUpdate = true;
+        customEntityTemplateUniqueConstraint = selectedUniqueConstraint;
+    }
+
+    public void saveUniqueConstraint() {
+        if (!isUpdate) {
+            customEntityTemplateUniqueConstraint.setCustomEntityTemplate(entity);
+            customEntityTemplateUniqueConstraints.add(customEntityTemplateUniqueConstraint);
+        } else {
+            for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
+                if (uniqueConstraint != null && uniqueConstraint.getCode().equals(customEntityTemplateUniqueConstraint.getCode())) {
+                    uniqueConstraint.setDescription(customEntityTemplateUniqueConstraint.getDescription());
+                    uniqueConstraint.setCypherQuery(customEntityTemplateUniqueConstraint.getCypherQuery());
+                    uniqueConstraint.setTrustScore(customEntityTemplateUniqueConstraint.getTrustScore());
+                    uniqueConstraint.setApplicableOnEl(customEntityTemplateUniqueConstraint.getApplicableOnEl());
+                    break;
+                }
+            }
+        }
+        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+        isUpdate = false;
+        String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public Boolean getIsUpdate() {
+        return isUpdate;
+    }
+
+    public void setIsUpdate(Boolean isUpdate) {
+        this.isUpdate = isUpdate;
     }
 
     public class SortedTreeNode extends DefaultTreeNode {
