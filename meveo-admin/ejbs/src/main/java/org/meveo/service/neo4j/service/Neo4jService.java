@@ -137,6 +137,15 @@ public class Neo4jService {
 
             /* Find unique fields and validate data */
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+            // Fallback to when entity is defined as primitive but does not have associated CFT
+            if(cetFields.isEmpty() && cet.isPrimitiveEntity()){
+                CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
+                CustomEntityTemplateService.turnIntoPrimitive(cet, customFieldTemplate);
+                customFieldTemplateService.create(customFieldTemplate);
+                cetFields.put("value", customFieldTemplate);
+            }
+
             Map<String, Object> uniqueFields = new HashMap<>();
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
             fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
@@ -166,19 +175,32 @@ public class Neo4jService {
 
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
-                    if(referencedCet.isPrimitiveEntity() && referencedCet.getUniqueConstraints().isEmpty()){    // If the CET is primitive, copy value in current node's value
+                    if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = new HashMap<>();
                         valueMap.put("value", value);
-                        List<String> additionalLabels = getAdditionalLabels(referencedCet);
-                        if(referencedCet.getPrePersistScript() != null){
-                            scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+
+                        // If there is no unique constraints defined, directly merge node
+                        if(referencedCet.getUniqueConstraints().isEmpty()){
+                            List<String> additionalLabels = getAdditionalLabels(referencedCet);
+                            if(referencedCet.getPrePersistScript() != null){
+                                scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+                            }
+                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, additionalLabels);
+                            relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
+                        }else{
+                            relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                         }
-                        Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, additionalLabels);
-                        relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
+
                     }else{
-                        @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
-                        relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
+                        // Referenced CET is not primitive
+                        if(value instanceof Map){
+                            @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
+                            relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
+                        }else{
+                            throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
+                        }
+
                     }
                     if (relatedNodeReferences != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
