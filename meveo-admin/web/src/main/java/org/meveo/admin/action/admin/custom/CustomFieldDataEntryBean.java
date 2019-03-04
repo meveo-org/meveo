@@ -1156,20 +1156,33 @@ public class CustomFieldDataEntryBean implements Serializable {
     /**
      * Prepare new child entity record for data entry
      *
-     * @param mainEntityValueHolder Entity custom field value holder
      * @param mainEntityCfv Main entity's custom field value containing child entities
-     * @param childEntityFieldDefinition Custom field template of child entity type, definition, corresponding to cfv
      */
-    public void attachChildEntity(CustomFieldValueHolder mainEntityValueHolder, CustomFieldValue mainEntityCfv, CustomFieldTemplate childEntityFieldDefinition) {
-        CustomEntityInstance cei = customEntityInstanceService.findById(entityInstance.getId());
-        cei.setCetCode(CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz()));
-        cei.setParentEntityUuid(mainEntityValueHolder.getEntityUuid());
+    public void attachChildEntity(CustomFieldValue mainEntityCfv) {
 
-        initFields(cei);
+        Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entityInstance);
 
-        CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(cei.getUuid());
-        mainEntityValueHolder.setSelectedChildEntity(childEntityValueHolder);
-        saveChildEntity(mainEntityValueHolder, mainEntityCfv, childEntityFieldDefinition);
+        customFieldTemplates = sortByValue(customFieldTemplates);
+
+        GroupedCustomField groupedCustomField = new GroupedCustomField(customFieldTemplates.values(), "Custom fields", false);
+        groupedFieldTemplates.put(entityInstance.getUuid(), groupedCustomField);
+
+        Map<String, List<CustomFieldValue>> cfValuesByCode = null;
+        // Get custom field instances mapped by a CFT code if entity has any field defined
+        // if (!((IEntity) entity).isTransient() && customFieldTemplates != null && customFieldTemplates.size() > 0) {
+        // No longer checking for isTransient as for offer new version creation, CFs are duplicated, but entity is not persisted, offering to review it in GUI before saving it.
+        if (customFieldTemplates != null && customFieldTemplates.size() > 0 && ((ICustomFieldEntity) entityInstance).getCfValues() != null) {
+            cfValuesByCode = ((ICustomFieldEntity) entityInstance).getCfValues().getValuesByCode();
+        }
+        cfValuesByCode = prepareCFIForGUI(customFieldTemplates, cfValuesByCode, entityInstance);
+        CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(customFieldTemplates, cfValuesByCode, entityInstance);
+        fieldsValues.put(entityInstance.getUuid(), entityFieldsValues);
+        CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(entityInstance.getUuid());
+
+        String message = "customFieldInstance.childEntity.save.successful";
+
+        mainEntityCfv.getChildEntityValuesForGUI().add(childEntityValueHolder);
+        messages.info(new BundleKey("messages", message));
     }
 
     /**
@@ -1673,6 +1686,7 @@ public class CustomFieldDataEntryBean implements Serializable {
     public void initializeCustomEntityTemplateCode(String entityClazz) {
         customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
         customEntityInstanceCode = null;
+        entityInstance = null;
         entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
 

@@ -82,7 +82,9 @@
                         <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm" />
                     </p:commandButton>
                     <p:commandButton value="#{messages['commons.attachNew']}" partialSubmit="true" process="@this"
+                        update=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm #{messagesId}"
                         actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').show()">
+                        <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" />
                     </p:commandButton>
                 </f:facet>
             </c:if>
@@ -121,7 +123,7 @@
         </hftl:decorateFormPanel>
     </p:dialog>
     <p:dialog widgetVar="#{fieldPrefix}attachChildEntityDialogWidget" header="#{cft.description}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
-        <h:form id="dlg_#{fieldPrefix}ChildEntityForm">
+        <h:form id="#{fieldPrefix}dlg_attachChildEntityForm">
             <h:panelGroup layout="block" styleClass="search-panel">
                 <p:outputPanel styleClass="search-panel-fields">
                     <p:inputText id="ceiCode" value="#{customFieldDataEntryBean.customEntityInstanceCode}">
@@ -131,8 +133,8 @@
                     </p:inputText>
                 </p:outputPanel>
                 <h:panelGroup layout="block" styleClass="search-panel-actions">
-                    <p:commandButton id="buttonSearch" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" partialSubmit="true" action="#{customFieldDataEntryBean.search}" value="#{messages['commons.search']}" update="@form" />
-                    <p:commandButton id="buttonClear" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" action="#{customFieldDataEntryBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                    <p:commandButton id="buttonSearch" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" partialSubmit="true" action="#{customFieldDataEntryBean.search}" value="#{messages['commons.search']}" update="@form" />
+                    <p:commandButton id="buttonClear" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" action="#{customFieldDataEntryBean.clean}" value="#{messages['commons.clean']}" update="@form" />
                 </h:panelGroup>
             </h:panelGroup>
 
@@ -152,10 +154,10 @@
                     <h:outputText value="#{e['description']}" />
                 </p:column>
                 <f:facet name="footer">
-                    <p:commandButton value="#{messages['action.attach']}" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" partialSubmit="true"
-                         partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form #{messagesId} :#{clientGuiId}:childEntityTable"
+                    <p:commandButton value="#{messages['action.attach']}" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" partialSubmit="true"
+                         partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :#{clientGuiId}:childEntityTable"
                          oncomplete="if (args &amp;&amp; !args.validationFailed) PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()"
-                         action="#{customFieldDataEntryBean.attachChildEntity(cfValueHolder, field, cft)}" rendered="#{edit and !disabled}" />
+                         action="#{customFieldDataEntryBean.attachChildEntity(field)}" rendered="#{edit and !disabled}" />
                     <p:commandButton value="#{messages['commons.close']}" update="@this :#{clientGuiId}:childEntityTable"
                          oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()">
                         <p:resetInput target="@form" />
