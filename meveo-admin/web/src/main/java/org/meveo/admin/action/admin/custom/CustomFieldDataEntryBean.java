@@ -118,9 +118,16 @@ public class CustomFieldDataEntryBean implements Serializable {
     @Inject
     protected Messages messages;
 
+    private String customEntityTemplateCode;
+
+    private String customEntityInstanceCode;
+
+    private List<CustomEntityInstance> entityInstances;
+
+    private CustomEntityInstance entityInstance;
+
     /** Logger. */
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private final  String SEGMENT_TREE = "segmentTree";
+    private Logger log = LoggerFactory.getLogger(this.getClass()); 
 
     /**
      * Explicitly refresh fields and action definitions. Should be used on some field value change event when that field is used to determine what fields and actions apply. E.g.
@@ -1147,6 +1154,25 @@ public class CustomFieldDataEntryBean implements Serializable {
     }
 
     /**
+     * Prepare new child entity record for data entry
+     *
+     * @param mainEntityValueHolder Entity custom field value holder
+     * @param mainEntityCfv Main entity's custom field value containing child entities
+     * @param childEntityFieldDefinition Custom field template of child entity type, definition, corresponding to cfv
+     */
+    public void attachChildEntity(CustomFieldValueHolder mainEntityValueHolder, CustomFieldValue mainEntityCfv, CustomFieldTemplate childEntityFieldDefinition) {
+        CustomEntityInstance cei = customEntityInstanceService.findById(entityInstance.getId());
+        cei.setCetCode(CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz()));
+        cei.setParentEntityUuid(mainEntityValueHolder.getEntityUuid());
+
+        initFields(cei);
+
+        CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(cei.getUuid());
+        mainEntityValueHolder.setSelectedChildEntity(childEntityValueHolder);
+        saveChildEntity(mainEntityValueHolder, mainEntityCfv, childEntityFieldDefinition);
+    }
+
+    /**
      * Serialize map, list and entity reference values that were adapted for GUI data entry. See CustomFieldValue.xxxGUI fields for transformation description
      * 
      * @param customFieldValue Value to serialize
@@ -1609,8 +1635,8 @@ public class CustomFieldDataEntryBean implements Serializable {
     	String segmentTreeValue=null;
     	Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
     	 for (CustomFieldTemplate cft : customFieldTemplates.values()) {
-            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){
-             segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, SEGMENT_TREE);
+            if(cft.getFieldType()==CustomFieldTypeEnum.EMBEDDED_ENTITY){ 
+             segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, cft.getCode());
              if(segmentTreeValue==null){
             	 segmentTreeValue="{}";
              }
@@ -1618,5 +1644,52 @@ public class CustomFieldDataEntryBean implements Serializable {
             }
          }
     	return segmentTreeValue;
+    }
+
+    public String getCustomEntityTemplateCode() {
+        return customEntityTemplateCode;
+    }
+
+    public void setCustomEntityTemplateCode(String customEntityTemplateCode) {
+        this.customEntityTemplateCode = customEntityTemplateCode;
+    }
+
+    public String getCustomEntityInstanceCode() {
+        return customEntityInstanceCode;
+    }
+
+    public void setCustomEntityInstanceCode(String customEntityInstanceCode) {
+        this.customEntityInstanceCode = customEntityInstanceCode;
+    }
+
+    public CustomEntityInstance getEntityInstance() {
+        return entityInstance;
+    }
+
+    public void setEntityInstance(CustomEntityInstance entityInstance) {
+        this.entityInstance = entityInstance;
+    }
+
+    public void initializeCustomEntityTemplateCode(String entityClazz) {
+        customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
+        customEntityInstanceCode = null;
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+    }
+
+    public List<CustomEntityInstance> getEntityInstances() {
+        return entityInstances;
+    }
+
+    public void setEntityInstances(List<CustomEntityInstance> entityInstances) {
+        this.entityInstances = entityInstances;
+    }
+
+    public void search() {
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+    }
+
+    public void clean() {
+        customEntityInstanceCode = null;
+        entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
 }

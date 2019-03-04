@@ -20,7 +20,14 @@ import javax.validation.constraints.Size;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
         parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
 )
-@NamedQueries({ @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  ") })
+@NamedQueries({
+        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  "),
+        @NamedQuery(name = "CustomRelationshipTemplate.findByStartEndAndName",
+        query = "SELECT crt from CustomRelationshipTemplate crt " +
+                "WHERE crt.startNode.code = :startCode " +
+                "AND crt.endNode.code = :endCode " +
+                "AND crt.name = :name")
+})
 public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {
 
     private static final long serialVersionUID = 8281478284763353310L;

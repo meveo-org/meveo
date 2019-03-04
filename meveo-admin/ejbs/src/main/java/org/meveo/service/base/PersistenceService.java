@@ -39,7 +39,10 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.index.ElasticClient;
 
+import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -379,6 +382,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             elasticClient.createOrFullUpdate((ISearchable) entity);
         }
 
+        afterUpdate(entity);
+
         log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
         return entity;
@@ -643,6 +648,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @param entity The entity to create or update
      */
     protected void beforeUpdateOrCreate(E entity){}
+
+    /**
+     * Action to execute after update of an entity
+     *
+     * @param entity The entity to create or update
+     */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @Asynchronous
+    protected void afterUpdate(E entity) throws BusinessException {}
 
     /**
      * Creates query to filter entities according data provided in pagination configuration.

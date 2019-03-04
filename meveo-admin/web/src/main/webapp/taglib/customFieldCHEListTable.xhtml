@@ -33,13 +33,10 @@
     <h:outputText value="#{''}" />
     <c:set var="cfValueHolder" value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />
     <c:set var="fieldPrefix" value="#{prefix}_#{fn:replace(cft.code, ' ','_')}_" />
-
     <hftl:decorateFormField label="#{cft.description}#{cft.valueRequired?' *':''}" componentWidth="100" displayOneLine="false">
 
         <p:dataTable id="childEntityTable" lazy="false" value="#{field.childEntityValuesForGUI}" var="childEntityValueHolder" reflow="true" resizableColumns="true"
             rowIndexVar="rowIndex">
-
-
             <p:columns value="#{cft.childEntityFieldsAsList}" var="fieldCode">
                 <f:facet name="header">
                     <h:outputText value="#{messages['businessEntity.'.concat(fieldCode)]}" rendered="#{fieldCode eq 'code' or fieldCode eq 'description'}" />
@@ -84,6 +81,9 @@
                         actionListener="#{customFieldDataEntryBean.newChildEntity(cfValueHolder, field, cft)}" oncomplete="PF('#{fieldPrefix}childEntityDialogWidget').show()">
                         <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm" />
                     </p:commandButton>
+                    <p:commandButton value="#{messages['commons.attachNew']}" partialSubmit="true" process="@this"
+                        actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').show()">
+                    </p:commandButton>
                 </f:facet>
             </c:if>
         </p:dataTable>
@@ -120,6 +120,49 @@
             </ui:define>
         </hftl:decorateFormPanel>
     </p:dialog>
+    <p:dialog widgetVar="#{fieldPrefix}attachChildEntityDialogWidget" header="#{cft.description}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+        <h:form id="dlg_#{fieldPrefix}ChildEntityForm">
+            <h:panelGroup layout="block" styleClass="search-panel">
+                <p:outputPanel styleClass="search-panel-fields">
+                    <p:inputText id="ceiCode" value="#{customFieldDataEntryBean.customEntityInstanceCode}">
+                        <c:if test="#{not empty converter}">
+                            <f:converter converterId="#{converter}" />
+                        </c:if>
+                    </p:inputText>
+                </p:outputPanel>
+                <h:panelGroup layout="block" styleClass="search-panel-actions">
+                    <p:commandButton id="buttonSearch" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" partialSubmit="true" action="#{customFieldDataEntryBean.search}" value="#{messages['commons.search']}" update="@form" />
+                    <p:commandButton id="buttonClear" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" action="#{customFieldDataEntryBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                </h:panelGroup>
+            </h:panelGroup>
 
+            <p:dataTable id="resultSearchEntityTable" var="e" paginator="true" resizableColumns="true" value="#{customFieldDataEntryBean.entityInstances}" rows="10" selection="#{customFieldDataEntryBean.entityInstance}"
+                         rowKey="#{e.id}" lazy="#{lazy}">
+                <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                <p:column>
+                    <f:facet name="header">
+                        <h:outputText value="#{messages['BusinessEntity.code']}" />
+                    </f:facet>
+                    <h:outputText value="#{e['code']}" />
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        <h:outputText value="#{messages['BusinessEntity.description']}" />
+                    </f:facet>
+                    <h:outputText value="#{e['description']}" />
+                </p:column>
+                <f:facet name="footer">
+                    <p:commandButton value="#{messages['action.attach']}" process="@this :#{clientGuiId}:dlg_#{fieldPrefix}ChildEntityForm" partialSubmit="true"
+                         partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form #{messagesId} :#{clientGuiId}:childEntityTable"
+                         oncomplete="if (args &amp;&amp; !args.validationFailed) PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()"
+                         action="#{customFieldDataEntryBean.attachChildEntity(cfValueHolder, field, cft)}" rendered="#{edit and !disabled}" />
+                    <p:commandButton value="#{messages['commons.close']}" update="@this :#{clientGuiId}:childEntityTable"
+                         oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()">
+                        <p:resetInput target="@form" />
+                    </p:commandButton>
+                </f:facet>
+            </p:dataTable>
+        </h:form>
+    </p:dialog>
 </ui:composition>
 </html>

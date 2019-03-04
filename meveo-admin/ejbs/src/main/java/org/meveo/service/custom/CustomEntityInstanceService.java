@@ -5,6 +5,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.service.base.BusinessService;
@@ -35,6 +36,17 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
         qb.addCriterion("cei.cetCode", "=", cetCode, true);
         qb.addCriterion("cei.parentEntityUuid", "=", parentEntityUuid, true);
+
+        return qb.getQuery(getEntityManager()).getResultList();
+    }
+
+    public List<CustomEntityInstance> findByCode(String cetCode, String code) {
+
+        QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
+        qb.addCriterion("cei.cetCode", "=", cetCode, true);
+        if (StringUtils.isNotEmpty(code)) {
+            qb.like("cei.code", code, QueryBuilder.QueryLikeStyleEnum.MATCH_ANYWHERE, false);
+        }
 
         return qb.getQuery(getEntityManager()).getResultList();
     }
