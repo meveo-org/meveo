@@ -54,10 +54,10 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.billing.impl.CounterValueInsufficientException;
+import org.meveo.service.neo4j.graph.Neo4jEntity;
+import org.meveo.service.neo4j.graph.Neo4jRelationship;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.Script;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 
 @Singleton
@@ -343,22 +343,22 @@ public class DefaultObserver {
         checkEvent(NotificationEventTypeEnum.COUNTER_DEDUCED, event);
     }
 
-    public void nodeCreated(@Observes @Created Node e) throws BusinessException {
+    public void nodeCreated(@Observes @Created Neo4jEntity e) throws BusinessException {
         log.debug("Defaut observer : Node {} with id {} created", e.labels(), e.id());
         checkEvent(NotificationEventTypeEnum.CREATED, e);
     }
 
-    public void nodeUpdated(@Observes @Updated Node e) throws  BusinessException {
+    public void nodeUpdated(@Observes @Updated Neo4jEntity e) throws  BusinessException {
         log.debug("Defaut observer : Node {} with id {} updated", e.labels(), e.id());
         checkEvent(NotificationEventTypeEnum.UPDATED, e);
     }
 
-    public  void relationshipCreated(@Observes @Created Relationship e) throws  BusinessException {
+    public  void relationshipCreated(@Observes @Created Neo4jRelationship e) throws  BusinessException {
         log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} created", e.startNodeId(), e.endNodeId(), e.type(), e.id());
         checkEvent(NotificationEventTypeEnum.CREATED, e);
     }
 
-    public  void relationshipUpdated(@Observes @Updated Relationship e) throws  BusinessException {
+    public  void relationshipUpdated(@Observes @Updated Neo4jRelationship e) throws  BusinessException {
         log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} updated", e.startNodeId(), e.endNodeId(), e.type(), e.id());
         checkEvent(NotificationEventTypeEnum.UPDATED, e);
     }
