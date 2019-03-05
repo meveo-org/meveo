@@ -137,11 +137,14 @@ public class Neo4jService {
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
             // Fallback to when entity is defined as primitive but does not have associated CFT
-            if(cetFields.isEmpty() && cet.isPrimitiveEntity()){
-                CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
-                CustomEntityTemplateService.turnIntoPrimitive(cet, customFieldTemplate);
-                customFieldTemplateService.create(customFieldTemplate);
-                cetFields.put("value", customFieldTemplate);
+            if(cet.isPrimitiveEntity()){
+                CustomFieldTemplate valueCft = cetFields.get("value");
+                if(valueCft == null){
+                    valueCft = new CustomFieldTemplate();
+                    CustomEntityTemplateService.turnIntoPrimitive(cet, valueCft);
+                    customFieldTemplateService.create(valueCft);
+                    cetFields.put("value", valueCft);
+                }
             }
 
             Map<String, Object> uniqueFields = new HashMap<>();
