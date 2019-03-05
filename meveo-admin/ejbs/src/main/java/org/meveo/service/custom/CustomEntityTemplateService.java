@@ -132,7 +132,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
             if(valueCft == null){
                 createPrimitiveCft(cet);
-            }else{
+            }else if(valueCft.getFieldType() != cet.getPrimitiveType().getCftType()){
+                flush();
                 valueCft.setFieldType(cet.getPrimitiveType().getCftType());
                 customFieldTemplateService.update(valueCft);
             }
