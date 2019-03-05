@@ -40,13 +40,14 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.neo4j.graph.Neo4jEntity;
+import org.meveo.service.neo4j.graph.Neo4jRelationship;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.neo4j.scheduler.NodeReference;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,29 +97,26 @@ public class Neo4jService {
 
     @Inject
     @Removed
-    private Event<org.neo4j.driver.v1.types.Node> nodeRemovedEvent;
+    private Event<Neo4jEntity> nodeRemovedEvent;
 
     @Inject
     @Updated
-    private Event<org.neo4j.driver.v1.types.Node> nodeUpdatedEvent;
+    private Event<Neo4jEntity> nodeUpdatedEvent;
 
     @Inject
     @Created
-    private Event<org.neo4j.driver.v1.types.Relationship> edgeCreatedEvent;
+    private Event<Neo4jRelationship> edgeCreatedEvent;
 
     @Inject
     @Updated
-    private Event<org.neo4j.driver.v1.types.Relationship> edgeUpdatedEvent;
+    private Event<Neo4jRelationship> edgeUpdatedEvent;
 
     @Inject
     @ApplicationProvider
     protected Provider appProvider;
 
+    @SuppressWarnings("unchecked")
     public Set<NodeReference> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
-        return addCetNode(neo4JConfiguration, cetCode, fieldValues, false);
-    }
-
-    public Set<NodeReference> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues, boolean isTemporaryCET) {
 
         Set<NodeReference> nodeReferences = new HashSet<>();
 
@@ -487,7 +485,7 @@ public class Neo4jService {
         }
 
         for (Record record : recordList){
-            final Relationship relationship = record.get(relationshipAlias).asRelationship();  // Parse relationship
+            final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
@@ -556,7 +554,7 @@ public class Neo4jService {
         }
 
         for (Record record : recordList){
-            final Relationship relationship = record.get(relationshipAlias).asRelationship();  // Parse relationship
+            final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
@@ -631,7 +629,7 @@ public class Neo4jService {
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
         final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
 
-        org.neo4j.driver.v1.types.Node startNode = null;
+        Neo4jEntity startNode = null;
 
         try {
             try {
@@ -655,7 +653,7 @@ public class Neo4jService {
                 final StatementResult result = transaction.run(updateStatement, parametersValues);  // Execute query
 
                 // Fire node update event
-                startNode = result.single().get(startNodeAlias).asNode();
+                startNode = new Neo4jEntity(result.single().get(startNodeAlias).asNode(), neo4JConfiguration);
 
             } catch (NoSuchRecordException e) {
 
@@ -752,7 +750,7 @@ public class Neo4jService {
         }
         
         if(internalNode != null){
-            nodeRemovedEvent.fire(internalNode);    // Fire notification
+            nodeRemovedEvent.fire(new Neo4jEntity(internalNode, neo4jConfiguration));    // Fire notification
         }
 
     }

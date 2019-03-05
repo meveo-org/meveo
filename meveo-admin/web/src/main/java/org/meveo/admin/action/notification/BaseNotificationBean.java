@@ -102,7 +102,7 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
                 events = Arrays.asList(NotificationEventTypeEnum.FILE_UPLOAD, NotificationEventTypeEnum.FILE_DOWNLOAD, NotificationEventTypeEnum.FILE_DELETE,
                     NotificationEventTypeEnum.FILE_RENAME);
             }
-        } else if (clazzStr.equals("org.neo4j.driver.v1.types.Node") || clazzStr.equals("org.neo4j.driver.v1.types.Relationship")) {
+        } else if (clazzStr.equals("org.meveo.service.neo4j.graph.Neo4jEntity") || clazzStr.equals("org.meveo.service.neo4j.graph.Neo4jRelationship")) {
             events.addAll(Arrays.asList(NotificationEventTypeEnum.CREATED, NotificationEventTypeEnum.UPDATED));
         }
 		return events;

@@ -233,7 +233,7 @@
         </addColumn>
         <renameColumn tableName="technical_services" oldColumnName="service_version" newColumnName="function_version"/>
     </changeSet>
-    
+
      <changeSet id="setters_and_getters" author="Clement Bareth">
         <addColumn tableName="meveo_script_instance">
             <column name="getters" type="${type.json}"> </column>
@@ -468,10 +468,10 @@
             <column name="updated" type="datetime" />
             <column name="description" type="varchar(255)" />
             <column name="code" type="varchar(255)" />
-            
+
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
-            
+
             <column name="name" type="varchar(100)">
                 <constraints nullable="false" />
             </column>
@@ -514,6 +514,21 @@
             </column>
         </addColumn>
         <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code, cet_id" constraintName="cust_cet_unique_constraint_pkey"/>
+    </changeSet>
+    
+    <changeSet id="#3516_replace_node_and_relationships_classname_filter" author="Clément Bareth">
+        <update tableName="adm_notification">
+            <column name="class_name_filter" value="org.meveo.service.neo4j.graph.Neo4jEntity"/>
+            <where>
+                class_name_filter = 'org.neo4j.driver.v1.types.Node'
+            </where>
+        </update>
+        <update tableName="adm_notification">
+            <column name="class_name_filter" value="org.meveo.service.neo4j.graph.Neo4jRelationship"/>
+            <where>
+                class_name_filter = 'org.neo4j.driver.v1.types.Relationship'
+            </where>
+        </update>
     </changeSet>
 
 </databaseChangeLog>
