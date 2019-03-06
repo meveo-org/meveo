@@ -4,6 +4,7 @@ package org.meveo.elresolver;
 import javax.el.FunctionMapper;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,9 +15,11 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
     public MeveoDefaultFunctionMapper(){
 
         try {
-            addFunction("kb","contains", getClass().getMethod("contains", String.class, String.class));
-            addFunction("kb","startsWith", getClass().getMethod("startsWith", String.class, String.class));
-            addFunction("kb","endsWith", getClass().getMethod("endsWith", String.class, String.class));
+            addFunction("string","contains", getClass().getMethod("contains", String.class, String.class));
+            addFunction("string","startsWith", getClass().getMethod("startsWith", String.class, String.class));
+            addFunction("string","endsWith", getClass().getMethod("endsWith", String.class, String.class));
+
+            addFunction("array", "first", getClass().getMethod("getFirstItem", Collection.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -78,6 +81,13 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
      */
     public static boolean endsWith(String string1, String string2){
         return string1.endsWith(string2);
+    }
+
+    /**
+     * First item of the collection
+     */
+    public static Object getFirstItem(Collection collection){
+        return collection.iterator().next();
     }
 
 
