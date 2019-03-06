@@ -59,7 +59,7 @@ public abstract class EntityOrRelation implements Serializable {
 
     @JsonProperty("name")
 	public String getNameIndexed() {
-		if(this.index > 1) {
+		if(this.index >= 1) {
 			return this.name + this.index;
 		}
 		return this.name;
