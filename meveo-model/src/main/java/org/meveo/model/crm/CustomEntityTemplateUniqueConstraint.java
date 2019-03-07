@@ -8,11 +8,11 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.model.BusinessEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
 @Entity
-@Table(name = "cust_cet_unique_constraint", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
+@Table(name = "cust_cet_unique_constraint", uniqueConstraints = @UniqueConstraint(columnNames = {"code","cypher_query", "trust_score", "applicable_on_el"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "cust_cet_unique_constraint_seq")})
 @IdClass(CetUcPk.class)
 public class CustomEntityTemplateUniqueConstraint {

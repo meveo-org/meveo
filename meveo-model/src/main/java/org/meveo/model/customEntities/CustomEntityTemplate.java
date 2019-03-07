@@ -58,7 +58,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Unique constraint to be applied when persisiting custom entities
 	 */
-	@OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, orphanRemoval=true, cascade = CascadeType.ALL)
 	@OrderColumn(name = "position")
 	private List<CustomEntityTemplateUniqueConstraint> uniqueConstraints = new ArrayList<>();
 
