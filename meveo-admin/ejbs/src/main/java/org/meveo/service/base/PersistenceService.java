@@ -382,8 +382,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             elasticClient.createOrFullUpdate((ISearchable) entity);
         }
 
-        afterUpdate(entity);
-
         log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
         return entity;
