@@ -46,9 +46,9 @@ public class Endpoint extends BusinessEntity {
     /**
      * Technical service associated to the endpoint
      */
-    @ManyToOne(fetch = FetchType.EAGER, targetEntity = Function.class)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "service_id", updatable = false, nullable = false)
-    private TechnicalService service;
+    private Function service;
 
     /**
      * Whether the execution of the service will be syncrhonous.
@@ -88,7 +88,7 @@ public class Endpoint extends BusinessEntity {
         pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
     }
 
-    public TechnicalService getService() {
+    public Function getService() {
         return service;
     }
 

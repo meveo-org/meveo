@@ -41,7 +41,7 @@ public class EndpointDto extends BusinessDto implements Serializable {
      * Code of the technical service to update or create
      */
     @JsonProperty(required = true) @NotNull
-    private String technicalServiceCode;
+    private String serviceCode;
 
     /**
      * Whether the endpoint should be synchronous
@@ -68,12 +68,12 @@ public class EndpointDto extends BusinessDto implements Serializable {
     private List<InputPropertyDto> pathParameters = new ArrayList<>();
 
 
-    public String getTechnicalServiceCode() {
-        return technicalServiceCode;
+    public String getServiceCode() {
+        return serviceCode;
     }
 
-    public void setTechnicalServiceCode(String technicalServiceCode) {
-        this.technicalServiceCode = technicalServiceCode;
+    public void setServiceCode(String serviceCode) {
+        this.serviceCode = serviceCode;
     }
 
     public boolean isSynchronous() {

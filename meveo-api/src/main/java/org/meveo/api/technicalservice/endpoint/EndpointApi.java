@@ -23,6 +23,7 @@ import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.technicalservice.DescriptionApi;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.InputMeveoProperty;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -67,7 +68,7 @@ public class EndpointApi {
      * @throws BusinessException if error occurs while execution
      */
     public Map<String, Object> execute(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
-        TechnicalService service = endpoint.getService();
+        Function service = endpoint.getService();
         Map<String, Object> parameterMap = new HashMap<>(parameters);
 
         // Assign path parameters
@@ -217,7 +218,7 @@ public class EndpointApi {
         EndpointDto endpointDto = new EndpointDto();
         endpointDto.setCode(endpoint.getCode());
         endpointDto.setMethod(endpoint.getMethod());
-        endpointDto.setTechnicalServiceCode(endpoint.getService().getCode());
+        endpointDto.setServiceCode(endpoint.getService().getCode());
         endpointDto.setSynchronous(endpoint.isSynchronous());
         List<InputPropertyDto> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
@@ -252,8 +253,8 @@ public class EndpointApi {
         endpoint.setSynchronous(endpointDto.isSynchronous());
 
         // Technical Service
-        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getTechnicalServiceCode());
-        TechnicalService service = (TechnicalService) functionService.findByCode(endpointDto.getTechnicalServiceCode());
+        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
+        TechnicalService service = (TechnicalService) functionService.findByCode(endpointDto.getServiceCode());
         endpoint.setService(service);
 
         // Parameters mappings
@@ -270,7 +271,7 @@ public class EndpointApi {
         List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
         for (InputPropertyDto pathParameter : endpointDto.getPathParameters()) {
             EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), pathParameter);
+            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getServiceCode(), pathParameter);
             endpointPathParameter.setEndpointParameter(endpointParameter);
             endpointPathParameters.add(endpointPathParameter);
         }
@@ -283,7 +284,7 @@ public class EndpointApi {
             TSParameterMapping tsParameterMapping = new TSParameterMapping();
             tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
             tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), parameterMappingDto.getServiceParameter());
+            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getServiceCode(), parameterMappingDto.getServiceParameter());
             tsParameterMapping.setEndpointParameter(endpointParameter);
             tsParameterMappings.add(tsParameterMapping);
         }
