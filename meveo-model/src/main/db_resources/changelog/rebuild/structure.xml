@@ -1583,7 +1583,10 @@
             <column name="value_required" type="${type.boolean}" defaultValueNumeric="0">
                 <constraints nullable="false" />
             </column>
-
+            <column name="primitive_entity" type = "${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="primitive_type" type="varchar(100)"/>
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
             <column name="versionable" type="${type.boolean}" defaultValueNumeric="0">
