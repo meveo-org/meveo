@@ -530,5 +530,11 @@
             </where>
         </update>
     </changeSet>
+    
+    <changeSet id="rest_endpoint_add_jsonata" author="Clément Bareth">
+        <addColumn tableName="service_endpoint">
+            <column name="jsonata_transformer" type="varchar(255)"></column>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

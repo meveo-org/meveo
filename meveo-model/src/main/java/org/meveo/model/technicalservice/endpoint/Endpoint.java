@@ -79,6 +79,12 @@ public class Endpoint extends BusinessEntity {
     @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<TSParameterMapping> parametersMapping;
 
+    /**
+     * JSONata query used to transform the result
+     */
+    @Column(name = "jsonata_transformer")
+    private String jsonataTransformer;
+
     @Transient
     private String endpointUrl;
 
@@ -86,6 +92,14 @@ public class Endpoint extends BusinessEntity {
     private void postLoad() {
         endpointUrl = "/rest"+code;
         pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
+    }
+
+    public String getJsonataTransformer() {
+        return jsonataTransformer;
+    }
+
+    public void setJsonataTransformer(String jsonataTransformer) {
+        this.jsonataTransformer = jsonataTransformer;
     }
 
     public Function getService() {

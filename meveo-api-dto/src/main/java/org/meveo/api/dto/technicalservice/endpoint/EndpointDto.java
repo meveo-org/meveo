@@ -67,6 +67,19 @@ public class EndpointDto extends BusinessDto implements Serializable {
     @JsonProperty
     private List<InputPropertyDto> pathParameters = new ArrayList<>();
 
+    /**
+     * JSONata query used to transform the result
+     */
+    @JsonProperty
+    private String jsonataTransformer;
+
+    public String getJsonataTransformer() {
+        return jsonataTransformer;
+    }
+
+    public void setJsonataTransformer(String jsonataTransformer) {
+        this.jsonataTransformer = jsonataTransformer;
+    }
 
     public String getServiceCode() {
         return serviceCode;

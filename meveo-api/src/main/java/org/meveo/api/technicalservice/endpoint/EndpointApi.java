@@ -236,6 +236,7 @@ public class EndpointApi {
             mappingDto.setServiceParameter(inputPropertyDto);
             mappingDtos.add(mappingDto);
         }
+        endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
         return endpointDto;
     }
 
@@ -251,6 +252,9 @@ public class EndpointApi {
 
         // Synchronous
         endpoint.setSynchronous(endpointDto.isSynchronous());
+
+        // JSONata query
+        endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
 
         // Technical Service
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
