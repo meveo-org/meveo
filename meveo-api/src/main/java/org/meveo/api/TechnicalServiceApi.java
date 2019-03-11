@@ -25,6 +25,7 @@ import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.technicalservice.DescriptionApi;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
@@ -110,7 +111,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
             }
             technicalService.setFunctionVersion(versionNumber);
         }
-        persistenceService.create(technicalService);
+        try{
+            if(getTechnicalService(postData.getName(), postData.getVersion()) != null){
+                throw new EntityAlreadyExistsException(TechnicalService.class, postData.getCode());
+            }
+        } catch (EntityDoesNotExistsException e){
+            persistenceService.create(technicalService);
+        }
+
     }
 
     /**
