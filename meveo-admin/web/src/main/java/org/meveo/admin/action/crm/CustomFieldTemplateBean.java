@@ -11,13 +11,13 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.UpdateMapTypeFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -28,6 +28,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -49,6 +50,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     private CustomizedEntityService customizedEntityService;
 
     @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+
+    @Inject
     private ResourceBundle resourceMessages;
 
     private DualListModel<CustomFieldMatrixColumn> childEntityFieldDM;
@@ -60,6 +64,21 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     public CustomFieldTemplateBean() {
         super(CustomFieldTemplate.class);
+    }
+
+    @Override
+    public void saveOrUpdateForPopup() throws BusinessException, ELException {
+
+        if (!StringUtils.isBlank(entity.getEntityClazz())){
+
+            String cetCode = CustomFieldTemplate.retrieveCetCode(entity.getEntityClazz());
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+
+            if (cet != null) {
+                entity.setPrimitiveType(cet.getPrimitiveType());
+            }
+        }
+        super.saveOrUpdateForPopup();
     }
 
     @Override

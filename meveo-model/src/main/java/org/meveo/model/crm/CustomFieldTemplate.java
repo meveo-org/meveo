@@ -131,14 +131,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     private boolean triggerEndPeriodEvent;
 
     /**
-     * Whether the CET is primitive. A primitive entity is an entity containing only
-     * one property named "value"
-     */
-    @Column(name = "primitive_entity")
-    @Type(type = "numeric_boolean")
-    private boolean primitiveEntity;
-
-    /**
      * The primitive type, if entity is primitive.
      */
     @Column(name = "primitive_type")
@@ -405,14 +397,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     public String getEntityClazzCetCode() {
         return CustomFieldTemplate.retrieveCetCode(entityClazz);
-    }
-
-    public boolean isPrimitiveEntity() {
-        return primitiveEntity;
-    }
-
-    public void setPrimitiveEntity(boolean primitiveEntity) {
-        this.primitiveEntity = primitiveEntity;
     }
 
     public PrimitiveTypeEnum getPrimitiveType() {
