@@ -24,6 +24,7 @@ public class Neo4jDao {
 
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
+    private static final String UPDATABLE_FIELDS = "updatableFields";
     public static final String ID = "id";
 
     Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
@@ -92,7 +93,7 @@ public class Neo4jDao {
      * @param labels Additionnal labels of the node
      * @return the id of the created node, or null if it has failed
      */
-    public Long mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, List<String> labels) {
+    public Long mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
         Long nodeId = null;        // Id of the created node
@@ -102,6 +103,7 @@ public class Neo4jDao {
         valuesMap.put("cetCode", cetCode);
         valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
         valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(UPDATABLE_FIELDS, Values.value(updatableFields));
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
