@@ -22,7 +22,8 @@
                     <h:outputText value="#{entity.label}" rendered="#{node.type == 'action'}" size="56" maxlength="100" componentWidth="100"/>
                 </p:column>
                 <p:column headerText="#{messages['customFieldTemplate.fieldType']}" style="width: 8%">
-                    <h:outputText value="#{messages[entity.fieldType.label]}" rendered="#{node.type == 'field'}" />
+                    <h:outputText value="#{messages[entity.fieldType.label]}" rendered="#{node.type == 'field' and entity.entityClazz == null}" />
+                    <h:outputText value="#{entity.referenceEntityClazzCetCode}" rendered="#{node.type == 'field' and entity.entityClazz != null}" />
                 </p:column>
                 <p:column headerText="#{messages['customFieldTemplate.storageType']}" style="width: 7%">
                     <h:outputText value="#{messages[entity.storageType.label]}" rendered="#{node.type == 'field'}" />
