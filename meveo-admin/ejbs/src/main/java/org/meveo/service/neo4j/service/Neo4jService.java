@@ -187,12 +187,11 @@ public class Neo4jService {
                             if (referencedCet.getPrePersistScript() != null) {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
                             }
-                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, additionalLabels);
+                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
                             relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
                         } else {
                             relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                         }
-
                     } else {
                         // Referenced CET is not primitive
                         if (value instanceof Map) {
@@ -201,7 +200,6 @@ public class Neo4jService {
                         } else {
                             throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
                         }
-
                     }
                     if (relatedNodeReferences != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
@@ -237,7 +235,9 @@ public class Neo4jService {
                     Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 } else {
-                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                    Map<String, Object> editableFields = getEditableFields(cetFields, fields);
+
+                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 }
             } else {
@@ -269,7 +269,10 @@ public class Neo4jService {
                             nodeReferences.add(new NodeReference(createdNodeId));
                             nodeReferences.add(new NodeReference(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
                         } else {
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, fields);
+                            Map<String, Object> updatableFields = new HashMap<>(fields);
+                            uniqueFields.keySet().forEach(updatableFields::remove);
+
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields);
                             nodeReferences.add(new NodeReference(id));
                         }
                     }
@@ -284,7 +287,9 @@ public class Neo4jService {
                         Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     } else {
-                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                        Map<String, Object> editableFields = getEditableFields(cetFields, fields);
+
+                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
@@ -315,6 +320,17 @@ public class Neo4jService {
         /* Create relationships to referenced nodes */
 
         return nodeReferences;
+    }
+
+    private Map<String, Object> getEditableFields(Map<String, CustomFieldTemplate> cetFields, Map<String, Object> convertedFields) {
+        Map<String, Object> editableFields = new HashMap<>();
+        editableFields.putAll(convertedFields);
+        cetFields.values()
+            .stream()
+            .filter(customFieldTemplate -> !customFieldTemplate.isAllowEdit() || customFieldTemplate.isUnique())
+            .map(CustomFieldTemplate::getCode)
+            .forEach(editableFields::remove);
+        return editableFields;
     }
 
     private boolean isApplicableConstraint(Map<String, Object> fields, CustomEntityTemplateUniqueConstraint uniqueConstraint) {

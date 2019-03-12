@@ -65,7 +65,7 @@ public class Neo4JRequests {
 
     public final static StringBuffer mergeCetStatement = new StringBuffer("MERGE (n:${cetCode}${fieldKeys}) \n")
             .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp() \n")
-            .append("ON MATCH SET n += ${fields}, n." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
+            .append("ON MATCH SET n += ${updatableFields}, n." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static StringBuffer createCetStatement = new StringBuffer()
             .append("CREATE (n:${cetCode}${fields}) \n")
