@@ -41,6 +41,15 @@ import java.util.List;
         firstCollection = "pathParameters.endpointParameter.parameter",
         secondCollection = "parametersMapping.endpointParameter.parameter"
 )
+@NamedQuery(
+        name = "findByParameterName",
+        query = "SELECT e FROM Endpoint e " +
+                "INNER JOIN e.service as service " +
+                "LEFT JOIN e.pathParameters as pathParameter " +
+                "LEFT JOIN e.parametersMapping as parameterMapping " +
+                "WHERE service.code = :serviceCode " +
+                "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
+)
 public class Endpoint extends BusinessEntity {
 
     /**

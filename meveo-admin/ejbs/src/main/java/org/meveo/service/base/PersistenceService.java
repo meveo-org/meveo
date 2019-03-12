@@ -645,7 +645,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      *
      * @param entity The entity to create or update
      */
-    protected void beforeUpdateOrCreate(E entity){}
+    protected void beforeUpdateOrCreate(E entity) throws BusinessException {}
 
     /**
      * Action to execute after update of an entity

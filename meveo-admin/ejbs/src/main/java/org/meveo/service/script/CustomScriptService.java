@@ -53,10 +53,7 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -64,6 +61,8 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.model.technicalservice.Description;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends FunctionService<T, SI> {
 
@@ -72,6 +71,9 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     private static final String IS = "is";
     @Inject
     private ResourceBundle resourceMessages;
+
+    @Inject
+    private EndpointService endpointService;
 
     protected final Class<SI> scriptInterfaceClass;
 
@@ -299,6 +301,29 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
     }
 
+    private void checkEndpoints(CustomScript scriptInstance, List<Accessor> setters) throws BusinessException {
+
+        // Check if endpoints parameters are not bound to deleted inputs
+        final List<String> newInputs = setters
+                .stream()
+                .map(Accessor::getName)
+                .collect(Collectors.toList());
+
+        final List<String> currentInputs = scriptInstance.getInputs()
+                .stream()
+                .map(FunctionIO::getName)
+                .collect(Collectors.toList());
+
+        List<String> deletedProperties = new ArrayList<>(currentInputs);
+        deletedProperties.removeAll(newInputs);
+
+        final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
+
+        if(hasEndpoint){
+            throw new BusinessException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
+        }
+    }
+
     private String getFilePath(File jar) {
         try {
             return jar.getCanonicalPath();
@@ -360,7 +385,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      * @param script Script to parse
      */
 	@Override
-    protected void beforeUpdateOrCreate(T script) {
+    protected void beforeUpdateOrCreate(T script) throws BusinessException {
         CompilationUnit compilationUnit = JavaParser.parse(script.getScript());
         final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
                 .stream()
@@ -423,6 +448,8 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                             }));
                     return getter;
                 }).collect(Collectors.toList());
+
+        checkEndpoints(script, setters);
 
         script.setGetters(getters);
         script.setSetters(setters);

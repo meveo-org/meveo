@@ -218,5 +218,11 @@
                 <liquibase.changeLogFile>src/main/db_resources/changelog/db.rebuild.xml</liquibase.changeLogFile>
             </properties>
         </profile>
+        <profile>
+            <id>additional</id>
+            <properties>
+                <liquibase.changeLogFile>src/main/db_resources/changelog/db.additional.xml</liquibase.changeLogFile>
+            </properties>
+        </profile>
     </profiles>
 </project>

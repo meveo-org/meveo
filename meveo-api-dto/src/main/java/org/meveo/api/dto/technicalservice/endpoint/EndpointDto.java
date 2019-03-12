@@ -65,7 +65,7 @@ public class EndpointDto extends BusinessDto implements Serializable {
      * Ordered list of parameters that will construct endpoint path
      */
     @JsonProperty
-    private List<InputPropertyDto> pathParameters = new ArrayList<>();
+    private List<String> pathParameters = new ArrayList<>();
 
     /**
      * JSONata query used to transform the result
@@ -105,11 +105,11 @@ public class EndpointDto extends BusinessDto implements Serializable {
         this.method = method;
     }
 
-    public List<InputPropertyDto> getPathParameters() {
+    public List<String> getPathParameters() {
         return pathParameters;
     }
 
-    public void setPathParameters(List<InputPropertyDto> pathParameters) {
+    public void setPathParameters(List<String> pathParameters) {
         this.pathParameters = pathParameters;
     }
 

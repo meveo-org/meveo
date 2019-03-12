@@ -65,7 +65,7 @@ import java.util.concurrent.TimeUnit;
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
 
-    private static final Cache<String, Future<Map<String, Object>>> pendingExecutions = CacheBuilder.newBuilder()
+    private static final Cache<String, Future<String>> pendingExecutions = CacheBuilder.newBuilder()
             .expireAfterWrite(7, TimeUnit.DAYS)
             .build();
 
@@ -143,12 +143,12 @@ public class EndpointServlet extends HttpServlet {
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
 
         try {
-            final Future<Map<String, Object>> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
+            final Future<String> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
                     endpointExecution.getResp().setStatus(200);
-                    endpointExecution.getWriter().print(transformData(endpoint, execResult.get()));
+                    endpointExecution.getWriter().print(execResult.get());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         pendingExecutions.invalidate(endpointExecution.getFirstUriPart());
@@ -201,18 +201,19 @@ public class EndpointServlet extends HttpServlet {
                 } else {
                     final UUID id = UUID.randomUUID();
                     log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-                    final CompletableFuture<Map<String, Object>> execution = CompletableFuture.supplyAsync(() -> {
+                    final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
                         try {
-                            return endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                            final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                            return transformData(endpoint, result);
                         } catch (BusinessException e) {
                             throw new RuntimeException(e);
                         }
                     });
                     pendingExecutions.put(id.toString(), execution);
 
-                    if(endpointExecution.getPersistenceContextId() != null){
-                        execution.thenAccept(map -> saveResult(endpointExecution, map));
-                    }
+//                    if(endpointExecution.getPersistenceContextId() != null){
+//                        execution.thenAccept(map -> saveResult(endpointExecution, map));
+//                    }
 
                     /*
                         If header wait was true, wait for execution of the service.
@@ -221,7 +222,7 @@ public class EndpointServlet extends HttpServlet {
                     */
                     if(endpointExecution.isWait()){
                         endpointExecution.getResp().setStatus(200);    // Accepted
-                        final Map<String, Object> execResult = execution.get();
+                        final String execResult = execution.get();
                         if(endpointExecution.isKeep()){
                             Map<String, Object> returnedValue = new HashMap<>();
                             returnedValue.put("id", id.toString());

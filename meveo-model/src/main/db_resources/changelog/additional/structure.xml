@@ -515,7 +515,7 @@
         </addColumn>
         <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code, cet_id" constraintName="cust_cet_unique_constraint_pkey"/>
     </changeSet>
-    
+
     <changeSet id="#3516_replace_node_and_relationships_classname_filter" author="Clément Bareth">
         <update tableName="adm_notification">
             <column name="class_name_filter" value="org.meveo.service.neo4j.graph.Neo4jEntity"/>
@@ -530,10 +530,22 @@
             </where>
         </update>
     </changeSet>
-    
+
     <changeSet id="rest_endpoint_add_jsonata" author="Clément Bareth">
         <addColumn tableName="service_endpoint">
-            <column name="jsonata_transformer" type="varchar(255)"></column>
+            <column name="jsonata_transformer" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    
+    <changeSet id="endpoint_parmeter_id_string" author="Clément Bareth">
+        <dropForeignKeyConstraint baseTableName="service_parameter_mapping" constraintName="fk_service_parameter_mapping_parameter_id"/>
+        <dropForeignKeyConstraint baseTableName="endpoint_path_parameter" constraintName="fk_endpoint_path_parameter_parameter_id"/>
+        <modifyDataType tableName="service_parameter_mapping" columnName="parameter_id" newDataType="varchar(255)"/>
+        <modifyDataType tableName="endpoint_path_parameter" columnName="parameter_id" newDataType="varchar(255)"/>
+        <addColumn tableName="service_parameter_mapping">
+            <column name="multivalued" type="${type.boolean}">
+                <constraints nullable="false"/>
+            </column>
         </addColumn>
     </changeSet>
 

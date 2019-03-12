@@ -31,7 +31,13 @@ public class TSParameterMappingDto implements Serializable {
      * Technical service's parameter to map
      */
     @JsonProperty(required = true)
-    private InputPropertyDto serviceParameter;
+    private String serviceParameter;
+
+    /**
+     * Whether the parameter is multivalued
+     */
+    @JsonProperty(required = true)
+    private String multivalued;
 
     /**
      * Name of the parameter as exposed by the endpoint
@@ -45,11 +51,11 @@ public class TSParameterMappingDto implements Serializable {
     @JsonProperty(required = true)
     private String defaultValue;
 
-    public InputPropertyDto getServiceParameter() {
+    public String getServiceParameter() {
         return serviceParameter;
     }
 
-    public void setServiceParameter(InputPropertyDto serviceParameter) {
+    public void setServiceParameter(String serviceParameter) {
         this.serviceParameter = serviceParameter;
     }
 
@@ -67,5 +73,13 @@ public class TSParameterMappingDto implements Serializable {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public String getMultivalued() {
+        return multivalued;
+    }
+
+    public void setMultivalued(String multivalued) {
+        this.multivalued = multivalued;
     }
 }
