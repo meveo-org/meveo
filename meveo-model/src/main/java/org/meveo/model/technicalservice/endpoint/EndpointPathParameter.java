@@ -20,6 +20,7 @@ package org.meveo.model.technicalservice.endpoint;
 import org.meveo.model.technicalservice.InputMeveoProperty;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 /**
  * Configuration of an endpoint allowing to use a technical service.
@@ -63,4 +64,16 @@ public class EndpointPathParameter {
         return position;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EndpointPathParameter that = (EndpointPathParameter) o;
+        return getEndpointParameter().equals(that.getEndpointParameter());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getEndpointParameter(), getPosition());
+    }
 }

@@ -115,7 +115,7 @@ public class Endpoint extends BusinessEntity {
         return service;
     }
 
-    public void setService(TechnicalService service) {
+    public void setService(Function service) {
         this.service = service;
     }
 

@@ -249,7 +249,7 @@ public class EndpointApi {
 
         // Technical Service
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
-        TechnicalService service = (TechnicalService) functionService.findByCode(endpointDto.getServiceCode());
+        Function service = functionService.findByCode(endpointDto.getServiceCode());
         endpoint.setService(service);
 
         // Parameters mappings
