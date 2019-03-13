@@ -20,6 +20,7 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
             addFunction("string","endsWith", getClass().getMethod("endsWith", String.class, String.class));
 
             addFunction("array", "first", getClass().getMethod("getFirstItem", Collection.class));
+            addFunction("array", "contains", getClass().getMethod("contains", Collection.class, Object.class));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -88,6 +89,10 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
      */
     public static Object getFirstItem(Collection collection){
         return collection.iterator().next();
+    }
+
+    public static boolean contains(Collection collection, Object object){
+        return collection.contains(object);
     }
 
 
