@@ -128,7 +128,8 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
             * - All repostitories (default)
             * - Default repository - Implemented
             */
-            neo4jService.addCetNode(null, entity.getCetCode(), fieldValues);
+            /****RAY : i comented out this call, bacause the save in NEO4j must be optional and only for some specific CFT****************/
+           // neo4jService.addCetNode(null, entity.getCetCode(), fieldValues);
         }
 
 
