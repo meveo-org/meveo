@@ -184,7 +184,7 @@ public class ValueExpressionWrapper {
         }
         expression = StringUtils.trim(expression);
 
-        if (expression.indexOf("#{") < 0) {
+        if (!expression.contains("#{") && !expression.contains("${")) {
             log.debug("the expression '{}' doesn't contain any EL", expression);
             if (resultClass.equals(String.class)) {
                 return expression;

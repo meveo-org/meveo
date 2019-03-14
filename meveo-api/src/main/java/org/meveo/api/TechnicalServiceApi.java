@@ -25,18 +25,19 @@ import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.technicalservice.DescriptionApi;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * TechnicalService management api
@@ -47,6 +48,9 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 
     @Inject
     private DescriptionApi descriptionApi;
+
+    @Inject
+    private EndpointService endpointService;
 
     private TechnicalServiceService<T> persistenceService;
 
@@ -110,7 +114,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
             }
             technicalService.setFunctionVersion(versionNumber);
         }
-        persistenceService.create(technicalService);
+        try{
+            if(getTechnicalService(postData.getName(), postData.getVersion()) != null){
+                throw new EntityAlreadyExistsException(TechnicalService.class, postData.getCode());
+            }
+        } catch (EntityDoesNotExistsException e){
+            persistenceService.create(technicalService);
+        }
+
     }
 
     /**
@@ -127,8 +138,34 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     protected T updateService(T service, D data) throws EntityDoesNotExistsException, BusinessException {
-        service.setDescriptions(descriptionApi.fromDescriptionsDto(service, data));
+        final List<Description> descriptions = descriptionApi.fromDescriptionsDto(service, data);
+        checkEndpoints(service, descriptions);
+        service.setDescriptions(descriptions);
         return service;
+    }
+
+    private void checkEndpoints(T service, List<Description> descriptions) throws BusinessException {
+        // Check if endpoints parameters are not bound to deleted properties
+        final List<String> newMevoeoProperties = descriptions
+                .stream()
+                .flatMap(d -> d.getInputProperties().stream())
+                .map(d -> d.getDescription().getName() + "." + d.getProperty())
+                .collect(Collectors.toList());
+
+        final List<String> currentMeveoProperties = service.getDescriptions()
+                .stream()
+                .flatMap(d -> d.getInputProperties().stream())
+                .map(d -> d.getDescription().getName() + "." + d.getProperty())
+                .collect(Collectors.toList());
+
+        List<String> deletedProperties = new ArrayList<>(currentMeveoProperties);
+        deletedProperties.removeAll(newMevoeoProperties);
+
+        final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(service.getCode(), o).isEmpty());
+
+        if(hasEndpoint){
+            throw new BusinessException("An Endpoint is associated to one of those properties : " + deletedProperties + " and therfore can't be deleted");
+        }
     }
 
     /**
@@ -142,8 +179,9 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      */
     public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(name, version);
-        persistenceService.removeDescription(technicalService.getId());
         final List<Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
+        checkEndpoints(technicalService, descriptions);
+        persistenceService.removeDescription(technicalService.getId());
         technicalService.setDescriptions(descriptions);
         persistenceService.update(technicalService);
     }

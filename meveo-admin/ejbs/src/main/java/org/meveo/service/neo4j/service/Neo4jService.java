@@ -129,7 +129,7 @@ public class Neo4jService {
             }
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
-            if(cet.getPrePersistScript() != null){
+            if (cet.getPrePersistScript() != null) {
                 scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
             }
 
@@ -137,9 +137,9 @@ public class Neo4jService {
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
             // Fallback to when entity is defined as primitive but does not have associated CFT
-            if(cet.isPrimitiveEntity()){
+            if (cet.isPrimitiveEntity()) {
                 CustomFieldTemplate valueCft = cetFields.get("value");
-                if(valueCft == null){
+                if (valueCft == null) {
                     valueCft = new CustomFieldTemplate();
                     CustomEntityTemplateService.turnIntoPrimitive(cet, valueCft);
                     customFieldTemplateService.create(valueCft);
@@ -162,7 +162,7 @@ public class Neo4jService {
 
             /* Create referenced nodes and collect relationships to create */
             Map<NodeReference, String> relationshipsToCreate = new HashMap<>();  // Map where the id of the target node is the key and the label of relationship is the value
-            for (CustomFieldTemplate entityReference : entityReferences){
+            for (CustomFieldTemplate entityReference : entityReferences) {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazzCetCode();
                 CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
@@ -176,36 +176,34 @@ public class Neo4jService {
 
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
-                    if(referencedCet.isPrimitiveEntity()){    // If the CET is primitive, copy value in current node's value
+                    if (referencedCet.isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = new HashMap<>();
                         valueMap.put("value", value);
 
                         // If there is no unique constraints defined, directly merge node
-                        if(referencedCet.getUniqueConstraints().isEmpty()){
+                        if (referencedCet.getUniqueConstraints().isEmpty()) {
                             List<String> additionalLabels = getAdditionalLabels(referencedCet);
-                            if(referencedCet.getPrePersistScript() != null){
+                            if (referencedCet.getPrePersistScript() != null) {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
                             }
-                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, additionalLabels);
+                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
                             relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
-                        }else{
+                        } else {
                             relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                         }
-
-                    }else{
+                    } else {
                         // Referenced CET is not primitive
-                        if(value instanceof Map){
+                        if (value instanceof Map) {
                             @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
                             relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
-                        }else{
+                        } else {
                             throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
                         }
-
                     }
                     if (relatedNodeReferences != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
-                              .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+                                .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
                         for (NodeReference nodeReference : relatedNodeReferences) {
                             relationshipsToCreate.put(nodeReference, relationshipName);
                         }
@@ -223,11 +221,11 @@ public class Neo4jService {
 
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
-                .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
-                .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
+                    .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
+                    .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
             List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getUniqueConstraints()
                     .stream()
-                    .filter(uniqueConstraint ->  isApplicableConstraint(fields, uniqueConstraint))
+                    .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
                     .sorted(comparator)
                     .collect(Collectors.toList());
 
@@ -237,7 +235,9 @@ public class Neo4jService {
                     Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 } else {
-                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                    Map<String, Object> editableFields = getEditableFields(cetFields, fields);
+
+                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 }
             } else {
@@ -248,10 +248,10 @@ public class Neo4jService {
 
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
                         String joinedIds = ids.stream()
-                            .map(Object::toString)
-                            .collect(Collectors.joining(", "));
+                                .map(Object::toString)
+                                .collect(Collectors.joining(", "));
                         LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})",
-                            uniqueConstraint.getCode(), joinedIds);
+                                uniqueConstraint.getCode(), joinedIds);
                     }
 
                     for (Long id : ids) {
@@ -263,13 +263,16 @@ public class Neo4jService {
                             //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
                             Long createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                             neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
-                                "trustScore", uniqueConstraint.getTrustScore(),
-                                "constraintCode", uniqueConstraint.getCode()
+                                    "trustScore", uniqueConstraint.getTrustScore(),
+                                    "constraintCode", uniqueConstraint.getCode()
                             ));
                             nodeReferences.add(new NodeReference(createdNodeId));
                             nodeReferences.add(new NodeReference(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
                         } else {
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, fields);
+                            Map<String, Object> updatableFields = new HashMap<>(fields);
+                            uniqueFields.keySet().forEach(updatableFields::remove);
+
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields);
                             nodeReferences.add(new NodeReference(id));
                         }
                     }
@@ -284,7 +287,9 @@ public class Neo4jService {
                         Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     } else {
-                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, labels);
+                        Map<String, Object> editableFields = getEditableFields(cetFields, fields);
+
+                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
@@ -317,12 +322,23 @@ public class Neo4jService {
         return nodeReferences;
     }
 
+    private Map<String, Object> getEditableFields(Map<String, CustomFieldTemplate> cetFields, Map<String, Object> convertedFields) {
+        Map<String, Object> editableFields = new HashMap<>();
+        editableFields.putAll(convertedFields);
+        cetFields.values()
+            .stream()
+            .filter(customFieldTemplate -> !customFieldTemplate.isAllowEdit() || customFieldTemplate.isUnique())
+            .map(CustomFieldTemplate::getCode)
+            .forEach(editableFields::remove);
+        return editableFields;
+    }
+
     private boolean isApplicableConstraint(Map<String, Object> fields, CustomEntityTemplateUniqueConstraint uniqueConstraint) {
 
         Map<Object, Object> userMap = new HashMap<>();
         userMap.put("entity", fields);
 
-        if(StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())){
+        if (StringUtils.isBlank(uniqueConstraint.getApplicableOnEl())) {
             return true;
         }
 
@@ -331,7 +347,7 @@ public class Neo4jService {
             if (isApplicable != null && !(isApplicable instanceof Boolean)) {
                 LOGGER.error("Expression " + uniqueConstraint.getApplicableOnEl() + " do not evaluate to boolean but " + isApplicable.getClass());
                 return false;
-            }else if(isApplicable != null){
+            } else if (isApplicable != null) {
                 return (boolean) isApplicable;
             }
         } catch (ELException e) {
@@ -355,11 +371,11 @@ public class Neo4jService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addCRTByNodeValues(
-                       String neo4JConfiguration,
-                       String crtCode,
-                       Map<String, Object> crtValues,
-                       Map<String, Object> startFieldValues,
-                       Map<String, Object> endFieldValues)
+            String neo4JConfiguration,
+            String crtCode,
+            Map<String, Object> crtValues,
+            Map<String, Object> startFieldValues,
+            Map<String, Object> endFieldValues)
             throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -401,11 +417,11 @@ public class Neo4jService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addCRTByNodeIds(
-          String neo4JConfiguration,
-          String crtCode,
-          Map<String, Object> crtValues,
-          Long startNodeId,
-          Long endNodeId
+            String neo4JConfiguration,
+            String crtCode,
+            Map<String, Object> crtValues,
+            Long startNodeId,
+            Long endNodeId
     ) throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -477,7 +493,7 @@ public class Neo4jService {
 
             transaction.success();  // Commit transaction
 
-        } catch(Exception e){
+        } catch (Exception e) {
 
             log.error(e.getMessage());
             transaction.failure();
@@ -487,7 +503,7 @@ public class Neo4jService {
             session.close();        // Close Neo4J session
         }
 
-        for (Record record : recordList){
+        for (Record record : recordList) {
             final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
@@ -499,7 +515,7 @@ public class Neo4jService {
     }
 
     public void saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, Long startNodeId,
-          Long endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
+                                       Long endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
 
@@ -520,9 +536,9 @@ public class Neo4jService {
         // Build the statement
         StringBuffer statement;
 
-        if(customRelationshipTemplate.isUnique()){
+        if (customRelationshipTemplate.isUnique()) {
             statement = neo4jDao.appendReturnStatement(Neo4JRequests.uniqueCrtStatementByNodeIds, relationshipAlias, valuesMap);
-        }else{
+        } else {
             statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatementByNodeIds, relationshipAlias, valuesMap);
         }
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -546,7 +562,7 @@ public class Neo4jService {
 
             transaction.success();  // Commit transaction
 
-        } catch(Exception e){
+        } catch (Exception e) {
 
             log.error(e.getMessage());
             transaction.failure();
@@ -556,7 +572,7 @@ public class Neo4jService {
             session.close();        // Close Neo4J session
         }
 
-        for (Record record : recordList){
+        for (Record record : recordList) {
             final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
@@ -574,9 +590,9 @@ public class Neo4jService {
      * If such a relation does not exists, we create the source node with it fields.
      *
      * @param neo4JConfiguration Neo4J coordinates
-     * @param crtCode Code of the source node to update or create
-     * @param startNodeValues Values to assign to the start node
-     * @param endNodeValues Filters on the target node values
+     * @param crtCode            Code of the source node to update or create
+     * @param startNodeValues    Values to assign to the start node
+     * @param endNodeValues      Filters on the target node values
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -607,7 +623,7 @@ public class Neo4jService {
         final String startNodeValuesStatements = neo4jDao.getFieldsString(startNodeConvertedValues.keySet());
 
         // No unique fields has been found
-        if(endNodeUniqueFields.isEmpty()){
+        if (endNodeUniqueFields.isEmpty()) {
             log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
                     "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
             throw new BusinessException("Unique field must be provided");
@@ -621,7 +637,7 @@ public class Neo4jService {
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
 
         // Values of the keys defined in valuesMap
-        Map<String, Object> parametersValues =  new HashMap<>();
+        Map<String, Object> parametersValues = new HashMap<>();
         parametersValues.putAll(startNodeConvertedValues);
         parametersValues.putAll(endNodeConvertedValues);
 
@@ -668,20 +684,20 @@ public class Neo4jService {
 
             transaction.success();
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
             transaction.failure();
             log.error("Transaction for persisting entity with code {} and fields {} was rolled back : {}", cetCode, startNodeValues, e.getMessage());
             throw new BusinessException(e);
 
-        }finally {
+        } finally {
 
             session.close();
             transaction.close();
 
         }
 
-        if(startNode != null) {
+        if (startNode != null) {
             nodeUpdatedEvent.fire(startNode);
         }
 
@@ -728,7 +744,7 @@ public class Neo4jService {
 
             // Execute query
             final StatementResult result = transaction.run(deleteStatement, values);
-            for(Record record : result.list()) {
+            for (Record record : result.list()) {
 
                 // Fire deletion event
                 final Map<String, Value> properties = record.get("properties").asMap(e -> e);   // Parse properties
@@ -751,17 +767,17 @@ public class Neo4jService {
             transaction.close();
 
         }
-        
-        if(internalNode != null){
+
+        if (internalNode != null) {
             nodeRemovedEvent.fire(new Neo4jEntity(internalNode, neo4jConfiguration));    // Fire notification
         }
 
     }
 
-    private List<String> getAllSuperTemplateLabels(CustomEntityTemplate customEntityTemplate){
+    private List<String> getAllSuperTemplateLabels(CustomEntityTemplate customEntityTemplate) {
         List<String> labels = new ArrayList<>();
         CustomEntityTemplate parent = customEntityTemplate.getSuperTemplate();
-        while (parent != null){
+        while (parent != null) {
             labels.add(parent.getCode());
             parent = parent.getSuperTemplate();
         }
@@ -772,7 +788,7 @@ public class Neo4jService {
         return sub.replace(findStartNodeId).replace('"', '\'');
     }
 
-    public String callNeo4jWithStatement(StringBuffer statement, Map<String, Object> values){
+    public String callNeo4jWithStatement(StringBuffer statement, Map<String, Object> values) {
         StrSubstitutor sub = new StrSubstitutor(values);
         String resolvedStatement = sub.replace(statement);
         log.info("resolvedStatement : {}", resolvedStatement);
@@ -786,7 +802,7 @@ public class Neo4jService {
         List<CustomFieldTemplate> retrievedCft = customFieldTemplateService.findCftUniqueFieldsByApplies(appliesTo);
         for (CustomFieldTemplate cf : retrievedCft) {
             if (!StringUtils.isBlank(convertedFieldValues.get(cf.getCode()))) {
-                    nodeKeysMap.put(cf.getCode(), convertedFieldValues.get(cf.getCode()));
+                nodeKeysMap.put(cf.getCode(), convertedFieldValues.get(cf.getCode()));
             }
         }
         return nodeKeysMap;
@@ -826,132 +842,148 @@ public class Neo4jService {
                 throw new InvalidCustomFieldException("Custom field template with code " + cftEntry.getKey() + " not found.");
             }
             Object fieldValue = fieldValues.get(cftEntry.getKey());
-            // Validate that value is not empty when field is mandatory
-            boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
-            if (cft.isValueRequired() && isEmpty) {
-                final String message = "CFT with code " + cft.getCode() + " is not provided";
-                log.error(message);
-                throw new InvalidCustomFieldException(message);
-            }
-            // Validate that value is valid (min/max, regexp). When
-            // value is a list or a map, check separately each value
-            if (fieldValue != null
-                    && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
-                    cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
-                    cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION)) {
-                List valuesToCheck = new ArrayList<>();
-                if (fieldValue instanceof Map) {
-                    // Skip Key item if Storage type is Matrix
-                    if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-                        for (Entry<String, Object> mapEntry : ((Map<String, Object>) fieldValue).entrySet()) {
-                            if (CustomFieldValue.MAP_KEY.equals(mapEntry.getKey())) {
-                                continue;
+            try {
+
+                // Validate that value is not empty when field is mandatory
+                boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
+                if (cft.isValueRequired() && isEmpty) {
+                    final String message = "CFT with code " + cft.getCode() + " is not provided";
+                    log.error(message);
+                    throw new InvalidCustomFieldException(message);
+                }
+                // Validate that value is valid (min/max, regexp). When
+                // value is a list or a map, check separately each value
+                if (fieldValue != null
+                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
+                        cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
+                        cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION)) {
+                    List valuesToCheck = new ArrayList<>();
+                    if (fieldValue instanceof Map) {
+                        // Skip Key item if Storage type is Matrix
+                        if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
+                            for (Entry<String, Object> mapEntry : ((Map<String, Object>) fieldValue).entrySet()) {
+                                if (CustomFieldValue.MAP_KEY.equals(mapEntry.getKey())) {
+                                    continue;
+                                }
+                                valuesToCheck.add(mapEntry.getValue());
                             }
-                            valuesToCheck.add(mapEntry.getValue());
+                        } else {
+                            valuesToCheck.add(fieldValue);
                         }
+                    } else if (fieldValue instanceof List) {
+                        convertedFields.put(cft.getCode(), fieldValue);
+                        continue;
                     } else {
                         valuesToCheck.add(fieldValue);
                     }
-                } else if (fieldValue instanceof List) {
-                    convertedFields.put(cft.getCode(), fieldValue);
-                    continue;
-                } else {
-                    valuesToCheck.add(fieldValue);
-                }
-                for (Object valueToCheck : valuesToCheck) {
-                    if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
-                        String stringValue;
-                        if (valueToCheck instanceof Integer) {
-                            stringValue = ((Integer) valueToCheck).toString();
-                        } else if (valueToCheck instanceof Map) {
-                            GsonBuilder builder = new GsonBuilder();
-                            Gson gson = builder.create();
-                            String mapToJson = gson.toJson(valueToCheck).replaceAll("'", "’").replaceAll("\"", "");
-                            convertedFields.put(cft.getCode(), mapToJson);
-                            continue;
-                        } else {
-                            stringValue = String.valueOf(valueToCheck);
-                        }
-                        stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
-                        stringValue = stringValue.replaceAll("\n", " ");
+                    for (Object valueToCheck : valuesToCheck) {
+                        if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
+                            String stringValue;
+                            if (valueToCheck instanceof Integer) {
+                                stringValue = ((Integer) valueToCheck).toString();
+                            } else if (valueToCheck instanceof Map) {
+                                GsonBuilder builder = new GsonBuilder();
+                                Gson gson = builder.create();
+                                String mapToJson = gson.toJson(valueToCheck).replaceAll("'", "’").replaceAll("\"", "");
+                                convertedFields.put(cft.getCode(), mapToJson);
+                                continue;
+                            } else {
+                                stringValue = String.valueOf(valueToCheck);
+                            }
+                            stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
+                            stringValue = stringValue.replaceAll("\n", " ");
 
-                        if (cft.getMaxValue() == null) {
-                            cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
-                        }
-                        // Validate String length
-                        if (stringValue.length() > cft.getMaxValue()) {
-                            throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " length is longer then " + cft.getMaxValue() + " symbols");
-                            // Validate String regExp
-                        } else if (cft.getRegExp() != null) {
-                            try {
-                                Pattern pattern = Pattern.compile(cft.getRegExp());
-                                Matcher matcher = pattern.matcher(stringValue);
-                                if (!matcher.matches()) {
-                                    throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " does not match regular expression "
-                                            + cft.getRegExp());
+                            if (cft.getMaxValue() == null) {
+                                cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
+                            }
+                            // Validate String length
+                            if (stringValue.length() > cft.getMaxValue()) {
+                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " length is longer then " + cft.getMaxValue() + " symbols");
+                                // Validate String regExp
+                            } else if (cft.getRegExp() != null) {
+                                try {
+                                    Pattern pattern = Pattern.compile(cft.getRegExp());
+                                    Matcher matcher = pattern.matcher(stringValue);
+                                    if (!matcher.matches()) {
+                                        throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " does not match regular expression "
+                                                + cft.getRegExp());
+                                    }
+                                } catch (PatternSyntaxException pse) {
+                                    throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " definition specifies an invalid regular expression " + cft.getRegExp());
                                 }
-                            } catch (PatternSyntaxException pse) {
-                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " definition specifies an invalid regular expression " + cft.getRegExp());
+                            }
+                            if (fieldValue instanceof String) {
+                                fieldValue = ((String) fieldValue).trim().replaceAll("'", "’").replaceAll("\"", "").trim();
+                            }
+
+                        } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
+                            Long longValue;
+                            if (valueToCheck instanceof Integer) {
+                                longValue = ((Integer) valueToCheck).longValue();
+                            } else if (valueToCheck instanceof String) {
+                                longValue = Long.parseLong((String) valueToCheck);
+                            } else {
+                                longValue = (Long) valueToCheck;
+                            }
+
+                            if (cft.getMaxValue() != null && longValue.compareTo(cft.getMaxValue()) > 0) {
+                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is bigger then " + cft.getMaxValue()
+                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+
+                            } else if (cft.getMinValue() != null && longValue.compareTo(cft.getMinValue()) < 0) {
+                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is smaller then " + cft.getMinValue()
+                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                            }
+                        } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+                            Double doubleValue;
+                            if (valueToCheck instanceof Integer) {
+                                doubleValue = ((Integer) valueToCheck).doubleValue();
+                            } else if (valueToCheck instanceof String) {
+                                doubleValue = Double.parseDouble((String) valueToCheck);
+
+                            } else {
+                                doubleValue = (Double) valueToCheck;
+                            }
+                            if (cft.getMaxValue() != null && doubleValue.compareTo(cft.getMaxValue().doubleValue()) > 0) {
+                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is bigger then " + cft.getMaxValue()
+                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                            } else if (cft.getMinValue() != null && doubleValue.compareTo(cft.getMinValue().doubleValue()) < 0) {
+                                throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is smaller then " + cft.getMinValue()
+                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
                         }
-                        if (fieldValue instanceof String) {
-                            fieldValue = ((String) fieldValue).trim().replaceAll("'", "’").replaceAll("\"", "").trim();
+                        if (cft.isUnique() && uniqueFields != null) {
+                            uniqueFields.put(cft.getCode(), fieldValue);
                         }
-
-                    } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-                        Long longValue;
-                        if (valueToCheck instanceof Integer) {
-                            longValue = ((Integer) valueToCheck).longValue();
-                        } else if (valueToCheck instanceof String) {
-                            longValue = Long.parseLong((String) valueToCheck);
-                        } else {
-                            longValue = (Long) valueToCheck;
-                        }
-
-                        if (cft.getMaxValue() != null && longValue.compareTo(cft.getMaxValue()) > 0) {
-                            throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is bigger then " + cft.getMaxValue()
-                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
-
-                        } else if (cft.getMinValue() != null && longValue.compareTo(cft.getMinValue()) < 0) {
-                            throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is smaller then " + cft.getMinValue()
-                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
-                        }
-                    } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-                        Double doubleValue;
-                        if (valueToCheck instanceof Integer) {
-                            doubleValue = ((Integer) valueToCheck).doubleValue();
-                        } else if (valueToCheck instanceof String) {
-                            doubleValue = Double.parseDouble((String) valueToCheck);
-                        } else {
-                            doubleValue = (Double) valueToCheck;
-                        }
-                        if (cft.getMaxValue() != null && doubleValue.compareTo(cft.getMaxValue().doubleValue()) > 0) {
-                            throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is bigger then " + cft.getMaxValue()
-                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
-                        } else if (cft.getMinValue() != null && doubleValue.compareTo(cft.getMinValue().doubleValue()) < 0) {
-                            throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is smaller then " + cft.getMinValue()
-                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
-                        }
+                        convertedFields.put(cft.getCode(), fieldValue);
                     }
+                }
+                if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
+                    fieldValue = setExpressionField(fieldValues, cft, convertedFields);
+                    convertedFields.put(cft.getCode(), fieldValue);
                     if (cft.isUnique() && uniqueFields != null) {
                         uniqueFields.put(cft.getCode(), fieldValue);
                     }
-                    convertedFields.put(cft.getCode(), fieldValue);
                 }
-            }
-            if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
-                fieldValue = setExpressionField(fieldValues, cft, convertedFields);
-                convertedFields.put(cft.getCode(), fieldValue);
-                if (cft.isUnique() && uniqueFields != null) {
-                    uniqueFields.put(cft.getCode(), fieldValue);
+            } catch (NumberFormatException e) {
+                if (cft != null && fieldValue != null) {
+                    LOGGER.error(
+                            "Wrong data type format for {}#{}\nExpected type : {}, value is : {}\nSkipping field value\n",
+                            cft.getAppliesTo(),
+                            cft.getCode(),
+                            cft.getFieldType(),
+                            fieldValue
+                    );
                 }
             }
         }
+
         return convertedFields;
+
     }
 
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {

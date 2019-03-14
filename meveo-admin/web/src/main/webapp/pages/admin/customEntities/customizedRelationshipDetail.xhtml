@@ -55,9 +55,6 @@
                             <hftl:objectConverter/>
                         </p:selectOneMenu>
                     </hftl:decorateFormField>
-                    <!--<hftl:decorateFormField field = "unique" fieldId="unique" rendered="true" componentWidth="75" label="#{messages['customFieldTemplate.unique']}">-->
-                        <!--<hftl:formField label="#{messages['customFieldTemplate.unique']}" rendered="true" required="true" field="unique" style="width:150px;" />-->
-                    <!--</hftl:decorateFormField>-->
                 </h:panelGrid>
                 <h:panelGrid columns="2" rendered="#{customRelationshipTemplateBean.entity.id != null}" styleClass="clearLeft">
                     <hftl:decorateFormField  field = "startNode" fieldId="startNodeLabel" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
@@ -72,6 +69,11 @@
             </p:fieldset>
             </hftl:formPanel>
         </h:panelGroup>
+
+        <h:panelGroup id="crFields">
+            <ui:include src="customFieldsRelationships.xhtml"/>
+        </h:panelGroup>
+
         <h:form>
             <p:panel width="100">
                 <p:button id="backButton" value="#{messages['action.back']}" outcome="#{customRelationshipTemplateBean.back()}" includeViewParams="true">

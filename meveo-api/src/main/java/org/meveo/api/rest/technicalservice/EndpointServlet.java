@@ -21,6 +21,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
+import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityOrRelation;
@@ -64,7 +65,7 @@ import java.util.concurrent.TimeUnit;
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
 
-    private static final Cache<String, Future<Map<String, Object>>> pendingExecutions = CacheBuilder.newBuilder()
+    private static final Cache<String, Future<String>> pendingExecutions = CacheBuilder.newBuilder()
             .expireAfterWrite(7, TimeUnit.DAYS)
             .build();
 
@@ -138,13 +139,16 @@ public class EndpointServlet extends HttpServlet {
     }
 
     private void doRequest(EndpointExecution endpointExecution) {
+        // Retrieve endpoint
+        final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
+
         try {
-            final Future<Map<String, Object>> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
+            final Future<String> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
                     endpointExecution.getResp().setStatus(200);
-                    endpointExecution.getWriter().print(JacksonUtil.toString(execResult.get()));
+                    endpointExecution.getWriter().print(execResult.get());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         pendingExecutions.invalidate(endpointExecution.getFirstUriPart());
@@ -153,7 +157,7 @@ public class EndpointServlet extends HttpServlet {
                     endpointExecution.getResp().setStatus(102);    // In progress
                 }
             } else {
-                launchEndpoint(endpointExecution);
+                launchEndpoint(endpointExecution, endpoint);
             }
         } catch (Exception e) {
             log.error("Error while executing request", e);
@@ -165,16 +169,30 @@ public class EndpointServlet extends HttpServlet {
         }
     }
 
-    private void launchEndpoint(EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {
-        // Retrieve endpoint
-        final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
+    /**
+     * Apply JSONata query if defined
+     *
+     * @param endpoint Endpoint endpoxecuted
+     * @param result Result of the endpoint execution
+     * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
+     */
+    private String transformData(Endpoint endpoint, Map<String, Object> result){
+        final String serializedResult = JacksonUtil.toString(result);
+        if(!StringUtils.isBlank(endpoint.getJsonataTransformer())) {
+            return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
+        }else{
+            return serializedResult;
+        }
+    }
+
+    private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException {
         if (endpoint != null) {
             if (endpoint.getMethod() == endpointExecution.getMethod()) {
                 List<String> pathParameters = new ArrayList<>(Arrays.asList(endpointExecution.getPathInfo()).subList(2, endpointExecution.getPathInfo().length));
                 // Execute service
                 if (endpoint.isSynchronous()) {
                     final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
-                    endpointExecution.getWriter().print(JacksonUtil.toString(result));
+                    endpointExecution.getWriter().print(transformData(endpoint, result));
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
                     endpointExecution.getResp().setStatus(200);    // OK
                     if(endpointExecution.getPersistenceContextId() != null){
@@ -183,18 +201,19 @@ public class EndpointServlet extends HttpServlet {
                 } else {
                     final UUID id = UUID.randomUUID();
                     log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-                    final CompletableFuture<Map<String, Object>> execution = CompletableFuture.supplyAsync(() -> {
+                    final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
                         try {
-                            return endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                            final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                            return transformData(endpoint, result);
                         } catch (BusinessException e) {
                             throw new RuntimeException(e);
                         }
                     });
                     pendingExecutions.put(id.toString(), execution);
 
-                    if(endpointExecution.getPersistenceContextId() != null){
-                        execution.thenAccept(map -> saveResult(endpointExecution, map));
-                    }
+//                    if(endpointExecution.getPersistenceContextId() != null){
+//                        execution.thenAccept(map -> saveResult(endpointExecution, map));
+//                    }
 
                     /*
                         If header wait was true, wait for execution of the service.
@@ -203,7 +222,7 @@ public class EndpointServlet extends HttpServlet {
                     */
                     if(endpointExecution.isWait()){
                         endpointExecution.getResp().setStatus(200);    // Accepted
-                        final Map<String, Object> execResult = execution.get();
+                        final String execResult = execution.get();
                         if(endpointExecution.isKeep()){
                             Map<String, Object> returnedValue = new HashMap<>();
                             returnedValue.put("id", id.toString());
@@ -237,6 +256,7 @@ public class EndpointServlet extends HttpServlet {
     private void saveResult(EndpointExecution endpointExecution, Map<String, Object> results){
         final List<EntityOrRelation> resultsToSave = JacksonUtil.OBJECT_MAPPER .convertValue(results.get("results"), new TypeReference<List<EntityOrRelation>>() {});
         try {
+            //TODO: Rething persistence
             AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(resultsToSave);
             scheduledPersistenceService.persist(endpointExecution.getPersistenceContextId(), atomicPersistencePlan);
         } catch (CyclicDependencyException | BusinessException | ELException e) {

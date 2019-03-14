@@ -17,12 +17,7 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
-import org.meveo.model.technicalservice.InputMeveoProperty;
-
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -44,9 +39,8 @@ public class EndpointParameter implements Serializable {
     /**
      * Input property of the technical service described by the endpoint
      */
-    @ManyToOne
-    @JoinColumn(name = "parameter_id")
-    private InputMeveoProperty parameter;
+    @Column(name = "parameter_id")
+    private String parameter;
 
     public Endpoint getEndpoint() {
         return endpoint;
@@ -56,16 +50,16 @@ public class EndpointParameter implements Serializable {
         this.endpoint = endpoint;
     }
 
-    public InputMeveoProperty getParameter() {
+    public String getParameter() {
         return parameter;
     }
 
-    public void setParameter(InputMeveoProperty parameter) {
+    public void setParameter(String parameter) {
         this.parameter = parameter;
     }
 
     @Override
     public String toString() {
-        return parameter.getDescription().getName() + "." + parameter.getProperty();
+        return parameter;
     }
 }
