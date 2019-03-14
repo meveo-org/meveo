@@ -41,14 +41,23 @@ import java.util.List;
         firstCollection = "pathParameters.endpointParameter.parameter",
         secondCollection = "parametersMapping.endpointParameter.parameter"
 )
+@NamedQuery(
+        name = "findByParameterName",
+        query = "SELECT e FROM Endpoint e " +
+                "INNER JOIN e.service as service " +
+                "LEFT JOIN e.pathParameters as pathParameter " +
+                "LEFT JOIN e.parametersMapping as parameterMapping " +
+                "WHERE service.code = :serviceCode " +
+                "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
+)
 public class Endpoint extends BusinessEntity {
 
     /**
      * Technical service associated to the endpoint
      */
-    @ManyToOne(fetch = FetchType.EAGER, targetEntity = Function.class)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "service_id", updatable = false, nullable = false)
-    private TechnicalService service;
+    private Function service;
 
     /**
      * Whether the execution of the service will be syncrhonous.
@@ -79,6 +88,12 @@ public class Endpoint extends BusinessEntity {
     @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<TSParameterMapping> parametersMapping;
 
+    /**
+     * JSONata query used to transform the result
+     */
+    @Column(name = "jsonata_transformer")
+    private String jsonataTransformer;
+
     @Transient
     private String endpointUrl;
 
@@ -88,11 +103,19 @@ public class Endpoint extends BusinessEntity {
         pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
     }
 
-    public TechnicalService getService() {
+    public String getJsonataTransformer() {
+        return jsonataTransformer;
+    }
+
+    public void setJsonataTransformer(String jsonataTransformer) {
+        this.jsonataTransformer = jsonataTransformer;
+    }
+
+    public Function getService() {
         return service;
     }
 
-    public void setService(TechnicalService service) {
+    public void setService(Function service) {
         this.service = service;
     }
 

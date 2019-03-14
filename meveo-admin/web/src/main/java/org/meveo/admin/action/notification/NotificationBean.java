@@ -239,8 +239,8 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
                 classNames.add(clazz.getName());
             }
         }
-        classNames.add("org.neo4j.driver.v1.types.Node");
-        classNames.add("org.neo4j.driver.v1.types.Relationship");
+        classNames.add("org.meveo.service.neo4j.graph.Neo4jEntity");
+        classNames.add("org.meveo.service.neo4j.graph.Neo4jRelationship");
         Collections.sort(classNames);
         return classNames;
     }

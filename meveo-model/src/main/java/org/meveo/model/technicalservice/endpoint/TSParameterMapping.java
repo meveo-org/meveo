@@ -17,6 +17,8 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 
 /**
@@ -37,6 +39,10 @@ public class TSParameterMapping {
      */
     @Column(name = "parameter_name")
     private String parameterName;
+
+    @Column(name = "multivalued")
+    @Type(type = "numeric_boolean")
+    private boolean multivalued;
 
     /**
      * Default value of the parameter
@@ -66,5 +72,13 @@ public class TSParameterMapping {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public boolean isMultivalued() {
+        return multivalued;
+    }
+
+    public void setMultivalued(boolean multivalued) {
+        this.multivalued = multivalued;
     }
 }

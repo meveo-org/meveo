@@ -20,6 +20,7 @@ import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.BusinessService;
 
 import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -48,6 +49,14 @@ public class EndpointService extends BusinessService<Endpoint> {
         final Join<Endpoint, Function> service = root.join("service");
         query.where(cb.equal(service.get("code"), code));
         return getEntityManager().createQuery(query).getResultList();
+    }
+
+    public List<Endpoint> findByParameterName(String code, String parameterName){
+        return getEntityManager()
+                .createNamedQuery("findByParameterName", Endpoint.class)
+                .setParameter("serviceCode", code)
+                .setParameter("propertyName", parameterName)
+                .getResultList();
     }
 
 }

@@ -24,8 +24,11 @@ import org.meveo.model.scripts.ScriptInstance;
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cet", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @Parameter(name = "sequence_name", value = "cust_cet_seq"), })
-@NamedQueries({@NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
-		       @NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name")})
+@NamedQueries({
+		@NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
+		@NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name"),
+		@NamedQuery(name = "CustomEntityTemplate.PrimitiveType", query = "SELECT cet.primitiveType FROM CustomEntityTemplate cet WHERE code = :code")
+})
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 8281478284763353310L;
@@ -58,7 +61,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Unique constraint to be applied when persisiting custom entities
 	 */
-	@OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, orphanRemoval=true, cascade = CascadeType.ALL)
 	@OrderColumn(name = "position")
 	private List<CustomEntityTemplateUniqueConstraint> uniqueConstraints = new ArrayList<>();
 

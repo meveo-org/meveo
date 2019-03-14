@@ -23,7 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
@@ -35,6 +38,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -103,7 +107,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldTemplateService.create(customFieldTemplate);
     }
 
-    private void turnIntoPrimitive(CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
+    public static void turnIntoPrimitive(CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
         customFieldTemplate.setActive(true);			       	    // Always active
         customFieldTemplate.setAllowEdit(false);		       	    // CFT can't be updated
         customFieldTemplate.setAppliesTo(cet.getAppliesTo());
@@ -120,13 +124,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @Asynchronous
     protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
         /* Primitive entity and type management */
         if(cet.isPrimitiveEntity() && cet.getPrimitiveType() != null){
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            final CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
-            valueCft.setFieldType(cet.getPrimitiveType().getCftType());
-            customFieldTemplateService.update(valueCft);
+            CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
+            if(valueCft == null){
+                createPrimitiveCft(cet);
+            }else if(valueCft.getFieldType() != cet.getPrimitiveType().getCftType()){
+                flush();
+                valueCft.setFieldType(cet.getPrimitiveType().getCftType());
+                customFieldTemplateService.update(valueCft);
+            }
         }else {
             cet.setPrimitiveType(null);
         }
@@ -262,5 +273,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     public List<CustomEntityTemplate> getCETForConfiguration() {
         return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
+    }
+
+    public PrimitiveTypeEnum getPrimitiveType(String code){
+        return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
+                .setParameter("code", code)
+                .getSingleResult();
     }
 }

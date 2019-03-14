@@ -51,13 +51,6 @@
             onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cust_cet"/>
 
     </changeSet>
-    <changeSet id="#1150_20161010" author="rachidAityaazza" failOnError="false">
-		<addColumn tableName="crm_custom_field_tmpl">
-            <column name="is_unique" type="${type.boolean}" defaultValueNumeric="0"/>
-            <column name="is_filter" type="${type.boolean}" defaultValueNumeric="0"/>
-            <column name="expression_separator" type="VARCHAR(100)"/>
-		</addColumn>
-	</changeSet>
 	<changeSet id="#2289_20170202" author="rachidAityaazza">
         <modifyDataType tableName="CRM_CUSTOM_FIELD_TMPL" columnName="INDEX_TYPE" newDataType="VARCHAR(250)"/>
     </changeSet>
@@ -240,7 +233,7 @@
         </addColumn>
         <renameColumn tableName="technical_services" oldColumnName="service_version" newColumnName="function_version"/>
     </changeSet>
-    
+
      <changeSet id="setters_and_getters" author="Clement Bareth">
         <addColumn tableName="meveo_script_instance">
             <column name="getters" type="${type.json}"> </column>
@@ -334,16 +327,8 @@
         </sql>
     </changeSet>
 
-    <changeSet id="addColumnfunction_id" author = "Hien Bach">
-        <addColumn tableName="adm_notification">
-            <column name="function_id" type="BIGINT"/>
-        </addColumn>
-    </changeSet>
-
     <changeSet id="updatecolumnfunction_id" author = "Hien Bach">
-        <update tableName="adm_notification">
-            <column name="function_id" type="varchar(255)" value = "script_instance_id"/>
-        </update>
+        <renameColumn tableName="adm_notification" oldColumnName="script_instance_id" newColumnName="function_id"/>
     </changeSet>
 
     <changeSet id="foreignKeyfk_function_id" author = "Hien Bach">
@@ -352,30 +337,21 @@
                                  referencedColumnNames="id"/>
     </changeSet>
 
-    <changeSet id = "extractor_connector" author = "Hien Bach">
-        <createTable tableName="extractor">
-            <column name="id" type="BIGINT">
+    <changeSet id="neo4j_configuration" author="Clément Bareth">
+        <createTable tableName="neo4j_configuration">
+            <column name="code" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="pk_neo4_configuration" nullable="false"/>
+            </column>
+            <column name="neo4j_url" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="tree" type="text">
+            <column name="neo4j_login" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-			<column name="tree" type="text">
-                <constraints nullable="false"/>
-            </column>
-            <column name="tree" type=" VARCHAR(255)"/>
-        </createTable>
-        <addPrimaryKey tableName="extractor" columnNames="id"/>
-
-        <createTable tableName="connector">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="tree" type="text">
+            <column name="neo4j_password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addPrimaryKey tableName="connector" columnNames="id"/>
     </changeSet>
 
     <changeSet id = "deleteproperty_description" author = "Hien Bach">
@@ -384,21 +360,6 @@
         </sql>
         <sql>
             DELETE FROM technical_services_description WHERE 1 = 1
-        </sql>
-    </changeSet>
-
-    <changeSet id="inserttechnical_services" author = "Hien Bach">
-        <sql>
-            INSERT INTO extractor (id, tree, name)
-            SELECT id, script as tree, name
-            FROM technical_services
-            WHERE service_type = 'Extractor'; -- After that, manually modify fields "parameters", "tree" and "applicable_when_el"
-        </sql>
-        <sql>
-            INSERT INTO connector (id, tree, name)
-            SELECT id, script as tree, name
-            FROM technical_services
-            WHERE service_type = 'Connector';
         </sql>
     </changeSet>
 
@@ -423,7 +384,7 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="version" type="int4"/>
-            <column name="disabled" type="int1" defaultValueNumeric="0"/>
+            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0"/>
             <column name="created" type="datetime">
                 <constraints nullable="false" />
             </column>
@@ -437,7 +398,7 @@
             <column name="service_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="synchronous" type="int1" defaultValueNumeric="0">
+            <column name="synchronous" type="${type.boolean}" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="method" type="varchar(255)">
@@ -507,10 +468,10 @@
             <column name="updated" type="datetime" />
             <column name="description" type="varchar(255)" />
             <column name="code" type="varchar(255)" />
-            
+
             <column name="creator" type="varchar(100)" />
             <column name="updater" type="varchar(100)" />
-            
+
             <column name="name" type="varchar(100)">
                 <constraints nullable="false" />
             </column>
@@ -553,6 +514,39 @@
             </column>
         </addColumn>
         <addPrimaryKey tableName="cust_cet_unique_constraint" columnNames="code, cet_id" constraintName="cust_cet_unique_constraint_pkey"/>
+    </changeSet>
+
+    <changeSet id="#3516_replace_node_and_relationships_classname_filter" author="Clément Bareth">
+        <update tableName="adm_notification">
+            <column name="class_name_filter" value="org.meveo.service.neo4j.graph.Neo4jEntity"/>
+            <where>
+                class_name_filter = 'org.neo4j.driver.v1.types.Node'
+            </where>
+        </update>
+        <update tableName="adm_notification">
+            <column name="class_name_filter" value="org.meveo.service.neo4j.graph.Neo4jRelationship"/>
+            <where>
+                class_name_filter = 'org.neo4j.driver.v1.types.Relationship'
+            </where>
+        </update>
+    </changeSet>
+
+    <changeSet id="rest_endpoint_add_jsonata" author="Clément Bareth">
+        <addColumn tableName="service_endpoint">
+            <column name="jsonata_transformer" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    
+    <changeSet id="endpoint_parmeter_id_string" author="Clément Bareth">
+        <dropForeignKeyConstraint baseTableName="service_parameter_mapping" constraintName="fk_service_parameter_mapping_parameter_id"/>
+        <dropForeignKeyConstraint baseTableName="endpoint_path_parameter" constraintName="fk_endpoint_path_parameter_parameter_id"/>
+        <modifyDataType tableName="service_parameter_mapping" columnName="parameter_id" newDataType="varchar(255)"/>
+        <modifyDataType tableName="endpoint_path_parameter" columnName="parameter_id" newDataType="varchar(255)"/>
+        <addColumn tableName="service_parameter_mapping">
+            <column name="multivalued" type="${type.boolean}">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>

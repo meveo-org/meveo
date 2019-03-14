@@ -11,17 +11,22 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
@@ -34,6 +39,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	 * CustomEntityTemplate class instance
 	 */
 	private CustomizedEntity customizedEntity;
+
+    Logger logger = LoggerFactory.getLogger(CustomEntityTemplateBean.class);
 
 	/**
 	 * Prefix to apply to custom field templates (appliesTo value)
@@ -51,6 +58,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private List<CustomEntityTemplate> cetConfigurations;
 
 	private List<CustomEntityCategory> customEntityCategories;
+
+    private List<CustomEntityTemplateUniqueConstraint> customEntityTemplateUniqueConstraints = new ArrayList<>();
+
+    private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
+
+    private Boolean isUpdate = false;
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -191,6 +204,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		if (entityTemplate != null && entityTemplate.isPrimitiveEntity()) {
 			fields.remove("value");
+		}
+
+		// Init primitve types
+		for(CustomFieldTemplate field : fields.values()){
+			if(!StringUtils.isBlank(field.getEntityClazz())){
+				final String cetCode = CustomFieldTemplate.retrieveCetCode(field.getEntityClazz());
+				field.setPrimitiveType(customEntityTemplateService.getPrimitiveType(cetCode));
+			}
 		}
 
 		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), CustomEntityTemplate.class.isAssignableFrom(entityClass) ? entity.getName() : "Custom fields", true);
@@ -521,7 +542,73 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
-	public class SortedTreeNode extends DefaultTreeNode {
+    public List<CustomEntityTemplateUniqueConstraint> getCustomEntityTemplateUniqueConstraints() {
+        if (entity != null && entity.getUniqueConstraints() != null) {
+            customEntityTemplateUniqueConstraints = entity.getUniqueConstraints();
+        }
+        return customEntityTemplateUniqueConstraints;
+    }
+
+    public CustomEntityTemplateUniqueConstraint getCustomEntityTemplateUniqueConstraint() {
+        return customEntityTemplateUniqueConstraint;
+    }
+
+    public void setCustomEntityTemplateUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
+        this.customEntityTemplateUniqueConstraint = customEntityTemplateUniqueConstraint;
+    }
+
+    public void addUniqueConstraint() {
+        isUpdate = false;
+        customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
+        customEntityTemplateUniqueConstraint.setTrustScore(100);
+    }
+
+    public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
+        for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
+            if (uniqueConstraint != null && uniqueConstraint.equals(selectedUniqueConstraint)) {
+                entity.getUniqueConstraints().remove(selectedUniqueConstraint);
+                break;
+            }
+        }
+        String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public void editUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
+        isUpdate = true;
+        customEntityTemplateUniqueConstraint = selectedUniqueConstraint;
+    }
+
+    public void saveUniqueConstraint() {
+        if (!isUpdate) {
+            customEntityTemplateUniqueConstraint.setCustomEntityTemplate(entity);
+            customEntityTemplateUniqueConstraints.add(customEntityTemplateUniqueConstraint);
+        } else {
+            for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
+                if (uniqueConstraint != null && uniqueConstraint.getCode().equals(customEntityTemplateUniqueConstraint.getCode())) {
+                    uniqueConstraint.setDescription(customEntityTemplateUniqueConstraint.getDescription());
+                    uniqueConstraint.setCypherQuery(customEntityTemplateUniqueConstraint.getCypherQuery());
+                    uniqueConstraint.setTrustScore(customEntityTemplateUniqueConstraint.getTrustScore());
+                    uniqueConstraint.setApplicableOnEl(customEntityTemplateUniqueConstraint.getApplicableOnEl());
+                    break;
+                }
+            }
+        }
+        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+        isUpdate = false;
+        String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public Boolean getIsUpdate() {
+        return isUpdate;
+    }
+
+    public void setIsUpdate(Boolean isUpdate) {
+        this.isUpdate = isUpdate;
+    }
+
+    public class SortedTreeNode extends DefaultTreeNode {
 
 		private static final long serialVersionUID = 3694377290046737073L;
 

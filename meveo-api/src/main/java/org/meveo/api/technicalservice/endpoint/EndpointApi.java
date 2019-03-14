@@ -17,13 +17,11 @@ package org.meveo.api.technicalservice.endpoint;
 
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.technicalservice.InputPropertyDto;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.technicalservice.DescriptionApi;
 import org.meveo.jpa.JpaAmpNewTx;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
-import org.meveo.model.technicalservice.InputMeveoProperty;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
@@ -49,9 +47,6 @@ import java.util.stream.Collectors;
 public class EndpointApi {
 
     @Inject
-    private DescriptionApi descriptionApi;
-
-    @Inject
     private EndpointService endpointService;
 
     @Inject
@@ -67,7 +62,7 @@ public class EndpointApi {
      * @throws BusinessException if error occurs while execution
      */
     public Map<String, Object> execute(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
-        TechnicalService service = endpoint.getService();
+        Function service = endpoint.getService();
         Map<String, Object> parameterMap = new HashMap<>(parameters);
 
         // Assign path parameters
@@ -80,25 +75,24 @@ public class EndpointApi {
             Object parameterValue = parameters.get(tsParameterMapping.getParameterName());
 
             // Use default value if parameter not provided
-            if(parameterValue == null){
+            if (parameterValue == null) {
                 parameterValue = tsParameterMapping.getDefaultValue();
-            }else{
+            } else {
                 // Handle cases where parameter is multivalued
-                final CustomFieldStorageTypeEnum storageType = tsParameterMapping.getEndpointParameter().getParameter().getCet().getStorageType();
-                if(parameterValue instanceof String[]){
+                if (parameterValue instanceof String[]) {
                     String[] arrValue = (String[]) parameterValue;
-                    if(storageType == CustomFieldStorageTypeEnum.LIST){
+                    if (tsParameterMapping.isMultivalued()) {
                         parameterValue = new ArrayList<>(Arrays.asList(arrValue));
-                    }else if(arrValue.length == 1){
+                    } else if (arrValue.length == 1) {
                         parameterValue = arrValue[0];
-                    }else{
+                    } else {
                         throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
                     }
-                }else if(parameterValue instanceof Collection){
+                } else if (parameterValue instanceof Collection) {
                     Collection colValue = (Collection) parameterValue;
-                    if(storageType != CustomFieldStorageTypeEnum.LIST && colValue.size() == 1){
+                    if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
                         parameterValue = colValue.iterator().next();
-                    }else{
+                    } else if (!tsParameterMapping.isMultivalued()) {
                         throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
                     }
                 }
@@ -217,13 +211,12 @@ public class EndpointApi {
         EndpointDto endpointDto = new EndpointDto();
         endpointDto.setCode(endpoint.getCode());
         endpointDto.setMethod(endpoint.getMethod());
-        endpointDto.setTechnicalServiceCode(endpoint.getService().getCode());
+        endpointDto.setServiceCode(endpoint.getService().getCode());
         endpointDto.setSynchronous(endpoint.isSynchronous());
-        List<InputPropertyDto> pathParameterDtos = new ArrayList<>();
+        List<String> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
-            InputPropertyDto inputPropertyDto = descriptionApi.toInputPropertyDto(pathParameter.getEndpointParameter().getParameter());
-            pathParameterDtos.add(inputPropertyDto);
+            pathParameterDtos.add(pathParameter.getEndpointParameter().getParameter());
         }
         List<TSParameterMappingDto> mappingDtos = new ArrayList<>();
         endpointDto.setParameterMappings(mappingDtos);
@@ -231,10 +224,10 @@ public class EndpointApi {
             TSParameterMappingDto mappingDto = new TSParameterMappingDto();
             mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
             mappingDto.setParameterName(tsParameterMapping.getParameterName());
-            InputPropertyDto inputPropertyDto = descriptionApi.toInputPropertyDto(tsParameterMapping.getEndpointParameter().getParameter());
-            mappingDto.setServiceParameter(inputPropertyDto);
+            mappingDto.setServiceParameter(tsParameterMapping.getEndpointParameter().getParameter());
             mappingDtos.add(mappingDto);
         }
+        endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
         return endpointDto;
     }
 
@@ -251,9 +244,12 @@ public class EndpointApi {
         // Synchronous
         endpoint.setSynchronous(endpointDto.isSynchronous());
 
+        // JSONata query
+        endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+
         // Technical Service
-        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getTechnicalServiceCode());
-        TechnicalService service = (TechnicalService) functionService.findByCode(endpointDto.getTechnicalServiceCode());
+        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
+        Function service = functionService.findByCode(endpointDto.getServiceCode());
         endpoint.setService(service);
 
         // Parameters mappings
@@ -268,9 +264,9 @@ public class EndpointApi {
 
     private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
         List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
-        for (InputPropertyDto pathParameter : endpointDto.getPathParameters()) {
+        for (String pathParameter : endpointDto.getPathParameters()) {
             EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), pathParameter);
+            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, pathParameter);
             endpointPathParameter.setEndpointParameter(endpointParameter);
             endpointPathParameters.add(endpointPathParameter);
         }
@@ -283,18 +279,17 @@ public class EndpointApi {
             TSParameterMapping tsParameterMapping = new TSParameterMapping();
             tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
             tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, endpointDto.getTechnicalServiceCode(), parameterMappingDto.getServiceParameter());
+            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, parameterMappingDto.getServiceParameter());
             tsParameterMapping.setEndpointParameter(endpointParameter);
             tsParameterMappings.add(tsParameterMapping);
         }
         return tsParameterMappings;
     }
 
-    private EndpointParameter buildEndpointParameter(Endpoint endpoint, String code, InputPropertyDto inputPropertyDto){
+    private EndpointParameter buildEndpointParameter(Endpoint endpoint, String param){
         EndpointParameter endpointParameter = new EndpointParameter();
         endpointParameter.setEndpoint(endpoint);
-        InputMeveoProperty inputMeveoProperty = descriptionApi.fromInputPropertyDto(code, inputPropertyDto);
-        endpointParameter.setParameter(inputMeveoProperty);
+        endpointParameter.setParameter(param);
         return endpointParameter;
     }
 

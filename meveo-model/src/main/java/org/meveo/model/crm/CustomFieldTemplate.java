@@ -130,6 +130,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "trigger_end_period_event", nullable = false)
     private boolean triggerEndPeriodEvent;
 
+//    /**
+//     * The primitive type, if entity is primitive.
+//     */
+//    @Column(name = "primitive_type")
+//    @Enumerated(EnumType.STRING)
+    @Transient
+    private PrimitiveTypeEnum primitiveType;
+
     /**
      * Where field should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;fieldGroup:&lt;fieldgroup name&gt;:&lt;fieldgroup relative
      * position&gt;;field:&lt;field relative position in fieldgroup/tab&gt;
@@ -390,6 +398,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     public String getEntityClazzCetCode() {
         return CustomFieldTemplate.retrieveCetCode(entityClazz);
+    }
+
+    public PrimitiveTypeEnum getPrimitiveType() {
+        return primitiveType;
+    }
+
+    public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
+        this.primitiveType = primitiveType;
     }
 
     /**

@@ -21,6 +21,9 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.job.Job;
+import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -35,11 +38,19 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
      */
     private String crtPrefix;
 
+    private CustomizedEntity customizedEntity;
+
     private SortedTreeNode groupedFields;
 
     private List<CustomEntityTemplate> customEntityTemplates;
     
     private List<CustomRelationshipTemplate> customRelationshipTemplates;
+
+    protected TreeNode selectedFieldGrouping;
+
+    private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
+
+    private EntityCustomAction selectedEntityAction;
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
@@ -80,6 +91,70 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         return entityClassName == null || CustomRelationshipTemplate.class.getName().equals(entityClassName);
     }
 
+    /**
+     * Prepare to show entity customization for a particular class - To be used from
+     * GUI action button/link
+     *
+     * @param entityClassName
+     *                            Entity class
+     */
+    public void initCustomization(String entityClassName) {
+        customizedEntity = null;
+        this.entityClassName = entityClassName;
+        try {
+            getCustomizedEntity();
+        } catch (ClassNotFoundException e) {
+            log.error("Failed to initialize entity customization for a class {}", entityClassName);
+        }
+    }
+
+    /**
+     * Construct customizedEntity instance which is a representation of customizable
+     * class (e.g. Customer)
+     *
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public CustomizedEntity getCustomizedEntity() throws ClassNotFoundException {
+
+        // Convert appliesTo parameter to a entityClassName of objectId value in case of
+        // customEntity template
+        if (customizedEntity == null && appliesTo != null) {
+
+            CustomizedEntity customizedEntityMatched = customizedEntityService.getCustomizedEntity(appliesTo);
+            if (customizedEntityMatched != null) {
+                setEntityClassName(customizedEntityMatched.getEntityClass().getName());
+                if (customizedEntityMatched.getCustomEntityId() != null) {
+                    initEntity(customizedEntityMatched.getCustomEntityId());
+                }
+            }
+        }
+
+        if (customizedEntity == null && entityClassName != null && !CustomEntityTemplate.class.getName().equals(entityClassName)) {
+            entityClass = Class.forName(entityClassName);
+            customizedEntity = new CustomizedEntity(entityClass.getSimpleName(), entityClass, null, null);
+            crtPrefix = EntityCustomizationUtils.getAppliesTo(entityClass, null);
+
+            if (Job.class.isAssignableFrom(entityClass)) {
+
+                // Check and instantiate missing custom field templates for a given job
+                Job job = jobInstanceService.getJobByName(entityClass.getSimpleName());
+                Map<String, CustomFieldTemplate> jobCustomFields = job.getCustomFields();
+
+                // Create missing custom field templates if needed
+                try {
+                    customFieldTemplateService.createMissingTemplates(crtPrefix, jobCustomFields.values());
+
+                } catch (BusinessException e) {
+                    log.error("Failed to construct customized entity", e);
+                    messages.error(new BundleKey("messages", "error.unexpected"));
+                }
+            }
+        }
+
+        return customizedEntity;
+    }
+
     public TreeNode getFields() {
         if (groupedFields != null || crtPrefix == null) {
             return groupedFields;
@@ -91,9 +166,6 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
  
         groupedFields = new SortedTreeNode(groupedCFT.getType(), groupedCFT.getData(), null, true);
         groupedFields.setExpanded(true);
-        
-        
-        
 
         // Create through tabs
         for (GroupedCustomField level1 : groupedCFT.getChildren()) { 
@@ -165,13 +237,37 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         groupedFields = null;
     }
 
+    public void editFieldGrouping(TreeNode selectedFieldGrouping) {
+        setSelectedFieldGrouping(selectedFieldGrouping);
+        // this.selectedFieldGroupingLabel = (TranslatableLabel)
+        // selectedFieldGrouping.getData();
+    }
+
     public void setSelectedFieldGrouping(TreeNode selectedFieldGrouping) {
         this.selectedFieldGrouping = selectedFieldGrouping;
+        this.selectedFieldGroupingLabel = (TranslatableLabel) selectedFieldGrouping.getData();
     }
 
     public TreeNode getSelectedFieldGrouping() {
         return selectedFieldGrouping;
     }
+
+    public TranslatableLabel getSelectedFieldGroupingLabel() {
+        return selectedFieldGroupingLabel;
+    }
+
+    public void setSelectedFieldGroupingLabel(TranslatableLabel selectedFieldGroupingLabel) {
+        this.selectedFieldGroupingLabel = selectedFieldGroupingLabel;
+    }
+
+    public void setSelectedEntityAction(EntityCustomAction selectedEntityAction) {
+        this.selectedEntityAction = selectedEntityAction;
+    }
+
+    public EntityCustomAction getSelectedEntityAction() {
+        return selectedEntityAction;
+    }
+
 
     @Override
     public String getEditViewName() {
@@ -435,10 +531,10 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
             if (getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
                 return GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";"
-                        + ";field:" + getChildCount();
+                        + "field:" + getChildCount();
 
             } else if (getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
-                String guiPosition = GroupedCustomFieldTreeItemType.fieldGroup.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";field:" + getChildCount();
+                String guiPosition = GroupedCustomFieldTreeItemType.fieldGroup.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + "field:" + getChildCount();
                 if (getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
                     guiPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getParent().getData() + ":" + getParent().getParent().getChildren().indexOf(getParent())
                             + ";" + guiPosition;
@@ -469,8 +565,12 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
                 .getParent()).canMoveDown())));
 
         }
-        
-        
+
+        public TreeNode getSelectedFieldGrouping() {
+            return selectedFieldGrouping;
+        }
+
+
         
         
         protected int getIndexInParent() {
