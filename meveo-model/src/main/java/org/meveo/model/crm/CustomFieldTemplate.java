@@ -130,11 +130,12 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "trigger_end_period_event", nullable = false)
     private boolean triggerEndPeriodEvent;
 
-    /**
-     * The primitive type, if entity is primitive.
-     */
-    @Column(name = "primitive_type")
-    @Enumerated(EnumType.STRING)
+//    /**
+//     * The primitive type, if entity is primitive.
+//     */
+//    @Column(name = "primitive_type")
+//    @Enumerated(EnumType.STRING)
+    @Transient
     private PrimitiveTypeEnum primitiveType;
 
     /**

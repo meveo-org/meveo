@@ -38,6 +38,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -272,5 +273,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     public List<CustomEntityTemplate> getCETForConfiguration() {
         return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
+    }
+
+    public PrimitiveTypeEnum getPrimitiveType(String code){
+        return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
+                .setParameter("code", code)
+                .getSingleResult();
     }
 }

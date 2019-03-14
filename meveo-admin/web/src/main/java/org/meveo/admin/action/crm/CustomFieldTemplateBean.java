@@ -67,21 +67,6 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     @Override
-    public void saveOrUpdateForPopup() throws BusinessException, ELException {
-
-        if (!StringUtils.isBlank(entity.getEntityClazz())){
-
-            String cetCode = CustomFieldTemplate.retrieveCetCode(entity.getEntityClazz());
-            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-
-            if (cet != null) {
-                entity.setPrimitiveType(cet.getPrimitiveType());
-            }
-        }
-        super.saveOrUpdateForPopup();
-    }
-
-    @Override
     public CustomFieldTemplate initEntity() {
         CustomFieldTemplate customFieldTemplate = super.initEntity();
 

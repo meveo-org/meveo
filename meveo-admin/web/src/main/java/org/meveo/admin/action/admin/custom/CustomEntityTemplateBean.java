@@ -11,12 +11,14 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -202,6 +204,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		if (entityTemplate != null && entityTemplate.isPrimitiveEntity()) {
 			fields.remove("value");
+		}
+
+		// Init primitve types
+		for(CustomFieldTemplate field : fields.values()){
+			if(!StringUtils.isBlank(field.getEntityClazz())){
+				final String cetCode = CustomFieldTemplate.retrieveCetCode(field.getEntityClazz());
+				field.setPrimitiveType(customEntityTemplateService.getPrimitiveType(cetCode));
+			}
 		}
 
 		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), CustomEntityTemplate.class.isAssignableFrom(entityClass) ? entity.getName() : "Custom fields", true);
