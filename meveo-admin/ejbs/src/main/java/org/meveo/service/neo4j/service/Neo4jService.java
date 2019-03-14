@@ -989,7 +989,7 @@ public class Neo4jService {
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
 
         Object evaluatedExpression = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
-                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)), String.class);
+                   .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()!=null?e.getValue():"")), String.class);
 
         if (evaluatedExpression != null) {
 
