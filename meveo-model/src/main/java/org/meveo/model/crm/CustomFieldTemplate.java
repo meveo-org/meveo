@@ -408,6 +408,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         this.primitiveType = primitiveType;
     }
 
+    public String getReferenceEntityClazzCetCode() {
+        return "Reference to "+ CustomFieldTemplate.retrieveCetCode(entityClazz);
+    }
+
     /**
      * Retrieve a cet code from classname and code as it is stored in entityClazz field.
      * 

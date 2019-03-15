@@ -22,7 +22,8 @@
                     <h:outputText value="#{entity.label}" rendered="#{node.type == 'action'}" size="50" maxlength="100" componentWidth="100"/>
                 </p:column>
                 <p:column headerText="#{messages['customFieldTemplate.fieldType']}" style="width: 10%">
-                    <h:outputText value="#{messages[entity.fieldType.label]}" rendered="#{node.type == 'field'}" />
+                    <h:outputText value="#{messages[entity.fieldType.label]}" rendered="#{node.type == 'field' and entity.entityClazz == null}" />
+                    <h:outputText value="#{entity.referenceEntityClazzCetCode}" rendered="#{node.type == 'field' and entity.entityClazz != null}" />
                 </p:column>
                 <p:column headerText="#{messages['customFieldTemplate.primitiveType']}" style="width: 8%">
                     <h:outputText value="#{entity.primitiveType}" rendered="#{node.type == 'field' and entity.entityClazz != null}"/>
@@ -290,8 +291,8 @@
                     <h:panelGroup>
                         <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" required="true" allowEdit="false" componentWidth="100" size="56" />
                         <hftl:formField label="#{messages['customFieldTemplate.description']}" field="description" required="true" size="56" maxlength="100" componentWidth="100" />
-                        <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
                     </h:panelGroup>
+
                     <h:panelGroup>
                         <hftl:formField label="#{messages['customFieldTemplate.fieldType']}" field="fieldType" required="true" componentWidth="30"
                             listenerUpdate="listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields"
