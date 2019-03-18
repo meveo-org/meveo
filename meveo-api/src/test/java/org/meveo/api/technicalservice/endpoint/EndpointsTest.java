@@ -36,8 +36,10 @@ import org.mockito.Answers;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -49,7 +51,7 @@ public class EndpointsTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void before() throws BusinessException {
+    public void before() {
         concreteFunctionService = mock(ConcreteFunctionService.class);
         customScriptService = mock(ScriptInstanceService.class, Answers.CALLS_REAL_METHODS.get());
 
@@ -58,10 +60,6 @@ public class EndpointsTest {
         ScriptInstance scriptInstance = getScriptInstance();
 
         doReturn(scriptInstance).when(customScriptService).findByCode(anyString());
-        doReturn(new ExposedScriptTest()).when(customScriptService).getScriptInstance(anyString());
-
-        when(customScriptService.getExecutionEngine(anyString(), anyMap())).thenCallRealMethod();
-        when(customScriptService.execute(anyObject(), anyMap())).thenCallRealMethod();
 
         endpointApi = new EndpointApi(null, concreteFunctionService);
     }
@@ -70,7 +68,10 @@ public class EndpointsTest {
      * The goal is to test the path parameters mapping
      */
     @Test
-    public void testPathParameter() throws BusinessException {
+    public void testPathParameter() throws BusinessException, ExecutionException, InterruptedException {
+
+        doReturn(new ExposedScriptTest()).when(customScriptService).getScriptInstance(anyString());
+
         Endpoint endpoint = getEndpoint();
 
         EndpointExecution execution = getEndpointExecution(endpoint);
@@ -85,7 +86,10 @@ public class EndpointsTest {
      * The goal is to test the budget information mapping
      */
     @Test
-    public void testBudget() throws BusinessException {
+    public void testBudget() throws BusinessException, ExecutionException, InterruptedException {
+
+        doReturn(new ExposedScriptTest()).when(customScriptService).getScriptInstance(anyString());
+
         Endpoint endpoint = getEndpoint();
 
         EndpointExecution execution = getEndpointExecution(endpoint);
@@ -96,10 +100,44 @@ public class EndpointsTest {
     }
 
     /**
+     * The goal is to test the timeout of an endpoint. A counter is incremented every second.
+     * We fix the tiemout to 2 seconds, so the counter should be 2
+     */
+    @Test
+    public void testTimeout() throws BusinessException, ExecutionException, InterruptedException {
+
+        doReturn(new TimedOutScript()).when(customScriptService).getScriptInstance(anyString());
+
+        // Function
+        ScriptInstance function = new ScriptInstance();
+        function.setCode("test");
+
+        // Endpoint
+        Endpoint endpoint = new Endpoint();
+        endpoint.setCode("test-endpoint");
+        endpoint.setService(function);
+
+        final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
+                .setPathInfo(new String[]{"rest", endpoint.getCode()})
+                .setDelayUnit(TimeUnit.SECONDS)
+                .setDelayValue(2L)
+                .createEndpointExecution();
+
+        final Map<String, Object> execute = endpointApi.execute(endpoint, endpointExecution);
+        int counter =  (int) execute.get("counter");
+
+        Assert.assertEquals("Counter should be 2", 2, counter);
+
+    }
+
+    /**
      * The goal is to test the body / query parameters mapping
      */
     @Test
-    public void testParameterMapping() throws BusinessException {
+    public void testParameterMapping() throws BusinessException, ExecutionException, InterruptedException {
+
+        doReturn(new ExposedScriptTest()).when(customScriptService).getScriptInstance(anyString());
+
         Endpoint endpoint = getEndpoint();
 
         EndpointExecution execution = getEndpointExecution(endpoint);

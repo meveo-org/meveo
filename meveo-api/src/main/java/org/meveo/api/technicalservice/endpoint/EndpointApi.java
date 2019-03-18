@@ -35,6 +35,10 @@ import org.meveo.service.technicalservice.endpoint.EndpointService;
 import javax.ejb.*;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +52,10 @@ public class EndpointApi {
 
     private EndpointService endpointService;
     private ConcreteFunctionService concreteFunctionService;
+
+    public EndpointApi(){
+
+    }
 
     @Inject
     public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
@@ -63,7 +71,7 @@ public class EndpointApi {
      * @return The result of the execution
      * @throws BusinessException if error occurs while execution
      */
-    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException {
+    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
         List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
@@ -112,6 +120,23 @@ public class EndpointApi {
         }
 
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+
+        if(execution.getDelayValue() != null){
+            final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+            try {
+                final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return functionService.execute(executionEngine, parameterMap);
+                    } catch (BusinessException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+            } catch (TimeoutException e) {
+                return executionEngine.cancel();
+            }
+        }
+
         return functionService.execute(service.getCode(), parameterMap);
     }
 

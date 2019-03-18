@@ -65,6 +65,8 @@ public enum Headers {
                 value = Double.parseDouble(header);
             }else if(String.class.equals(rawClass)){
                 value = header;
+            } else if(Enum.class.isAssignableFrom(rawClass)){
+                value = Enum.valueOf((Class) rawClass, header);
             }
             return (T) value;
         }else{

@@ -157,6 +157,7 @@ public class EndpointServlet extends HttpServlet {
             if (endpoint.getMethod() == endpointExecution.getMethod()) {
                 // Execute service
                 if (endpoint.isSynchronous()) {
+
                     final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                     endpointExecution.getWriter().print(transformData(endpoint, result));
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
@@ -171,7 +172,7 @@ public class EndpointServlet extends HttpServlet {
                         try {
                             final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                             return transformData(endpoint, result);
-                        } catch (BusinessException e) {
+                        } catch (BusinessException | ExecutionException | InterruptedException e) {
                             throw new RuntimeException(e);
                         }
                     });

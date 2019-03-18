@@ -20,10 +20,12 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class EndpointExecutionBuilder {
-    private Map<String, Object> parameters;
+    private Map<String, Object> parameters = new HashMap<>();
     private HttpServletResponse resp;
     private PrintWriter writer;
     private String[] pathInfo;
@@ -35,6 +37,8 @@ public class EndpointExecutionBuilder {
     private String persistenceContext;
     private String budgetUnit;
     private Double bugetMax;
+    private TimeUnit delayUnit;
+    private Long delayValue;
 
     public EndpointExecutionBuilder setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
@@ -77,7 +81,7 @@ public class EndpointExecutionBuilder {
     }
 
     public EndpointExecution createEndpointExecution() {
-        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax);
+        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue);
     }
 
     public EndpointExecutionBuilder setResp(HttpServletResponse resp) {
@@ -102,6 +106,16 @@ public class EndpointExecutionBuilder {
 
     public EndpointExecutionBuilder setBugetMax(Double bugetMax) {
         this.bugetMax = bugetMax;
+        return this;
+    }
+
+    public EndpointExecutionBuilder setDelayUnit(TimeUnit delayUnit) {
+        this.delayUnit = delayUnit;
+        return this;
+    }
+
+    public EndpointExecutionBuilder setDelayValue(Long delayValue) {
+        this.delayValue = delayValue;
         return this;
     }
 }

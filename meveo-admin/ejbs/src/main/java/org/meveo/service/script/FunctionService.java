@@ -206,7 +206,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return Context parameters. Will not be null even if "context" parameter is null.
      * @throws BusinessException Any execution exception
      */
-    protected Map<String, Object> execute(E engine, Map<String, Object> context)
+    public Map<String, Object> execute(E engine, Map<String, Object> context)
             throws BusinessException {
         if (context == null) {
             context = new HashMap<String, Object>();
