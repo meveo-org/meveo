@@ -46,11 +46,14 @@ import java.util.stream.Collectors;
 @Stateless
 public class EndpointApi {
 
-    @Inject
     private EndpointService endpointService;
+    private ConcreteFunctionService concreteFunctionService;
 
     @Inject
-    private ConcreteFunctionService concreteFunctionService;
+    public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
+        this.endpointService = endpointService;
+        this.concreteFunctionService = concreteFunctionService;
+    }
 
     /**
      * Execute the technical service associated to the endpoint
