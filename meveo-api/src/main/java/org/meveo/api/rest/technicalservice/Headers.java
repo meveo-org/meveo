@@ -63,6 +63,8 @@ public enum Headers {
                 value = Float.parseFloat(header);
             }else if(Double.class.equals(rawClass)){
                 value = Double.parseDouble(header);
+            }else if(String.class.equals(rawClass)){
+                value = header;
             }
             return (T) value;
         }else{

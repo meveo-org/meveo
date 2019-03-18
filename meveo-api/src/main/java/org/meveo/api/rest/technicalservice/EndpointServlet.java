@@ -42,7 +42,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -84,27 +83,12 @@ public class EndpointServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        final PrintWriter writer = resp.getWriter();
-        resp.setCharacterEncoding("UTF-8");
-
-        String[] pathInfo = req.getPathInfo().split("/");
-        if (pathInfo.length == 0) {
-            throw new ServletException("Incomplete URL");
-        }
-
         String requestBody = StringUtils.readBuffer(req.getReader());
         final Map<String, Object> parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
 
-        final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
+        final EndpointExecution endpointExecution = EndpointExecutionFactory.getExecutionBuilder(req, resp)
                 .setParameters(parameters)
-                .setResponse(resp)
-                .setWriter(writer)
-                .setPathInfo(pathInfo)
-                .setFirstUriPart(pathInfo[1])
-                .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
-                .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
                 .setMethod(EndpointHttpMethod.POST)
-                .setPersistenceContextId(Headers.PERSISTENCE_CONTEXT_ID.getValue(req))
                 .createEndpointExecution();
 
         doRequest(endpointExecution);
@@ -112,24 +96,10 @@ public class EndpointServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        final PrintWriter writer = resp.getWriter();
-        resp.setCharacterEncoding("UTF-8");
 
-        String[] pathInfo = req.getPathInfo().split("/");
-        if (pathInfo.length == 0) {
-            throw new ServletException("Incomplete URL");
-        }
-
-        final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
+        final EndpointExecution endpointExecution = EndpointExecutionFactory.getExecutionBuilder(req, resp)
                 .setParameters(new HashMap<>(req.getParameterMap()))
-                .setResponse(resp)
-                .setWriter(writer)
-                .setPathInfo(pathInfo)
-                .setFirstUriPart(pathInfo[1])
-                .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
-                .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
                 .setMethod(EndpointHttpMethod.GET)
-                .setPersistenceContextId(Headers.PERSISTENCE_CONTEXT_ID.getValue(req))
                 .createEndpointExecution();
 
         doRequest(endpointExecution);
@@ -185,10 +155,9 @@ public class EndpointServlet extends HttpServlet {
     private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException {
         if (endpoint != null) {
             if (endpoint.getMethod() == endpointExecution.getMethod()) {
-                List<String> pathParameters = new ArrayList<>(Arrays.asList(endpointExecution.getPathInfo()).subList(2, endpointExecution.getPathInfo().length));
                 // Execute service
                 if (endpoint.isSynchronous()) {
-                    final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                    final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                     endpointExecution.getWriter().print(transformData(endpoint, result));
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
                     endpointExecution.getResp().setStatus(200);    // OK
@@ -200,7 +169,7 @@ public class EndpointServlet extends HttpServlet {
                     log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
                     final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
                         try {
-                            final Map<String, Object> result = endpointApi.execute(endpoint, pathParameters, endpointExecution.getParameters());
+                            final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                             return transformData(endpoint, result);
                         } catch (BusinessException e) {
                             throw new RuntimeException(e);
@@ -253,7 +222,7 @@ public class EndpointServlet extends HttpServlet {
     private void saveResult(EndpointExecution endpointExecution, Map<String, Object> results){
         final List<EntityOrRelation> resultsToSave = JacksonUtil.OBJECT_MAPPER .convertValue(results.get("results"), new TypeReference<List<EntityOrRelation>>() {});
         try {
-            //TODO: Rething persistence
+            //TODO: Rethink persistence
             AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(resultsToSave);
             scheduledPersistenceService.persist(endpointExecution.getPersistenceContextId(), atomicPersistencePlan);
         } catch (CyclicDependencyException | BusinessException | ELException e) {

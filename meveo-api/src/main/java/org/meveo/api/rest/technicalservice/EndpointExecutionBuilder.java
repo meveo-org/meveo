@@ -33,6 +33,8 @@ public class EndpointExecutionBuilder {
     private EndpointHttpMethod method;
     private String persistenceContextId;
     private String persistenceContext;
+    private String budgetUnit;
+    private Double bugetMax;
 
     public EndpointExecutionBuilder setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
@@ -75,7 +77,7 @@ public class EndpointExecutionBuilder {
     }
 
     public EndpointExecution createEndpointExecution() {
-        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext);
+        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax);
     }
 
     public EndpointExecutionBuilder setResp(HttpServletResponse resp) {
@@ -90,6 +92,16 @@ public class EndpointExecutionBuilder {
 
     public EndpointExecutionBuilder setPersistenceContext(String persistenceContext) {
         this.persistenceContext = persistenceContext;
+        return this;
+    }
+
+    public EndpointExecutionBuilder setBudgetUnit(String budgetUnit) {
+        this.budgetUnit = budgetUnit;
+        return this;
+    }
+
+    public EndpointExecutionBuilder setBugetMax(Double bugetMax) {
+        this.bugetMax = bugetMax;
         return this;
     }
 }

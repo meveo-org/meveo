@@ -19,10 +19,10 @@ package org.meveo.api.technicalservice.endpoint;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
-import org.meveo.api.technicalservice.DescriptionApi;
+import org.meveo.api.rest.technicalservice.EndpointExecution;
+import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
@@ -56,14 +56,20 @@ public class EndpointApi {
      * Execute the technical service associated to the endpoint
      *
      * @param endpoint Endpoint to execute
-     * @param pathParameters Path parameters the endpoint was called with
-     * @param parameters Optional parameters the endpoint was called with
+     * @param execution Parameters of the execution
      * @return The result of the execution
      * @throws BusinessException if error occurs while execution
      */
-    public Map<String, Object> execute(Endpoint endpoint, List<String> pathParameters, Map<String, Object> parameters) throws BusinessException {
+    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException {
+
+        List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
+
         Function service = endpoint.getService();
-        Map<String, Object> parameterMap = new HashMap<>(parameters);
+        Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
+
+        // Set budget variables
+        parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
+        parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
 
         // Assign path parameters
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
@@ -72,7 +78,7 @@ public class EndpointApi {
 
         // Assign query or post parameters
         for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
-            Object parameterValue = parameters.get(tsParameterMapping.getParameterName());
+            Object parameterValue = execution.getParameters().get(tsParameterMapping.getParameterName());
 
             // Use default value if parameter not provided
             if (parameterValue == null) {
