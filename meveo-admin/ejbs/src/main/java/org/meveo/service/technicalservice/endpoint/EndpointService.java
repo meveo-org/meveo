@@ -20,7 +20,6 @@ import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.BusinessService;
 
 import javax.ejb.Stateless;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;

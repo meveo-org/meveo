@@ -17,8 +17,6 @@
 package org.meveo.api.rest.technicalservice;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
@@ -32,6 +30,7 @@ import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
 import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
 import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
 import org.meveo.service.neo4j.scheduler.SchedulingService;
+import org.meveo.service.technicalservice.endpoint.EndpointResultsCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.slf4j.Logger;
 
@@ -48,7 +47,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Servlet that allows to execute technical services through configured endpoints.<br>
@@ -65,10 +63,6 @@ import java.util.concurrent.TimeUnit;
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
 
-    private static final Cache<String, Future<String>> pendingExecutions = CacheBuilder.newBuilder()
-            .expireAfterWrite(7, TimeUnit.DAYS)
-            .build();
-
     @Inject
     private Logger log;
 
@@ -83,6 +77,9 @@ public class EndpointServlet extends HttpServlet {
 
     @Inject
     private ScheduledPersistenceService scheduledPersistenceService;
+
+    @Inject
+    private EndpointResultsCacheContainer endpointResultsCacheContainer;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -143,7 +140,7 @@ public class EndpointServlet extends HttpServlet {
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
 
         try {
-            final Future<String> execResult = pendingExecutions.getIfPresent(endpointExecution.getFirstUriPart());
+            final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
@@ -151,7 +148,7 @@ public class EndpointServlet extends HttpServlet {
                     endpointExecution.getWriter().print(execResult.get());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
-                        pendingExecutions.invalidate(endpointExecution.getFirstUriPart());
+                        endpointResultsCacheContainer.remove(endpointExecution.getFirstUriPart());
                     }
                 } else {
                     endpointExecution.getResp().setStatus(102);    // In progress
@@ -209,7 +206,7 @@ public class EndpointServlet extends HttpServlet {
                             throw new RuntimeException(e);
                         }
                     });
-                    pendingExecutions.put(id.toString(), execution);
+                    endpointResultsCacheContainer.put(id.toString(), execution);
 
 //                    if(endpointExecution.getPersistenceContextId() != null){
 //                        execution.thenAccept(map -> saveResult(endpointExecution, map));
@@ -230,7 +227,7 @@ public class EndpointServlet extends HttpServlet {
                             endpointExecution.getWriter().println(JacksonUtil.toString(returnedValue));
                         }else{
                             endpointExecution.getWriter().println(JacksonUtil.toString(execResult));
-                            pendingExecutions.invalidate(id.toString());
+                            endpointResultsCacheContainer.remove(id.toString());
                         }
 
                     }else{
