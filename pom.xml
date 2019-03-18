@@ -28,6 +28,7 @@
         <module>meveo-json-schema</module>
         <module>meveo-el-resolver</module>
         <module>jmeter.sampler</module>
+        <module>meveo-ws</module>
     </modules>
     <repositories>
         <repository>
