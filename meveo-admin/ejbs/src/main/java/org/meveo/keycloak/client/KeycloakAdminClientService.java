@@ -1,14 +1,12 @@
 package org.meveo.keycloak.client;
 
 import org.apache.http.HttpStatus;
+import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.RolesResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.admin.client.resource.*;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -23,6 +21,8 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -48,6 +48,9 @@ public class KeycloakAdminClientService {
     @Inject
     @CurrentUser
     protected MeveoUser currentUser;
+
+    @Resource
+    private SessionContext ctx;
 
     /**
      * Reads the configuration from system property.
@@ -99,6 +102,29 @@ public class KeycloakAdminClientService {
             .build();
 
         return keycloak;
+    }
+
+    public void createClient(String name){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        ClientRepresentation clientRepresentation = new ClientRepresentation();
+        clientRepresentation.setClientId(name);
+        clientRepresentation.setEnabled(true);
+        clientRepresentation.setName(name);
+        clientRepresentation.setId(name);
+        clientRepresentation.setProtocol("openid-connect");
+        clientRepresentation.setSecret(name);
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final ClientsResource clients = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients();
+
+        if(clients.findByClientId(name).isEmpty()){
+            clients.create(clientRepresentation);
+        }
     }
 
     /**

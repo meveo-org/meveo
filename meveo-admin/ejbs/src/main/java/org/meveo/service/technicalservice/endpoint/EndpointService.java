@@ -15,11 +15,18 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -33,7 +40,15 @@ import java.util.List;
  * @since 01.02.2019
  */
 @Stateless
+@DeclareRoles({"endpointManagement"})
+@RolesAllowed({"endpointManagement"})
 public class EndpointService extends BusinessService<Endpoint> {
+
+    @Inject
+    private PermissionService permissionService;
+
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
 
     /**
      * Retrieve all endpoints associated to the given service
@@ -58,4 +73,10 @@ public class EndpointService extends BusinessService<Endpoint> {
                 .getResultList();
     }
 
+    @Override
+    protected void beforeUpdateOrCreate(Endpoint entity) throws BusinessException {
+        String endointPermission = String.format("Execute_Endpoint_%s", entity.getCode());
+        permissionService.createIfAbsent(endointPermission, "Execute_All_Endpoints", "SUPER_ADMIN");
+        keycloakAdminClientService.createClient("endpoints");
+    }
 }

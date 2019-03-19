@@ -17,6 +17,7 @@
 package org.meveo.api.rest.technicalservice;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.keycloak.KeycloakPrincipal;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
@@ -26,6 +27,8 @@ import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
 import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
 import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
@@ -106,6 +109,7 @@ public class EndpointServlet extends HttpServlet {
     }
 
     private void doRequest(EndpointExecution endpointExecution) {
+
         // Retrieve endpoint
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
 

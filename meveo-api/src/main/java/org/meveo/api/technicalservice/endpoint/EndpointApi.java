@@ -20,17 +20,16 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
-import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointParameter;
-import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
-import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.model.technicalservice.endpoint.*;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.*;
@@ -46,9 +45,11 @@ import java.util.stream.Collectors;
  * @since 01.02.2019
  */
 @Stateless
+@DeclareRoles({"endpointManagement"})
+@RolesAllowed({"endpointManagement"})
 public class EndpointApi {
 
-    @Inject
+    @EJB
     private EndpointService endpointService;
 
     @Inject

@@ -22,7 +22,9 @@ import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 
-import javax.inject.Inject;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -37,9 +39,11 @@ import java.util.List;
  * @since 04.02.2019
  */
 @Path("/endpoint")
+@DeclareRoles({"endpointManagement"})
+@RolesAllowed({"endpointManagement"})
 public class EndpointRs extends BaseRs {
 
-    @Inject
+    @EJB
     private EndpointApi endpointApi;
 
     @POST
