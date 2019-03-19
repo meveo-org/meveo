@@ -21,7 +21,6 @@ import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
-import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
@@ -32,12 +31,11 @@ import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.ejb.*;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -50,14 +48,16 @@ import java.util.stream.Collectors;
 @Stateless
 public class EndpointApi {
 
+    @Inject
     private EndpointService endpointService;
+
+    @Inject
     private ConcreteFunctionService concreteFunctionService;
 
     public EndpointApi(){
 
     }
 
-    @Inject
     public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
         this.endpointService = endpointService;
         this.concreteFunctionService = concreteFunctionService;
@@ -146,7 +146,6 @@ public class EndpointApi {
      * @param endpointDto Configuration of the endpoint
      * @return the created Endpoint
      */
-    @JpaAmpNewTx @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Endpoint create(EndpointDto endpointDto) throws BusinessException {
         Endpoint endpoint = fromDto(endpointDto);
         endpointService.create(endpoint);

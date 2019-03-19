@@ -19,15 +19,16 @@ package org.meveo.service.technicalservice.endpoint;
 import org.infinispan.Cache;
 
 import javax.annotation.Resource;
-import javax.inject.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Singleton;
 import java.util.concurrent.Future;
 
 @Singleton
+@Startup
 public class EndpointResultsCacheContainer {
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/unique-crt")
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
     private Cache<String, Future<String>> pendingExecutions;
-
 
     public Future<String> getPendingExecution(String key) {
         return pendingExecutions.get(key);

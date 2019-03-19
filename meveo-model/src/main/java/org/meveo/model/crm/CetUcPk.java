@@ -19,6 +19,7 @@ package org.meveo.model.crm;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class CetUcPk implements Serializable {
 
@@ -48,5 +49,19 @@ public class CetUcPk implements Serializable {
 
     public void setCustomEntityTemplate(CustomEntityTemplate customEntityTemplate) {
         this.customEntityTemplate = customEntityTemplate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CetUcPk cetUcPk = (CetUcPk) o;
+        return Objects.equals(getCode(), cetUcPk.getCode()) &&
+                Objects.equals(getCustomEntityTemplate(), cetUcPk.getCustomEntityTemplate());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getCode(), getCustomEntityTemplate());
     }
 }

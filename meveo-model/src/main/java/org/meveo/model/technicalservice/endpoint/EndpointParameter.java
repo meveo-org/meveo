@@ -19,6 +19,7 @@ package org.meveo.model.technicalservice.endpoint;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Embeddable representation of an endpoint parameter.
@@ -61,5 +62,19 @@ public class EndpointParameter implements Serializable {
     @Override
     public String toString() {
         return parameter;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EndpointParameter that = (EndpointParameter) o;
+        return Objects.equals(getEndpoint(), that.getEndpoint()) &&
+                Objects.equals(getParameter(), that.getParameter());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getEndpoint(), getParameter());
     }
 }
