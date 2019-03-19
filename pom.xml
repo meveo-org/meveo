@@ -616,6 +616,7 @@
                     <groupId>org.liquibase.ext</groupId>
                     <artifactId>liquibase-postgresql</artifactId>
                     <version>3.0</version>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
         </profile>
@@ -646,6 +647,7 @@
                     <groupId>org.liquibase.ext</groupId>
                     <artifactId>liquibase-postgresql</artifactId>
                     <version>3.0</version>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
         </profile>
