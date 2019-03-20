@@ -30,6 +30,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import java.util.List;
+import java.util.Set;
 
 /**
  * EJB for managing technical services endpoints
@@ -38,8 +39,6 @@ import java.util.List;
  * @since 01.02.2019
  */
 @Stateless
-@DeclareRoles({EndpointService.ENDPOINT_MANAGEMENT})
-@RolesAllowed({EndpointService.ENDPOINT_MANAGEMENT})
 public class EndpointService extends BusinessService<Endpoint> {
 
     public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
@@ -47,12 +46,17 @@ public class EndpointService extends BusinessService<Endpoint> {
     public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
     public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
 
-    public static String getEndpointPermission(Endpoint entity) {
-        return String.format(EXECUTE_ENDPOINT_TEMPLATE, entity.getCode());
+    public static String getEndpointPermission(Endpoint endpoint) {
+        return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
     }
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
+
+    public boolean isUserAuthorized(Endpoint endpoint){
+        final Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(ENDPOINTS_CLIENT);
+        return currentUserRoles.contains(getEndpointPermission(endpoint));
+    }
 
     /**
      * Retrieve all endpoints associated to the given service

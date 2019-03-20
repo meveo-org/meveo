@@ -17,7 +17,6 @@
 package org.meveo.api.rest.technicalservice;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.keycloak.KeycloakPrincipal;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
@@ -27,8 +26,6 @@ import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
-import org.meveo.security.CurrentUser;
-import org.meveo.security.MeveoUser;
 import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
 import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
 import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
@@ -45,7 +42,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -112,6 +112,12 @@ public class EndpointServlet extends HttpServlet {
 
         // Retrieve endpoint
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
+
+        if(endpoint != null && !endpointService.isUserAuthorized(endpoint)){
+            endpointExecution.getResp().setStatus(403);
+            endpointExecution.getWriter().print("You are not authorized to access this endpoint");
+            return;
+        }
 
         try {
             final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());

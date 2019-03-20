@@ -27,8 +27,6 @@ import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -45,8 +43,6 @@ import java.util.stream.Collectors;
  * @since 01.02.2019
  */
 @Stateless
-@DeclareRoles({"endpointManagement"})
-@RolesAllowed({"endpointManagement"})
 public class EndpointApi {
 
     @EJB
