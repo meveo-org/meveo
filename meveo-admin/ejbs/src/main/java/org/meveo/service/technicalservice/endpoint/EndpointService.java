@@ -15,6 +15,7 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -46,6 +47,10 @@ public class EndpointService extends BusinessService<Endpoint> {
     public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
     public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
 
+    public static String getEndpointPermission(Endpoint entity) {
+        return String.format(EXECUTE_ENDPOINT_TEMPLATE, entity.getCode());
+    }
+
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
 
@@ -73,16 +78,25 @@ public class EndpointService extends BusinessService<Endpoint> {
     }
 
     @Override
-    protected void beforeUpdateOrCreate(Endpoint entity) {
+    public void create(Endpoint entity) throws BusinessException {
+        super.create(entity);
+
         // Create client if not exitsts
         keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-        String endointPermission = String.format(EXECUTE_ENDPOINT_TEMPLATE, entity.getCode());
+        String endointPermission = getEndpointPermission(entity);
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
         keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
 
         // Add Execute_All_Endpoints to endpointManagement composite if not already in
         keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);
+    }
+
+    @Override
+    public void remove(Endpoint entity) throws BusinessException {
+        super.remove(entity);
+
+        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, getEndpointPermission(entity));
     }
 }
