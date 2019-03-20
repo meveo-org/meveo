@@ -15,18 +15,15 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
-import org.meveo.admin.exception.BusinessException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -40,12 +37,14 @@ import java.util.List;
  * @since 01.02.2019
  */
 @Stateless
-@DeclareRoles({"endpointManagement"})
-@RolesAllowed({"endpointManagement"})
+@DeclareRoles({EndpointService.ENDPOINT_MANAGEMENT})
+@RolesAllowed({EndpointService.ENDPOINT_MANAGEMENT})
 public class EndpointService extends BusinessService<Endpoint> {
 
-    @Inject
-    private PermissionService permissionService;
+    public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
+    public static final String ENDPOINTS_CLIENT = "endpoints";
+    public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
+    public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
@@ -74,9 +73,16 @@ public class EndpointService extends BusinessService<Endpoint> {
     }
 
     @Override
-    protected void beforeUpdateOrCreate(Endpoint entity) throws BusinessException {
-        String endointPermission = String.format("Execute_Endpoint_%s", entity.getCode());
-        permissionService.createIfAbsent(endointPermission, "Execute_All_Endpoints", "SUPER_ADMIN");
-        keycloakAdminClientService.createClient("endpoints");
+    protected void beforeUpdateOrCreate(Endpoint entity) {
+        // Create client if not exitsts
+        keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+
+        String endointPermission = String.format(EXECUTE_ENDPOINT_TEMPLATE, entity.getCode());
+
+        // Create endpoint permission and add it to Execute_All_Endpoints composite
+        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
+
+        // Add Execute_All_Endpoints to endpointManagement composite if not already in
+        keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);
     }
 }

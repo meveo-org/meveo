@@ -48,8 +48,12 @@ public class EndpointRs extends BaseRs {
 
     @POST
     public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
-        final Endpoint endpoint = endpointApi.create(endpointDto);
-        return Response.status(201).entity(endpoint.getId()).build();
+        try {
+            final Endpoint endpoint = endpointApi.create(endpointDto);
+            return Response.status(201).entity(endpoint.getId()).build();
+        } catch (NullPointerException e) {
+            throw new NotFoundException("Function " + endpointDto.getServiceCode() + "does not exists.");
+        }
     }
 
     @PUT

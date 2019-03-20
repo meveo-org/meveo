@@ -128,6 +128,61 @@ public class KeycloakAdminClientService {
     }
 
     /**
+     * Add a role from target client to a composite role of an default client.
+     * Both roles should already exists.
+     *
+     * @param clientTarget Id of the client holding the composite role
+     * @param roleCompositeSource composite role of the default client=
+     * @param roleTargetToAdd role of the target client to add
+     */
+    public void addToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToAdd) {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final String defaultSourceClient = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(keycloakAdminClientConfig.getClientId())
+                .get(0)
+                .getId();
+
+        final RoleRepresentation roleToAdd = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(clientTarget)
+                .roles()
+                .get(roleTargetToAdd)
+                .toRepresentation();
+
+        keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(defaultSourceClient)
+                .roles()
+                .get(roleCompositeSource)
+                .addComposites(Collections.singletonList(roleToAdd));
+
+    }
+
+    /**
+     * Add a role to an other composite role for a given client. Create missing roles.
+     *
+     * @param client Client to manage
+     * @param role Role to create and / or add to composite role
+     * @param compositeRole Composite role to create and / or where to add the given role
+     */
+    public void addToComposite(String client, String role, String compositeRole){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        addToComposite(keycloak, keycloakAdminClientConfig, client, role, compositeRole);
+
+    }
+
+    /**
      * Creates a user in keycloak. Also assigns the role.
      * 
      * @param httpServletRequest http request
@@ -462,4 +517,49 @@ public class KeycloakAdminClientService {
         }
         return createUser(httpServletRequest, postData, null);
     }
+
+    private void addToComposite(Keycloak keycloak, KeycloakAdminClientConfig keycloakAdminClientConfig, String client, String role, String compositeRole){
+        final RolesResource rolesResource = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(client != null ? client : keycloakAdminClientConfig.getClientId())
+                .roles();
+
+        final List<RoleRepresentation> existingRoles = rolesResource.list();
+
+        final boolean roleExists = existingRoles.stream()
+                .anyMatch(r -> r.getName().equals(role));
+
+        if(!roleExists){
+            RoleRepresentation roleRepresentation = new RoleRepresentation();
+            roleRepresentation.setName(role);
+            roleRepresentation.setClientRole(true);
+            roleRepresentation.setComposite(false);
+
+            rolesResource.create(roleRepresentation);
+        }
+
+        final boolean compositeExists = existingRoles.stream()
+                .anyMatch(r -> r.getName().equals(compositeRole));
+
+        if(!compositeExists){
+            RoleRepresentation compositeRoleRepresentation = new RoleRepresentation();
+            compositeRoleRepresentation.setName(compositeRole);
+            compositeRoleRepresentation.setClientRole(true);
+            compositeRoleRepresentation.setComposite(true);
+
+            rolesResource.create(compositeRoleRepresentation);
+        }
+
+        final RoleResource compositeRoleResource = rolesResource.get(compositeRole);
+
+        final boolean alreadyAdded = compositeRoleResource.getRoleComposites()
+                .stream()
+                .anyMatch(r -> r.getName().equals(role));
+
+        if(!alreadyAdded){
+            final RoleRepresentation roleToAdd = rolesResource.get(role).toRepresentation();
+            compositeRoleResource.addComposites(Collections.singletonList(roleToAdd));
+        }
+    }
+
 }
