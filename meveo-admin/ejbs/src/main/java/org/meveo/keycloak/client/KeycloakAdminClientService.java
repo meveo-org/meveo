@@ -5,6 +5,7 @@ import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.*;
+import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -56,8 +57,15 @@ public class KeycloakAdminClientService {
     public Set<String> getCurrentUserRoles(String client){
         final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
-        return keycloakSecurityContext.getToken()
-            .getResourceAccess(client)
+
+        final AccessToken.Access resourceAccess = keycloakSecurityContext.getToken()
+                .getResourceAccess(client);
+
+        if(resourceAccess == null){
+            return Collections.emptySet();
+        }
+
+        return resourceAccess
             .getRoles();
     }
 
