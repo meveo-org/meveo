@@ -159,6 +159,12 @@ public class CustomFieldTemplateDto extends BaseDto {
     protected String expressionSeparator;
 
     /**
+     * Whether we can use this field as the identifier of the entity
+     */
+    @XmlElement
+    private boolean identifier;
+
+    /**
      * Key format of a map for map type fields.
      */
     @XmlElement()
@@ -251,9 +257,17 @@ public class CustomFieldTemplateDto extends BaseDto {
             childEntityFieldsForSummary = Arrays.asList(cf.getChildEntityFieldsAsList());
         }
 
+        identifier = cf.isIdentifier();
+
     }
-    
-    
+
+    public boolean isIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(boolean identifier) {
+        this.identifier = identifier;
+    }
 
     public String getRelationshipName() {
 		return relationshipName;

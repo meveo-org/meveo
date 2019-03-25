@@ -408,6 +408,8 @@ public class CustomFieldTemplateApi extends BaseApi {
 
         cft.setUnique(dto.isUnique());
 
+        cft.setIdentifier(dto.isIdentifier());
+
         return cft;
     }
 

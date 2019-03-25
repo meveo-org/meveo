@@ -556,4 +556,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="#3555" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="identifier" type="int4"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

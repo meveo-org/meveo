@@ -254,6 +254,8 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setDescription(dto.getDescription());
         crt.setDirection(dto.getDirection());
         crt.setUnique(dto.isUnique());
+        crt.setSourceNamePlural(dto.getSourceNamePlural());
+        crt.setSourceNameSingular(dto.getSourceNameSingular());
         return crt;
     }
 
