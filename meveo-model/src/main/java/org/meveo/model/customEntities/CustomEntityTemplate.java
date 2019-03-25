@@ -97,6 +97,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
+	/**
+	 * Additionnal fields that can be retrieved using graphql engine
+	 */
+	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
+	@Type(type = "jsonList")
+	private List<GraphQLQueryField> graphqlQueryFields;
+
 	public ScriptInstance getPrePersistScript() {
 		return prePersistScript;
 	}
@@ -214,4 +221,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		}
 	}
 
+	public List<GraphQLQueryField> getGraphqlQueryFields() {
+		return graphqlQueryFields;
+	}
+
+	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
+		this.graphqlQueryFields = graphqlQueryFields;
+	}
 }
