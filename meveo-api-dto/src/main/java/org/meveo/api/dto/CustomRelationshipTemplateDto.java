@@ -56,6 +56,62 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlAttribute()
     private List<String> endNodeKeys = new ArrayList<>();
 
+    /**
+     * Name of the field that will be added to the source entity to refer the most recent target entity
+     */
+    @XmlAttribute
+    private String sourceNameSingular;
+
+    /**
+     * Name of the field that will be added to the source entity to refer every target entities
+     */
+    @XmlAttribute
+    private String sourceNamePlural;
+
+    /**
+     * Name of the field that will be added to the source entity and that refer to the outgoing relationships of this type
+     */
+    private String outgoingRelationshipsField;
+
+    /**
+     * Name of the graphql type corresponding to the relationship
+     */
+    private String graphQlTypeName;
+
+    // ------------------------------------------------- Setters and Getters ------------------------------------------
+
+    public String getSourceNameSingular() {
+        return sourceNameSingular;
+    }
+
+    public void setSourceNameSingular(String sourceNameSingular) {
+        this.sourceNameSingular = sourceNameSingular;
+    }
+
+    public String getSourceNamePlural() {
+        return sourceNamePlural;
+    }
+
+    public void setSourceNamePlural(String sourceNamePlural) {
+        this.sourceNamePlural = sourceNamePlural;
+    }
+
+    public String getOutgoingRelationshipsField() {
+        return outgoingRelationshipsField;
+    }
+
+    public void setOutgoingRelationshipsField(String outgoingRelationshipsField) {
+        this.outgoingRelationshipsField = outgoingRelationshipsField;
+    }
+
+    public String getGraphQlTypeName() {
+        return graphQlTypeName;
+    }
+
+    public void setGraphQlTypeName(String graphQlTypeName) {
+        this.graphQlTypeName = graphQlTypeName;
+    }
+
     public String getCode() {
         return code;
     }
@@ -165,6 +221,10 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setUnique(cet.isUnique());
+        dto.setGraphQlTypeName(cet.getGraphQlTypeName());
+        dto.setSourceNamePlural(cet.getSourceNamePlural());
+        dto.setSourceNameSingular(cet.getSourceNameSingular());
+        dto.setOutgoingRelationshipsField(cet.getOutgoingRelationshipsField());
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {

@@ -548,5 +548,12 @@
             </column>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="#3553" author="Clément Bareth">
+        <addColumn tableName="cust_crt">
+            <column name="source_name_singular" type="varchar(255)"/>
+            <column name="source_name_plural" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

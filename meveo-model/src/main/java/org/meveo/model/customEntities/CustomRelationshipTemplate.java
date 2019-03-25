@@ -71,6 +71,48 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     @ColumnDefault("0")
     private boolean unique;
 
+    /**
+     * Name of the field that will be added to the source entity to refer the most recent target entity
+     */
+    @Column(name = "source_name_singular")
+    private String sourceNameSingular;
+
+    /**
+     * Name of the field that will be added to the source entity to refer every target entities
+     */
+    @Column(name = "source_name_plural")
+    private String sourceNamePlural;
+
+    /**
+     * Name of the field that will be added to the source entity and that refer to the outgoing relationships of this type
+     */
+    public String getOutgoingRelationshipsField() {
+        return sourceNameSingular + "Relationships";
+    }
+
+    /**
+     * Name of the graphql type corresponding to the relationship
+     */
+    public String getGraphQlTypeName(){
+        return Character.toUpperCase(sourceNameSingular.charAt(0)) + sourceNameSingular.substring(1) + "Relationship";
+    }
+
+    public String getSourceNameSingular() {
+        return sourceNameSingular;
+    }
+
+    public void setSourceNameSingular(String sourceNameSingular) {
+        this.sourceNameSingular = sourceNameSingular;
+    }
+
+    public String getSourceNamePlural() {
+        return sourceNamePlural;
+    }
+
+    public void setSourceNamePlural(String sourceNamePlural) {
+        this.sourceNamePlural = sourceNamePlural;
+    }
+
     public boolean isUnique() {
         return unique;
     }
