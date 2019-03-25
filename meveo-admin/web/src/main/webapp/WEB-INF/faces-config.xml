@@ -1384,6 +1384,17 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             <to-view-id>/pages/admin/menu/menuConfigurationDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-    </navigation-rule>
 
+        <navigation-case>
+            <from-outcome>endpoint</from-outcome>
+            <to-view-id>/pages/admin/endpoint/technicalServiceEndpoints.xhtml</to-view-id>
+            <redirect include-view-params="true"/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>endpointDetail</from-outcome>
+            <to-view-id>/pages/admin/endpoint/technicalServiceEndpointDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
 </faces-config>
