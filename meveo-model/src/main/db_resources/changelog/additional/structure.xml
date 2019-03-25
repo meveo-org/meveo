@@ -560,6 +560,9 @@
         <addColumn tableName="crm_custom_field_tmpl">
             <column name="identifier" type="int4"/>
         </addColumn>
+        <update tableName="crm_custom_field_tmpl">
+            <column name="identifier" value="0"/>
+        </update>
     </changeSet>
 
 </databaseChangeLog>
