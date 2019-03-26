@@ -555,6 +555,7 @@
             <column name="source_name_plural" type="varchar(255)"/>
             <column name="target_name_singular" type="varchar(255)"/>
             <column name="target_name_plural" type="varchar(255)"/>
+            <column name="graphql_type" type="varchar(255)"/>
         </addColumn>
     </changeSet>
 

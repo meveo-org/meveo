@@ -96,33 +96,52 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     private String targetNamePlural;
 
     /**
+     * Name of the graphql type corresponding to the relationship
+     */
+    @Column(name = "graphql_type")
+    private String graphqlTypeName;
+
+    /**
      * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type
      */
     public String getRelationshipsFieldTarget() {
         if(targetNameSingular == null){
-            return null;
+            return targetNameSingular + "Relations";
         }
-        return targetNameSingular + "Relations";
+
+        if(graphqlTypeName != null){
+            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        }
+
+        return null;
     }
 
     /**
      * Name of the field that will be added to the source  entity and that refer to the outgoing relationships of this type
      */
     public String getRelationshipsFieldSource() {
-        if(sourceNameSingular == null){
-            return null;
+        if(sourceNameSingular != null){
+            return sourceNameSingular + "Relations";
         }
-        return sourceNameSingular + "Relations";
+
+        if(graphqlTypeName != null){
+            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        }
+
+        return null;
+
     }
 
-    /**
-     * Name of the graphql type corresponding to the relationship
-     */
+
     public String getGraphQlTypeName(){
-        if(sourceNameSingular == null){
-            return null;
+        if(graphqlTypeName != null){
+            return graphqlTypeName;
         }
-        return Character.toUpperCase(sourceNameSingular.charAt(0)) + sourceNameSingular.substring(1) + "Relation";
+        return null;
+    }
+
+    public void setGraphqlTypeName(String graphqlTypeName) {
+        this.graphqlTypeName = graphqlTypeName;
     }
 
     public String getTargetNameSingular() {

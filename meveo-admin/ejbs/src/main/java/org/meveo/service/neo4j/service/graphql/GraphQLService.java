@@ -179,7 +179,7 @@ public class GraphQLService {
             // Create Graphql relationship type
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(relationshipTemplate.getAppliesTo());
             GraphQLEntity graphQLEntity = new GraphQLEntity();
-            String typeName = relationshipTemplate.getEndNode().getCode() + "Relation";
+            String typeName = relationshipTemplate.getGraphQlTypeName() == null ? relationshipTemplate.getEndNode().getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
 
             List<GraphQLField> graphQLFields = getGraphQLFields(cfts);

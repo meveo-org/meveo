@@ -81,9 +81,19 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlAttribute
     private String targetNamePlural;
 
+    @XmlAttribute
+    private String graphQlTypeName;
+
 
     // ------------------------------------------------- Setters and Getters ------------------------------------------
 
+    public String getGraphQlTypeName() {
+        return graphQlTypeName;
+    }
+
+    public void setGraphQlTypeName(String graphQlTypeName) {
+        this.graphQlTypeName = graphQlTypeName;
+    }
 
     public String getTargetNameSingular() {
         return targetNameSingular;
@@ -230,6 +240,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setSourceNameSingular(cet.getSourceNameSingular());
         dto.setTargetNamePlural(cet.getTargetNamePlural());
         dto.setTargetNameSingular(cet.getTargetNameSingular());
+        dto.setGraphQlTypeName(cet.getGraphQlTypeName());
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {
@@ -263,6 +274,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setSourceNameSingular(dto.getSourceNameSingular());
         crt.setTargetNamePlural(dto.getTargetNamePlural());
         crt.setTargetNameSingular(dto.getTargetNameSingular());
+        crt.setGraphqlTypeName(dto.getGraphQlTypeName());
         return crt;
     }
 
