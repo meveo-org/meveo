@@ -14,21 +14,22 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.model.customEntities;
+package org.meveo.service.neo4j.service.graphql;
 
-public class GraphQLQueryField {
+public class GraphQLField {
 
     private String fieldName;
     private String fieldType;
-    private boolean multivalued;
+    private boolean multivialued;
+    private boolean required;
     private String query;
 
-    public boolean isMultivalued() {
-        return multivalued;
+    public String getFieldName() {
+        return fieldName;
     }
 
-    public void setMultivalued(boolean multivalued) {
-        this.multivalued = multivalued;
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
     }
 
     public String getFieldType() {
@@ -39,12 +40,12 @@ public class GraphQLQueryField {
         this.fieldType = fieldType;
     }
 
-    public String getFieldName() {
-        return fieldName;
+    public boolean isMultivialued() {
+        return multivialued;
     }
 
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
+    public void setMultivalued(boolean multivialued) {
+        this.multivialued = multivialued;
     }
 
     public String getQuery() {
@@ -53,5 +54,13 @@ public class GraphQLQueryField {
 
     public void setQuery(String query) {
         this.query = query;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
     }
 }

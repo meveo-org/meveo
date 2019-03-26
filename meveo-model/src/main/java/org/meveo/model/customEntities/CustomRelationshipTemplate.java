@@ -84,17 +84,61 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     private String sourceNamePlural;
 
     /**
-     * Name of the field that will be added to the source entity and that refer to the outgoing relationships of this type
+     * Name of the field that will be added to the target entity to refer the most recent source entity
      */
-    public String getOutgoingRelationshipsField() {
-        return sourceNameSingular + "Relationships";
+    @Column(name = "target_name_singular")
+    private String targetNameSingular;
+
+    /**
+     * Name of the field that will be added to the target entity to refer every source entities
+     */
+    @Column(name = "target_name_plural")
+    private String targetNamePlural;
+
+    /**
+     * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type
+     */
+    public String getRelationshipsFieldTarget() {
+        if(targetNameSingular == null){
+            return null;
+        }
+        return targetNameSingular + "Relations";
+    }
+
+    /**
+     * Name of the field that will be added to the source  entity and that refer to the outgoing relationships of this type
+     */
+    public String getRelationshipsFieldSource() {
+        if(sourceNameSingular == null){
+            return null;
+        }
+        return sourceNameSingular + "Relations";
     }
 
     /**
      * Name of the graphql type corresponding to the relationship
      */
     public String getGraphQlTypeName(){
-        return Character.toUpperCase(sourceNameSingular.charAt(0)) + sourceNameSingular.substring(1) + "Relationship";
+        if(sourceNameSingular == null){
+            return null;
+        }
+        return Character.toUpperCase(sourceNameSingular.charAt(0)) + sourceNameSingular.substring(1) + "Relation";
+    }
+
+    public String getTargetNameSingular() {
+        return targetNameSingular;
+    }
+
+    public void setTargetNameSingular(String targetNameSingular) {
+        this.targetNameSingular = targetNameSingular;
+    }
+
+    public String getTargetNamePlural() {
+        return targetNamePlural;
+    }
+
+    public void setTargetNamePlural(String targetNamePlural) {
+        this.targetNamePlural = targetNamePlural;
     }
 
     public String getSourceNameSingular() {

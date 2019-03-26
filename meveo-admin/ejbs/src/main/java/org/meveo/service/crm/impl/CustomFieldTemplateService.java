@@ -473,7 +473,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
 
             final Map<String, CustomFieldTemplate> fields = findByAppliesTo(cft.getAppliesTo());
-            final boolean identifierAlreadyExist = fields.values().stream().anyMatch(CustomFieldTemplate::isIdentifier);
+            final boolean identifierAlreadyExist = fields.values()
+                    .stream()
+                    .anyMatch(customFieldTemplate -> customFieldTemplate.isIdentifier() && !customFieldTemplate.getCode().equals(cft.getCode()));
             if(identifierAlreadyExist){
                 throw new ValidationException("An other field has already been defined as identifier !");
             }

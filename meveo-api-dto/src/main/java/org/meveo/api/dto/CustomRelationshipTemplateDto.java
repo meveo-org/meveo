@@ -68,17 +68,38 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlAttribute
     private String sourceNamePlural;
 
-    /**
-     * Name of the field that will be added to the source entity and that refer to the outgoing relationships of this type
+
+    /*
+     * Name of the field that will be added to the target entity to refer the most recent source entity
      */
-    private String outgoingRelationshipsField;
+    @XmlAttribute
+    private String targetNameSingular;
 
     /**
-     * Name of the graphql type corresponding to the relationship
+     * Name of the field that will be added to the target entity to refer every source entities
      */
-    private String graphQlTypeName;
+    @XmlAttribute
+    private String targetNamePlural;
+
 
     // ------------------------------------------------- Setters and Getters ------------------------------------------
+
+
+    public String getTargetNameSingular() {
+        return targetNameSingular;
+    }
+
+    public void setTargetNameSingular(String targetNameSingular) {
+        this.targetNameSingular = targetNameSingular;
+    }
+
+    public String getTargetNamePlural() {
+        return targetNamePlural;
+    }
+
+    public void setTargetNamePlural(String targetNamePlural) {
+        this.targetNamePlural = targetNamePlural;
+    }
 
     public String getSourceNameSingular() {
         return sourceNameSingular;
@@ -94,22 +115,6 @@ public class CustomRelationshipTemplateDto extends BaseDto {
 
     public void setSourceNamePlural(String sourceNamePlural) {
         this.sourceNamePlural = sourceNamePlural;
-    }
-
-    public String getOutgoingRelationshipsField() {
-        return outgoingRelationshipsField;
-    }
-
-    public void setOutgoingRelationshipsField(String outgoingRelationshipsField) {
-        this.outgoingRelationshipsField = outgoingRelationshipsField;
-    }
-
-    public String getGraphQlTypeName() {
-        return graphQlTypeName;
-    }
-
-    public void setGraphQlTypeName(String graphQlTypeName) {
-        this.graphQlTypeName = graphQlTypeName;
     }
 
     public String getCode() {
@@ -221,10 +226,10 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setUnique(cet.isUnique());
-        dto.setGraphQlTypeName(cet.getGraphQlTypeName());
         dto.setSourceNamePlural(cet.getSourceNamePlural());
         dto.setSourceNameSingular(cet.getSourceNameSingular());
-        dto.setOutgoingRelationshipsField(cet.getOutgoingRelationshipsField());
+        dto.setTargetNamePlural(cet.getTargetNamePlural());
+        dto.setTargetNameSingular(cet.getTargetNameSingular());
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {
@@ -256,6 +261,8 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setUnique(dto.isUnique());
         crt.setSourceNamePlural(dto.getSourceNamePlural());
         crt.setSourceNameSingular(dto.getSourceNameSingular());
+        crt.setTargetNamePlural(dto.getTargetNamePlural());
+        crt.setTargetNameSingular(dto.getTargetNameSingular());
         return crt;
     }
 

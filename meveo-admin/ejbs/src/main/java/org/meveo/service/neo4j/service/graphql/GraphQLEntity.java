@@ -14,44 +14,28 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.model.customEntities;
+package org.meveo.service.neo4j.service.graphql;
 
-public class GraphQLQueryField {
+import java.util.List;
 
-    private String fieldName;
-    private String fieldType;
-    private boolean multivalued;
-    private String query;
+public class GraphQLEntity {
 
-    public boolean isMultivalued() {
-        return multivalued;
+    private String name;
+    private List<GraphQLField> graphQLFields;
+
+    public String getName() {
+        return name;
     }
 
-    public void setMultivalued(boolean multivalued) {
-        this.multivalued = multivalued;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getFieldType() {
-        return fieldType;
+    public List<GraphQLField> getGraphQLFields() {
+        return graphQLFields;
     }
 
-    public void setFieldType(String fieldType) {
-        this.fieldType = fieldType;
-    }
-
-    public String getFieldName() {
-        return fieldName;
-    }
-
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
-
-    public String getQuery() {
-        return query;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
+    public void setGraphQLFields(List<GraphQLField> graphQLFields) {
+        this.graphQLFields = graphQLFields;
     }
 }
