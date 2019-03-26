@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -48,14 +48,13 @@ import org.meveo.service.index.ElasticClient;
 /**
  * @author Wassim Drira
  * @lastModifiedVersion 5.0
- *
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
 
     private static final String PRIMITIVE_CFT_VALUE = "value";
 
-	@Inject
+    @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
@@ -85,13 +84,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         elasticClient.createCETMapping(cet);
-        
+
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
             /* If cet is a primitive type, create custom field of corresponding type */
-            if(cet.isPrimitiveEntity()) {
+            if (cet.isPrimitiveEntity()) {
                 createPrimitiveCft(cet);
             }
         } catch (Exception e) {
@@ -108,18 +107,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     public static void turnIntoPrimitive(CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
-        customFieldTemplate.setActive(true);			       	    // Always active
-        customFieldTemplate.setAllowEdit(false);		       	    // CFT can't be updated
+        customFieldTemplate.setActive(true);                        // Always active
+        customFieldTemplate.setAllowEdit(false);                    // CFT can't be updated
         customFieldTemplate.setAppliesTo(cet.getAppliesTo());
-        if(cet.getPrimitiveType() == null) {
+        if (cet.getPrimitiveType() == null) {
             throw new IllegalArgumentException("Primitive type class must be provided");
         }
         customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
-        customFieldTemplate.setUnique(true);			       	    // Must be unique
-        customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);	        // Code is 'value'
-        customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);	// Label is 'value'
-        customFieldTemplate.setFilter(true);			            // Can be used as filter
-        customFieldTemplate.setValueRequired(true);		            // Always required
+        customFieldTemplate.setUnique(true);                        // Must be unique
+        customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);            // Code is 'value'
+        customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);    // Label is 'value'
+        customFieldTemplate.setFilter(true);                        // Can be used as filter
+        customFieldTemplate.setValueRequired(true);                    // Always required
         customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
     }
 
@@ -128,17 +127,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Asynchronous
     protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
         /* Primitive entity and type management */
-        if(cet.isPrimitiveEntity() && cet.getPrimitiveType() != null){
+        if (cet.isPrimitiveEntity() && cet.getPrimitiveType() != null) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
-            if(valueCft == null){
+            if (valueCft == null) {
                 createPrimitiveCft(cet);
-            }else if(valueCft.getFieldType() != cet.getPrimitiveType().getCftType()){
+            } else if (valueCft.getFieldType() != cet.getPrimitiveType().getCftType()) {
                 flush();
                 valueCft.setFieldType(cet.getPrimitiveType().getCftType());
                 customFieldTemplateService.update(valueCft);
             }
-        }else {
+        } else {
             cet.setPrimitiveType(null);
         }
     }
@@ -162,7 +161,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
 
-
         return cetUpdated;
     }
 
@@ -183,7 +181,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     /**
      * List custom entity templates, optionally filtering by an active status. Custom entity templates will be looked up in cache or retrieved from DB.
-     * 
+     *
      * @param active Custom entity template's status. Or any if null
      * @return A list of custom entity templates
      */
@@ -237,9 +235,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
     }
 
+    public List<CustomEntityTemplate> getCETsWithSubTemplates() {
+        String query = new StringBuffer()
+                .append("SELECT DISTINCT cet from CustomEntityTemplate cet ")
+                .append("LEFT JOIN FETCH cet.subTemplates")
+                .toString();
+
+        return getEntityManager().createQuery(query, CustomEntityTemplate.class).getResultList();
+    }
+
+
     /**
      * Get a list of custom entity templates for cache
-     * 
+     *
      * @return A list of custom entity templates
      */
     public List<CustomEntityTemplate> getCETForCache() {
@@ -248,12 +256,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     /**
      * A generic method that returns a filtered list of ICustomFieldEntity given an entity class and code.
-     * 
+     *
      * @param entityClass - class of an entity. eg. org.meveo.catalog.OfferTemplate
-     * @param entityCode - code of entity
+     * @param entityCode  - code of entity
      * @return customer field entity
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
         ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
@@ -275,7 +283,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
     }
 
-    public PrimitiveTypeEnum getPrimitiveType(String code){
+    public PrimitiveTypeEnum getPrimitiveType(String code) {
         return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
                 .setParameter("code", code)
                 .getSingleResult();

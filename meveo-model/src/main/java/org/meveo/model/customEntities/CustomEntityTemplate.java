@@ -228,4 +228,17 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
 		this.graphqlQueryFields = graphqlQueryFields;
 	}
+
+	/**
+	 * /!\ The subTemplates field should have been fetch, will raise an exception otherwise
+	 * @return the cet with all of its descendance
+	 */
+	public List<CustomEntityTemplate> descendance() {
+		List<CustomEntityTemplate> descendance = new ArrayList<>();
+		descendance.add(this);
+		for (CustomEntityTemplate descendant : subTemplates) {
+			descendance.addAll(descendant.descendance());
+		}
+		return descendance;
+	}
 }

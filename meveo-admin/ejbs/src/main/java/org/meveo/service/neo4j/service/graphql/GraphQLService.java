@@ -17,6 +17,8 @@
 package org.meveo.service.neo4j.service.graphql;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -64,18 +66,18 @@ public class GraphQLService {
 
     public void updateIDL() {
 
-        final List<GraphQLEntity> entities = getEntities();
+        final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
         System.out.println(idl);
 
     }
 
-    public String getIDL(){
-        final List<GraphQLEntity> entities = getEntities();
+    public String getIDL() {
+        final Collection<GraphQLEntity> entities = getEntities();
         return getIDL(entities);
     }
 
-    private String getIDL(List<GraphQLEntity> graphQLEntities) {
+    private String getIDL(Collection<GraphQLEntity> graphQLEntities) {
         StringBuilder idl = new StringBuilder();
 
         idl.append("scalar GraphQLLong\n");
@@ -113,13 +115,18 @@ public class GraphQLService {
         return idl.toString();
     }
 
-    private List<GraphQLEntity> getEntities() {
+    private Collection<GraphQLEntity> getEntities() {
 
-        List<GraphQLEntity> graphQLEntities = new ArrayList<>();
+        Map<String, GraphQLEntity> graphQLEntities = new HashMap<>();
+
 
         // Entities
-        final List<CustomEntityTemplate> cets = customEntityTemplateService.list();
-        for (CustomEntityTemplate cet : cets) {
+        final List<CustomEntityTemplate> ceTsWithSubTemplates = customEntityTemplateService.getCETsWithSubTemplates();
+        final Map<String, CustomEntityTemplate> cetsByName = ceTsWithSubTemplates
+                .stream()
+                .collect(Collectors.toMap(CustomEntityTemplate::getCode, Function.identity()));
+
+        for (CustomEntityTemplate cet : cetsByName.values()) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
@@ -137,9 +144,9 @@ public class GraphQLService {
             }
 
             // Primitive type
-            if(cet.isPrimitiveEntity()){
+            if (cet.isPrimitiveEntity()) {
                 final boolean valueExists = graphQLFields.stream().anyMatch(f -> f.getFieldName().equals("value"));
-                if(!valueExists){
+                if (!valueExists) {
                     GraphQLField value = new GraphQLField();
                     switch (cet.getPrimitiveType()) {
                         case STRING:
@@ -161,11 +168,12 @@ public class GraphQLService {
             }
 
             graphQLEntity.setGraphQLFields(graphQLFields);
-            graphQLEntities.add(graphQLEntity);
+            graphQLEntities.put(graphQLEntity.getName(), graphQLEntity);
         }
 
         // Relationships
         final List<CustomRelationshipTemplate> customRelationshipTemplates = customRelationshipTemplateService.list();
+
         for (CustomRelationshipTemplate relationshipTemplate : customRelationshipTemplates) {
 
             // Create Graphql relationship type
@@ -189,13 +197,13 @@ public class GraphQLService {
             graphQLFields.add(from);
 
             graphQLEntity.setGraphQLFields(graphQLFields);
-            graphQLEntities.add(graphQLEntity);
 
-            // Add fields to source entities
-            graphQLEntities.stream()
-                    .filter(e -> e.getName().equals(relationshipTemplate.getStartNode().getCode()))
-                    .findFirst()
-                    .ifPresent(source -> {
+            // Add fields to sources (and sub-sources)
+            cetsByName.get(relationshipTemplate.getStartNode().getCode())
+                    .descendance()
+                    .stream()
+                    .map(sourceCet -> graphQLEntities.get(sourceCet.getCode()))
+                    .forEach(source -> {
                         // Source singular field
                         if (relationshipTemplate.getSourceNameSingular() != null) {
                             GraphQLField sourceNameSingular = new GraphQLField();
@@ -235,11 +243,12 @@ public class GraphQLService {
                         }
                     });
 
-            // Add fields to target entities
-            graphQLEntities.stream()
-                    .filter(e -> e.getName().equals(relationshipTemplate.getEndNode().getCode()))
-                    .findFirst()
-                    .ifPresent(target -> {
+            // Add fields to target (and sub-targets)
+            cetsByName.get(relationshipTemplate.getEndNode().getCode())
+                    .descendance()
+                    .stream()
+                    .map(targetCet -> graphQLEntities.get(targetCet.getCode()))
+                    .forEach(target -> {
                         // Target singular field
                         if (relationshipTemplate.getTargetNameSingular() != null) {
                             GraphQLField targetNameSingular = new GraphQLField();
@@ -278,9 +287,12 @@ public class GraphQLService {
                             target.getGraphQLFields().add(relationship);
                         }
                     });
+
+            graphQLEntities.put(graphQLEntity.getName(), graphQLEntity);
+
         }
 
-        return graphQLEntities;
+        return graphQLEntities.values();
     }
 
     private List<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
