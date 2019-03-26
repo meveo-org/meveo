@@ -192,7 +192,7 @@ public class GraphQLService {
 
             GraphQLField from = new GraphQLField();
             from.setFieldName("from");
-            from.setFieldType(relationshipTemplate.getEndNode().getCode());
+            from.setFieldType(relationshipTemplate.getStartNode().getCode());
             from.setQuery("@cypher(statement: \"MATCH (from)-[this]->() RETURN from\")");
             graphQLFields.add(from);
 
