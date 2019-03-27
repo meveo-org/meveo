@@ -111,6 +111,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
                     endpointParameter = new EndpointParameter();
                     endpointParameter.setEndpoint(entity);
                     endpointParameter.setParameter(endpointPathParameter.getEndpointParameter().getParameter());
+                    tsParameterMapping.setEndpointParameter(endpointParameter);
                     parameterMappings.add(tsParameterMapping);
                     parameterNames.add(endpointPathParameter.getEndpointParameter().getParameter());
                 }
