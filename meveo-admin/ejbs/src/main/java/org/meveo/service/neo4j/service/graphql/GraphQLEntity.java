@@ -16,12 +16,12 @@
 
 package org.meveo.service.neo4j.service.graphql;
 
-import java.util.List;
+import java.util.Set;
 
 public class GraphQLEntity {
 
     private String name;
-    private List<GraphQLField> graphQLFields;
+    private Set<GraphQLField> graphQLFields;
 
     public String getName() {
         return name;
@@ -31,11 +31,11 @@ public class GraphQLEntity {
         this.name = name;
     }
 
-    public List<GraphQLField> getGraphQLFields() {
+    public Set<GraphQLField> getGraphQLFields() {
         return graphQLFields;
     }
 
-    public void setGraphQLFields(List<GraphQLField> graphQLFields) {
+    public void setGraphQLFields(Set<GraphQLField> graphQLFields) {
         this.graphQLFields = graphQLFields;
     }
 }

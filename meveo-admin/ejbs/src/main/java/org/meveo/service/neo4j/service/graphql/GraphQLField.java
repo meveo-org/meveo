@@ -16,6 +16,8 @@
 
 package org.meveo.service.neo4j.service.graphql;
 
+import java.util.Objects;
+
 public class GraphQLField {
 
     private String fieldName;
@@ -62,5 +64,18 @@ public class GraphQLField {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GraphQLField that = (GraphQLField) o;
+        return getFieldName().equals(that.getFieldName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getFieldName());
     }
 }
