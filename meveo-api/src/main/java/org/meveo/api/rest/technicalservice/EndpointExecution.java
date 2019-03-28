@@ -21,6 +21,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class EndpointExecution {
     private final Map<String, Object> parameters;
@@ -35,8 +36,10 @@ public class EndpointExecution {
     private final String persistenceContext;
     private final String budgetUnit;
     private final Double bugetMax;
+    private final TimeUnit delayUnit;
+    private final Long delayValue;
 
-    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax) {
+    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue) {
         this.parameters = parameters;
         this.resp = resp;
         this.writer = writer;
@@ -49,9 +52,17 @@ public class EndpointExecution {
         this.persistenceContext = persistenceContext;
         this.budgetUnit = budgetUnit;
         this.bugetMax = bugetMax;
+        this.delayUnit = delayUnit;
+        this.delayValue = delayValue;
     }
 
+    public TimeUnit getDelayUnit() {
+        return delayUnit;
+    }
 
+    public Long getDelayValue() {
+        return delayValue;
+    }
 
     public String getBudgetUnit() {
         return budgetUnit;

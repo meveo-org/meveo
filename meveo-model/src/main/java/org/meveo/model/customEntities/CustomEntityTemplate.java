@@ -97,6 +97,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
+	/**
+	 * Additionnal fields that can be retrieved using graphql engine
+	 */
+	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
+	@Type(type = "jsonList")
+	private List<GraphQLQueryField> graphqlQueryFields;
+
 	public ScriptInstance getPrePersistScript() {
 		return prePersistScript;
 	}
@@ -214,4 +221,24 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		}
 	}
 
+	public List<GraphQLQueryField> getGraphqlQueryFields() {
+		return graphqlQueryFields;
+	}
+
+	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
+		this.graphqlQueryFields = graphqlQueryFields;
+	}
+
+	/**
+	 * /!\ The subTemplates field should have been fetch, will raise an exception otherwise
+	 * @return the cet with all of its descendance
+	 */
+	public List<CustomEntityTemplate> descendance() {
+		List<CustomEntityTemplate> descendance = new ArrayList<>();
+		descendance.add(this);
+		for (CustomEntityTemplate descendant : subTemplates) {
+			descendance.addAll(descendant.descendance());
+		}
+		return descendance;
+	}
 }

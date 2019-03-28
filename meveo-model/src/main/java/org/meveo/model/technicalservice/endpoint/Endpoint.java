@@ -26,6 +26,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -80,13 +81,13 @@ public class Endpoint extends BusinessEntity {
      */
     @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderColumn(name = "position")
-    private List<EndpointPathParameter> pathParameters;
+    private List<EndpointPathParameter> pathParameters = new ArrayList<>();
 
     /**
      * Mapping of the parameters that are not defined as path parameters
      */
     @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<TSParameterMapping> parametersMapping;
+    private List<TSParameterMapping> parametersMapping = new ArrayList<>();
 
     /**
      * JSONata query used to transform the result

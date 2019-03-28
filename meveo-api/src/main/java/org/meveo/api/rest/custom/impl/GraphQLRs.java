@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 import org.meveo.model.neo4j.GraphQLRequest;
-import org.meveo.service.neo4j.service.GraphQLService;
+import org.meveo.service.neo4j.service.graphql.GraphQLService;
 
 @Path("/graphql/{neo4jConfiguration}/")
 public class GraphQLRs {
@@ -27,6 +27,12 @@ public class GraphQLRs {
 
   @PathParam("neo4jConfiguration")
   private String neo4jConfiguration;
+
+  @GET
+  @Path("/idl")
+  public String getIdl(){
+    return graphQLService.getIDL();
+  }
 
   @GET
   @Path("/")

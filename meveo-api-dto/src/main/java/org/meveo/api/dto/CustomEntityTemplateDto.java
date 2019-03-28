@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
+import org.meveo.model.customEntities.GraphQLQueryField;
 
 
 /**
@@ -76,12 +77,26 @@ public class CustomEntityTemplateDto extends BaseDto {
     private String customEntityCategoryCode;
 
     /**
+     * Additionnal fields that can be retrieved using graphql engine
+     */
+    @XmlElement()
+    private List<GraphQLQueryField> graphqlQueryFields;
+
+    /**
      * Instantiates a new custom entity template dto.
      */
     public CustomEntityTemplateDto() {
 
     }
-    
+
+    public List<GraphQLQueryField> getGraphqlQueryFields() {
+        return graphqlQueryFields;
+    }
+
+    public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
+        this.graphqlQueryFields = graphqlQueryFields;
+    }
+
     public String getPrePersistScripCode() {
 		return prePersistScripCode;
 	}

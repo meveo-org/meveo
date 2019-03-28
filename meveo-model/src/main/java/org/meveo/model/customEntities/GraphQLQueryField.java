@@ -14,31 +14,44 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.technicalservice.endpoint;
+package org.meveo.model.customEntities;
 
-import org.infinispan.Cache;
+public class GraphQLQueryField {
 
-import javax.annotation.Resource;
-import javax.ejb.Startup;
-import javax.ejb.Singleton;
-import java.util.concurrent.Future;
+    private String fieldName;
+    private String fieldType;
+    private boolean multivalued;
+    private String query;
 
-@Singleton
-@Startup
-public class EndpointResultsCacheContainer {
-
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, Future<String>> pendingExecutions;
-
-    public Future<String> getPendingExecution(String key) {
-        return pendingExecutions.get(key);
+    public boolean isMultivalued() {
+        return multivalued;
     }
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
+    public void setMultivalued(boolean multivalued) {
+        this.multivalued = multivalued;
     }
 
-    public void put(String key, Future<String> value){
-        pendingExecutions.put(key, value);
+    public String getFieldType() {
+        return fieldType;
+    }
+
+    public void setFieldType(String fieldType) {
+        this.fieldType = fieldType;
+    }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 }

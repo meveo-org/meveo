@@ -1,5 +1,6 @@
 package org.meveo.service.script;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.meveo.admin.exception.BusinessException;
@@ -35,4 +36,11 @@ public interface ScriptInterface {
      * @throws BusinessException business exception.
      */
     void finalize(Map<String, Object> methodContext) throws BusinessException;
+
+    /**
+     * Immediatly stop the execution and return current results
+     */
+    default Map<String, Object> cancel(){
+        return new HashMap<>();
+    }
 }

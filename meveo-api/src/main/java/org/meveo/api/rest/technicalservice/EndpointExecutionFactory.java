@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.TimeUnit;
 
 public class EndpointExecutionFactory {
 
@@ -41,8 +42,10 @@ public class EndpointExecutionFactory {
                 .setFirstUriPart(pathInfo[1])
                 .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
                 .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
-                .setBudgetUnit(Headers.BUDGET_UNIT.getValue(req, String.class, null))
-                .setBugetMax(Headers.BUDGET_MAX_VALUE.getValue(req, Double.class, null))
+                .setBudgetUnit(Headers.BUDGET_UNIT.getValue(req, String.class))
+                .setBugetMax(Headers.BUDGET_MAX_VALUE.getValue(req, Double.class))
+                .setDelayUnit(Headers.DELAY_UNIT.getValue(req, TimeUnit.class, TimeUnit.SECONDS))
+                .setDelayValue(Headers.DELAY_MAX_VALUE.getValue(req, Long.class))
                 .setPersistenceContextId(Headers.PERSISTENCE_CONTEXT_ID.getValue(req));
     }
 }

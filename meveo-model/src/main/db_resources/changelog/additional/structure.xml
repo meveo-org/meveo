@@ -548,5 +548,30 @@
             </column>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="#3553" author="Clément Bareth">
+        <addColumn tableName="cust_crt">
+            <column name="source_name_singular" type="varchar(255)"/>
+            <column name="source_name_plural" type="varchar(255)"/>
+            <column name="target_name_singular" type="varchar(255)"/>
+            <column name="target_name_plural" type="varchar(255)"/>
+            <column name="graphql_type" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="#3555" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="identifier" type="int4"/>
+        </addColumn>
+        <update tableName="crm_custom_field_tmpl">
+            <column name="identifier" value="0"/>
+        </update>
+    </changeSet>
+
+    <changeSet id="#3557" author="Clément Bareth">
+        <addColumn tableName="cust_cet">
+            <column name="graphql_query_fields" type="${type.json}"/>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

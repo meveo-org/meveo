@@ -56,6 +56,77 @@ public class CustomRelationshipTemplateDto extends BaseDto {
     @XmlAttribute()
     private List<String> endNodeKeys = new ArrayList<>();
 
+    /**
+     * Name of the field that will be added to the source entity to refer the most recent target entity
+     */
+    @XmlAttribute
+    private String sourceNameSingular;
+
+    /**
+     * Name of the field that will be added to the source entity to refer every target entities
+     */
+    @XmlAttribute
+    private String sourceNamePlural;
+
+
+    /*
+     * Name of the field that will be added to the target entity to refer the most recent source entity
+     */
+    @XmlAttribute
+    private String targetNameSingular;
+
+    /**
+     * Name of the field that will be added to the target entity to refer every source entities
+     */
+    @XmlAttribute
+    private String targetNamePlural;
+
+    @XmlAttribute
+    private String graphQlTypeName;
+
+
+    // ------------------------------------------------- Setters and Getters ------------------------------------------
+
+    public String getGraphQlTypeName() {
+        return graphQlTypeName;
+    }
+
+    public void setGraphQlTypeName(String graphQlTypeName) {
+        this.graphQlTypeName = graphQlTypeName;
+    }
+
+    public String getTargetNameSingular() {
+        return targetNameSingular;
+    }
+
+    public void setTargetNameSingular(String targetNameSingular) {
+        this.targetNameSingular = targetNameSingular;
+    }
+
+    public String getTargetNamePlural() {
+        return targetNamePlural;
+    }
+
+    public void setTargetNamePlural(String targetNamePlural) {
+        this.targetNamePlural = targetNamePlural;
+    }
+
+    public String getSourceNameSingular() {
+        return sourceNameSingular;
+    }
+
+    public void setSourceNameSingular(String sourceNameSingular) {
+        this.sourceNameSingular = sourceNameSingular;
+    }
+
+    public String getSourceNamePlural() {
+        return sourceNamePlural;
+    }
+
+    public void setSourceNamePlural(String sourceNamePlural) {
+        this.sourceNamePlural = sourceNamePlural;
+    }
+
     public String getCode() {
         return code;
     }
@@ -165,6 +236,11 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setUnique(cet.isUnique());
+        dto.setSourceNamePlural(cet.getSourceNamePlural());
+        dto.setSourceNameSingular(cet.getSourceNameSingular());
+        dto.setTargetNamePlural(cet.getTargetNamePlural());
+        dto.setTargetNameSingular(cet.getTargetNameSingular());
+        dto.setGraphQlTypeName(cet.getGraphQlTypeName());
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {
@@ -194,6 +270,11 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setDescription(dto.getDescription());
         crt.setDirection(dto.getDirection());
         crt.setUnique(dto.isUnique());
+        crt.setSourceNamePlural(dto.getSourceNamePlural());
+        crt.setSourceNameSingular(dto.getSourceNameSingular());
+        crt.setTargetNamePlural(dto.getTargetNamePlural());
+        crt.setTargetNameSingular(dto.getTargetNameSingular());
+        crt.setGraphqlTypeName(dto.getGraphQlTypeName());
         return crt;
     }
 

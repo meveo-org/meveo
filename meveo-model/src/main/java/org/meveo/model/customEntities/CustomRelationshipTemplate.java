@@ -71,6 +71,111 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     @ColumnDefault("0")
     private boolean unique;
 
+    /**
+     * Name of the field that will be added to the source entity to refer the most recent target entity
+     */
+    @Column(name = "source_name_singular")
+    private String sourceNameSingular;
+
+    /**
+     * Name of the field that will be added to the source entity to refer every target entities
+     */
+    @Column(name = "source_name_plural")
+    private String sourceNamePlural;
+
+    /**
+     * Name of the field that will be added to the target entity to refer the most recent source entity
+     */
+    @Column(name = "target_name_singular")
+    private String targetNameSingular;
+
+    /**
+     * Name of the field that will be added to the target entity to refer every source entities
+     */
+    @Column(name = "target_name_plural")
+    private String targetNamePlural;
+
+    /**
+     * Name of the graphql type corresponding to the relationship
+     */
+    @Column(name = "graphql_type")
+    private String graphqlTypeName;
+
+    /**
+     * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type
+     */
+    public String getRelationshipsFieldTarget() {
+        if(targetNameSingular == null){
+            return targetNameSingular + "Relations";
+        }
+
+        if(graphqlTypeName != null){
+            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        }
+
+        return null;
+    }
+
+    /**
+     * Name of the field that will be added to the source  entity and that refer to the outgoing relationships of this type
+     */
+    public String getRelationshipsFieldSource() {
+        if(sourceNameSingular != null){
+            return sourceNameSingular + "Relations";
+        }
+
+        if(graphqlTypeName != null){
+            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        }
+
+        return null;
+
+    }
+
+
+    public String getGraphQlTypeName(){
+        if(graphqlTypeName != null){
+            return graphqlTypeName;
+        }
+        return null;
+    }
+
+    public void setGraphqlTypeName(String graphqlTypeName) {
+        this.graphqlTypeName = graphqlTypeName;
+    }
+
+    public String getTargetNameSingular() {
+        return targetNameSingular;
+    }
+
+    public void setTargetNameSingular(String targetNameSingular) {
+        this.targetNameSingular = targetNameSingular;
+    }
+
+    public String getTargetNamePlural() {
+        return targetNamePlural;
+    }
+
+    public void setTargetNamePlural(String targetNamePlural) {
+        this.targetNamePlural = targetNamePlural;
+    }
+
+    public String getSourceNameSingular() {
+        return sourceNameSingular;
+    }
+
+    public void setSourceNameSingular(String sourceNameSingular) {
+        this.sourceNameSingular = sourceNameSingular;
+    }
+
+    public String getSourceNamePlural() {
+        return sourceNamePlural;
+    }
+
+    public void setSourceNamePlural(String sourceNamePlural) {
+        this.sourceNamePlural = sourceNamePlural;
+    }
+
     public boolean isUnique() {
         return unique;
     }

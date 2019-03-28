@@ -14,12 +14,10 @@ import org.meveo.model.catalog.CalendarInterval;
 import org.meveo.model.catalog.CalendarYearly;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,14 +190,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @Override
     public void create(CustomFieldTemplate cft) throws BusinessException {
 
-        if ("INVOICE_SEQUENCE".equals(cft.getCode()) && (cft.getFieldType() != CustomFieldTypeEnum.LONG || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE
-                || !cft.isVersionable() || cft.getCalendar() == null)) {
-            throw new ValidationException("invoice_sequence CF must be versionnable, Long, Single value and must have a Calendar");
-        }
-        if ("INVOICE_ADJUSTMENT_SEQUENCE".equals(cft.getCode()) && (cft.getFieldType() != CustomFieldTypeEnum.LONG || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE
-                || !cft.isVersionable() || cft.getCalendar() == null)) {
-            throw new ValidationException("invoice_adjustement_sequence CF must be versionnable, Long, Single value and must have a Calendar");
-        }
+        checkIdentifierTypeAndUniqueness(cft);
 
         super.create(cft);
 //        if (cft.isUnique()) {
@@ -214,14 +205,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
 
-        if ("INVOICE_SEQUENCE".equals(cft.getCode()) && (cft.getFieldType() != CustomFieldTypeEnum.LONG || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE
-                || !cft.isVersionable() || cft.getCalendar() == null)) {
-            throw new ValidationException("invoice_sequence CF must be versionnable, Long, Single value and must have a Calendar");
-        }
-        if ("INVOICE_ADJUSTMENT_SEQUENCE".equals(cft.getCode()) && (cft.getFieldType() != CustomFieldTypeEnum.LONG || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE
-                || !cft.isVersionable() || cft.getCalendar() == null)) {
-            throw new ValidationException("invoice_adjustement_sequence CF must be versionnable, Long, Single value and must have a Calendar");
-        }
+        checkIdentifierTypeAndUniqueness(cft);
+
         CustomFieldTemplate cftBefore = super.findById(cft.getId());
         CustomFieldTemplate cftUpdated = super.update(cft);
 //        if (cftBefore.isUnique() && !cftUpdated.isUnique()) {
@@ -473,5 +458,27 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         create(cftCopy);
 
         return cftCopy;
+    }
+
+    /**
+     * There can only be one identifier field for a CET / CFT, and it must be a String or a Long
+     *
+     * @param cft Field to validate
+     * @throws ValidationException if field is not valid
+     */
+    private void checkIdentifierTypeAndUniqueness(CustomFieldTemplate cft) throws ValidationException {
+        if(cft.isIdentifier()){
+            if(cft.getFieldType() != CustomFieldTypeEnum.STRING && cft.getFieldType() != CustomFieldTypeEnum.LONG){
+                throw new ValidationException("Identifier field can only be String or Long !");
+            }
+
+            final Map<String, CustomFieldTemplate> fields = findByAppliesTo(cft.getAppliesTo());
+            final boolean identifierAlreadyExist = fields.values()
+                    .stream()
+                    .anyMatch(customFieldTemplate -> customFieldTemplate.isIdentifier() && !customFieldTemplate.getCode().equals(cft.getCode()));
+            if(identifierAlreadyExist){
+                throw new ValidationException("An other field has already been defined as identifier !");
+            }
+        }
     }
 }

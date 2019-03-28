@@ -130,11 +130,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "trigger_end_period_event", nullable = false)
     private boolean triggerEndPeriodEvent;
 
-//    /**
-//     * The primitive type, if entity is primitive.
-//     */
-//    @Column(name = "primitive_type")
-//    @Enumerated(EnumType.STRING)
     @Transient
     private PrimitiveTypeEnum primitiveType;
 
@@ -222,7 +217,23 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "EXPRESSION_SEPARATOR", length = 2)
     @Size(max = 2)
     private String expressionSeparator;
-    
+
+    /**
+     * Whether we can use this field as the identifier of the entity
+     */
+    @Column(name = "identifier")
+    @Type(type = "numeric_boolean")
+    @ColumnDefault("0")
+    private boolean identifier;
+
+    public boolean isIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(boolean identifier) {
+        this.identifier = identifier;
+    }
+
     public String getRelationshipName() {
 		return relationshipName;
 	}

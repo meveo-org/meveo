@@ -14,31 +14,28 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.technicalservice.endpoint;
+package org.meveo.service.neo4j.service.graphql;
 
-import org.infinispan.Cache;
+import java.util.List;
 
-import javax.annotation.Resource;
-import javax.ejb.Startup;
-import javax.ejb.Singleton;
-import java.util.concurrent.Future;
+public class GraphQLEntity {
 
-@Singleton
-@Startup
-public class EndpointResultsCacheContainer {
+    private String name;
+    private List<GraphQLField> graphQLFields;
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, Future<String>> pendingExecutions;
-
-    public Future<String> getPendingExecution(String key) {
-        return pendingExecutions.get(key);
+    public String getName() {
+        return name;
     }
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void put(String key, Future<String> value){
-        pendingExecutions.put(key, value);
+    public List<GraphQLField> getGraphQLFields() {
+        return graphQLFields;
+    }
+
+    public void setGraphQLFields(List<GraphQLField> graphQLFields) {
+        this.graphQLFields = graphQLFields;
     }
 }

@@ -436,6 +436,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         final CustomEntityTemplate cet = cetToUpdate != null ? cetToUpdate : new CustomEntityTemplate();
         if (cetToUpdate != null) {
             cet.getUniqueConstraints().clear();
+            customEntityTemplateService.flush();
         }
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
@@ -443,6 +444,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setPrimitiveEntity(dto.isPrimitiveEntity());
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
+        cet.setGraphqlQueryFields(dto.getGraphqlQueryFields());
 
         if(dto.getUniqueConstraints() != null){
             final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
@@ -531,6 +533,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setPrimitiveEntity(cet.isPrimitiveEntity());
         dto.setPrimitiveType(cet.getPrimitiveType());
         dto.setLabels(cet.getLabels());
+        dto.setGraphqlQueryFields(cet.getGraphqlQueryFields());
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());

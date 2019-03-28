@@ -20,21 +20,20 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
-import org.meveo.model.technicalservice.endpoint.EndpointVariables;
-import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointParameter;
-import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
-import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.model.technicalservice.endpoint.*;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.ejb.*;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -46,11 +45,20 @@ import java.util.stream.Collectors;
 @Stateless
 public class EndpointApi {
 
-    @Inject
+    @EJB
     private EndpointService endpointService;
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    public EndpointApi(){
+
+    }
+
+    public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
+        this.endpointService = endpointService;
+        this.concreteFunctionService = concreteFunctionService;
+    }
 
     /**
      * Execute the technical service associated to the endpoint
@@ -60,7 +68,7 @@ public class EndpointApi {
      * @return The result of the execution
      * @throws BusinessException if error occurs while execution
      */
-    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException {
+    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
         List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
@@ -109,6 +117,23 @@ public class EndpointApi {
         }
 
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+
+        if(execution.getDelayValue() != null){
+            final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+            try {
+                final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return functionService.execute(executionEngine, parameterMap);
+                    } catch (BusinessException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+            } catch (TimeoutException e) {
+                return executionEngine.cancel();
+            }
+        }
+
         return functionService.execute(service.getCode(), parameterMap);
     }
 
@@ -118,7 +143,6 @@ public class EndpointApi {
      * @param endpointDto Configuration of the endpoint
      * @return the created Endpoint
      */
-    @JpaAmpNewTx @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Endpoint create(EndpointDto endpointDto) throws BusinessException {
         Endpoint endpoint = fromDto(endpointDto);
         endpointService.create(endpoint);

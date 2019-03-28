@@ -1,14 +1,11 @@
 package org.meveo.keycloak.client;
 
 import org.apache.http.HttpStatus;
+import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.RolesResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.admin.client.resource.*;
+import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -23,6 +20,8 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
 
+import javax.annotation.Resource;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -33,11 +32,14 @@ import javax.ws.rs.core.Response.Status;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.meveo.keycloak.client.KeycloakUtils.*;
+
 /**
+ * @author Clément Bareth
  * @author Edward P. Legaspi
- * @since 10 Nov 2017
  * @author akadid abdelmounaim
- * @lastModifiedVersion 5.0.1
+ * @since 20.03.2019
+ * @lastModifiedVersion 6.0.5
  **/
 @Stateless
 public class KeycloakAdminClientService {
@@ -49,56 +51,120 @@ public class KeycloakAdminClientService {
     @CurrentUser
     protected MeveoUser currentUser;
 
-    /**
-     * Reads the configuration from system property.
-     * 
-     * @return KeycloakAdminClientConfig
-     */
-    public KeycloakAdminClientConfig loadConfig() {
-        KeycloakAdminClientConfig keycloakAdminClientConfig = new KeycloakAdminClientConfig();
-        try {
-            // override from system property
-            String keycloakServer = System.getProperty("meveo.keycloak.url");
-            if (!StringUtils.isBlank(keycloakServer)) {
-                keycloakAdminClientConfig.setServerUrl(keycloakServer);
-            }
-            String realm = System.getProperty("meveo.keycloak.realm");
-            if (!StringUtils.isBlank(realm)) {
-                keycloakAdminClientConfig.setRealm(realm);
-            }
-            String clientId = System.getProperty("meveo.keycloak.client");
-            if (!StringUtils.isBlank(clientId)) {
-                keycloakAdminClientConfig.setClientId(clientId);
-            }
-            String clientSecret = System.getProperty("meveo.keycloak.secret");
-            if (!StringUtils.isBlank(clientSecret)) {
-                keycloakAdminClientConfig.setClientSecret(clientSecret);
-            }
+    @Resource
+    private SessionContext ctx;
 
-            log.debug("Found keycloak configuration: {}", keycloakAdminClientConfig);
-        } catch (Exception e) {
-            log.error("Error: Loading keycloak admin configuration. " + e.getMessage());
+    public Set<String> getCurrentUserRoles(String client){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+
+        final AccessToken.Access resourceAccess = keycloakSecurityContext.getToken()
+                .getResourceAccess(client);
+
+        if(resourceAccess == null){
+            return Collections.emptySet();
         }
 
-        return keycloakAdminClientConfig;
+        return resourceAccess
+            .getRoles();
+    }
+
+    public void removeRole(String client, String role){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        try {
+            keycloak.realm(keycloakAdminClientConfig.getRealm())
+                    .clients()
+                    .get(client)
+                    .roles()
+                    .get(role)
+                    .remove();
+
+        } catch (NotFoundException ignored){
+
+        }
+    }
+
+    public void createClient(String name){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        ClientRepresentation clientRepresentation = new ClientRepresentation();
+        clientRepresentation.setClientId(name);
+        clientRepresentation.setEnabled(true);
+        clientRepresentation.setName(name);
+        clientRepresentation.setId(name);
+        clientRepresentation.setProtocol("openid-connect");
+        clientRepresentation.setSecret(name);
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final ClientsResource clients = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients();
+
+        if(clients.findByClientId(name).isEmpty()){
+            clients.create(clientRepresentation);
+        }
     }
 
     /**
-     * @param session keycloak session
-     * @param keycloakAdminClientConfig keycloak admin client config.
-     * @return instance of Keycloak.
+     * Add a role from target client to a composite role of an default client.
+     * Both roles should already exists.
+     *
+     * @param clientTarget Id of the client holding the composite role
+     * @param roleCompositeSource composite role of the default client=
+     * @param roleTargetToAdd role of the target client to add
      */
-    private Keycloak getKeycloakClient(KeycloakSecurityContext session, KeycloakAdminClientConfig keycloakAdminClientConfig) {
-        Keycloak keycloak = KeycloakBuilder.builder() //
-            .serverUrl(keycloakAdminClientConfig.getServerUrl()) //
-            .realm(keycloakAdminClientConfig.getRealm()) //
-            .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
-            .clientId(keycloakAdminClientConfig.getClientId()) //
-            .clientSecret(keycloakAdminClientConfig.getClientSecret()) //
-            .authorization(session.getTokenString()) //
-            .build();
+    public void addToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToAdd) {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
 
-        return keycloak;
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final String defaultSourceClient = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(keycloakAdminClientConfig.getClientId())
+                .get(0)
+                .getId();
+
+        final RoleRepresentation roleToAdd = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(clientTarget)
+                .roles()
+                .get(roleTargetToAdd)
+                .toRepresentation();
+
+        keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(defaultSourceClient)
+                .roles()
+                .get(roleCompositeSource)
+                .addComposites(Collections.singletonList(roleToAdd));
+
+    }
+
+    /**
+     * Add a role to an other composite role for a given client. Create missing roles.
+     *
+     * @param client Client to manage
+     * @param role Role to create and / or add to composite role
+     * @param compositeRole Composite role to create and / or where to add the given role
+     */
+    public void addToComposite(String client, String role, String compositeRole){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        KeycloakUtils.addToComposite(keycloak, keycloakAdminClientConfig, client, role, compositeRole);
+
     }
 
     /**
@@ -131,9 +197,9 @@ public class KeycloakAdminClientService {
         user.setEmail(postData.getEmail());
 
         Map<String, List<String>> attributes = new HashMap<>();
-        attributes.put("origin", Arrays.asList("OPENCELL-API"));
+        attributes.put("origin", Collections.singletonList("OPENCELL-API"));
         if (ParamBean.isMultitenancyEnabled() && !StringUtils.isBlank(provider)) {
-            attributes.put("provider", Arrays.asList(provider));
+            attributes.put("provider", Collections.singletonList(provider));
         }
 
         user.setAttributes(attributes);
@@ -141,18 +207,6 @@ public class KeycloakAdminClientService {
         // Get realm
         RealmResource realmResource = keycloak.realm(keycloakAdminClientConfig.getRealm());
         UsersResource usersResource = realmResource.users();
-
-        // does not work
-        // Define password credential
-        // CredentialRepresentation credential = new CredentialRepresentation();
-        // credential.setTemporary(false);
-        // credential.setType(CredentialRepresentation.PASSWORD);
-        // credential.setValue(postData.getPassword());
-        // user.setCredentials(Arrays.asList(credential));
-
-        // Map<String, List<String>> clientRoles = new HashMap<>();
-        // clientRoles.put(keycloakAdminClientConfig.getClientId(),
-        // Arrays.asList(KeycloakConstants.ROLE_API_ACCESS, KeycloakConstants.ROLE_GUI_ACCESS, KeycloakConstants.ROLE_ADMINISTRATEUR, KeycloakConstants.ROLE_USER_MANAGEMENT));
 
         // check if realm role exists
         // find realm roles and assign to the newly create user
@@ -219,25 +273,6 @@ public class KeycloakAdminClientService {
     }
 
     /**
-     * Remove a role representation from list of role representation.
-     * 
-     * @param listRoleRepresentation list of role representation.
-     * @param roleRepresentation role representation to remove.
-     * @throws BusinessException business exception.
-     * @author akadid abdelmounaim
-     * @lastModifiedVersion 5.0
-     */
-    private List<RoleRepresentation> removeRole(List<RoleRepresentation> listRoleRepresentation, RoleRepresentation roleRepresentation) throws BusinessException {
-        List<RoleRepresentation> updatedListRoleRepresentation = new ArrayList<>();
-        for (RoleRepresentation roleRepresentationItem : listRoleRepresentation) {
-            if (!roleRepresentation.getName().equalsIgnoreCase(roleRepresentationItem.getName())) {
-                updatedListRoleRepresentation.add(roleRepresentationItem);
-            }
-        }
-        return updatedListRoleRepresentation;
-    }
-
-    /**
      * Updates a user in keycloak. Also assigns the role.
      * 
      * @param httpServletRequest http request
@@ -274,7 +309,7 @@ public class KeycloakAdminClientService {
                     try {
                         RoleRepresentation tempRole = rolesResource.get(externalRole.getName()).toRepresentation();
                         rolesToAdd.add(tempRole);
-                        rolesToDelete = removeRole(rolesToDelete, tempRole);
+                        rolesToDelete = KeycloakUtils.removeRole(rolesToDelete, tempRole);
                     } catch (NotFoundException e) {
                         throw new EntityDoesNotExistsException(RoleRepresentation.class, externalRole.getName());
                     }
@@ -345,11 +380,10 @@ public class KeycloakAdminClientService {
      * @param httpServletRequest http request
      * @param username user name
      * @return list of role
-     * @throws BusinessException business exception
      * @author akadid abdelmounaim
      * @lastModifiedVersion 5.0
      */
-    public List<RoleDto> findUserRoles(HttpServletRequest httpServletRequest, String username) throws BusinessException {
+    public List<RoleDto> findUserRoles(HttpServletRequest httpServletRequest, String username) {
         KeycloakSecurityContext session = (KeycloakSecurityContext) httpServletRequest.getAttribute(KeycloakSecurityContext.class.getName());
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
         Keycloak keycloak = getKeycloakClient(session, keycloakAdminClientConfig);
@@ -361,11 +395,9 @@ public class KeycloakAdminClientService {
             UserRepresentation userRepresentation = getUserRepresentationByUsername(usersResource, username);
 
             return userRepresentation != null ? usersResource.get(userRepresentation.getId()).roles().realmLevel().listEffective().stream()
-                .filter(p -> !KeycloakConstants.ROLE_KEYCLOAK_DEFAULT_EXCLUDED.contains(p.getName())).map(p -> {
-                    return new RoleDto(p.getName());
-                }).collect(Collectors.toList()) : new ArrayList<>();
+                .filter(p -> !KeycloakConstants.ROLE_KEYCLOAK_DEFAULT_EXCLUDED.contains(p.getName())).map(p -> new RoleDto(p.getName())).collect(Collectors.toList()) : new ArrayList<>();
         } catch (Exception e) {
-            return new ArrayList<RoleDto>();
+            return new ArrayList<>();
         }
     }
 
@@ -385,9 +417,7 @@ public class KeycloakAdminClientService {
         RealmResource realmResource = keycloak.realm(keycloakAdminClientConfig.getRealm());
 
         try {
-            return realmResource.roles().list().stream().map(p -> {
-                return new RoleDto(p.getName());
-            }).collect(Collectors.toList());
+            return realmResource.roles().list().stream().map(p -> new RoleDto(p.getName())).collect(Collectors.toList());
         } catch (Exception e) {
             throw new BusinessException("Unable to list role.");
         }
@@ -436,4 +466,5 @@ public class KeycloakAdminClientService {
         }
         return createUser(httpServletRequest, postData, null);
     }
+
 }

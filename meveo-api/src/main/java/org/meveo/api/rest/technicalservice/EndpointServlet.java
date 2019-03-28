@@ -42,7 +42,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -106,8 +109,15 @@ public class EndpointServlet extends HttpServlet {
     }
 
     private void doRequest(EndpointExecution endpointExecution) {
+
         // Retrieve endpoint
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
+
+        if(endpoint != null && !endpointService.isUserAuthorized(endpoint)){
+            endpointExecution.getResp().setStatus(403);
+            endpointExecution.getWriter().print("You are not authorized to access this endpoint");
+            return;
+        }
 
         try {
             final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
@@ -157,6 +167,7 @@ public class EndpointServlet extends HttpServlet {
             if (endpoint.getMethod() == endpointExecution.getMethod()) {
                 // Execute service
                 if (endpoint.isSynchronous()) {
+
                     final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                     endpointExecution.getWriter().print(transformData(endpoint, result));
                     endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
@@ -171,7 +182,7 @@ public class EndpointServlet extends HttpServlet {
                         try {
                             final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                             return transformData(endpoint, result);
-                        } catch (BusinessException e) {
+                        } catch (BusinessException | ExecutionException | InterruptedException e) {
                             throw new RuntimeException(e);
                         }
                     });
