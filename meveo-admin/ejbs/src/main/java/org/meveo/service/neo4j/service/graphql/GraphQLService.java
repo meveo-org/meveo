@@ -131,7 +131,7 @@ public class GraphQLService {
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
-            List<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            HashSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             // Additional queries defined
             for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getGraphqlQueryFields()).orElse(Collections.emptyList())) {
@@ -168,7 +168,7 @@ public class GraphQLService {
             }
 
             graphQLEntity.setGraphQLFields(graphQLFields);
-            graphQLEntities.put(graphQLEntity.getName(), graphQLEntity);
+            add(graphQLEntities, graphQLEntity);
         }
 
         // Relationships
@@ -182,7 +182,7 @@ public class GraphQLService {
             String typeName = relationshipTemplate.getGraphQlTypeName() == null ? relationshipTemplate.getEndNode().getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
 
-            List<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            HashSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             GraphQLField to = new GraphQLField();
             to.setFieldName("to");
@@ -288,15 +288,22 @@ public class GraphQLService {
                         }
                     });
 
-            graphQLEntities.put(graphQLEntity.getName(), graphQLEntity);
+            add(graphQLEntities, graphQLEntity);
 
         }
 
         return graphQLEntities.values();
     }
 
-    private List<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
-        List<GraphQLField> graphQLFields = new ArrayList<>();
+    private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity){
+        graphQLEntityMap.merge(graphQLEntity.getName(), graphQLEntity, (oldEntity, newEntity) -> {
+            oldEntity.getGraphQLFields().addAll(newEntity.getGraphQLFields());
+            return oldEntity;
+        });
+    }
+
+    private HashSet<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
+        HashSet<GraphQLField> graphQLFields = new HashSet<>();
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
             // Skip the field if it is an entity reference
