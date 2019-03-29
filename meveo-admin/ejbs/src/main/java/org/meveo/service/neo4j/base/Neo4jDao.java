@@ -3,6 +3,8 @@ package org.meveo.service.neo4j.base;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.service.neo4j.graph.Neo4jEntity;
 import org.meveo.service.neo4j.graph.Neo4jRelationship;
@@ -48,13 +50,29 @@ public class Neo4jDao {
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
 
-    public Map<String, Object> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String,Object> variables, String operationName){
+    public void updageIDL(String neo4jConfiguration, String idl) {
+        try (
+                final Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
+                final Transaction transaction = session.beginTransaction()
+        ) {
+            try {
+                transaction.run("call graphql.idl($idl)", Collections.singletonMap("idl", idl));
+                transaction.success();
+            } catch (Exception e) {
+                transaction.failure();
+                LOGGER.error(e.getMessage());
+            }
+        }
+
+    }
+
+    public Map<String, Object> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String, Object> variables, String operationName) {
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
         values.put("query", query);
-        values.put("variables", (variables!=null) ? variables : new HashMap<>());
-        values.put("operationName", (operationName!=null) ? operationName : "");
+        values.put("variables", (variables != null) ? variables : new HashMap<>());
+        values.put("operationName", (operationName != null) ? operationName : "");
 
         StringBuilder statement = new StringBuilder("call graphql.execute($query,$variables,$operationName)");
         // Begin transaction
@@ -66,12 +84,12 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(statement.toString(), values);
             transaction.success();  // Commit transaction
             return result.list()
-                .stream()
-                .map(record -> record.get("result"))
-                .map(Value::asMap)
-                .findFirst()
-                .orElseGet(Collections::emptyMap);
-        } catch(Exception e) {
+                    .stream()
+                    .map(record -> record.get("result"))
+                    .map(Value::asMap)
+                    .findFirst()
+                    .orElseGet(Collections::emptyMap);
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
             return null;
@@ -87,10 +105,10 @@ public class Neo4jDao {
      * Merge a Neo4J node based on its unique fields
      *
      * @param neo4JConfiguration Neo4J coordinates
-     * @param cetCode Code of the corresponding CustomEntityTemplate
-     * @param uniqueFields Unique fields that identifies the node
-     * @param fields Properties of the node
-     * @param labels Additionnal labels of the node
+     * @param cetCode            Code of the corresponding CustomEntityTemplate
+     * @param uniqueFields       Unique fields that identifies the node
+     * @param fields             Properties of the node
+     * @param labels             Additionnal labels of the node
      * @return the id of the created node, or null if it has failed
      */
     public Long mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
@@ -130,7 +148,7 @@ public class Neo4jDao {
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = node.id();
-        } catch(Exception e) {
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
         } finally {
@@ -142,9 +160,9 @@ public class Neo4jDao {
         if (node != null) {
             final Neo4jEntity neo4jEntity = new Neo4jEntity(node, neo4JConfiguration);
             //  If node has been created, fire creation event. If it was updated, fire update event.
-            if(node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
+            if (node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)) {
                 nodeUpdatedEvent.fire(neo4jEntity);
-            }else{
+            } else {
                 nodeCreatedEvent.fire(neo4jEntity);
             }
         }
@@ -187,7 +205,7 @@ public class Neo4jDao {
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = node.id();
-        } catch(Exception e) {
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
         } finally {
@@ -232,7 +250,7 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(resolvedStatement);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
-        } catch(Exception e) {
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
         } finally {
@@ -268,16 +286,16 @@ public class Neo4jDao {
             LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement, fields);
             Set<Long> ids = result.list()
-                .stream()
-                .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
-                .filter(value -> !value.isNull())
-                .map(Value::asLong)
-                .collect(Collectors.toSet());
+                    .stream()
+                    .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
+                    .filter(value -> !value.isNull())
+                    .map(Value::asLong)
+                    .collect(Collectors.toSet());
 
             transaction.success();
 
             return ids;
-        } catch(Exception e) {
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
         } finally {
@@ -289,7 +307,7 @@ public class Neo4jDao {
         return Collections.emptySet();
     }
 
-    public void createRelationBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields){
+    public void createRelationBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields) {
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
@@ -313,7 +331,7 @@ public class Neo4jDao {
             relationship = result.single().get("relationship").asRelationship();
 
             transaction.success();  // Commit transaction
-        } catch(Exception e) {
+        } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
         } finally {
@@ -322,12 +340,12 @@ public class Neo4jDao {
             session.close();
         }
 
-        if(relationship != null){
+        if (relationship != null) {
             //  If relationship has been created, fire creation event. If it was updated, fire update event.
             final Neo4jRelationship neo4jRelationship = new Neo4jRelationship(relationship, neo4JConfiguration);
-            if(relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)){
+            if (relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)) {
                 edgeUpdatedEvent.fire(neo4jRelationship);
-            }else{
+            } else {
                 edgeCreatedEvent.fire(neo4jRelationship);
             }
         }
@@ -341,7 +359,7 @@ public class Neo4jDao {
      * @param valuesMap Map where are stored the statement's variables - Variables required for the query will be added to it
      * @return A new {@link StringBuffer} representing the extended query
      */
-    public StringBuffer appendReturnStatement(final StringBuffer statement, String alias, Map<String, Object> valuesMap){
+    public StringBuffer appendReturnStatement(final StringBuffer statement, String alias, Map<String, Object> valuesMap) {
         valuesMap.put(Neo4JRequests.ALIAS, alias);
         return new StringBuffer(statement).append(Neo4JRequests.returnStatement);
     }
@@ -369,9 +387,9 @@ public class Neo4jDao {
      * @param labels Additional labels defined for the CET / CRT
      * @return The labels give to the created entity
      */
-    private String buildLabels(List<String> labels){
+    private String buildLabels(List<String> labels) {
         StringBuilder labelsString = new StringBuilder();
-        for (String label : labels){
+        for (String label : labels) {
             labelsString.append(" :").append(label);
         }
         return labelsString.toString();

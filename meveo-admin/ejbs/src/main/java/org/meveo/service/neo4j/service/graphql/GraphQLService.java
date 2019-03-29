@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -30,6 +32,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.neo4j.GraphQLRequest;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -50,6 +53,10 @@ public class GraphQLService {
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
+    @Inject
+    @MeveoJpa
+    private EntityManagerWrapper entityManagerWrapper;
+
     public Map<String, Object> executeGraphQLRequest(GraphQLRequest graphQLRequest, String neo4jConfiguration) {
 
         return neo4jDao.executeGraphQLQuery(
@@ -64,12 +71,31 @@ public class GraphQLService {
         return neo4jDao.executeGraphQLQuery(neo4jConfiguration, query, null, null);
     }
 
+    /**
+     * Update the IDL for every neo4j repositories
+     */
     public void updateIDL() {
-
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
-        System.out.println(idl);
 
+        final List<String> neo4jConfigurations = entityManagerWrapper.getEntityManager()
+                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+                .getResultList();
+
+        for (String neo4jConfiguration : neo4jConfigurations) {
+            neo4jDao.updageIDL(neo4jConfiguration, idl);
+        }
+
+    }
+
+    /**
+     * Update the IDL for the specified neo4j repository
+     * @param neo4jConfiguration Repository to update
+     */
+    public void updateIDL(String neo4jConfiguration) {
+        final Collection<GraphQLEntity> entities = getEntities();
+        String idl = getIDL(entities);
+        neo4jDao.updageIDL(neo4jConfiguration, idl);
     }
 
     public String getIDL() {
@@ -117,8 +143,7 @@ public class GraphQLService {
 
     private Collection<GraphQLEntity> getEntities() {
 
-        Map<String, GraphQLEntity> graphQLEntities = new HashMap<>();
-
+        Map<String, GraphQLEntity> graphQLEntities = new TreeMap<>();
 
         // Entities
         final List<CustomEntityTemplate> ceTsWithSubTemplates = customEntityTemplateService.getCETsWithSubTemplates();
@@ -131,7 +156,7 @@ public class GraphQLService {
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
-            HashSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             // Additional queries defined
             for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getGraphqlQueryFields()).orElse(Collections.emptyList())) {
@@ -182,7 +207,7 @@ public class GraphQLService {
             String typeName = relationshipTemplate.getGraphQlTypeName() == null ? relationshipTemplate.getEndNode().getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
 
-            HashSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             GraphQLField to = new GraphQLField();
             to.setFieldName("to");
@@ -210,7 +235,7 @@ public class GraphQLService {
                             sourceNameSingular.setFieldName(relationshipTemplate.getSourceNameSingular());
                             sourceNameSingular.setMultivalued(false);
                             sourceNameSingular.setFieldType(relationshipTemplate.getEndNode().getCode());
-                            sourceNameSingular.setQuery("@relation(name: " + relationshipTemplate.getName() + ", direction: OUT)");
+                            sourceNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNameSingular);
                         }
 
@@ -220,7 +245,7 @@ public class GraphQLService {
                             sourceNamePlural.setFieldName(relationshipTemplate.getSourceNamePlural());
                             sourceNamePlural.setMultivalued(true);
                             sourceNamePlural.setFieldType(relationshipTemplate.getEndNode().getCode());
-                            sourceNamePlural.setQuery("@relation(name: " + relationshipTemplate.getName() + ", direction: OUT)");
+                            sourceNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNamePlural);
                         }
 
@@ -255,7 +280,7 @@ public class GraphQLService {
                             targetNameSingular.setFieldName(relationshipTemplate.getTargetNameSingular());
                             targetNameSingular.setMultivalued(false);
                             targetNameSingular.setFieldType(relationshipTemplate.getStartNode().getCode());
-                            targetNameSingular.setQuery("@relation(name: " + relationshipTemplate.getName() + ", direction: IN)");
+                            targetNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNameSingular);
                         }
 
@@ -265,7 +290,7 @@ public class GraphQLService {
                             targetNamePlural.setFieldName(relationshipTemplate.getTargetNamePlural());
                             targetNamePlural.setMultivalued(true);
                             targetNamePlural.setFieldType(relationshipTemplate.getStartNode().getCode());
-                            targetNamePlural.setQuery("@relation(name: " + relationshipTemplate.getName() + ", direction: IN)");
+                            targetNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNamePlural);
                         }
 
@@ -295,15 +320,8 @@ public class GraphQLService {
         return graphQLEntities.values();
     }
 
-    private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity){
-        graphQLEntityMap.merge(graphQLEntity.getName(), graphQLEntity, (oldEntity, newEntity) -> {
-            oldEntity.getGraphQLFields().addAll(newEntity.getGraphQLFields());
-            return oldEntity;
-        });
-    }
-
-    private HashSet<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
-        HashSet<GraphQLField> graphQLFields = new HashSet<>();
+    private SortedSet<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
+        SortedSet<GraphQLField> graphQLFields = new TreeSet<>();
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
             // Skip the field if it is an entity reference
@@ -343,6 +361,13 @@ public class GraphQLService {
             graphQLFields.add(graphQLField);
         }
         return graphQLFields;
+    }
+
+    private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity){
+        graphQLEntityMap.merge(graphQLEntity.getName(), graphQLEntity, (oldEntity, newEntity) -> {
+            oldEntity.getGraphQLFields().addAll(newEntity.getGraphQLFields());
+            return oldEntity;
+        });
     }
 
 }

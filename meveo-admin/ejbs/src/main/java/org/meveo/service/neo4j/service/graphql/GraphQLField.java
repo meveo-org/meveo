@@ -18,7 +18,7 @@ package org.meveo.service.neo4j.service.graphql;
 
 import java.util.Objects;
 
-public class GraphQLField {
+public class GraphQLField implements Comparable {
 
     private String fieldName;
     private String fieldType;
@@ -77,5 +77,15 @@ public class GraphQLField {
     @Override
     public int hashCode() {
         return Objects.hash(getFieldName());
+    }
+
+    @Override
+    public int compareTo(Object o) {
+       if(o instanceof GraphQLField){
+           GraphQLField other = (GraphQLField) o;
+           return this.getFieldName().compareTo(other.getFieldName());
+       }
+
+       return 0;
     }
 }
