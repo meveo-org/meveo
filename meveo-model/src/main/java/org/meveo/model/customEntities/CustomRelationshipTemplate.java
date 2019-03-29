@@ -105,7 +105,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
      * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type
      */
     public String getRelationshipsFieldTarget() {
-        if(targetNameSingular == null){
+        if(targetNameSingular != null){
             return targetNameSingular + "Relations";
         }
 

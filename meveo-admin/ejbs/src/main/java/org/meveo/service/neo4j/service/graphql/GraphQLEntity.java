@@ -17,11 +17,12 @@
 package org.meveo.service.neo4j.service.graphql;
 
 import java.util.Set;
+import java.util.SortedSet;
 
 public class GraphQLEntity {
 
     private String name;
-    private Set<GraphQLField> graphQLFields;
+    private SortedSet<GraphQLField> graphQLFields;
 
     public String getName() {
         return name;
@@ -35,7 +36,7 @@ public class GraphQLEntity {
         return graphQLFields;
     }
 
-    public void setGraphQLFields(Set<GraphQLField> graphQLFields) {
+    public void setGraphQLFields(SortedSet<GraphQLField> graphQLFields) {
         this.graphQLFields = graphQLFields;
     }
 }

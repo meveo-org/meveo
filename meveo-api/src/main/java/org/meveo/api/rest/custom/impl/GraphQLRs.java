@@ -31,7 +31,16 @@ public class GraphQLRs {
   @GET
   @Path("/idl")
   public String getIdl(){
-    return graphQLService.getIDL();
+    return graphQLService.getIDL()
+            // Removing cypher annotations useless for end-user.
+            /*.replaceAll("@cypher.*", "")
+            .replaceAll("@relation.*", "")*/;
+  }
+
+  @POST
+  @Path("/idl")
+  public void updateIdl(){
+    graphQLService.updateIDL(neo4jConfiguration);
   }
 
   @GET
