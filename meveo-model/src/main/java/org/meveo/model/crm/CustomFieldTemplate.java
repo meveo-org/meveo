@@ -5,10 +5,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.DatePeriod;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ModuleItem;
+import org.meveo.model.*;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.crm.custom.*;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
@@ -29,6 +26,7 @@ import java.util.stream.Collectors;
 @ModuleItem
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })
+@ObservableEntity
 @Table(name = "crm_custom_field_tmpl", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "applies_to" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })

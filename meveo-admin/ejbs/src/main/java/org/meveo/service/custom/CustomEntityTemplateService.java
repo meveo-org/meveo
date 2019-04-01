@@ -27,6 +27,7 @@ import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
@@ -70,6 +71,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private ParamBeanFactory paramBeanFactory;
+
+    @Inject
+    private Event<CustomEntityTemplate> customEntityTemplateEvent;
 
     @PostConstruct
     private void init() {

@@ -50,20 +50,23 @@ public class Neo4jDao {
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
 
-    public void updageIDL(String neo4jConfiguration, String idl) {
-        try (
-                final Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
-                final Transaction transaction = session.beginTransaction()
-        ) {
-            try {
-                transaction.run("call graphql.idl($idl)", Collections.singletonMap("idl", idl));
-                transaction.success();
-            } catch (Exception e) {
-                transaction.failure();
-                LOGGER.error(e.getMessage());
-            }
-        }
+    public void updateIDL(String neo4jConfiguration, String idl) {
+        Transaction transaction = null;
 
+        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
+            transaction = session.beginTransaction();
+            transaction.run("call graphql.idl($idl)", Collections.singletonMap("idl", idl));
+
+            transaction.success();
+            transaction.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.failure();
+                transaction.close();
+            }
+
+            LOGGER.error("Cannot update IDL for repository {} : {}", neo4jConfiguration, e.getMessage());
+        }
     }
 
     public Map<String, Object> executeGraphQLQuery(String neo4JConfiguration, String query, Map<String, Object> variables, String operationName) {

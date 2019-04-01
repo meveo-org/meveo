@@ -7,6 +7,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 
 import javax.persistence.*;
@@ -28,6 +29,7 @@ import javax.validation.constraints.Size;
                 "AND crt.endNode.code = :endCode " +
                 "AND crt.name = :name")
 })
+@ObservableEntity
 public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {
 
     private static final long serialVersionUID = 8281478284763353310L;

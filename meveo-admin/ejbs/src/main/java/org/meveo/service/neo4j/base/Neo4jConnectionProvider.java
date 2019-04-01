@@ -81,6 +81,9 @@ public class Neo4jConnectionProvider {
         return getSession(null);
     }
 
+    /**
+     * @return a neo4j session, or null if a problem has occured
+     */
     public Session getSession(String neo4JConfigurationCode) {
 
         Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
@@ -92,8 +95,14 @@ public class Neo4jConnectionProvider {
             }
         }
 
-        Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
-        return driver.session();
+        try{
+            Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
+            return driver.session();
+        }catch (Exception e){
+            LOGGER.error("Can't connect to {} : {}", neo4JConfigurationCode, e.getMessage());
+            return null;
+        }
+
     }
 
     public String getNeo4jUrl() {
