@@ -17,7 +17,9 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Hien Bach.
@@ -97,39 +99,47 @@ public class EndpointBean extends BaseBean<Endpoint> {
     }
 
     public List<TSParameterMapping> getParameterMappings() {
-        List<String> parameterNames = new ArrayList<>();
-        if (pathParametersDL != null && pathParametersDL.getTarget() != null) {
+        parameterMappings.clear();
+        if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getSource())) {
             TSParameterMapping tsParameterMapping;
             EndpointParameter endpointParameter;
+            Map<String, TSParameterMapping> tsParameterMappingMap = new HashMap<>();
             if (getEntity().getParametersMapping() != null) {
-                getEntity().getParametersMapping().forEach(item->parameterNames.add(item.getEndpointParameter().getParameter()));
-                parameterMappings.addAll(getEntity().getParametersMapping());
+                getEntity().getParametersMapping().forEach(item->tsParameterMappingMap.put(item.getEndpointParameter().getParameter(), item));
             }
-            for (EndpointPathParameter endpointPathParameter : pathParametersDL.getTarget()) {
-                if (!parameterNames.contains(endpointPathParameter.getEndpointParameter().getParameter())) {
+            for (EndpointPathParameter endpointPathParameter : pathParametersDL.getSource()) {
+                if (tsParameterMappingMap.containsKey(endpointPathParameter.getEndpointParameter().getParameter())) {
+                    parameterMappings.add(tsParameterMappingMap.get(endpointPathParameter.getEndpointParameter().getParameter()));
+                } else {
                     tsParameterMapping = new TSParameterMapping();
                     endpointParameter = new EndpointParameter();
                     endpointParameter.setEndpoint(entity);
                     endpointParameter.setParameter(endpointPathParameter.getEndpointParameter().getParameter());
                     tsParameterMapping.setEndpointParameter(endpointParameter);
                     parameterMappings.add(tsParameterMapping);
-                    parameterNames.add(endpointPathParameter.getEndpointParameter().getParameter());
                 }
             }
         }
         return parameterMappings;
     }
 
+    public void setParameterMappings(List<TSParameterMapping> parameterMappings) {
+        this.parameterMappings = parameterMappings;
+    }
+
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        log.info("functionIOList size {}", entity.getService().getInputs().size());
         if (CollectionUtils.isNotEmpty(parameterMappings)) {
             getEntity().getParametersMapping().clear();
             getEntity().getParametersMapping().addAll(parameterMappings);
+        } else {
+            getEntity().getParametersMapping().clear();
         }
         if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
             getEntity().getPathParameters().clear();
             getEntity().getPathParameters().addAll(pathParametersDL.getTarget());
+        } else {
+            getEntity().getPathParameters().clear();
         }
         return super.saveOrUpdate(killConversation);
     }

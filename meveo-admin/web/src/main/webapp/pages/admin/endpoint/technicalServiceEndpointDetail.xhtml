@@ -18,17 +18,17 @@
             </p:breadCrumb>
         </h:form>
         <hftl:entityPopup id="searchFuncionPopup"
-                          header="#{messages['endpoint.search.endpoint.service']}"
-                          backingBean="#{functionBean}"
-                          searchField1Label="#{messages['BusinessEntity.code']}"
-                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-                          column1="code" selection="#{endpointBean.entity.service}"
-                          column2Label="#{messages['BusinessEntity.description']}"
-                          column2="description"
-                          column3="class"
-                          column3Child = "simpleName"
-                          column3Label="Type"
-                          updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:technicalServiceParametersId :endpointForm:pathParametersId">
+              header="#{messages['endpoint.search.endpoint.service']}"
+              backingBean="#{functionBean}"
+              searchField1Label="#{messages['BusinessEntity.code']}"
+              searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+              column1="code" selection="#{endpointBean.entity.service}"
+              column2Label="#{messages['BusinessEntity.description']}"
+              column2="description"
+              column3="class"
+              column3Child = "simpleName"
+              column3Label="Type"
+              updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping">
         </hftl:entityPopup>
         <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
@@ -45,64 +45,46 @@
                 </hftl:decorateFormField>
                 <hftl:formField label="#{messages['enpoint.synchronous']}" field="synchronous" />
             </h:panelGrid>
-            <hftl:decorateFormField field ="pathParameters" fieldId="technicalServiceParametersId" componentWidth="100" label="#{messages['endpoint.technicalServiceParameters']}">
-                <p:dataTable id="technicalServiceParametersId" var="parameterMapping" value="#{endpointBean.entity.service.inputs}" editable="false">
-                    <p:column>
-                        <f:facet name="header">
-                            <h:outputText value="#{messages['endpoint.technicalServiceParameters.name']}" />
-                        </f:facet>
-                        <f:facet name="output"><h:outputText value="#{parameterMapping.name}"/></f:facet>
-                    </p:column>
-                    <p:column>
-                        <f:facet name="header">
-                            <h:outputText value="#{messages['endpoint.technicalServiceParameters.type']}" />
-                        </f:facet>
-                        <f:facet name="output"><h:outputText value="#{parameterMapping.type}"/></f:facet>
-                    </p:column>
-                    <p:column>
-                        <f:facet name="header">
-                            <h:outputText value="#{messages['endpoint.technicalServiceParameters.description']}" />
-                        </f:facet>
-                        <f:facet name="output"><h:outputText value="#{parameterMapping.description}"/></f:facet>
-                    </p:column>
-                </p:dataTable>
-            </hftl:decorateFormField>
-            <h:panelGrid columns="2">
-                <hftl:formField label="#{messages['endpoint.pathParameter']}" field="pathParameters" id="pathParametersId"
-                                listType="pickUpList" valueLabelField="endpointParameter.parameter" valueLabelField2="endpointParameter.parameter"
-                                dualListModel="#{endpointBean.dualListModel}" newLine="true" updateField=":parametersMappingId"/>
-                <hftl:decorateFormField field ="parametersMapping" fieldId="parametersMappingId" componentWidth="100" label="#{messages['endpoint.parameters.mapping']}">
-                    <p:dataTable id="parametersMappingId" var="parameterMapping" value="#{endpointBean.parameterMappings}" editable="true" editMode="cell">
-                        <p:ajax event="cellEdit" listener="#{endpointBean.onCellEdit}"/>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{messages['endpoint.parameters.mapping.service']}" />
-                            </f:facet>
-                            <p:cellEditor>
-                                <f:facet name="output"><h:outputText value="#{parameterMapping.parameterName}"/></f:facet>
-                                <f:facet name="input"><p:inputText id="parameter" value="#{parameterMapping.endpointParameter.parameter}" style="width:100%"/></f:facet>
-                            </p:cellEditor>
+            <h:panelGroup id="functionInputs">
+                <hftl:decorateFormField componentWidth="100%" rendered="#{notificationBean.entity.function.hasInputs()}" label="#{messages['endpoint.technicalServiceParameters']}">
+                    <p:dataTable id="technicalServiceParametersId" resizableColumns="true" var="item" paginator="false"
+                                 reflow="true" value="#{endpointBean.entity.service.inputs}">
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.name']}">
+                            <h:outputText value="#{item.name}" />
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{messages['endpoint.parameters.mapping.expose']}" />
-                            </f:facet>
-                            <p:cellEditor>
-                                <f:facet name="output"><h:outputText value="#{parameterMapping.parameterName}"/></f:facet>
-                                <f:facet name="input"><p:inputText id="parameterName" value="#{parameterMapping.parameterName}" style="width:100%"/></f:facet>
-                            </p:cellEditor>
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.type']}">
+                            <h:outputText value="#{item.type}" />
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{messages['endpoint.parameters.mapping.default']}" />
-                            </f:facet>
-                            <p:cellEditor>
-                                <f:facet name="output"><h:outputText value="#{parameterMapping.parameterName}"/></f:facet>
-                                <f:facet name="input"><p:inputText id="defaultValue" value="#{parameterMapping.defaultValue}" style="width:100%"/></f:facet>
-                            </p:cellEditor>
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.description']}">
+                            <h:outputText value="#{item.description != null ? item.description : ''}" />
                         </p:column>
                     </p:dataTable>
                 </hftl:decorateFormField>
+            </h:panelGroup>
+            <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
+                <h:panelGroup id="pathParameters">
+                    <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
+                        <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item.endpointParameter.parameter}" itemValue="#{item}">
+                            <p:ajax event="transfer" update=":endpointForm:parametersMapping" />
+                            <hftl:objectConverter />
+                        </p:pickList>
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+                <h:panelGroup id="parametersMapping">
+                    <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.parameters.mapping']}">
+                        <p:dataTable id="parametersMappingId" resizableColumns="true" var="item" value="#{endpointBean.parameterMappings}" paginator="false" reflow="true">
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.service']}">
+                                <h:outputText value="#{item.endpointParameter.parameter}" />
+                            </p:column>
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.expose']}">
+                                <h:inputText value="#{item.parameterName}" size="40"/>
+                            </p:column>
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.default']}">
+                                <h:inputText value="#{item.defaultValue}" size="40"/>
+                            </p:column>
+                        </p:dataTable>
+                    </hftl:decorateFormField>
+                </h:panelGroup>
             </h:panelGrid>
             <hftl:decorateFormField field ="endpointUrl" fieldId="endpointUrlId" label="#{messages['endpoint.accessUrl']}">
                 <p:inputText id="endpointUrlId" value="#{endpointBean.entity.endpointUrl}" size="100" maxlength="100"  readonly="true" />
