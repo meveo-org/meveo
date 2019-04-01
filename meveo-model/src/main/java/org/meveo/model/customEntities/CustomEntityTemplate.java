@@ -14,6 +14,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
@@ -29,6 +30,7 @@ import org.meveo.model.scripts.ScriptInstance;
 		@NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name"),
 		@NamedQuery(name = "CustomEntityTemplate.PrimitiveType", query = "SELECT cet.primitiveType FROM CustomEntityTemplate cet WHERE code = :code")
 })
+@ObservableEntity
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 8281478284763353310L;

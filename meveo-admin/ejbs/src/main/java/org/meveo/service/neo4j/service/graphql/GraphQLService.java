@@ -32,17 +32,20 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.neo4j.GraphQLRequest;
-import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.neo4j.base.Neo4jDao;
+import org.slf4j.Logger;
 
 @Stateless
 public class GraphQLService {
 
     @Inject
     private Neo4jDao neo4jDao;
+
+    @Inject
+    private Logger log;
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -83,7 +86,7 @@ public class GraphQLService {
                 .getResultList();
 
         for (String neo4jConfiguration : neo4jConfigurations) {
-            neo4jDao.updageIDL(neo4jConfiguration, idl);
+            neo4jDao.updateIDL(neo4jConfiguration, idl);
         }
 
     }
@@ -95,7 +98,7 @@ public class GraphQLService {
     public void updateIDL(String neo4jConfiguration) {
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
-        neo4jDao.updageIDL(neo4jConfiguration, idl);
+        neo4jDao.updateIDL(neo4jConfiguration, idl);
     }
 
     public String getIDL() {
