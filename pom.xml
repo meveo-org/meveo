@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.meveo</groupId>
     <artifactId>meveo</artifactId>
     <packaging>pom</packaging>
-    <version>6.0.5-SNAPSHOT</version>
+    <version>0.0.12</version>
     <name>Meveo Parent Project</name>
     <properties>
         <env>dev</env>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.keycloak>3.4.3.Final</version.keycloak>
         <dbtype>generic</dbtype>
-        <releaseOption/>
+        <releaseOption />
     </properties>
 
     <scm>
         <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-    </scm>
+      <tag>0.0.12</tag>
+  </scm>
 
     <modules>
         <module>meveo-security</module>
@@ -578,7 +578,7 @@
                 <db.driver>org.mariadb.jdbc.Driver</db.driver>
                 <db.url>jdbc:mariadb://localhost:3306/meveo</db.url>
                 <db.username>root</db.username>
-                <db.password/>
+                <db.password />
             </properties>
             <dependencies>
                 <!-- Dependency for liquibase plugin -->
