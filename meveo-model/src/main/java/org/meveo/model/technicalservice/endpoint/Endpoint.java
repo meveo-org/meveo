@@ -21,9 +21,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
-import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -95,15 +93,6 @@ public class Endpoint extends BusinessEntity {
     @Column(name = "jsonata_transformer")
     private String jsonataTransformer;
 
-    @Transient
-    private String endpointUrl;
-
-    @PostLoad
-    private void postLoad() {
-        endpointUrl = "/rest"+code;
-        pathParameters.forEach(endpointPathParameter -> endpointUrl += "/{"+endpointPathParameter+"}");
-    }
-
     public String getJsonataTransformer() {
         return jsonataTransformer;
     }
@@ -154,7 +143,9 @@ public class Endpoint extends BusinessEntity {
 
     @Transient
     public String getEndpointUrl() {
-        return endpointUrl;
+        final StringBuilder endpointUrl = new StringBuilder("/rest/"+code);
+        pathParameters.forEach(endpointPathParameter -> endpointUrl.append("/{").append(endpointPathParameter).append("}"));
+        return endpointUrl.toString();
     }
 
 }
