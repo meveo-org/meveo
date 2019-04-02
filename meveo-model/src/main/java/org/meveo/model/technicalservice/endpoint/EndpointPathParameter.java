@@ -67,7 +67,7 @@ public class EndpointPathParameter {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EndpointPathParameter that = (EndpointPathParameter) o;
-        return getEndpointParameter().equals(that.getEndpointParameter());
+        return getEndpointParameter().getParameter().equals(that.getEndpointParameter().getParameter());
     }
 
     @Override

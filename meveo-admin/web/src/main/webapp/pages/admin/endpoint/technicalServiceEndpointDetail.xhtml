@@ -28,7 +28,7 @@
               column3="class"
               column3Child = "simpleName"
               column3Label="Type"
-              updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping">
+              updateField=":endpointForm:endpointParameters :endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrlId">
         </hftl:entityPopup>
         <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
@@ -61,7 +61,7 @@
                     </p:dataTable>
                 </hftl:decorateFormField>
             </h:panelGroup>
-            <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
+            <h:panelGrid id="endpointParameters" columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
                 <h:panelGroup id="pathParameters">
                     <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
                         <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item.endpointParameter.parameter}" itemValue="#{item}">
