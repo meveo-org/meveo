@@ -12,20 +12,18 @@
   ~ General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License along with this program.
-  ~ If not, see <http://www.gnu.org/licenses/>.
+  ~ If not, see <http://www.gnu.org/licenses />.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>meveo</artifactId>
         <groupId>org.meveo</groupId>
-        <version>6.0.5-SNAPSHOT</version>
+        <version>0.0.12</version>
     </parent>
 
     <properties>
-        <apache.jmeter.home/>
+        <apache.jmeter.home />
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
@@ -91,7 +89,7 @@
                         <phase>install</phase>
                         <configuration>
                             <tasks>
-                                <copy file="./target/meveo-plugin.jar" todir="${apache.jmeter.home}"/>
+                                <copy file="./target/meveo-plugin.jar" todir="${apache.jmeter.home}" />
                             </tasks>
                         </configuration>
                         <goals>
