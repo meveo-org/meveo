@@ -6,7 +6,7 @@
         <groupId>org.meveo</groupId>
         <artifactId>meveo</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>0.0.12</version>
+        <version>6.0.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>meveo-json-schema</artifactId>
