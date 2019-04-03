@@ -18,6 +18,7 @@ import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -64,6 +65,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 
     private Boolean isUpdate = false;
+
+    private List<GraphQLQueryField> graphQLQueryFields = new ArrayList<>();
+
+    private GraphQLQueryField graphQLQueryField = new GraphQLQueryField();
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -598,6 +603,29 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         isUpdate = false;
         String message = "customFieldInstance.childEntity.save.successful";
         messages.info(new BundleKey("messages", message));
+    }
+
+    public List<GraphQLQueryField> getGraphQLQueryField() {
+        if (entity != null && entity.getGraphqlQueryFields() != null) {
+            graphQLQueryFields = entity.getGraphqlQueryFields();
+        }
+        return graphQLQueryFields;
+    }
+
+    public void removeGraphQLQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+        for (GraphQLQueryField graphQLQueryField : graphQLQueryFields) {
+            if (graphQLQueryField != null && graphQLQueryField.equals(selectedGraphQLQueryField)) {
+                entity.getUniqueConstraints().remove(selectedGraphQLQueryField);
+                break;
+            }
+        }
+        String message = "graphqlQueryField.remove.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public void editGraphQLQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+        isUpdate = true;
+        graphQLQueryField = selectedGraphQLQueryField;
     }
 
     public Boolean getIsUpdate() {
