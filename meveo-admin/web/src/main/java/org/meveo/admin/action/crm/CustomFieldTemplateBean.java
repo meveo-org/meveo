@@ -1,9 +1,6 @@
 package org.meveo.admin.action.crm;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -57,12 +54,17 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     private DualListModel<CustomFieldMatrixColumn> childEntityFieldDM;
 
+    private List<CustomFieldTypeEnum> identifierFieldTypes = Arrays.asList(CustomFieldTypeEnum.LONG, CustomFieldTypeEnum.STRING);
+
+    private CustomFieldTypeEnum fieldType;
+
     /**
      * To what entity class CFT should be copied to - a appliesTo value
      */
     private String copyCftTo;
 
     public CustomFieldTemplateBean() {
+
         super(CustomFieldTemplate.class);
     }
 
@@ -281,7 +283,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     /**
      * Copy and associate custom field template with another entity class
      * 
-     * @throws BusinessException
+     * @throws org.meveo.admin.exception.BusinessException
      */
     @ActionMethod
     public void copyCFT() throws BusinessException {
@@ -294,5 +296,23 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         customFieldTemplateService.copyCustomFieldTemplate(entity, copyCftTo);
 
         messages.info(new BundleKey("messages", "customFieldTemplate.copyCFT.ok"));
+    }
+
+    public List<CustomFieldTypeEnum> getIdentifierFieldTypes() {
+        return identifierFieldTypes;
+    }
+
+    public CustomFieldTypeEnum getFieldType() {
+        entity.setFieldType(fieldType);
+        return fieldType;
+    }
+
+    public void setFieldType(CustomFieldTypeEnum fieldType) {
+        entity.setFieldType(fieldType);
+        this.fieldType = fieldType;
+    }
+
+    public void resetFieldType() {
+        this.fieldType = null;
     }
 }
