@@ -101,7 +101,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
      * Name of the graphql type corresponding to the relationship
      */
     @Column(name = "graphql_type")
-    private String graphqlTypeName;
+    private String graphQlTypeName;
 
     /**
      * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type
@@ -111,8 +111,8 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
             return targetNameSingular + "Relations";
         }
 
-        if(graphqlTypeName != null){
-            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        if(graphQlTypeName != null){
+            return Character.toLowerCase(graphQlTypeName.charAt(0)) + graphQlTypeName.substring(1) + "s";
         }
 
         return null;
@@ -126,24 +126,19 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
             return sourceNameSingular + "Relations";
         }
 
-        if(graphqlTypeName != null){
-            return Character.toLowerCase(graphqlTypeName.charAt(0)) + graphqlTypeName.substring(1) + "s";
+        if(graphQlTypeName != null){
+            return Character.toLowerCase(graphQlTypeName.charAt(0)) + graphQlTypeName.substring(1) + "s";
         }
 
         return null;
-
     }
-
-
+    
     public String getGraphQlTypeName(){
-        if(graphqlTypeName != null){
-            return graphqlTypeName;
-        }
-        return null;
+        return graphQlTypeName;
     }
 
     public void setGraphqlTypeName(String graphqlTypeName) {
-        this.graphqlTypeName = graphqlTypeName;
+        this.graphQlTypeName = graphqlTypeName;
     }
 
     public String getTargetNameSingular() {
