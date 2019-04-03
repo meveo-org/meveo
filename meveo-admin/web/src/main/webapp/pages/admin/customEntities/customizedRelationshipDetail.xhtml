@@ -39,7 +39,7 @@
                 <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" />
                 <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
                 <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
-                
+				<hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <p:selectOneMenu id="startNode" value="#{customRelationshipTemplateBean.entity.startNode}" required="true" style="width:150px;">
@@ -64,25 +64,22 @@
                         <h:outputText id="endNodeLabel" value="#{customRelationshipTemplateBean.entity.endNode.name}" styleClass="field-value"/>
                     </hftl:decorateFormField>
                 </h:panelGrid>
-                <p:fieldset id="validations" legend="#{messages['customFieldTemplate.validations']}" styleClass="validations clearfix">
-                <hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
-            </p:fieldset>
+				<p:fieldset id="idl" toggleable="true" collapsed="true" legend="#{messages['customFieldTemplate.idl']}" styleClass="validations clearfix">
+					<h:panelGrid columns="5" cellpadding = "5">
+		                <hftl:formField label="#{messages['customizedRelationships.sourceNameSingular']}" field="sourceNameSingular"/>
+		                <hftl:formField label="#{messages['customizedRelationships.sourceNamePlural']}" field="sourceNamePlural"/>
+		                <hftl:formField label="#{messages['customizedRelationships.targetNameSingular']}" field="targetNameSingular"/>
+		                <hftl:formField label="#{messages['customizedRelationships.targetNamePlural']}" field="targetNamePlural"/>
+		                <hftl:formField label="#{messages['customizedRelationships.graphqlTypeName']}" field="graphQlTypeName"/>	
+					</h:panelGrid>
+                </p:fieldset>
             </hftl:formPanel>
-        </h:panelGroup>
+			<h:panelGroup id="crFields">
+				<ui:include src="customFieldsRelationships.xhtml" />
+			</h:panelGroup>
 
-        <h:panelGroup id="crFields">
-            <ui:include src="customFieldsRelationships.xhtml"/>
-        </h:panelGroup>
+		</h:panelGroup>
 
-        <h:form>
-            <p:panel width="100">
-                <p:button id="backButton" value="#{messages['action.back']}" outcome="#{customRelationshipTemplateBean.back()}" includeViewParams="true">
-                    <c:if test="#{javax.enterprise.context.conversation.id != null}">
-                        <f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />
-                    </c:if>
-                </p:button>
-            </p:panel>
-        </h:form>
     </ui:define>
 
 </ui:composition>
