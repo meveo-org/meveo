@@ -17,8 +17,6 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
-import org.meveo.model.technicalservice.InputMeveoProperty;
-
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -40,7 +38,7 @@ public class EndpointPathParameter {
      * This column is used only for JPA to build list in right order.
      */
     @Column(name = "position", nullable = false)
-    private int position;
+    private int position = 0;
 
     @PrePersist @PreUpdate
     private void prePersist(){
@@ -69,7 +67,7 @@ public class EndpointPathParameter {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EndpointPathParameter that = (EndpointPathParameter) o;
-        return getEndpointParameter().equals(that.getEndpointParameter());
+        return getEndpointParameter().getParameter().equals(that.getEndpointParameter().getParameter());
     }
 
     @Override

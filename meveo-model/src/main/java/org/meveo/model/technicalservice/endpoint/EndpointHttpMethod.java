@@ -26,6 +26,9 @@ package org.meveo.model.technicalservice.endpoint;
 public enum EndpointHttpMethod {
 
     GET,
-    POST
+    POST;
 
+    public String getLabel() {
+        return this.name();
+    }
 }
