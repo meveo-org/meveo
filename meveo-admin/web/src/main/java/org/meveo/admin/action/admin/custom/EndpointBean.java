@@ -3,6 +3,7 @@ package org.meveo.admin.action.admin.custom;
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -39,6 +40,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
     private String endpointUrl;
 
+    private String serviceCode;
+
     /**
      * Constructor. Invokes super constructor and provides class type of this
      * bean for {@link org.meveo.admin.action.BaseBean}.
@@ -54,6 +57,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
     @Override
     public Endpoint initEntity() {
         Endpoint endpoint = super.initEntity();
+        if (endpoint.getService() != null) {
+            serviceCode = endpoint.getService().getCode();
+        }
         return endpoint;
     }
 
@@ -82,7 +88,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
                 perksSource.add(endpointPathParameter);
             }
             List<EndpointPathParameter> perksTarget = new ArrayList<>();
-            if (getEntity().getPathParameters() != null) {
+            if (!StringUtils.isBlank(serviceCode) && getEntity().getService() != null && serviceCode.equals(getEntity().getService().getCode()) && getEntity().getPathParameters() != null) {
                 perksTarget.addAll(getEntity().getPathParameters());
             }
             perksSource.removeAll(perksTarget);
@@ -129,7 +135,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
     }
 
     public String getEndpointUrl() {
-        endpointUrl = "/rest"+ getEntity().getCode();
+        endpointUrl = "/rest/"+ getEntity().getCode();
         if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
             pathParametersDL.getTarget().forEach(endpointPathParameter -> endpointUrl += "/{" + endpointPathParameter + "}");
         }

@@ -28,7 +28,7 @@
               column3="class"
               column3Child = "simpleName"
               column3Label="Type"
-              updateField=":endpointForm:endpointParameters :endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrlId">
+              updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping">
         </hftl:entityPopup>
         <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
@@ -61,7 +61,7 @@
                     </p:dataTable>
                 </hftl:decorateFormField>
             </h:panelGroup>
-            <h:panelGrid id="endpointParameters" columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
+            <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
                 <h:panelGroup id="pathParameters">
                     <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
                         <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item.endpointParameter.parameter}" itemValue="#{item}">
@@ -86,11 +86,16 @@
                     </hftl:decorateFormField>
                 </h:panelGroup>
             </h:panelGrid>
-            <h:panelGroup id="endpointUrl">
-                <hftl:decorateFormField field ="endpointUrl" fieldId="endpointUrlId" label="#{messages['endpoint.accessUrl']}">
-                    <p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}" size="100" maxlength="100"  readonly="true" />
+            <h:panelGrid columns="1">
+                <hftl:decorateFormField field ="jsonataTransformer" fieldId="jsonataTransformerId" label="#{messages['endpoint.jsonataTransformer']}">
+                    <p:inputText id="jsonataTransformerId" value="#{endpointBean.entity.jsonataTransformer}" size="100"/>
                 </hftl:decorateFormField>
-            </h:panelGroup>
+                <h:panelGroup id="endpointUrl">
+                    <hftl:decorateFormField field ="endpointUrl" fieldId="endpointUrlId" label="#{messages['endpoint.accessUrl']}">
+                        <p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}" size="100" readonly="true" />
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+            </h:panelGrid>
         </hftl:formPanel>
     </ui:define>
 
