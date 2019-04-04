@@ -179,8 +179,7 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api-dto</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+			</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-json-schema</artifactId>
@@ -196,11 +195,11 @@
 			<version>3.10.1</version>
 		</dependency>
 		<!-- Libraries included in Jboss -->
-		<dependency>
-			<groupId>org.jboss.spec.javax.servlet</groupId>
-			<artifactId>jboss-servlet-api_3.1_spec</artifactId>
-			<scope>provided</scope>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.jboss.spec.javax.servlet</groupId>-->
+<!--			<artifactId>jboss-servlet-api_3.1_spec</artifactId>-->
+<!--			<scope>provided</scope>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>javax.mail-api</artifactId>
@@ -223,29 +222,19 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.1-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.spec.javax.faces</groupId>
-			<artifactId>jboss-jsf-api_2.2_spec</artifactId>
+			<artifactId>jboss-jsf-api_2.3_spec</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-el-resolver</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
@@ -581,4 +570,13 @@
 			</build>
 		</profile>
 	</profiles>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.olap4j</groupId>
+				<artifactId>olap4j</artifactId>
+				<version>1.2.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

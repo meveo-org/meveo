@@ -31,7 +31,6 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.communication.MeveoInstance;
@@ -47,9 +46,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import java.io.StringReader;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -160,16 +157,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         } catch (NoResultException e) {
             return null;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static MeveoModuleDto moduleSourceToDto(MeveoModule module) throws JAXBException {
-        Class<? extends MeveoModuleDto> dtoClass = (Class<? extends MeveoModuleDto>) ReflectionUtils.getClassBySimpleNameAndParentClass(module.getClass().getSimpleName() + "Dto",
-            MeveoModuleDto.class);
-
-        MeveoModuleDto moduleDto = (MeveoModuleDto) JAXBContext.newInstance(dtoClass).createUnmarshaller().unmarshal(new StringReader(module.getModuleSource()));
-
-        return moduleDto;
     }
 
     public MeveoModule uninstall(MeveoModule module) throws BusinessException {

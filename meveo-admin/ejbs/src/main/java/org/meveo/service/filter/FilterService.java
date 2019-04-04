@@ -41,6 +41,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
@@ -331,7 +332,7 @@ public class FilterService extends BusinessService<Filter> {
                     extractCustomFields(entity, subCondition, customFieldTemplates);
                 }
             } else if (filterCondition instanceof PrimitiveFilterCondition) {
-                String appliesTo = CustomFieldTemplateService.calculateAppliesToValue(entity);
+                String appliesTo = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
                 PrimitiveFilterCondition condition = (PrimitiveFilterCondition) filterCondition;
                 extractCustomField(customFieldTemplates, appliesTo, condition);
             }

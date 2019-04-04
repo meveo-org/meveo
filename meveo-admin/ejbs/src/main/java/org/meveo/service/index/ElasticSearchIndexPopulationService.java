@@ -104,7 +104,7 @@ public class ElasticSearchIndexPopulationService implements Serializable {
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
 
-    private ParamBean paramBean = ParamBeanFactory.getAppScopeInstance();
+    private ParamBean paramBean = ParamBean.getInstance();
 
     /**
      * Populate index with data of a given entity class

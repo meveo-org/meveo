@@ -39,6 +39,7 @@ import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.neo4j.graph.Neo4jEntity;
 import org.meveo.service.neo4j.graph.Neo4jRelationship;
@@ -141,7 +142,7 @@ public class Neo4jService {
                 CustomFieldTemplate valueCft = cetFields.get("value");
                 if (valueCft == null) {
                     valueCft = new CustomFieldTemplate();
-                    CustomEntityTemplateService.turnIntoPrimitive(cet, valueCft);
+                    CustomEntityTemplateUtils.turnIntoPrimitive(cet, valueCft);
                     customFieldTemplateService.create(valueCft);
                     cetFields.put("value", valueCft);
                 }

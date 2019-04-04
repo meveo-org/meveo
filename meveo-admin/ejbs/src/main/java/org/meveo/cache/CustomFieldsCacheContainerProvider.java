@@ -33,6 +33,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     @EJB
     private CustomEntityTemplateService customEntityTemplateService;
 
-    private ParamBean paramBean = ParamBeanFactory.getAppScopeInstance();
+    private ParamBean paramBean = ParamBean.getInstance();
 
     private static boolean useCFTCache = true;
     private static boolean useCETCache = true;
@@ -85,7 +86,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     protected MeveoUser currentUser;
 
     static {
-        ParamBean tmpParamBean = ParamBeanFactory.getAppScopeInstance();
+        ParamBean tmpParamBean = ParamBean.getInstance();
         useCFTCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheCFT", "true"));
         useCETCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheCET", "true"));
     }
@@ -414,7 +415,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
      */
     public CustomFieldTemplate getCustomFieldTemplate(String code, ICustomFieldEntity entity) {
         try {
-            return getCustomFieldTemplate(code, CustomFieldTemplateService.calculateAppliesToValue(entity));
+            return getCustomFieldTemplate(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
 
         } catch (CustomFieldException e) {
             log.error("Can not determine applicable CFT type for entity of {} class.", entity.getClass().getSimpleName());

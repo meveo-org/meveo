@@ -46,7 +46,7 @@ public class EndpointService extends BusinessService<Endpoint> {
     public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
     public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
 
-    public static String getEndpointPermission(Endpoint endpoint) {
+    private static String getEndpointPermission(Endpoint endpoint) {
         return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
     }
 

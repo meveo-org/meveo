@@ -26,6 +26,7 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -269,7 +270,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
             } else {
                 try {
-                    moduleDto = MeveoModuleService.moduleSourceToDto(meveoModule);
+                    moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
                 } catch (JAXBException e) {
                     log.error("Failed to parse module {} source", meveoModule.getCode(), e);
                     throw new BusinessException("Failed to parse module source", e);
@@ -524,7 +525,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
         if (module.isDownloaded() && !module.isInstalled()) {
             try {
-                return MeveoModuleService.moduleSourceToDto(module);
+                return MeveoModuleUtils.moduleSourceToDto(module);
             } catch (Exception e) {
                 log.error("Failed to load module source {}", module.getCode(), e);
                 throw new MeveoApiException("Failed to load module source");

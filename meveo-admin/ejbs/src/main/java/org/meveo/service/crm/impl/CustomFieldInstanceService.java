@@ -165,7 +165,7 @@ public class CustomFieldInstanceService extends BaseService {
             if (cft == null) {
                 cft = new CustomFieldTemplate();
                 cft.setCode(cfCode);
-                cft.setAppliesTo(CustomFieldTemplateService.calculateAppliesToValue(entity));
+                cft.setAppliesTo(CustomFieldTemplateUtils.calculateAppliesToValue(entity));
                 cft.setActive(true);
                 cft.setDescription(cfCode);
                 cft.setFieldType(CustomFieldTypeEnum.STRING);
@@ -1629,7 +1629,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @return Map value that closely matches map key
      */
     @SuppressWarnings("unchecked")
-    public static Object matchClosestValue(Object value, String keyToMatch) {
+    private static Object matchClosestValue(Object value, String keyToMatch) {
         if (value == null || !(value instanceof Map) || StringUtils.isEmpty(keyToMatch)) {
             return null;
         }
@@ -1661,7 +1661,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @return A value matched
      */
     @SuppressWarnings("unchecked")
-    public static Object matchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
+    private static Object matchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
         if (value == null || !(value instanceof Map) || keys == null || keys.length == 0) {
             return null;
         }
@@ -1706,7 +1706,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @return True if a value was matched
      */
     @SuppressWarnings("unchecked")
-    public static boolean isMatchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
+   private static boolean isMatchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
         if (value == null || !(value instanceof Map) || keys == null || keys.length == 0) {
             return false;
         }
@@ -1745,7 +1745,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @return Map value that closely matches map key
      */
     @SuppressWarnings("unchecked")
-    public static Object matchRangeOfNumbersValue(Object value, Object numberToMatch) {
+    private static Object matchRangeOfNumbersValue(Object value, Object numberToMatch) {
         if (value == null || !(value instanceof Map) || numberToMatch == null
                 || !(numberToMatch instanceof Long || numberToMatch instanceof Integer || numberToMatch instanceof Double || numberToMatch instanceof BigDecimal)) {
             return null;
@@ -1770,7 +1770,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @return True if map value matches map key
      */
     @SuppressWarnings("unchecked")
-    public static boolean isMatchRangeOfNumbersValue(Object value, Object numberToMatch) {
+    private  static boolean isMatchRangeOfNumbersValue(Object value, Object numberToMatch) {
         if (value == null || !(value instanceof Map) || numberToMatch == null
                 || !(numberToMatch instanceof Long || numberToMatch instanceof Integer || numberToMatch instanceof Double || numberToMatch instanceof BigDecimal)) {
             return false;

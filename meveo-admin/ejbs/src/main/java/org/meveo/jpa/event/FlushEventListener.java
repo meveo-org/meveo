@@ -1,8 +1,7 @@
 package org.meveo.jpa.event;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.event.internal.core.JpaFlushEventListener;
+import org.hibernate.event.spi.FlushEvent;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.service.index.ElasticClient;
 
@@ -10,17 +9,16 @@ import org.meveo.service.index.ElasticClient;
  * JPA flush event listener. Flushes pending changes to Elastic Search
  * 
  * @author Andrius Karpavicius
+ * @author clement.bareth
  */
-public class FlushEventListener extends JpaFlushEventListener {
+public class FlushEventListener implements org.hibernate.event.spi.FlushEventListener {
 
     private static final long serialVersionUID = -9043373325952642047L;
 
-    @Override
-    protected void postFlush(SessionImplementor session) throws HibernateException {
-
-        super.postFlush(session);
-
-        ElasticClient elasticClient = (ElasticClient) EjbUtils.getServiceInterface("ElasticClient");
-        elasticClient.flushChanges();
-    }
+	@Override
+	public void onFlush(FlushEvent event) throws HibernateException {
+		ElasticClient elasticClient = (ElasticClient) EjbUtils.getServiceInterface("ElasticClient");
+        elasticClient.flushChanges();		
+	}
+	
 }

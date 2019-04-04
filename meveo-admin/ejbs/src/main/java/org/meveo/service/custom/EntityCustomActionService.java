@@ -12,7 +12,7 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldException;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
@@ -26,7 +26,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
      */
     public Map<String, EntityCustomAction> findByAppliesTo(ICustomFieldEntity entity) {
         try {
-            return findByAppliesTo(CustomFieldTemplateService.calculateAppliesToValue(entity));
+            return findByAppliesTo(CustomFieldTemplateUtils.calculateAppliesToValue(entity));
 
         } catch (CustomFieldException e) {
             // Its ok, handles cases when value that is part of CFT.AppliesTo calculation is not set yet on entity
@@ -66,7 +66,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
      * @throws CustomFieldException An exception when AppliesTo value can not be calculated
      */
     public EntityCustomAction findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) throws CustomFieldException {
-        return findByCodeAndAppliesTo(code, CustomFieldTemplateService.calculateAppliesToValue(entity));
+        return findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
     }
 
     /**

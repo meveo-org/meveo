@@ -1,5 +1,25 @@
 package org.meveo.api;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -12,27 +32,10 @@ import org.meveo.export.RemoteAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.Stateless;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-@Stateless
 public class CETUtils {
 
     private static final Logger log = LoggerFactory.getLogger(CETUtils.class);
 
-    @SuppressWarnings("ConstantConditions")
     public Response callMeveoApi(String url, String body, String httpMethod) throws BusinessException {
         log.info("callMeveoApi url:{},body:{}", url, body);
         try {

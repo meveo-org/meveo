@@ -96,17 +96,12 @@ public class AuditManagerService {
 		return event;
 	}
 
-	public static List<MethodParameter> getParameterLines(Method method, Object[] objects) {
+	private static List<MethodParameter> getParameterLines(Method method, Object[] objects) {
 		Parameter[] parameters = method.getParameters();
 		List<MethodParameter> methodParameters = new ArrayList<>();
 
 		int i = 0;
 		for (Parameter parameter : parameters) {
-			// if (!parameter.isNamePresent()) {
-			// // throw new IllegalArgumentException("Parameter names are not
-			// // present!");
-			// continue;
-			// }
 			final Object obj = objects[i++];
 
 			MethodParameter mp = new MethodParameter(parameter.getName(), obj, parameter.getType().getName());

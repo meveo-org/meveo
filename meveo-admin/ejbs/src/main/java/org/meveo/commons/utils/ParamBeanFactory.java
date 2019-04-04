@@ -53,13 +53,4 @@ public class ParamBeanFactory {
             return paramBean.getChrootDir("");
         }
     }
-
-    /**
-     * Return the application scope parameter bean
-     * 
-     * @return paramBean
-     */
-    public static ParamBean getAppScopeInstance() {
-        return ParamBean.getInstance();
-    }
 }

@@ -38,7 +38,6 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.admin.impl.PermissionService;
@@ -52,8 +51,6 @@ import org.meveo.service.index.ElasticClient;
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
-
-    private static final String PRIMITIVE_CFT_VALUE = "value";
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -72,12 +69,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     private ParamBeanFactory paramBeanFactory;
 
-    @Inject
-    private Event<CustomEntityTemplate> customEntityTemplateEvent;
-
     @PostConstruct
     private void init() {
-        useCETCache = Boolean.parseBoolean(ParamBeanFactory.getAppScopeInstance().getProperty("cache.cacheCET", "true"));
+        useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
     }
 
     @Override
@@ -105,25 +99,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private void createPrimitiveCft(CustomEntityTemplate cet) throws BusinessException {
         // Define CFT
         final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
-        turnIntoPrimitive(cet, customFieldTemplate);
+        CustomEntityTemplateUtils.turnIntoPrimitive(cet, customFieldTemplate);
         // Create CFT
         customFieldTemplateService.create(customFieldTemplate);
-    }
-
-    public static void turnIntoPrimitive(CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
-        customFieldTemplate.setActive(true);                        // Always active
-        customFieldTemplate.setAllowEdit(false);                    // CFT can't be updated
-        customFieldTemplate.setAppliesTo(cet.getAppliesTo());
-        if (cet.getPrimitiveType() == null) {
-            throw new IllegalArgumentException("Primitive type class must be provided");
-        }
-        customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
-        customFieldTemplate.setUnique(true);                        // Must be unique
-        customFieldTemplate.setCode(PRIMITIVE_CFT_VALUE);            // Code is 'value'
-        customFieldTemplate.setDescription(PRIMITIVE_CFT_VALUE);    // Label is 'value'
-        customFieldTemplate.setFilter(true);                        // Can be used as filter
-        customFieldTemplate.setValueRequired(true);                    // Always required
-        customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
     }
 
     @Override
@@ -133,7 +111,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         /* Primitive entity and type management */
         if (cet.isPrimitiveEntity() && cet.getPrimitiveType() != null) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            CustomFieldTemplate valueCft = cfts.get(PRIMITIVE_CFT_VALUE);
+            CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
             if (valueCft == null) {
                 createPrimitiveCft(cet);
             } else if (valueCft.getFieldType() != cet.getPrimitiveType().getCftType()) {

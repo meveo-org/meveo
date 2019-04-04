@@ -1,13 +1,12 @@
 package org.meveo.service.crm.impl;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarInterval;
@@ -19,8 +18,6 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.util.PersistenceUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -50,7 +47,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @PostConstruct
     private void init() {
-        useCFTCache = Boolean.parseBoolean(ParamBeanFactory.getAppScopeInstance().getProperty("cache.cacheCFT", "true"));
+        useCFTCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCFT", "true"));
     }
 
     @SuppressWarnings("unchecked")
@@ -73,7 +70,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public Map<String, CustomFieldTemplate> findByAppliesTo(ICustomFieldEntity entity) {
         try {
-            return findByAppliesTo(CustomFieldTemplateService.calculateAppliesToValue(entity));
+            return findByAppliesTo(CustomFieldTemplateUtils.calculateAppliesToValue(entity));
 
         } catch (CustomFieldException e) {
             // Its ok, handles cases when value that is part of CFT.AppliesTo calculation is not set yet on entity
@@ -135,7 +132,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
         try {
-            return findByCodeAndAppliesTo(code, CustomFieldTemplateService.calculateAppliesToValue(entity));
+            return findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
 
         } catch (CustomFieldException e) {
             log.error("Can not determine applicable CFT type for entity of {} class.", entity.getClass().getSimpleName());
@@ -268,35 +265,6 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
     /**
-     * Calculate custom field template AppliesTo value for a given entity. AppliesTo consist of a prefix and optionally one or more entity fields. e.g. JOB_jobTemplate
-     * 
-     * @param entity Entity
-     * @return A appliesTo value
-     * @throws CustomFieldException An exception when AppliesTo value can not be calculated. Occurs when value that is part of CFT.AppliesTo calculation is not set yet on entity
-     */
-    public static String calculateAppliesToValue(ICustomFieldEntity entity) throws CustomFieldException {
-        CustomFieldEntity cfeAnnotation = entity.getClass().getAnnotation(CustomFieldEntity.class);
-
-        String appliesTo = cfeAnnotation.cftCodePrefix();
-        if (cfeAnnotation.cftCodeFields().length > 0) {
-            for (String fieldName : cfeAnnotation.cftCodeFields()) {
-                try {
-                    Object fieldValue = FieldUtils.getField(entity.getClass(), fieldName, true).get(entity);
-                    if (fieldValue == null) {
-                        throw new CustomFieldException("Can not calculate AppliesTo value");
-                    }
-                    appliesTo = appliesTo + "_" + fieldValue;
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    Logger log = LoggerFactory.getLogger(CustomFieldTemplateService.class);
-                    log.error("Unable to access field {}.{}", entity.getClass().getSimpleName(), fieldName);
-                    throw new RuntimeException("Unable to access field " + entity.getClass().getSimpleName() + "." + fieldName);
-                }
-            }
-        }
-        return appliesTo;
-    }
-
-    /**
      * Check and create missing templates given a list of templates.
      * 
      * @param entity Entity that custom field templates apply to
@@ -306,7 +274,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public Map<String, CustomFieldTemplate> createMissingTemplates(ICustomFieldEntity entity, Collection<CustomFieldTemplate> templates) throws BusinessException {
         try {
-            return createMissingTemplates(calculateAppliesToValue(entity), templates, false, false);
+            return createMissingTemplates(CustomFieldTemplateUtils.calculateAppliesToValue(entity), templates, false, false);
 
         } catch (CustomFieldException e) {
             // Its OK, handles cases when value that is part of CFT.AppliesTo calculation is not set yet on entity
@@ -339,7 +307,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public Map<String, CustomFieldTemplate> createMissingTemplates(ICustomFieldEntity entity, Collection<CustomFieldTemplate> templates, boolean updateExisting,
             boolean removeOrphans) throws BusinessException {
         try {
-            return createMissingTemplates(calculateAppliesToValue(entity), templates, updateExisting, removeOrphans);
+            return createMissingTemplates(CustomFieldTemplateUtils.calculateAppliesToValue(entity), templates, updateExisting, removeOrphans);
         } catch (CustomFieldException e) {
             // Its OK, handles cases when value that is part of CFT.AppliesTo calculation is not set yet on entity
             return new HashMap<String, CustomFieldTemplate>();

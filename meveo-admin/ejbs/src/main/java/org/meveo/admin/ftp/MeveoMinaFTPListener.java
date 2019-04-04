@@ -15,6 +15,7 @@ import org.apache.ftpserver.impl.DefaultFtpServer;
 import org.apache.ftpserver.impl.FtpServerContext;
 import org.apache.ftpserver.listener.Listener;
 import org.apache.ftpserver.listener.ListenerFactory;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.admin.impl.UserService;
@@ -42,7 +43,7 @@ public class MeveoMinaFTPListener {
 
     @PostConstruct
     public void init() {
-        String portStr = ParamBeanFactory.getAppScopeInstance().getProperty("ftpserver.port", null);
+        String portStr = ParamBean.getInstance().getProperty("ftpserver.port", null);
         if (StringUtils.isBlank(portStr)) {
             return;
         }

@@ -50,6 +50,7 @@ import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
@@ -142,7 +143,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
             // If module was downloaded, show module items from meveoModule.moduleSource
         } else {
             try {
-                MeveoModuleDto dto = MeveoModuleService.moduleSourceToDto(module);
+                MeveoModuleDto dto = MeveoModuleUtils.moduleSourceToDto(module);
 
                 if (dto.getModuleItems() == null) {
                     return module;
@@ -481,7 +482,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                 return module;
             }
 
-            MeveoModuleDto moduleDto = MeveoModuleService.moduleSourceToDto(module);
+            MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
 
             module = moduleApi.install(moduleDto);
             messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());

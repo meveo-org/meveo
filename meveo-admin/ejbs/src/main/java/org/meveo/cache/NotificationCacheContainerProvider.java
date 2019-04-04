@@ -50,7 +50,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
     @EJB
     private NotificationService notificationService;
 
-    private ParamBean paramBean = ParamBeanFactory.getAppScopeInstance();
+    private ParamBean paramBean = ParamBean.getInstance();
 
     private static boolean useNotificationCache = true;
 
@@ -65,7 +65,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
     protected MeveoUser currentUser;
 
     static {
-        ParamBean tmpParamBean = ParamBeanFactory.getAppScopeInstance();
+        ParamBean tmpParamBean = ParamBean.getInstance();
         useNotificationCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheNotification", "true"));
     }
 

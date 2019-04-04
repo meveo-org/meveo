@@ -178,11 +178,11 @@
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.spec.javax.servlet</groupId>
-			<artifactId>jboss-servlet-api_3.1_spec</artifactId>
-			<scope>provided</scope>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.jboss.spec.javax.servlet</groupId>-->
+<!--			<artifactId>jboss-servlet-api_3.1_spec</artifactId>-->
+<!--			<scope>provided</scope>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>javax.enterprise</groupId>
 			<artifactId>cdi-api</artifactId>
@@ -199,13 +199,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.jboss.spec.javax.faces</groupId>
-			<artifactId>jboss-jsf-api_2.2_spec</artifactId>
+			<artifactId>jboss-jsf-api_2.3_spec</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -307,11 +302,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.1-api</artifactId>
-			<version>1.0.0.Final</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.hibernate.javax.persistence</groupId>-->
+<!--			<artifactId>hibernate-jpa-2.1-api</artifactId>-->
+<!--			<version>1.0.0.Final</version>-->
+<!--		</dependency>-->
 		
 	</dependencies>
 	<profiles>

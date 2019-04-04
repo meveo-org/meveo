@@ -285,7 +285,7 @@
         <location>/errors/expired.xhtml</location>
     </error-page>     
     <error-page>
-        <exception-type>org.jboss.weld.context.NonexistentConversationException</exception-type>
+        <exception-type>javax.enterprise.context.NonexistentConversationException</exception-type>
         <location>/errors/expired.xhtml</location>
     </error-page> 
     <error-page>

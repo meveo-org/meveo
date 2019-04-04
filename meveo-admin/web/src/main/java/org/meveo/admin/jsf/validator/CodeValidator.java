@@ -11,6 +11,7 @@ import javax.faces.validator.ValidatorException;
 import javax.inject.Inject;
 
 import org.meveo.admin.util.ResourceBundle;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 
@@ -28,10 +29,10 @@ public class CodeValidator implements Validator {
 
     @Override
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
-        if (value != null && !StringUtils.isMatch(value.toString(), ParamBeanFactory.getAppScopeInstance().getProperty("meveo.code.pattern", StringUtils.CODE_REGEX))) {
+        if (value != null && !StringUtils.isMatch(value.toString(), ParamBean.getInstance().getProperty("meveo.code.pattern", StringUtils.CODE_REGEX))) {
             FacesMessage facesMessage = new FacesMessage();
             String message = resourceMessages.getString("message.validation.code.pattern");
-            message = MessageFormat.format(message, getLabel(context, component), ParamBeanFactory.getAppScopeInstance().getProperty("meveo.code.pattern", StringUtils.CODE_REGEX));
+            message = MessageFormat.format(message, getLabel(context, component), ParamBean.getInstance().getProperty("meveo.code.pattern", StringUtils.CODE_REGEX));
             facesMessage.setDetail(message);
             facesMessage.setSummary(message);
             facesMessage.setSeverity(FacesMessage.SEVERITY_ERROR);

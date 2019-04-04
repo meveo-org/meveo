@@ -525,7 +525,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      * @param cetActions Actions (EntityActionScript) available on CustomEntityTemplate
      * @return A CustomEntityTemplateDto object with fields set
      */
-    public static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions) {
+    private static CustomEntityTemplateDto toDTO(CustomEntityTemplate cet, Collection<CustomFieldTemplate> cetFields, Collection<EntityCustomAction> cetActions) {
         CustomEntityTemplateDto dto = new CustomEntityTemplateDto();
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
