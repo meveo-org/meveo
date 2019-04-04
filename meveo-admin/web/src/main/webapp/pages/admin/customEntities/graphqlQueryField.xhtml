@@ -6,64 +6,64 @@
         <p:panel width="100" header="#{messages['customizedEntities.graphqlQueryField']}">
             <h:panelGroup id="graphqlQueryFieldsPanel">
                 <p:messages/>
-                <p:dataTable id="graphqlQueryFieldDatatable" value="#{customEntityTemplateBean.graphQLQueryField}" var="graphQLQueryField" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+                <p:dataTable id="graphqlQueryFieldDatatable" value="#{customEntityTemplateBean.graphqlQueryFields}" var="graphqlQueryField" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
                              paginator="true" rows="30" resizableColumns="true"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
                              lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
                     <p:column headerText="#{messages['graphqlQueryField.fieldName']}">
-                        <h:outputText value="#{graphQLQueryField.fieldName}" styleClass="field-value" />
+                        <h:outputText value="#{graphqlQueryField.fieldName}" styleClass="field-value" />
                     </p:column>
-                    <p:column headerText="#{messages['graphQLQueryField.fieldType']}">
-                        <h:outputText value="#{graphQLQueryField.fieldType}" styleClass="field-value" />
+                    <p:column headerText="#{messages['graphqlQueryField.fieldType']}">
+                        <h:outputText value="#{graphqlQueryField.fieldType}" styleClass="field-value" />
                     </p:column>
-                    <p:column headerText="#{messages['graphQLQueryField.multivalue']}">
-                        <h:outputText value="#{graphQLQueryField.multivalued}" styleClass="field-value" />
+                    <p:column headerText="#{messages['graphqlQueryField.multivalued']}">
+                        <h:outputText value="#{messages[graphqlQueryField.multivalued.toString()=='true'?'commons.yes':'commons.no']}" styleClass="field-value" />
                     </p:column>
-                    <p:column headerText="#{messages['graphQLQueryField.query']}">
-                        <h:outputText value="#{graphQLQueryField.query}" styleClass="field-value" />
+                    <p:column headerText="#{messages['graphqlQueryField.query']}">
+                        <h:outputText value="#{graphqlQueryField.query}" styleClass="field-value" />
                     </p:column>
                     <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
-
-                        <p:commandButton action="#{customEntityTemplateBean.removeGraphQLQueryField(graphQLQueryField)}" icon="ui-icon-trash" update=":graphqlQueryFieldsForm:graphqlQueryFieldsPanel" />
-                        <p:commandButton id="editfieldBtn" icon="ui-icon-document" oncomplete="PF('uniqueConstraintsDialog').show()" update=":uniqueConstraintsDialogForm"
-                                         actionListener="#{customEntityTemplateBean.editGraphQLQueryField(graphQLQueryField)}">
+                        <p:commandButton id="editfieldBtn" icon="ui-icon-document" oncomplete="PF('graphqlQueryFieldsDialog').show()" update=":graphqlQueryFieldsDialog"
+                                         actionListener="#{customEntityTemplateBean.editGraphqlQueryField(graphqlQueryField)}">
                         </p:commandButton>
+                        <p:commandButton action="#{customEntityTemplateBean.removeGraphqlQueryField(graphqlQueryField)}" icon="ui-icon-trash" update=":graphqlQueryFieldsForm:graphqlQueryFieldsPanel" />
                     </p:column>
                     <f:facet name="footer">
-                        <p:commandButton action="#{customEntityTemplateBean.addGraphQLQueryField}" id="addGraphQLQueryField" value="#{messages['graphqlQueryField.addGraphQLQueryField']}" oncomplete="PF('graphqlQueryFieldsDialog').show()"  update=":graphqlQueryFieldsDialogForm"></p:commandButton>
+                        <p:commandButton action="#{customEntityTemplateBean.addGraphqlQueryField}" id="addGraphqlQueryField" value="#{messages['commons.addNew']}" oncomplete="PF('graphqlQueryFieldsDialog').show()"  update=":graphqlQueryFieldsDialogForm"></p:commandButton>
                     </f:facet>
                 </p:dataTable>
             </h:panelGroup>
         </p:panel>
     </h:form>
-    <p:dialog id="graphqlQueryFieldsDialog" header="#{messages['graphqlQueryField.addgraphqlQueryField.header']}" widgetVar="graphqlQueryFieldsDialog" modal="true" closeOnEscape="true" width="80%" closable="true" appendTo="@(body)">
+    <p:dialog id="graphqlQueryFieldsDialog" header="#{messages['graphqlQueryField.addgraphqlQueryField.header']}" widgetVar="graphqlQueryFieldsDialog" modal="true" closeOnEscape="true" width="60%" closable="true" appendTo="@(body)">
         <hftl:decorateFormPanel formId="graphqlQueryFieldsDialogForm">
             <ui:define name="fields">
                 <h:panelGrid columns="1">
                     <h:panelGrid columns="2">
                         <hftl:decorateFormField fieldId="fieldName" label="#{messages['graphqlQueryField.fieldName']}">
-                            <p:inputText id="fieldName" value="#{customEntityTemplateBean.graphQLQueryField.fieldName}" size="50" maxlength="50"  readonly="#{customEntityTemplateBean.isUpdate}" />
+                            <p:inputText id="fieldName" value="#{customEntityTemplateBean.graphqlQueryField.fieldName}" size="53" maxlength="100"  readonly="#{customEntityTemplateBean.isUpdate}" />
                         </hftl:decorateFormField>
-                        <hftl:decorateFormField fieldId="fieldType" label="#{messages['graphQLQueryField.fieldType']}" >
-                            <p:inputText id="fieldType" value="#{customEntityTemplateBean.graphQLQueryField.fieldType}" size="100" maxlength="100" disabled="false" />
+                        <hftl:decorateFormField fieldId="fieldType" label="#{messages['graphqlQueryField.fieldType']}" >
+                            <p:inputText id="fieldType" value="#{customEntityTemplateBean.graphqlQueryField.fieldType}" size="53" maxlength="100" disabled="false" />
                         </hftl:decorateFormField>
                     </h:panelGrid>
                     <h:panelGrid columns="1">
-                        <hftl:decorateFormField fieldId="multivalued" label="#{messages['graphQLQueryField.multivalue']}" >
-                            <p:inputTextarea id="multivalued" value="#{customEntityTemplateBean.graphQLQueryField.multivalued}" rows="5" cols="158"  autoResize="false"/>
+                        <hftl:decorateFormField fieldId="multivalued" label="#{messages['graphqlQueryField.multivalued']}" >
+                            <p:selectBooleanCheckbox id="multivalued" value="#{customEntityTemplateBean.graphqlQueryField.multivalued}">
+                            </p:selectBooleanCheckbox>
                         </hftl:decorateFormField>
                     </h:panelGrid>
                     <h:panelGrid columns="2">
-                        <hftl:decorateFormField fieldId="query" label="#{messages['graphQLQueryField.query']}" >
-                            <p:inputNumber id="query" value="#{customEntityTemplateBean.graphQLQueryField.query}" symbolPosition="s" decimalPlaces="0"/>
+                        <hftl:decorateFormField fieldId="query" label="#{messages['graphqlQueryField.query']}" >
+                            <p:inputText id="query" value="#{customEntityTemplateBean.graphqlQueryField.query}" size="114" maxlength="120"/>
                         </hftl:decorateFormField>
                     </h:panelGrid>
                 </h:panelGrid>
             </ui:define>
             <ui:define name="buttons">
-                <p:commandButton value="#{messages['action.save']}" action="#{customEntityTemplateBean.saveGraphQLQueryField()}" update=":cetForm:messages :graphQLQueryFieldsForm"
-                                 oncomplete="if (args &amp;&amp; !args.validationFailed){PF('graphQLQueryFieldsDialog').hide();}" ajax="true" />
-                <p:button value="#{messages['action.cancel']}" onclick="PF('graphQLQueryFieldsDialog').hide(); return false;" />
+                <p:commandButton value="#{messages['action.save']}" action="#{customEntityTemplateBean.saveGraphqlQueryField()}" update=":cetForm:messages :graphqlQueryFieldsForm"
+                                 oncomplete="if (args &amp;&amp; !args.validationFailed){PF('graphqlQueryFieldsDialog').hide();}" ajax="true" />
+                <p:button value="#{messages['action.cancel']}" onclick="PF('graphqlQueryFieldsDialog').hide(); return false;" />
             </ui:define>
         </hftl:decorateFormPanel>
     </p:dialog>

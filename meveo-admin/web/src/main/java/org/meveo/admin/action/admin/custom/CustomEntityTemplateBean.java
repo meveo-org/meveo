@@ -67,9 +67,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
     private Boolean isUpdate = false;
 
-    private List<GraphQLQueryField> graphQLQueryFields = new ArrayList<>();
+    private List<GraphQLQueryField> graphqlQueryFields = new ArrayList<>();
 
-    private GraphQLQueryField graphQLQueryField = new GraphQLQueryField();
+    private GraphQLQueryField graphqlQueryField = new GraphQLQueryField();
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -606,17 +606,22 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         messages.info(new BundleKey("messages", message));
     }
 
-    public List<GraphQLQueryField> getGraphQLQueryField() {
-        if (entity != null && entity.getGraphqlQueryFields() != null) {
-            graphQLQueryFields = entity.getGraphqlQueryFields();
-        }
-        return graphQLQueryFields;
+
+    public GraphQLQueryField getGraphqlQueryField() {
+        return graphqlQueryField;
     }
 
-    public void removeGraphQLQueryField(GraphQLQueryField selectedGraphQLQueryField) {
-        for (GraphQLQueryField graphQLQueryField : graphQLQueryFields) {
-            if (graphQLQueryField != null && graphQLQueryField.equals(selectedGraphQLQueryField)) {
-                entity.getUniqueConstraints().remove(selectedGraphQLQueryField);
+    public List<GraphQLQueryField> getGraphqlQueryFields() {
+        if (entity != null && entity.getGraphqlQueryFields() != null) {
+            graphqlQueryFields = entity.getGraphqlQueryFields();
+        }
+        return graphqlQueryFields;
+    }
+
+    public void removeGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+        for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
+            if (graphqlQueryField != null && graphqlQueryField.equals(selectedGraphQLQueryField)) {
+                entity.getGraphqlQueryFields().remove(selectedGraphQLQueryField);
                 break;
             }
         }
@@ -624,31 +629,31 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         messages.info(new BundleKey("messages", message));
     }
 
-    public void editGraphQLQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+    public void editGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
         isUpdate = true;
-        graphQLQueryField = selectedGraphQLQueryField;
+        graphqlQueryField = selectedGraphQLQueryField;
     }
 
-    public void addGraphQLQueryField() {
+    public void addGraphqlQueryField() {
         isUpdate = false;
-        graphQLQueryField = new GraphQLQueryField();
+        graphqlQueryField = new GraphQLQueryField();
     }
 
-    public void saveGraphQLQueryField() {
+    public void saveGraphqlQueryField() {
         if (!isUpdate) {
-            graphQLQueryFields.add(graphQLQueryField);
+            graphqlQueryFields.add(graphqlQueryField);
         } else {
-            for (GraphQLQueryField graphQLQueryField : graphQLQueryFields) {
-                if (graphQLQueryField != null && graphQLQueryField.getFieldType().equals(this.graphQLQueryField.getFieldName())) {
-                    graphQLQueryField.setFieldName(this.graphQLQueryField.getFieldName());
-                    graphQLQueryField.setFieldType(this.graphQLQueryField.getFieldType());
-                    graphQLQueryField.setMultivalued(this.graphQLQueryField.isMultivalued());
-                    graphQLQueryField.setQuery(this.graphQLQueryField.getQuery());
+            for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
+                if (graphqlQueryField != null && graphqlQueryField.getFieldType().equals(this.graphqlQueryField.getFieldName())) {
+                    graphqlQueryField.setFieldName(this.graphqlQueryField.getFieldName());
+                    graphqlQueryField.setFieldType(this.graphqlQueryField.getFieldType());
+                    graphqlQueryField.setMultivalued(this.graphqlQueryField.isMultivalued());
+                    graphqlQueryField.setQuery(this.graphqlQueryField.getQuery());
                     break;
                 }
             }
         }
-        entity.setGraphqlQueryFields(graphQLQueryFields);
+        entity.setGraphqlQueryFields(graphqlQueryFields);
         isUpdate = false;
         String message = "graphqlQueryField.save.successful";
         messages.info(new BundleKey("messages", message));
