@@ -11,6 +11,7 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.neo4j.Graph;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -18,6 +19,7 @@ import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -64,6 +66,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     private CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 
     private Boolean isUpdate = false;
+
+    private List<GraphQLQueryField> graphqlQueryFields = new ArrayList<>();
+
+    private GraphQLQueryField graphqlQueryField = new GraphQLQueryField();
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -597,6 +603,59 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
         entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
         isUpdate = false;
         String message = "customFieldInstance.childEntity.save.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+
+    public GraphQLQueryField getGraphqlQueryField() {
+        return graphqlQueryField;
+    }
+
+    public List<GraphQLQueryField> getGraphqlQueryFields() {
+        if (entity != null && entity.getGraphqlQueryFields() != null) {
+            graphqlQueryFields = entity.getGraphqlQueryFields();
+        }
+        return graphqlQueryFields;
+    }
+
+    public void removeGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+        for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
+            if (graphqlQueryField != null && graphqlQueryField.equals(selectedGraphQLQueryField)) {
+                entity.getGraphqlQueryFields().remove(selectedGraphQLQueryField);
+                break;
+            }
+        }
+        String message = "graphqlQueryField.remove.successful";
+        messages.info(new BundleKey("messages", message));
+    }
+
+    public void editGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
+        isUpdate = true;
+        graphqlQueryField = selectedGraphQLQueryField;
+    }
+
+    public void addGraphqlQueryField() {
+        isUpdate = false;
+        graphqlQueryField = new GraphQLQueryField();
+    }
+
+    public void saveGraphqlQueryField() {
+        if (!isUpdate) {
+            graphqlQueryFields.add(graphqlQueryField);
+        } else {
+            for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
+                if (graphqlQueryField != null && graphqlQueryField.getFieldType().equals(this.graphqlQueryField.getFieldName())) {
+                    graphqlQueryField.setFieldName(this.graphqlQueryField.getFieldName());
+                    graphqlQueryField.setFieldType(this.graphqlQueryField.getFieldType());
+                    graphqlQueryField.setMultivalued(this.graphqlQueryField.isMultivalued());
+                    graphqlQueryField.setQuery(this.graphqlQueryField.getQuery());
+                    break;
+                }
+            }
+        }
+        entity.setGraphqlQueryFields(graphqlQueryFields);
+        isUpdate = false;
+        String message = "graphqlQueryField.save.successful";
         messages.info(new BundleKey("messages", message));
     }
 
