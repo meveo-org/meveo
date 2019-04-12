@@ -19,9 +19,7 @@ package org.meveo.admin.action.admin.custom;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -99,7 +97,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
     @Override
     public CustomEntityTemplate initEntity() {
-        entity = customEntityTemplateService.findByCode(cet);
+    	
+    	if(cet != null) {
+            entity = customEntityTemplateService.findByCode(cet);
+    	}else if(getObjectId() != null) {
+    		entity = customEntityTemplateService.findById(getObjectId());
+    	}
 
         customTableName = entity.getDbTablename();
 
@@ -189,11 +192,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     /**
      * @return Custom table fields
      */
-    public Map<String, CustomFieldTemplate> getFields() {
+    public Collection<CustomFieldTemplate> getFields() {
         if (entity == null) {
             initEntity();
         }
-        return fields;
+        return fields.values();
     }
 
     @Override
