@@ -18,6 +18,7 @@ package org.meveo.jmeter.function;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -208,7 +209,11 @@ public class FunctionManager {
     }
 
     private static String getHostUri() {
-        return currentHost.getProtocol() + "://" + currentHost.getHostName() + ":" + currentHost.getPortNumber();
+        String hostUri = currentHost.getProtocol() + "://" + currentHost.getHostName();
+        if(!StringUtils.isBlank(currentHost.getPortNumber())){
+            hostUri += ":" + currentHost.getPortNumber();
+        }
+        return hostUri;
     }
 
 
