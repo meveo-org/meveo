@@ -53,7 +53,7 @@
                 <h:panelGroup layout="block" styleClass="search-panel-actions" rendered="#{backingBean.getListFilters() ne null and backingBean.getListFilters().size() > 0}">
                     <hftl:decorateFormField label="#{messages['menu.filters']}" fieldId="filter">
                         <p:selectOneMenu id="filter" value="#{backingBean.listFilter}" converter="omnifaces.SelectItemsConverter">
-                            <f:selectItem itemLabel="" itemValue="" />
+                            <f:selectItem itemLabel="" itemValue="#{null}" />
                             <f:selectItems value="#{backingBean.getListFilters()}" var="elem" itemLabel="#{elem.descriptionOrCode}" itemValue="#{elem}" />
                             <p:ajax listener="#{backingBean.runListFilter()}" update="#{ajaxUpdateIds}"></p:ajax>
                         </p:selectOneMenu>

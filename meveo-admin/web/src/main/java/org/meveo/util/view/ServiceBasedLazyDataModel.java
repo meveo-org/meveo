@@ -21,11 +21,11 @@ package org.meveo.util.view;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.search.SearchResponse;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
@@ -34,9 +34,6 @@ import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyDataModel<T> {
 
@@ -61,7 +58,9 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
 
         // Do a regular search
         if (fullTextSearchValue == null) {
-            PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(), null, getListFieldsToFetchImpl(), sortField, sortOrder);
+
+            PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(loadingFilters), null, getListFieldsToFetchImpl(), sortField,
+                sortOrder);
 
             setRowCount(countRecords(paginationConfig));
 
@@ -82,7 +81,7 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
             if (getRowCount() > 0) {
 
                 Map<String, Object> dataFilters = new HashMap<String, Object>();
-                dataFilters.put("code", esResults.codes);
+                dataFilters.put("id", esResults.ids);
 
                 paginationConfig = new PaginationConfiguration(0, pageSize, dataFilters, null, getListFieldsToFetchImpl(), sortField, sortOrder);
                 return loadData(paginationConfig);
@@ -133,32 +132,30 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
      */
     private ElasticSearchResults retrieveDataFromES(PaginationConfiguration paginationConfig) {
 
-        String dataJson = null;
+        SearchResponse searchResult = null;
         try {
-            dataJson = getElasticClientImpl().search(paginationConfig, new String[] { getPersistenceServiceImpl().getEntityClass().getName() });
+            searchResult = getElasticClientImpl().search(paginationConfig, new String[] { getPersistenceServiceImpl().getEntityClass().getName() });
 
-            if (StringUtils.isEmpty(dataJson) || dataJson.equals("{}")) {
+            if (searchResult == null) {
                 return new ElasticSearchResults(0);
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(dataJson);
+            // Get number of hits
 
-            // Parse number of hits
-            int rowCount = node.get("hits").get("total").asInt();
-            List<String> codes = new ArrayList<>();
+            int rowCount = new Long(searchResult.getHits().getTotalHits()).intValue();
 
-            Iterator<JsonNode> hitsIterator = node.get("hits").get("hits").elements();
-            while (hitsIterator.hasNext()) {
-                JsonNode recordNode = hitsIterator.next();
-                String entityCode = recordNode.get("fields").get(ESBasedDataModel.RECORD_CODE).get(0).textValue();
-                codes.add(entityCode);
-            }
-            return new ElasticSearchResults(rowCount, codes);
+            List<String> ids = new ArrayList<>();
+
+            searchResult.getHits().forEach(hit -> {
+                ids.add((String) hit.getSourceAsMap().get(ESBasedDataModel.RECORD_ID));
+                // codes.add(hit.getFields().get(ESBasedDataModel.RECORD_CODE).getValue());
+            });
+
+            return new ElasticSearchResults(rowCount, ids);
 
         } catch (Exception e) {
             Logger log = LoggerFactory.getLogger(getClass());
-            log.error("Failed to search in ES with {} or parse data retrieved {}", paginationConfig, dataJson, e);
+            log.error("Failed to search in ES with {} or parse data retrieved {}", paginationConfig, searchResult, e);
         }
         return new ElasticSearchResults(0);
     }
@@ -237,9 +234,20 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
     }
 
     /**
-     * Get search criteria for data searching.&lt;br/&gt;
-     * Search criteria is a map with filter criteria name as a key and value as a value. &lt;br/&gt;
-     * Criteria name consist of [&lt;condition&gt; ]&lt;field name&gt; (e.g. "like firstName") where &lt;condition&gt; is a condition to apply to field value comparison and &lt;field name&gt; is an entity
+     * Get search criteria for data searching.&lt;br/&gt; Search criteria is a map with filter criteria name as a key and value as a value. &lt;br/&gt; Criteria name consist of
+     * [&lt;condition&gt; ]&lt;field name&gt; (e.g. "like firstName") where &lt;condition&gt; is a condition to apply to field value comparison and &lt;field name&gt; is an entity
+     * attribute name.
+     *
+     * @param filters the filters
+     * @return the search criteria
+     */
+    protected Map<String, Object> getSearchCriteria(Map<String, Object> filters) {
+        return getSearchCriteria();
+    }
+
+    /**
+     * Get search criteria for data searching.&lt;br/&gt; Search criteria is a map with filter criteria name as a key and value as a value. &lt;br/&gt; Criteria name consist of
+     * [&lt;condition&gt; ]&lt;field name&gt; (e.g. "like firstName") where &lt;condition&gt; is a condition to apply to field value comparison and &lt;field name&gt; is an entity
      * attribute name.
      * 
      * @return Map of search criteria
@@ -254,9 +262,9 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
     protected abstract IPersistenceService<T> getPersistenceServiceImpl();
 
     /**
-     * Get default sort
+     * Get default sort.
      * 
-     * @return
+     * @return default sort implementation
      */
     protected String getDefaultSortImpl() {
         return "";
@@ -268,23 +276,27 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
 
     /**
      * Override this method if you need to fetch any fields when selecting list of entities in data table. Return list of field names that has to be fetched.
+     * 
+     * @return List of fields to fetch
      */
     protected List<String> getListFieldsToFetchImpl() {
         return null;
     }
 
     /**
-     * A method to mock List/Set/Collection size property, so it is easy to be used in EL expressions
+     * A method to mock List/Set/Collection size property, so it is easy to be used in EL expressions.
+     * 
+     * @return Size of rows
      */
     public Integer size() {
         return rowCount;
     }
 
     /**
-     * Get a value for full text search
+     * Get a value for full text search.
      * 
      * @param loadingFilters Datatable filters
-     * @return
+     * @return fullText search value
      */
     protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
         if (loadingFilters != null) {
@@ -301,19 +313,19 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
     protected abstract ElasticClient getElasticClientImpl();
 
     /**
-     * Elastic Search search results- number of total records matched and entity identifiers(codes) of records matched in current page
+     * Elastic Search search results- number of total records matched and entity identifiers of records matched in current page
      */
     private class ElasticSearchResults {
         protected int hits;
-        protected List<String> codes;
+        protected List<String> ids;
 
         public ElasticSearchResults(int hits) {
             this.hits = hits;
         }
 
-        public ElasticSearchResults(int hits, List<String> codes) {
+        public ElasticSearchResults(int hits, List<String> ids) {
             this.hits = hits;
-            this.codes = codes;
+            this.ids = ids;
         }
     }
 }

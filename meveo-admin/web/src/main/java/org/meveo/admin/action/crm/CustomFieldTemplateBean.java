@@ -75,7 +75,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         if (customFieldTemplate != null) {
             extractMapTypeFieldFromEntity(customFieldTemplate.getListValuesSorted(), "listValues");
         }
-
+        
+        entity = customFieldTemplate;
         return customFieldTemplate;
     }
 
@@ -199,15 +200,15 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public DualListModel<CustomFieldMatrixColumn> getChildEntityFieldListModel() {
         if (childEntityFieldDM == null && CustomFieldTemplate.retrieveCetCode(entity.getEntityClazz()) != null) {
 
-            List<CustomFieldMatrixColumn> perksSource = new ArrayList<>();
-            perksSource.add(new CustomFieldMatrixColumn("code", "Code"));
-            perksSource.add(new CustomFieldMatrixColumn("description", "Description"));
+            List<CustomFieldMatrixColumn> childEntityFieldsList = new ArrayList<>();
+            childEntityFieldsList.add(new CustomFieldMatrixColumn("code", "Code"));
+            childEntityFieldsList.add(new CustomFieldMatrixColumn("description", "Description"));
 
             Map<String, CustomFieldTemplate> cfts = customFieldTemplateService
                 .findByAppliesTo(EntityCustomizationUtils.getAppliesTo(CustomEntityTemplate.class, CustomFieldTemplate.retrieveCetCode(entity.getEntityClazz())));
 
             for (CustomFieldTemplate cft : cfts.values()) {
-                perksSource.add(new CustomFieldMatrixColumn(cft.getCode(), cft.getDescription()));
+                childEntityFieldsList.add(new CustomFieldMatrixColumn(cft.getCode(), cft.getDescription()));
             }
 
             // Custom field template stores selected fields as a comma separated string of field codes.
@@ -224,8 +225,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
                     }
                 }
             }
-            perksSource.removeAll(perksTarget);
-            childEntityFieldDM = new DualListModel<CustomFieldMatrixColumn>(perksSource, perksTarget);
+            childEntityFieldsList.removeAll(perksTarget);
+            childEntityFieldDM = new DualListModel<CustomFieldMatrixColumn>(childEntityFieldsList, perksTarget);
         }
         return childEntityFieldDM;
     }

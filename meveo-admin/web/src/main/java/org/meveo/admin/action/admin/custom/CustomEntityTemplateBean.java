@@ -11,7 +11,6 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.neo4j.Graph;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -20,7 +19,6 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
-import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -103,6 +101,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public List<CustomEntityCategory> getCustomEntityCategories() {
 		return customEntityCategories;
 	}
+	
+    /**
+     * Is entity being customized is a Custom entity template and will be stored as a separate table
+     * 
+     * @return True if entity being customized is a Custom entity template and will be stored as a separate table
+     */
+    public boolean isCustomTable() {
+        return isCustomEntityTemplate() && entity != null && entity.isStoreAsTable();
+    }
 
     public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
         Map<String, List<CustomEntityTemplate>> listMap = new HashMap<>();

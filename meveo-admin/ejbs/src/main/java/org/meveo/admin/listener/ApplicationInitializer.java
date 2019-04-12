@@ -24,6 +24,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.crm.impl.ProviderService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.index.ElasticSearchIndexPopulationService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.model.SortOrder;
@@ -72,6 +73,9 @@ public class ApplicationInitializer {
 
     @Inject
     private ElasticClient elasticClient;
+    
+    @Inject
+    private ElasticSearchIndexPopulationService esPopulationService;
 
     public void init() {
 
@@ -143,7 +147,10 @@ public class ApplicationInitializer {
 
 
         if (createESIndex) {
-            elasticClient.cleanAndReindex(MeveoUser.instantiate("applicationInitializer", isMainProvider ? null : provider.getCode()));
+            // Here cache will be populated as part of reindexing
+            elasticClient.cleanAndReindex(MeveoUser.instantiate("applicationInitializer", isMainProvider ? null : provider.getCode()), true);
+        } else {
+            esPopulationService.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
         }
 
         log.info("Initialized application for provider {}", provider.getCode());

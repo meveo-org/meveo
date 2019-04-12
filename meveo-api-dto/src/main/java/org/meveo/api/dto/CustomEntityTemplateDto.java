@@ -33,6 +33,12 @@ public class CustomEntityTemplateDto extends BaseDto {
     /** Additional labels */
     @XmlAttribute()
     private List<String> labels;
+    
+    /**
+     * Store as a separate table
+     */
+    @XmlAttribute
+    private Boolean storeAsTable;
 
     @XmlElement()
 	private String superTemplate;
@@ -88,8 +94,18 @@ public class CustomEntityTemplateDto extends BaseDto {
     public CustomEntityTemplateDto() {
 
     }
+    
+    public Boolean getStoreAsTable() {
+		return storeAsTable;
+	}
 
-    public List<GraphQLQueryField> getGraphqlQueryFields() {
+	public void setStoreAsTable(Boolean storeAsTable) {
+		this.storeAsTable = storeAsTable;
+	}
+
+
+
+	public List<GraphQLQueryField> getGraphqlQueryFields() {
         return graphqlQueryFields;
     }
 

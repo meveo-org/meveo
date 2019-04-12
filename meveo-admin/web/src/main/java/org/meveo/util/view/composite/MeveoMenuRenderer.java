@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIForm;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 
@@ -200,10 +201,10 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
                     idParams.add(menuitem.getId());
                     params.put(menuClientId + "_menuid", idParams);
 
-                    command = menuitem.isAjax() ? buildAjaxRequest(context, menu, (AjaxSource) menuitem, form, params) : buildNonAjaxRequest(context, menu, form, menuClientId, params, true);
+                    command = menuitem.isAjax() ? buildAjaxRequest(context, menu, (AjaxSource) menuitem, (UIForm) form, params) : buildNonAjaxRequest(context, menu, form, menuClientId, params, true);
                 } 
                 else {
-                    command = menuitem.isAjax() ? buildAjaxRequest(context, (AjaxSource) menuitem, form) : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem).getClientId(context), true);
+                    command = menuitem.isAjax() ? buildAjaxRequest(context, (AjaxSource) menuitem, (UIForm) form) : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem).getClientId(context), true);
                 }
 
                 onclick = (onclick == null) ? command : onclick + ";" + command;

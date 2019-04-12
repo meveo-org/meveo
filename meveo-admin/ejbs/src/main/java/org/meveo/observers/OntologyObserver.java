@@ -16,16 +16,23 @@
 
 package org.meveo.observers;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.service.neo4j.service.graphql.GraphQLService;
 import org.slf4j.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.*;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -33,6 +40,7 @@ import javax.inject.Inject;
  */
 @Singleton
 @Startup
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class OntologyObserver {
 
     @Inject
@@ -41,7 +49,7 @@ public class OntologyObserver {
     @Inject
     private Logger log;
 
-    private boolean hasChange = true;
+    private AtomicBoolean hasChange = new AtomicBoolean(true);
 
     /**
      * At startup, update the IDL definitions
@@ -58,8 +66,8 @@ public class OntologyObserver {
     @Asynchronous
     public void updateIDL(){
         log.debug("Checking for ontology changes");
-        if(hasChange){
-            hasChange = false;
+        if(hasChange.get()){
+            hasChange.set(false);
             log.info("Ontology has changed, updating IDL definitions");
             graphQLService.updateIDL();
         }
@@ -69,21 +77,21 @@ public class OntologyObserver {
      * Get notified when a CET changes
      */
     public void cetChange(@Observes CustomEntityTemplate customEntityTemplate){
-        hasChange = true;
+        hasChange.set(true);
     }
 
     /**
      * Get notified when a CRT changes
      */
     public void crtChange(@Observes CustomRelationshipTemplate customEntityTemplate){
-        hasChange = true;
+        hasChange.set(true);
     }
 
     /**
      * Get notified when a CFT changes
      */
     public void cftChange(@Observes CustomFieldTemplate customEntityTemplate){
-        hasChange = true;
+        hasChange.set(true);
     }
 
 }

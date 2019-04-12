@@ -1,22 +1,60 @@
 package org.meveo.model.crm;
 
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OrderBy;
+import javax.persistence.QueryHint;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.*;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
+import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
-import org.meveo.model.crm.custom.*;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
+import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.shared.DateUtils;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author akadid abdelmounaim
@@ -27,6 +65,7 @@ import java.util.stream.Collectors;
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })
 @ObservableEntity
+@ImportOrder(3)
 @Table(name = "crm_custom_field_tmpl", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "applies_to" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })
@@ -41,7 +80,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     private static final long serialVersionUID = -1403961759495272885L;
 
-    public static long DEFAULT_MAX_LENGTH_STRING = Long.MAX_VALUE;
+    public static long DEFAULT_MAX_LENGTH_STRING = 255L;
 
     public static String ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR = " - ";
 
@@ -224,6 +263,53 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @ColumnDefault("0")
     private boolean identifier;
 
+    /**
+     * Database field name - derived from code
+     */
+    @Transient
+    private String dbFieldname;
+
+    /**
+     * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
+     *
+     * @return Database field name
+     */
+    public String getDbFieldname() {
+        if (dbFieldname == null && code != null) {
+            dbFieldname = CustomFieldTemplate.getDbFieldname(code);
+        }
+        return dbFieldname;
+    }
+
+
+    /**
+     * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
+     *
+     * @param code Field code
+     * @return Database field name
+     */
+    public static String getDbFieldname(String code) {
+        return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
+    }
+
+    /**
+     * Get GUI 'field' position value in a GUIPosition value as in e.g. "tab:Configuration:0;fieldGroup:Purge counter periods:1;field:0"
+     *
+     * @return GUI 'field' position value
+     */
+    public int getGUIFieldPosition() {
+        if (guiPosition != null) {
+            String position = getGuiPositionParsed().get(GroupedCustomFieldTreeItemType.field.positionTag + "_pos");
+            if (position != null) {
+                try {
+                    return Integer.parseInt(position);
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+        return 0;
+    }
+
     public boolean isIdentifier() {
         return identifier;
     }
@@ -247,7 +333,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     public void setFieldType(CustomFieldTypeEnum fieldType) {
         this.fieldType = fieldType;
     }
-
+    
     public String getAppliesTo() {
         return appliesTo;
     }

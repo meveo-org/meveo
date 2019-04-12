@@ -34,7 +34,7 @@ public enum CustomFieldTypeEnum {
     /**
      * A reference to an entity
      */
-    ENTITY(true, EntityReferenceWrapper.class),
+    ENTITY(false, EntityReferenceWrapper.class),
 
     /**
      * A long string value

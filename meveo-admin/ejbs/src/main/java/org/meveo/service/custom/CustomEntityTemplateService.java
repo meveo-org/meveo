@@ -19,6 +19,7 @@
 package org.meveo.service.custom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
+import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -64,10 +66,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     private ElasticClient elasticClient;
 
-    private static boolean useCETCache = true;
-
     @Inject
     private ParamBeanFactory paramBeanFactory;
+
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
+
+    private static boolean useCETCache = true;
 
     @PostConstruct
     private void init() {
@@ -80,6 +85,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         ParamBean paramBean = paramBeanFactory.getInstance();
         super.create(cet);
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
+
+        if (cet.isStoreAsTable()) {
+            customTableCreatorService.createTable(cet.getDbTablename());
+        }
 
         elasticClient.createCETMapping(cet);
 
@@ -158,6 +167,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         super.remove(id);
 
+        if (cet.isStoreAsTable()) {
+            customTableCreatorService.removeTable(cet.getDbTablename());
+        }
+
         customFieldsCache.removeCustomEntityTemplate(cet);
     }
 
@@ -172,7 +185,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (active == null || active)) {
 
-            List<CustomEntityTemplate> cets = new ArrayList<CustomEntityTemplate>();
+            List<CustomEntityTemplate> cets = new ArrayList<>();
             cets.addAll(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
@@ -199,7 +212,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
                 || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
-            List<CustomEntityTemplate> cets = new ArrayList<CustomEntityTemplate>();
+            List<CustomEntityTemplate> cets = new ArrayList<>();
             cets.addAll(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
@@ -269,5 +282,60 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
                 .setParameter("code", code)
                 .getSingleResult();
+    }
+
+    /**
+     * Get a list of custom entity templates that use custom tables as implementation
+     *
+     * @return A list of custom entity templates
+     */
+    @SuppressWarnings("unchecked")
+    public List<CustomEntityTemplate> listCustomTableTemplates() {
+
+        if (useCETCache) {
+            List<CustomEntityTemplate> cets = new ArrayList<>();
+            for (CustomEntityTemplate customEntityTemplate : customFieldsCache.getCustomEntityTemplates()) {
+                if (customEntityTemplate.isStoreAsTable()) {
+                    cets.add(customEntityTemplate);
+                }
+            }
+            return cets;
+
+        } else {
+            return super.list(new PaginationConfiguration(MapUtils.putAll(new HashMap<>(), new Object[] { "storeAsTable", true })));
+        }
+    }
+
+    /**
+     * Find a custom entity template that uses a given custom table as implementation
+     *
+     * @param codeOrDbTablename Custom entity code or a corresponding database table name
+     * @return A custom entity template
+     */
+    public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
+
+        CustomEntityTemplate cet = findByCode(codeOrDbTablename);
+        if (cet != null) {
+            return cet;
+        }
+        return findByDbTablename(codeOrDbTablename);
+    }
+
+    /**
+     * Find a custom entity template that uses a given custom table as implementation
+     *
+     * @param dbTablename Database table name
+     * @return A custom entity template
+     */
+    public CustomEntityTemplate findByDbTablename(String dbTablename) {
+
+        List<CustomEntityTemplate> cets = listCustomTableTemplates();
+
+        for (CustomEntityTemplate cet : cets) {
+            if (cet.getDbTablename().equalsIgnoreCase(dbTablename)) {
+                return cet;
+            }
+        }
+        return null;
     }
 }

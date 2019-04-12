@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -38,6 +38,7 @@ import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -48,9 +49,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * File utilities class.
- * 
+ *
  * @author Donatas Remeika
- * 
+ * @author Edward P. Legaspi
+ *
+ * @lastModifiedVersion 5.1
  */
 public final class FileUtils {
 
@@ -62,10 +65,28 @@ public final class FileUtils {
     private FileUtils() {
 
     }
+    
+    public static List<File> getFilesToProcess(File dir, String prefix, String ext) {
+        List<File> files = new ArrayList<File>();
+        ImportFileFiltre filtre = new ImportFileFiltre(prefix, ext);
+        File[] listFile = dir.listFiles(filtre);
+
+        if (listFile == null) {
+            return files;
+        }
+
+        for (File file : listFile) {
+            if (file.isFile()) {
+                files.add(file);
+            }
+        }
+
+        return files;
+    }
 
     /**
      * Add extension to existing file by renamig it.
-     * 
+     *
      * @param file File to be renamed.
      * @param extension Extension.
      * @return Renamed File object.
@@ -83,7 +104,7 @@ public final class FileUtils {
 
     /**
      * Replaces file extension with new one.
-     * 
+     *
      * @param file Old file.
      * @param extension New extension.
      * @return New File.
@@ -102,7 +123,7 @@ public final class FileUtils {
     }
 
     /**
-     * 
+     *
      * @param file instance of File needs to rename
      * @param newName new file's name
      * @return file
@@ -119,7 +140,7 @@ public final class FileUtils {
 
     /**
      * Move file to destination directory.
-     * 
+     *
      * @param destination Absolute path to destination directory.
      * @param file File object to move.
      * @param newFilename New filename for moved file.
@@ -141,7 +162,7 @@ public final class FileUtils {
 
     /**
      * Copy file. If destination file name is directory, then create copy of file with same name in that directory. I destination is file, then copy data to file with this name.
-     * 
+     *
      * @param fromFileName File name that we are copying.
      * @param toFileName File(dir) name where to copy.
      * @throws IOException IO exeption.
@@ -216,7 +237,7 @@ public final class FileUtils {
 
     /**
      * Replaces filename extension with new one.
-     * 
+     *
      * @param filename Old filename.
      * @param extension New extension.
      * @return New Filename.
@@ -237,7 +258,7 @@ public final class FileUtils {
 
     /**
      * Get file format by file name extension.
-     * 
+     *
      * @param filename File name.
      * @return FileFormat enum.
      */
@@ -253,33 +274,15 @@ public final class FileUtils {
     }
 
     /**
-     * Get File representation ready for parsing.
-     * 
+     * Get the first file from a given directory matching extensions
+     *
      * @param sourceDirectory Directory to search inside.
-     * @param extensions list of extensions
-     * @return File object.
+     * @param extensions list of extensions to match
+     * @return First found file
      */
-    public static File getFileForParsing(String sourceDirectory, final List<String> extensions) {
-        File sourceDir = new File(sourceDirectory);
-        if (!sourceDir.exists() || !sourceDir.isDirectory()) {
-            logger.info(String.format("Wrong source directory: %s", sourceDir.getAbsolutePath()));
-            return null;
-        }
-        File[] files = sourceDir.listFiles(new FilenameFilter() {
+    public static File getFirstFile(String sourceDirectory, final List<String> extensions) {
 
-            public boolean accept(File dir, String name) {
-                if (extensions == null) {
-                    return true;
-                }
-                for (String extension : extensions) {
-                    if (name.endsWith(extension)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-        });
+        File[] files = listFiles(sourceDirectory, extensions);
 
         if (files == null || files.length == 0) {
             return null;
@@ -295,31 +298,31 @@ public final class FileUtils {
     }
 
     /**
-     * @param sourceDirectory source directory
-     * @param extensions list of extensions
-     * @return array of File instance
+     * List files matching extensions in a given directory
+     *
+     * @param sourceDirectory Directory to inspect
+     * @param extensions List of extensions to filter by
+     * @return Array of matched files
      */
-    public static File[] getFilesForParsing(String sourceDirectory, final List<String> extensions) {
+    public static File[] listFiles(String sourceDirectory, final List<String> extensions) {
+        return listFiles(sourceDirectory, extensions, "*");
+    }
+
+    /**
+     * List files matching extensions and prefix in a given directory
+     *
+     * @param sourceDirectory Directory to inspect
+     * @param extensions List of extensions to filter by
+     * @param prefix Filename prefix to filter by
+     * @return Array of matched files
+     */
+    public static File[] listFiles(String sourceDirectory, final List<String> extensions, final String prefix) {
         File sourceDir = new File(sourceDirectory);
         if (!sourceDir.exists() || !sourceDir.isDirectory()) {
-            logger.info(String.format("Wrong source directory: %s", sourceDir.getAbsolutePath()));
+            logger.error(String.format("Wrong source directory: %s", sourceDir.getAbsolutePath()));
             return null;
         }
-        File[] files = sourceDir.listFiles(new FilenameFilter() {
-
-            public boolean accept(File dir, String name) {
-                if (extensions == null) {
-                    return true;
-                }
-                for (String extension : extensions) {
-                    if (name.endsWith(extension)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-        });
+        File[] files = sourceDir.listFiles(new ImportFileFiltre(prefix, extensions));
 
         if (files == null || files.length == 0) {
             return null;
@@ -328,9 +331,17 @@ public final class FileUtils {
         return files;
     }
 
-    public static List<File> getFilesToProcess(File dir, String prefix, String ext) {
+    /**
+     * List files matching extension and prefix in a given directory
+     *
+     * @param dir Directory to inspect
+     * @param extension File extension to match
+     * @param prefix File prefix to match
+     * @return Array of matched files
+     */
+    public static List<File> listFiles(File dir, String extension, String prefix) {
         List<File> files = new ArrayList<File>();
-        ImportFileFiltre filtre = new ImportFileFiltre(prefix, ext);
+        ImportFileFiltre filtre = new ImportFileFiltre(prefix, extension);
         File[] listFile = dir.listFiles(filtre);
 
         if (listFile == null) {
@@ -348,7 +359,7 @@ public final class FileUtils {
 
     /**
      * Creates directory by name if it does not exist.
-     * 
+     *
      * @param dirName Directory name. Must be full path.
      */
     public static void createDirectory(String dirName) {
@@ -363,33 +374,30 @@ public final class FileUtils {
      * @param filesToAdd list of files to add
      */
     public static void createZipArchive(String zipFilename, String... filesToAdd) {
-        int BUFFER = 2048;
-        try {
-            BufferedInputStream origin = null;
-            FileOutputStream dest = new FileOutputStream(zipFilename);
-            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
-            byte data[] = new byte[BUFFER];
+        final int BUFFER = 2048;
+        try (FileOutputStream dest = new FileOutputStream(zipFilename); ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest))) {
+            byte[] data = new byte[BUFFER];
             for (int i = 0; i < filesToAdd.length; i++) {
-                FileInputStream fi = new FileInputStream(filesToAdd[i]);
-                origin = new BufferedInputStream(fi, BUFFER);
-                ZipEntry entry = new ZipEntry(new File(filesToAdd[i]).getName());
-                out.putNextEntry(entry);
-                int count;
-                while ((count = origin.read(data, 0, BUFFER)) != -1) {
-                    out.write(data, 0, count);
+                try (FileInputStream fi = new FileInputStream(filesToAdd[i]); BufferedInputStream origin = new BufferedInputStream(fi, BUFFER)) {
+                    ZipEntry entry = new ZipEntry(new File(filesToAdd[i]).getName());
+                    out.putNextEntry(entry);
+                    int count;
+                    while ((count = origin.read(data, 0, BUFFER)) != -1) {
+                        out.write(data, 0, count);
+                    }
+                    FileUtils.closeStream(origin);
+                } catch (Exception ex) {
+                    logger.error("Error while working with zip archive", ex);
                 }
-                FileUtils.closeStream(origin);
             }
             FileUtils.closeStream(out);
         } catch (Exception e) {
             logger.error("Error while creating zip archive", e);
-        } finally {
-
         }
     }
 
     /**
-     * @param c closable 
+     * @param c closable
      * @return true/false
      */
     public static boolean closeStream(Closeable c) {
@@ -432,7 +440,7 @@ public final class FileUtils {
 
     /**
      * unzip files into folder.
-     *  
+     *
      * @param folder folder name
      * @param in input stream
      * @throws Exception exception
@@ -440,8 +448,6 @@ public final class FileUtils {
     public static void unzipFile(String folder, InputStream in) throws Exception {
         ZipInputStream zis = null;
         BufferedInputStream bis = null;
-        OutputStream fos = null;
-        BufferedOutputStream bos = null;
         CheckedInputStream cis = null;
         try {
             cis = new CheckedInputStream(in, new CRC32());
@@ -460,20 +466,20 @@ public final class FileUtils {
                 if (!fileout.exists()) {
                     (new File(fileout.getParent())).mkdirs();
                 }
-                fos = new FileOutputStream(fileout);
-                bos = new BufferedOutputStream(fos);
-                int b = -1;
-                while ((b = bis.read()) != -1) {
-                    bos.write(b);
+                try (OutputStream fos = new FileOutputStream(fileout); BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                    int b = -1;
+                    while ((b = bis.read()) != -1) {
+                        bos.write(b);
+                    }
+                    bos.flush();
+                    fos.flush();
+                } catch (Exception ex) {
+                    throw ex;
                 }
-                bos.flush();
-                fos.flush();
             }
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         } finally {
-            IOUtils.closeQuietly(bos);
-            IOUtils.closeQuietly(fos);
             IOUtils.closeQuietly(bis);
             IOUtils.closeQuietly(zis);
             IOUtils.closeQuietly(cis);
@@ -482,10 +488,10 @@ public final class FileUtils {
 
     /**
      * Compress a folder with sub folders and its files into byte array.
-     * 
+     *
      * @param sourceFolder source folder
      * @return zip file as byte array
-     * @throws Exception exception. 
+     * @throws Exception exception.
      */
     public static byte[] createZipFile(String sourceFolder) throws Exception {
 
@@ -514,7 +520,7 @@ public final class FileUtils {
         }
     }
 
-    private static void addToZipFile(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addToZipFile(File source, ZipOutputStream zos, String basedir) throws Exception {
 
         if (!source.exists()) {
             return;
@@ -527,7 +533,7 @@ public final class FileUtils {
         }
     }
 
-    private static void addFileToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addFileToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
         if (!source.exists()) {
             return;
         }
@@ -552,7 +558,17 @@ public final class FileUtils {
         }
     }
 
-    private static void addDirectoryToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addZipEntry(ZipOutputStream zipOut, FileInputStream fis, ZipEntry zipEntry) throws IOException {
+        zipOut.putNextEntry(zipEntry);
+        final byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+        zipOut.closeEntry();
+    }
+
+    public static void addDirectoryToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
         if (!source.exists()) {
             return;
         }
@@ -569,6 +585,12 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * @param relativeRoot relative root path
+     * @param dir2zip directory to be zipped
+     * @param zos zip output stream
+     * @throws IOException inpu/ouput exception.
+     */
     public static void addDirToArchive(String relativeRoot, String dir2zip, ZipOutputStream zos) throws IOException {
         File zipDir = new File(dir2zip);
         String[] dirList = zipDir.list();
@@ -582,38 +604,127 @@ public final class FileUtils {
                 addDirToArchive(relativeRoot, filePath, zos);
                 continue;
             }
+            try (FileInputStream fis = new FileInputStream(f)) {
+                String relativePath = Paths.get(relativeRoot).relativize(f.toPath()).toString();
+                ZipEntry anEntry = new ZipEntry(relativePath);
+                zos.putNextEntry(anEntry);
 
-            FileInputStream fis = new FileInputStream(f);
-            String relativePath = Paths.get(relativeRoot).relativize(f.toPath()).toString();
-            ZipEntry anEntry = new ZipEntry(relativePath);
-            zos.putNextEntry(anEntry);
-
-            while ((bytesIn = fis.read(readBuffer)) != -1) {
-                zos.write(readBuffer, 0, bytesIn);
+                while ((bytesIn = fis.read(readBuffer)) != -1) {
+                    zos.write(readBuffer, 0, bytesIn);
+                }
+            } catch (IOException ex) {
+                throw ex;
             }
-
-            fis.close();
         }
     }
 
+    /**
+     * @param file file to be archived
+     * @throws IOException input/ouput exception
+     */
     public static void archiveFile(File file) throws IOException {
         byte[] buffer = new byte[1024];
+        try (FileOutputStream fos = new FileOutputStream(file.getParent() + File.separator + FilenameUtils.removeExtension(file.getName()) + ".zip");
+             ZipOutputStream zos = new ZipOutputStream(fos);
+             FileInputStream in = new FileInputStream(file)) {
+            ZipEntry ze = new ZipEntry(file.getName());
+            zos.putNextEntry(ze);
+            int len;
+            while ((len = in.read(buffer)) > 0) {
+                zos.write(buffer, 0, len);
+            }
+        } catch (IOException ex) {
+            throw ex;
+        }
+    }
 
-        FileOutputStream fos = new FileOutputStream(file.getParent() + File.separator + FilenameUtils.removeExtension(file.getName()) + ".zip");
-        ZipOutputStream zos = new ZipOutputStream(fos);
-        ZipEntry ze = new ZipEntry(file.getName());
-        zos.putNextEntry(ze);
-        FileInputStream in = new FileInputStream(file);
+    /**
+     * Change the extension of a file to the given a new file extension.
+     *
+     * @param filename Name of the file
+     * @param newExtension New extension
+     * @return Filename with renamed extension
+     */
+    public static String changeExtension(String filename, String newExtension) {
+        String name = filename.substring(0, filename.lastIndexOf('.'));
+        return name + newExtension;
+    }
 
-        int len;
-        while ((len = in.read(buffer)) > 0) {
-            zos.write(buffer, 0, len);
+    /**
+     * Encode a file to byte64 string.
+     *
+     * @param file File
+     * @return byte string representation of the file
+     * @throws IOException IO exeption.
+     */
+    public static String encodeFileToBase64Binary(File file) throws IOException {
+        String encodedFile = null;
+        try (FileInputStream fileInputStreamReader = new FileInputStream(file)) {
+            byte[] bytes = new byte[(int) file.length()];
+            fileInputStreamReader.read(bytes);
+            encodedFile = org.apache.commons.codec.binary.Base64.encodeBase64String(bytes);
         }
 
-        in.close();
-        zos.closeEntry();
+        return encodedFile;
+    }
 
-        // remember close it
-        zos.close();
+    /**
+     * Gets a list of files
+     *
+     * @param sourceDirectory the source directory
+     * @param extensions the extensions
+     * @param fileNameFilter the file name key
+     * @return the files for parsing
+     */
+    public static File[] listFilesByNameFilter(String sourceDirectory, ArrayList<String> extensions, String fileNameFilter) {
+
+        File sourceDir = new File(sourceDirectory);
+        if (!sourceDir.exists() || !sourceDir.isDirectory()) {
+            logger.info(String.format("Wrong source directory: %s", sourceDir.getAbsolutePath()));
+            return null;
+        }
+
+        String fileNameFilterUpper = fileNameFilter != null ? fileNameFilter.toUpperCase() : null;
+
+        File[] files = sourceDir.listFiles((dir, name) -> {
+
+            String nameUpper = name.toUpperCase();
+            if (extensions == null && fileNameFilterUpper == null) {
+                return true;
+            }
+
+            if (extensions == null && nameUpper.contains(fileNameFilterUpper)) {
+                return true;
+            }
+
+            for (String extension : extensions) {
+                if ((name.endsWith(extension) || "*".equals(extension)) && (fileNameFilterUpper == null || nameUpper.contains(fileNameFilterUpper))) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        if (files == null || files.length == 0) {
+            return null;
+        }
+
+        return files;
+
+    }
+
+    /**
+     * Checks if the file param is valid zip
+     *
+     * @param file
+     * @return isValidZip
+     */
+    public static boolean isValidZip(final File file) {
+        try (ZipFile zipfile = new ZipFile(file);) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

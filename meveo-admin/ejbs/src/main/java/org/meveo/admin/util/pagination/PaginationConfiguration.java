@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -26,14 +26,14 @@ import org.primefaces.model.SortOrder;
 
 /**
  * @author Andrius
- *
+ * @author Edward P. Legaspi(edward.legaspi@manaty.net)
  */
 public class PaginationConfiguration implements Serializable {
 
     private static final long serialVersionUID = -2750287256630146681L;
 
     private Integer firstRow;
-    
+
     private Integer numberOfRows;
 
     /**
@@ -43,7 +43,7 @@ public class PaginationConfiguration implements Serializable {
 
     /** Search filters (key = field name, value = search pattern or value). */
     private Map<String, Object> filters;
-    
+
     private Map<String, String> sortOrdering;
 
     /**
@@ -52,12 +52,11 @@ public class PaginationConfiguration implements Serializable {
     private List<String> fetchFields;
 
     private String sortField;
-    
-    
+
     private SortOrder ordering;
 
     /**
-     * 
+     *
      * @param sortField Field to sort by
      * @param sortOrder Sort order
      */
@@ -75,11 +74,13 @@ public class PaginationConfiguration implements Serializable {
      * @param sortOrder Sort order
      */
     public PaginationConfiguration(Integer firstRow, Integer numberOfRows, Map<String, Object> filters, String fullTextFilter, List<String> fetchFields, String sortField,
-            SortOrder sortOrder) {
+                                   SortOrder sortOrder) {
         this(firstRow, numberOfRows, filters, fullTextFilter, fetchFields, sortField, sortOrder, null);
     }
 
     /**
+     * Constructor
+     *
      * @param firstRow Number of the first row to retrieve
      * @param numberOfRows Number of rows to retrieve
      * @param filters Search criteria
@@ -90,7 +91,7 @@ public class PaginationConfiguration implements Serializable {
      * @param sortOrdering sort ordering.
      */
     public PaginationConfiguration(Integer firstRow, Integer numberOfRows, Map<String, Object> filters, String fullTextFilter, List<String> fetchFields, String sortField,
-            SortOrder sortOrder, Map<String, String> sortOrdering) {
+                                   SortOrder sortOrder, Map<String, String> sortOrdering) {
         this.firstRow = firstRow;
         this.numberOfRows = numberOfRows;
         this.filters = filters;
@@ -102,10 +103,25 @@ public class PaginationConfiguration implements Serializable {
     }
 
     /**
+     * Constructor
+     *
      * @param filters Search criteria
      */
     public PaginationConfiguration(Map<String, Object> filters) {
         this.filters = filters;
+    }
+
+    /**
+     * Constructor
+     *
+     * @param filters Search criteria
+     * @param sortField Field to sort by
+     * @param sortOrder Sort order
+     */
+    public PaginationConfiguration(Map<String, Object> filters, String sortField, SortOrder sortOrder) {
+        this.filters = filters;
+        this.sortField = sortField;
+        this.ordering = sortOrder;
     }
 
     public Integer getFirstRow() {
@@ -155,6 +171,10 @@ public class PaginationConfiguration implements Serializable {
     @Override
     public String toString() {
         return String.format("PaginationConfiguration [firstRow=%s, numberOfRows=%s, fullTextFilter=%s, filters=%s, sortOrdering=%s, fetchFields=%s, sortField=%s, ordering=%s]",
-            firstRow, numberOfRows, fullTextFilter, filters, sortOrdering, fetchFields, sortField, ordering);
+                firstRow, numberOfRows, fullTextFilter, filters, sortOrdering, fetchFields, sortField, ordering);
+    }
+
+    public void setFilters(Map<String, Object> filters) {
+        this.filters = filters;
     }
 }

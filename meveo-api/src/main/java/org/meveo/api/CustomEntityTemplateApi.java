@@ -11,6 +11,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.*;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -20,6 +21,9 @@ import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -75,10 +79,41 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         handleMissingParameters();
+        
+        if (dto.getStoreAsTable() == null) {
+            dto.setStoreAsTable(Boolean.FALSE);
+        }
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
+        
+     // Validate field types for custom table
+        if (dto.getStoreAsTable() && dto.getFields() != null) {
+            int pos = 0;
+            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+
+                // Default to 'Index but not analyze storage', 'single' storage type and sequential field position for custom tables
+                if (cftDto.getIndexType() == null) {
+                    cftDto.setIndexType(CustomFieldIndexTypeEnum.INDEX_NOT_ANALYZE);
+                }
+                if (cftDto.getStorageType() == null) {
+                    cftDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                }
+                if (cftDto.getGuiPosition() == null) {
+                    cftDto.setGuiPosition("tab:" + dto.getName() + ":0;field:" + pos);
+                    pos++;
+                }
+
+                if (cftDto.getStorageType() != CustomFieldStorageTypeEnum.SINGLE || (cftDto.getFieldType() != CustomFieldTypeEnum.DATE
+                        && cftDto.getFieldType() != CustomFieldTypeEnum.DOUBLE && cftDto.getFieldType() != CustomFieldTypeEnum.LIST
+                        && cftDto.getFieldType() != CustomFieldTypeEnum.LONG && cftDto.getFieldType() != CustomFieldTypeEnum.STRING)
+                        || (cftDto.isVersionable() != null && cftDto.isVersionable())) {
+                    throw new InvalidParameterException("Custom table supports only unversioned and simple Date, Double, Long, String and Select from list type fields");
+                }
+            }
+        }
+
 
         CustomEntityTemplate cet = fromDTO(dto, null);
 
@@ -124,6 +159,33 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(dto.getCode());
         if (cet == null) {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
+        }
+        
+     // Validate field types for custom table
+        if (cet.isStoreAsTable() && dto.getFields() != null) {
+            int pos = 0;
+            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+
+                // Default to 'Index but not analyze storage' and 'single' storeage type for custom tables
+                if (cftDto.getIndexType() == null) {
+                    cftDto.setIndexType(CustomFieldIndexTypeEnum.INDEX_NOT_ANALYZE);
+                }
+                //
+                if (cftDto.getStorageType() == null) {
+                    cftDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                }
+                if (cftDto.getGuiPosition() == null) {
+                    cftDto.setGuiPosition("tab:" + dto.getName() + ":0;field:" + pos);
+                    pos++;
+                }
+
+                if (cftDto.getStorageType() != CustomFieldStorageTypeEnum.SINGLE || (cftDto.getFieldType() != CustomFieldTypeEnum.DATE
+                        && cftDto.getFieldType() != CustomFieldTypeEnum.DOUBLE && cftDto.getFieldType() != CustomFieldTypeEnum.LIST
+                        && cftDto.getFieldType() != CustomFieldTypeEnum.LONG && cftDto.getFieldType() != CustomFieldTypeEnum.STRING)
+                        || (cftDto.isVersionable() != null && cftDto.isVersionable())) {
+                    throw new InvalidParameterException("Custom table supports only unversioned and simple Date, Double, Long, String and Select from list type fields");
+                }
+            }
         }
 
 
@@ -445,6 +507,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
         cet.setGraphqlQueryFields(dto.getGraphqlQueryFields());
+        if (cet.isStoreAsTable()) {
+            cet.setStoreAsTable(true);
+        }
 
         if(dto.getUniqueConstraints() != null){
             final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
@@ -534,6 +599,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setPrimitiveType(cet.getPrimitiveType());
         dto.setLabels(cet.getLabels());
         dto.setGraphqlQueryFields(cet.getGraphqlQueryFields());
+        dto.setStoreAsTable(cet.isStoreAsTable());
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());

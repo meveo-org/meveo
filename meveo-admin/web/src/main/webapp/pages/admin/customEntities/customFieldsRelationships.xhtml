@@ -312,7 +312,7 @@
                 rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.CHILD_ENTITY and customFieldTemplateBean.entity.entityClazzCetCode!=null}">
         <hftl:decorateFormField fieldId="cheFields" required="true" label="#{messages['customFieldTemplate.childEntity.fields']}">
             <p:pickList id="cheFields" value="#{customFieldTemplateBean.childEntityFieldListModel}" required="true" var="item" itemLabel="#{item.label}" itemValue="#{item}">
-                <hftl:objectConverter />
+				<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.childEntityFieldListModel.source}" />
             </p:pickList>
         </hftl:decorateFormField>
     </p:fieldset>

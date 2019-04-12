@@ -58,7 +58,7 @@
 
 					<p:selectOneMenu value="#{cc.attrs.model.dimension1}"
 						id="dimension1_list">
-						<f:selectItem itemLabel="" itemValue="" />
+						<f:selectItem itemLabel="" itemValue="#{null}" />
 						<f:selectItems value="#{cc.attrs.model.dimension1List}"
 							var="element" itemValue="#{element}" itemLabel="#{element}" />
 						<p:ajax event="valueChange" update="@form"
@@ -75,7 +75,7 @@
 
 					<p:selectOneMenu value="#{cc.attrs.model.dimension2}"
 						id="dimension2_list">
-						<f:selectItem itemLabel="" itemValue="" />
+						<f:selectItem itemLabel="" itemValue="#{null}" />
 						<f:selectItems value="#{cc.attrs.model.dimension2List}"
 							var="element" itemValue="#{element}" itemLabel="#{element}" />
 						<p:ajax event="valueChange" update="@form"
@@ -90,7 +90,7 @@
 						value="#{cc.attrs.model.chart.measurableQuantity.dimension3}"></p:outputLabel>
 					<p:selectOneMenu value="#{cc.attrs.model.dimension3}"
 						id="dimension3_list">
-						<f:selectItem itemLabel="" itemValue="" />
+						<f:selectItem itemLabel="" itemValue="#{null}" />
 						<f:selectItems value="#{cc.attrs.model.dimension3List}"
 							var="element" itemValue="#{element}" itemLabel="#{element}" />
 						<p:ajax event="valueChange" update="@form"
@@ -105,7 +105,7 @@
 						value="#{cc.attrs.model.chart.measurableQuantity.dimension4}"></p:outputLabel>
 					<p:selectOneMenu value="#{cc.attrs.model.dimension4}"
 						id="dimension4_list">
-						<f:selectItem itemLabel="" itemValue="" />
+						<f:selectItem itemLabel="" itemValue="#{null}" />
 						<f:selectItems value="#{cc.attrs.model.dimension4List}"
 							var="element" itemValue="#{element}" itemLabel="#{element}" />
 						<p:ajax event="valueChange" update="@form"

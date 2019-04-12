@@ -42,7 +42,7 @@
                 <p:outputPanel styleClass="search-panel-fields">
                     <hftl:decorateFormField fieldId="searchEntityClass" label="#{messages['BusinessEntity.type']}">
                         <p:selectOneMenu id="searchEntityClass" value="#{genericEntityPickerBean.selectedEntityClass}" required="true">
-                            <f:selectItem itemLabel="" itemValue="" />
+                            <f:selectItem itemLabel="" itemValue="#{null}" />
                             <f:selectItems value="#{genericEntityPickerBean.getEntityClasses(annotation)}" var="elem" itemLabel="#{ref:getHumanClassName(elem.simpleName)}" itemValue="#{elem}" />
                             <hftl:objectConverter />
                             <p:ajax update="searchFields #{id}datatable" event="change" />
@@ -88,8 +88,7 @@
                     <h:outputText value="#{e.description}" />
                 </p:column>
                 <p:column headerText="#{messages['meveoModuleItem.appliesTo']}" rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'appliesTo')}">
-                    <c:set var="converter2" value="#{getConverter.forType(e['appliesTo'], 'customFieldAppliesTo')}"></c:set>
-                    <h:outputText value="#{e['appliesTo']}" converter="#{converter2}" />
+                    <h:outputText value="#{e['appliesTo']}" converterId="customFieldAppliesTo" />
                 </p:column>
                 <p:column headerText="#{messages['commons.validFrom']}" rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'validity')}" width="15%">
                     <h:outputText value="#{e.validity.from}">

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.enterprise.inject.spi.CDI;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
@@ -75,6 +76,10 @@ public class CustomFieldAppliesToConverter implements Converter, Serializable {
     private void loadAppliesToDefinitions() {
 
         appliesToMap = new HashMap<String, String>();
+        
+        if(customizedEntityService == null) {
+        	customizedEntityService = CDI.current().select(CustomizedEntityService.class).get();
+        }
 
         List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(null, false, true, true, null, null);
 

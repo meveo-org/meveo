@@ -38,7 +38,7 @@
                 <hftl:formField label="#{messages['endpoint.description']}" field="description" />
                 <hftl:decorateFormField field = "method" fieldId="method" componentWidth="100" label="#{messages['endpoint.method']}">
                     <p:selectOneMenu id="method" value="#{endpointBean.entity.method}" style="width:150px;">
-                        <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="" noSelectionOption="true" />
+                        <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
                         <f:selectItem itemLabel="#{messages['endpoint.GET']}" itemValue="GET" />
                         <f:selectItem itemLabel="#{messages['endpoint.POST']}" itemValue="POST" />
                     </p:selectOneMenu>
@@ -66,7 +66,7 @@
                     <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
                         <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item.endpointParameter.parameter}" itemValue="#{item}">
                             <p:ajax event="transfer" update=":endpointForm:parametersMapping :endpointForm:endpointUrl" />
-                            <hftl:objectConverter />
+							    <o:converter converterId="omnifaces.ListConverter" list="#{endpointBean.dualListModel.source}" />
                         </p:pickList>
                     </hftl:decorateFormField>
                 </h:panelGroup>

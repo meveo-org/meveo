@@ -16,7 +16,7 @@ import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.job.JobInstanceService;
 import org.primefaces.model.TreeNode;
 
-import javax.faces.bean.ViewScoped;
+import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;

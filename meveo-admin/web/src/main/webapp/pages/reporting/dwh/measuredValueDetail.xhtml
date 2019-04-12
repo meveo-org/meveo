@@ -29,7 +29,7 @@
 							<p:selectOneMenu id="measurableQuantityCode" required="true"
 								value="#{measurementBean.measurableQuantityCode}"
 								converter="omnifaces.SelectItemsConverter" style="width: 150px">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems
 									value="#{measurementBean.getMeasurableQuantityCodes()}"
 									var="obj" itemValue="#{obj}" itemLabel="#{obj}"></f:selectItems>
@@ -41,7 +41,7 @@
 							<p:selectOneMenu id="measurablePeriod" required="true"
 								value="#{measurementBean.measuredPeriod}"
 								converter="omnifaces.SelectItemsConverter" style="width: 150px">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems value="#{measurementBean.getMeasurePeriods()}"
 									var="obj" itemValue="#{obj}"
 									itemLabel="#{messages['enum.measurementperiod.'.concat(obj)]}"></f:selectItems>
@@ -64,7 +64,7 @@
 								value="#{measurementBean.dimension1Filter}"
 								converter="omnifaces.SelectItemsConverter"
 								rendered="#{measurementBean.measurableQuantity == null}">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems value="#{measurementBean.getDimensionList(1)}"
 									var="obj" itemValue="#{obj}"></f:selectItems>
 								<p:ajax event="valueChange" update=":measurementForm"></p:ajax>
@@ -78,7 +78,7 @@
 								value="#{measurementBean.dimension2Filter}"
 								converter="omnifaces.SelectItemsConverter"
 								rendered="#{measurementBean.measurableQuantity == null}">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems value="#{measurementBean.getDimensionList(2)}"
 									var="obj" itemValue="#{obj}"></f:selectItems>
 								<p:ajax event="valueChange" update=":measurementForm"></p:ajax>
@@ -92,7 +92,7 @@
 								value="#{measurementBean.dimension3Filter}"
 								converter="omnifaces.SelectItemsConverter"
 								rendered="#{measurementBean.measurableQuantity == null}">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems value="#{measurementBean.getDimensionList(3)}"
 									var="obj" itemValue="#{obj}"></f:selectItems>
 								<p:ajax event="valueChange" update=":measurementForm"></p:ajax>
@@ -106,7 +106,7 @@
 								value="#{measurementBean.dimension4Filter}"
 								converter="omnifaces.SelectItemsConverter"
 								rendered="#{measurementBean.measurableQuantity == null}">
-								<f:selectItem itemLabel="" itemValue="" />
+								<f:selectItem itemLabel="" itemValue="#{null}" />
 								<f:selectItems value="#{measurementBean.getDimensionList(4)}"
 									var="obj" itemValue="#{obj}"></f:selectItems>
 								<p:ajax event="valueChange" update=":measurementForm"></p:ajax>

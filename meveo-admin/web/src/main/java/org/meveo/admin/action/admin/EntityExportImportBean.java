@@ -113,11 +113,11 @@ public class EntityExportImportBean implements Serializable {
         this.dataModelToExport = dataModelToExport;
 
         // Determine applicable template by matching a class name
-        if (dataModelToExport.getRowCount() > 0 && selectedExportTemplate == null) {
-            selectedExportTemplate = getExportImportTemplateForClass(dataModelToExport.iterator().next().getClass());
-            // } else { Now that dataModelToExport or selectedEntitiesToExport can be set, dont reset selectedExportTemplate value
-            // selectedExportTemplate = null;
+        if (dataModelToExport.getRowIndex() > -1 && selectedExportTemplate == null) {
+        	IEntity value = dataModelToExport.getRowData();
+            selectedExportTemplate = getExportImportTemplateForClass(value.getClass());
         }
+        
     }
 
     @SuppressWarnings("rawtypes")
@@ -321,7 +321,7 @@ public class EntityExportImportBean implements Serializable {
                     "." + FilenameUtils.getExtension(event.getFile().getFileName()));
                 FileUtils.copyInputStreamToFile(event.getFile().getInputstream(), tempFile);
 
-                exportImportFuture = entityExportImportService.importEntities(tempFile, event.getFile().getFileName().replaceAll(" ", "_"), false, !requireFK, null);
+                exportImportFuture = entityExportImportService.importEntities(tempFile, event.getFile().getFileName().replaceAll(" ", "_"), false, !requireFK);
                 messages.info(new BundleKey("messages", "export.import.inProgress"), event.getFile().getFileName());
 
             } catch (Exception e) {

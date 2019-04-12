@@ -195,4 +195,32 @@ public class EntityManagerProvider {
     private String convertToSchemaName(String providerCode) {
         return providerCode.replace(' ', '_').toLowerCase();
     }
+
+    /**
+     * Get entity manager for use in Bean managed transactions. Entity manager produced from a entity manager factory will NOT join a transaction. Will consider a tenant that
+     * currently connected user belongs to.
+     *
+     * @return Get entity manager for a given provider. Entity manager produced from a entity manager factory will join a transaction
+     */
+    public EntityManager getEntityManagerWoutJoinedTransactions() {
+        String providerCode = currentUserProvider.getCurrentUserProviderCode();
+
+        log.trace("Produce EM for provider {}", providerCode);
+
+        if (providerCode == null || !isMultiTenancyEnabled) {
+
+            // Create an container managed persistence context main provider, for API and JOBs
+            if (FacesContext.getCurrentInstance() == null) {
+                return emfForJobs;
+
+                // Create an application managed persistence context main provider, for GUI
+            } else {
+                return emf.createEntityManager();
+            }
+        }
+
+        // Create an application managed persistence context for provider
+        return createEntityManager(providerCode);
+
+    }
 }
