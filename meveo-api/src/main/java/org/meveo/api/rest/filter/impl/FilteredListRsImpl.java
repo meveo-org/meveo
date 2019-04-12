@@ -45,6 +45,7 @@ public class FilteredListRsImpl extends BaseRs implements FilteredListRs {
     @Inject
     private FullTextSearchApi fullTextSearchApi;
 
+    @Override
     public Response listByFilter(FilterDto filter, Integer firstRow, Integer numberOfRows) {
         Response.ResponseBuilder responseBuilder = null;
         FilteredListResponseDto result = new FilteredListResponseDto();
@@ -68,6 +69,7 @@ public class FilteredListRsImpl extends BaseRs implements FilteredListRs {
         return responseBuilder.build();
     }
 
+    @Override
     public Response search(String[] classnamesOrCetCodes, String query, Integer from, Integer size, String sortField, SortOrder sortOrder) {
         Response.ResponseBuilder responseBuilder = null;
 
@@ -92,6 +94,7 @@ public class FilteredListRsImpl extends BaseRs implements FilteredListRs {
         return response;
     }
 
+    @Override
     public Response searchByField(String[] classnamesOrCetCodes, Integer from, Integer size, String sortField, SortOrder sortOrder, UriInfo info) {
         Response.ResponseBuilder responseBuilder = null;
 
