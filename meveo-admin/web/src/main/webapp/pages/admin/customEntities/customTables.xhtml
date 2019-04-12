@@ -145,7 +145,8 @@
 
         <hftl:searchPanel backingBean="#{customTableBean}" renderNewButton="false" ajaxUpdateIds=":ctForm:ctSearchResults">
 
-            <c:forEach items="#{customTableBean.fields}" var="field">
+            <c:forEach items="#{customTableBean.filterFields}" var="field">
+            
                 <c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
                     <hftl:searchTextField id="#{field.dbFieldname}" backingBean="#{customTableBean}" field="#{field.dbFieldname}"
                         label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}" maxlength="#{field.maxValue}" />
@@ -188,7 +189,7 @@
                     <p:column headerText="id" sortBy="#{id}">
                         <h:outputText value="#{entity['id']}" />
                     </p:column>
-                    <p:columns value="#{customTableBean.fields}" var="field" headerText="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}" sortBy="#{field.dbFieldname}">
+                    <p:columns value="#{customTableBean.summaryFields}" var="field" headerText="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}" sortBy="#{field.dbFieldname}">
                         <p:cellEditor>
                             <f:facet name="output">
                                 <h:outputText id="#{entity[field.dbFieldname]}_out_date" value="#{entity[field.dbFieldname]}" styleClass="field-value"
@@ -262,7 +263,7 @@
                             <p:messages id="ctNewFieldsMessage" globalOnly="false" redisplay="false" />
 
                             <hf:namingContainer id="addNewFields" rendered="#{customTableBean.edit}">
-                                <c:forEach items="#{customTableBean.fields}" var="field">
+                                <c:forEach items="#{customTableBean.summaryFields}" var="field">
                                     <c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
                                         <p:inputText id="#{field.dbFieldname}" value="#{customTableBean.newValues[field.dbFieldname]}"
                                             placeholder="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}" style="margin-left:5px"

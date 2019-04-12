@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -76,6 +78,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * Custom table fields. Come from custom fields defined in custom entity.
      */
     private Map<String, CustomFieldTemplate> fields;
+    
+    private List<CustomFieldTemplate> quickAddFields;
+
+    private List<CustomFieldTemplate> summaryFields;
+
+    private List<CustomFieldTemplate> filterFields;
 
     private LazyDataModel<Map<String, Object>> customTableBasedDataModel;
 
@@ -110,6 +118,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
         if (cfts != null) {
             fields = cfts;
+            summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
+            filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
+            quickAddFields = Stream.concat(
+            		summaryFields.stream(),
+            		fields.values().stream().filter(CustomFieldTemplate::isValueRequired)
+        		).collect(Collectors.toList());
         }
 
         return entity;
@@ -161,6 +175,27 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         }
 
         return customTableBasedDataModel;
+    }
+
+    public List<CustomFieldTemplate> getSummaryFields() {
+        if (entity == null) {
+            initEntity();
+        }
+        return summaryFields;
+    }
+    
+    public List<CustomFieldTemplate> getQuickAddFields() {
+        if (entity == null) {
+            initEntity();
+        }
+        return quickAddFields;
+    }
+
+    public List<CustomFieldTemplate> getFilterFields() {
+        if (entity == null) {
+            initEntity();
+        }
+        return filterFields;
     }
 
     /**

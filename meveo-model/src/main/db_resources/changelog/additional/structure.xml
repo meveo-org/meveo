@@ -583,4 +583,13 @@
     	</update>
     </changeSet>
 
+    <changeSet id="#3594_12042019" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="is_summary" type="${type.boolean}" defaultValueNumeric="0"/>
+        </addColumn>
+        <update  tableName="crm_custom_field_tmpl">
+            <column name="is_summary" value="0"/>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

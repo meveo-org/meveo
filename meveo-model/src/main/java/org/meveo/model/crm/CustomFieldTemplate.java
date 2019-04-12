@@ -249,7 +249,15 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Type(type="numeric_boolean") @ColumnDefault("1")
     @Column(name = "IS_FILTER")
     @NotNull
-    private boolean filter=true;
+    private boolean filter = true;
+
+    /**
+     * Whether the field will appear in the listing of custom table
+     */
+    @Type(type="numeric_boolean") @ColumnDefault("0")
+    @Column(name = "IS_SUMMARY")
+    @NotNull
+    private boolean summary = false;
     
     @Column(name = "EXPRESSION_SEPARATOR", length = 2)
     @Size(max = 2)
@@ -308,6 +316,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             }
         }
         return 0;
+    }
+
+    public boolean isSummary() {
+        return summary;
+    }
+
+    public void setSummary(boolean summary) {
+        this.summary = summary;
     }
 
     public boolean isIdentifier() {
