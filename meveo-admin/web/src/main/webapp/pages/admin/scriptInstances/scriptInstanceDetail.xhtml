@@ -1,7 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
-    xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+    xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
     template="/layout/template.xhtml">
-
+    <o:importConstants type="org.meveo.model.scripts.ScriptSourceTypeEnum" />
     <ui:define name="metadata">
         <f:metadata>
             <f:viewParam name="objectId" value="#{scriptInstanceBean.objectId}" />
@@ -35,9 +35,15 @@
                     </div>
                 </div>
             </h:panelGroup>
-            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" componentWidth="35" size="60" doNotShowOnNew="true" disabled="true" />
+            <h:panelGroup id="scriptCode">
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" componentWidth="35" size="60"
+                                doNotShowOnNew="#{(scriptInstanceBean.entity.sourceTypeEnum == 'JAVA' or scriptInstanceBean.entity.id != null) ? 'true' : 'false'}"
+                                disabled="#{(scriptInstanceBean.entity.sourceTypeEnum == 'JAVA' or scriptInstanceBean.entity.id != null) ? 'true' : 'false'}"/>
+
+            </h:panelGroup>
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
-            <hftl:formField label="#{messages['scriptInstance.sourceTypeEnum']}" field="sourceTypeEnum" componentWidth="15" required="true" />
+            <hftl:formField label="#{messages['scriptInstance.sourceTypeEnum']}" field="sourceTypeEnum" componentWidth="15" required="true"
+                            listenerUpdate="scriptCode"/>
             <hftl:decorateFormField label="#{messages['scriptInstance.script']}" fieldId="codeMirror" componentWidth="100">
                 <pe:codeMirror id="codeMirror" theme="eclipse" mode="text/x-java" value="#{scriptInstanceBean.entity.script}" lineNumbers="true" required="true" />
                 <h:panelGroup layout="block" styleClass="form-panel-actions">
