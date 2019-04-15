@@ -3,11 +3,7 @@ package org.meveo.service.script;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Object;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.service.script.ScriptInterface;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 /**
