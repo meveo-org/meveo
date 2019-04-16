@@ -50,6 +50,7 @@ import org.meveo.util.view.NativeTableBasedDataModel;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.UploadedFile;
@@ -79,7 +80,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      */
     private Map<String, CustomFieldTemplate> fields;
     
-    private List<CustomFieldTemplate> quickAddFields;
+    private Set<CustomFieldTemplate> quickAddFields;
 
     private List<CustomFieldTemplate> summaryFields;
 
@@ -98,6 +99,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     private Future<DataImportExportStatistics> importFuture;
     
     private String cet;
+    
+    private Map<String, Object> selectedRow;
+    
+    private int selectedRowIndex;
+    
+    private CustomFieldTemplate selectedRowField;
 
     public CustomTableBean() {
         super(CustomEntityTemplate.class);
@@ -110,6 +117,8 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
             entity = customEntityTemplateService.findByCode(cet);
     	}else if(getObjectId() != null) {
     		entity = customEntityTemplateService.findById(getObjectId());
+    	} else {
+    		return null;
     	}
 
         customTableName = entity.getDbTablename();
@@ -123,13 +132,38 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
             quickAddFields = Stream.concat(
             		summaryFields.stream(),
             		fields.values().stream().filter(CustomFieldTemplate::isValueRequired)
-        		).collect(Collectors.toList());
+        		).collect(Collectors.toSet());
         }
 
         return entity;
     }
     
-    public List<Map<String, Object>> list(){
+    
+    public int getSelectedRowIndex() {
+		return selectedRowIndex;
+	}
+
+	public void setSelectedRowIndex(int selectedRowIndex) {
+		this.selectedRowIndex = selectedRowIndex;
+	}
+
+	public CustomFieldTemplate getSelectedRowField() {
+		return selectedRowField;
+	}
+
+	public void setSelectedRowField(CustomFieldTemplate selectedRowField) {
+		this.selectedRowField = selectedRowField;
+	}
+
+	public Map<String, Object> getSelectedRow() {
+		return selectedRow;
+	}
+
+	public void setSelectedRow(Map<String, Object> selectedRow) {
+		this.selectedRow = selectedRow;
+	}
+
+	public List<Map<String, Object>> list(){
 		return customTableService.list(customTableName);
     }
 
@@ -184,7 +218,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         return summaryFields;
     }
     
-    public List<CustomFieldTemplate> getQuickAddFields() {
+    public Set<CustomFieldTemplate> getQuickAddFields() {
         if (entity == null) {
             initEntity();
         }
@@ -251,6 +285,15 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         customTableService.update(customTableName, mapValue);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
+    
+    @ActionMethod
+    public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
+    	Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
+    	Object newId = selectedEntityInPopup.get("id");
+    	selectedRow.put(selectedRowField.getDbFieldname(), newId);
+        customTableService.update(customTableName, selectedRow);
+        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+    }
 
     public Map<String, Object> getNewValues() {
         return newValues;
@@ -275,7 +318,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         newValues = new HashMap<>();
         customTableBasedDataModel = null;
     }
-
+    
     /**
      * Handle a file upload and import the file
      * 

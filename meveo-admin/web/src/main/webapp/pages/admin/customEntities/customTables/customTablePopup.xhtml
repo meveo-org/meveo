@@ -1,0 +1,121 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:s="http://jboss.org/seam/faces"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+
+	<p:dialog id="customTableDialog" widgetVar="customTableDialog" modal="true" draggable = "false" resizeable="false"  width="80%">
+
+		<hftl:searchPanel formId="searchEntityReference" backingBean="#{customTablePopupBean}" renderNewButton="false" ajaxUpdateIds=":customTableDialogctSearchResults">
+
+			<c:forEach items="#{customTablePopupBean.filterFields}" var="field">
+
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
+					<hftl:searchTextField id="#{field.dbFieldname}"
+						backingBean="#{customTablePopupBean}" field="#{field.dbFieldname}"
+						label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+						maxlength="#{field.maxValue}" />
+				</c:if>
+				
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DATE}">
+					<hftl:searchDateField id="#{field.dbFieldname}"
+						backingBean="#{customTablePopupBean}" field="#{field.dbFieldname}"
+						label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+						datePattern="#{paramBean.dateFormat}" rangeSearch="true"
+						componentWidth="25" />
+				</c:if>
+				
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE}">
+					<hftl:searchNumberField id="#{field.dbFieldname}"
+						converterId="javax.faces.Double" backingBean="#{customTablePopupBean}"
+						field="${field.dbFieldname}"
+						label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+						componentWidth="25" rangeSearch="true" />
+				</c:if>
+				
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LONG}">
+					<hftl:searchNumberField id="#{field.dbFieldname}"
+						converterId="javax.faces.Long" backingBean="#{customTablePopupBean}"
+						field="${field.dbFieldname}"
+						label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+						componentWidth="25" rangeSearch="true" />
+				</c:if>
+
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LIST}">
+					<hftl:decorateFormField fieldId="#{field.dbFieldname}"
+						label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+						componentWidth="25">
+						<p:selectOneMenu id="#{field.dbFieldname}"
+							value="#{customTablePopupBean.filters[field.dbFieldname]}"
+							placeholder="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(bean.currentLocale.ISO3Language)}">
+							<f:selectItem itemValue="#{null}" itemLabel="" />
+							<f:selectItems value="#{field.listValues.entrySet()}"
+								var="listVal" itemValue="#{listVal.key}"
+								itemLabel="#{listVal.value} (#{listVal.key})" />
+						</p:selectOneMenu>
+					</hftl:decorateFormField>
+				</c:if>
+			</c:forEach>
+		</hftl:searchPanel>
+
+		<p:dataTable id="customTableDialogctSearchResults"
+			value="#{customTablePopupBean.dataModel}" var="entity" lazy="true"
+			widgetVar="customTableDialogctSearchResults"
+			paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+			paginator="true" rows="10"  resizableColumns="false" styleClass="custom-grid" reflow="true"
+			editable="false" selection="#{customTablePopupBean.selectedValues}"
+			selectionMode="single"
+			rowKey="#{entity['id']}"
+			sortBy="id">
+
+        	<p:ajax event="rowSelect" 
+        				listener="#{customTableBean.onEntityReferenceSelected}" 
+        				update=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})" 
+        				oncomplete="PF('customTableDialog').hide();" />
+
+			<p:column headerText="id" sortBy="#{id}" selectRow="false">
+				<h:outputText value="#{entity['id']}" />
+			</p:column>
+
+			<p:columns value="#{customTablePopupBean.summaryFields}" var="field"
+				headerText="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
+				sortBy="#{field.dbFieldname}" selectRow="false">
+
+				<!--  Date -->
+				<h:outputText id="#{entity[field.dbFieldname]}_out_date"
+					value="#{entity[field.dbFieldname]}" styleClass="field-value"
+					rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE}">
+					<f:convertDateTime type="date"
+						pattern="#{field.displayFormat!=null? field.displayFormat:paramcustomTablePopupBean.dateFormat}" />
+				</h:outputText>
+
+				<!--  String, Enum or Long  -->
+				<h:outputText id="#{entity[field.dbFieldname]}_out"
+					value="#{entity[field.dbFieldname]}" styleClass="field-value"
+					rendered="#{field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG}" />
+
+				<!--  Double -->
+				<h:outputText id="#{entity[field.dbFieldname]}_out_double"
+					value="#{entity[field.dbFieldname]}" styleClass="field-value"
+					rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE}">
+					<f:converter converterId="javax.faces.Double" />
+				</h:outputText>
+
+				<h:outputText id="#{entity[field.dbFieldname]}_input_link"
+					value="#{entity[field.dbFieldname]}" styleClass="field-value">
+					<f:converter binding="#{entityReferenceConverter}" />
+					<f:attribute name="field" value="#{field}" />
+				</h:outputText>
+
+			</p:columns>
+		</p:dataTable>
+	</p:dialog>
+
+</ui:composition>
