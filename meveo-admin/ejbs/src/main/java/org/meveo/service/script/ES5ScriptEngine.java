@@ -1,10 +1,10 @@
 package org.meveo.service.script;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Object;
+import java.util.Map;
+
 import org.meveo.admin.exception.BusinessException;
 
-import java.util.Map;
+import com.eclipsesource.v8.V8;
 
 /**
  * Created by Hien Bach on 4/5/2019.
@@ -19,14 +19,25 @@ public class ES5ScriptEngine implements ScriptInterface {
 
     @Override
     public void execute(Map<String, Object> methodContext) throws BusinessException {
+    	// Initialize runtime
         V8 runtime = V8.createV8Runtime();
-        Object o = runtime.executeScript(script);
-        if(o instanceof V8Object){
-            V8Object v = (V8Object) o;
-            final String[] keys = v.getKeys();
-            for (String key : keys) {
-                methodContext.put(key, v.get(key));
-            }
+        methodContext.forEach((k, v) -> {
+        	if(v instanceof String) {
+        		runtime.add(k, (String) v);
+        	}else if(v instanceof Integer) {
+        		runtime.add(k, (int) v);
+        	}else if(v instanceof Double) {
+        		runtime.add(k, (double) v);
+        	}else if(v instanceof Boolean) {
+        		runtime.add(k, (boolean) v);
+        	}
+        });
+        
+        // Execute and retrieve results
+        runtime.executeScript(script);
+        final String[] keys = runtime.getKeys();
+        for (String key : keys) {
+            methodContext.put(key, runtime.get(key));
         }
     }
 

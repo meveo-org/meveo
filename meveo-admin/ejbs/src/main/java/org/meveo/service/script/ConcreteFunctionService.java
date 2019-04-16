@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Default
 @Singleton
 @Lock(LockType.READ)
-public class ConcreteFunctionService  extends FunctionService<Function, ScriptInterface> {
+public class ConcreteFunctionService extends FunctionService<Function, ScriptInterface> {
 	
 	@Inject @Any
     private Instance<FunctionService<?, ?>> fnServiceInst;
@@ -63,10 +63,23 @@ public class ConcreteFunctionService  extends FunctionService<Function, ScriptIn
 		FunctionService<?, ScriptInterface> functionService = getFunctionService(executableCode);
 		return functionService.getExecutionEngine(executableCode, context);
 	}
+	
+	@Override
+	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) {
+		FunctionService<?, ScriptInterface> functionService = getFunctionService(function);
+		return functionService.getExecutionEngine(function.getCode(), context);
+	}
 
 	@SuppressWarnings("unchecked")
 	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
 		final Function function = findByCode(executableCode);
+		String functionType = function.getFunctionType();
+		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
+		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public FunctionService<?, ScriptInterface> getFunctionService(Function function) {
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
 		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
@@ -76,4 +89,5 @@ public class ConcreteFunctionService  extends FunctionService<Function, ScriptIn
 	public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
 		return null;
 	}
+
 }

@@ -53,6 +53,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.script.ScriptInterfaceSupplier;
 
 @Stateless
 public class WorkflowService extends BusinessService<Workflow> {
@@ -108,13 +109,17 @@ public class WorkflowService extends BusinessService<Workflow> {
                 }
             }
         }
-        List<Class<ScriptInterface>> mmap = scriptInstanceService.getAllScriptInterfacesWCompile();
+        List<ScriptInterfaceSupplier> mmap = scriptInstanceService.getAllScriptInterfacesWCompile();
 
         if (mmap != null) {
-            for (Class<ScriptInterface> si : mmap) {
-                if (si.isAnnotationPresent(WorkflowTypeClass.class)) {
-                    result.add(si);
-                }
+            for (ScriptInterfaceSupplier si : mmap) {
+                try {
+					if (si.getScriptInterface().getClass().isAnnotationPresent(WorkflowTypeClass.class)) {
+					    result.add(si.getClass());
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
             }
         }
         return result;
@@ -304,10 +309,10 @@ public class WorkflowService extends BusinessService<Workflow> {
 
         } catch (ClassNotFoundException ex) {
             try {
-                Class<?> clazz = scriptInstanceService.getScriptInterface(wfTypeClassName);
+                Class<?> clazz = scriptInstanceService.getScriptInterface(wfTypeClassName).getClass();
                 return clazz;
 
-            } catch (ElementNotFoundException e) {
+            } catch (Exception e) {
                 throw new ClassNotFoundException("Class " + wfTypeClassName);
             }
         }

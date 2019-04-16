@@ -1,6 +1,6 @@
 /*
  * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr) and contributors.
- * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
+ * (C) Copyright 2015-2018 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,11 @@
  */
 package org.meveo.service.script;
 
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,9 +45,6 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8ScriptCompilationException;
-import com.github.javaparser.ast.Modifier;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -55,20 +52,22 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.javadoc.JavadocBlockTag;
-import org.meveo.model.scripts.test.ExpectedOutput;
-import org.meveo.model.technicalservice.Description;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
-
-public abstract class CustomScriptService<T extends CustomScript, SI extends ScriptInterface> extends FunctionService<T, SI> {
+public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final String SET = "set";
     private static final String GET = "get";
@@ -79,31 +78,31 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     @Inject
     private EndpointService endpointService;
 
-    protected final Class<SI> scriptInterfaceClass;
+//    protected final Class<ScriptInterface> scriptInterfaceClass;
 
-    private Map<CacheKeyStr, Class<SI>> allScriptInterfaces = new HashMap<>();
+    private Map<CacheKeyStr, ScriptInterfaceSupplier> allScriptInterfaces = new HashMap<>();
 
-    private CharSequenceCompiler<SI> compiler;
+    private CharSequenceCompiler<ScriptInterface> compiler;
 
     private String classpath = "";
 
     /**
      * Constructor.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+//    @SuppressWarnings({ "unchecked", "rawtypes" })
     public CustomScriptService() {
         super();
-        Class clazz = getClass();
-        while (!(clazz.getGenericSuperclass() instanceof ParameterizedType)) {
-            clazz = clazz.getSuperclass();
-        }
-        Object o = ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[1];
-
-        if (o instanceof TypeVariable) {
-            this.scriptInterfaceClass = (Class<SI>) ((TypeVariable) o).getBounds()[0];
-        } else {
-            this.scriptInterfaceClass = (Class<SI>) o;
-        }
+//        Class clazz = getClass();
+//        while (!(clazz.getGenericSuperclass() instanceof ParameterizedType)) {
+//            clazz = clazz.getSuperclass();
+//        }
+//        Object o = ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[1];
+//
+//        if (o instanceof TypeVariable) {
+//            this.scriptInterfaceClass = (Class<ScriptInterface>) ((TypeVariable) o).getBounds()[0];
+//        } else {
+//            this.scriptInterfaceClass = (Class<ScriptInterface>) o;
+//        }
     }
 
     /**
@@ -153,10 +152,15 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
     }
 
     @Override
-    public SI getExecutionEngine(String scriptCode, Map<String, Object> context) {
-        try {
-            CustomScript script = this.findByCode(scriptCode);
-            SI scriptInstance = this.getScriptInstance(scriptCode);
+    public ScriptInterface getExecutionEngine(String scriptCode, Map<String, Object> context) {
+	    T script = this.findByCode(scriptCode);
+	    return getExecutionEngine(script, context);
+    }
+    
+	@Override
+	public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
+		try {
+            ScriptInterface scriptInstance = this.getScriptInstance(script.getCode());
 
             // Call setters if those are provided
             if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
@@ -173,15 +177,17 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
         } catch(Exception e){
             throw new RuntimeException(e);
         }
-    }
-
-
-
+	}
 
     @Override
-    protected Map<String, Object> buildResultMap(SI engine, Map<String, Object> context) {
+    protected Map<String, Object> buildResultMap(ScriptInterface engine, Map<String, Object> context) {
         CustomScript script = this.findByCode(engine.getClass().getName());
 
+        if(script == null) {
+        	// The script is probably not a Java script and we cannot retrieve its code using its class name
+        	return context;
+        }
+        
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             for (Accessor getter : script.getGetters()) {
@@ -195,6 +201,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                 }
             }
         }
+        
         return super.buildResultMap(engine, context);
     }
 
@@ -493,12 +500,11 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
                 // For now no need to check source type if (sourceType==ScriptSourceTypeEnum.JAVA){
 
-                Class<SI> compiledScript = compileJavaSource(sourceCode);
+                Class<ScriptInterface> compiledScript = compileJavaSource(sourceCode);
 
                 if (!testCompile && isActive) {
 
-                    allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript);
-
+                    allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> compiledScript.newInstance());
                     log.debug("Compiled script {} added to compiled interface map", scriptCode);
                 }
 
@@ -536,19 +542,21 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
                 return scriptErrors;
             }
         } else {
-            V8 runtime = V8.createV8Runtime();
-            try {
-                runtime.executeScript(sourceCode);
-            } catch (V8ScriptCompilationException e){
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-                scriptInstanceError.setMessage(e.getMessage());
-                scriptInstanceError.setLineNumber(e.getLineNumber());
-                scriptInstanceError.setColumnNumber(e.getStartColumn());
-                scriptInstanceError.setSourceFile(e.getSourceLine());
-                scriptErrors.add(scriptInstanceError);
-                return scriptErrors;
-            }
+        	ScriptInterface engine = new ES5ScriptEngine(sourceCode);
+            allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
+//            V8 runtime = V8.createV8Runtime();
+//            try {
+//                runtime.executeScript(sourceCode);
+//            } catch (V8ScriptCompilationException e){
+//                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
+//                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
+//                scriptInstanceError.setMessage(e.getMessage());
+//                scriptInstanceError.setLineNumber(e.getLineNumber());
+//                scriptInstanceError.setColumnNumber(e.getStartColumn());
+//                scriptInstanceError.setSourceFile(e.getSourceLine());
+//                scriptErrors.add(scriptInstanceError);
+//                return scriptErrors;
+//            }
             return null;
         }
     }
@@ -561,7 +569,7 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      * @return Compiled class instance
      * @throws CharSequenceCompilerException char sequence compiler exception.
      */
-    protected Class<SI> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
 
         supplementClassPathWithMissingImports(javaSrc);
 
@@ -569,9 +577,9 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classpath);
 
-        compiler = new CharSequenceCompiler<SI>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
+        compiler = new CharSequenceCompiler<ScriptInterface>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<JavaFileObject>();
-        Class<SI> compiledScript = compiler.compile(fullClassName, javaSrc, errs, scriptInterfaceClass);
+        Class<ScriptInterface> compiledScript = compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
         return compiledScript;
     }
 
@@ -621,21 +629,17 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      *
      * @param scriptCode Script code
      * @return Script interface Class
-     * @throws InvalidScriptException Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
+     * @throws Exception 
      */
     @Lock(LockType.READ)
-    public Class<SI> getScriptInterface(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
-        Class<SI> result = null;
+    public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
+        ScriptInterfaceSupplier supplier = allScriptInterfaces.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
-        result = allScriptInterfaces.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
-
-        if (result == null) {
-            result = getScriptInterfaceWCompile(scriptCode);
+        if (supplier == null) {
+        	supplier = getScriptInterfaceWCompile(scriptCode);
         }
 
-        log.debug("getScriptInterface scriptCode:{} -> {}", scriptCode, result);
-        return result;
+        return supplier.getScriptInterface();
     }
 
     /**
@@ -648,8 +652,8 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      * @throws ElementNotFoundException Script not found
      */
     @Lock(LockType.WRITE)
-    protected Class<SI> getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
-        Class<SI> result = null;
+    protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
+        ScriptInterfaceSupplier result = null;
 
         result = allScriptInterfaces.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
@@ -684,14 +688,10 @@ public abstract class CustomScriptService<T extends CustomScript, SI extends Scr
      * @throws ElementNotFoundException Script not found
      */
     @Lock(LockType.READ)
-    public SI getScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
-        Class<SI> scriptClass = getScriptInterface(scriptCode);
-
+    public ScriptInterface getScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
         try {
-            SI script = scriptClass.newInstance();
-            return script;
-
-        } catch (InstantiationException | IllegalAccessException e) {
+            return getScriptInterface(scriptCode);
+        } catch (Exception e) {
             log.error("Failed to instantiate script {}", scriptCode, e);
             throw new InvalidScriptException(scriptCode, getEntityClass().getName());
         }

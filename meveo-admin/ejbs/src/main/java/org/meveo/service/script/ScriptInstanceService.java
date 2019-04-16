@@ -1,5 +1,6 @@
 /*
- * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ * (C) Copyright 2015-2018 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -48,7 +49,7 @@ import org.meveo.model.security.Role;
 @Singleton
 @Default
 @Lock(LockType.READ)
-public class ScriptInstanceService extends CustomScriptService<ScriptInstance, ScriptInterface> {
+public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
     /**
      * Get all ScriptInstances with error.
@@ -95,7 +96,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance, S
         ScriptInstance scriptInstance = findByCode(scriptCode);
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
-        return super.execute(scriptCode, context);
+        
+        ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
+        return super.execute(executionEngine, context);
     }
 
     /**
@@ -202,9 +205,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance, S
      * 
      * @return the allScriptInterfaces
      */
-    public List<Class<ScriptInterface>> getAllScriptInterfacesWCompile() {
+    public List<ScriptInterfaceSupplier> getAllScriptInterfacesWCompile() {
 
-        List<Class<ScriptInterface>> scriptInterfaces = new ArrayList<>();
+        List<ScriptInterfaceSupplier> scriptInterfaces = new ArrayList<>();
 
         List<ScriptInstance> scriptInstances = findByType(ScriptSourceTypeEnum.JAVA);
         for (ScriptInstance scriptInstance : scriptInstances) {
@@ -217,4 +220,5 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance, S
 
         return scriptInterfaces;
     }
+
 }
