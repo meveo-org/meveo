@@ -26,6 +26,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.PersistenceService;
@@ -43,7 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Standard backing bean for {@link ScriptInstance} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
+ * Standard backing bean for {@link org.meveo.model.scripts.ScriptInstance} (extends {@link org.meveo.admin.action.BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
  * create, edit, view, delete operations). It works with Manaty custom JSF components.
  */
 @Named
@@ -52,7 +53,7 @@ import java.util.List;
 public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private static final long serialVersionUID = 1L;
     /**
-     * Injected @{link ScriptInstance} service. Extends {@link PersistenceService}.
+     * Injected @{link ScriptInstance} service. Extends {@link org.meveo.service.base.PersistenceService}.
      */
     @Inject
     private ScriptInstanceService scriptInstanceService;
@@ -117,7 +118,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     /**
-     * Constructor. Invokes super constructor and provides class type of this bean for {@link BaseBean}.
+     * Constructor. Invokes super constructor and provides class type of this bean for {@link org.meveo.admin.action.BaseBean}.
      */
     public ScriptInstanceBean() {
         super(ScriptInstance.class);
@@ -154,13 +155,15 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        String code = entity.getCode();
+        if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+            code = CustomScriptService.getFullClassname(entity.getScript());
 
-        String code = CustomScriptService.getFullClassname(entity.getScript());
-
-        // check script existed full class name in class path
-        if (CustomScriptService.isOverwritesJavaClass(code)) {
-            messages.error(new BundleKey("messages", "message.scriptInstance.classInvalid"), code);
-            return null;
+            // check script existed full class name in class path
+            if (CustomScriptService.isOverwritesJavaClass(code)) {
+                messages.error(new BundleKey("messages", "message.scriptInstance.classInvalid"), code);
+                return null;
+            }
         }
 
         // check duplicate script
@@ -208,12 +211,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public void testCompilation() {
-
+        String code = entity.getCode();
         // check script existed full class name in class path
-        String code = CustomScriptService.getFullClassname(entity.getScript());
-        if (CustomScriptService.isOverwritesJavaClass(code)) {
-            messages.error(new BundleKey("messages", "message.scriptInstance.classInvalid"), code);
-            return;
+        if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+            code = CustomScriptService.getFullClassname(entity.getScript());
+            if (CustomScriptService.isOverwritesJavaClass(code)) {
+                messages.error(new BundleKey("messages", "message.scriptInstance.classInvalid"), code);
+                return;
+            }
         }
 
         // check duplicate script

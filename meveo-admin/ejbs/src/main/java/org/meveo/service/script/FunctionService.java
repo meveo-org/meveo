@@ -158,6 +158,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return An instance of an execution engine for the executable with code
      */
     public abstract E getExecutionEngine(String executableCode, Map<String, Object> context);
+    
+    public abstract E getExecutionEngine(T function, Map<String, Object> context);
 
     /**
      * Add a log line for a script
@@ -206,8 +208,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return Context parameters. Will not be null even if "context" parameter is null.
      * @throws BusinessException Any execution exception
      */
-    public Map<String, Object> execute(E engine, Map<String, Object> context)
-            throws BusinessException {
+    public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
         if (context == null) {
             context = new HashMap<String, Object>();
         }
