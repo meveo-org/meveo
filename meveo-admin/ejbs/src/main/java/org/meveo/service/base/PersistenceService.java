@@ -100,6 +100,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      */
     public static String SEARCH_FILTER_PARAMETERS = "$FILTER_PARAMETERS";
 
+    /**
+     * Entity list search parameter criteria - just like wildcardOr but Ignoring case
+     */
+    public static String SEARCH_WILDCARD_OR_IGNORE_CAS = "wildcardOrIgnoreCase";
+
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;

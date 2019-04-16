@@ -573,5 +573,23 @@
             <column name="graphql_query_fields" type="${type.json}"/>
         </addColumn>
     </changeSet>
+    
+      <changeSet id="#3607_20190123" author="andrius.karpavicius">
+        <addColumn tableName="cust_cet">
+            <column name="store_as_table" type="${type.boolean}" defaultValueNumeric="0"/>
+        </addColumn>
+        <update  tableName="cust_cet">
+        	<column name="store_as_table" value="0"/>
+    	</update>
+    </changeSet>
+
+    <changeSet id="#3594_12042019" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="is_summary" type="${type.boolean}" defaultValueNumeric="0"/>
+        </addColumn>
+        <update  tableName="crm_custom_field_tmpl">
+            <column name="is_summary" value="0"/>
+        </update>
+    </changeSet>
 
 </databaseChangeLog>

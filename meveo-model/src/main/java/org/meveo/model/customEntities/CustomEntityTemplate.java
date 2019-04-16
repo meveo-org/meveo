@@ -7,14 +7,13 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ModuleItem;
-import org.meveo.model.ObservableEntity;
+import org.meveo.model.*;
+import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
@@ -31,6 +30,7 @@ import org.meveo.model.scripts.ScriptInstance;
 		@NamedQuery(name = "CustomEntityTemplate.PrimitiveType", query = "SELECT cet.primitiveType FROM CustomEntityTemplate cet WHERE code = :code")
 })
 @ObservableEntity
+@ImportOrder(2)
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 8281478284763353310L;
@@ -41,6 +41,20 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Size(max = 100)
 	@NotNull
 	private String name;
+
+	/**
+	 * Should data be stored in a separate table
+	 */
+	@Type(type = "numeric_boolean")
+	@Column(name = "store_as_table", nullable = false)
+	@NotNull
+	private boolean storeAsTable = false;
+
+	/**
+	 * A database table name derived from a code value
+	 */
+	@Transient
+	private String dbTablename;
 
 	/**
 	 * Labels to apply to the template.
@@ -242,5 +256,35 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 			descendance.addAll(descendant.descendance());
 		}
 		return descendance;
+	}
+
+	public boolean isStoreAsTable() {
+		return storeAsTable;
+	}
+
+	public void setStoreAsTable(boolean storeAsTable) {
+		this.storeAsTable = storeAsTable;
+	}
+
+	/**
+	 * Get a database table name derived from a code value. Lowercase and spaces replaced by "_".
+	 *
+	 * @return Database field name
+	 */
+	public String getDbTablename() {
+		if (dbTablename == null && code != null) {
+			dbTablename = getDbTablename(code);
+		}
+		return dbTablename;
+	}
+
+	/**
+	 * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
+	 *
+	 * @param code Field code
+	 * @return Database field name
+	 */
+	public static String getDbTablename(String code) {
+		return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
 	}
 }

@@ -549,9 +549,6 @@ public class CustomFieldValue implements Serializable {
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));
             break;
 
-        case CHILD_ENTITY:
-            throw new RuntimeException("Child entity type of field supports only list of entities");
-
         case MULTI_VALUE:
             throw new RuntimeException("Multi-value type of field supports only matrix");
         }
@@ -814,8 +811,6 @@ public class CustomFieldValue implements Serializable {
             case LIST:
             case TEXT_AREA:
                 return stringValue;
-            case CHILD_ENTITY:
-                throw new RuntimeException("Child entity type of field supports only list of entities");
             case MULTI_VALUE:
                 throw new RuntimeException("Multi-value type of field supports only matrix");
             }

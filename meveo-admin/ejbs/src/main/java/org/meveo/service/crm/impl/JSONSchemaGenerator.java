@@ -191,12 +191,13 @@ public class JSONSchemaGenerator {
 				switch (field.getFieldType()) {
 					case DATE:   result = createDateSchema(field); break;
 					case ENTITY: result = createReferenceSchema(field, allRefs); break;
-					case CHILD_ENTITY: 
-						throw new IllegalStateException(
-							"Child entity type of field supports only list of entities" +
-							": field = " + field + 
-							", storageType = " + field.getStorageType()
-						);
+//					case CHILD_ENTITY:
+						//TODO: Handle this case
+//						throw new IllegalStateException(
+//							"Child entity type of field supports only list of entities" +
+//							": field = " + field +
+//							", storageType = " + field.getStorageType()
+//						);
 					case TEXT_AREA:
 					case EMBEDDED_ENTITY:
 					case STRING:  result = createStringSchema(field); break;
@@ -330,8 +331,8 @@ public class JSONSchemaGenerator {
 		switch (field.getFieldType()) {
 			case DATE:   valueBuilder = createDateSchema(field); break;
 			case ENTITY: valueBuilder = createReferenceSchema(field, allRefs); break;
-			case CHILD_ENTITY: 
-				throw new IllegalStateException("Child entity type of field supports only list of entities: field = " + field + ", storageType = " + field.getStorageType());
+//			case CHILD_ENTITY:  TODO: handle this case
+//				throw new IllegalStateException("Child entity type of field supports only list of entities: field = " + field + ", storageType = " + field.getStorageType());
 			case TEXT_AREA:
 			case STRING:  valueBuilder = createStringSchema(field); break;
 			case LIST:    valueBuilder = createEnumSchema(field); break;

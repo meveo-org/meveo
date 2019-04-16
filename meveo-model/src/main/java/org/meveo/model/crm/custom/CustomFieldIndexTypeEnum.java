@@ -11,9 +11,15 @@ public enum CustomFieldIndexTypeEnum {
      * Store and index in Elastic Search
      */
     INDEX(false),
+    
     STORE_ONLY_NEO4J(false),
     
-    INDEX_NEO4J(false);
+    INDEX_NEO4J(false),
+
+    /**
+     * Store and index without analyzing in Elastic Search
+     */
+    INDEX_NOT_ANALYZE(false);
 
     private boolean storeOnly;
 

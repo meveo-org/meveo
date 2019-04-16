@@ -73,7 +73,7 @@
                 </c:if>
 
                 <p:selectOneMenu id="#{id}" value="#{fieldItem}" required="#{required}" disabled="#{disabled}">
-                    <f:selectItem itemLabel="" itemValue="" />
+                    <f:selectItem itemLabel="" itemValue="#{null}" />
                     <!-- store a entity itself -->
                     <c:if test="#{! fkToEntity}">
                         <f:selectItems value="#{elements}" var="elem" itemLabel="#{elem[valueLabelField]}" itemValue="#{elem}" />

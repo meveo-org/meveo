@@ -20,6 +20,8 @@ package org.meveo.admin.jsf.validator;
 
 import java.text.MessageFormat;
 
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.spi.CDI;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -32,10 +34,12 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.service.validation.ValidationService;
 
 @FacesValidator("uniqueConstraintValidator")
-public class UniqueConstraintValidator implements Validator {
+@Dependent
+public class UniqueConstraintValidator implements Validator<Object> {
+	
     @Inject
     private ValidationService validationService;
-
+    
     @Inject
     private ResourceBundle resourceMessages;
     
@@ -45,6 +49,10 @@ public class UniqueConstraintValidator implements Validator {
         String className = (String) component.getAttributes().get("className");
         String fieldName = (String) component.getAttributes().get("fieldName");
         Object id = component.getAttributes().get("idValue");
+        
+        if(validationService == null) {
+        	validationService = CDI.current().select(ValidationService.class).get();
+        }
         
         if (!validationService.validateUniqueField(className, fieldName, id, value)) {
             FacesMessage facesMessage = new FacesMessage();

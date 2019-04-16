@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This file is not required if you don't need any extra configuration. -->
-<faces-config version="2.2" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
-http://xmlns.jcp.org/xml/ns/javaee
-http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
+<faces-config version="2.3" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_3.xsd">
 
     <!-- <factory> -->
     <!-- <exception-handler-factory>org.omnifaces.exceptionhandler.FullAjaxExceptionHandlerFactory</exception-handler-factory> -->
@@ -49,6 +46,7 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
     </lifecycle>
 
     <navigation-rule>
+
         <navigation-case>
             <from-outcome>forbidden</from-outcome>
             <to-view-id>/errors/403.xhtml</to-view-id>
@@ -361,6 +359,11 @@ http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
             <to-view-id>/pages/admin/customEntities/customEntities.xhtml
             </to-view-id>
             <redirect include-view-params="true"/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>customTables</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customTables.xhtml</to-view-id>
+            <redirect include-view-params="true" />
         </navigation-case>
         <navigation-case>
             <from-outcome>customEntity</from-outcome>

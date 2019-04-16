@@ -6,6 +6,16 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 
 public abstract class Script implements ScriptInterface {
+	
+    /**
+     * Current provider/tenant
+     */
+    public static String CONTEXT_APP_PROVIDER = "CONTEXT_APP_PROVIDER";
+	
+    /**
+     * Current user
+     */
+    public static String CONTEXT_CURRENT_USER = "CONTEXT_CURRENT_USER";
 
     /**
      * GUI redirection after entity custom action execution

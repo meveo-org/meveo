@@ -14,9 +14,13 @@ import org.meveo.model.catalog.CalendarYearly;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.neo4j.base.Neo4jDao;
+import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
 
 import javax.annotation.PostConstruct;
@@ -41,7 +45,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     private ElasticClient elasticClient;
 
     @Inject
-    private Neo4jDao neo4jDao;
+    private CustomTableCreatorService customTableCreatorService;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
     static boolean useCFTCache = true;
 
@@ -190,10 +197,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         checkIdentifierTypeAndUniqueness(cft);
 
         super.create(cft);
-//        if (cft.isUnique()) {
-//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-//            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
-//        }
+
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+        if (cet == null) {
+            log.warn("Custom entity template {} was not found", entityCode);
+        } else if (cet.isStoreAsTable()) {
+            customTableCreatorService.addField(cet.getDbTablename(), cft);
+        }
 
         customFieldsCache.addUpdateCustomFieldTemplate(cft);
         elasticClient.updateCFMapping(cft);
@@ -204,30 +215,34 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         checkIdentifierTypeAndUniqueness(cft);
 
-        CustomFieldTemplate cftBefore = super.findById(cft.getId());
         CustomFieldTemplate cftUpdated = super.update(cft);
-//        if (cftBefore.isUnique() && !cftUpdated.isUnique()) {
-//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-//            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
-//        } else if (!cftBefore.isUnique() && cftUpdated.isUnique()) {
-//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-//            neo4jDao.createIndexLabelByProperty(label, cft.getCode());
-//        }
+
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
+
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+        if (cet == null) {
+            log.warn("Custom entity template {} was not found", entityCode);
+        } else if (cet.isStoreAsTable()) {
+            customTableCreatorService.updateField(cet.getDbTablename(), cft);
+        }
 
         return cftUpdated;
     }
 
     @Override
     public void remove(CustomFieldTemplate cft) throws BusinessException {
-        CustomFieldTemplate cftBefore = super.findById(cft.getId());
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
-//        if (cftBefore.isUnique()) {
-//            String label = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-//            neo4jDao.removeIndexLabelByProperty(label, cft.getCode());
-//        }
+
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+        if (cet == null) {
+            log.warn("Custom entity template {} was not found", entityCode);
+        } else if (cet.isStoreAsTable()) {
+            customTableCreatorService.removeField(cet.getDbTablename(), cft);
+        }
     }
 
     @Override

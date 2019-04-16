@@ -185,17 +185,17 @@
             <dependency>
                 <groupId>org.primefaces.extensions</groupId>
                 <artifactId>primefaces-extensions</artifactId>
-                <version>6.0.0</version>
+                <version>7.0</version>
             </dependency>
             <dependency>
                 <groupId>org.primefaces.extensions</groupId>
                 <artifactId>resources-codemirror</artifactId>
-                <version>6.0.0</version>
+                <version>6.1.1</version>
             </dependency>
             <dependency>
                 <groupId>org.primefaces</groupId>
                 <artifactId>primefaces</artifactId>
-                <version>6.1</version>
+                <version>7.0</version>
             </dependency>
             <dependency>
                 <groupId>org.reflections</groupId>
@@ -347,7 +347,7 @@
             <dependency>
                 <groupId>org.elasticsearch</groupId>
                 <artifactId>elasticsearch</artifactId>
-                <version>2.3.3</version>
+                <version>6.6.1</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -552,10 +552,10 @@
             <properties>
                 <!-- Properties for liquibase plugin. Can be passed from a command line: mvn -Ddb.schema=ten2 -->
                 <db.driver>org.postgresql.Driver </db.driver>
-                <db.url>jdbc:postgresql://localhost/meveo</db.url>
+                <db.url>jdbc:postgresql://51.75.197.172/meveo</db.url>
                 <db.schema>public</db.schema>
-                <db.username>meveo</db.username>
-                <db.password>meveo</db.password>
+                <db.username>postgres</db.username>
+                <db.password>5SNjbYYSqm9ow6WV</db.password>
             </properties>
             <dependencies>
                 <!-- Dependency for liquibase plugin -->

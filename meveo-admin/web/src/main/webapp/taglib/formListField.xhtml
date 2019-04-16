@@ -2,7 +2,8 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:s="http://jboss.org/seam/faces" xmlns:hftl="http://hftl.org">
+    xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:s="http://jboss.org/seam/faces" xmlns:hftl="http://hftl.org" 	xmlns:o="http://omnifaces.org/ui"
+    >
 
 <ui:composition>
     <hftl:decorateFormField fieldId="#{id}" label="#{label}" componentWidth="#{componentWidth}" newLine="#{newLine}" displayOneLine="#{displayOneLine}" styleClass="#{styleClass}"
@@ -84,12 +85,12 @@
                 <!--                 </c:if> -->
                 <c:if test="#{not empty(valueLabelField2)}">
                     <p:pickList required="#{required}" id="#{id}" value="#{elements}" var="elem" itemLabel="#{elem[valueLabelField]} #{elem[valueLabelField2]}" itemValue="#{elem}">
-                        <hftl:objectConverter />
+							    <o:converter converterId="omnifaces.ListConverter" list="#{dualListModel.source}" />
                     </p:pickList>
                 </c:if>
                 <c:if test="#{empty(valueLabelField2)}">
                     <p:pickList required="#{required}" id="#{id}" value="#{elements}" var="elem" itemLabel="#{elem[valueLabelField]}" itemValue="#{elem}">
-                        <hftl:objectConverter />
+							    <o:converter converterId="omnifaces.ListConverter" list="#{dualListModel.source}" />
                     </p:pickList>
                 </c:if>
 

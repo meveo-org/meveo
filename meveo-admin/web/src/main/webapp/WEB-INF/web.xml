@@ -34,6 +34,10 @@
 		<param-name>primefaces.FONT_AWESOME</param-name>
 		<param-value>true</param-value>
 	</context-param>
+	<context-param>
+	    <param-name>primefaces.MOVE_SCRIPTS_TO_BOTTOM</param-name>
+	    <param-value>true</param-value>
+	</context-param>
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
@@ -94,21 +98,27 @@
 			<url-pattern>/pages/*</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>HomePage</web-resource-name>
 			<url-pattern>/home.jsf</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>HomePage</web-resource-name>
 			<url-pattern>/home.xhtml</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>IndexPage</web-resource-name>
 			<url-pattern>/mm_index.jsf</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>IndexPage</web-resource-name>
 			<url-pattern>/mm_index.xhtml</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>IndexPage</web-resource-name>
 			<url-pattern>/index.jsf</url-pattern>
 		</web-resource-collection>
 		<web-resource-collection>
+			<web-resource-name>IndexPage</web-resource-name>
 			<url-pattern>/index.xhtml</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>

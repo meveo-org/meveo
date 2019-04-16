@@ -43,14 +43,14 @@
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <p:selectOneMenu id="startNode" value="#{customRelationshipTemplateBean.entity.startNode}" required="true" style="width:150px;">
-                            <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="" noSelectionOption="true" />
+                            <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{customRelationshipTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" />
                             <hftl:objectConverter/>
                         </p:selectOneMenu>
                     </hftl:decorateFormField>
                     <hftl:decorateFormField field = "endNode" fieldId="endNode" componentWidth="150" label="#{messages['customizedRelationships.endEntity']}">
                         <p:selectOneMenu id="endNode" value="#{customRelationshipTemplateBean.entity.endNode}" required="true" style="width:150px;">
-                            <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="" noSelectionOption="true" />
+                            <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{customRelationshipTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" />
                             <hftl:objectConverter/>
                         </p:selectOneMenu>

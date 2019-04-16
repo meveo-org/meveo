@@ -2,6 +2,7 @@ package org.meveo.jpa.event;
 
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.FlushEvent;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.service.index.ElasticClient;
 
@@ -18,7 +19,11 @@ public class FlushEventListener implements org.hibernate.event.spi.FlushEventLis
 	@Override
 	public void onFlush(FlushEvent event) throws HibernateException {
 		ElasticClient elasticClient = (ElasticClient) EjbUtils.getServiceInterface("ElasticClient");
-        elasticClient.flushChanges();		
+        try {
+			elasticClient.flushChanges();
+		} catch (BusinessException e) {
+			throw new RuntimeException(e);
+		}		
 	}
 	
 }

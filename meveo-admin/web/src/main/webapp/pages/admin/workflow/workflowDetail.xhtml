@@ -106,7 +106,7 @@
                                                                 <p:ajax listener="#{workflowBean.changedRuleName(loopStatus.index)}" process="decisionRuleName#{loopStatus.index}"
                                                                     update=":tabView:formDunningPlanTransition:tabDetail:decisionRulesPanel" event="valueChange">
                                                                 </p:ajax>
-                                                                <f:selectItem itemLabel="#{messages['transition.selectRule']}" itemValue="" noSelectionOption="true" />
+                                                                <f:selectItem itemLabel="#{messages['transition.selectRule']}" itemValue="#{null}" noSelectionOption="true" />
                                                                 <f:selectItems value="#{workflowBean.wfDecisionRulesName}" />
                                                             </p:selectOneMenu>
                                                         </hftl:decorateFormField>

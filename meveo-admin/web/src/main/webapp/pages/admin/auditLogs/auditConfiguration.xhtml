@@ -49,7 +49,7 @@
 								<p:ajax listener="#{auditConfigurationBean.onClassChange()}"
 									update="methods messages" />
 								<f:selectItem itemLabel="#{messages['commons.select']}"
-									itemValue="" noSelectionOption="true" />
+									itemValue="#{null}" noSelectionOption="true" />
 								<f:selectItems value="#{auditConfigurationBean.serviceClasses}"
 									var="e" itemLabel="#{e.simpleName}" />
 							</p:selectOneMenu>

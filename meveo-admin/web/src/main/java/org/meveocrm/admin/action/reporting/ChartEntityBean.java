@@ -1,19 +1,43 @@
 package org.meveocrm.admin.action.reporting;
 
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.enterprise.context.Dependent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.action.BaseBean;
-import org.meveo.model.dwh.*;
+import org.meveo.model.dwh.BarChart;
+import org.meveo.model.dwh.Chart;
+import org.meveo.model.dwh.LineChart;
+import org.meveo.model.dwh.MeasurableQuantity;
+import org.meveo.model.dwh.MeasuredValue;
+import org.meveo.model.dwh.MeasurementPeriodEnum;
+import org.meveo.model.dwh.PieChart;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveocrm.services.dwh.ChartService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
-import org.primefaces.model.chart.*;
+import org.primefaces.model.chart.Axis;
+import org.primefaces.model.chart.AxisType;
+import org.primefaces.model.chart.BarChartModel;
+import org.primefaces.model.chart.CategoryAxis;
+import org.primefaces.model.chart.ChartModel;
+import org.primefaces.model.chart.ChartSeries;
+import org.primefaces.model.chart.LineChartModel;
+import org.primefaces.model.chart.LineChartSeries;
+import org.primefaces.model.chart.PieChartModel;
 
-import javax.inject.Inject;
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
+@Dependent
 public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends ChartEntityModel<T, CM>> extends BaseBean<T> {
 
 	@Inject

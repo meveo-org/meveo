@@ -1,8 +1,18 @@
 package org.meveo.admin.action.index;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.enterprise.context.Conversation;
+import javax.enterprise.context.ConversationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.action.BaseBean;
-import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessEntityService;
@@ -11,15 +21,6 @@ import org.meveo.service.index.ElasticSearchClassInfo;
 import org.meveo.util.view.ESBasedDataModel;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
-
-import javax.enterprise.context.Conversation;
-import javax.enterprise.context.ConversationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Named
 @ConversationScoped
@@ -80,11 +81,10 @@ public class FullTextSearchBean implements Serializable {
                 public String[] getSearchScope() {
 
                     // Limit search scope to offers, product, offer template categories, user groups for marketing manager application
-//                    if (FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogManager")
-//                            || FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogVisualization")) {
-//                        return new String[] { OfferTemplate.class.getName(), ProductTemplate.class.getName(), BundleTemplate.class.getName(), OfferTemplateCategory.class.getName(),
-//                                UserHierarchyLevel.class.getName() };
-//                    }
+                    if (FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogManager")
+                            || FullTextSearchBean.this.getCurrentUser().hasRole("marketingCatalogVisualization")) {
+                        return new String[] { UserHierarchyLevel.class.getName() };
+                    }
                     return null;
                 }
             };
@@ -126,36 +126,41 @@ public class FullTextSearchBean implements Serializable {
     /**
      * Get navigation link and identifier
      * 
-     * @param esType
-     * @param code
-     * @return
+     * @param indexName Index name
+     * @param type Class simple name or CET code
+     * @param id Identifier
+     * @return Navigation link/view name to entity's view screen
      */
     @SuppressWarnings("unchecked")
-    public String[] getViewAndId(String esType, String code) {
+    public String getViewAndId(String indexName, String type, Long id) {
 
-        String[] viewInfo = new String[2];
+        String viewName = null;
 
-        ElasticSearchClassInfo scopeInfo = elasticClient.getSearchScopeInfo(esType);
-
-        QueryBuilder qb = new QueryBuilder(scopeInfo.getClazz(), "be", null);
-        qb.addCriterion("be.code", "=", code, true);
-
-        List<? extends BusinessEntity> results = qb.getQuery(businessEntityService.getEntityManager()).getResultList();
-        if (!results.isEmpty()) {
-            BusinessEntity entity = results.get(0);
-            viewInfo[0] = BaseBean.getEditViewName(entity.getClass());
-            viewInfo[1] = entity.getId().toString();
-
-            if (getCurrentUser().hasRole("marketingCatalogManager") || getCurrentUser().hasRole("marketingCatalogVisualization")) {
-                viewInfo[0] = "mm_" + viewInfo[0];
-            }
-
-        } else {
-            log.warn("Could not resolve view and ID for {} {}", esType, code);
-            viewInfo[0] = "fullTextSearch";
-            viewInfo[1] = code;
+        if (StringUtils.isBlank(type)) {
+            type = null;
         }
 
-        return viewInfo;
+        ElasticSearchClassInfo scopeInfo = elasticClient.getSearchScopeInfo(indexName, type);
+
+        if (scopeInfo != null) {
+            BusinessEntity entity = null;
+            if (BusinessEntity.class.isAssignableFrom(scopeInfo.getClazz())) {
+                businessEntityService.setEntityClass((Class<BusinessEntity>) scopeInfo.getClazz());
+                entity = businessEntityService.findById(id);
+            }
+            if (entity != null) {
+                viewName = BaseBean.getEditViewName(entity.getClass());
+
+                if (getCurrentUser().hasRole("marketingCatalogManager") || getCurrentUser().hasRole("marketingCatalogVisualization")) {
+                    viewName = "mm_" + viewName;
+                }
+            }
+        }
+
+        if (viewName == null) {
+            log.warn("Could not resolve view and ID for {}/{} {}", indexName, type, id);
+            viewName = "fullTextSearch";
+        }
+        return viewName;
     }
 }

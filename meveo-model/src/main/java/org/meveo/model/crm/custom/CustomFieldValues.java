@@ -56,6 +56,45 @@ public class CustomFieldValues implements Serializable {
     }
 
     /**
+     * Get custom field values (not CF value entity). In case of versioned values (more than one entry in CF value list) a CF value corresponding to today will be returned
+     *
+     * @return A map of values with key being custom field code.
+     */
+    public Map<String, Object> getValues() {
+
+        Map<String, Object> values = new HashMap<>();
+
+        for (Entry<String, List<CustomFieldValue>> valueInfo : valuesByCode.entrySet()) {
+            String cfCode = valueInfo.getKey();
+            List<CustomFieldValue> cfValues = valueInfo.getValue();
+            if (cfValues != null && !cfValues.isEmpty()) {
+                CustomFieldValue valueFound = null;
+                if (cfValues.size() == 1) {
+                    valueFound = cfValues.get(0);
+
+                } else {
+                    Date date = new Date();
+
+                    for (CustomFieldValue cfValue : cfValues) {
+                        if (cfValue.getPeriod() == null && (valueFound == null || valueFound.getPriority() < cfValue.getPriority())) {
+                            valueFound = cfValue;
+
+                        } else if (cfValue.getPeriod() != null && cfValue.getPeriod().isCorrespondsToPeriod(date)) {
+                            if (valueFound == null || valueFound.getPriority() < cfValue.getPriority()) {
+                                valueFound = cfValue;
+                            }
+                        }
+                    }
+                }
+                if (valueFound != null) {
+                    values.put(cfCode, valueFound.getValue());
+                }
+            }
+        }
+        return values;
+    }
+
+    /**
      * Set custom field values as is. Not responsible for validity of what is being set. Only a check is made to mark new versionable custom field value periods as new.
      * 
      * @param newValuesByCode values by code

@@ -236,7 +236,8 @@
         </description>
         <tag-name>objectConverter</tag-name>
         <converter>
-            <converter-id>org.jboss.seam.faces.conversion.ObjectConverter</converter-id>
+<!--             <converter-id>org.jboss.seam.faces.conversion.ObjectConverter</converter-id> -->
+             <converter-id>omnifaces.SelectItemsIndexConverter</converter-id>
         </converter>
     </tag>
 </facelet-taglib>

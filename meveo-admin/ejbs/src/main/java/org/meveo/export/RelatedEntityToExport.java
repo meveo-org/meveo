@@ -55,7 +55,7 @@ public class RelatedEntityToExport {
     }
 
     @SuppressWarnings("rawtypes")
-    public Class getEntityClass() {
+    public Class<?> getEntityClass() {
         return entityClass;
     }
 

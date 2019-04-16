@@ -10,12 +10,14 @@ import org.hibernate.annotations.*;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.annotation.ImportOrder;
 
 import java.util.List;
 
 @Entity
 @ModuleItem
 @Cacheable
+@ImportOrder(1)
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cec", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @org.hibernate.annotations.Parameter(name = "sequence_name", value = "cust_cec_seq"), })
