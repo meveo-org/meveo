@@ -77,7 +77,7 @@ public class Endpoint extends BusinessEntity {
     /**
      * Parameters that will be exposed in the endpoint path
      */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderColumn(name = "position")
     private List<EndpointPathParameter> pathParameters = new ArrayList<>();
 
