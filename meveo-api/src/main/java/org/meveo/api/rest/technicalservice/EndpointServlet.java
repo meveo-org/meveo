@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityOrRelation;
@@ -83,6 +84,9 @@ public class EndpointServlet extends HttpServlet {
     @Inject
     private EndpointResultsCacheContainer endpointResultsCacheContainer;
 
+    @Inject
+    private ParamBean paramBean;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
@@ -113,7 +117,9 @@ public class EndpointServlet extends HttpServlet {
         // Retrieve endpoint
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
 
-        if(endpoint != null && !endpointService.isUserAuthorized(endpoint)){
+        // If endpoint security is enabled, check if user has right to access that particular endpoint
+        boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
+        if(endpointSecurityEnabled && endpoint != null && !endpointService.isUserAuthorized(endpoint)){
             endpointExecution.getResp().setStatus(403);
             endpointExecution.getWriter().print("You are not authorized to access this endpoint");
             return;
