@@ -230,6 +230,12 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
         return childEntityFieldDM;
     }
+    
+    public List<CustomFieldMatrixColumn> getChildEntityFieldList(){
+    	ArrayList<CustomFieldMatrixColumn> arrayList = new ArrayList<>(childEntityFieldDM.getSource());
+    	arrayList.addAll(childEntityFieldDM.getTarget());
+    	return arrayList;
+    }
 
     public void setChildEntityFieldListModel(DualListModel<CustomFieldMatrixColumn> childEntityFieldDM) {
         this.childEntityFieldDM = childEntityFieldDM;

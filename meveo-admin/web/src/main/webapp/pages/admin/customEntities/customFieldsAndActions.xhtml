@@ -635,7 +635,7 @@
 								value="#{customFieldTemplateBean.childEntityFieldListModel}"
 								required="true" var="item" itemLabel="#{item.label}"
 								itemValue="#{item}">
-							    <o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.childEntityFieldListModel.source}" />
+							    <o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.childEntityFieldList}" />
 							</p:pickList>
 						</hftl:decorateFormField>
 					</p:fieldset>

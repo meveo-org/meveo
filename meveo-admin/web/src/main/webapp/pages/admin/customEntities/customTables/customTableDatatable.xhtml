@@ -65,26 +65,48 @@
 							<f:converter converterId="javax.faces.Double" />
 						</h:outputText>
 
-<!-- 						 Entity reference -->
-							<p:commandLink
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}"
-								action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
-								update=":customTableDialog"
-							    process="@this"
-								oncomplete="PF('customTableDialog').show()">
+ 						 <!-- Entity reference -->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}"
+							action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
+							update=":customTableDialog"
+						    process="@this"
+							oncomplete="PF('customTableDialog').show()">
 
-								<h:outputText id="#{entity[field.dbFieldname]}_input_link"
-									value="#{entity[field.dbFieldname]}" styleClass="field-value">
-									<f:converter binding="#{entityReferenceConverter}" />
-									<f:attribute name="field" value="#{field}" />
-								</h:outputText>
-								
-	                            <f:setPropertyActionListener target="#{customTableBean.cet}" value="#{field.entityClazzCetCode}" />
-								<f:setPropertyActionListener target="#{customTableBean.selectedRow}" value="#{entity}"/>
-								<f:setPropertyActionListener target="#{customTableBean.selectedRowField}" value="#{field}"/>
-								<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
-								
-							</p:commandLink>
+							<h:outputText id="#{entity[field.dbFieldname]}_input_link"
+								value="#{entity[field.dbFieldname]}" styleClass="field-value">
+								<f:converter binding="#{entityReferenceConverter}" />
+								<f:attribute name="field" value="#{field}" />
+							</h:outputText>
+							
+                            <f:setPropertyActionListener target="#{customTableBean.cet}" value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener target="#{customTableBean.selectedRow}" value="#{entity}"/>
+							<f:setPropertyActionListener target="#{customTableBean.selectedRowField}" value="#{field}"/>
+							<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
+							
+						</p:commandLink>
+<!-- 													 -->
+						
+						<!-- Child entity -->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}"
+							action="#{childEntityPopupBean.initEntity(field.entityClazzCetCode, entity[field.dbFieldname])}"
+							update=":childEntityPopup"
+						    process="@this"
+							oncomplete="PF('childEntityPopup').show()">
+
+							<h:outputText id="#{entity[field.dbFieldname]}_out_link"
+										  value="#{entity[field.dbFieldname]}"
+										  converter="jsonConverter"
+										  styleClass="field-value" />
+
+							
+                            <f:setPropertyActionListener target="#{customTableBean.cet}" value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener target="#{customTableBean.selectedRow}" value="#{entity}"/>
+							<f:setPropertyActionListener target="#{customTableBean.selectedRowField}" value="#{field}"/>
+							<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
+							
+						</p:commandLink>
 
 					</f:facet>
 
@@ -165,31 +187,6 @@
 								var="listVal" itemValue="#{listVal.key}"
 								itemLabel="#{listVal.value} (#{listVal.key})" />
 						</p:selectOneMenu>
-
-						<!--  Entity reference -->
-						<c:if test="#{popupMode == 'false'}">
-						
-<!-- 						<hftl:formPanel> -->
-<!-- 									<hftl:formField id="entityRef"  -->
-<!-- 											label="#{field.getDescription(bean.currentLocale.ISO3Language)}" -->
-<!-- 											field="#{field.dbFieldname}"  -->
-<!-- 											required="#{field.valueRequired}" popup="true"  popupId="popup"/> -->
-<!-- 						</hftl:formPanel> -->
-
-
-<!-- 							<p:commandLink -->
-<!-- 								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}" -->
-<!-- 								action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}" -->
-<!-- 								oncomplete="PF('customTableDialog').show()"> -->
-
-<!-- 								<h:outputText id="#{entity[field.dbFieldname]}_input_link" -->
-<!-- 									value="#{entity[field.dbFieldname]}" styleClass="field-value"> -->
-<!-- 									<f:converter binding="#{entityReferenceConverter}" /> -->
-<!-- 									<f:attribute name="field" value="#{field}" /> -->
-<!-- 								</h:outputText> -->
-
-<!-- 							</p:commandLink> -->
-						</c:if>
 
 					</f:facet>
 				</p:cellEditor>
