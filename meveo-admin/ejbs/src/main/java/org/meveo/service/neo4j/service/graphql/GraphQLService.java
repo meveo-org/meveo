@@ -344,6 +344,7 @@ public class GraphQLService {
                 graphQLField.setRequired(customFieldTemplate.isValueRequired());
 
                 switch (customFieldTemplate.getFieldType()) {
+                    case LIST:
                     case STRING:
                     case TEXT_AREA:
                         graphQLField.setFieldType("String");
