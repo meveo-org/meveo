@@ -28,22 +28,22 @@ public class ScriptUtils {
 
         // Try to find boxed type
         switch (type) {
-            case "Integer":
-                classAndValue.setValue(Integer.parseInt(value));
             case "int":
                 classAndValue.setClass(int.class);
+            case "Integer":
+                classAndValue.setValue(Integer.parseInt(value));
                 break;
 
-            case "Double":
-                classAndValue.setValue(Double.parseDouble(value));
             case "double":
                 classAndValue.setClass(double.class);
+            case "Double":
+                classAndValue.setValue(Double.parseDouble(value));
                 break;
 
-            case "Long":
-                classAndValue.setValue(Long.parseLong(value));
             case "long":
                 classAndValue.setClass(long.class);
+            case "Long":
+                classAndValue.setValue(Long.parseLong(value));
                 break;
 
             default:
