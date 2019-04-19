@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -33,10 +32,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
@@ -101,7 +96,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         ScriptInstance scriptInstance = findByCode(scriptCode);
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
-
+        
         ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
         return super.execute(executionEngine, context);
     }
@@ -226,21 +221,4 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         return scriptInterfaces;
     }
 
-    public List<MethodDeclaration> getMethodsByScript(String script) {
-        CompilationUnit compilationUnit = JavaParser.parse(script);
-        final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
-                .stream()
-                .filter(e -> e instanceof ClassOrInterfaceDeclaration)
-                .map(e -> (ClassOrInterfaceDeclaration) e)
-                .findFirst()
-                .get();
-
-        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
-                .stream()
-                .filter(e -> e instanceof MethodDeclaration)
-                .map(e -> (MethodDeclaration) e)
-                .collect(Collectors.toList());
-
-        return methods;
-    }
 }

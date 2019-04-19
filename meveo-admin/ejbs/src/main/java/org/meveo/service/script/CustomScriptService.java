@@ -69,9 +69,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private EndpointService endpointService;
 
-    @Inject
-    private ScriptInstanceService scriptInstanceService;
-
 //    protected final Class<ScriptInterface> scriptInterfaceClass;
 
     private Map<CacheKeyStr, ScriptInterfaceSupplier> allScriptInterfaces = new HashMap<>();
@@ -183,11 +180,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         // Remove the map the keys that are not outputs
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(script.getCode());
-        if (scriptInstance != null && CollectionUtils.isNotEmpty(scriptInstance.getScriptOutputs())) {
+        if (CollectionUtils.isNotEmpty(script.getScriptOutputs())) {
             for(Iterator<Map.Entry<String, Object>> it = context.entrySet().iterator(); it.hasNext();){
                 Map.Entry<String, Object> entry = it.next();
-                if (!scriptInstance.getScriptOutputs().contains(entry.getKey())) {
+                if (!script.getScriptOutputs().contains(entry.getKey())) {
                     it.remove();
                 }
             }
@@ -413,8 +409,19 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     protected void beforeUpdateOrCreate(T script) throws BusinessException {
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+            CompilationUnit compilationUnit = JavaParser.parse(script.getScript());
+            final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
+                    .stream()
+                    .filter(e -> e instanceof ClassOrInterfaceDeclaration)
+                    .map(e -> (ClassOrInterfaceDeclaration) e)
+                    .findFirst()
+                    .get();
 
-            final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(script.getScript());
+            final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+                    .stream()
+                    .filter(e -> e instanceof MethodDeclaration)
+                    .map(e -> (MethodDeclaration) e)
+                    .collect(Collectors.toList());
 
             final List<Accessor> setters = methods.stream()
                     .filter(e -> e.getNameAsString().startsWith(SET))

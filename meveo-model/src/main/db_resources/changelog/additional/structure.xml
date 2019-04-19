@@ -591,5 +591,26 @@
             <column name="is_summary" value="0"/>
         </update>
     </changeSet>
-
+    <changeSet author="Hien Bach" id="meveo_script_inputs">
+        <createTable tableName="meveo_script_inputs">
+            <column name="meveo_script_instance_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="script_input" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="meveo_script_instance_id, script_input" constraintName="pk_meveo_script_inputs" tableName="meveo_script_inputs" />
+    </changeSet>
+    <changeSet author="Hien Bach" id="meveo_script_outputs">
+        <createTable tableName="meveo_script_outputs">
+            <column name="meveo_script_instance_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="script_output" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="meveo_script_instance_id, script_output" constraintName="pk_meveo_script_outputs" tableName="meveo_script_outputs" />
+    </changeSet>
 </databaseChangeLog>

@@ -27,10 +27,7 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptIO;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -276,20 +273,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public List<ScriptIO> getInputs() {
         if (CollectionUtils.isEmpty(inputs)) {
             if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(entity.getScript());
-                final List<String> setters = methods.stream()
-                        .filter(e -> e.getNameAsString().startsWith("set"))
-                        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
-                        .filter(e -> e.getParameters().size() == 1)
-                        .map(methodDeclaration -> {
-                            String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                            String setter = Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1);
-                            return setter;
-                        }).collect(Collectors.toList());
-
+                final List<Accessor> setters = entity.getSetters();
                 if (CollectionUtils.isNotEmpty(setters)) {
-                    for (String item : setters) {
-                        inputs.add(createIO(item));
+                    for (Accessor accessor : setters) {
+                        inputs.add(createIO(accessor.getName()));
                     }
                 }
             }
@@ -308,25 +295,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public List<ScriptIO> getOutputs() {
         if (CollectionUtils.isEmpty(outputs)) {
             if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(entity.getScript());
-                final List<String> getters = methods.stream()
-                        .filter(e -> e.getNameAsString().startsWith("get") || e.getNameAsString().startsWith("is"))
-                        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
-                        .filter(e -> e.getParameters().isEmpty())
-                        .map(methodDeclaration -> {
-
-                            String accessorFieldName;
-                            if (methodDeclaration.getNameAsString().startsWith("get")) {
-                                accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                            } else {
-                                accessorFieldName = methodDeclaration.getNameAsString().substring(2);
-                            }
-                            String output = Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1);
-                            return output;
-                        }).collect(Collectors.toList());
+                final List<Accessor> getters = entity.getGetters();
                 if (CollectionUtils.isNotEmpty(getters)) {
-                    for (String outPutName : getters) {
-                        outputs.add(createIO(outPutName));
+                    for (Accessor accessor : getters) {
+                        outputs.add(createIO(accessor.getName()));
                     }
                 }
             }
