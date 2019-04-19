@@ -18,8 +18,7 @@
  */
 package org.meveo.model.scripts;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.*;
 
@@ -53,6 +52,16 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<Role>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @JoinTable(name="meveo_script_inputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
+    @Column(name="script_input")
+    private Set<String> scriptInputs = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @JoinTable(name="meveo_script_outputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
+    @Column(name="script_output")
+    private Set<String> scriptOutputs = new HashSet<>();
+
     /**
      * @return the executionRoles
      */
@@ -81,4 +90,19 @@ public class ScriptInstance extends CustomScript {
         this.sourcingRoles = sourcingRoles;
     }
 
+    public Set<String> getScriptInputs() {
+        return scriptInputs;
+    }
+
+    public void setScriptInputs(Set<String> scriptInputs) {
+        this.scriptInputs = scriptInputs;
+    }
+
+    public Set<String> getScriptOutputs() {
+        return scriptOutputs;
+    }
+
+    public void setScriptOutputs(Set<String> scriptOutputs) {
+        this.scriptOutputs = scriptOutputs;
+    }
 }

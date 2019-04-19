@@ -18,6 +18,9 @@
  */
 package org.meveo.admin.action.catalog;
 
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
@@ -25,11 +28,11 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.ScriptIO;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
-import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -42,6 +45,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Standard backing bean for {@link org.meveo.model.scripts.ScriptInstance} (extends {@link org.meveo.admin.action.BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -63,6 +67,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     private DualListModel<Role> execRolesDM;
     private DualListModel<Role> sourcRolesDM;
+
+    private List<ScriptIO> inputs = new ArrayList<>();
+    private List<ScriptIO> outputs = new ArrayList<>();
+
 
     public void initCompilationErrors() {
         if (FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest()) {
@@ -184,6 +192,27 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (sourcRolesDM != null) {
             getEntity().getSourcingRoles().addAll(roleService.refreshOrRetrieve(sourcRolesDM.getTarget()));
         }
+        if (CollectionUtils.isNotEmpty(inputs)) {
+            List<String> scriptInputs = new ArrayList<>();
+            for (ScriptIO scriptIO : inputs) {
+                if (scriptIO.isEditable()) {
+                    scriptInputs.add(scriptIO.getName());
+                }
+                getEntity().getScriptInputs().clear();
+                getEntity().getScriptInputs().addAll(scriptInputs);
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(outputs)) {
+            List<String> scriptOutputs = new ArrayList<>();
+            for (ScriptIO scriptIO : outputs) {
+                if (scriptIO.isEditable()) {
+                    scriptOutputs.add(scriptIO.getName());
+                }
+                getEntity().getScriptOutputs().clear();
+                getEntity().getScriptOutputs().addAll(scriptOutputs);
+            }
+        }
 
         String result = super.saveOrUpdate(killConversation);
 
@@ -244,4 +273,100 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         return scriptInstanceService.findByCodeLike(query);
     }
 
+    public List<ScriptIO> getInputs() {
+        if (CollectionUtils.isEmpty(inputs)) {
+            if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+                final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(entity.getScript());
+                final List<String> setters = methods.stream()
+                        .filter(e -> e.getNameAsString().startsWith("set"))
+                        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+                        .filter(e -> e.getParameters().size() == 1)
+                        .map(methodDeclaration -> {
+                            String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+                            String setter = Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1);
+                            return setter;
+                        }).collect(Collectors.toList());
+
+                if (CollectionUtils.isNotEmpty(setters)) {
+                    for (String item : setters) {
+                        inputs.add(createIO(item));
+                    }
+                }
+            }
+            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptInputs())) {
+                ScriptIO input;
+                for (String item : entity.getScriptInputs()) {
+                    input = new ScriptIO();
+                    input.setName(item);
+                    inputs.add(input);
+                }
+            }
+        }
+        return inputs;
+    }
+
+    public List<ScriptIO> getOutputs() {
+        if (CollectionUtils.isEmpty(outputs)) {
+            if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+                final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(entity.getScript());
+                final List<String> getters = methods.stream()
+                        .filter(e -> e.getNameAsString().startsWith("get") || e.getNameAsString().startsWith("is"))
+                        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+                        .filter(e -> e.getParameters().isEmpty())
+                        .map(methodDeclaration -> {
+
+                            String accessorFieldName;
+                            if (methodDeclaration.getNameAsString().startsWith("get")) {
+                                accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+                            } else {
+                                accessorFieldName = methodDeclaration.getNameAsString().substring(2);
+                            }
+                            String output = Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1);
+                            return output;
+                        }).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(getters)) {
+                    for (String outPutName : getters) {
+                        outputs.add(createIO(outPutName));
+                    }
+                }
+            }
+
+            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptOutputs())) {
+                ScriptIO output;
+                for (String item : entity.getScriptOutputs()) {
+                    output = new ScriptIO();
+                    output.setName(item);
+                    outputs.add(output);
+                }
+            }
+        }
+        return outputs;
+    }
+
+    public void addNewInput() {
+        ScriptIO scriptIO = new ScriptIO();
+        scriptIO.setEditable(true);
+        inputs.add(scriptIO);
+    }
+
+    public void addNewOutput() {
+        ScriptIO scriptIO = new ScriptIO();
+        scriptIO.setEditable(true);
+        outputs.add(scriptIO);
+    }
+
+    public void removeScriptInput(ScriptIO scriptIO) {
+        inputs.remove(scriptIO);
+    }
+
+    public void removeScriptOutput(ScriptIO scriptIO) {
+        outputs.remove(scriptIO);
+    }
+
+    private ScriptIO createIO(String name) {
+        ScriptIO scriptIO = new ScriptIO();
+        scriptIO.setName(name);
+        scriptIO.setEditable(false);
+        return scriptIO;
+    }
 }

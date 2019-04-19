@@ -22,13 +22,13 @@ public class ES5ScriptEngine implements ScriptInterface {
     	// Initialize runtime
         V8 runtime = V8.createV8Runtime();
         methodContext.forEach((k, v) -> {
-        	if(v instanceof String) {
+        	if (v instanceof String) {
         		runtime.add(k, (String) v);
-        	}else if(v instanceof Integer) {
+        	} else if (v instanceof Integer) {
         		runtime.add(k, (int) v);
-        	}else if(v instanceof Double) {
+        	} else if (v instanceof Double) {
         		runtime.add(k, (double) v);
-        	}else if(v instanceof Boolean) {
+        	} else if (v instanceof Boolean) {
         		runtime.add(k, (boolean) v);
         	}
         });

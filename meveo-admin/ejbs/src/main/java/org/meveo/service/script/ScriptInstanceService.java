@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -32,6 +33,10 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
@@ -85,9 +90,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param scriptCode ScriptInstanceCode
      * @param context Context parameters (optional)
      * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws InvalidPermissionException Insufficient access to run the script
-     * @throws ElementNotFoundException Script not found
-     * @throws BusinessException Any execution exception
+     * @throws org.meveo.admin.exception.InvalidPermissionException Insufficient access to run the script
+     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
+     * @throws org.meveo.admin.exception.BusinessException Any execution exception
      */
     @Override
     public Map<String, Object> execute(String scriptCode, Map<String, Object> context)
@@ -96,7 +101,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         ScriptInstance scriptInstance = findByCode(scriptCode);
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
-        
+
         ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
         return super.execute(executionEngine, context);
     }
@@ -128,7 +133,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * with no executionRoles can be executed by any user.
      *
      * @param scriptInstance instance of script
-     * @throws InvalidPermissionException invalid permission exception.
+     * @throws org.meveo.admin.exception.InvalidPermissionException invalid permission exception.
      */
     public void isUserHasExecutionRole(ScriptInstance scriptInstance) throws InvalidPermissionException {
         if (scriptInstance != null && scriptInstance.getExecutionRoles() != null && !scriptInstance.getExecutionRoles().isEmpty()) {
@@ -166,7 +171,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param workerName The name of the API or service that will be invoked.
      * @param methodName The name of the method that will be invoked.
      * @param parameters The array of parameters accepted by the method. They must be specified in exactly the same order as the target method.
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -221,4 +226,21 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         return scriptInterfaces;
     }
 
+    public List<MethodDeclaration> getMethodsByScript(String script) {
+        CompilationUnit compilationUnit = JavaParser.parse(script);
+        final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
+                .stream()
+                .filter(e -> e instanceof ClassOrInterfaceDeclaration)
+                .map(e -> (ClassOrInterfaceDeclaration) e)
+                .findFirst()
+                .get();
+
+        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+                .stream()
+                .filter(e -> e instanceof MethodDeclaration)
+                .map(e -> (MethodDeclaration) e)
+                .collect(Collectors.toList());
+
+        return methods;
+    }
 }

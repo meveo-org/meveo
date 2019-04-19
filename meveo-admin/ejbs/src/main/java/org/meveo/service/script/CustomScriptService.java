@@ -24,15 +24,7 @@ import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,6 +37,9 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 
+import com.eclipsesource.v8.V8;
+import com.eclipsesource.v8.V8ScriptCompilationException;
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -52,11 +47,7 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.FunctionIO;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
@@ -77,6 +68,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
 //    protected final Class<ScriptInterface> scriptInterfaceClass;
 
@@ -183,11 +177,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     protected Map<String, Object> buildResultMap(ScriptInterface engine, Map<String, Object> context) {
         CustomScript script = this.findByCode(engine.getClass().getName());
 
-        if(script == null) {
+        if (script == null) {
         	// The script is probably not a Java script and we cannot retrieve its code using its class name
         	return context;
         }
-        
+
+        // Remove the map the keys that are not outputs
+        ScriptInstance scriptInstance = scriptInstanceService.findByCode(script.getCode());
+        if (scriptInstance != null && CollectionUtils.isNotEmpty(scriptInstance.getScriptOutputs())) {
+            for(Iterator<Map.Entry<String, Object>> it = context.entrySet().iterator(); it.hasNext();){
+                Map.Entry<String, Object> entry = it.next();
+                if (!scriptInstance.getScriptOutputs().contains(entry.getKey())) {
+                    it.remove();
+                }
+            }
+        }
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             for (Accessor getter : script.getGetters()) {
@@ -223,7 +227,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      *
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public void constructClassPath() throws IOException {
 
@@ -409,19 +413,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     protected void beforeUpdateOrCreate(T script) throws BusinessException {
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-            CompilationUnit compilationUnit = JavaParser.parse(script.getScript());
-            final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
-                    .stream()
-                    .filter(e -> e instanceof ClassOrInterfaceDeclaration)
-                    .map(e -> (ClassOrInterfaceDeclaration) e)
-                    .findFirst()
-                    .get();
 
-            final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
-                    .stream()
-                    .filter(e -> e instanceof MethodDeclaration)
-                    .map(e -> (MethodDeclaration) e)
-                    .collect(Collectors.toList());
+            final List<MethodDeclaration> methods = scriptInstanceService.getMethodsByScript(script.getScript());
 
             final List<Accessor> setters = methods.stream()
                     .filter(e -> e.getNameAsString().startsWith(SET))
@@ -542,21 +535,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 return scriptErrors;
             }
         } else {
-        	ScriptInterface engine = new ES5ScriptEngine(sourceCode);
-            allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-//            V8 runtime = V8.createV8Runtime();
-//            try {
-//                runtime.executeScript(sourceCode);
-//            } catch (V8ScriptCompilationException e){
-//                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-//                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-//                scriptInstanceError.setMessage(e.getMessage());
-//                scriptInstanceError.setLineNumber(e.getLineNumber());
-//                scriptInstanceError.setColumnNumber(e.getStartColumn());
-//                scriptInstanceError.setSourceFile(e.getSourceLine());
-//                scriptErrors.add(scriptInstanceError);
-//                return scriptErrors;
-//            }
+            V8 runtime = V8.createV8Runtime();
+            try {
+                runtime.executeScript(sourceCode);
+                ScriptInterface engine = new ES5ScriptEngine(sourceCode);
+                allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
+            } catch (V8ScriptCompilationException e){
+                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
+                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
+                scriptInstanceError.setMessage(e.getMessage());
+                scriptInstanceError.setLineNumber(e.getLineNumber());
+                scriptInstanceError.setColumnNumber(e.getStartColumn());
+                scriptInstanceError.setSourceFile(e.getSourceLine());
+                scriptErrors.add(scriptInstanceError);
+                return scriptErrors;
+            }
             return null;
         }
     }
@@ -567,7 +560,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws CharSequenceCompilerException char sequence compiler exception.
+     * @throws org.meveo.service.script.CharSequenceCompilerException char sequence compiler exception.
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
 
@@ -648,8 +641,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return Script interface Class
-     * @throws InvalidScriptException Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
+     * @throws org.meveo.admin.exception.InvalidScriptException Were not able to instantiate or compile a script
+     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
      */
     @Lock(LockType.WRITE)
     protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
@@ -684,8 +677,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return A compiled script class
-     * @throws InvalidScriptException Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
+     * @throws org.meveo.admin.exception.InvalidScriptException Were not able to instantiate or compile a script
+     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
      */
     @Lock(LockType.READ)
     public ScriptInterface getScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
