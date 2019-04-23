@@ -46,6 +46,30 @@ public class ScriptUtils {
                 classAndValue.setValue(Long.parseLong(value));
                 break;
 
+            case "byte":
+                classAndValue.setClass(byte.class);
+            case "Byte":
+                classAndValue.setValue(Byte.parseByte(value));
+                break;
+
+            case "short":
+                classAndValue.setClass(short.class);
+            case "Short":
+                classAndValue.setValue(Short.parseShort(value));
+                break;
+
+            case "float":
+                classAndValue.setClass(float.class);
+            case "Float":
+                classAndValue.setValue(Float.parseFloat(value));
+                break;
+
+            case "boolean":
+                classAndValue.setClass(boolean.class);
+            case "Boolean":
+                classAndValue.setValue(Boolean.parseBoolean(value));
+                break;
+
             default:
                 classAndValue.setValue(value);
                 logger.warn("Type {} not handled for string parsing", type);
