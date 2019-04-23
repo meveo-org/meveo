@@ -55,7 +55,7 @@
 	                                   lineNumbers="true" required="true"/>
 	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
 	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
-	                                         action="#{scriptInstanceBean.testCompilation}" update="@form"/>
+	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors"/>
 	                    </h:panelGroup>
 	                </hftl:decorateFormField>
  				</c:if>
@@ -70,7 +70,7 @@
 	                                   lineNumbers="true" required="true"/>
 	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
 	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
-	                                         action="#{scriptInstanceBean.testCompilation}" update="@form"/>
+	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors"/>
 	                    </h:panelGroup>
                 	</hftl:decorateFormField>
  				</c:if>
