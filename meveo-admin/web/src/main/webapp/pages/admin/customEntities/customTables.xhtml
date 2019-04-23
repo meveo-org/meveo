@@ -27,8 +27,19 @@
 
 		<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
 		
-  	    <ui:include src="/pages/admin/customEntities/customTables/customTablePopup.xhtml"/>
-	    <ui:include src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml"/>
+  	    <ui:include src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
+  	    	<ui:param name="prefix" value="listing"/>
+  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
+  	    	<ui:param name="bean" value="#{customTableBean}"/>
+    	</ui:include>
+    	
+	    <ui:include src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
+ 		    <ui:param name="prefix" value="listing"/>
+  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
+  	    	<ui:param name="bean" value="#{customTableBean}"/>
+	    </ui:include>
+	    
+  	    <ui:include src="/pages/admin/customEntities/customTables/customTableRowDetail.xhtml"/>
 		
 		<o:importConstants
 			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />

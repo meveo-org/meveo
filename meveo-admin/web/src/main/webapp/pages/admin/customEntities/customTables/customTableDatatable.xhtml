@@ -8,8 +8,7 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:o="http://omnifaces.org/ui">
 
-	<o:importConstants
-		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
 		
 	<h:form id="#{id}ctForm">
 		<p:dataTable id="#{id}ctSearchResults" value="#{bean.dataModel}"
@@ -69,9 +68,9 @@
 						<p:commandLink
 							rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}"
 							action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
-							update=":customTableDialog"
+							update=":listing_customTableDialog"
 						    process="@this"
-							oncomplete="PF('customTableDialog').show()">
+							oncomplete="PF('listing_customTableDialog').show()">
 
 							<h:outputText id="#{entity[field.dbFieldname]}_input_link"
 								value="#{entity[field.dbFieldname]}" styleClass="field-value">
@@ -85,15 +84,14 @@
 							<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
 							
 						</p:commandLink>
-<!-- 													 -->
 						
 						<!-- Child entity -->
 						<p:commandLink
 							rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}"
 							action="#{childEntityPopupBean.initEntity(field.entityClazzCetCode, entity[field.dbFieldname])}"
-							update=":childEntityPopup"
+							update=":listing_childEntityPopup"
 						    process="@this"
-							oncomplete="PF('childEntityPopup').show()">
+							oncomplete="PF('listing_childEntityPopup').show()">
 
 							<h:outputText id="#{entity[field.dbFieldname]}_out_link"
 										  value="#{entity[field.dbFieldname]}"
@@ -201,6 +199,16 @@
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 						message="#{messages['commons.confirmDelete']}"
 						icon="ui-icon-alert" />
+				</p:commandButton>
+				<p:commandButton id="detail" icon="ui-icon-document"
+					update=":rowDetail"
+					process="@this"
+					immediate="true"
+					action="#{customTableRowDetailBean.initEntity(customTableBean.cet, entity, customTableBean.fields)}" 
+					oncomplete="PF('rowDetail').show()">
+					
+					<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
+					
 				</p:commandButton>
 			</p:column>
 

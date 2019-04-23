@@ -3,6 +3,7 @@ package org.meveo.model.crm.custom;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -1201,20 +1202,14 @@ public class CustomFieldValue implements Serializable {
 
         if (value instanceof Date) {
             dateValue = (Date) value;
-
         } else if (value instanceof BigDecimal) {
             doubleValue = ((BigDecimal) value).setScale(2, RoundingMode.HALF_UP).doubleValue();
-
         } else if (value instanceof Double) {
             doubleValue = (Double) value;
-
-        } else if (value instanceof Long) {
-            longValue = (Long) value;
-        }else if (value instanceof Boolean) {
-                booleanValue = (Boolean) value;
-        } else if (value instanceof Integer) {
-            longValue = ((Integer) value).longValue();
-
+        } else if (value instanceof Boolean) {
+            booleanValue = (Boolean) value;
+        } else if (value instanceof Number) {
+            longValue = ((Number) value).longValue();
         } else if (value instanceof String) {
             stringValue = (String) value;
 

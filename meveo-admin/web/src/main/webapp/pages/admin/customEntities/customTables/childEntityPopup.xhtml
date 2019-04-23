@@ -8,7 +8,7 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:o="http://omnifaces.org/ui">
 
-	<p:dialog id="childEntityPopup" widgetVar="childEntityPopup" modal="true" draggable="false" resizable="false" style="max-width:80%">
+	<p:dialog id="#{prefix}_childEntityPopup" widgetVar="#{prefix}_childEntityPopup" modal="true" draggable="false" resizable="false" style="max-width:80%">
 		<h:form width="100%">
 			<p:fieldset legend="#{childEntityPopupBean.cetCode}">
 				<h:panelGrid columns="5" cellspacing="5" width="100%">
@@ -16,16 +16,16 @@
 						<h:panelGrid columns="3">
 							<h:outputText value="#{cft.code} :"/>
 							<hftl:customFieldValueField entity="#{customEntityInstanceBean.entity}" cft="#{cft}" 
-													    field="#{childEntityPopupBean.values.getCfValue(cft.code)}"
+													    field="#{childEntityPopupBean.values.getCfValue(cft.dbFieldname)}"
 													    edit="true" />
 						</h:panelGrid>
 					</c:forEach>
 				</h:panelGrid>			
 			</p:fieldset>
 			<p:commandButton value="Save" style="margin-top: 5px; margin-left: 1px;"
- 							 action="#{customTableBean.onChildEntityUpdated(childEntityPopupBean.values)}"
- 							 update=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"
-							 oncomplete="PF('childEntityPopup').hide()">
+ 							 action="#{bean.onChildEntityUpdated(childEntityPopupBean.values)}"
+ 							 update="#{update}"
+							 oncomplete="PF('#{prefix}_childEntityPopup').hide()">
  			 </p:commandButton>
 		</h:form>
 	</p:dialog>

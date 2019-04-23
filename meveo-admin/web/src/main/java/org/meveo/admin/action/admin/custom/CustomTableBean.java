@@ -335,6 +335,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         customTableBasedDataModel = null;
     }
     
+    @ActionMethod
+    public void update(Map<String, Object> values) throws BusinessException {
+    	customTableService.update(customTableName, values);
+        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+    }
+    
     /**
      * Handle a file upload and import the file
      * 
