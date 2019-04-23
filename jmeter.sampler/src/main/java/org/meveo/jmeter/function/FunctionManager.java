@@ -41,6 +41,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.IOUtil;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -262,11 +263,12 @@ public class FunctionManager {
                 if (response.getStatusLine().getStatusCode() >= 200 && response.getStatusLine().getStatusCode() < 400) {
                     return onSuccess.onSuccess(response.getEntity());
                 } else {
+                    final String responseContentString = IOUtils.toString(response.getEntity().getContent());
                     try{
-                        Map<String, Object> responseContent = JacksonUtil.OBJECT_MAPPER.readValue(response.getEntity().getContent(), GenericTypeReferences.MAP_STRING_OBJECT);
+                        Map<String, Object> responseContent = JacksonUtil.OBJECT_MAPPER.readValue(responseContentString, GenericTypeReferences.MAP_STRING_OBJECT);
                         LOG.error(errorMessage + " : {}. {}.", response.getStatusLine(), responseContent.get("error_description"));
                     }catch (Exception e){
-                        LOG.error(errorMessage + " : {}", response.getStatusLine());
+                        LOG.error(errorMessage + " : {}. {}.", response.getStatusLine(), responseContentString);
                     }
                 }
             }
