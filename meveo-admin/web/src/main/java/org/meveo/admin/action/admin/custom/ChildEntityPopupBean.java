@@ -18,12 +18,14 @@ package org.meveo.admin.action.admin.custom;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.jaxb.customer.CustomField;
@@ -48,10 +50,16 @@ public class ChildEntityPopupBean implements Serializable {
     
     public void initEntity(String cetCode, String serializedValues) {
     	values = new CustomFieldValues();
-    	this.cetCode = cetCode;
     	fields = customFieldTemplateService.findByAppliesTo("CE_"+cetCode).values();
-    	Map<String, Object> mapOfValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
-    	mapOfValues.forEach((k,v) -> values.setValue(k, v));
+    	this.cetCode = cetCode;
+
+    	if(!StringUtils.isBlank(serializedValues)) {
+    		Map<String, Object> mapOfValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
+        	mapOfValues.forEach((k,v) -> values.setValue(k, v));
+    	}else {
+    		fields.forEach(t -> values.setValue(t.getDbFieldname(), t.getDefaultValueConverted()));
+    	}
+    	
     }
     
 	public CustomFieldValues getValues() {
