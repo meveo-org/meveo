@@ -27,7 +27,7 @@
 						<hftl:searchTextField id="#{prefix}_#{field.dbFieldname}"
 							backingBean="#{customTablePopupBean}"
 							field="#{field.dbFieldname}"
-							label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
 							maxlength="#{field.maxValue}" />
 					</c:if>
 
@@ -35,7 +35,7 @@
 						<hftl:searchDateField id="#{prefix}_#{field.dbFieldname}"
 							backingBean="#{customTablePopupBean}"
 							field="#{field.dbFieldname}"
-							label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
 							datePattern="#{paramBean.dateFormat}" rangeSearch="true"
 							componentWidth="25" />
 					</c:if>
@@ -45,7 +45,7 @@
 							converterId="javax.faces.Double"
 							backingBean="#{customTablePopupBean}"
 							field="${field.dbFieldname}"
-							label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
 							componentWidth="25" rangeSearch="true" />
 					</c:if>
 
@@ -54,18 +54,18 @@
 							converterId="javax.faces.Long"
 							backingBean="#{customTablePopupBean}"
 							field="${field.dbFieldname}"
-							label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
 							componentWidth="25" rangeSearch="true" />
 					</c:if>
 
 					<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LIST}">
 						<hftl:decorateFormField fieldId="#{prefix}_#{field.dbFieldname}"
-							label="#{field.getDescription(bean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
 							componentWidth="25">
 							<p:selectOneMenu id="#{prefix}_#{field.dbFieldname}"
 								value="#{customTablePopupBean.filters[field.dbFieldname]}"
-								placeholder="#{field.getDescription(bean.currentLocale.ISO3Language)}"
-								label="#{field.getDescription(bean.currentLocale.ISO3Language)}">
+								placeholder="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}"
+								label="#{field.getDescription(customTablePopupBean.currentLocale.ISO3Language)}">
 								<f:selectItem itemValue="#{null}" itemLabel="" />
 								<f:selectItems value="#{field.listValues.entrySet()}"
 									var="listVal" itemValue="#{listVal.key}"
