@@ -103,4 +103,21 @@ public class EndpointService extends BusinessService<Endpoint> {
 
         keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, getEndpointPermission(entity));
     }
+
+    @Override
+    public Endpoint update(Endpoint entity) throws BusinessException {
+        Endpoint endpoint = findById(entity.getId());
+        endpoint.getPathParameters().clear();
+        endpoint.getPathParameters().addAll(entity.getPathParameters());
+        endpoint.getParametersMapping().clear();
+        endpoint.getParametersMapping().addAll(entity.getParametersMapping());
+        endpoint.setJsonataTransformer(entity.getJsonataTransformer());
+        endpoint.setMethod(entity.getMethod());
+        endpoint.setService(entity.getService());
+        endpoint.setSynchronous(entity.isSynchronous());
+        endpoint.setCode(entity.getCode());
+        endpoint.setDescription(entity.getDescription());
+        super.update(endpoint);
+        return entity;
+    }
 }
