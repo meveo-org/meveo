@@ -159,7 +159,7 @@ public class EndpointApi {
         Endpoint endpoint = endpointService.findByCode(endpointDto.getCode());
         if(endpoint != null){
             update(endpoint, endpointDto);
-            return null;
+            return endpoint;
         }else {
             return create(endpointDto);
         }

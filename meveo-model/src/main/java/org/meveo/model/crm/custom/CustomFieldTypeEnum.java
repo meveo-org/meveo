@@ -9,67 +9,72 @@ public enum CustomFieldTypeEnum {
     /**
      * String value
      */
-    STRING(false, String.class),
+    STRING(false, true, String.class),
 
     /**
      * Date value
      */
-    DATE(false, Date.class),
+    DATE(false, true, Date.class),
 
     /**
      * Long value
      */
-    LONG(false, Long.class),
+    LONG(false, true, Long.class),
 
     /**
      * Double value
      */
-    DOUBLE(false, Double.class),
+    DOUBLE(false, true, Double.class),
 
     /**
      * String value picked from a list of values
      */
-    LIST(false, String.class),
+    LIST(false, true, String.class),
 
     /**
      * A reference to an entity
      */
-    ENTITY(false, EntityReferenceWrapper.class),
+    ENTITY(false, false, EntityReferenceWrapper.class),
 
     /**
      * A long string value
      */
-    TEXT_AREA(false, String.class),
+    TEXT_AREA(false, true, String.class),
 
     /**
      * An embedded entity data
      */
-    CHILD_ENTITY(true, EntityReferenceWrapper.class),
+    CHILD_ENTITY(true, true, EntityReferenceWrapper.class),
 
     /**
      * Multi value (map) type value
      */
-    MULTI_VALUE(true, Map.class),
+    MULTI_VALUE(true, true, Map.class),
 	
 	
-    EXPRESSION(false,String.class),
+    EXPRESSION(false, true, String.class),
     
     /**
      * Boolean value
      */
-    BOOLEAN(false, Boolean.class),
+    BOOLEAN(false, true, Boolean.class),
 	
 	 /**
      * EMBEDDED_ENTITY value
      */
     
-	EMBEDDED_ENTITY(true, EntityReferenceWrapper.class);
+	EMBEDDED_ENTITY(true, true, EntityReferenceWrapper.class);
 
 
     /**
      * Is value stored in a serialized form in DB
      */
     private boolean storedSerialized;
+    
+    /**
+     * Is value stored in a serialized form in DB when using collections
+     */
+    private boolean storedSerializedList;
 
     /**
      * Corresponding class to field type for conversion to json
@@ -77,9 +82,10 @@ public enum CustomFieldTypeEnum {
     @SuppressWarnings("rawtypes")
     private Class dataClass;
 
-    CustomFieldTypeEnum(boolean storedSerialized, @SuppressWarnings("rawtypes") Class dataClass) {
+    CustomFieldTypeEnum(boolean storedSerialized, boolean storedSerializedList, @SuppressWarnings("rawtypes") Class dataClass) {
         this.storedSerialized = storedSerialized;
         this.dataClass = dataClass;
+        this.storedSerializedList = storedSerializedList ;
     }
 
     public String getLabel() {
@@ -89,8 +95,14 @@ public enum CustomFieldTypeEnum {
     public boolean isStoredSerialized() {
         return storedSerialized;
     }
+    
+    
 
-    @SuppressWarnings("rawtypes")
+    public boolean isStoredSerializedList() {
+		return storedSerializedList;
+	}
+
+	@SuppressWarnings("rawtypes")
     public Class getDataClass() {
         return dataClass;
     }

@@ -261,7 +261,7 @@
 								fileLimitMessage="#{messages['customFieldTemplate.importFile.fileLimitMessage']}"
 								multiple="false" update=":growl :importSummary @this"
 								onstart="PF('importDialog').hide()"
-								oncomplete="PF('fileUploadWidget').reset()"
+								oncomplete="PF('fileUploadWidget').reset(); PF('fileUploadWidget').reset();"
 								rendered="#{customTableBean.importFuture ==null or customTableBean.importFuture.isDone()}" />
 
 						</hftl:decorateFormField>

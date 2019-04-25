@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.enterprise.context.NonexistentConversationException;
 import javax.faces.FacesException;
 import javax.faces.application.NavigationHandler;
+import javax.faces.application.ViewExpiredException;
 import javax.faces.context.ExceptionHandler;
 import javax.faces.context.ExceptionHandlerWrapper;
 import javax.faces.context.ExternalContext;
@@ -46,7 +47,7 @@ public class CustomExceptionHandler extends ExceptionHandlerWrapper {
                 Throwable throwable = exceptionQueuedEventContext.getException();
                 
                 // Reload the page if NonexistentConversationException occurs
-                if(throwable instanceof NonexistentConversationException) {
+                if(throwable instanceof NonexistentConversationException || throwable instanceof ViewExpiredException) {
                 	ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
                     ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
                 }else {

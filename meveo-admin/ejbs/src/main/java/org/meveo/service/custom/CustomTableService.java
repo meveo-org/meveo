@@ -16,11 +16,40 @@
 
 package org.meveo.service.custom;
 
-import com.fasterxml.jackson.core.JsonGenerator.Feature;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Future;
+
+import javax.annotation.Resource;
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
+import javax.inject.Inject;
+import javax.transaction.NotSupportedException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
+
 import org.apache.commons.collections4.MapUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.document.DocumentField;
@@ -38,19 +67,23 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.index.ElasticSearchClassInfo;
 
-import javax.ejb.*;
-import javax.inject.Inject;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.Future;
+import com.fasterxml.jackson.core.JsonGenerator.Feature;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
 
 @Stateless
 public class CustomTableService extends NativePersistenceService {
@@ -81,6 +114,11 @@ public class CustomTableService extends NativePersistenceService {
 
         return id;
     }
+    
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void createInNewTx(String tableName, Map<String, Object> values) throws BusinessException {
+    	create(tableName, values);
+    }
 
     /**
      * Insert multiple values into table
@@ -99,6 +137,7 @@ public class CustomTableService extends NativePersistenceService {
 
         elasticClient.flushChanges();
     }
+    
 
     /**
      * Insert multiple values into table with optionally not updating ES. Will execute in a new transaction
@@ -253,6 +292,29 @@ public class CustomTableService extends NativePersistenceService {
                 do {
                     queryBuilder.applyPagination(query, firstRow, 500);
                     List<Map<String, Object>> values = query.list();
+
+                    /* Fetch entity references */
+                    Map<Integer, Object[]> fetchedEntityReferences = new HashMap<>();			// Map used to replace data with as key the index of the value to replace and as value the actual (key, value) pair to replace
+                    Map<String, Map<String, String>> entityReferencesCache = new HashMap<>();	// Cache used to avoid fetching multiple time the same data
+                    values.forEach(map -> map.forEach((key, value) -> fields.stream()
+                            .filter(f -> f.getDbFieldname().equals(key)).findFirst()
+                            .ifPresent(customFieldTemplate -> {
+                                if(customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+                                    String referencedEntity = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
+                                        .computeIfAbsent(
+                                            customFieldTemplate.getDbFieldname(),
+                                            k -> {
+                                                log.info("Fetching {} with id {}", customFieldTemplate.getCode(), value);
+                                                Map<String, Object> entityRefValues = findById(k, ((Number) value).longValue());
+                                                entityRefValues.remove("id");				// We don't want to save the id
+                                                return JacksonUtil.toString(entityRefValues);
+                                            }
+                                    );
+                                    fetchedEntityReferences.put(values.indexOf(map), new Object[]{key, referencedEntity});
+                                }
+                            })));
+                    fetchedEntityReferences.forEach((index, array) -> values.get(index).put((String) array[0], array[1])); 
+                    
                     nrItemsFound = values.size();
                     firstRow = firstRow + 500;
 
@@ -281,7 +343,7 @@ public class CustomTableService extends NativePersistenceService {
      * @return Number of records imported
      * @throws BusinessException General business exception
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+//    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public int importData(CustomEntityTemplate customEntityTemplate, File file, boolean append) throws BusinessException {
 
         try (FileInputStream inputStream = new FileInputStream(file)) {
@@ -301,7 +363,7 @@ public class CustomTableService extends NativePersistenceService {
      * @return A future with a number of records imported or exception occurred
      */
     @Asynchronous
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+//    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public Future<DataImportExportStatistics> importDataAsync(CustomEntityTemplate customEntityTemplate, InputStream inputStream, boolean append) {
 
         try {
@@ -309,6 +371,7 @@ public class CustomTableService extends NativePersistenceService {
             return new AsyncResult<>(new DataImportExportStatistics(itemsImported));
 
         } catch (Exception e) {
+        	log.error("Error importing data", e);
             return new AsyncResult<>(new DataImportExportStatistics(e));
         }
     }
@@ -318,12 +381,11 @@ public class CustomTableService extends NativePersistenceService {
      * 
      * @param customEntityTemplate Custom table definition
      * @param inputStream Data stream
-     * @param append True if data should be appended to the existing data
+     * @param append True if data should be appended to the existing data. If false, data will be added in batch. One by one otherwise.
      * @return Number of records imported
      * @throws BusinessException General business exception
      */
-    @SuppressWarnings("rawtypes")
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+//    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public int importData(CustomEntityTemplate customEntityTemplate, InputStream inputStream, boolean append) throws BusinessException {
 
         // Custom table fields. Fields will be sorted by their GUI 'field' position.
@@ -347,43 +409,50 @@ public class CustomTableService extends NativePersistenceService {
 
         ObjectReader oReader = getCSVReader(fields);
 
-        // Delete current data first if in override mode
-        if (!append) {
-            customTableService.remove(tableName);
-        }
-
-        // Update ES in batch way might be faster - reconstructed from a table
-
         try (Reader reader = new InputStreamReader(inputStream)) {
+        	
+    		Map<String, Map<String, Long>> entityReferencesCache = new HashMap<>(); // Cache used to avoid fetching multiple time the same data
 
             MappingIterator<Map<String, Object>> mappingIterator = oReader.readValues(reader);
 
             while (mappingIterator.hasNext()) {
-
-                // Save to DB every 500 records
-                if (importedLines >= 500) {
-
-                    values = convertValues(values, cfts, false);
-                    customTableService.createInNewTx(tableName, values, false);
-
-                    values.clear();
-                    importedLines = 0;
-                }
-
                 Map<String, Object> lineValues = mappingIterator.next();
-                values.add(lineValues);
-
-                importedLines++;
-                importedLinesTotal++;
-
+            	lineValues.remove("id");
+                
+                if(append) {
+                	lineValues = convertValue(lineValues, cfts, true, null);
+                	replaceEntityreferences(fields, entityReferencesCache, lineValues);
+                	Long id = findIdByValues(tableName, lineValues);
+                	if(id == null) {
+                		createInNewTx(tableName, lineValues);
+                		importedLines++;
+                        importedLinesTotal++;
+                	}
+                } else {
+	            	// Save to DB every 500 records
+	                if (importedLines >= 500) {
+	
+	                    saveBatch(cfts, fields, tableName, values, entityReferencesCache);
+	
+	                    values.clear();
+	                    importedLines = 0;
+	                }
+	                importedLines++;
+	                importedLinesTotal++;
+	            	values.add(lineValues);
+                }
+                
+                
                 if (importedLinesTotal % 30000 == 0) {
                     log.trace("Imported {} lines to {} table", importedLinesTotal, tableName);
                 }
+                
             }
 
-            // Save to DB remaining records
-            values = convertValues(values, cfts, false);
-            customTableService.createInNewTx(tableName, values, false);
+            if(!append) {
+                // Save remaining records
+	            saveBatch(cfts, fields, tableName, values, entityReferencesCache);
+            }
 
             // Re-populate ES index
             elasticClient.populateAll(currentUser, CustomTableRecord.class, customEntityTemplate.getCode());
@@ -400,6 +469,74 @@ public class CustomTableService extends NativePersistenceService {
         return importedLinesTotal;
     }
 
+	/**
+	 * @param cfts
+	 * @param fields
+	 * @param tableName
+	 * @param values
+	 * @param entityReferencesCache 
+	 * @return
+	 * @throws ValidationException
+	 * @throws BusinessException
+	 */
+	private void saveBatch(Map<String, CustomFieldTemplate> cfts, List<CustomFieldTemplate> fields, String tableName, List<Map<String, Object>> values, Map<String, Map<String, Long>> entityReferencesCache) throws ValidationException, BusinessException {
+		
+		values = convertValues(values, cfts, false);
+		values = replaceEntityReferences(fields, values, entityReferencesCache);
+		customTableService.createInNewTx(tableName, values, false);
+	}
+
+	/**
+	 * @param fields
+	 * @param entityReferencesCache 
+	 * @param values
+	 * @throws BusinessException
+	 */
+	private List<Map<String, Object>> replaceEntityReferences(List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, Long>> entityReferencesCache) throws BusinessException {
+		List<Map<String, Object>> values = new ArrayList<>(oldvalues);
+		/* Create or retrieve entity references */
+		for (Map<String, Object> map : values) {
+		    replaceEntityreferences(fields, entityReferencesCache, map);
+		}
+		return values;
+	}
+
+	/**
+	 * @param fields
+	 * @param entityReferencesCache
+	 * @param entityRefValueMap
+	 * @throws BusinessException
+	 */
+	private void replaceEntityreferences(List<CustomFieldTemplate> fields, Map<String, Map<String, Long>> entityReferencesCache, Map<String, Object> entityRefValueMap) throws BusinessException {
+		final HashMap<String, Object> iterationMap = new HashMap<>(entityRefValueMap);
+		for (Entry<String, Object> entry : iterationMap.entrySet()) {
+		    String key = entry.getKey();
+		    Object value = entry.getValue();
+		    final Optional<CustomFieldTemplate> templateOptional = fields.stream().filter(f -> f.getDbFieldname().equals(key)).findFirst();
+		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
+		    	String entityRefTableName = CustomEntityTemplate.getDbTablename(templateOptional.get().getEntityClazzCetCode());
+		        // Try to retrieve record first
+		        Long id = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
+		                .computeIfAbsent(
+		                        (String) value,
+		                        serializedValues -> {
+		                            Map<String, Object> entityRefValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
+		                            return findIdByValues(entityRefTableName, entityRefValues);
+		                        }
+		                );
+
+		        // If record is not found, create it
+		        if (id == null) {
+		            Map<String, Object> entityRefValues = JacksonUtil.fromString((String) value, GenericTypeReferences.MAP_STRING_OBJECT);
+		            log.info("Creating missing entity reference {}", entityRefValues);
+		            id = create(entityRefTableName, entityRefValues);
+		        }
+
+		        entityRefValueMap.put(key, id);
+		    }
+		}
+	}
+
     /**
      * Import data into custom table
      * 
@@ -409,7 +546,6 @@ public class CustomTableService extends NativePersistenceService {
      * @return Number of records imported
      * @throws BusinessException General business exception
      */
-    @SuppressWarnings("rawtypes")
     @TransactionAttribute(TransactionAttributeType.NEVER)
     public int importData(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values, boolean append) throws BusinessException {
 
@@ -522,7 +658,7 @@ public class CustomTableService extends NativePersistenceService {
         return mapper.writerFor(Map.class).with(schema).with(new SimpleDateFormat(ParamBean.getInstance().getDateTimeFormat(appProvider.getCode())))
             .with(Feature.WRITE_BIGDECIMAL_AS_PLAIN);
     }
-
+    
     /**
      * Execute a search on given fields for given query values. See ElasticClient.search() for a query format.
      *
@@ -736,14 +872,26 @@ public class CustomTableService extends NativePersistenceService {
                     // String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
                     String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1]; // field name here can be a db field name or a custom field code
 
-                    final CustomFieldTypeEnum fieldType = fields.get(fieldName).getFieldType();
+                    CustomFieldTemplate customFieldTemplate = fields.values()
+                    		.stream()
+                    		.filter(f -> f.getDbFieldname().equals(fieldName))
+                    		.findFirst()
+                    		.get();
+                    
+					final CustomFieldTypeEnum fieldType = customFieldTemplate
+                    		.getFieldType();
+                    
                     Class dataClass = fieldType.getDataClass();
                     if (dataClass == null) {
                         throw new ValidationException("No field definition " + fieldName + " was found");
                     }
 
-                    boolean isList = fields.get(fieldName).getStorageType() == CustomFieldStorageTypeEnum.LIST;
-
+                    boolean isList = customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST;
+                    
+                    if(isList && fieldType.isStoredSerializedList()) {
+                    	isList = false;
+                    }
+                    
                     Object value = castValue(valueEntry.getValue(), dataClass, isList, datePatterns);
 
                     // Replace cft code with db field name if needed

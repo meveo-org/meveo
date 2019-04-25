@@ -366,6 +366,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         }
 
         try {
+        	if(!appendImportedData) {
+                // Delete current data first if in override mode
+    			customTableService.remove(entity.getDbTablename());
+        	}
+        	
             importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
             messages.info(new BundleKey("messages", "customTable.importFile.started"));
 

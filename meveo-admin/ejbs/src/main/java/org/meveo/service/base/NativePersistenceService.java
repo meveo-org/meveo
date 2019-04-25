@@ -21,24 +21,40 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.query.NativeQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
-import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
@@ -194,6 +210,10 @@ public class NativePersistenceService extends BaseService {
                                 preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
                             } else if (fieldValue instanceof Date) {
                                 preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
+                            } else if(fieldValue instanceof Collection) {
+                            	preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
+                            } else {
+                            	log.error("Unhandled field type {}", fieldValue.getClass());
                             }
 
                             i++;
@@ -210,7 +230,7 @@ public class NativePersistenceService extends BaseService {
                     preparedStatement.executeBatch();
 
                 } catch (SQLException e) {
-                    log.error("Failed to bulk insert with sql {}", sql, e);
+                    log.error("Failed to bulk insert with sql {}\n", sql, e);
                     throw e;
                 }
             }
@@ -460,7 +480,7 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     public void remove(String tableName, Set<Long> ids) throws BusinessException {
-        getEntityManager().createNativeQuery("delete from " + tableName + " where id in:ids").setParameter("ids", ids).executeUpdate();
+        getEntityManager().createNativeQuery("delete from " + tableName + " where id in :ids").setParameter("ids", ids).executeUpdate();
 
     }
 
@@ -793,6 +813,31 @@ public class NativePersistenceService extends BaseService {
         SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(), true);
         return query.list();
     }
+    
+    /**
+     * Find a record id in table using its exact values
+     * 
+     * @param cetCodeOrTableName Table name where the record is stored
+     * @param queryValues Values used to filter the result
+     * @return The id of the record if it was found or null if it was not
+     */
+    public Long findIdByValues(String cetCodeOrTableName, Map<String, Object> queryValues) {
+        QueryBuilder queryBuilder = new QueryBuilder("SELECT id FROM " + cetCodeOrTableName + " a ", "a");
+        queryValues.forEach((key, value) -> {
+            queryBuilder.addCriterion(key, "=", value, false);
+        });
+
+        NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);
+        try {
+        	Map<String, Object> singleResult = query.getSingleResult();
+			return ((Number) singleResult.get("id")).longValue();
+        } catch (NoResultException | NonUniqueResultException e) {
+            return null;
+        } catch(Exception e) {
+        	log.error("Error executing query {}", query.getQueryString());
+        	throw e;
+        }
+    }
 
     /**
      * Load and return the list of the records IN A Object[] format from database according to sorting and paging information in {@link PaginationConfiguration} object.
@@ -877,11 +922,15 @@ public class NativePersistenceService extends BaseService {
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Object castValue(Object value, Class targetClass, boolean expectedList, String[] datePatterns) throws ValidationException {
 
+		if(StringUtils.isBlank(value)) {
+			return null;
+		}
+    	
         // Nothing to cast - same data type
         if (targetClass.isAssignableFrom(value.getClass()) && !expectedList) {
             return value;
         }
-
+        
         // A list is expected as value. If value is not a list, parse value as comma separated string and convert each value separately
         if (expectedList) {
             if (value instanceof List || value instanceof Set || value.getClass().isArray()) {
@@ -914,6 +963,10 @@ public class NativePersistenceService extends BaseService {
                 }
             }
 
+        }else {
+        	if(value instanceof Collection) {
+        		return JacksonUtil.toString(value);
+        	}
         }
 
         Number numberVal = null;

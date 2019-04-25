@@ -18,16 +18,25 @@
  */
 package org.meveo.commons.utils;
 
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import java.lang.reflect.Field;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.lang.reflect.Field;
-import java.util.*;
+
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.query.NativeQuery;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 
 /**
  * Query builder class for building JPA queries.
@@ -77,11 +86,12 @@ public class QueryBuilder {
      * @param convertToMap If False, query will return a list of Object[] values. If True, query will return a list of map of values.
      * @return instance of Query.
      */
-    public SQLQuery getNativeQuery(EntityManager em, boolean convertToMap) {
+    @SuppressWarnings("unchecked")
+    public <T> NativeQuery<T> getNativeQuery(EntityManager em, boolean convertToMap) {
         applyOrdering(paginationSortAlias);
 
         Session session = em.unwrap(Session.class);
-        SQLQuery result = session.createSQLQuery(q.toString());
+		NativeQuery<T> result = (NativeQuery<T>) session.createSQLQuery(q.toString());
         applyPagination(result);
 
         if (convertToMap) {
