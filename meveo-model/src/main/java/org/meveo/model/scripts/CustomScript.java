@@ -10,6 +10,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import com.thoughtworks.xstream.annotations.XStreamConverter;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
@@ -140,36 +142,56 @@ public abstract class CustomScript extends Function {
         this.error = error;
     }
 
-	@Override
-	public List<FunctionIO> getInputs() {
-		if(setters == null) {
-			return new ArrayList<>();
-		}
-		return setters.stream().map(s -> {
-					FunctionIO inp = new FunctionIO();
-					inp.setDescription(s.getDescription());
-					inp.setName(s.getName());
-					inp.setType(s.getType());
-					return inp;
-				}).collect(Collectors.toList());
-	}
-
     @Override
-    public List<FunctionIO> getOutputs() {
+    public List<FunctionIO> getInputs() {
         if(setters == null) {
             return new ArrayList<>();
         }
-        return getters.stream().map(s -> {
+        List<FunctionIO> inputs = setters.stream().map(s -> {
             FunctionIO inp = new FunctionIO();
             inp.setDescription(s.getDescription());
             inp.setName(s.getName());
             inp.setType(s.getType());
             return inp;
         }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(scriptInputs)) {
+            inputs.addAll(scriptInputs.stream().map(s -> {
+                FunctionIO inp = new FunctionIO();
+                inp.setDescription(s);
+                inp.setName(s);
+                inp.setType(StringUtils.EMPTY);
+                return inp;
+            }).collect(Collectors.toList()));
+        }
+        return inputs;
     }
 
     @Override
-	public boolean hasInputs() {
+    public List<FunctionIO> getOutputs() {
+        if(setters == null) {
+            return new ArrayList<>();
+        }
+        List<FunctionIO> outputs = getters.stream().map(s -> {
+            FunctionIO inp = new FunctionIO();
+            inp.setDescription(s.getDescription());
+            inp.setName(s.getName());
+            inp.setType(s.getType());
+            return inp;
+        }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(scriptOutputs)) {
+            outputs.addAll(scriptOutputs.stream().map(s -> {
+                FunctionIO inp = new FunctionIO();
+                inp.setDescription(s);
+                inp.setName(s);
+                inp.setType(StringUtils.EMPTY);
+                return inp;
+            }).collect(Collectors.toList()));
+        }
+        return outputs;
+    }
+
+    @Override
+    public boolean hasInputs() {
         return setters != null && !setters.isEmpty();
     }
 
