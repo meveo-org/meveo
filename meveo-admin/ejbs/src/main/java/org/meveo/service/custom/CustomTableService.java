@@ -104,6 +104,9 @@ public class CustomTableService extends NativePersistenceService {
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
+    
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
 
     @Override
@@ -905,5 +908,37 @@ public class CustomTableService extends NativePersistenceService {
 
         }
         return valuesConverted;
+    }
+    
+    /**
+     * Search etities, fetching entity references and converting field names from db column name to custom field names
+     * @param cetCode
+     * @param pagination
+     * @return
+     */
+    public List<Map<String, Object>> searchAndFetch(String cetCode, PaginationConfiguration pagination){
+    	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+    	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+    	
+    	List<Map<String, Object>> entities = customTableService.list(cet.getDbTablename(), pagination);
+    	
+    	cfts.values().forEach(cft -> {
+    		entities.forEach(entity -> {
+        		Object property = entity.get(cft.getDbFieldname());
+				if(property != null) {
+					// Fetch entity reference
+            		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+            			String propertyTableName = CustomEntityTemplate.getDbTablename(cft.getEntityClazzCetCode());
+            			property = customTableService.findById(propertyTableName, ((Number) property).longValue());
+            		}
+            		
+            		// Replace db field names to cft name
+            		entity.remove(cft.getDbFieldname());
+            		entity.put(cft.getCode(), property);
+        		}
+    		});
+    	});
+    	
+    	return entities;
     }
 }
