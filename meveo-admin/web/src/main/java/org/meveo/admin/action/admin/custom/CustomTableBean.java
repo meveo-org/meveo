@@ -113,6 +113,8 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     private int selectedRowIndex;
     
     private CustomFieldTemplate selectedRowField;
+    
+    private int listSize = 0;
 
     public CustomTableBean() {
         super(CustomEntityTemplate.class);
@@ -172,7 +174,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 	}
 
 	public List<Map<String, Object>> list(){
-		return customTableService.list(customTableName);
+		List<Map<String, Object>> list = customTableService.list(customTableName);
+		listSize = list.size();
+		return list;
     }
 
     /**
@@ -181,7 +185,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * @return LazyDataModel implementation.
      */
     public LazyDataModel<Map<String, Object>> getDataModel() {
-        return getDataModel(filters);
+        LazyDataModel<Map<String, Object>> dataModel2 = getDataModel(filters);
+        if(dataModel2 != null) {
+            listSize = dataModel2.getRowCount();
+        }
+		return dataModel2;
     }
 
     /**
@@ -335,6 +343,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         customTableBasedDataModel = null;
     }
     
+    @ActionMethod
+    public void update(Map<String, Object> values) throws BusinessException {
+    	customTableService.update(customTableName, values);
+        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+    }
+    
     /**
      * Handle a file upload and import the file
      * 
@@ -352,6 +366,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         }
 
         try {
+        	if(!appendImportedData) {
+                // Delete current data first if in override mode
+    			customTableService.remove(entity.getDbTablename());
+        	}
+        	
             importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
             messages.info(new BundleKey("messages", "customTable.importFile.started"));
 
@@ -460,6 +479,16 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
 	public String getCet() {
 		return cet;
+	}
+	
+	
+
+	public int getListSize() {
+		return listSize;
+	}
+
+	public void setListSize(int listSize) {
+		this.listSize = listSize;
 	}
 
 	public void setCet(String cet) {

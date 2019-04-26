@@ -1,0 +1,147 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:s="http://jboss.org/seam/faces"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+
+	<o:importConstants
+		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+
+	<ui:include
+		src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
+		<ui:param name="prefix" value="detail" />
+		<ui:param name="update" value=":rowDetailForm" />
+		<ui:param name="bean" value="#{customTableRowDetailBean}" />
+	</ui:include>
+
+	<ui:include
+		src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
+		<ui:param name="prefix" value="detail" />
+		<ui:param name="update" value=":rowDetailForm" />
+		<ui:param name="bean" value="#{customTableRowDetailBean}" />
+	</ui:include>
+
+	<p:dialog id="rowDetail" widgetVar="rowDetail" modal="true"
+		draggable="false" resizable="false" style="max-width:80%">
+		<h:form width="100%" id="rowDetailForm">
+			<p:fieldset legend="#{customTableBean.entity.code} : #{customTableRowDetailBean.values.getCfValue('id').longValue}">
+				<h:panelGrid columns="4" cellspacing="5">
+					<c:forEach items="#{customTableRowDetailBean.fields}" var="cft">
+						<h:panelGroup id="#{cft.code}_panel" style="display: flex;flex-direction: column;">
+							<h:outputLabel value="#{cft.description}" for="#{cft.code}_field"/>
+							<c:choose>
+							
+								<!--  Child entity not null -->
+								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
+									<c:set var="childCf" value="#{cft}" scope="view" />
+
+									<p:commandLink process="@this"
+										action="#{childEntityPopupBean.initEntity(cft.entityClazzCetCode, customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue)}"
+										update=":detail_childEntityPopup"
+										oncomplete="PF('detail_childEntityPopup').show()">
+
+										<h:outputText id="#{cft.code}_field"
+											value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue}"
+											converter="jsonConverter" styleClass="field-value" />
+
+										<f:setPropertyActionListener
+											target="#{customTableRowDetailBean.selectedCft}"
+											value="#{childCf}" />
+
+									</p:commandLink>
+								</c:when>
+								<!--  Child entity null -->
+								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue == null}">
+									<c:set var="childCf" value="#{cft}" scope="view" />
+									
+									<p:commandLink process="@this"
+										action="#{childEntityPopupBean.initEntity(cft.entityClazzCetCode, customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue)}"
+										update=":detail_childEntityPopup"
+										oncomplete="PF('detail_childEntityPopup').show()">
+
+										<h:outputText id="#{cft.code}_field"
+											value="Enter the #{cft.code}" 
+											styleClass="field-value" />
+
+										<f:setPropertyActionListener
+											target="#{customTableRowDetailBean.selectedCft}"
+											value="#{childCf}" />
+
+									</p:commandLink>
+								</c:when>
+								
+								<!--  Entity reference not null -->
+								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue != null}">
+
+									<c:set var="fieldCf" value="#{cft}" scope="view" />
+
+									<p:commandLink
+										action="#{customTablePopupBean.initEntity(cft.entityClazzCetCode)}"
+										update=":detail_customTableDialog" process="@this"
+										rendered="true"
+										oncomplete="PF('detail_customTableDialog').show()">
+
+										<h:outputText id="#{cft.code}_field"
+											value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue}"
+											styleClass="field-value">
+
+											<f:converter binding="#{entityReferenceConverter}" />
+											<f:attribute name="field" value="#{fieldCf}" />
+
+										</h:outputText>
+
+										<f:setPropertyActionListener
+											target="#{customTableRowDetailBean.selectedCft}"
+											value="#{fieldCf}" />
+
+									</p:commandLink>
+								</c:when>
+								<!--  Entity reference null -->
+								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue == null}">
+
+									<c:set var="fieldCf" value="#{cft}" scope="view" />
+
+									<p:commandLink
+										action="#{customTablePopupBean.initEntity(cft.entityClazzCetCode)}"
+										update=":detail_customTableDialog" process="@this"
+										rendered="true"
+										oncomplete="PF('detail_customTableDialog').show()">
+
+										<h:outputText id="#{cft.code}_field"
+											value="Choose a #{cft.code}"
+											styleClass="field-value">
+
+										</h:outputText>
+
+										<f:setPropertyActionListener
+											target="#{customTableRowDetailBean.selectedCft}"
+											value="#{fieldCf}" />
+
+									</p:commandLink>
+								</c:when>
+								<c:otherwise>
+									<hftl:customFieldValueField
+										entity="#{customEntityInstanceBean.entity}" cft="#{cft}"
+										field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}"
+										edit="true" />
+								</c:otherwise>
+							</c:choose>
+						</h:panelGroup>
+					</c:forEach>
+				</h:panelGrid>
+			</p:fieldset>
+			
+			<p:commandButton value="Save"
+				style="margin-top: 5px; margin-left: 1px;"
+				process="@form"
+				action="#{customTableBean.update(customTableRowDetailBean.valuesMap)}"
+				update=":ctForm:ctSearchResults :growl"
+				oncomplete="PF('rowDetail').hide()" />
+
+		</h:form>
+	</p:dialog>
+</ui:composition>

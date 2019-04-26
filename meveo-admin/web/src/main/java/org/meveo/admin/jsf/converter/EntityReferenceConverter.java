@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomTableService;
 
@@ -26,17 +27,19 @@ import com.google.common.cache.RemovalListener;
 
 @Named("entityReferenceConverter")
 @ApplicationScoped
-public class EntityReferenceConverter implements Converter, Serializable {
+public class EntityReferenceConverter implements Converter<Object>, Serializable {
 
-    @Inject
+	private static final long serialVersionUID = 2297474050618191644L;
+
+	@Inject
     private CustomTableService customTableService;
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
-    private volatile Map<String, LoadingCache<BigInteger, String>> cacheMap = new HashMap<>();
+    private volatile Map<String, LoadingCache<Long, String>> cacheMap = new HashMap<>();
 
-    private volatile Map<String, Map<BigInteger, Object>> valuesMap = new HashMap<>();
+    private volatile Map<String, Map<Long, Object>> valuesMap = new HashMap<>();
 
     @Override
     public Object getAsObject(FacesContext context, UIComponent component, String value) {
@@ -46,23 +49,26 @@ public class EntityReferenceConverter implements Converter, Serializable {
 
     @Override
     public String getAsString(FacesContext context, UIComponent component, Object value) {
-
-    	if(!(value instanceof BigInteger)) {
+        CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
+    	
+        // This converter only applies on entity references
+    	if(field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
     		return null;
     	}
     	
-        CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
-        LoadingCache<BigInteger, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
+    	Number numberValue = (Number) value;
+    	
+        LoadingCache<Long, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
         	return CacheBuilder.newBuilder()
                     .expireAfterWrite(5, TimeUnit.MINUTES)
-                    .removalListener((RemovalListener<BigInteger, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
+                    .removalListener((RemovalListener<Long, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
                     .build(new FieldRepresentationLoader(cetCode));
         });
 
-        return cetCache.getUnchecked((BigInteger) value);
+        return cetCache.getUnchecked(numberValue.longValue());
     }
 
-    private class FieldRepresentationLoader extends CacheLoader<BigInteger, String>{
+    private class FieldRepresentationLoader extends CacheLoader<Long, String>{
 
         String cetCode;
 
@@ -71,7 +77,7 @@ public class EntityReferenceConverter implements Converter, Serializable {
         }
 
         @Override
-        public String load(BigInteger value) {
+        public String load(Long value) {
             final Map<String, CustomFieldTemplate> referencedEntityFields = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
             final List<String> summaryFields = referencedEntityFields.values()
                     .stream()

@@ -19,23 +19,22 @@
  */
 package org.meveo.service.script;
 
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.util.ResourceBundle;
+import org.meveo.cache.CacheKeyStr;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -44,28 +43,15 @@ import javax.persistence.NoResultException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.ElementNotFoundException;
-import org.meveo.admin.exception.InvalidScriptException;
-import org.meveo.admin.util.ResourceBundle;
-import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.FunctionIO;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
-import org.meveo.model.scripts.test.ExpectedOutput;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
-
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.javadoc.JavadocBlockTag;
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
 
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -193,8 +179,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         CustomScript script = this.findByCode(engine.getClass().getName());
 
         if (script == null) {
-            // The script is probably not a Java script and we cannot retrieve its code using its class name
-            return context;
+        	// The script is probably not a Java script and we cannot retrieve its code using its class name
+        	return context;
         }
 
         // Put getters' values to context
@@ -232,7 +218,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      *
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public void constructClassPath() throws IOException {
 
@@ -553,19 +539,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } else {
             ScriptInterface engine = new ES5ScriptEngine(sourceCode);
             allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-//            V8 runtime = V8.createV8Runtime();
-//            try {
-//                runtime.executeScript(sourceCode);
-//            } catch (V8ScriptCompilationException e){
-//                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-//                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-//                scriptInstanceError.setMessage(e.getMessage());
-//                scriptInstanceError.setLineNumber(e.getLineNumber());
-//                scriptInstanceError.setColumnNumber(e.getStartColumn());
-//                scriptInstanceError.setSourceFile(e.getSourceLine());
-//                scriptErrors.add(scriptInstanceError);
-//                return scriptErrors;
-//            }
             return null;
         }
     }
@@ -576,7 +549,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws CharSequenceCompilerException char sequence compiler exception.
+     * @throws org.meveo.service.script.CharSequenceCompilerException char sequence compiler exception.
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
 

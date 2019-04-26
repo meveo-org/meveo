@@ -85,9 +85,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param scriptCode ScriptInstanceCode
      * @param context Context parameters (optional)
      * @return Context parameters. Will not be null even if "context" parameter is null.
-     * @throws InvalidPermissionException Insufficient access to run the script
-     * @throws ElementNotFoundException Script not found
-     * @throws BusinessException Any execution exception
+     * @throws org.meveo.admin.exception.InvalidPermissionException Insufficient access to run the script
+     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
+     * @throws org.meveo.admin.exception.BusinessException Any execution exception
      */
     @Override
     public Map<String, Object> execute(String scriptCode, Map<String, Object> context)
@@ -128,7 +128,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * with no executionRoles can be executed by any user.
      *
      * @param scriptInstance instance of script
-     * @throws InvalidPermissionException invalid permission exception.
+     * @throws org.meveo.admin.exception.InvalidPermissionException invalid permission exception.
      */
     public void isUserHasExecutionRole(ScriptInstance scriptInstance) throws InvalidPermissionException {
         if (scriptInstance != null && scriptInstance.getExecutionRoles() != null && !scriptInstance.getExecutionRoles().isEmpty()) {
@@ -166,7 +166,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param workerName The name of the API or service that will be invoked.
      * @param methodName The name of the method that will be invoked.
      * @param parameters The array of parameters accepted by the method. They must be specified in exactly the same order as the target method.
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

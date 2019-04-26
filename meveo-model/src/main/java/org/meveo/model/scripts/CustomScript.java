@@ -1,17 +1,17 @@
 package org.meveo.model.scripts;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import com.thoughtworks.xstream.annotations.XStreamConverter;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
@@ -52,6 +52,16 @@ public abstract class CustomScript extends Function {
     @Type(type = "jsonList")
     @Column(name = "getters", columnDefinition = "text")
     private List<Accessor> getters = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @JoinTable(name="meveo_script_inputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
+    @Column(name="script_input")
+    private Set<String> scriptInputs = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @JoinTable(name="meveo_script_outputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
+    @Column(name="script_output")
+    private Set<String> scriptOutputs = new HashSet<>();
 
     /**
      * @return the script
@@ -132,36 +142,56 @@ public abstract class CustomScript extends Function {
         this.error = error;
     }
 
-	@Override
-	public List<FunctionIO> getInputs() {
-		if(setters == null) {
-			return new ArrayList<>();
-		}
-		return setters.stream().map(s -> {
-					FunctionIO inp = new FunctionIO();
-					inp.setDescription(s.getDescription());
-					inp.setName(s.getName());
-					inp.setType(s.getType());
-					return inp;
-				}).collect(Collectors.toList());
-	}
-
     @Override
-    public List<FunctionIO> getOutputs() {
+    public List<FunctionIO> getInputs() {
         if(setters == null) {
             return new ArrayList<>();
         }
-        return getters.stream().map(s -> {
+        List<FunctionIO> inputs = setters.stream().map(s -> {
             FunctionIO inp = new FunctionIO();
             inp.setDescription(s.getDescription());
             inp.setName(s.getName());
             inp.setType(s.getType());
             return inp;
         }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(scriptInputs)) {
+            inputs.addAll(scriptInputs.stream().map(s -> {
+                FunctionIO inp = new FunctionIO();
+                inp.setDescription(s);
+                inp.setName(s);
+                inp.setType(StringUtils.EMPTY);
+                return inp;
+            }).collect(Collectors.toList()));
+        }
+        return inputs;
     }
 
     @Override
-	public boolean hasInputs() {
+    public List<FunctionIO> getOutputs() {
+        if(setters == null) {
+            return new ArrayList<>();
+        }
+        List<FunctionIO> outputs = getters.stream().map(s -> {
+            FunctionIO inp = new FunctionIO();
+            inp.setDescription(s.getDescription());
+            inp.setName(s.getName());
+            inp.setType(s.getType());
+            return inp;
+        }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(scriptOutputs)) {
+            outputs.addAll(scriptOutputs.stream().map(s -> {
+                FunctionIO inp = new FunctionIO();
+                inp.setDescription(s);
+                inp.setName(s);
+                inp.setType(StringUtils.EMPTY);
+                return inp;
+            }).collect(Collectors.toList()));
+        }
+        return outputs;
+    }
+
+    @Override
+    public boolean hasInputs() {
         return setters != null && !setters.isEmpty();
     }
 
@@ -173,5 +203,21 @@ public abstract class CustomScript extends Function {
     @Override
     public String getFunctionType() {
         return TYPE;
+    }
+
+    public Set<String> getScriptInputs() {
+        return scriptInputs;
+    }
+
+    public void setScriptInputs(Set<String> scriptInputs) {
+        this.scriptInputs = scriptInputs;
+    }
+
+    public Set<String> getScriptOutputs() {
+        return scriptOutputs;
+    }
+
+    public void setScriptOutputs(Set<String> scriptOutputs) {
+        this.scriptOutputs = scriptOutputs;
     }
 }

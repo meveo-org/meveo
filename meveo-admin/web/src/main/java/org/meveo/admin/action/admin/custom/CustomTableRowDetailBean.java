@@ -18,52 +18,50 @@ package org.meveo.admin.action.admin.custom;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.StringUtils;
+import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.jaxb.customer.CustomField;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.primefaces.event.SelectEvent;
 
 @Named
 @ViewScoped
-public class ChildEntityPopupBean implements Serializable {
+public class CustomTableRowDetailBean extends CustomTableBean implements Serializable{
 
-	private static final long serialVersionUID = 2039863489603451126L;
-
-	@Inject 
-    private CustomFieldTemplateService customFieldTemplateService;
+    private static final long serialVersionUID = -2748591950645172132L;
     
     private CustomFieldValues values;
     
     private Collection<CustomFieldTemplate> fields;
     
+    private CustomFieldTemplate selectedCft;
+    
     private String cetCode;
     
-    public void initEntity(String cetCode, String serializedValues) {
+    public void initEntity(String cetCode, Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
     	values = new CustomFieldValues();
-    	fields = customFieldTemplateService.findByAppliesTo("CE_"+cetCode).values();
     	this.cetCode = cetCode;
-
-    	if(!StringUtils.isBlank(serializedValues)) {
-    		Map<String, Object> mapOfValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
-        	mapOfValues.forEach((k,v) -> values.setValue(k, v));
-    	}else {
-    		fields.forEach(t -> values.setValue(t.getDbFieldname(), t.getDefaultValueConverted()));
-    	}
-    	
+    	this.fields = fields;
+    	valuesMap.forEach((k,v) -> values.setValue(k, v));
     }
     
 	public CustomFieldValues getValues() {
 		return values;
+	}
+	
+	public Map<String, Object> getValuesMap(){
+		return values.getValues();
 	}
 
 	public void setValues(CustomFieldValues values) {
@@ -81,5 +79,36 @@ public class ChildEntityPopupBean implements Serializable {
 	public String getCetCode() {
 		return cetCode;
 	}
-    
+	
+	@SuppressWarnings("unchecked")
+    @ActionMethod
+    @Override
+    public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
+		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
+		Number newId = (Number) selectedEntityInPopup.get("id");
+    	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
+		cfValue.setLongValue(newId.longValue());
+    }
+	
+	@Override
+	@ActionMethod
+	public void onChildEntityUpdated(CustomFieldValues cfValues) {
+		String serializedValues = JacksonUtil.toString(cfValues.getValues());
+    	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
+		cfValue.setStringValue(serializedValues);
+	}
+
+	public CustomFieldTemplate getSelectedCft() {
+		return selectedCft;
+	}
+
+	public void setSelectedCft(CustomFieldTemplate selectedCft) {
+		this.selectedCft = selectedCft;
+	}
+
+	public void setCetCode(String cetCode) {
+		this.cetCode = cetCode;
+	}
+	
+	
 }
