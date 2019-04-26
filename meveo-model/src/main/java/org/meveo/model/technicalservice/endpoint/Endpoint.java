@@ -17,15 +17,29 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.scripts.Function;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
-
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Configuration of an endpoint allowing to use a technical service.
@@ -49,6 +63,7 @@ import java.util.List;
                 "WHERE service.code = :serviceCode " +
                 "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
 )
+@ImportOrder(2)
 public class Endpoint extends BusinessEntity {
 
     /**
