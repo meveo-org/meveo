@@ -18,17 +18,17 @@
             </p:breadCrumb>
         </h:form>
         <hftl:entityPopup id="searchFuncionPopup"
-              header="#{messages['endpoint.search.endpoint.service']}"
-              backingBean="#{functionBean}"
-              searchField1Label="#{messages['BusinessEntity.code']}"
-              searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-              column1="code" selection="#{endpointBean.entity.service}"
-              column2Label="#{messages['BusinessEntity.description']}"
-              column2="description"
-              column3="class"
-              column3Child = "simpleName"
-              column3Label="Type"
-              updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrl">
+                          header="#{messages['endpoint.search.endpoint.service']}"
+                          backingBean="#{functionBean}"
+                          searchField1Label="#{messages['BusinessEntity.code']}"
+                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                          column1="code" selection="#{endpointBean.entity.service}"
+                          column2Label="#{messages['BusinessEntity.description']}"
+                          column2="description"
+                          column3="class"
+                          column3Child = "simpleName"
+                          column3Label="Type"
+                          updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrl">
         </hftl:entityPopup>
         <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
@@ -64,9 +64,8 @@
             <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
                 <h:panelGroup id="pathParameters">
                     <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
-                        <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item.endpointParameter.parameter}" itemValue="#{item}">
+                        <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item}" itemValue="#{item}">
                             <p:ajax event="transfer" update=":endpointForm:parametersMapping :endpointForm:endpointUrl" />
-							    <o:converter converterId="omnifaces.ListConverter" list="#{endpointBean.dualListModel.source}" />
                         </p:pickList>
                     </hftl:decorateFormField>
                 </h:panelGroup>

@@ -51,7 +51,7 @@ public class CustomExceptionHandler extends ExceptionHandlerWrapper {
                 	ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
                     ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
                 }else {
-                	log.error("Exception :" + throwable);
+                	log.error("Exception", throwable);
                 }
 
             } catch (IOException e) {

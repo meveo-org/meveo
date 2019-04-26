@@ -3,7 +3,6 @@ package org.meveo.admin.action.admin.custom;
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -17,10 +16,7 @@ import org.primefaces.model.DualListModel;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Hien Bach.
@@ -34,7 +30,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
     @Inject
     private EndpointService endpointService;
 
-    private DualListModel<EndpointPathParameter> pathParametersDL;
+    private DualListModel<String> pathParametersDL;
 
     private List<TSParameterMapping> parameterMappings = new ArrayList<>();
 
@@ -73,35 +69,42 @@ public class EndpointBean extends BaseBean<Endpoint> {
         return endpointService;
     }
 
-    public DualListModel<EndpointPathParameter> getDualListModel() {
-        List<EndpointPathParameter> perksSource = new ArrayList<>();
-        if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
+    public DualListModel<String> getDualListModel() {
+        List<String> perksTarget;
+        if (pathParametersDL == null) {
+            List<String> perksSource = new ArrayList<>();
+            if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
+                List<FunctionIO> functionIOList = entity.getService().getInputs();
+                Set<String> parameterSources = new HashSet<>();
+                perksTarget = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(getEntity().getPathParameters())) {
+                    getEntity().getPathParameters().forEach(item->parameterSources.add(item.getEndpointParameter().getParameter()));
+                }
+                for (FunctionIO functionIO : functionIOList) {
+                    if (!parameterSources.contains(functionIO.getName())) {
+                        perksSource.add(functionIO.getName());
+                    } else {
+                        perksTarget.add(functionIO.getName());
+                    }
+                }
+                pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
+            } else {
+                perksTarget = new ArrayList<>();
+                pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
+            }
+        } else if (getEntity().getService() != null && !getEntity().getService().getCode().equals(serviceCode) && CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
             List<FunctionIO> functionIOList = entity.getService().getInputs();
-            EndpointPathParameter endpointPathParameter;
-            EndpointParameter endpointParameter;
+            List<String> perksSource = new ArrayList<>();
             for (FunctionIO functionIO : functionIOList) {
-                endpointPathParameter = new EndpointPathParameter();
-                endpointParameter = new EndpointParameter();
-                endpointParameter.setEndpoint(entity);
-                endpointParameter.setParameter(functionIO.getName());
-                endpointPathParameter.setEndpointParameter(endpointParameter);
-                perksSource.add(endpointPathParameter);
+                perksSource.add(functionIO.getName());
             }
-            List<EndpointPathParameter> perksTarget = new ArrayList<>();
-            if (!StringUtils.isBlank(serviceCode) && getEntity().getService() != null && serviceCode.equals(getEntity().getService().getCode()) && getEntity().getPathParameters() != null) {
-                perksTarget.addAll(getEntity().getPathParameters());
-            }
-            perksSource.removeAll(perksTarget);
-            pathParametersDL = new DualListModel<EndpointPathParameter>(perksSource, perksTarget);
-        } else {
-            List<EndpointPathParameter> perksTarget = new ArrayList<>();
-            pathParametersDL = new DualListModel<EndpointPathParameter>(perksSource, perksTarget);
+            perksTarget = new ArrayList<>();
+            pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
         }
-
         return pathParametersDL;
     }
 
-    public void setDualListModel(DualListModel<EndpointPathParameter> pathParametersDL) {
+    public void setDualListModel(DualListModel<String> pathParametersDL) {
         this.pathParametersDL = pathParametersDL;
     }
 
@@ -114,14 +117,14 @@ public class EndpointBean extends BaseBean<Endpoint> {
             if (getEntity().getParametersMapping() != null) {
                 getEntity().getParametersMapping().forEach(item->tsParameterMappingMap.put(item.getEndpointParameter().getParameter(), item));
             }
-            for (EndpointPathParameter endpointPathParameter : pathParametersDL.getSource()) {
-                if (tsParameterMappingMap.containsKey(endpointPathParameter.getEndpointParameter().getParameter())) {
-                    parameterMappings.add(tsParameterMappingMap.get(endpointPathParameter.getEndpointParameter().getParameter()));
+            for (String endpointPathParameter : pathParametersDL.getSource()) {
+                if (tsParameterMappingMap.containsKey(endpointPathParameter)) {
+                    parameterMappings.add(tsParameterMappingMap.get(endpointPathParameter));
                 } else {
                     tsParameterMapping = new TSParameterMapping();
                     endpointParameter = new EndpointParameter();
                     endpointParameter.setEndpoint(entity);
-                    endpointParameter.setParameter(endpointPathParameter.getEndpointParameter().getParameter());
+                    endpointParameter.setParameter(endpointPathParameter);
                     tsParameterMapping.setEndpointParameter(endpointParameter);
                     parameterMappings.add(tsParameterMapping);
                 }
@@ -151,8 +154,19 @@ public class EndpointBean extends BaseBean<Endpoint> {
             getEntity().getParametersMapping().clear();
         }
         if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
+            List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
+            EndpointPathParameter endpointPathParameter;
+            EndpointParameter endpointParameter;
+            for (String parameter : pathParametersDL.getTarget()) {
+                endpointPathParameter = new EndpointPathParameter();
+                endpointParameter = new EndpointParameter();
+                endpointParameter.setEndpoint(entity);
+                endpointParameter.setParameter(parameter);
+                endpointPathParameter.setEndpointParameter(endpointParameter);
+                endpointPathParameters.add(endpointPathParameter);
+            }
             getEntity().getPathParameters().clear();
-            getEntity().getPathParameters().addAll(pathParametersDL.getTarget());
+            getEntity().getPathParameters().addAll(endpointPathParameters);
         } else {
             getEntity().getPathParameters().clear();
         }
