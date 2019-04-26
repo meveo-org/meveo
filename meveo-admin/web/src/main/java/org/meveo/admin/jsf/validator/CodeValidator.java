@@ -2,6 +2,7 @@ package org.meveo.admin.jsf.validator;
 
 import java.text.MessageFormat;
 
+import javax.enterprise.inject.spi.CDI;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -25,7 +26,7 @@ import org.meveo.commons.utils.StringUtils;
 public class CodeValidator implements Validator {
 
     @Inject
-    private ResourceBundle resourceMessages;
+    private ResourceBundle resourceMessages = CDI.current().select(ResourceBundle.class).get();
 
     @Override
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
