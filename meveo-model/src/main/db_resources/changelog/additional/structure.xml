@@ -591,5 +591,11 @@
             <column name="is_summary" value="0"/>
         </update>
     </changeSet>
+    
+    <changeSet id="endpoint_returned_variable_name" author="Clément Bareth"
+    	<addColumn tableName="service_endpoint">
+            <column name="returned_variable_name" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

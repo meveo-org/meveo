@@ -153,14 +153,23 @@ public class EndpointServlet extends HttpServlet {
     }
 
     /**
-     * Apply JSONata query if defined
+     * Extract variable designed by returned variable name and apply JSONata query if defined
      *
      * @param endpoint Endpoint endpoxecuted
      * @param result Result of the endpoint execution
      * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
      */
     private String transformData(Endpoint endpoint, Map<String, Object> result){
-        final String serializedResult = JacksonUtil.toString(result);
+    	Object returnValue = result;
+    	if(!StringUtils.isBlank(endpoint.getReturnedVariableName())) {
+    		Object extractedValue = result.get(endpoint.getReturnedVariableName());
+    		if(extractedValue != null){
+    			returnValue = extractedValue;
+    		}else {
+    			log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(), endpoint.getReturnedVariableName());
+    		}
+    	}
+        final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if(!StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
         }else{

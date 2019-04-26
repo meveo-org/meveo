@@ -7,6 +7,8 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 
 import javax.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @ExportIdentifier({"code"})
@@ -18,7 +20,7 @@ import java.util.List;
         strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
         parameters = {@Parameter(name = "sequence_name", value = "meveo_function_seq")}
 )
-public abstract class Function extends BusinessEntity {
+public class Function extends BusinessEntity {
 
     private static final long serialVersionUID = -1615762108685208441L;
 
@@ -28,6 +30,14 @@ public abstract class Function extends BusinessEntity {
     @Column(name = "test_suite", columnDefinition = "TEXT")
     @Type(type = "json")
     private String testSuite;
+    
+    /**
+     * @deprecated Use child implementations
+     */
+    @Deprecated
+    public Function() {
+    	
+    }
 
     public Integer getFunctionVersion() {
         return functionVersion;
@@ -37,13 +47,21 @@ public abstract class Function extends BusinessEntity {
         this.functionVersion = functionVersion;
     }
 
-    public abstract List<FunctionIO> getInputs();
+    public List<FunctionIO> getInputs(){
+    	return new ArrayList<>();
+    }
     
-    public abstract boolean hasInputs();
+    public boolean hasInputs() {
+    	return false;
+    }
 
-    public abstract List<FunctionIO> getOutputs();
+    public List<FunctionIO> getOutputs(){
+    	return new ArrayList<>();
+    }
 
-    public abstract boolean hasOutputs();
+    public boolean hasOutputs() {
+    	return false;
+    }
 
     public String getTestSuite() {
         return testSuite;
@@ -53,5 +71,7 @@ public abstract class Function extends BusinessEntity {
         this.testSuite = testSuite;
     }
 
-    public abstract String getFunctionType();
+    public String getFunctionType() {
+    	return "Unknown";
+    }
 }

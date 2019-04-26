@@ -243,6 +243,7 @@ public class EndpointApi {
         endpointDto.setMethod(endpoint.getMethod());
         endpointDto.setServiceCode(endpoint.getService().getCode());
         endpointDto.setSynchronous(endpoint.isSynchronous());
+        endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
         List<String> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
@@ -264,7 +265,7 @@ public class EndpointApi {
     private Endpoint fromDto(EndpointDto endpointDto){
 
         Endpoint endpoint = new Endpoint();
-
+        
         // Code
         endpoint.setCode(endpointDto.getCode());
 
@@ -276,6 +277,9 @@ public class EndpointApi {
 
         // JSONata query
         endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+        
+        // Returned variable name
+        endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
 
         // Technical Service
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());

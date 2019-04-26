@@ -60,6 +60,14 @@ public class JacksonUtil {
             throw new IllegalArgumentException("The given Json object value: " + value + " cannot be transformed to a String", e);
         }
     }
+    
+    public static String toStringPrettyPrinted(Object value) {
+        try {
+        	return OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("The given Json object value: " + value + " cannot be transformed to a String", e);
+        }
+    }
 
     public static JsonNode toJsonNode(String value) {
         try {

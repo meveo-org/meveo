@@ -72,8 +72,22 @@ public class EndpointDto extends BusinessDto implements Serializable {
      */
     @JsonProperty
     private String jsonataTransformer;
+    
+    /**
+     * Context variable to be returned by the endpoint
+     */
+    @JsonProperty
+    private String returnedVariableName;
+    
+    public String getReturnedVariableName() {
+		return returnedVariableName;
+	}
 
-    public String getJsonataTransformer() {
+	public void setReturnedVariableName(String returnedVariableName) {
+		this.returnedVariableName = returnedVariableName;
+	}
+
+	public String getJsonataTransformer() {
         return jsonataTransformer;
     }
 
