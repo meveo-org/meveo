@@ -8,6 +8,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
 /**
@@ -46,7 +47,6 @@ public abstract class CustomFieldBean<T extends IEntity> extends BaseBean<T> {
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         boolean isNew = entity.isTransient();
-        
         customFieldDataEntryBean.saveCustomFieldsToEntity((ICustomFieldEntity) entity, isNew);
         String outcome = super.saveOrUpdate(killConversation);
         

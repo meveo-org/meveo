@@ -344,10 +344,6 @@ public class GraphQLService {
                 graphQLField.setRequired(customFieldTemplate.isValueRequired());
 
                 switch (customFieldTemplate.getFieldType()) {
-                    case STRING:
-                    case TEXT_AREA:
-                        graphQLField.setFieldType("String");
-                        break;
                     case LONG:
                     case DATE:
                         graphQLField.setFieldType("GraphQLLong");
@@ -357,6 +353,14 @@ public class GraphQLService {
                         break;
                     case BOOLEAN:
                         graphQLField.setFieldType("Boolean");
+                        break;
+    				case CHILD_ENTITY:
+					case EMBEDDED_ENTITY:
+                    case LIST:
+                    case STRING:
+                    case TEXT_AREA:
+                    default:
+                        graphQLField.setFieldType("String");
                         break;
                 }
             }

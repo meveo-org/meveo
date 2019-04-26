@@ -10,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -19,27 +19,12 @@
  */
 package org.meveo.service.script;
 
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8ScriptCompilationException;
-import org.apache.commons.collections.CollectionUtils;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -51,12 +36,22 @@ import org.meveo.model.scripts.*;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.javadoc.JavadocBlockTag;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
 
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -144,13 +139,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Override
     public ScriptInterface getExecutionEngine(String scriptCode, Map<String, Object> context) {
-	    T script = this.findByCode(scriptCode);
-	    return getExecutionEngine(script, context);
+        T script = this.findByCode(scriptCode);
+        return getExecutionEngine(script, context);
     }
-    
-	@Override
-	public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
-		try {
+
+    @Override
+    public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
+        try {
             ScriptInterface scriptInstance = this.getScriptInstance(script.getCode());
 
             // Call setters if those are provided
@@ -158,17 +153,26 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 for (Accessor setter : script.getSetters()) {
                     Object setterValue = context.get(setter.getName());
                     if (setterValue != null) {
+                        // In case the parameters are initialized by a get request, we might need to convert the input to their right types
+                        ScriptUtils.ClassAndValue classAndValue = new ScriptUtils.ClassAndValue();
+                        if (!setter.getType().equals("String") && setterValue instanceof String) {
+                            classAndValue = ScriptUtils.findTypeAndConvert(setter.getType(), (String) setterValue);
+                        } else {
+                            classAndValue.setValue(setterValue);
+                            classAndValue.setClass(setterValue.getClass());
+                        }
+
                         scriptInstance.getClass()
-                                .getMethod(setter.getMethodName(), setterValue.getClass())
-                                .invoke(scriptInstance, setterValue);
+                                .getMethod(setter.getMethodName(), classAndValue.getTypeClass())
+                                .invoke(scriptInstance, classAndValue.getValue());
                     }
                 }
             }
             return scriptInstance;
-        } catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-	}
+    }
 
     @Override
     protected Map<String, Object> buildResultMap(ScriptInterface engine, Map<String, Object> context) {
@@ -179,15 +183,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         	return context;
         }
 
-        // Remove the map the keys that are not outputs
-        if (CollectionUtils.isNotEmpty(script.getScriptOutputs())) {
-            for(Iterator<Map.Entry<String, Object>> it = context.entrySet().iterator(); it.hasNext();){
-                Map.Entry<String, Object> entry = it.next();
-                if (!script.getScriptOutputs().contains(entry.getKey())) {
-                    it.remove();
-                }
-            }
-        }
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             for (Accessor getter : script.getGetters()) {
@@ -201,7 +196,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 }
             }
         }
-        
+
         return super.buildResultMap(engine, context);
     }
 
@@ -265,17 +260,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 
                 /* Fallback when thorntail is used */
-                if(classPathEntries.isEmpty()){
+                if (classPathEntries.isEmpty()) {
                     for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
                         if (physicalLibDir.isDirectory()) {
-                            for(File subLib : Objects.requireNonNull(physicalLibDir.listFiles())){
-                                if(subLib.isDirectory()){
+                            for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
+                                if (subLib.isDirectory()) {
                                     final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar")
                                             .stream()
                                             .map(this::getFilePath)
                                             .collect(Collectors.toList());
                                     classPathEntries.addAll(jars);
-                                    if(subLib.getName().equals("classes")){
+                                    if (subLib.getName().equals("classes")) {
                                         classPathEntries.add(subLib.getCanonicalPath());
                                     }
                                 }
@@ -341,7 +336,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
 
-        if(hasEndpoint){
+        if (hasEndpoint) {
             throw new BusinessException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
         }
     }
@@ -390,7 +385,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * Compile script, a and update script entity status with compilation errors. Successfully compiled script is added to a compiled script cache if active and not in test
      * compilation mode.
      *
-     * @param script Script entity to compile
+     * @param script      Script entity to compile
      * @param testCompile Is it a compilation for testing purpose. Won't clear nor overwrite existing compiled script cache.
      */
     public void compileScript(T script, boolean testCompile) {
@@ -478,15 +473,15 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             script.setSetters(setters);
         }
     }
+
     /**
      * Compile script. DOES NOT update script entity status. Successfully compiled script is added to a compiled script cache if active and not in test compilation mode.
      *
-     * @param scriptCode Script entity code
-     * @param sourceType Source code language type
-     * @param sourceCode Source code
-     * @param isActive Is script active. It will compile it anyway. Will clear but not overwrite existing compiled script cache.
+     * @param scriptCode  Script entity code
+     * @param sourceType  Source code language type
+     * @param sourceCode  Source code
+     * @param isActive    Is script active. It will compile it anyway. Will clear but not overwrite existing compiled script cache.
      * @param testCompile Is it a compilation for testing purpose. Won't clear nor overwrite existing compiled script cache.
-     *
      * @return A list of compilation errors if not compiled
      */
     private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile) {
@@ -542,21 +537,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 return scriptErrors;
             }
         } else {
-            V8 runtime = V8.createV8Runtime();
-            try {
-                runtime.executeScript(sourceCode);
-                ScriptInterface engine = new ES5ScriptEngine(sourceCode);
-                allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-            } catch (V8ScriptCompilationException e){
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-                scriptInstanceError.setMessage(e.getMessage());
-                scriptInstanceError.setLineNumber(e.getLineNumber());
-                scriptInstanceError.setColumnNumber(e.getStartColumn());
-                scriptInstanceError.setSourceFile(e.getSourceLine());
-                scriptErrors.add(scriptInstanceError);
-                return scriptErrors;
-            }
+            ScriptInterface engine = new ES5ScriptEngine(sourceCode);
+            allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
             return null;
         }
     }
@@ -629,14 +611,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return Script interface Class
-     * @throws Exception 
+     * @throws Exception
      */
     @Lock(LockType.READ)
     public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
         ScriptInterfaceSupplier supplier = allScriptInterfaces.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
         if (supplier == null) {
-        	supplier = getScriptInterfaceWCompile(scriptCode);
+            supplier = getScriptInterfaceWCompile(scriptCode);
         }
 
         return supplier.getScriptInterface();
@@ -648,8 +630,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return Script interface Class
-     * @throws org.meveo.admin.exception.InvalidScriptException Were not able to instantiate or compile a script
-     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
+     * @throws InvalidScriptException   Were not able to instantiate or compile a script
+     * @throws ElementNotFoundException Script not found
      */
     @Lock(LockType.WRITE)
     protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
@@ -684,8 +666,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return A compiled script class
-     * @throws org.meveo.admin.exception.InvalidScriptException Were not able to instantiate or compile a script
-     * @throws org.meveo.admin.exception.ElementNotFoundException Script not found
+     * @throws InvalidScriptException   Were not able to instantiate or compile a script
+     * @throws ElementNotFoundException Script not found
      */
     @Lock(LockType.READ)
     public ScriptInterface getScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
@@ -752,4 +734,5 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
         return null;
     }
+
 }

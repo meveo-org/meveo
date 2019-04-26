@@ -1,5 +1,6 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,9 +17,16 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.CustomFieldValueHolder;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.typereferences.GenericTypeReferences;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -88,7 +96,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
         
         return initResult;
     }
-
+    
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
@@ -134,6 +142,79 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 
         return listViewName;
+    }
+    
+    public void updateInBaseBean() {
+    	Map<String, List<CustomFieldValue>> newValuesByCode = new HashMap<>();
+
+        CustomFieldValueHolder entityFieldsValues = customFieldDataEntryBean.getFieldValueHolderByUUID(entity.getUuid());
+        GroupedCustomField groupedCustomFields = customFieldDataEntryBean.groupedFieldTemplates.get(entity.getUuid());
+//        if (groupedCustomFields != null) {
+//            for (CustomFieldTemplate cft : groupedCustomFields.getFields()) {
+//
+//                // Do not update existing CF value if it is not updatable
+//                if (!isNewEntity && !cft.isAllowEdit()) {
+//
+//                    if (entity != null && entity.getCfValues() != null) {
+//                        List<CustomFieldValue> previousCfValues = entity.getCfValues().getValuesByCode().get(cft.getCode());
+//                        if (previousCfValues != null && !previousCfValues.isEmpty()) {
+//                            newValuesByCode.put(cft.getCode(), previousCfValues);
+//                        }
+//                    }
+//                    continue;
+//                }
+//
+//                for (CustomFieldValue cfValue : entityFieldsValues.getValues(cft)) {
+//
+//
+//                    // if (duplicateCFI) {
+//                    // if (removedOriginalCFI) {
+//                    // List<CustomFieldInstance> cfisToBeRemove = customFieldInstanceService.getCustomFieldInstances(entity, cfValue.getCode());
+//                    // if (cfisToBeRemove != null) {
+//                    // for (CustomFieldInstance cfiToBeRemove : cfisToBeRemove) {
+//                    // customFieldInstanceService.remove(cfiToBeRemove);
+//                    // }
+//                    // }
+//                    // }
+//                    //
+//                    // customFieldInstanceService.detach(cfValue);
+//                    // cfValue.setId(null);
+//                    // cfValue.setAppliesToEntity(entity.getUuid());
+//                    // }
+//
+//                    // Not saving empty values unless template has a default value or is versionable (to prevent that for SINGLE type CFT with a default value, value is
+//                    // instantiates automatically)
+//                    // Also don't save if CFT does not apply in a given entity lifecycle or because cft.applicableOnEL evaluates to false
+//                    if ((cfValue.isValueEmptyForGui() && (cft.getDefaultValue() == null || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) && !cft.isVersionable())
+//                            || ((isNewEntity && cft.isHideOnNew())
+//                                    || (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)))) {
+//                        log.trace("Will ommit from saving cfi {}", cfValue);
+//
+//                        // Existing value update
+//                    } else {
+//                        serializeFromGUI(cfValue, cft);
+//
+//                        if (!newValuesByCode.containsKey(cft.getCode())) {
+//                            newValuesByCode.put(cft.getCode(), new ArrayList<>());
+//                        }
+//                        newValuesByCode.get(cft.getCode()).add(cfValue);
+//
+//                        saveChildEntities(entity, cfValue, cft);
+//                    }
+//                }
+//            }
+//        }
+//        // Update entity custom values field
+//
+//        if (entity != null) {
+//            if (newValuesByCode.isEmpty()) {
+//                entity.clearCfValues();
+//            } else {
+//                entity.getCfValuesNullSafe().setValuesByCode(newValuesByCode);
+//            }
+//        }
+
+//        return newValuesByCode
     }
 
     @Override

@@ -38,8 +38,13 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldValueHolder;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -69,6 +74,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    protected CustomFieldDataEntryBean customFieldDataEntryBean;
 
     /**
      * Custom table name. Determined from customEntityTemplate.code value.
@@ -105,6 +113,8 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     private int selectedRowIndex;
     
     private CustomFieldTemplate selectedRowField;
+    
+    private int listSize = 0;
 
     public CustomTableBean() {
         super(CustomEntityTemplate.class);
@@ -164,7 +174,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 	}
 
 	public List<Map<String, Object>> list(){
-		return customTableService.list(customTableName);
+		List<Map<String, Object>> list = customTableService.list(customTableName);
+		listSize = list.size();
+		return list;
     }
 
     /**
@@ -173,7 +185,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * @return LazyDataModel implementation.
      */
     public LazyDataModel<Map<String, Object>> getDataModel() {
-        return getDataModel(filters);
+        LazyDataModel<Map<String, Object>> dataModel2 = getDataModel(filters);
+        if(dataModel2 != null) {
+            listSize = dataModel2.getRowCount();
+        }
+		return dataModel2;
     }
 
     /**
@@ -286,11 +302,19 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
+	@SuppressWarnings("unchecked")
     @ActionMethod
     public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
-    	Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
+		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
     	Object newId = selectedEntityInPopup.get("id");
     	selectedRow.put(selectedRowField.getDbFieldname(), newId);
+        customTableService.update(customTableName, selectedRow);
+        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+    }
+    
+    public void onChildEntityUpdated(CustomFieldValues cfValues) throws BusinessException {
+    	String serializedValues = JacksonUtil.toString(cfValues.getValues());
+    	selectedRow.put(selectedRowField.getDbFieldname(), serializedValues);
         customTableService.update(customTableName, selectedRow);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
@@ -319,6 +343,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         customTableBasedDataModel = null;
     }
     
+    @ActionMethod
+    public void update(Map<String, Object> values) throws BusinessException {
+    	customTableService.update(customTableName, values);
+        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+    }
+    
     /**
      * Handle a file upload and import the file
      * 
@@ -336,6 +366,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         }
 
         try {
+        	if(!appendImportedData) {
+                // Delete current data first if in override mode
+    			customTableService.remove(entity.getDbTablename());
+        	}
+        	
             importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
             messages.info(new BundleKey("messages", "customTable.importFile.started"));
 
@@ -444,6 +479,16 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
 	public String getCet() {
 		return cet;
+	}
+	
+	
+
+	public int getListSize() {
+		return listSize;
+	}
+
+	public void setListSize(int listSize) {
+		this.listSize = listSize;
 	}
 
 	public void setCet(String cet) {

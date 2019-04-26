@@ -29,6 +29,8 @@ public class CustomTablePopupBean extends CustomTableBean {
     	super.setCet(cetCode);
     	super.initEntity();
     }
-
     
+    public boolean canUserUpdateEntity() {
+    	return true;
+    }
 }

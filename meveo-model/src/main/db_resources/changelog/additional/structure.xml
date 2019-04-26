@@ -613,4 +613,11 @@
         </createTable>
         <addPrimaryKey columnNames="meveo_script_instance_id, script_output" constraintName="pk_meveo_script_outputs" tableName="meveo_script_outputs" />
     </changeSet>
+
+    <changeSet id="endpoint_returned_variable_name" author="Clément Bareth">
+    	<addColumn tableName="service_endpoint">
+            <column name="returned_variable_name" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

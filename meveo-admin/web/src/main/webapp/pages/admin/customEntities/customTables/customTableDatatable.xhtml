@@ -10,18 +10,15 @@
 
 	<o:importConstants
 		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
-		
+
 	<h:form id="#{id}ctForm">
 		<p:dataTable id="#{id}ctSearchResults" value="#{bean.dataModel}"
 			var="entity" lazy="true" widgetVar="ctTable"
 			paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
 			paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
 			resizableColumns="true" styleClass="custom-grid" reflow="true"
-			editable="#{bean.edit}" editMode="cell"
-			rowSelectMode="checkbox"
-			selection="#{bean.selectedValues}" sortBy="id"
-			rowIndexVar="rowIdx"
-			>
+			editable="#{bean.edit}" editMode="cell" rowSelectMode="checkbox"
+			selection="#{bean.selectedValues}" sortBy="id" rowIndexVar="rowIdx">
 
 			<p:ajax event="cellEdit" listener="#{bean.onCellEdit}"
 				update=":growl" partialSubmit="true"
@@ -32,11 +29,11 @@
 
 			<p:column id="multiSelect" selectionMode="multiple" width="4%"
 				exportable="false" toggleable="false" selectRow="false" />
-				
+
 			<p:column headerText="id" sortBy="#{id}" selectRow="false">
 				<h:outputText value="#{entity['id']}" />
 			</p:column>
-			
+
 			<p:columns value="#{bean.summaryFields}" var="field"
 				headerText="#{field.getDescription(bean.currentLocale.ISO3Language)}"
 				sortBy="#{field.dbFieldname}" selectRow="false">
@@ -65,26 +62,96 @@
 							<f:converter converterId="javax.faces.Double" />
 						</h:outputText>
 
-<!-- 						 Entity reference -->
-							<p:commandLink
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}"
-								action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
-								update=":customTableDialog"
-							    process="@this"
-								oncomplete="PF('customTableDialog').show()">
+						<!-- Entity reference not null-->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] != null}"
+							action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
+							update=":listing_customTableDialog" process="@this"
+							oncomplete="PF('listing_customTableDialog').show()">
 
-								<h:outputText id="#{entity[field.dbFieldname]}_input_link"
-									value="#{entity[field.dbFieldname]}" styleClass="field-value">
-									<f:converter binding="#{entityReferenceConverter}" />
-									<f:attribute name="field" value="#{field}" />
-								</h:outputText>
-								
-	                            <f:setPropertyActionListener target="#{customTableBean.cet}" value="#{field.entityClazzCetCode}" />
-								<f:setPropertyActionListener target="#{customTableBean.selectedRow}" value="#{entity}"/>
-								<f:setPropertyActionListener target="#{customTableBean.selectedRowField}" value="#{field}"/>
-								<f:setPropertyActionListener target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}"/>
-								
-							</p:commandLink>
+							<h:outputText id="#{entity[field.dbFieldname]}_input_link"
+								value="#{entity[field.dbFieldname]}" styleClass="field-value">
+								<f:converter binding="#{entityReferenceConverter}" />
+								<f:attribute name="field" value="#{field}" />
+							</h:outputText>
+
+							<f:setPropertyActionListener target="#{customTableBean.cet}"
+								value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRow}" value="#{entity}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowField}" value="#{field}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}" />
+
+						</p:commandLink>
+						
+						<!-- Entity reference null-->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] == null}"
+							action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}"
+							update=":listing_customTableDialog" process="@this"
+							oncomplete="PF('listing_customTableDialog').show()">
+
+							<h:outputText id="choose_#{entity[field.dbFieldname]}_input_link"
+								value="Choose a #{field.code}" styleClass="field-value">
+							</h:outputText>
+
+							<f:setPropertyActionListener target="#{customTableBean.cet}"
+								value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRow}" value="#{entity}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowField}" value="#{field}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}" />
+
+						</p:commandLink>
+
+						<!-- Child entity not null -->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.dbFieldname] != null}"
+							action="#{childEntityPopupBean.initEntity(field.entityClazzCetCode, entity[field.dbFieldname])}"
+							update=":listing_childEntityPopup" process="@this"
+							oncomplete="PF('listing_childEntityPopup').show()">
+
+							<h:outputText id="#{entity[field.dbFieldname]}_out_link"
+								value="#{entity[field.dbFieldname]}" converter="jsonConverter"
+								styleClass="field-value" />
+
+
+							<f:setPropertyActionListener target="#{customTableBean.cet}"
+								value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRow}" value="#{entity}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowField}" value="#{field}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}" />
+
+						</p:commandLink>
+						
+						<!-- Child entity null -->
+						<p:commandLink
+							rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.dbFieldname] == null}"
+							action="#{childEntityPopupBean.initEntity(field.entityClazzCetCode, entity[field.dbFieldname])}"
+							update=":listing_childEntityPopup" process="@this"
+							oncomplete="PF('listing_childEntityPopup').show()">
+
+							<h:outputText id="enter_#{entity[field.dbFieldname]}_out_link"
+								value="Enter the #{field.code}" 
+								styleClass="field-value" />
+
+							<f:setPropertyActionListener target="#{customTableBean.cet}"
+								value="#{field.entityClazzCetCode}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRow}" value="#{entity}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowField}" value="#{field}" />
+							<f:setPropertyActionListener
+								target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}" />
+
+						</p:commandLink>
 
 					</f:facet>
 
@@ -166,44 +233,27 @@
 								itemLabel="#{listVal.value} (#{listVal.key})" />
 						</p:selectOneMenu>
 
-						<!--  Entity reference -->
-						<c:if test="#{popupMode == 'false'}">
-						
-<!-- 						<hftl:formPanel> -->
-<!-- 									<hftl:formField id="entityRef"  -->
-<!-- 											label="#{field.getDescription(bean.currentLocale.ISO3Language)}" -->
-<!-- 											field="#{field.dbFieldname}"  -->
-<!-- 											required="#{field.valueRequired}" popup="true"  popupId="popup"/> -->
-<!-- 						</hftl:formPanel> -->
-
-
-<!-- 							<p:commandLink -->
-<!-- 								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY}" -->
-<!-- 								action="#{customTablePopupBean.initEntity(field.entityClazzCetCode)}" -->
-<!-- 								oncomplete="PF('customTableDialog').show()"> -->
-
-<!-- 								<h:outputText id="#{entity[field.dbFieldname]}_input_link" -->
-<!-- 									value="#{entity[field.dbFieldname]}" styleClass="field-value"> -->
-<!-- 									<f:converter binding="#{entityReferenceConverter}" /> -->
-<!-- 									<f:attribute name="field" value="#{field}" /> -->
-<!-- 								</h:outputText> -->
-
-<!-- 							</p:commandLink> -->
-						</c:if>
-
 					</f:facet>
 				</p:cellEditor>
 			</p:columns>
 			<p:column headerText="#{messages['commons.actions']}"
 				exportable="false" selectRow="false">
 				<p:commandButton id="deletelink" icon="ui-icon-trash"
-					action="#{bean.delete(entity['id'])}"
-					rendered="#{bean.edit}"
+					action="#{bean.delete(entity['id'])}" rendered="#{bean.edit}"
 					update=":#{id}ctForm:#{id}ctSearchResults" process="@this"
 					immediate="true">
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 						message="#{messages['commons.confirmDelete']}"
 						icon="ui-icon-alert" />
+				</p:commandButton>
+				<p:commandButton id="detail" icon="ui-icon-document"
+					update=":rowDetail" process="@this" immediate="true"
+					action="#{customTableRowDetailBean.initEntity(customTableBean.cet, entity, customTableBean.fields)}"
+					oncomplete="PF('rowDetail').show()">
+
+					<f:setPropertyActionListener
+						target="#{customTableBean.selectedRowIndex}" value="#{rowIdx}" />
+
 				</p:commandButton>
 			</p:column>
 
@@ -213,8 +263,7 @@
 					<p:messages id="ctNewFieldsMessage" globalOnly="false"
 						redisplay="false" />
 
-					<hf:namingContainer id="addNewFields"
-						rendered="#{bean.edit}">
+					<hf:namingContainer id="addNewFields" rendered="#{bean.edit}">
 						<c:forEach items="#{bean.quickAddFields}" var="field">
 							<c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
 								<p:inputText id="#{field.dbFieldname}"
@@ -296,8 +345,7 @@
 						<p:commandButton value="#{messages['commons.addNew']}"
 							partialSubmit="true" process="@this addNewFields"
 							update=":#{id}ctForm:#{id}ctSearchResults"
-							action="#{bean.addNewValues()}"
-							style="margin-left:20px">
+							action="#{bean.addNewValues()}" style="margin-left:20px">
 							<p:resetInput target="addNewFields" />
 						</p:commandButton>
 

@@ -16,6 +16,10 @@ public class CustomFieldTemplateUtils {
 	 * @throws CustomFieldException An exception when AppliesTo value can not be calculated. Occurs when value that is part of CFT.AppliesTo calculation is not set yet on entity
 	 */
 	public static String calculateAppliesToValue(ICustomFieldEntity entity) throws CustomFieldException {
+		if(entity == null) {
+			return null;
+		}
+		
 	    CustomFieldEntity cfeAnnotation = entity.getClass().getAnnotation(CustomFieldEntity.class);
 	
 	    String appliesTo = cfeAnnotation.cftCodePrefix();

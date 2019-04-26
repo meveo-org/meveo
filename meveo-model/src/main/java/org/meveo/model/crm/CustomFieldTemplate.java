@@ -542,7 +542,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     public Object getDefaultValueConverted() {
         if (defaultValue == null) {
-            return null;
+        	return null;
         }
         try {
             if (fieldType == CustomFieldTypeEnum.DOUBLE) {

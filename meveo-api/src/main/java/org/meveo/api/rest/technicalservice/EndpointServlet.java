@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityOrRelation;
@@ -83,6 +84,9 @@ public class EndpointServlet extends HttpServlet {
     @Inject
     private EndpointResultsCacheContainer endpointResultsCacheContainer;
 
+    @Inject
+    private ParamBean paramBean;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
@@ -113,7 +117,9 @@ public class EndpointServlet extends HttpServlet {
         // Retrieve endpoint
         final Endpoint endpoint = endpointService.findByCode(endpointExecution.getFirstUriPart());
 
-        if(endpoint != null && !endpointService.isUserAuthorized(endpoint)){
+        // If endpoint security is enabled, check if user has right to access that particular endpoint
+        boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
+        if(endpointSecurityEnabled && endpoint != null && !endpointService.isUserAuthorized(endpoint)){
             endpointExecution.getResp().setStatus(403);
             endpointExecution.getWriter().print("You are not authorized to access this endpoint");
             return;
@@ -147,14 +153,23 @@ public class EndpointServlet extends HttpServlet {
     }
 
     /**
-     * Apply JSONata query if defined
+     * Extract variable designed by returned variable name and apply JSONata query if defined
      *
      * @param endpoint Endpoint endpoxecuted
      * @param result Result of the endpoint execution
      * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
      */
     private String transformData(Endpoint endpoint, Map<String, Object> result){
-        final String serializedResult = JacksonUtil.toString(result);
+    	Object returnValue = result;
+    	if(!StringUtils.isBlank(endpoint.getReturnedVariableName())) {
+    		Object extractedValue = result.get(endpoint.getReturnedVariableName());
+    		if(extractedValue != null){
+    			returnValue = extractedValue;
+    		}else {
+    			log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(), endpoint.getReturnedVariableName());
+    		}
+    	}
+        final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if(!StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
         }else{

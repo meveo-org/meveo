@@ -77,7 +77,7 @@ public class CustomFieldDataEntryBean implements Serializable {
     /**
      * Custom field templates grouped into tabs and field groups
      */
-    private Map<String, GroupedCustomField> groupedFieldTemplates = new HashMap<String, GroupedCustomField>();
+    Map<String, GroupedCustomField> groupedFieldTemplates = new HashMap<String, GroupedCustomField>();
 
     /**
      * Custom actions applicable to the entity

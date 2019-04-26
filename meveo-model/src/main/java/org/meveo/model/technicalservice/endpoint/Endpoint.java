@@ -77,7 +77,7 @@ public class Endpoint extends BusinessEntity {
     /**
      * Parameters that will be exposed in the endpoint path
      */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderColumn(name = "position")
     private List<EndpointPathParameter> pathParameters = new ArrayList<>();
 
@@ -86,14 +86,28 @@ public class Endpoint extends BusinessEntity {
      */
     @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<TSParameterMapping> parametersMapping = new ArrayList<>();
-
+    
     /**
      * JSONata query used to transform the result
      */
     @Column(name = "jsonata_transformer")
     private String jsonataTransformer;
+    
+    /**
+     * Context variable to be returned by the endpoint
+     */
+    @Column(name = "returned_variable_name")
+    private String returnedVariableName;
+    
+    public String getReturnedVariableName() {
+		return returnedVariableName;
+	}
 
-    public String getJsonataTransformer() {
+	public void setReturnedVariableName(String returnedVariableName) {
+		this.returnedVariableName = returnedVariableName;
+	}
+
+	public String getJsonataTransformer() {
         return jsonataTransformer;
     }
 
