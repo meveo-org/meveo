@@ -37,6 +37,8 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.scripts.Function;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
@@ -63,10 +65,14 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
                 "WHERE service.code = :serviceCode " +
                 "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
 )
-@ImportOrder(2)
+@ImportOrder(5)
+@ExportIdentifier({ "code" })
+@ModuleItem
 public class Endpoint extends BusinessEntity {
 
-    /**
+	private static final long serialVersionUID = 6561905332917884613L;
+
+	/**
      * Technical service associated to the endpoint
      */
     @ManyToOne(fetch = FetchType.EAGER)
