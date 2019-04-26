@@ -18,8 +18,7 @@
  */
 package org.meveo.model.scripts;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.*;
 
@@ -73,12 +72,4 @@ public class ScriptInstance extends CustomScript {
     public Set<Role> getSourcingRoles() {
         return sourcingRoles;
     }
-
-    /**
-     * @param sourcingRoles the sourcingRoles to set
-     */
-    public void setSourcingRoles(Set<Role> sourcingRoles) {
-        this.sourcingRoles = sourcingRoles;
-    }
-
 }
