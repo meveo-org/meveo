@@ -33,15 +33,15 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
+import org.primefaces.model.TreeNode;
 
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +68,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
+    private TreeNode rootNode;
+
+    private TreeNode selectedNode;
 
     public void initCompilationErrors() {
         if (FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest()) {
@@ -145,7 +148,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     /**
      * Fetch customer field so no LazyInitialize exception is thrown when we access it from account edit view.
-     * 
+     *
      */
     @Override
     protected List<String> getFormFieldsToFetch() {
@@ -259,10 +262,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
         }
     }
-    
+
     /**
      * Autocomplete method for selecting a class that implement ICustomFieldEntity. Return a human readable class name. Used in conjunction with CustomFieldAppliesToConverter
-     * 
+     *
      * @param query Partial class name to match
      * @return
      */
@@ -340,5 +343,70 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         scriptIO.setName(name);
         scriptIO.setEditable(false);
         return scriptIO;
+    }
+
+  /*  private void createTreeNode() {
+        List<ScriptInstance> scriptInstanceListJava =  scriptInstanceService.findByType(ScriptSourceTypeEnum.JAVA);
+        for(ScriptInstance scriptInstance : scriptInstanceListJava) {
+            rootJava = new DefaultTreeNode("RootJAVA", null);
+            String[] listDataSplit = scriptInstance.getCode().split(".");
+            for (String node : listDataSplit) {
+                TreeNode child = new DefaultTreeNode(node, this.rootJava);
+                child.setParent(this.rootJava);
+            }
+        }
+        List<ScriptInstance> scriptInstanceListEs5 =  scriptInstanceService.findByType(ScriptSourceTypeEnum.ES5);
+        for(ScriptInstance scriptInstance : scriptInstanceListEs5) {
+            rootEs5 = new DefaultTreeNode("RootES5", null);
+            String[] listDataSplit = scriptInstance.getCode().split(".");
+            for (String node : listDataSplit) {
+                TreeNode child = new DefaultTreeNode(node, this.rootEs5);
+                child.setParent(this.rootEs5);
+            }
+        }
+    }*/
+
+
+
+    public TreeNode getRootNode() {
+
+        rootNode = new DefaultTreeNode("Root", null);
+        TreeNode rootJava = new DefaultTreeNode("java", rootNode);
+        List<ScriptInstance> scriptInstances =  scriptInstanceService.findByType(ScriptSourceTypeEnum.JAVA);
+        for(ScriptInstance scriptInstance : scriptInstances) {
+            String[] packages = scriptInstance.getCode().split("\\.");
+            List<String> nodes = new LinkedList<>(Arrays.asList(packages));
+            createTree(nodes, rootJava);
+        }
+
+        TreeNode rootEs5 = new DefaultTreeNode("es5", rootNode );
+        scriptInstances =  scriptInstanceService.findByType(ScriptSourceTypeEnum.ES5);
+        for(ScriptInstance scriptInstance : scriptInstances) {
+            String[] packages = scriptInstance.getCode().split("\\.");
+            List<String> nodes = new LinkedList<>(Arrays.asList(packages));
+            createTree(nodes, rootEs5);
+        }
+        return rootNode;
+    }
+
+    public void setRootNode(TreeNode rootNode) {
+        this.rootNode = rootNode;
+    }
+
+    public TreeNode getSelectedNode() {
+        return selectedNode;
+    }
+
+    public void setSelectedNode(TreeNode selectedNode) {
+        this.selectedNode = selectedNode;
+    }
+
+    private void createTree(List<String> packages, TreeNode rootNode) {
+        if (CollectionUtils.isNotEmpty(packages)) {
+            String node = packages.get(0);
+            TreeNode newNode = new DefaultTreeNode(node, rootNode);
+            packages.remove(0);
+            createTree(packages, newNode);
+        }
     }
 }

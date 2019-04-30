@@ -98,7 +98,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @return list of scripts
      */
     @SuppressWarnings("unchecked")
-    protected List<T> findByType(ScriptSourceTypeEnum type) {
+    public List<T> findByType(ScriptSourceTypeEnum type) {
         List<T> result = new ArrayList<T>();
         try {
             result = (List<T>) getEntityManager().createNamedQuery("CustomScript.getScriptInstanceByTypeActive").setParameter("sourceTypeEnum", type).getResultList();
