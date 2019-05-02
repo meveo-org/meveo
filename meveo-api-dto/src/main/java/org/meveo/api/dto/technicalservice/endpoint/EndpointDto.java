@@ -84,8 +84,22 @@ public class EndpointDto extends BusinessDto implements Serializable {
      */
     @JsonProperty
     private boolean serializeResult;
+    
+    /**
+     * Content type of the response
+     */
+    @JsonProperty
+    private String contentType;
+    
+    public String getContentType() {
+		return contentType;
+	}
 
-    public boolean isSerializeResult() {
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public boolean isSerializeResult() {
         return serializeResult;
     }
 

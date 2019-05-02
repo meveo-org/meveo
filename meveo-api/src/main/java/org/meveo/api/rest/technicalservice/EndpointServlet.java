@@ -126,8 +126,8 @@ public class EndpointServlet extends HttpServlet {
             final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
-                    endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
                     endpointExecution.getResp().setStatus(200);
+                    endpointExecution.getResp().setContentType(endpoint.getContentType());
                     endpointExecution.getWriter().print(execResult.get());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
@@ -158,11 +158,11 @@ public class EndpointServlet extends HttpServlet {
      * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
      */
     private String transformData(Endpoint endpoint, Map<String, Object> result){
-        final boolean returnedVarNameDefined = StringUtils.isBlank(endpoint.getReturnedVariableName());
+        final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
         boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
 
     	Object returnValue = result;
-    	if(!returnedVarNameDefined) {
+    	if(returnedVarNameDefined) {
     		Object extractedValue = result.get(endpoint.getReturnedVariableName());
     		if(extractedValue != null){
     			returnValue = extractedValue;
@@ -192,7 +192,7 @@ public class EndpointServlet extends HttpServlet {
 
                     final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
                     endpointExecution.getWriter().print(transformData(endpoint, result));
-                    endpointExecution.getResp().setContentType(MediaType.APPLICATION_JSON);
+                    endpointExecution.getResp().setContentType(endpoint.getContentType());
                     endpointExecution.getResp().setStatus(200);    // OK
                     if(endpointExecution.getPersistenceContextId() != null){
                         saveResult(endpointExecution, result);

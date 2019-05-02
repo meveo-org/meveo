@@ -222,23 +222,14 @@ public class EndpointApi {
 
         endpointService.flush();
 
-        // Update synchronous
         endpoint.setSynchronous(endpointDto.isSynchronous());
-
-        // Update method
         endpoint.setMethod(endpointDto.getMethod());
-
-        // Update path parameters
         endpoint.getPathParameters().addAll(getEndpointPathParameters(endpointDto,endpoint));
-
-        // Update parameters mappings
         endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
-
         endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
-
         endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
-
         endpoint.setSerializeResult(endpointDto.isSerializeResult());
+        endpoint.setContentType(endpointDto.getContentType());
 
         endpointService.update(endpoint);
     }
@@ -266,6 +257,7 @@ public class EndpointApi {
             mappingDtos.add(mappingDto);
         }
         endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
+        endpointDto.setContentType(endpoint.getContentType());
         return endpointDto;
     }
 
@@ -302,6 +294,9 @@ public class EndpointApi {
         endpoint.setPathParameters(endpointPathParameters);
 
         endpoint.setSerializeResult(endpointDto.isSerializeResult());
+        
+        endpoint.setContentType(endpointDto.getContentType());
+        
         return endpoint;
     }
 

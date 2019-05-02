@@ -126,8 +126,22 @@ public class Endpoint extends BusinessEntity {
     @Type(type = "numeric_boolean")
     @Column(name = "serialize_result", nullable = false)
     private boolean serializeResult;
+    
+    /**
+     * Content type of the response
+     */
+    @Column(name = "content_type")
+    private String contentType;
+    
+    public String getContentType() {
+		return contentType;
+	}
 
-    public void setSerializeResult(boolean serializeResult) {
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public void setSerializeResult(boolean serializeResult) {
         this.serializeResult = serializeResult;
     }
 
