@@ -234,6 +234,10 @@ public class EndpointApi {
         // Update parameters mappings
         endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
 
+        endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
+
+        endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+
         endpointService.update(endpoint);
     }
 
