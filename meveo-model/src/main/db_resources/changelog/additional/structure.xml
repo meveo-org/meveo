@@ -620,4 +620,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+        <addColumn tableName="service_endpoint">
+            <column name="serialize_result" type="${type.boolean}" valueNumeric="0" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

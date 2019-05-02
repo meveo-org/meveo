@@ -238,6 +238,8 @@ public class EndpointApi {
 
         endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
 
+        endpoint.setSerializeResult(endpointDto.isSerializeResult());
+
         endpointService.update(endpoint);
     }
 
@@ -248,6 +250,7 @@ public class EndpointApi {
         endpointDto.setServiceCode(endpoint.getService().getCode());
         endpointDto.setSynchronous(endpoint.isSynchronous());
         endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
+        endpointDto.setSerializeResult(endpoint.isSerializeResult());
         List<String> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
@@ -297,6 +300,8 @@ public class EndpointApi {
         // Path parameters
         List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
         endpoint.setPathParameters(endpointPathParameters);
+
+        endpoint.setSerializeResult(endpointDto.isSerializeResult());
         return endpoint;
     }
 

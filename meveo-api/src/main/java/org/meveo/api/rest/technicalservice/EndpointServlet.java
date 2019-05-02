@@ -20,8 +20,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
@@ -83,9 +83,6 @@ public class EndpointServlet extends HttpServlet {
 
     @Inject
     private EndpointResultsCacheContainer endpointResultsCacheContainer;
-
-    @Inject
-    private ParamBean paramBean;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -153,15 +150,19 @@ public class EndpointServlet extends HttpServlet {
     }
 
     /**
-     * Extract variable designed by returned variable name and apply JSONata query if defined
+     * Extract variable pointed by returned variable name and apply JSONata query if defined
+     * If endpoint is not configured to serialize the result and that returned variable name is set, do not serialize result. Otherwise serialize it.
      *
      * @param endpoint Endpoint endpoxecuted
      * @param result Result of the endpoint execution
      * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
      */
     private String transformData(Endpoint endpoint, Map<String, Object> result){
+        final boolean returnedVarNameDefined = StringUtils.isBlank(endpoint.getReturnedVariableName());
+        boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
+
     	Object returnValue = result;
-    	if(!StringUtils.isBlank(endpoint.getReturnedVariableName())) {
+    	if(!returnedVarNameDefined) {
     		Object extractedValue = result.get(endpoint.getReturnedVariableName());
     		if(extractedValue != null){
     			returnValue = extractedValue;
@@ -169,12 +170,18 @@ public class EndpointServlet extends HttpServlet {
     			log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(), endpoint.getReturnedVariableName());
     		}
     	}
+
+        if (!shouldSerialize) {
+            return returnValue.toString();
+        }
+
         final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
-        if(!StringUtils.isBlank(endpoint.getJsonataTransformer())) {
-            return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
-        }else{
+        if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return serializedResult;
         }
+
+        return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
+
     }
 
     private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException {

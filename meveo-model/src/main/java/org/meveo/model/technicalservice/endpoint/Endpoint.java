@@ -119,7 +119,22 @@ public class Endpoint extends BusinessEntity {
      */
     @Column(name = "returned_variable_name")
     private String returnedVariableName;
-    
+
+    /**
+     * Context variable to be returned by the endpoint
+     */
+    @Type(type = "numeric_boolean")
+    @Column(name = "serialize_result", nullable = false)
+    private boolean serializeResult;
+
+    public void setSerializeResult(boolean serializeResult) {
+        this.serializeResult = serializeResult;
+    }
+
+    public boolean isSerializeResult() {
+        return serializeResult;
+    }
+
     public String getReturnedVariableName() {
 		return returnedVariableName;
 	}

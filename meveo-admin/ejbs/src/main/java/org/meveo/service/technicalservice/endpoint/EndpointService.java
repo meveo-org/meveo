@@ -54,8 +54,13 @@ public class EndpointService extends BusinessService<Endpoint> {
     private KeycloakAdminClientService keycloakAdminClientService;
 
     public boolean isUserAuthorized(Endpoint endpoint){
-        final Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(ENDPOINTS_CLIENT);
-        return currentUserRoles.contains(getEndpointPermission(endpoint));
+        try {
+            final Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(ENDPOINTS_CLIENT);
+            return currentUserRoles.contains(getEndpointPermission(endpoint));
+        }catch (Exception e){
+            log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+            return false;
+        }
     }
 
     /**
