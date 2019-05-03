@@ -70,6 +70,8 @@ public class EndpointApi {
      */
     public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
+    	System.out.println(execution.getRequest().getRemainingPath());
+    	
         List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
         Function service = endpoint.getService();
@@ -133,6 +135,9 @@ public class EndpointApi {
                 return executionEngine.cancel();
             }
         }
+
+        // Implicitly pass the request information to the script
+        parameterMap.put("request", execution.getRequest());
 
         return functionService.execute(service.getCode(), parameterMap);
     }

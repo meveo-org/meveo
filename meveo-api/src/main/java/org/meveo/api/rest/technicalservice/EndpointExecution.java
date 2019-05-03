@@ -16,12 +16,15 @@
 
 package org.meveo.api.rest.technicalservice;
 
-import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
-
-import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 public class EndpointExecution {
     private final Map<String, Object> parameters;
@@ -38,8 +41,10 @@ public class EndpointExecution {
     private final Double bugetMax;
     private final TimeUnit delayUnit;
     private final Long delayValue;
+    private final EndpointRequest request;
+    private final Endpoint endpoint;
 
-    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue) {
+    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue, EndpointRequest request, Endpoint endpoint) {
         this.parameters = parameters;
         this.resp = resp;
         this.writer = writer;
@@ -54,6 +59,16 @@ public class EndpointExecution {
         this.bugetMax = bugetMax;
         this.delayUnit = delayUnit;
         this.delayValue = delayValue;
+        this.request = request;
+        this.endpoint = endpoint;
+    }
+    
+    public Endpoint getEndpoint() {
+		return endpoint;
+	}
+
+	public EndpointRequest getRequest() {
+        return request;
     }
 
     public TimeUnit getDelayUnit() {
