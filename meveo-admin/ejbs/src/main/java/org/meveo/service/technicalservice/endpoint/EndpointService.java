@@ -113,8 +113,11 @@ public class EndpointService extends BusinessService<Endpoint> {
     public Endpoint update(Endpoint entity) throws BusinessException {
         Endpoint endpoint = findById(entity.getId());
         endpoint.getPathParameters().clear();
-        endpoint.getPathParameters().addAll(entity.getPathParameters());
         endpoint.getParametersMapping().clear();
+        
+        flush();
+        
+        endpoint.getPathParameters().addAll(entity.getPathParameters());
         endpoint.getParametersMapping().addAll(entity.getParametersMapping());
         endpoint.setJsonataTransformer(entity.getJsonataTransformer());
         endpoint.setMethod(entity.getMethod());
@@ -122,7 +125,12 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpoint.setSynchronous(entity.isSynchronous());
         endpoint.setCode(entity.getCode());
         endpoint.setDescription(entity.getDescription());
+        endpoint.setReturnedVariableName(entity.getReturnedVariableName());
+        endpoint.setSerializeResult(entity.isSerializeResult());
+        endpoint.setContentType(entity.getContentType());
+        
         super.update(endpoint);
+        
         return entity;
     }
 }

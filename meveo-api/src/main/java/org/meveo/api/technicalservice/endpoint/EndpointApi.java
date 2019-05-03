@@ -217,21 +217,25 @@ public class EndpointApi {
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
 
-        endpoint.getParametersMapping().clear();
-        endpoint.getPathParameters().clear();
+    	Endpoint updatedEndpoint = new Endpoint();
+    	updatedEndpoint.setId(endpoint.getId());
+    	updatedEndpoint.setCode(endpointDto.getCode());
+    	
+    	updatedEndpoint.setSynchronous(endpointDto.isSynchronous());
+    	updatedEndpoint.setMethod(endpointDto.getMethod());
 
-        endpointService.flush();
+        final List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+        updatedEndpoint.setPathParameters(endpointPathParameters);
 
-        endpoint.setSynchronous(endpointDto.isSynchronous());
-        endpoint.setMethod(endpointDto.getMethod());
-        endpoint.getPathParameters().addAll(getEndpointPathParameters(endpointDto,endpoint));
-        endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
-        endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
-        endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
-        endpoint.setSerializeResult(endpointDto.isSerializeResult());
-        endpoint.setContentType(endpointDto.getContentType());
+        final List<TSParameterMapping> parameterMappings = getParameterMappings(endpointDto, endpoint);
+        updatedEndpoint.setParametersMapping(parameterMappings);
+        
+        updatedEndpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
+        updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+        updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
+        updatedEndpoint.setContentType(endpointDto.getContentType());
 
-        endpointService.update(endpoint);
+        endpointService.update(updatedEndpoint);
     }
 
     private EndpointDto toDto(Endpoint endpoint) {
