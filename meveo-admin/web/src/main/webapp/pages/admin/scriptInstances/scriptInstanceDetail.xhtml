@@ -10,6 +10,7 @@
     </ui:define>
 
     <ui:define name="body">
+    	<p:growl id="growl" showDetail="false" sticky="false" autoUpdate="false" />
         <p:panel>
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -54,7 +55,7 @@
 	                                   lineNumbers="true" required="true"/>
 	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
 	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
-	                                         action="#{scriptInstanceBean.testCompilation}" update="@form"/>
+	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors :growl"/>
 	                    </h:panelGroup>
 	                </hftl:decorateFormField>
  				</c:if>
@@ -67,10 +68,6 @@
 	                    			   value="#{scriptInstanceBean.entity.script}"
 	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javascriptHint);}}"
 	                                   lineNumbers="true" required="true"/>
-	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
-	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
-	                                         action="#{scriptInstanceBean.testCompilation}" update="@form"/>
-	                    </h:panelGroup>
                 	</hftl:decorateFormField>
  				</c:if>
 
@@ -133,8 +130,12 @@
                 <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />
             </hftl:decorateFormField>
             
-            <hf:formButtons backingBean="#{scriptInstanceBean}" edit="#{scriptInstanceBean.edit}" ajaxSubmit="true"
-                execute="#{scriptInstanceBean.entity.id!=null and !scriptInstanceBean.entity.error}" executeLabel="#{messages['action.execute']}" />
+            <hf:formButtons backingBean="#{scriptInstanceBean}" 
+           					edit="#{scriptInstanceBean.edit}" 
+           					ajaxSubmit="true"
+           					submitUpdate="@form:scriptErrors"
+                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}" 
+                			executeLabel="#{messages['action.execute']}" />
         </hftl:formPanel>
         <p:dataTable var="log" value="#{scriptInstanceBean.getLogs()}" rendered="#{!empty(scriptInstanceBean.getLogs())}">
             <p:column headerText="Logs">

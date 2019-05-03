@@ -211,13 +211,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
-        String result = super.saveOrUpdate(killConversation);
+        String result = super.saveOrUpdate(false);
 
         if (entity.isError()) {
-            result = null;
-        }
-        if (killConversation) {
-            endConversation();
+        	result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
+        }else {
+            if (killConversation) {
+                endConversation();
+            }
         }
 
         return result;
