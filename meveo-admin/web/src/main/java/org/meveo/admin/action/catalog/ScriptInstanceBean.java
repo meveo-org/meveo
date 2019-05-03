@@ -18,8 +18,7 @@
  */
 package org.meveo.admin.action.catalog;
 
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.MethodDeclaration;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
@@ -33,6 +32,7 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
@@ -41,8 +41,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Standard backing bean for {@link org.meveo.model.scripts.ScriptInstance} (extends {@link org.meveo.admin.action.BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -71,6 +71,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private TreeNode rootNode;
 
     private TreeNode selectedNode;
+    private TreeNode searchNode;
 
     public void initCompilationErrors() {
         if (FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest()) {
@@ -338,53 +339,27 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         outputs.remove(scriptIO);
     }
 
-    private ScriptIO createIO(String name) {
-        ScriptIO scriptIO = new ScriptIO();
-        scriptIO.setName(name);
-        scriptIO.setEditable(false);
-        return scriptIO;
-    }
-
-  /*  private void createTreeNode() {
-        List<ScriptInstance> scriptInstanceListJava =  scriptInstanceService.findByType(ScriptSourceTypeEnum.JAVA);
-        for(ScriptInstance scriptInstance : scriptInstanceListJava) {
-            rootJava = new DefaultTreeNode("RootJAVA", null);
-            String[] listDataSplit = scriptInstance.getCode().split(".");
-            for (String node : listDataSplit) {
-                TreeNode child = new DefaultTreeNode(node, this.rootJava);
-                child.setParent(this.rootJava);
-            }
-        }
-        List<ScriptInstance> scriptInstanceListEs5 =  scriptInstanceService.findByType(ScriptSourceTypeEnum.ES5);
-        for(ScriptInstance scriptInstance : scriptInstanceListEs5) {
-            rootEs5 = new DefaultTreeNode("RootES5", null);
-            String[] listDataSplit = scriptInstance.getCode().split(".");
-            for (String node : listDataSplit) {
-                TreeNode child = new DefaultTreeNode(node, this.rootEs5);
-                child.setParent(this.rootEs5);
-            }
-        }
-    }*/
-
-
-
     public TreeNode getRootNode() {
-
-        rootNode = new DefaultTreeNode("Root", null);
-        TreeNode rootJava = new DefaultTreeNode("java", rootNode);
-        List<ScriptInstance> scriptInstances =  scriptInstanceService.findByType(ScriptSourceTypeEnum.JAVA);
-        for(ScriptInstance scriptInstance : scriptInstances) {
-            String[] packages = scriptInstance.getCode().split("\\.");
-            List<String> nodes = new LinkedList<>(Arrays.asList(packages));
-            createTree(nodes, rootJava);
+        rootNode = new DefaultTreeNode("document", new ScriptInstanceNode(""), null);
+        List<ScriptInstance> scriptInstances = scriptInstanceService.findByType(ScriptSourceTypeEnum.JAVA);
+        if (CollectionUtils.isNotEmpty(scriptInstances)) {
+            TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode("java"), rootNode);
+            rootJava.setExpanded(true);
+            for (ScriptInstance scriptInstance : scriptInstances) {
+                String[] fullNames = scriptInstance.getCode().split("\\.");
+                List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
+                createTree(nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
+            }
         }
-
-        TreeNode rootEs5 = new DefaultTreeNode("es5", rootNode );
         scriptInstances =  scriptInstanceService.findByType(ScriptSourceTypeEnum.ES5);
-        for(ScriptInstance scriptInstance : scriptInstances) {
-            String[] packages = scriptInstance.getCode().split("\\.");
-            List<String> nodes = new LinkedList<>(Arrays.asList(packages));
-            createTree(nodes, rootEs5);
+        if (CollectionUtils.isNotEmpty(scriptInstances)) {
+            TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode("es5"), rootNode);
+            rootEs5.setExpanded(true);
+            for (ScriptInstance scriptInstance : scriptInstances) {
+                String[] fullNames = scriptInstance.getCode().split("\\.");
+                List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
+                createTree(nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
+            }
         }
         return rootNode;
     }
@@ -401,12 +376,51 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         this.selectedNode = selectedNode;
     }
 
-    private void createTree(List<String> packages, TreeNode rootNode) {
+    public void viewScript(NodeSelectEvent event) throws IOException{
+        ScriptInstanceNode scriptInstanceNode = (ScriptInstanceNode) event.getTreeNode().getData();
+        if (scriptInstanceNode.getId() != null) {
+            String url = "scriptInstanceDetail.jsf?objectId=" + scriptInstanceNode.getId() +"&edit=true&cid=" + conversation.getId();
+            FacesContext.getCurrentInstance().getExternalContext().redirect(url);
+        }
+    }
+
+    private ScriptIO createIO(String name) {
+        ScriptIO scriptIO = new ScriptIO();
+        scriptIO.setName(name);
+        scriptIO.setEditable(false);
+        return scriptIO;
+    }
+
+    private void createTree(List<String> packages, TreeNode rootNode, String fullName, Long id, Boolean error) {
         if (CollectionUtils.isNotEmpty(packages)) {
-            String node = packages.get(0);
-            TreeNode newNode = new DefaultTreeNode(node, rootNode);
+            String nodeName = packages.get(0);
+            searchNode = null;
+            findNode(rootNode, nodeName);
+            TreeNode newNode;
+            if (searchNode == null) {
+                if (fullName.endsWith(nodeName)) {
+                    newNode = new DefaultTreeNode("document", new ScriptInstanceNode(nodeName, fullName, error, id), rootNode);
+                } else {
+                    newNode = new DefaultTreeNode("document", new ScriptInstanceNode(nodeName), rootNode);
+                }
+                newNode.setExpanded(true);
+            } else {
+                newNode = searchNode;
+            }
             packages.remove(0);
-            createTree(packages, newNode);
+            searchNode = null;
+            createTree(packages, newNode, fullName, id, error);
+        }
+    }
+
+    private void findNode(TreeNode node, String searchNodeName){
+        List<TreeNode> subChild = node.getChildren();
+        for (TreeNode treeNode : subChild) {
+            ScriptInstanceNode scriptInstanceNode = (ScriptInstanceNode) treeNode.getData();
+            if (scriptInstanceNode.getName().equals(searchNodeName)){
+                searchNode = treeNode;
+            }
+            findNode(treeNode, searchNodeName);
         }
     }
 }
