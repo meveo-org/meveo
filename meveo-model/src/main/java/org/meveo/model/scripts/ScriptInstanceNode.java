@@ -5,16 +5,19 @@ public class ScriptInstanceNode {
     private String fullName;
     private Boolean error;
     private Long id;
+    private String scriptType;
 
     public ScriptInstanceNode() {
     }
 
-    public ScriptInstanceNode(String name) {
+    public ScriptInstanceNode(String name, String scriptType) {
         this.name = name;
+        this.scriptType = scriptType;
     }
 
-    public ScriptInstanceNode(String name, String fullName, Boolean error, Long id) {
+    public ScriptInstanceNode(String name, String scriptType, String fullName, Boolean error, Long id) {
         this.name = name;
+        this.scriptType = scriptType;
         this.fullName = fullName;
         this.error = error;
         this.id = id;
@@ -50,5 +53,13 @@ public class ScriptInstanceNode {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getScriptType() {
+        return scriptType;
+    }
+
+    public void setScriptType(String scriptType) {
+        this.scriptType = scriptType;
     }
 }

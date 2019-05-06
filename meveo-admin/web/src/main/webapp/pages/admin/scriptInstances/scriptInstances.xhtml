@@ -7,7 +7,6 @@
             <f:event type="preRenderView" listener="#{scriptInstanceListBean.preRenderView}" />
         </f:metadata>
     </ui:define>
-
      <ui:define name="body">
          <h:form id="crumbmenuForm">
              <p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -19,12 +18,12 @@
              <hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
          </hftl:searchPanel>
          <p:panel id="results_panel" width="100%">
-             <hftl:decorateFormField fieldId="scriptInstances" label="#{messages['scriptInstance.title']}" newLine="true" style="width : 40%">
-                 <p:tree id="scriptInstances" value="#{scriptInstanceBean.rootNode}" var="script" selectionMode="single"
-                         selection="#{scriptInstanceBean.selectedNode}" style="width: 100%;height: 300px;overflow: auto;display: block">
-                     <p:ajax event="select" listener="#{scriptInstanceBean.viewScript}" />
+             <hftl:decorateFormField fieldId="scriptInstances" label="#{messages['scriptInstance.title']}" newLine="true" style="width : 100%">
+                 <p:tree id="scriptInstances" value="#{scriptInstanceListBean.rootNode}" var="script" selectionMode="single"
+                         selection="#{scriptInstanceListBean.selectedNode}" style="width: 100%;height: 300px; overflow: auto;display: block">
+                     <p:ajax event="select" listener="#{scriptInstanceListBean.viewScript}" />
                      <p:treeNode type="document">
-                         <i class="fa #{script.id == null ? 'fa-folder-o' : (script.error == true ? 'fa-bug': 'fa-file-o')} fa-2x"></i>
+                         <i style="color: #{script.scriptType == 'java' ? 'orange;' : 'blue;'})}" class="fa #{script.id == null ? 'fa-folder-o' : (script.error == true ? 'fa-bug': 'fa-file-o')} fa-2x"></i>
                          <p:spacer width="6" />
                          <h:outputText value="#{script.name}" />
                      </p:treeNode>
