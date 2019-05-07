@@ -28,8 +28,8 @@ import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -278,10 +278,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
     }
 
+    /**
+     * Find the primitive type of a given CustomEntityTemplate
+     * 
+     * @param code Code of the CustomEntityTemplate to find primitive type
+     * @return the primitive type of the CustomEntityTemplate or null if it does not have one or is not a CustomEntityTemplate
+     */
     public PrimitiveTypeEnum getPrimitiveType(String code) {
-        return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
-                .setParameter("code", code)
-                .getSingleResult();
+    	try {
+	        return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
+	                .setParameter("code", code)
+	                .getSingleResult();
+    	} catch(NoResultException ignored) {
+    		return null;
+    	}
     }
 
     /**
