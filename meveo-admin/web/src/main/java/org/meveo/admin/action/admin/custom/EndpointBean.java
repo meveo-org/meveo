@@ -34,6 +34,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
     private List<TSParameterMapping> parameterMappings = new ArrayList<>();
 
+    private List<String> returnedVariableNames;
+
     private String endpointUrl;
 
     private String serviceCode;
@@ -143,6 +145,25 @@ public class EndpointBean extends BaseBean<Endpoint> {
             pathParametersDL.getTarget().forEach(endpointPathParameter -> endpointUrl += "/{" + endpointPathParameter + "}");
         }
         return endpointUrl;
+    }
+
+    public List<String> getReturnedVariableNames() {
+        if (returnedVariableNames == null) {
+            returnedVariableNames = new ArrayList<>();
+            if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getOutputs())) {
+                List<FunctionIO> functionIOList = entity.getService().getOutputs();
+                functionIOList.forEach(item->returnedVariableNames.add(item.getName()));
+            }
+        } else if (getEntity().getService() != null && !getEntity().getService().getCode().equals(serviceCode) && CollectionUtils.isNotEmpty(entity.getService().getOutputs())) {
+            List<FunctionIO> functionIOList = entity.getService().getOutputs();
+            returnedVariableNames.clear();
+            functionIOList.forEach(item->returnedVariableNames.add(item.getName()));
+        }
+        return returnedVariableNames;
+    }
+
+    public void setReturnedVariableNames(List<String> returnedVariableNames) {
+        this.returnedVariableNames = returnedVariableNames;
     }
 
     @Override
