@@ -116,7 +116,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         return execRolesDM;
     }
-    
+
     public DualListModel<Role> getSourcRolesDM() {
 
         if (sourcRolesDM == null) {
@@ -228,13 +228,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
-        String result = super.saveOrUpdate(killConversation);
+        String result = super.saveOrUpdate(false);
 
         if (entity.isError()) {
-            result = null;
-        }
-        if (killConversation) {
-            endConversation();
+        	result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
+        }else {
+            if (killConversation) {
+                endConversation();
+            }
         }
 
         return result;
@@ -244,13 +245,13 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         scriptInstanceService.test(entity.getCode(), null);
         return null;
     }
-    
+
     @Override
     public void runListFilter() {
     	rootNode = computeRootNode();
     	super.runListFilter();
     }
-    
+
     @Override
     public void search() {
     	super.search();
@@ -363,7 +364,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public void removeScriptOutput(ScriptIO scriptIO) {
         outputs.remove(scriptIO);
     }
-    
+
     public TreeNode getRootNode() {
     	if(rootNode == null) {
     		rootNode = computeRootNode();
@@ -373,23 +374,23 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     public TreeNode computeRootNode() {
     	log.info("Computing root node");
-    	
+
         rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
 	    rootNode.setExpanded(false);
-	    
+
         Map<String, Object> filters = this.getFilters();
         String code = "";
         if (this.filters.containsKey("code")) {
             code = (String) filters.get("code");
         }
-        
+
         List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
             scriptInstances = scriptInstanceService.findByCodeLike(code);
         } else {
             scriptInstances = scriptInstanceService.list();
         }
-        
+
         List<ScriptInstance> javaScriptInstances = null;
         List<ScriptInstance> es5ScriptInstances = null;
         if (CollectionUtils.isNotEmpty(scriptInstances)) {
@@ -418,7 +419,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
             }
         }
-        
+
         return rootNode;
     }
 

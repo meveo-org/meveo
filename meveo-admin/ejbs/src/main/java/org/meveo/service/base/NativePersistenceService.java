@@ -592,8 +592,9 @@ public class NativePersistenceService extends BaseService {
      */
     @SuppressWarnings({"rawtypes"})
     public QueryBuilder getQuery(String tableName, PaginationConfiguration config) {
+        String startQuery = "select * from " + tableName + " a ";
 
-        QueryBuilder queryBuilder = new QueryBuilder("select * from " + tableName + " a ", "a");
+        QueryBuilder queryBuilder = new QueryBuilder(startQuery, "a");
 
         if (config == null) {
             return queryBuilder;
@@ -792,10 +793,12 @@ public class NativePersistenceService extends BaseService {
         }
 
         queryBuilder.addPaginationConfiguration(config, "a");
+        
+        //FIXME: Will only works for Postgres and few others ...
+        if(config.isRandomize()){
+        	queryBuilder.getSqlStringBuffer().append("ORDER BY RANDOM() ");
+        }
 
-        // log.trace("Filters is {}", filters);
-        // log.trace("Query is {}", queryBuilder.getSqlString());
-        // log.trace("Query params are {}", queryBuilder.getParams());
         return queryBuilder;
     }
 

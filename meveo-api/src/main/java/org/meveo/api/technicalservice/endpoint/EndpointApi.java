@@ -70,6 +70,8 @@ public class EndpointApi {
      */
     public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
+    	System.out.println(execution.getRequest().getRemainingPath());
+    	
         List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
         Function service = endpoint.getService();
@@ -133,6 +135,9 @@ public class EndpointApi {
                 return executionEngine.cancel();
             }
         }
+
+        // Implicitly pass the request information to the script
+        parameterMap.put("request", execution.getRequest());
 
         return functionService.execute(service.getCode(), parameterMap);
     }
@@ -217,24 +222,25 @@ public class EndpointApi {
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
 
-        endpoint.getParametersMapping().clear();
-        endpoint.getPathParameters().clear();
+    	Endpoint updatedEndpoint = new Endpoint();
+    	updatedEndpoint.setId(endpoint.getId());
+    	updatedEndpoint.setCode(endpointDto.getCode());
+    	
+    	updatedEndpoint.setSynchronous(endpointDto.isSynchronous());
+    	updatedEndpoint.setMethod(endpointDto.getMethod());
 
-        endpointService.flush();
+        final List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+        updatedEndpoint.setPathParameters(endpointPathParameters);
 
-        // Update synchronous
-        endpoint.setSynchronous(endpointDto.isSynchronous());
+        final List<TSParameterMapping> parameterMappings = getParameterMappings(endpointDto, endpoint);
+        updatedEndpoint.setParametersMapping(parameterMappings);
+        
+        updatedEndpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
+        updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+        updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
+        updatedEndpoint.setContentType(endpointDto.getContentType());
 
-        // Update method
-        endpoint.setMethod(endpointDto.getMethod());
-
-        // Update path parameters
-        endpoint.getPathParameters().addAll(getEndpointPathParameters(endpointDto,endpoint));
-
-        // Update parameters mappings
-        endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
-
-        endpointService.update(endpoint);
+        endpointService.update(updatedEndpoint);
     }
 
     private EndpointDto toDto(Endpoint endpoint) {
@@ -244,6 +250,7 @@ public class EndpointApi {
         endpointDto.setServiceCode(endpoint.getService().getCode());
         endpointDto.setSynchronous(endpoint.isSynchronous());
         endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
+        endpointDto.setSerializeResult(endpoint.isSerializeResult());
         List<String> pathParameterDtos = new ArrayList<>();
         endpointDto.setPathParameters(pathParameterDtos);
         for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
@@ -259,6 +266,7 @@ public class EndpointApi {
             mappingDtos.add(mappingDto);
         }
         endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
+        endpointDto.setContentType(endpoint.getContentType());
         return endpointDto;
     }
 
@@ -293,6 +301,11 @@ public class EndpointApi {
         // Path parameters
         List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
         endpoint.setPathParameters(endpointPathParameters);
+
+        endpoint.setSerializeResult(endpointDto.isSerializeResult());
+        
+        endpoint.setContentType(endpointDto.getContentType());
+        
         return endpoint;
     }
 

@@ -36,6 +36,8 @@ public class PaginationConfiguration implements Serializable {
 
     private Integer numberOfRows;
 
+    private boolean randomize;
+
     /**
      * Full text search filter. Mutually exclusive with filters attribute. fullTextFilter has priority
      */
@@ -62,6 +64,14 @@ public class PaginationConfiguration implements Serializable {
      */
     public PaginationConfiguration(String sortField, SortOrder sortOrder) {
         this(null, null, null, null, null, sortField, sortOrder, null);
+    }
+
+    public boolean isRandomize() {
+        return randomize;
+    }
+
+    public void setRandomize(boolean randomize) {
+        this.randomize = randomize;
     }
 
     /**

@@ -16,16 +16,25 @@
 
 package org.meveo.api.rest.technicalservice;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
-public class EndpointExecutionFactory {
+import javax.inject.Inject;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-    public static EndpointExecutionBuilder getExecutionBuilder(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
+
+public class EndpointExecutionFactory {
+	
+    @Inject
+    private EndpointService endpointService;
+
+    public EndpointExecutionBuilder getExecutionBuilder(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         final PrintWriter writer = resp.getWriter();
         resp.setCharacterEncoding("UTF-8");
@@ -34,10 +43,15 @@ public class EndpointExecutionFactory {
         if (pathInfo.length == 0) {
             throw new ServletException("Incomplete URL");
         }
+        
+        // Retrieve endpoint
+        final Endpoint endpoint = endpointService.findByCode(pathInfo[1]);
 
         return new EndpointExecutionBuilder()
+                .setRequest(new EndpointRequest(req, endpoint))
                 .setResponse(resp)
                 .setWriter(writer)
+                .setEndpoint(endpoint)
                 .setPathInfo(pathInfo)
                 .setFirstUriPart(pathInfo[1])
                 .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))

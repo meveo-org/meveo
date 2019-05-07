@@ -24,6 +24,7 @@ import javax.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.security.Role;
@@ -41,7 +42,8 @@ import org.meveo.model.security.Role;
 @NamedQueries({ @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceOnError", query = "from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceByTypeActive", query = "from ScriptInstance o where o.sourceTypeEnum=:sourceTypeEnum and o.disabled = false")})
-@ImportOrder(1)
+@ImportOrder(4)
+@ExportIdentifier({ "code" })
 public class ScriptInstance extends CustomScript {
 
     private static final long serialVersionUID = -7691357496569390167L;

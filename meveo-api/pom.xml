@@ -5,7 +5,7 @@
         <groupId>org.meveo</groupId>
         <artifactId>meveo</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>6.0.14-SNAPSHOT</version>
+        <version>6.0.15-SNAPSHOT</version>
     </parent>
     <artifactId>meveo-api</artifactId>
     <name>Meveo API</name>

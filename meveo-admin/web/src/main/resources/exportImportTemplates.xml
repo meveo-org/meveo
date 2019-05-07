@@ -32,6 +32,12 @@
             </relatedEntity>
         </relatedEntities>
     </template>
+     <template name="Endpoint" entityToExport="org.meveo.model.technicalservice.endpoint.Endpoint">
+          <classesToExportAsFull>
+            <java-class>org.meveo.model.technicalservice.endpoint.EndpointPathParameter</java-class>
+            <java-class>org.meveo.model.technicalservice.endpoint.TSParameterMapping</java-class>
+        </classesToExportAsFull>
+    </template>
     <template name="ScriptInstance" entityToExport="org.meveo.model.scripts.ScriptInstance">
         <exportAllClassesAsFull>true</exportAllClassesAsFull>
         <classesToExportAsFull>

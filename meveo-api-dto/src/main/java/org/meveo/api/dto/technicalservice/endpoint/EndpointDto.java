@@ -78,7 +78,35 @@ public class EndpointDto extends BusinessDto implements Serializable {
      */
     @JsonProperty
     private String returnedVariableName;
+
+    /**
+     * Whether to serialize the result of the endpoint if a returned variable has been specified
+     */
+    @JsonProperty
+    private boolean serializeResult;
     
+    /**
+     * Content type of the response
+     */
+    @JsonProperty
+    private String contentType;
+    
+    public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public boolean isSerializeResult() {
+        return serializeResult;
+    }
+
+    public void setSerializeResult(boolean serializeResult) {
+        this.serializeResult = serializeResult;
+    }
+
     public String getReturnedVariableName() {
 		return returnedVariableName;
 	}

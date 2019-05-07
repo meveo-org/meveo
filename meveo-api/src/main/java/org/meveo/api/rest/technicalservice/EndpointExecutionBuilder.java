@@ -16,6 +16,8 @@
 
 package org.meveo.api.rest.technicalservice;
 
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +41,13 @@ public class EndpointExecutionBuilder {
     private Double bugetMax;
     private TimeUnit delayUnit;
     private Long delayValue;
+    private EndpointRequest request;
+    private Endpoint endpoint;
+    
+    public EndpointExecutionBuilder setEndpoint(Endpoint endpoint) {
+    	this.endpoint = endpoint;
+    	return this;
+    }
 
     public EndpointExecutionBuilder setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
@@ -81,7 +90,7 @@ public class EndpointExecutionBuilder {
     }
 
     public EndpointExecution createEndpointExecution() {
-        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue);
+        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue, request, endpoint);
     }
 
     public EndpointExecutionBuilder setResp(HttpServletResponse resp) {
@@ -116,6 +125,11 @@ public class EndpointExecutionBuilder {
 
     public EndpointExecutionBuilder setDelayValue(Long delayValue) {
         this.delayValue = delayValue;
+        return this;
+    }
+
+    public EndpointExecutionBuilder setRequest(EndpointRequest request) {
+        this.request = request;
         return this;
     }
 }

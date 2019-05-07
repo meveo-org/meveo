@@ -403,75 +403,85 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     protected void beforeUpdateOrCreate(T script) throws BusinessException {
-        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-            CompilationUnit compilationUnit = JavaParser.parse(script.getScript());
-            final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
-                    .stream()
-                    .filter(e -> e instanceof ClassOrInterfaceDeclaration)
-                    .map(e -> (ClassOrInterfaceDeclaration) e)
-                    .findFirst()
-                    .get();
+    	if (script.getSourceTypeEnum() != ScriptSourceTypeEnum.JAVA) {
+    		return;
+    	}
 
-            final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
-                    .stream()
-                    .filter(e -> e instanceof MethodDeclaration)
-                    .map(e -> (MethodDeclaration) e)
-                    .collect(Collectors.toList());
+        CompilationUnit compilationUnit;
 
-            final List<Accessor> setters = methods.stream()
-                    .filter(e -> e.getNameAsString().startsWith(SET))
-                    .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
-                    .filter(e -> e.getParameters().size() == 1)
-                    .map(methodDeclaration -> {
-                        Accessor setter = new Accessor();
-                        String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                        setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                        setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
-                        setter.setMethodName(methodDeclaration.getNameAsString());
-                        methodDeclaration.getComment()
-                                .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                                    javadocComment.parse()
-                                            .getBlockTags()
-                                            .stream()
-                                            .filter(e -> e.getType() == JavadocBlockTag.Type.PARAM)
-                                            .findFirst()
-                                            .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
-                                }));
-                        return setter;
-                    }).collect(Collectors.toList());
+		try {
+			compilationUnit = JavaParser.parse(script.getScript());
+		}catch(Exception e) {
+			// Skip getter and setters parsing. We don't need to log errors as they will be logged later in code.
+			return;
+		}
 
-            final List<Accessor> getters = methods.stream()
-                    .filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
-                    .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
-                    .filter(e -> e.getParameters().isEmpty())
-                    .map(methodDeclaration -> {
-                        Accessor getter = new Accessor();
-                        String accessorFieldName;
-                        if (methodDeclaration.getNameAsString().startsWith(GET)) {
-                            accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                        } else {
-                            accessorFieldName = methodDeclaration.getNameAsString().substring(2);
-                        }
-                        getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                        getter.setMethodName(methodDeclaration.getNameAsString());
-                        getter.setType(methodDeclaration.getTypeAsString());
-                        methodDeclaration.getComment()
-                                .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                                    javadocComment.parse()
-                                            .getBlockTags()
-                                            .stream()
-                                            .filter(e -> e.getType() == JavadocBlockTag.Type.RETURN)
-                                            .findFirst()
-                                            .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
-                                }));
-                        return getter;
-                    }).collect(Collectors.toList());
+		final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
+		        .stream()
+		        .filter(e -> e instanceof ClassOrInterfaceDeclaration)
+		        .map(e -> (ClassOrInterfaceDeclaration) e)
+		        .findFirst()
+		        .get();
 
-            checkEndpoints(script, setters);
+		final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+		        .stream()
+		        .filter(e -> e instanceof MethodDeclaration)
+		        .map(e -> (MethodDeclaration) e)
+		        .collect(Collectors.toList());
 
-            script.setGetters(getters);
-            script.setSetters(setters);
-        }
+		final List<Accessor> setters = methods.stream()
+		        .filter(e -> e.getNameAsString().startsWith(SET))
+		        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+		        .filter(e -> e.getParameters().size() == 1)
+		        .map(methodDeclaration -> {
+		            Accessor setter = new Accessor();
+		            String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+		            setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+		            setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
+		            setter.setMethodName(methodDeclaration.getNameAsString());
+		            methodDeclaration.getComment()
+		                    .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+		                        javadocComment.parse()
+		                                .getBlockTags()
+		                                .stream()
+		                                .filter(e -> e.getType() == JavadocBlockTag.Type.PARAM)
+		                                .findFirst()
+		                                .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
+		                    }));
+		            return setter;
+		        }).collect(Collectors.toList());
+
+		final List<Accessor> getters = methods.stream()
+		        .filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
+		        .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC)))
+		        .filter(e -> e.getParameters().isEmpty())
+		        .map(methodDeclaration -> {
+		            Accessor getter = new Accessor();
+		            String accessorFieldName;
+		            if (methodDeclaration.getNameAsString().startsWith(GET)) {
+		                accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+		            } else {
+		                accessorFieldName = methodDeclaration.getNameAsString().substring(2);
+		            }
+		            getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+		            getter.setMethodName(methodDeclaration.getNameAsString());
+		            getter.setType(methodDeclaration.getTypeAsString());
+		            methodDeclaration.getComment()
+		                    .ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+		                        javadocComment.parse()
+		                                .getBlockTags()
+		                                .stream()
+		                                .filter(e -> e.getType() == JavadocBlockTag.Type.RETURN)
+		                                .findFirst()
+		                                .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
+		                    }));
+		            return getter;
+		        }).collect(Collectors.toList());
+
+		checkEndpoints(script, setters);
+
+		script.setGetters(getters);
+		script.setSetters(setters);
     }
 
     /**
@@ -492,8 +502,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (!testCompile) {
                     clearCompiledScripts(scriptCode);
                 }
-
-                // For now no need to check source type if (sourceType==ScriptSourceTypeEnum.JAVA){
 
                 Class<ScriptInterface> compiledScript = compileJavaSource(sourceCode);
 

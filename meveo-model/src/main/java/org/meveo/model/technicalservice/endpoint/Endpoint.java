@@ -37,6 +37,8 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.scripts.Function;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
@@ -63,10 +65,14 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
                 "WHERE service.code = :serviceCode " +
                 "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
 )
-@ImportOrder(2)
+@ImportOrder(5)
+@ExportIdentifier({ "code" })
+@ModuleItem
 public class Endpoint extends BusinessEntity {
 
-    /**
+	private static final long serialVersionUID = 6561905332917884613L;
+
+	/**
      * Technical service associated to the endpoint
      */
     @ManyToOne(fetch = FetchType.EAGER)
@@ -113,7 +119,36 @@ public class Endpoint extends BusinessEntity {
      */
     @Column(name = "returned_variable_name")
     private String returnedVariableName;
+
+    /**
+     * Context variable to be returned by the endpoint
+     */
+    @Type(type = "numeric_boolean")
+    @Column(name = "serialize_result", nullable = false)
+    private boolean serializeResult;
     
+    /**
+     * Content type of the response
+     */
+    @Column(name = "content_type")
+    private String contentType;
+    
+    public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public void setSerializeResult(boolean serializeResult) {
+        this.serializeResult = serializeResult;
+    }
+
+    public boolean isSerializeResult() {
+        return serializeResult;
+    }
+
     public String getReturnedVariableName() {
 		return returnedVariableName;
 	}

@@ -620,4 +620,21 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+        <addColumn tableName="service_endpoint">
+            <column name="serialize_result" type="${type.boolean}" valueNumeric="0" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    
+    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+        <addColumn tableName="service_endpoint">
+            <column name="content_type" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_unique_constraint_meveo_function_code" author="Clément Bareth" failOnError="false">
+        <addUniqueConstraint tableName="meveo_function" columnNames="code" constraintName="meveo_function_unique_code"/>
+    </changeSet>
 </databaseChangeLog>
