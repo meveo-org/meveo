@@ -98,7 +98,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @return list of scripts
      */
     @SuppressWarnings("unchecked")
-    protected List<T> findByType(ScriptSourceTypeEnum type) {
+    public List<T> findByType(ScriptSourceTypeEnum type) {
         List<T> result = new ArrayList<T>();
         try {
             result = (List<T>) getEntityManager().createNamedQuery("CustomScript.getScriptInstanceByTypeActive").setParameter("sourceTypeEnum", type).getResultList();
@@ -406,16 +406,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	if (script.getSourceTypeEnum() != ScriptSourceTypeEnum.JAVA) {
     		return;
     	}
-    	
+
         CompilationUnit compilationUnit;
-		
+
 		try {
 			compilationUnit = JavaParser.parse(script.getScript());
 		}catch(Exception e) {
 			// Skip getter and setters parsing. We don't need to log errors as they will be logged later in code.
 			return;
 		}
-		
+
 		final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes()
 		        .stream()
 		        .filter(e -> e instanceof ClassOrInterfaceDeclaration)
