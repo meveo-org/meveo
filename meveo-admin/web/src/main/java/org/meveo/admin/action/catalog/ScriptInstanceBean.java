@@ -19,15 +19,32 @@
 package org.meveo.admin.action.catalog;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.ScriptIO;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceNode;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -36,16 +53,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
-import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.TreeNode;
-
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Standard backing bean for {@link org.meveo.model.scripts.ScriptInstance} (extends {@link org.meveo.admin.action.BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -77,7 +85,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private TreeNode rootNode;
 
     private TreeNode selectedNode;
-    private TreeNode searchNode;
 
     public void initCompilationErrors() {
         if (FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest()) {
@@ -109,7 +116,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         return execRolesDM;
     }
-
+    
     public DualListModel<Role> getSourcRolesDM() {
 
         if (sourcRolesDM == null) {
@@ -237,6 +244,18 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         scriptInstanceService.test(entity.getCode(), null);
         return null;
     }
+    
+    @Override
+    public void runListFilter() {
+    	rootNode = computeRootNode();
+    	super.runListFilter();
+    }
+    
+    @Override
+    public void search() {
+    	super.search();
+    	rootNode = computeRootNode();
+    }
 
     public List<String> getLogs() {
         return scriptInstanceService.getLogs(entity.getCode());
@@ -344,20 +363,33 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public void removeScriptOutput(ScriptIO scriptIO) {
         outputs.remove(scriptIO);
     }
-
+    
     public TreeNode getRootNode() {
+    	if(rootNode == null) {
+    		rootNode = computeRootNode();
+    	}
+		return rootNode;
+    }
+
+    public TreeNode computeRootNode() {
+    	log.info("Computing root node");
+    	
         rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
+	    rootNode.setExpanded(false);
+	    
         Map<String, Object> filters = this.getFilters();
         String code = "";
         if (this.filters.containsKey("code")) {
             code = (String) filters.get("code");
         }
+        
         List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
             scriptInstances = scriptInstanceService.findByCodeLike(code);
         } else {
             scriptInstances = scriptInstanceService.list();
         }
+        
         List<ScriptInstance> javaScriptInstances = null;
         List<ScriptInstance> es5ScriptInstances = null;
         if (CollectionUtils.isNotEmpty(scriptInstances)) {
@@ -370,7 +402,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         if (CollectionUtils.isNotEmpty(javaScriptInstances)) {
             TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode(JAVA, JAVA), rootNode);
-            rootJava.setExpanded(true);
+            rootJava.setExpanded(false);
             for (ScriptInstance scriptInstance : javaScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
@@ -379,13 +411,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         if (CollectionUtils.isNotEmpty(es5ScriptInstances)) {
             TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode(ES5, ES5), rootNode);
-            rootEs5.setExpanded(true);
+            rootEs5.setExpanded(false);
             for (ScriptInstance scriptInstance : es5ScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
                 createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
             }
         }
+        
         return rootNode;
     }
 
@@ -426,7 +459,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 } else {
                     newNode = new DefaultTreeNode("document", new ScriptInstanceNode(nodeName, scripType), rootNode);
                 }
-                newNode.setExpanded(true);
+                newNode.setExpanded(false);
             }
             packages.remove(0);
             createTree(scripType, packages, newNode, fullName, id, error);

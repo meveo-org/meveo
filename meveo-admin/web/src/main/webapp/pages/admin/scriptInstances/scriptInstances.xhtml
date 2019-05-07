@@ -14,15 +14,19 @@
                  <p:menuitem outcome="scriptInstances" value="#{messages['menu.scriptInstances']}" />
              </p:breadCrumb>
          </h:form>
-         <hftl:searchPanel columns="3" label="#{messages['scriptInstance.search']}" backingBean="#{scriptInstanceListBean}">
+         <hftl:searchPanel columns="3" 
+         				   label="#{messages['scriptInstance.search']}" 
+         				   backingBean="#{scriptInstanceListBean}">
              <hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
          </hftl:searchPanel>
          <p:panel id="results_panel" width="100%">
              <hftl:decorateFormField fieldId="scriptInstances" label="#{messages['scriptInstance.title']}" newLine="true" style="width : 100%">
-                 <p:tree id="scriptInstances" value="#{scriptInstanceListBean.rootNode}" var="script" selectionMode="single"
-                         selection="#{scriptInstanceListBean.selectedNode}" style="width: 100%;height: 300px; overflow: auto;display: block">
+                 <p:tree id="scriptInstances" value="#{scriptInstanceListBean.rootNode}" 
+                 		 var="script" selectionMode="single" 
+                         selection="#{scriptInstanceListBean.selectedNode}" 
+                         style="width: 100%;max-height: 400px; overflow: auto;display: block">
                      <p:ajax event="select" listener="#{scriptInstanceListBean.viewScript}" />
-                     <p:treeNode type="document">
+                     <p:treeNode type="document" >
                          <i style="color: #{script.scriptType == 'java' ? 'orange;' : 'blue;'})}" class="fa #{script.id == null ? 'fa-folder-o' : (script.error == true ? 'fa-bug': 'fa-file-o')} fa-2x"></i>
                          <p:spacer width="6" />
                          <h:outputText value="#{script.name}" />
