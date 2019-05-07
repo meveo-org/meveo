@@ -258,6 +258,7 @@ public class CustomFieldTemplateDto extends BaseDto {
         }
 
         identifier = cf.isIdentifier();
+        isUnique = cf.isUnique();
 
     }
 
