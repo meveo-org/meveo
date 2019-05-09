@@ -138,6 +138,15 @@ public class EndpointBean extends BaseBean<Endpoint> {
     public void setParameterMappings(List<TSParameterMapping> parameterMappings) {
         this.parameterMappings = parameterMappings;
     }
+    
+    /**
+     * When function changes, reset returned variable name list, returned variable name and serialize result fields.
+     */
+    public void onFunctionChange(Object value) {
+    	returnedVariableNames = null;
+    	entity.setReturnedVariableName(null);
+    	entity.setSerializeResult(false);
+    }
 
     public String getEndpointUrl() {
         endpointUrl = "/rest/"+ getEntity().getCode();
