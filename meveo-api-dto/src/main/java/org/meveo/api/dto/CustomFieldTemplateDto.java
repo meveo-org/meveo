@@ -19,6 +19,7 @@ import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.persistence.DBStorageType;
 
 /**
  * The Class CustomFieldTemplateDto.
@@ -190,6 +191,9 @@ public class CustomFieldTemplateDto extends BaseDto {
     @XmlElement(name = "fieldCode")
     private List<String> childEntityFieldsForSummary;
 
+    @XmlElement()
+    private List<DBStorageType> storages;
+
     /**
      * If and how custom field values should be indexed in Elastic Search.
      */
@@ -214,6 +218,7 @@ public class CustomFieldTemplateDto extends BaseDto {
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
         code = cf.getCode();
+        storages = cf.getStorages();
         description = cf.getDescription();
         languageDescriptions = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(cf.getDescriptionI18n());
         fieldType = cf.getFieldType();
@@ -258,7 +263,6 @@ public class CustomFieldTemplateDto extends BaseDto {
         }
 
         identifier = cf.isIdentifier();
-        isUnique = cf.isUnique();
 
     }
 
@@ -278,7 +282,15 @@ public class CustomFieldTemplateDto extends BaseDto {
 		this.relationshipName = relationshipName;
 	}
 
-	/**
+    public List<DBStorageType> getStorages() {
+        return storages;
+    }
+
+    public void setStorages(List<DBStorageType> storages) {
+        this.storages = storages;
+    }
+
+    /**
      * Gets the code.
      *
      * @return the code

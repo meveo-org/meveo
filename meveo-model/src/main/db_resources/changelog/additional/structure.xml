@@ -643,4 +643,11 @@
     <changeSet id="add_unique_constraint_meveo_function_code" author="Clément Bareth" failOnError="false">
         <addUniqueConstraint tableName="meveo_function" columnNames="code" constraintName="meveo_function_unique_code"/>
     </changeSet>
+
+    <changeSet id="#3655-Storages" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="storages" type="${type.json}"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

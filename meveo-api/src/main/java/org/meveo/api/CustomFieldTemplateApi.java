@@ -21,8 +21,11 @@ import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -41,6 +44,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomizedEntityService customizedEntityService;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
@@ -409,6 +415,16 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setUnique(dto.isUnique());
 
         cft.setIdentifier(dto.isIdentifier());
+
+        // A cft can't be stored in a db that is not available for its cet
+        String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+        CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+        for(DBStorageType storageType : cet.getAvailableStorages()){
+            if(!cet.getAvailableStorages().contains(storageType)){
+                String message = "Custom field %s can't be stored to %s as the CET %s is not configure to be stored in this database";
+                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, cetCode));
+            }
+        }
 
         return cft;
     }
