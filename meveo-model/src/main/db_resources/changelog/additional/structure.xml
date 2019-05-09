@@ -634,6 +634,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="#3652-Available_storages" author="Clément Bareth">
+        <addColumn tableName="cust_cet">
+            <column name="available_storages" type="${type.json}"/>
+        </addColumn>
+    </changeSet>
+
     <changeSet id="add_unique_constraint_meveo_function_code" author="Clément Bareth" failOnError="false">
         <addUniqueConstraint tableName="meveo_function" columnNames="code" constraintName="meveo_function_unique_code"/>
     </changeSet>

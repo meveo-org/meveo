@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -16,6 +17,7 @@ import org.meveo.model.*;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
@@ -119,6 +121,21 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<GraphQLQueryField> graphqlQueryFields;
+
+	/**
+	 * List of storages where the custom fields can be stored
+	 */
+	@Column(name = "available_storages", columnDefinition = "TEXT")
+	@Type(type = "jsonList")
+	private List<DBStorageType> availableStorages = new ArrayList<>();
+
+	public List<DBStorageType> getAvailableStorages() {
+		return availableStorages;
+	}
+
+	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+		this.availableStorages = availableStorages;
+	}
 
 	public ScriptInstance getPrePersistScript() {
 		return prePersistScript;
