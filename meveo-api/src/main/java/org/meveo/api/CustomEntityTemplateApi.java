@@ -40,7 +40,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi
  * @author Clement Bareth
- * @lastModifiedVersion 6.0.5
+ * @lastModifiedVersion 6.0.15
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -507,6 +507,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setPrimitiveType(dto.getPrimitiveType());
         cet.setLabels(dto.getLabels());
         cet.setGraphqlQueryFields(dto.getGraphqlQueryFields());
+        cet.setAvailableStorages(dto.getAvailableStorages());
         if (cet.isStoreAsTable()) {
             cet.setStoreAsTable(true);
         }
@@ -600,6 +601,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setLabels(cet.getLabels());
         dto.setGraphqlQueryFields(cet.getGraphqlQueryFields());
         dto.setStoreAsTable(cet.isStoreAsTable());
+        dto.setAvailableStorages(cet.getAvailableStorages());
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
