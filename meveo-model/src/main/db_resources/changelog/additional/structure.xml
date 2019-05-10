@@ -649,5 +649,14 @@
             <column name="storages" type="${type.json}"/>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="fill-storages-type" author="Clément Bareth">
+    	<update tableName="cust_cet">
+    		<column name="available_storages" value="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
+    	</update>
+    	<update tableName="crm_custom_field_tmpl">
+    		<column name="storages" value="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
+    	</update>
+    </changeSet>
 
 </databaseChangeLog>
