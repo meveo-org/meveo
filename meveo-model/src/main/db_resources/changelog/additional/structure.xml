@@ -628,7 +628,7 @@
         </addColumn>
     </changeSet>
     
-    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+    <changeSet id="endpoint_serialize content_type" author="Clément Bareth">
         <addColumn tableName="service_endpoint">
             <column name="content_type" type="varchar(255)"/>
         </addColumn>
