@@ -220,7 +220,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(cetPrefix);
 
-		if (entityTemplate != null && entityTemplate.isPrimitiveEntity()) {
+		if (entityTemplate != null && entityTemplate.getNeo4JStorageConfiguration() != null && entityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 			fields.remove("value");
 		}
 
@@ -561,10 +561,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
     public List<CustomEntityTemplateUniqueConstraint> getCustomEntityTemplateUniqueConstraints() {
-        if (entity != null && entity.getUniqueConstraints() != null) {
-            customEntityTemplateUniqueConstraints = entity.getUniqueConstraints();
-        }
-        return customEntityTemplateUniqueConstraints;
+        if (entity.getNeo4JStorageConfiguration() != null) {
+			if (entity != null && entity.getNeo4JStorageConfiguration().getUniqueConstraints() != null) {
+				customEntityTemplateUniqueConstraints = entity.getNeo4JStorageConfiguration().getUniqueConstraints();
+			}
+			return customEntityTemplateUniqueConstraints;
+		} else {
+			return null;
+		}
     }
 
     public CustomEntityTemplateUniqueConstraint getCustomEntityTemplateUniqueConstraint() {
@@ -584,7 +588,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
         for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
             if (uniqueConstraint != null && uniqueConstraint.equals(selectedUniqueConstraint)) {
-                entity.getUniqueConstraints().remove(selectedUniqueConstraint);
+                entity.getNeo4JStorageConfiguration().getUniqueConstraints().remove(selectedUniqueConstraint);
                 break;
             }
         }
@@ -612,7 +616,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
                 }
             }
         }
-        entity.setUniqueConstraints(customEntityTemplateUniqueConstraints);
+        
+        entity.getNeo4JStorageConfiguration().setUniqueConstraints(customEntityTemplateUniqueConstraints);
         isUpdate = false;
         String message = "customFieldInstance.childEntity.save.successful";
         messages.info(new BundleKey("messages", message));
@@ -624,16 +629,21 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
     }
 
     public List<GraphQLQueryField> getGraphqlQueryFields() {
-        if (entity != null && entity.getGraphqlQueryFields() != null) {
-            graphqlQueryFields = entity.getGraphqlQueryFields();
-        }
-        return graphqlQueryFields;
+    	if(entity.getNeo4JStorageConfiguration() != null) {
+            if (entity != null && entity.getNeo4JStorageConfiguration().getGraphqlQueryFields() != null) {
+                graphqlQueryFields = entity.getNeo4JStorageConfiguration().getGraphqlQueryFields();
+            }
+            return graphqlQueryFields;
+    	}else {
+    		return new ArrayList<>();
+    	}
+
     }
 
     public void removeGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
         for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
             if (graphqlQueryField != null && graphqlQueryField.equals(selectedGraphQLQueryField)) {
-                entity.getGraphqlQueryFields().remove(selectedGraphQLQueryField);
+                entity.getNeo4JStorageConfiguration().getGraphqlQueryFields().remove(selectedGraphQLQueryField);
                 break;
             }
         }
@@ -665,7 +675,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
                 }
             }
         }
-        entity.setGraphqlQueryFields(graphqlQueryFields);
+        entity.getNeo4JStorageConfiguration().setGraphqlQueryFields(graphqlQueryFields);
         isUpdate = false;
         String message = "graphqlQueryField.save.successful";
         messages.info(new BundleKey("messages", message));

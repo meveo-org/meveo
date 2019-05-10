@@ -1,6 +1,10 @@
 package org.meveo.api;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -8,7 +12,13 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.*;
+import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.EntityCustomActionDto;
+import org.meveo.api.dto.EntityCustomizationDto;
+import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
@@ -27,6 +37,8 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -494,27 +506,36 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      */
     private CustomEntityTemplate fromDTO(CustomEntityTemplateDto dto, CustomEntityTemplate cetToUpdate) {
         final CustomEntityTemplate cet = cetToUpdate != null ? cetToUpdate : new CustomEntityTemplate();
-        if (cetToUpdate != null) {
-            cet.getUniqueConstraints().clear();
-            customEntityTemplateService.flush();
-        }
         cet.setCode(dto.getCode());
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
-        cet.setPrimitiveEntity(dto.isPrimitiveEntity());
-        cet.setPrimitiveType(dto.getPrimitiveType());
-        cet.setLabels(dto.getLabels());
-        cet.setGraphqlQueryFields(dto.getGraphqlQueryFields());
         cet.setAvailableStorages(dto.getAvailableStorages());
         cet.setSqlStorageConfiguration(dto.getSqlStorageConfiguration());
 
-        if(dto.getUniqueConstraints() != null){
-            final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
-                    .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
-                    .collect(Collectors.toList());
+        // Neo4J configuration if defined
+        if(dto.getNeo4jStorageConfiguration() != null) {
+        	
+            if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
+            	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
+                customEntityTemplateService.flush();
+            }
+            
+        	Neo4JStorageConfiguration configuration = new Neo4JStorageConfiguration();
+        	configuration.setPrimitiveEntity(dto.getNeo4jStorageConfiguration().isPrimitiveEntity());
+        	configuration.setPrimitiveType(dto.getNeo4jStorageConfiguration().getPrimitiveType());
+        	configuration.setLabels(dto.getNeo4jStorageConfiguration().getLabels());
+        	configuration.setGraphqlQueryFields(dto.getNeo4jStorageConfiguration().getGraphqlQueryFields());
+            
+            if(dto.getNeo4jStorageConfiguration().getUniqueConstraints() != null){
+                final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getNeo4jStorageConfiguration().getUniqueConstraints().stream()
+                        .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
+                        .collect(Collectors.toList());
 
-            cet.getUniqueConstraints().addAll(constraintList);
+
+                configuration.getUniqueConstraints().addAll(constraintList);
+            }
         }
+
 
 
         if(dto.getPrePersistScripCode() != null) {
@@ -568,16 +589,18 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      *
      * @param dto The CET dto to validate
      */
-     private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
+	private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
 
+		if (dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			if (!dto.getNeo4jStorageConfiguration().isPrimitiveEntity()) {
+				return; // If not a primitive type, skip tests
+			}
+			if (dto.getNeo4jStorageConfiguration() == null) {
+				throw new BusinessException("Primitive type must be defined");
+			}
+		}
 
-        if(!dto.isPrimitiveEntity()){
-            return; // If not a primitive type, skip tests
-        }
-        if(dto.getPrimitiveType() == null){
-            throw new BusinessException("Primitive type must be defined");
-        }
-     }
+	}
 
     /**
      * Convert CustomEntityTemplate instance to CustomEntityTemplateDto object including the fields and actions.
@@ -592,10 +615,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setCode(cet.getCode());
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
-        dto.setPrimitiveEntity(cet.isPrimitiveEntity());
-        dto.setPrimitiveType(cet.getPrimitiveType());
-        dto.setLabels(cet.getLabels());
-        dto.setGraphqlQueryFields(cet.getGraphqlQueryFields());
         dto.setAvailableStorages(cet.getAvailableStorages());
         dto.setSqlStorageConfiguration(cet.getSqlStorageConfiguration());
 
@@ -619,12 +638,27 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             dto.setActions(actions);
         }
 
-        List<CustomEntityTemplateUniqueConstraintDto> constraintDtoList = cet.getUniqueConstraints()
-                .stream()
-                .map(CustomEntityTemplateApi::toConstraintDto)
-                .collect(Collectors.toList());
+        // Neo4J configuration if defined
+        if(cet.getNeo4JStorageConfiguration() != null) {
+            
+        	Neo4JStorageConfigurationDto neo4jConf = new Neo4JStorageConfigurationDto();
 
-        dto.setUniqueConstraints(constraintDtoList);
+            neo4jConf.setLabels(cet.getNeo4JStorageConfiguration().getLabels());
+            neo4jConf.setGraphqlQueryFields(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields());
+            neo4jConf.setPrimitiveEntity(cet.getNeo4JStorageConfiguration().isPrimitiveEntity());
+            neo4jConf.setPrimitiveType(cet.getNeo4JStorageConfiguration().getPrimitiveType());
+            
+			if (cet.getNeo4JStorageConfiguration().getUniqueConstraints() != null) {
+				List<CustomEntityTemplateUniqueConstraintDto> constraintDtoList = cet.getNeo4JStorageConfiguration()
+						.getUniqueConstraints().stream().map(CustomEntityTemplateApi::toConstraintDto)
+						.collect(Collectors.toList());
+
+				neo4jConf.setUniqueConstraints(constraintDtoList);
+			}
+            
+            dto.setNeo4jStorageConfiguration(neo4jConf);
+        }
+
 
         return dto;
     }

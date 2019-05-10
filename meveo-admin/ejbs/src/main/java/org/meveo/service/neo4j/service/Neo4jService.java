@@ -138,7 +138,7 @@ public class Neo4jService {
             Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
             // Fallback to when entity is defined as primitive but does not have associated CFT
-            if (cet.isPrimitiveEntity()) {
+            if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 CustomFieldTemplate valueCft = cetFields.get("value");
                 if (valueCft == null) {
                     valueCft = new CustomFieldTemplate();
@@ -177,13 +177,13 @@ public class Neo4jService {
 
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
-                    if (referencedCet.isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
+                    if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
                         fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = new HashMap<>();
                         valueMap.put("value", value);
 
                         // If there is no unique constraints defined, directly merge node
-                        if (referencedCet.getUniqueConstraints().isEmpty()) {
+                        if (referencedCet.getNeo4JStorageConfiguration().getUniqueConstraints().isEmpty()) {
                             List<String> additionalLabels = getAdditionalLabels(referencedCet);
                             if (referencedCet.getPrePersistScript() != null) {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
@@ -224,7 +224,7 @@ public class Neo4jService {
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
                     .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
                     .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
-            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getUniqueConstraints()
+            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
                     .stream()
                     .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
                     .sorted(comparator)
@@ -705,7 +705,7 @@ public class Neo4jService {
     }
 
     private List<String> getAdditionalLabels(CustomEntityTemplate cet) {
-        List<String> additionalLabels = new ArrayList<>(cet.getLabels());
+        List<String> additionalLabels = new ArrayList<>(cet.getNeo4JStorageConfiguration().getLabels());
         additionalLabels.addAll(getAllSuperTemplateLabels(cet));
         return additionalLabels;
     }

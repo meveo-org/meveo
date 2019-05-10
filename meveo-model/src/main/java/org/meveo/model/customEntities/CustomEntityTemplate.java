@@ -3,21 +3,36 @@ package org.meveo.model.customEntities;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
+import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.*;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
-import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 
@@ -46,16 +61,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	private String name;
 
 	@Embedded
-	@AttributeOverride(name = "code", column = @Column(name="code", insertable = false, updatable = false))
 	private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
-
-	/**
-	 * Labels to apply to the template.
-	 */
-	@ElementCollection(fetch = FetchType.EAGER)
-	@CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
-	@Column(name = "label")
-	private List<String> labels = new ArrayList<>();
+	
+	@Embedded
+	private Neo4JStorageConfiguration neo4JStorageConfiguration = new Neo4JStorageConfiguration();
 
 	/**
 	 * Template that current template inherits from
@@ -67,30 +76,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@OneToMany(mappedBy = "superTemplate", fetch = FetchType.LAZY)
 	private List<CustomEntityTemplate> subTemplates;
 
-	/**
-	 * Unique constraint to be applied when persisiting custom entities
-	 */
-    @OneToMany(mappedBy = "customEntityTemplate", fetch = FetchType.EAGER, orphanRemoval=true, cascade = CascadeType.ALL)
-	@OrderColumn(name = "position")
-	private List<CustomEntityTemplateUniqueConstraint> uniqueConstraints = new ArrayList<>();
-
 	@OneToOne(mappedBy = "customEntityTemplate", fetch = FetchType.LAZY)
 	private CustomEntityReference entityReference;
-
-	/**
-	 * Whether the CET is primitive. A primitive entity is an entity containing only
-	 * one property named "value"
-	 */
-	@Column(name = "primitive_entity")
-	@Type(type = "numeric_boolean")
-	private boolean primitiveEntity;
-
-	/**
-	 * The primitive type, if entity is primitive.
-	 */
-	@Column(name = "primitive_type")
-	@Enumerated(EnumType.STRING)
-	private PrimitiveTypeEnum primitiveType;
 
 	/**
 	 * Script to execute before persisting the entity
@@ -107,13 +94,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	private CustomEntityCategory customEntityCategory;
 
 	/**
-	 * Additionnal fields that can be retrieved using graphql engine
-	 */
-	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
-	private List<GraphQLQueryField> graphqlQueryFields;
-
-	/**
 	 * List of storages where the custom fields can be stored
 	 */
 	@Column(name = "available_storages", columnDefinition = "TEXT")
@@ -127,7 +107,21 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		
 		return null;
 	}
-	
+
+	public Neo4JStorageConfiguration getNeo4JStorageConfiguration() {
+		if(availableStorages != null && availableStorages.contains(DBStorageType.NEO4J)) {
+			return neo4JStorageConfiguration;
+		}
+		
+		return null;
+	}
+
+	public void setNeo4JStorageConfiguration(Neo4JStorageConfiguration neo4jStorageConfiguration) {
+		neo4JStorageConfiguration = neo4jStorageConfiguration;
+	}
+
+
+
 
 	public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
 		this.sqlStorageConfiguration = sqlStorageConfiguration;
@@ -147,30 +141,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	public void setPrePersistScript(ScriptInstance prePersistScript) {
 		this.prePersistScript = prePersistScript;
-	}
-
-	public List<String> getLabels() {
-		return labels;
-	}
-
-	public boolean isPrimitiveEntity() {
-		return primitiveEntity;
-	}
-
-	public void setPrimitiveEntity(boolean primitiveEntity) {
-		this.primitiveEntity = primitiveEntity;
-	}
-
-	public PrimitiveTypeEnum getPrimitiveType() {
-		return primitiveType;
-	}
-
-	public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
-		this.primitiveType = primitiveType;
-	}
-
-	public void setLabels(List<String> labels) {
-		this.labels = labels;
 	}
 
 	public String getName() {
@@ -244,26 +214,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
 		this.customEntityCategory = customEntityCategory;
-	}
-
-	public List<CustomEntityTemplateUniqueConstraint> getUniqueConstraints() {
-		return uniqueConstraints;
-	}
-
-	public void setUniqueConstraints(List<CustomEntityTemplateUniqueConstraint> uniqueConstraints) {
-		if(uniqueConstraints == null){
-			this.uniqueConstraints.clear();
-		}else{
-			this.uniqueConstraints = uniqueConstraints;
-		}
-	}
-
-	public List<GraphQLQueryField> getGraphqlQueryFields() {
-		return graphqlQueryFields;
-	}
-
-	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
-		this.graphqlQueryFields = graphqlQueryFields;
 	}
 
 	/**

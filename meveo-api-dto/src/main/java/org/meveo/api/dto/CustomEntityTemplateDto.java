@@ -9,9 +9,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 
@@ -32,10 +32,6 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute(required = true)
     private String code;
 
-    /** Additional labels */
-    @XmlAttribute()
-    private List<String> labels;
-    
     @XmlElement()
 	private String superTemplate;
 
@@ -51,10 +47,6 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private boolean primitiveEntity = false;
 
-    /** Type of the primitiveEntity */
-    @XmlAttribute(required = false)
-    private PrimitiveTypeEnum primitiveType;
-
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
@@ -69,26 +61,18 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private String prePersistScripCode;
 
-    /** The actions. */
-    @XmlElementWrapper(name = "uniqueConstraints")
-    @XmlElement(name = "uniqueConstraint")
-    private List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints;
-
     /** Category the CET belgongs to */
     @XmlAttribute()
     private String customEntityCategoryCode;
-
-    /**
-     * Additionnal fields that can be retrieved using graphql engine
-     */
-    @XmlElement()
-    private List<GraphQLQueryField> graphqlQueryFields;
 
     /**
      * Storage where cfts can be stored
      */
     @XmlElement()
     private List<DBStorageType> availableStorages;
+    
+    @XmlElement
+    private Neo4JStorageConfigurationDto neo4jStorageConfiguration;
 
     @XmlElement()
     private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
@@ -100,8 +84,16 @@ public class CustomEntityTemplateDto extends BaseDto {
     public void setAvailableStorages(List<DBStorageType> availableStorages) {
         this.availableStorages = availableStorages;
     }
+    
+    public Neo4JStorageConfigurationDto getNeo4jStorageConfiguration() {
+		return neo4jStorageConfiguration;
+	}
 
-    public SQLStorageConfiguration getSqlStorageConfiguration() {
+	public void setNeo4jStorageConfiguration(Neo4JStorageConfigurationDto neo4jStorageConfiguration) {
+		this.neo4jStorageConfiguration = neo4jStorageConfiguration;
+	}
+
+	public SQLStorageConfiguration getSqlStorageConfiguration() {
 		return sqlStorageConfiguration;
     }
 
@@ -116,14 +108,6 @@ public class CustomEntityTemplateDto extends BaseDto {
 
     }
     
-	public List<GraphQLQueryField> getGraphqlQueryFields() {
-        return graphqlQueryFields;
-    }
-
-    public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
-        this.graphqlQueryFields = graphqlQueryFields;
-    }
-
     public String getPrePersistScripCode() {
 		return prePersistScripCode;
 	}
@@ -132,28 +116,12 @@ public class CustomEntityTemplateDto extends BaseDto {
 		this.prePersistScripCode = prePersistScripCode;
 	}
 
-	public List<String> getLabels() {
-        return labels;
-    }
-
-    public void setLabels(List<String> labels) {
-        this.labels = labels;
-    }
-
     public boolean isPrimitiveEntity() {
         return primitiveEntity;
     }
 
     public void setPrimitiveEntity(boolean primitiveEntity) {
         this.primitiveEntity = primitiveEntity;
-    }
-
-    public PrimitiveTypeEnum getPrimitiveType() {
-        return primitiveType;
-    }
-
-    public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
-        this.primitiveType = primitiveType;
     }
 
     /**
@@ -252,24 +220,6 @@ public class CustomEntityTemplateDto extends BaseDto {
      */
     public void setActions(List<EntityCustomActionDto> actions) {
         this.actions = actions;
-    }
-
-    /**
-     * Gets the unique constraints.
-     *
-     * @return the unique constraints
-     */
-    public List<CustomEntityTemplateUniqueConstraintDto> getUniqueConstraints() {
-        return uniqueConstraints;
-    }
-
-    /**
-     * Sets the unique constraints.
-     *
-     * @param uniqueConstraints the new unique constraints
-     */
-    public void setUniqueConstraints(List<CustomEntityTemplateUniqueConstraintDto> uniqueConstraints) {
-        this.uniqueConstraints = uniqueConstraints;
     }
 
     public String getCustomEntityCategoryCode() {

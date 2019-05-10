@@ -12,10 +12,10 @@ public class CustomEntityTemplateUtils {
 	    customFieldTemplate.setActive(true);                        // Always active
 	    customFieldTemplate.setAllowEdit(false);                    // CFT can't be updated
 	    customFieldTemplate.setAppliesTo(cet.getAppliesTo());
-	    if (cet.getPrimitiveType() == null) {
+	    if (cet.getNeo4JStorageConfiguration().getPrimitiveType() == null) {
 	        throw new IllegalArgumentException("Primitive type class must be provided");
 	    }
-	    customFieldTemplate.setFieldType(cet.getPrimitiveType().getCftType());
+	    customFieldTemplate.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
 	    customFieldTemplate.setUnique(true);                        // Must be unique
 	    customFieldTemplate.setCode(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);            // Code is 'value'
 	    customFieldTemplate.setDescription(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);    // Label is 'value'

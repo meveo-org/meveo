@@ -32,6 +32,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.neo4j.GraphQLRequest;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -147,7 +148,7 @@ public class GraphQLService {
     private Collection<GraphQLEntity> getEntities() {
 
         Map<String, GraphQLEntity> graphQLEntities = new TreeMap<>();
-
+        
         // Entities
         final List<CustomEntityTemplate> ceTsWithSubTemplates = customEntityTemplateService.getCETsWithSubTemplates();
         final Map<String, CustomEntityTemplate> cetsByName = ceTsWithSubTemplates
@@ -155,6 +156,12 @@ public class GraphQLService {
                 .collect(Collectors.toMap(CustomEntityTemplate::getCode, Function.identity()));
 
         for (CustomEntityTemplate cet : cetsByName.values()) {
+        	
+        	//Skip if cet is not stored in neo4j
+        	if(!cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        		continue;
+        	}
+        	
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
@@ -162,7 +169,7 @@ public class GraphQLService {
             SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             // Additional queries defined
-            for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getGraphqlQueryFields()).orElse(Collections.emptyList())) {
+            for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields()).orElse(Collections.emptyList())) {
                 GraphQLField graphQLField = new GraphQLField();
                 graphQLField.setQuery(graphqlQueryField.getQuery());
                 graphQLField.setFieldType(graphqlQueryField.getFieldType());
@@ -172,11 +179,11 @@ public class GraphQLService {
             }
 
             // Primitive type
-            if (cet.isPrimitiveEntity()) {
+            if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 final boolean valueExists = graphQLFields.stream().anyMatch(f -> f.getFieldName().equals("value"));
                 if (!valueExists) {
                     GraphQLField value = new GraphQLField();
-                    switch (cet.getPrimitiveType()) {
+                    switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
                         case STRING:
                             value.setFieldType("String");
                             break;
@@ -330,6 +337,11 @@ public class GraphQLService {
             // Skip the field if it is an entity reference
             if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY) {
                 continue;
+            }
+            
+            // Skip the field if it is not configured to be stored in neo4j
+            if(customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
+            	continue;
             }
 
             GraphQLField graphQLField = new GraphQLField();

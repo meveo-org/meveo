@@ -98,7 +98,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
             /* If cet is a primitive type, create custom field of corresponding type */
-            if (cet.isPrimitiveEntity()) {
+            if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 createPrimitiveCft(cet);
             }
         } catch (Exception e) {
@@ -119,18 +119,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Asynchronous
     protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
         /* Primitive entity and type management */
-        if (cet.isPrimitiveEntity() && cet.getPrimitiveType() != null) {
+        if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity() && cet.getNeo4JStorageConfiguration().getPrimitiveType() != null) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
             if (valueCft == null) {
                 createPrimitiveCft(cet);
-            } else if (valueCft.getFieldType() != cet.getPrimitiveType().getCftType()) {
+            } else if (valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType()) {
                 flush();
-                valueCft.setFieldType(cet.getPrimitiveType().getCftType());
+                valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
                 customFieldTemplateService.update(valueCft);
             }
         } else {
-            cet.setPrimitiveType(null);
+        	cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
         }
     }
 
