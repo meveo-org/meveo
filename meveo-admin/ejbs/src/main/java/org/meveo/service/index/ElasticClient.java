@@ -56,6 +56,7 @@ import org.meveo.model.crm.Provider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -947,7 +948,7 @@ public class ElasticClient {
 
         ReindexingStatistics statistics = cleanAndReindex(true, reinitESConnection, lastCurrentUser.getProviderCode());
 
-        return new AsyncResult<ReindexingStatistics>(statistics);
+        return new AsyncResult<>(statistics);
     }
 
     /**
@@ -1028,7 +1029,7 @@ public class ElasticClient {
         ReindexingStatistics statistics = new ReindexingStatistics();
 
         if (!esConnection.isEnabled()) {
-            return new AsyncResult<ReindexingStatistics>(statistics);
+            return new AsyncResult<>(statistics);
         }
 
         log.info("Started to repopulate Elastic Search for all providers");
@@ -1056,7 +1057,7 @@ public class ElasticClient {
                     reindexProvider = multitenantElasticClient.cleanAndReindex(provider.getCode(), i == 0);
                     statistics.updateStatistics(reindexProvider.get());
                     if (statistics.getException() != null) {
-                        return new AsyncResult<ReindexingStatistics>(statistics);
+                        return new AsyncResult<>(statistics);
                     }
 
                 } catch (InterruptedException | ExecutionException | BusinessException e) {
@@ -1069,7 +1070,7 @@ public class ElasticClient {
             log.error("Failed to repopulate Elastic Search for all providers", e);
             statistics.setException(e);
         }
-        return new AsyncResult<ReindexingStatistics>(statistics);
+        return new AsyncResult<>(statistics);
     }
 
     /**
@@ -1089,7 +1090,7 @@ public class ElasticClient {
 
         ReindexingStatistics statistics = cleanAndReindex(false, false, isMainProvider ? null : providerCode);
 
-        return new AsyncResult<ReindexingStatistics>(statistics);
+        return new AsyncResult<>(statistics);
     }
 
     /**
@@ -1110,7 +1111,7 @@ public class ElasticClient {
         ReindexingStatistics statistics = new ReindexingStatistics();
 
         if (!esConnection.isEnabled()) {
-            return new AsyncResult<ReindexingStatistics>(statistics);
+            return new AsyncResult<>(statistics);
         }
 
         log.info("Started to repopulate Elastic Search for {}/{}", entityClass, cetCode);
@@ -1123,13 +1124,12 @@ public class ElasticClient {
 
         populateAll(statistics, entityClass.getName(), cet);
 
-        return new AsyncResult<ReindexingStatistics>(statistics);
+        return new AsyncResult<>(statistics);
     }
 
     /**
      * Repopulate ALL data for a given entity class/custom entity code. Note: assumes that current data has been deleted already.
      *
-     * @param lastCurrentUser Current user
      * @param classname Full name of an Entity class to rebuild
      * @param cet Custom entity template to rebuild. Applies ONLY to custom tables.
      * @throws BusinessException General exception
@@ -1138,22 +1138,27 @@ public class ElasticClient {
 
         log.info("Started to repopulate Elastic Search for {}/{}", classname, cet != null ? cet.getCode() : null);
 
+        if(cet == null){
+            return;
+        }
+
         try {
 
             // Repopulate index from DB
 
             if (classname.equals(CustomTableRecord.class.getName())) {
 
-                log.info("Started to populate Elastic Search with data from {} table", cet.getDbTablename());
+                final String dbTableName = SQLStorageConfiguration.getDbTablename(cet);
+                log.info("Started to populate Elastic Search with data from {} table", dbTableName);
 
                 Object fromId = 0;
 
-                int recordCount = esPopulationService.getRecordCountInNativeTable(cet.getDbTablename());
+                int recordCount = esPopulationService.getRecordCountInNativeTable(dbTableName);
                 int recordsRemaining = recordCount;
                 int totalProcessed = 0;
                 while (recordsRemaining > 0) {
 
-                    Object[] processedInfo = esPopulationService.populateIndexFromNativeTable(cet.getDbTablename(), fromId,
+                    Object[] processedInfo = esPopulationService.populateIndexFromNativeTable(dbTableName, fromId,
                             recordsRemaining > INDEX_POPULATE_CT_PAGE_SIZE ? INDEX_POPULATE_CT_PAGE_SIZE : -1, statistics);
 
                     totalProcessed = totalProcessed + (int) processedInfo[0];
@@ -1161,7 +1166,7 @@ public class ElasticClient {
                     recordsRemaining = recordsRemaining - INDEX_POPULATE_CT_PAGE_SIZE;
                 }
 
-                log.info("Finished populating Elastic Search with data from {} table. Processed {} records.", cet.getDbTablename(), totalProcessed);
+                log.info("Finished populating Elastic Search with data from {} table. Processed {} records.", dbTableName, totalProcessed);
 
             } else {
 
@@ -1284,7 +1289,8 @@ public class ElasticClient {
             // Try first matching the CET name as is
             CustomEntityTemplate cet = cfCache.getCustomEntityTemplate(classnameOrCetCode);
             if (cet != null) {
-                if (cet.isStoreAsTable()) {
+                boolean storeAsTable = cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable();
+                if (storeAsTable) {
                     classInfo = new ElasticSearchClassInfo(CustomTableRecord.class, BaseEntity.cleanUpAndLowercaseCodeOrId(classnameOrCetCode));
                 } else {
                     classInfo = new ElasticSearchClassInfo(CustomEntityInstance.class, classnameOrCetCode);
@@ -1295,8 +1301,9 @@ public class ElasticClient {
                 String classnameOrCetCodeCL = BaseEntity.cleanUpAndLowercaseCodeOrId(classnameOrCetCode);
                 Collection<CustomEntityTemplate> cets = cfCache.getCustomEntityTemplates();
                 for (CustomEntityTemplate cetToClean : cets) {
-                    if (BaseEntity.cleanUpAndLowercaseCodeOrId(cetToClean.getCode()).equals(classnameOrCetCodeCL) || classnameOrCetCodeCL.equals(cetToClean.getDbTablename())) {
-                        if (cetToClean.isStoreAsTable()) {
+                    if (BaseEntity.cleanUpAndLowercaseCodeOrId(cetToClean.getCode()).equals(classnameOrCetCodeCL) || classnameOrCetCodeCL.equals(SQLStorageConfiguration.getDbTablename(cetToClean))) {
+                        boolean storeAsTable = cetToClean.getSqlStorageConfiguration() != null && cetToClean.getSqlStorageConfiguration().isStoreAsTable();
+                    	if (storeAsTable) {
                             classInfo = new ElasticSearchClassInfo(CustomTableRecord.class, cetToClean.getCode());
                         } else {
                             classInfo = new ElasticSearchClassInfo(CustomEntityInstance.class, cetToClean.getCode());

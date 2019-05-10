@@ -85,9 +85,9 @@
                 
 				<!--  SQL Storage -->
 				<p:fieldset id="sql" toggleable="true" collapsed="true" legend="SQL Persistence" width="100%" >
-	                <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" field="storeAsTable" allowEdit="false" />
-	                <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.storeAsTable}">
-	                    <h:outputText value="#{customEntityTemplateBean.entity.dbTablename}" styleClass="field-value" />
+	                <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" field="sqlStorageConfiguration['storeAsTable']" allowEdit="false" />
+	                <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
+	                    <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value" />
 	                </hftl:decorateFormField>
 				</p:fieldset>
 				

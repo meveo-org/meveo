@@ -43,6 +43,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -140,7 +141,7 @@ public class CustomTableApi extends BaseApi {
             if (importedLines >= 500) {
 
                 values = customTableService.convertValues(values, cfts, false);
-                customTableService.update(cet.getDbTablename(), values);
+                customTableService.update(SQLStorageConfiguration.getDbTablename(cet), values);
 
                 values.clear();
                 importedLines = 0;
@@ -152,7 +153,7 @@ public class CustomTableApi extends BaseApi {
 
         // Update remaining records
         values = customTableService.convertValues(values, cfts, false);
-        customTableService.update(cet.getDbTablename(), values);
+        customTableService.update(SQLStorageConfiguration.getDbTablename(cet), values);
     }
 
     /**
@@ -185,9 +186,9 @@ public class CustomTableApi extends BaseApi {
         for (CustomTableRecordDto record : dto.getValues()) {
 
             if (record.getValues().containsKey(NativePersistenceService.FIELD_ID)) {
-                customTableService.update(cet.getDbTablename(), customTableService.convertValue(record.getValues(), cfts, false, null));
+                customTableService.update(SQLStorageConfiguration.getDbTablename(cet), customTableService.convertValue(record.getValues(), cfts, false, null));
             } else {
-                customTableService.create(cet.getDbTablename(), customTableService.convertValue(record.getValues(), cfts, false, null));
+                customTableService.create(SQLStorageConfiguration.getDbTablename(cet), customTableService.convertValue(record.getValues(), cfts, false, null));
             }
         }
     }
@@ -228,7 +229,7 @@ public class CustomTableApi extends BaseApi {
 
         PaginationConfiguration paginationConfig = toPaginationConfiguration("id", SortOrder.ASCENDING, null, pagingAndFiltering, null);
 
-        long totalCount = customTableService.count(cet.getDbTablename(), paginationConfig);
+        long totalCount = customTableService.count(SQLStorageConfiguration.getDbTablename(cet), paginationConfig);
 
         CustomTableDataResponseDto result = new CustomTableDataResponseDto();
 
@@ -236,7 +237,7 @@ public class CustomTableApi extends BaseApi {
         result.getPaging().setTotalNumberOfRecords((int) totalCount);
         result.getCustomTableData().setCustomTableCode(customTableCode);
 
-        result.getCustomTableData().setValuesFromListofMap(customTableService.list(cet.getDbTablename(), paginationConfig));
+        result.getCustomTableData().setValuesFromListofMap(customTableService.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfig));
 
         return result;
     }
@@ -262,7 +263,7 @@ public class CustomTableApi extends BaseApi {
         }
 
         if (dto.getValues() == null || dto.getValues().isEmpty()) {
-            customTableService.remove(cet.getDbTablename());
+            customTableService.remove(SQLStorageConfiguration.getDbTablename(cet));
         } else {
             Set<Long> ids = new HashSet<>();
 
@@ -282,7 +283,7 @@ public class CustomTableApi extends BaseApi {
                     throw new InvalidParameterException("Not all values have an 'id' field specified");
                 }
             }
-            customTableService.remove(cet.getDbTablename(), ids);
+            customTableService.remove(SQLStorageConfiguration.getDbTablename(cet), ids);
         }
     }
 
@@ -334,9 +335,9 @@ public class CustomTableApi extends BaseApi {
             }
         }
         if (enable) {
-            customTableService.enable(cet.getDbTablename(), ids);
+            customTableService.enable(SQLStorageConfiguration.getDbTablename(cet), ids);
         } else {
-            customTableService.disable(cet.getDbTablename(), ids);
+            customTableService.disable(SQLStorageConfiguration.getDbTablename(cet), ids);
         }
     }
 }

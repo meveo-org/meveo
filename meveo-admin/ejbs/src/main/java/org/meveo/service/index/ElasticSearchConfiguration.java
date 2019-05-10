@@ -377,7 +377,7 @@ public class ElasticSearchConfiguration implements Serializable {
      */
     public String getCetIndexConfiguration(CustomEntityTemplate cet) {
 
-        if (cet.isStoreAsTable()) {
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             return customEntityTemplates.get("customTable");
         } else {
             return customEntityTemplates.get("cei");

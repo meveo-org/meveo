@@ -15,6 +15,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
@@ -202,8 +203,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
         if (cet == null) {
             log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.isStoreAsTable()) {
-            customTableCreatorService.addField(cet.getDbTablename(), cft);
+        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
         }
 
         customFieldsCache.addUpdateCustomFieldTemplate(cft);
@@ -224,8 +225,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
         if (cet == null) {
             log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.isStoreAsTable()) {
-            customTableCreatorService.updateField(cet.getDbTablename(), cft);
+        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
         }
 
         return cftUpdated;
@@ -240,8 +241,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
         if (cet == null) {
             log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.isStoreAsTable()) {
-            customTableCreatorService.removeField(cet.getDbTablename(), cft);
+        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
         }
     }
 

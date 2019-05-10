@@ -43,6 +43,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -192,7 +193,7 @@ public class CustomTableImportJob extends Job {
             CustomEntityTemplate customTable = null;
 
             for (CustomEntityTemplate cet : cets) {
-                if (filename.startsWith(cet.getDbTablename())) {
+                if (filename.startsWith(SQLStorageConfiguration.getDbTablename(cet.getCode()))) {
                     customTable = cet;
                     break;
                 }

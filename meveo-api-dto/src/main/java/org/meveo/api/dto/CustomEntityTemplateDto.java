@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 
 /**
@@ -35,12 +36,6 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private List<String> labels;
     
-    /**
-     * Store as a separate table
-     */
-    @XmlAttribute
-    private Boolean storeAsTable;
-
     @XmlElement()
 	private String superTemplate;
 
@@ -95,12 +90,23 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlElement()
     private List<DBStorageType> availableStorages;
 
+    @XmlElement()
+    private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
+
     public List<DBStorageType> getAvailableStorages() {
         return availableStorages;
     }
 
     public void setAvailableStorages(List<DBStorageType> availableStorages) {
         this.availableStorages = availableStorages;
+    }
+
+    public SQLStorageConfiguration getSqlStorageConfiguration() {
+		return sqlStorageConfiguration;
+    }
+
+    public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
+        this.sqlStorageConfiguration = sqlStorageConfiguration;
     }
 
     /**
@@ -110,16 +116,6 @@ public class CustomEntityTemplateDto extends BaseDto {
 
     }
     
-    public Boolean getStoreAsTable() {
-		return storeAsTable;
-	}
-
-	public void setStoreAsTable(Boolean storeAsTable) {
-		this.storeAsTable = storeAsTable;
-	}
-
-
-
 	public List<GraphQLQueryField> getGraphqlQueryFields() {
         return graphqlQueryFields;
     }

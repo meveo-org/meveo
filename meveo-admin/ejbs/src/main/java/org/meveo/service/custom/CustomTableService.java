@@ -68,6 +68,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.NativePersistenceService;
@@ -252,7 +253,8 @@ public class CustomTableService extends NativePersistenceService {
     public Future<DataImportExportStatistics> exportData(CustomEntityTemplate customEntityTemplate, PaginationConfiguration config) {
 
         try {
-            QueryBuilder queryBuilder = getQuery(customEntityTemplate.getDbTablename(), config);
+            final String dbTablename = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+            QueryBuilder queryBuilder = getQuery(dbTablename, config);
 
             SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(), true);
 
@@ -265,7 +267,7 @@ public class CustomTableService extends NativePersistenceService {
 
             File exportsDirFile = new File(exportDir);
 
-            File exportFile = new File(exportDir + customEntityTemplate.getDbTablename() + DateUtils.formatDateWithPattern(new Date(), "_yyyy-MM-dd_HH-mm-ss") + ".csv");
+            File exportFile = new File(exportDir + dbTablename + DateUtils.formatDateWithPattern(new Date(), "_yyyy-MM-dd_HH-mm-ss") + ".csv");
 
             if (!exportsDirFile.exists()) {
                 exportsDirFile.mkdirs();
@@ -274,7 +276,7 @@ public class CustomTableService extends NativePersistenceService {
             Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
 
             if (cfts == null || cfts.isEmpty()) {
-                throw new ValidationException("No fields are defined for custom table " + customEntityTemplate.getDbTablename(), "customTable.noFields");
+                throw new ValidationException("No fields are defined for custom table " + dbTablename + "customTable.noFields");
             }
 
             List<CustomFieldTemplate> fields = new ArrayList<>(cfts.values());
@@ -326,7 +328,7 @@ public class CustomTableService extends NativePersistenceService {
                 } while (nrItemsFound == 500);
 
             } catch (IOException e) {
-                log.error("Failed to write {} table data to a file {}", customEntityTemplate.getDbTablename(), exportFile.getAbsolutePath(), e);
+                log.error("Failed to write {} table data to a file {}", dbTablename, exportFile.getAbsolutePath(), e);
                 throw new BusinessException(e);
             }
 
@@ -391,10 +393,11 @@ public class CustomTableService extends NativePersistenceService {
 //    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public int importData(CustomEntityTemplate customEntityTemplate, InputStream inputStream, boolean append) throws BusinessException {
 
+        final String dbTableName = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
         // Custom table fields. Fields will be sorted by their GUI 'field' position.
         Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
         if (cfts == null || cfts.isEmpty()) {
-            throw new ValidationException("No fields are defined for custom table " + customEntityTemplate.getDbTablename(), "customTable.noFields");
+            throw new ValidationException("No fields are defined for custom table " + dbTableName, "customTable.noFields");
         }
         List<CustomFieldTemplate> fields = new ArrayList<>(cfts.values());
 
@@ -405,7 +408,7 @@ public class CustomTableService extends NativePersistenceService {
             return pos1 - pos2;
         });
 
-        String tableName = customEntityTemplate.getDbTablename();
+        String tableName = dbTableName;
         int importedLines = 0;
         int importedLinesTotal = 0;
         List<Map<String, Object>> values = new ArrayList<>();
@@ -492,7 +495,6 @@ public class CustomTableService extends NativePersistenceService {
 	/**
 	 * @param fields
 	 * @param entityReferencesCache 
-	 * @param values
 	 * @throws BusinessException
 	 */
 	private List<Map<String, Object>> replaceEntityReferences(List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, Long>> entityReferencesCache) throws BusinessException {
@@ -517,7 +519,7 @@ public class CustomTableService extends NativePersistenceService {
 		    Object value = entry.getValue();
 		    final Optional<CustomFieldTemplate> templateOptional = fields.stream().filter(f -> f.getDbFieldname().equals(key)).findFirst();
 		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
-		    	String entityRefTableName = CustomEntityTemplate.getDbTablename(templateOptional.get().getEntityClazzCetCode());
+		    	String entityRefTableName = SQLStorageConfiguration.getDbTablename(templateOptional.get().getEntityClazzCetCode());
 		        // Try to retrieve record first
 		        Long id = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
 		                .computeIfAbsent(
@@ -552,10 +554,12 @@ public class CustomTableService extends NativePersistenceService {
     @TransactionAttribute(TransactionAttributeType.NEVER)
     public int importData(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values, boolean append) throws BusinessException {
 
+        final String tableName = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+
         // Custom table fields. Fields will be sorted by their GUI 'field' position.
         Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
         if (cfts == null || cfts.isEmpty()) {
-            throw new ValidationException("No fields are defined for custom table " + customEntityTemplate.getDbTablename(), "customTable.noFields");
+            throw new ValidationException("No fields are defined for custom table " + tableName, "customTable.noFields");
         }
         List<CustomFieldTemplate> fields = new ArrayList<>(cfts.values());
 
@@ -566,7 +570,6 @@ public class CustomTableService extends NativePersistenceService {
             return pos1 - pos2;
         });
 
-        String tableName = customEntityTemplate.getDbTablename();
         int importedLines = 0;
         int importedLinesTotal = 0;
         List<Map<String, Object>> valuesPartial = new ArrayList<>();
@@ -920,7 +923,7 @@ public class CustomTableService extends NativePersistenceService {
     	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
     	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
     	
-    	List<Map<String, Object>> entities = customTableService.list(cet.getDbTablename(), pagination);
+    	List<Map<String, Object>> entities = customTableService.list(SQLStorageConfiguration.getDbTablename(cet), pagination);
     	
     	cfts.values().forEach(cft -> {
     		entities.forEach(entity -> {
@@ -928,7 +931,7 @@ public class CustomTableService extends NativePersistenceService {
 				if(property != null) {
 					// Fetch entity reference
             		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-            			String propertyTableName = CustomEntityTemplate.getDbTablename(cft.getEntityClazzCetCode());
+            			String propertyTableName = SQLStorageConfiguration.getDbTablename(cft.getEntityClazzCetCode());
             			property = customTableService.findById(propertyTableName, ((Number) property).longValue());
             		}
             		

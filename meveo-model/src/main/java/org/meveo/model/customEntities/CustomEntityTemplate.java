@@ -18,6 +18,7 @@ import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
@@ -44,19 +45,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@NotNull
 	private String name;
 
-	/**
-	 * Should data be stored in a separate table
-	 */
-	@Type(type = "numeric_boolean")
-	@Column(name = "store_as_table", nullable = false)
-	@NotNull
-	private boolean storeAsTable = false;
-
-	/**
-	 * A database table name derived from a code value
-	 */
-	@Transient
-	private String dbTablename;
+	@Embedded
+	@AttributeOverride(name = "code", column = @Column(name="code", insertable = false, updatable = false))
+	private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
 
 	/**
 	 * Labels to apply to the template.
@@ -128,6 +119,19 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
+
+	public SQLStorageConfiguration getSqlStorageConfiguration() {
+		if(availableStorages != null && availableStorages.contains(DBStorageType.SQL)) {
+			return sqlStorageConfiguration;
+		}
+		
+		return null;
+	}
+	
+
+	public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
+		this.sqlStorageConfiguration = sqlStorageConfiguration;
+	}
 
 	public List<DBStorageType> getAvailableStorages() {
 		return availableStorages;
@@ -275,33 +279,5 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return descendance;
 	}
 
-	public boolean isStoreAsTable() {
-		return storeAsTable;
-	}
 
-	public void setStoreAsTable(boolean storeAsTable) {
-		this.storeAsTable = storeAsTable;
-	}
-
-	/**
-	 * Get a database table name derived from a code value. Lowercase and spaces replaced by "_".
-	 *
-	 * @return Database field name
-	 */
-	public String getDbTablename() {
-		if (dbTablename == null && code != null) {
-			dbTablename = getDbTablename(code);
-		}
-		return dbTablename;
-	}
-
-	/**
-	 * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
-	 *
-	 * @param code Field code
-	 * @return Database field name
-	 */
-	public static String getDbTablename(String code) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
-	}
 }

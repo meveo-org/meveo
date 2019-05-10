@@ -79,17 +79,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         handleMissingParameters();
-        
-        if (dto.getStoreAsTable() == null) {
-            dto.setStoreAsTable(Boolean.FALSE);
-        }
+
+        boolean storeAsTable = dto.getSqlStorageConfiguration().isStoreAsTable();
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
         
      // Validate field types for custom table
-        if (dto.getStoreAsTable() && dto.getFields() != null) {
+        if (storeAsTable && dto.getFields() != null) {
             int pos = 0;
             for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 
@@ -162,7 +160,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
         
      // Validate field types for custom table
-        if (cet.isStoreAsTable() && dto.getFields() != null) {
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && dto.getFields() != null) {
             int pos = 0;
             for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 
@@ -508,9 +506,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setLabels(dto.getLabels());
         cet.setGraphqlQueryFields(dto.getGraphqlQueryFields());
         cet.setAvailableStorages(dto.getAvailableStorages());
-        if (cet.isStoreAsTable()) {
-            cet.setStoreAsTable(true);
-        }
+        cet.setSqlStorageConfiguration(dto.getSqlStorageConfiguration());
 
         if(dto.getUniqueConstraints() != null){
             final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getUniqueConstraints().stream()
@@ -600,8 +596,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setPrimitiveType(cet.getPrimitiveType());
         dto.setLabels(cet.getLabels());
         dto.setGraphqlQueryFields(cet.getGraphqlQueryFields());
-        dto.setStoreAsTable(cet.isStoreAsTable());
         dto.setAvailableStorages(cet.getAvailableStorages());
+        dto.setSqlStorageConfiguration(cet.getSqlStorageConfiguration());
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());

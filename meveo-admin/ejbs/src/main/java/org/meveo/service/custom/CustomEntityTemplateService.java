@@ -42,6 +42,7 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -86,8 +87,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         super.create(cet);
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
-        if (cet.isStoreAsTable()) {
-            customTableCreatorService.createTable(cet.getDbTablename());
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet));
         }
 
         elasticClient.createCETMapping(cet);
@@ -167,8 +168,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         super.remove(id);
 
-        if (cet.isStoreAsTable()) {
-            customTableCreatorService.removeTable(cet.getDbTablename());
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
 
         customFieldsCache.removeCustomEntityTemplate(cet);
@@ -305,7 +306,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (useCETCache) {
             List<CustomEntityTemplate> cets = new ArrayList<>();
             for (CustomEntityTemplate customEntityTemplate : customFieldsCache.getCustomEntityTemplates()) {
-                if (customEntityTemplate.isStoreAsTable()) {
+                if (customEntityTemplate.getSqlStorageConfiguration() != null && customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
                     cets.add(customEntityTemplate);
                 }
             }
@@ -342,7 +343,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         List<CustomEntityTemplate> cets = listCustomTableTemplates();
 
         for (CustomEntityTemplate cet : cets) {
-            if (cet.getDbTablename().equalsIgnoreCase(dbTablename)) {
+            if (SQLStorageConfiguration.getDbTablename(cet).equalsIgnoreCase(dbTablename)) {
                 return cet;
             }
         }

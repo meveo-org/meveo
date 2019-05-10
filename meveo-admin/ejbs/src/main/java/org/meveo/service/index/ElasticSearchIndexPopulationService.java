@@ -598,7 +598,7 @@ public class ElasticSearchIndexPopulationService implements Serializable {
         // Recreate mapping for custom entity templates - either custom tables, or custom entity instances
         List<CustomEntityTemplate> cets = customEntityTemplateService.listNoCache();
         for (CustomEntityTemplate cet : cets) {
-            String classname = cet.isStoreAsTable() ? CustomTableRecord.class.getName() : CustomEntityInstance.class.getName();
+            String classname = cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() ? CustomTableRecord.class.getName() : CustomEntityInstance.class.getName();
             addToIndexAndTypeCache(classname, cet.getCode());
         }
     }
@@ -611,7 +611,8 @@ public class ElasticSearchIndexPopulationService implements Serializable {
      */
     public void createCETIndex(CustomEntityTemplate cet) throws BusinessException {
 
-        Class<? extends ISearchable> instanceClass = cet.isStoreAsTable() ? CustomTableRecord.class : CustomEntityInstance.class;
+    	boolean storeAsTable = cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable();
+        Class<? extends ISearchable> instanceClass = storeAsTable ? CustomTableRecord.class : CustomEntityInstance.class;
         ESIndexNameAndType indexAndType = addToIndexAndTypeCache(instanceClass, cet.getCode());
 
         // Not interested in storing and indexing this entity in Elastic Search
@@ -716,7 +717,7 @@ public class ElasticSearchIndexPopulationService implements Serializable {
                 log.trace("Custom entity template {} was not found", entityCode);
                 return;
             }
-            if (cet.isStoreAsTable()) {
+            if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 entityClass = CustomTableRecord.class;
                 cleanupCFTFieldname = true;
             }
@@ -872,7 +873,7 @@ public class ElasticSearchIndexPopulationService implements Serializable {
      */
     public void removeCETIndex(CustomEntityTemplate cet) throws BusinessException {
 
-        Class<? extends ISearchable> instanceClass = cet.isStoreAsTable() ? CustomTableRecord.class : CustomEntityInstance.class;
+        Class<? extends ISearchable> instanceClass = cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() ? CustomTableRecord.class : CustomEntityInstance.class;
         ESIndexNameAndType indexAndType = getIndexAndType(instanceClass, cet.getCode());
 
         // Not interested in storing and indexing this entity in Elastic Search

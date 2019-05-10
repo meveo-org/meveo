@@ -2,7 +2,6 @@ package org.meveo.service.custom;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 
@@ -14,8 +13,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
-import liquibase.change.core.*;
-import liquibase.statement.ForeignKeyConstraint;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerProvider;
@@ -25,6 +22,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.slf4j.Logger;
 
 import liquibase.Contexts;
@@ -33,6 +31,19 @@ import liquibase.Liquibase;
 import liquibase.change.AddColumnConfig;
 import liquibase.change.ColumnConfig;
 import liquibase.change.ConstraintsConfig;
+import liquibase.change.core.AddColumnChange;
+import liquibase.change.core.AddDefaultValueChange;
+import liquibase.change.core.AddForeignKeyConstraintChange;
+import liquibase.change.core.AddNotNullConstraintChange;
+import liquibase.change.core.CreateSequenceChange;
+import liquibase.change.core.CreateTableChange;
+import liquibase.change.core.DropColumnChange;
+import liquibase.change.core.DropDefaultValueChange;
+import liquibase.change.core.DropForeignKeyConstraintChange;
+import liquibase.change.core.DropNotNullConstraintChange;
+import liquibase.change.core.DropSequenceChange;
+import liquibase.change.core.DropTableChange;
+import liquibase.change.core.ModifyDataTypeChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
@@ -179,7 +190,7 @@ public class CustomTableCreatorService implements Serializable {
         if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY){
             // Abort if referenced cet is not stored as table
             final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-            if(!referenceCet.isStoreAsTable()){
+            if(referenceCet.getSqlStorageConfiguration() == null || !referenceCet.getSqlStorageConfiguration().isStoreAsTable()){
                 String message = String.format("Referenced entity %s is not configured to be stored in a table, it therefore cannot be stored in %s table", referenceCet.getCode(), dbFieldname);
                 throw new BusinessException(message);
             }
@@ -188,7 +199,7 @@ public class CustomTableCreatorService implements Serializable {
             foreignKeyConstraint.setBaseColumnNames(dbFieldname);
             foreignKeyConstraint.setBaseTableName(dbTableName);
             foreignKeyConstraint.setReferencedColumnNames("id");
-            foreignKeyConstraint.setReferencedTableName(referenceCet.getDbTablename());
+            foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
             foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
             
             

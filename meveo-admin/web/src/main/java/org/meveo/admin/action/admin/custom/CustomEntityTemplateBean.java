@@ -19,6 +19,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -102,13 +103,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return customEntityCategories;
 	}
 	
+    public String getTableName() {
+    	return SQLStorageConfiguration.getDbTablename(entity);
+    }
+	
     /**
      * Is entity being customized is a Custom entity template and will be stored as a separate table
      * 
      * @return True if entity being customized is a Custom entity template and will be stored as a separate table
      */
     public boolean isCustomTable() {
-        return isCustomEntityTemplate() && entity != null && entity.isStoreAsTable();
+        return isCustomEntityTemplate() && entity != null && entity.getSqlStorageConfiguration() != null && entity.getSqlStorageConfiguration().isStoreAsTable();
     }
 
     public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {

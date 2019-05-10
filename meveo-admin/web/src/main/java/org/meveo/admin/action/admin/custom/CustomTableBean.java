@@ -38,13 +38,11 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -131,7 +129,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     		return null;
     	}
 
-        customTableName = entity.getDbTablename();
+        customTableName = SQLStorageConfiguration.getDbTablename(entity);
 
         // Get fields and sort them by GUI order
         Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
@@ -226,7 +224,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
         return customTableBasedDataModel;
     }
-
+    
     public List<CustomFieldTemplate> getSummaryFields() {
         if (entity == null) {
             initEntity();
@@ -368,7 +366,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         try {
         	if(!appendImportedData) {
                 // Delete current data first if in override mode
-    			customTableService.remove(entity.getDbTablename());
+    			customTableService.remove(SQLStorageConfiguration.getDbTablename(entity));
         	}
         	
             importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
