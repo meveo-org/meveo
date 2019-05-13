@@ -634,6 +634,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 .collect(Collectors.toList());
 
         dto.setUniqueConstraints(constraintDtoList);
+        
+        if(cet.getCustomEntityCategory() != null) {
+        	dto.setCustomEntityCategoryCode(cet.getCustomEntityCategory().getCode());
+        }
 
         return dto;
     }

@@ -419,11 +419,13 @@ public class CustomFieldTemplateApi extends BaseApi {
         // A cft can't be stored in a db that is not available for its cet
         String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-        for(DBStorageType storageType : cet.getAvailableStorages()){
-            if(!cet.getAvailableStorages().contains(storageType)){
-                String message = "Custom field %s can't be stored to %s as the CET %s is not configure to be stored in this database";
-                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, cetCode));
-            }
+        if(cet.getAvailableStorages() != null) {
+	        for(DBStorageType storageType : cet.getAvailableStorages()){
+	            if(!cet.getAvailableStorages().contains(storageType)){
+	                String message = "Custom field %s can't be stored to %s as the CET %s is not configure to be stored in this database";
+	                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, cetCode));
+	            }
+	        }
         }
 
         return cft;
