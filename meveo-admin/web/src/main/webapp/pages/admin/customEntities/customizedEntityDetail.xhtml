@@ -85,20 +85,27 @@
                 
 				<!--  SQL Storage -->
 				<p:fieldset id="sql" toggleable="true" collapsed="true" legend="SQL Persistence" width="100%" >
-	                <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" field="sqlStorageConfiguration['storeAsTable']" allowEdit="false" />
-	                <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
+	                <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable" 
+	                				field="sqlStorageConfiguration"
+	                				childField="storeAsTable"
+	                				allowEdit="false" />
+	                <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" 
+	                						rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
 	                    <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value" />
 	                </hftl:decorateFormField>
 				</p:fieldset>
 				
 				<!--  Neo4J Storage -->
-                <p:fieldset id="neo4j" toggleable="true" collapsed="true" legend="Neo4J Persistence" width="100%">
-			         <hftl:formField label="#{messages['BusinessEntity.labels']}" field="labels" />
+                <p:fieldset id="neo4j" toggleable="true" collapsed="true" legend="Neo4J Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.neo4JStorageConfiguration}">
+			         <hftl:formField label="#{messages['BusinessEntity.labels']}" field="neo4JStorageConfiguration" childField="labels" />
 					<!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
-	                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" field="primitiveEntity" listenerUpdate="@this primitiveType"/>
+	                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" id="primitiveEntity" 
+                					childField="primitiveEntity"
+	                				field="neo4JStorageConfiguration" listenerUpdate="@this primitiveType"/>
 	                <!--  If primitive, ask for primitive type class -->
 	                <h:panelGroup id="primitiveType">
-	                    <hftl:formField rendered="#{customEntityTemplateBean.entity.primitiveEntity}" label="#{messages['BusinessEntity.primitiveType']}" required="true" field="primitiveType"/>
+	                    <hftl:formField id="form_primitiveType" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity}" 
+	                    				label="#{messages['BusinessEntity.primitiveType']}" required="true" field="neo4JStorageConfiguration" childField="primitiveType"/>
 	                </h:panelGroup>
                </p:fieldset>
                

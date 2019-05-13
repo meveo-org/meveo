@@ -158,7 +158,7 @@ public class GraphQLService {
         for (CustomEntityTemplate cet : cetsByName.values()) {
         	
         	//Skip if cet is not stored in neo4j
-        	if(!cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        	if(cet.getAvailableStorages() == null || !cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
         		continue;
         	}
         	
@@ -340,7 +340,7 @@ public class GraphQLService {
             }
             
             // Skip the field if it is not configured to be stored in neo4j
-            if(customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
+            if(customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
             	continue;
             }
 
