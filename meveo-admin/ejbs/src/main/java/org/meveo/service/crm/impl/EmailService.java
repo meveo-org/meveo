@@ -26,8 +26,9 @@ import java.util.List;
 
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
-import javax.annotation.Resource;
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -40,6 +41,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.MailerSessionFactory;
 import org.meveo.model.communication.MediaEnum;
 import org.meveo.model.communication.MessageSenderConfig;
 import org.meveo.model.crm.Email;
@@ -51,8 +53,15 @@ import org.meveo.service.base.PersistenceService;
 @Stateless
 public class EmailService extends PersistenceService<Email> {
 
-	@Resource(lookup = "java:/MeveoMail")
+    @Inject
+    private MailerSessionFactory mailerSessionFactory;
+
 	private Session mailSession;
+
+    @PostConstruct
+    public void init() {
+        mailSession = mailerSessionFactory.getSession();
+    }
 
 	public void sendEmail(String from, List<String> to, List<String> cc,List<String> replytoAddress,String subject, String body)
 			throws BusinessException {

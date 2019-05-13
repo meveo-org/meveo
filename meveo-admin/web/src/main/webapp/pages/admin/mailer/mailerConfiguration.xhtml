@@ -1,44 +1,41 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
-                xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
-    <h:form id="mailerForm">
-        <hftl:formPanel width="100" header="#{messages['mailer.mailerConfig']}" backingBean="#{mailerBean}" >
-            <hftl:panelGroup columns="2">
-                <h:dataTable value="#{mailerBean.entity}" var="entity">
+                xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+                xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
+    <ui:define name="body">
+        <hftl:formPanel id="mailerForm" width="100" header="#{messages['mailer.mailerConfig']}">
+                <h:dataTable>
                     <hftl:formField label="#{messages['mailer.port']}" field="port">
-                        <h:outputText id="port"  value="#{entity.getInstance().port}" styleClass="field-value"></h:outputText>
+                        <h:outputText id="port"  value="#{paramBean.getInstance().getProperty('mail.smtp.port', '465')}" styleClass="field-value"/>
                     </hftl:formField>
                     <hftl:formField label="#{messages['mailer.host']}" field="host">
-                        <h:outputText id="host"  value="#{entity.host}" styleClass="field-value"></h:outputText>
+                        <h:outputText id="host"  value="#{paramBean.getInstance().setProperty('mail.smtp.host', 'smtp.gmail.com')}" styleClass="field-value"/>
                     </hftl:formField>
                     <hftl:formField label="#{messages['mailer.userName']}" field="userName">
-                        <h:outputText id="userName"  value="#{entity.userName}" styleClass="field-value"></h:outputText>
+                        <h:outputText id="userName"  value="#{paramBean.getInstance().getProperty('mail.smtp.username', 'true'}" styleClass="field-value"></h:outputText>
                     </hftl:formField>
                     <hftl:formField label="#{messages['mailer.passWord']}" field="passWord">
-                        <h:outputText id="passWord"  value="#{entity.passWord}" styleClass="field-value"></h:outputText>
+                        <h:outputText id="passWord"  value="#{paramBean.getInstance().getProperty('mail.smtp.password', '123456'}" styleClass="field-value"></h:outputText>
                     </hftl:formField>
                     <hftl:formField label="#{messages['mailer.transportLayerSecurity']}" field="transportLayerSecurity">
-                        <h:outputText id="transportLayerSecurity"  value="#{entity.transportLayerSecurity}" styleClass="field-value"></h:outputText>
+                        <h:outputText id="transportLayerSecurity"  value="#{paramBean.getInstance().getProperty('mail.smtp.starttls.enable', 'true')}" styleClass="field-value"></h:outputText>
                     </hftl:formField>
                 </h:dataTable>
                 <ui:define name="buttons">
                     <p:commandButton id="sendMail" icon="ui-icon-copy"
                                      update=":mailerSendForm" oncomplete="PF('mailerDialog').show()">
-                        <f:setPropertyActionListener
-                                target="#{mailerBean.entity}" value="#{entity}" />
                     </p:commandButton>
+                    <p:commandButton value="Back" onclick="window.history.back();"/>
                 </ui:define>
-            </hftl:panelGroup>
             <p:dialog id="mailerDialog" header="#{messages['mailer.sendmailer.createnewmail']}" modal="true" closeOnEscape="true" width="80%" closable="true" appendTo="@(body)">
                 <hftl:decorateFormPanel formId="mailerSendForm">
                     <hftl:formField label="#{messages['mailer.sender']}" var="sender" field="sender" showOnlyOnNew="true" required="true" />
                     <hftl:formField label="#{messages['mailer.receiver']}" var="receiver" field="receiver" showOnlyOnNew="true" required="true" />
                     <hftl:formField label="#{messages['mailer.subject']}" var="subject" field="subject" showOnlyOnNew="true"/>
-                    <hftl:formField label="#{messages['mailer.body']}" var="body" field="body" showOnlyOnNew="true" />
+                    <hftl:formField label="#{messages['mailer.body']}" var="bodyMailer" field="bodyMailer" showOnlyOnNew="true" />
                     <ui:define name="buttons">
                         <p:commandButton
                                 value="#{messages['mailer.sendmail']}"
-                                action="#{mailerBean.sendEmail(sender,receiver,subject,body)}"
-                                update="@form :mailerForm:messages"
+                                action="#{mailerBean.sendEmail(sender,receiver,subject,bodyMailer)}"
                                 oncomplete="if (args &amp;&amp; !args.validationFailed){PF('mailerDialog').hide();}"
                                 ajax="true" />
                         <p:button value="#{messages['mailer.cancel']}"
@@ -47,5 +44,5 @@
                 </hftl:decorateFormPanel>
             </p:dialog>
         </hftl:formPanel>
-    </h:form>
+    </ui:define>
 </ui:composition>

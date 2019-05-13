@@ -1,19 +1,10 @@
 package org.meveo.admin.action.admin;
 
-import org.meveo.admin.action.BaseBean;
 import org.meveo.commons.utils.MailerConfiguration;
-import org.meveo.security.CurrentUser;
-import org.meveo.security.MeveoUser;
-import org.meveo.service.base.local.IPersistenceService;
-import org.slf4j.Logger;
 
 import javax.enterprise.context.ConversationScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
+import javax.mail.*;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -25,16 +16,26 @@ import java.util.Properties;
  */
 @Named
 @ConversationScoped
-public class MailerBean extends BaseBean<MailerConfiguration> {
+public class MailerBean implements Serializable {
 
-    public MailerConfiguration mailerConfiguration;
+    MailerConfiguration mailerConfiguration = new MailerConfiguration();
 
     private static final long serialVersionUID = -4570971790276879220L;
 
-    public void sendEmail(String to, String from, String subject, String text) {
+    public void sendEmail(String to, String from, String cc, String subject, String text) {
         try {
-            Properties properties = mailerConfiguration.getInstance().getProperties();
-            Session emailSession = Session.getDefaultInstance(properties);
+            Properties props = new Properties();
+            props.put("mail.smtp.host", mailerConfiguration.getHost());
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", mailerConfiguration.getTransportLayerSecurity());
+            props.put("mail.smtp.port", mailerConfiguration.getPort());
+
+            Session emailSession = Session.getInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(mailerConfiguration.getUserName(), mailerConfiguration.getPassword());
+                        }
+                    });
 
             Message emailMessage = new MimeMessage(emailSession);
             emailMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
@@ -42,18 +43,11 @@ public class MailerBean extends BaseBean<MailerConfiguration> {
             emailMessage.setSubject(subject);
             emailMessage.setText(text);
 
-            emailSession.setDebug(true);
-
             Transport.send(emailMessage);
         } catch (AddressException e) {
             e.printStackTrace();
         } catch (MessagingException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected IPersistenceService<MailerConfiguration> getPersistenceService() {
-        return null;
     }
 }

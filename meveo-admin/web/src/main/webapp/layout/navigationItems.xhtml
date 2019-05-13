@@ -28,9 +28,9 @@
         <p:menuitem id="menuConfiguration" value="#{messages['menu.menuConfiguration']}"
             outcome="menuConfiguration"
             rendered="#{currentUser.hasRole('administrationVisualization')}" />
-        <p:menuitem id="mailer" value="#{messages['menu.mailer']}"
-                    outcome="mailer"
-                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        <p:menuitem id="mailerConfiguration" value="#{messages['menu.mailer']}"
+            outcome="mailerConfiguration"
+            rendered="#{currentUser.hasRole('administrationVisualization')}" />
         </p:submenu>
 		<p:submenu id="trading" label="#{messages['menu.trading']}"
 			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
