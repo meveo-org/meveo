@@ -604,6 +604,11 @@ public class CustomFieldDataEntryBean implements Serializable {
         String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
         return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
     }
+    
+    public List<BusinessEntity> allEntityForCFV(){
+        String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
+        return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, "");
+    }
 
     /**
      * Validate complex custom fields
