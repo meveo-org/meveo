@@ -462,7 +462,7 @@ public class CustomTableCreatorService implements Serializable {
         });
     }
 
-    private String getFkConstraintName(String tableName, CustomFieldTemplate cft){
+    public static String getFkConstraintName(String tableName, CustomFieldTemplate cft){
         return String.format("fk_%s_%s", tableName, cft.getDbFieldname());
     }
 

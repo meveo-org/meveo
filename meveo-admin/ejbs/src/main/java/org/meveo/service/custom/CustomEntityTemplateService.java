@@ -313,7 +313,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             return cets;
 
         } else {
-            return super.list(new PaginationConfiguration(MapUtils.putAll(new HashMap<>(), new Object[] { "storeAsTable", true })));
+            return super.list(new PaginationConfiguration(MapUtils.putAll(new HashMap<>(), new Object[] { "sqlStorageConfiguration.storeAsTable", true })));
         }
     }
 
