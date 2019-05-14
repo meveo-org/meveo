@@ -1,5 +1,6 @@
 package org.meveo.model.customEntities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -136,7 +137,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     }
 
     public List<DBStorageType> getAvailableStorages() {
-		return availableStorages;
+		return availableStorages != null ? availableStorages : new ArrayList<>();
 	}
 
 	public void setAvailableStorages(List<DBStorageType> availableStorages) {

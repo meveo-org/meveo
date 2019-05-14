@@ -1,11 +1,23 @@
 package org.meveo.service.crm.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang3.SerializationUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
@@ -15,21 +27,17 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.index.ElasticClient;
-import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.stream.Collectors;
+import org.olap4j.metadata.XmlaConstants.DBType;
 
 /**
  * @author Wassim Drira
@@ -50,6 +58,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     static boolean useCFTCache = true;
 
@@ -193,23 +204,36 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
     @Override
-    public void create(CustomFieldTemplate cft) throws BusinessException {
+	public void create(CustomFieldTemplate cft) throws BusinessException {
 
-        checkIdentifierTypeAndUniqueness(cft);
+		checkIdentifierTypeAndUniqueness(cft);
 
-        super.create(cft);
+		super.create(cft);
 
-        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-        if (cet == null) {
-            log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
-        }
+		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+		
+		// CF applies to a CET
+		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+			if(cet == null) {
+				log.warn("Custom entity template {} was not found", entityCode);
+			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			}
+			
+		// CF Applies to a CRT
+		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+			if(crt == null) {
+				log.warn("Custom relationship template {} was not found", entityCode);
+			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+			}
+		}
 
-        customFieldsCache.addUpdateCustomFieldTemplate(cft);
-        elasticClient.updateCFMapping(cft);
-    }
+		customFieldsCache.addUpdateCustomFieldTemplate(cft);
+		elasticClient.updateCFMapping(cft);
+	}
 
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
@@ -226,7 +250,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         if (cet == null) {
             log.warn("Custom entity template {} was not found", entityCode);
         } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
+            customTableCreatorService.updateField(SQLStorageConfiguration.getCetDbTablename(cet.getCode()), cft);
         }
 
         return cftUpdated;
@@ -242,7 +266,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         if (cet == null) {
             log.warn("Custom entity template {} was not found", entityCode);
         } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet.getCode()), cft);
+            customTableCreatorService.removeField(SQLStorageConfiguration.getCetDbTablename(cet.getCode()), cft);
         }
     }
 

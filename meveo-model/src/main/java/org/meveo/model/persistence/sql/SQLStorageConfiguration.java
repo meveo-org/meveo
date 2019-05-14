@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 @Embeddable
 public class SQLStorageConfiguration {
@@ -41,7 +42,7 @@ public class SQLStorageConfiguration {
      * @param code Field code
      * @return Database field name
      */
-    public static String getDbTablename(String code) {
+    public static String getCetDbTablename(String code) {
         return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
     }
     
@@ -53,6 +54,17 @@ public class SQLStorageConfiguration {
      */
     public static String getDbTablename(CustomEntityTemplate cet) {
         return BaseEntity.cleanUpAndLowercaseCodeOrId(cet.getCode());
+    }
+    
+    /**
+     * Get a database field name derived from code, start cet code and end cet code. Lowercase and spaces replaced by "_".
+     *
+     * @param crt {@link CustomRelationshipTemplate} to retrieve code
+     * @return Database table name
+     */
+    public static String getDbTablename(CustomRelationshipTemplate crt) {
+    	String tableName = crt.getStartNode().getCode() + "_" + crt.getCode() + "_" + crt.getEndNode().getCode();
+        return BaseEntity.cleanUpAndLowercaseCodeOrId(tableName);
     }
 
     public boolean isStoreAsTable() {

@@ -518,7 +518,7 @@ public class CustomTableService extends NativePersistenceService {
 		    Object value = entry.getValue();
 		    final Optional<CustomFieldTemplate> templateOptional = fields.stream().filter(f -> f.getDbFieldname().equals(key)).findFirst();
 		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
-		    	String entityRefTableName = SQLStorageConfiguration.getDbTablename(templateOptional.get().getEntityClazzCetCode());
+		    	String entityRefTableName = SQLStorageConfiguration.getCetDbTablename(templateOptional.get().getEntityClazzCetCode());
 		        // Try to retrieve record first
 		        String uuid = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
 		                .computeIfAbsent(
@@ -930,7 +930,7 @@ public class CustomTableService extends NativePersistenceService {
 				if(property != null) {
 					// Fetch entity reference
             		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-            			String propertyTableName = SQLStorageConfiguration.getDbTablename(cft.getEntityClazzCetCode());
+            			String propertyTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
             			property = customTableService.findById(propertyTableName, (String) property);
             		}
             		

@@ -21,6 +21,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.slf4j.Logger;
 
@@ -34,6 +36,7 @@ import liquibase.change.core.AddColumnChange;
 import liquibase.change.core.AddDefaultValueChange;
 import liquibase.change.core.AddForeignKeyConstraintChange;
 import liquibase.change.core.AddNotNullConstraintChange;
+import liquibase.change.core.AddPrimaryKeyChange;
 import liquibase.change.core.CreateTableChange;
 import liquibase.change.core.DropColumnChange;
 import liquibase.change.core.DropDefaultValueChange;
@@ -50,12 +53,15 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.statement.DatabaseFunction;
+import liquibase.statement.PrimaryKeyConstraint;
 
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
 public class CustomTableCreatorService implements Serializable {
 
-    private static final long serialVersionUID = -5858023657669249422L;
+    private static final String UUID = "uuid";
+
+	private static final long serialVersionUID = -5858023657669249422L;
 
     @PersistenceUnit(unitName = "MeveoAdmin")
     private EntityManagerFactory emf;
@@ -72,6 +78,68 @@ public class CustomTableCreatorService implements Serializable {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    /**
+     * Create a table with two columns referencing source and target custom tables
+     * 
+     * @param crt {@link CustomRelationshipTemplate} to create table for
+     * @throws BusinessException if the {@link CustomRelationshipTemplate} is not configured to be stored in a custom table
+     */
+    public void createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+    	if(crt.getAvailableStorages() == null || !crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+    		throw new BusinessException("CustomRelationshipTemplate " + crt.getCode() + " is not configured to be stored in a custom table");
+    	}
+    	
+    	String tableName = SQLStorageConfiguration.getDbTablename(crt);
+    	
+    	DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+    	
+        ChangeSet changeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql, mysql", dbLog);
+        
+        // Source column
+        ColumnConfig sourceColumn = new ColumnConfig();
+        sourceColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
+        sourceColumn.setType("varchar(255)");
+        
+        // Target column
+        ColumnConfig targetColumn = new ColumnConfig();
+        targetColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
+        targetColumn.setType("varchar(255)");
+        
+        // Table creation
+        CreateTableChange createTableChange = new CreateTableChange();
+        createTableChange.setTableName(tableName);
+        createTableChange.addColumn(sourceColumn);
+        createTableChange.addColumn(targetColumn);
+        changeset.addChange(createTableChange);
+        
+        // Primary key constraint addition
+        AddPrimaryKeyChange addPrimaryKeyChange = new AddPrimaryKeyChange();
+        addPrimaryKeyChange.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+        addPrimaryKeyChange.setTableName(tableName);
+        changeset.addChange(addPrimaryKeyChange);
+        
+        // Source foreign key if source cet is a custom table
+        if(crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
+	        AddForeignKeyConstraintChange sourceFkChange = new AddForeignKeyConstraintChange();
+	        sourceFkChange.setBaseColumnNames(sourceColumn.getName());
+	        sourceFkChange.setReferencedColumnNames(UUID);
+	        sourceFkChange.setBaseTableName(tableName);
+	        sourceFkChange.setReferencedTableName(sourceColumn.getName());
+	        changeset.addChange(sourceFkChange);
+        }
+        
+        // Target foreign key if target cet is a custom table
+        if(crt.getEndNode().getSqlStorageConfiguration() != null && crt.getEndNode().getSqlStorageConfiguration().isStoreAsTable()) {
+	        AddForeignKeyConstraintChange targetFkChange = new AddForeignKeyConstraintChange();
+	        targetFkChange.setBaseColumnNames(targetColumn.getName());
+	        targetFkChange.setReferencedColumnNames(UUID);
+	        targetFkChange.setBaseTableName(tableName);
+	        targetFkChange.setReferencedTableName(targetColumn.getName());
+	        changeset.addChange(targetFkChange);
+        }
+        
+    }
 
     /**
      * Create a table with a single 'id' field. Value is autoincremented for mysql or taken from sequence for Postgress databases.
@@ -89,7 +157,7 @@ public class CustomTableCreatorService implements Serializable {
         createPgTableChange.setTableName(dbTableName);
 
         ColumnConfig pgUuidColumn = new ColumnConfig();
-        pgUuidColumn.setName("uuid");
+        pgUuidColumn.setName(UUID);
         pgUuidColumn.setType("varchar(255)");
         pgUuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
@@ -111,7 +179,7 @@ public class CustomTableCreatorService implements Serializable {
         createMsTableChange.setTableName(dbTableName);
 
         ColumnConfig msUuidcolumn = new ColumnConfig();
-        msUuidcolumn.setName("uuid");
+        msUuidcolumn.setName(UUID);
         msUuidcolumn.setType("varchar(255)");
         msUuidcolumn.setDefaultValueComputed(new DatabaseFunction("uuid()"));
 
@@ -192,7 +260,7 @@ public class CustomTableCreatorService implements Serializable {
             AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
             foreignKeyConstraint.setBaseColumnNames(dbFieldname);
             foreignKeyConstraint.setBaseTableName(dbTableName);
-            foreignKeyConstraint.setReferencedColumnNames("uuid");
+            foreignKeyConstraint.setReferencedColumnNames(UUID);
             foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
             foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
             
