@@ -662,5 +662,11 @@
     <changeSet id="uuid-ossp" author="Clément Bareth" dbms="postgresql">
     	<sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
     </changeSet>
+    
+    <changeSet id="crt_available_storages" author="Clément Bareth">
+    	<addColumn tableName="cust_crt">
+    		<column name="available_storages" type="${type.json}" defaultValue="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
+    	</addColumn>
+    </changeSet>
 
 </databaseChangeLog>
