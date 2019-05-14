@@ -1,14 +1,11 @@
 package org.meveo.commons.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.Serializable;
 
 /**
  * Created by Hien Bach
  */
-public class MailerConfiguration {
-
-    private static final Logger log = LoggerFactory.getLogger(MailerConfiguration.class);
+public class MailerConfiguration implements Serializable {
 
     /**
      * sender
@@ -18,7 +15,7 @@ public class MailerConfiguration {
     /**
      * receiver
      */
-    private String receiver;
+    private String receivers;
 
     /**
      * cc
@@ -43,12 +40,12 @@ public class MailerConfiguration {
         this.sender = sender;
     }
 
-    public String getReceiver() {
-        return receiver;
+    public String getReceivers() {
+        return receivers;
     }
 
-    public void setReceiver(String receiver) {
-        this.receiver = receiver;
+    public void setReceivers(String receivers) {
+        this.receivers = receivers;
     }
 
     public String getCc() {
@@ -76,7 +73,7 @@ public class MailerConfiguration {
     }
 
     public String getHost() {
-        return ParamBean.getInstance().getProperty("mail.smtp.host", "smtp.gmail.com");
+        return ParamBean.getInstance().getProperty("mail.smtp.host", "localhost");
     }
 
     public void setHost(String host) {
@@ -84,7 +81,7 @@ public class MailerConfiguration {
     }
 
     public String getPort() {
-        return ParamBean.getInstance().getProperty("mail.smtp.port", "465");
+        return ParamBean.getInstance().getProperty("mail.smtp.port", "1025");
     }
 
     public void setPort(String port) {
