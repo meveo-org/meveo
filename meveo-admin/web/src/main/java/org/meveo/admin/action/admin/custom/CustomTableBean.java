@@ -304,7 +304,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     @ActionMethod
     public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
-    	Object newId = selectedEntityInPopup.get("id");
+    	Object newId = selectedEntityInPopup.get("uuid");
     	selectedRow.put(selectedRowField.getDbFieldname(), newId);
         customTableService.update(customTableName, selectedRow);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
@@ -412,11 +412,15 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
         return format.toString();
     }
-
+    
     @Override
-    @ActionMethod
     public void delete(Long id) throws BusinessException {
-        customTableService.remove(customTableName, id);
+    	// Should not be used
+    }
+
+    @ActionMethod
+    public void delete(String uuid) throws BusinessException {
+        customTableService.remove(customTableName, uuid);
         customTableBasedDataModel = null;
         messages.info(new BundleKey("messages", "delete.successful"));
     }
@@ -429,20 +433,12 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
             messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
             return;
         }
-        Set<Long> ids = new HashSet<>();
+        Set<String> ids = new HashSet<>();
 
         for (Map<String, Object> values : selectedValues) {
 
-            Object id = values.get(NativePersistenceService.FIELD_ID);
-            if (id instanceof String) {
-                id = Long.parseLong((String) id);
-            } else if (id instanceof BigDecimal) {
-                id = ((BigDecimal) id).longValue();
-            } else if (id instanceof BigInteger) {
-                id = ((BigInteger) id).longValue();
-            }
-
-            ids.add((long) id);
+            Object uuid = values.get(NativePersistenceService.FIELD_ID);
+            ids.add((String) uuid);
 
         }
 
@@ -455,7 +451,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     public void exportData() {
         exportFuture = null;
 
-        PaginationConfiguration config = new PaginationConfiguration(filters, "id", SortOrder.ASCENDING);
+        PaginationConfiguration config = new PaginationConfiguration(filters, "uuid", SortOrder.ASCENDING);
 
         try {
             exportFuture = customTableService.exportData(entity, config);
@@ -493,62 +489,4 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		this.cet = cet;
 	}
 
-    // Bellow is implementation when value changes are accumulated and saved in bulk
-    //
-    //
-    // private List<Map<String, Object>> dirtyValues = new ArrayList<>();
-    //
-    // private Set<Long> dirtyIds = new HashSet<>();
-    //
-    // /**
-    // * @param event the Value in Datatable edit event
-    // */
-    // @SuppressWarnings("unchecked")
-    // @ActionMethod
-    // public void onCellEdit(CellEditEvent event) {
-    // DataTable o = (DataTable) event.getSource();
-    // Map<String, Object> mapValue = (Map<String, Object>) o.getRowData();
-    // Long id = (Long) mapValue.get(NativePersistenceService.FIELD_ID);
-    // if (!dirtyIds.contains(id)) {
-    // dirtyIds.add(id);
-    // dirtyValues.add(mapValue);
-    // log.debug("Changed custom table value for ID {}", id);
-    // }
-    // }
-    //
-    // /**
-    // * Update custom table with new or modified values
-    // *
-    // * @throws BusinessException
-    // */
-    // @ActionMethod
-    // public void save() throws BusinessException {
-    //
-    // if (dirtyValues.isEmpty()) {
-    // return;
-    // }
-    // customTableService.createOrUpdate(customTableName, dirtyValues);
-    //
-    // dirtyValues = new ArrayList<>();
-    // dirtyIds = new HashSet<>();
-    // customTableBasedDataModel = null;
-    // messages.info(new BundleKey("messages", "customTable.valuesSaved"));
-    // }
-    //
-    // @ActionMethod
-    // public void reset() {
-    //
-    // dirtyValues = new ArrayList<>();
-    // dirtyIds = new HashSet<>();
-    // customTableBasedDataModel = null;
-    // messages.info(new BundleKey("messages", "customTable.valuesReset"));
-    // }
-    //
-    // /**
-    // * Add new values to a map of values, setting a default value if applicable
-    // */
-    // public void addValueToMap() {
-    // dirtyValues.add(newValues);
-    // newValues = new HashMap<>();
-    // }
 }

@@ -1,7 +1,6 @@
 package org.meveo.service.custom;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.Collections;
 
@@ -35,7 +34,6 @@ import liquibase.change.core.AddColumnChange;
 import liquibase.change.core.AddDefaultValueChange;
 import liquibase.change.core.AddForeignKeyConstraintChange;
 import liquibase.change.core.AddNotNullConstraintChange;
-import liquibase.change.core.CreateSequenceChange;
 import liquibase.change.core.CreateTableChange;
 import liquibase.change.core.DropColumnChange;
 import liquibase.change.core.DropDefaultValueChange;
@@ -44,13 +42,14 @@ import liquibase.change.core.DropNotNullConstraintChange;
 import liquibase.change.core.DropSequenceChange;
 import liquibase.change.core.DropTableChange;
 import liquibase.change.core.ModifyDataTypeChange;
+import liquibase.change.core.RawSQLChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
-import liquibase.statement.SequenceNextValueFunction;
+import liquibase.statement.DatabaseFunction;
 
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -86,26 +85,21 @@ public class CustomTableCreatorService implements Serializable {
         // Changeset for Postgress
         ChangeSet pgChangeSet = new ChangeSet(dbTableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql", dbLog);
 
-        CreateSequenceChange createPgSequence = new CreateSequenceChange();
-        createPgSequence.setSequenceName(dbTableName + "_seq");
-        createPgSequence.setStartValue(BigInteger.ONE);
-        pgChangeSet.addChange(createPgSequence);
-
         CreateTableChange createPgTableChange = new CreateTableChange();
         createPgTableChange.setTableName(dbTableName);
 
-        ColumnConfig pgIdColumn = new ColumnConfig();
-        pgIdColumn.setName("id");
-        pgIdColumn.setType("bigInt");
-        pgIdColumn.setDefaultValueSequenceNext(new SequenceNextValueFunction(dbTableName + "_seq"));
+        ColumnConfig pgUuidColumn = new ColumnConfig();
+        pgUuidColumn.setName("uuid");
+        pgUuidColumn.setType("varchar(255)");
+        pgUuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
         ConstraintsConfig idConstraints = new ConstraintsConfig();
         idConstraints.setNullable(false);
         idConstraints.setPrimaryKey(true);
         idConstraints.setPrimaryKeyName(dbTableName + "PK");
 
-        pgIdColumn.setConstraints(idConstraints);
-        createPgTableChange.addColumn(pgIdColumn);
+        pgUuidColumn.setConstraints(idConstraints);
+        createPgTableChange.addColumn(pgUuidColumn);
 
         pgChangeSet.addChange(createPgTableChange);
         dbLog.addChangeSet(pgChangeSet);
@@ -116,13 +110,13 @@ public class CustomTableCreatorService implements Serializable {
         CreateTableChange createMsTableChange = new CreateTableChange();
         createMsTableChange.setTableName(dbTableName);
 
-        ColumnConfig msIdcolumn = new ColumnConfig();
-        msIdcolumn.setName("id");
-        msIdcolumn.setType("bigInt");
-        msIdcolumn.setAutoIncrement(true);
+        ColumnConfig msUuidcolumn = new ColumnConfig();
+        msUuidcolumn.setName("uuid");
+        msUuidcolumn.setType("varchar(255)");
+        msUuidcolumn.setDefaultValueComputed(new DatabaseFunction("uuid()"));
 
-        msIdcolumn.setConstraints(idConstraints);
-        createMsTableChange.addColumn(msIdcolumn);
+        msUuidcolumn.setConstraints(idConstraints);
+        createMsTableChange.addColumn(msUuidcolumn);
 
         mysqlChangeSet.addChange(createMsTableChange);
         dbLog.addChangeSet(mysqlChangeSet);
@@ -198,7 +192,7 @@ public class CustomTableCreatorService implements Serializable {
             AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
             foreignKeyConstraint.setBaseColumnNames(dbFieldname);
             foreignKeyConstraint.setBaseTableName(dbTableName);
-            foreignKeyConstraint.setReferencedColumnNames("id");
+            foreignKeyConstraint.setReferencedColumnNames("uuid");
             foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
             foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
             
@@ -504,10 +498,10 @@ public class CustomTableCreatorService implements Serializable {
             case DOUBLE:
                 return "numeric(23, 12)";
             case LONG:
-            case ENTITY:
                 return "bigint";
             case STRING:
             case TEXT_AREA:
+            case ENTITY:
             case LIST:
                 return "varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")";
             // Store serialized

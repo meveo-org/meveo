@@ -658,5 +658,9 @@
     		<column name="storages" value="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
     	</update>
     </changeSet>
+    
+    <changeSet id="uuid-ossp" author="Clément Bareth" dbms="postgresql">
+    	<sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
+    </changeSet>
 
 </databaseChangeLog>

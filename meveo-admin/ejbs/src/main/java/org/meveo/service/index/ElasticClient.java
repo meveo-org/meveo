@@ -286,7 +286,7 @@ public class ElasticClient {
      * @param immediate True if changes should be propagated immediately to Elastic search. False - changes will be queued until JPA flush event
      * @throws BusinessException Communication with ES/request execution exception
      */
-    public void remove(Class<? extends ISearchable> entityClass, String cetCode, Long identifier, boolean immediate) throws BusinessException {
+    public void remove(Class<? extends ISearchable> entityClass, String cetCode, Object identifier, boolean immediate) throws BusinessException {
 
         if (!esConnection.isEnabled() || identifier == null) {
             return;

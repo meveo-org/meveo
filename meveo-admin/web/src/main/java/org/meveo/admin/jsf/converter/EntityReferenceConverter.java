@@ -37,9 +37,9 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
-    private volatile Map<String, LoadingCache<Long, String>> cacheMap = new HashMap<>();
+    private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
-    private volatile Map<String, Map<Long, Object>> valuesMap = new HashMap<>();
+    private volatile Map<String, Map<String, Object>> valuesMap = new HashMap<>();
 
     @Override
     public Object getAsObject(FacesContext context, UIComponent component, String value) {
@@ -48,7 +48,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
     }
 
     @Override
-    public String getAsString(FacesContext context, UIComponent component, Object value) {
+    public String getAsString(FacesContext context, UIComponent component, Object uuid) {
         CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
     	
         // This converter only applies on entity references
@@ -56,19 +56,19 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
     		return null;
     	}
     	
-    	Number numberValue = (Number) value;
+    	String stringUuid = (String) uuid;
     	
-        LoadingCache<Long, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
+        LoadingCache<String, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
         	return CacheBuilder.newBuilder()
                     .expireAfterWrite(5, TimeUnit.MINUTES)
-                    .removalListener((RemovalListener<Long, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
+                    .removalListener((RemovalListener<String, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
                     .build(new FieldRepresentationLoader(cetCode));
         });
 
-        return cetCache.getUnchecked(numberValue.longValue());
+        return cetCache.getUnchecked(stringUuid);
     }
 
-    private class FieldRepresentationLoader extends CacheLoader<Long, String>{
+    private class FieldRepresentationLoader extends CacheLoader<String, String>{
 
         String cetCode;
 
@@ -77,7 +77,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
         }
 
         @Override
-        public String load(Long value) {
+        public String load(String uuid) {
             final Map<String, CustomFieldTemplate> referencedEntityFields = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
             final List<String> summaryFields = referencedEntityFields.values()
                     .stream()
@@ -85,10 +85,10 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
                     .map(CustomFieldTemplate::getDbFieldname)
                     .collect(Collectors.toList());
 
-            final Map<String, Object> values = customTableService.findById(cetCode, value.longValue());
+            final Map<String, Object> values = customTableService.findById(cetCode, uuid);
 
             valuesMap.computeIfAbsent(cetCode, (k) -> new HashMap<>())
-                    .put(value, values);
+                    .put(uuid, values);
 
             Map<String, Object> summaryValues = values.entrySet()
             	.stream()

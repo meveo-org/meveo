@@ -265,20 +265,13 @@ public class CustomTableApi extends BaseApi {
         if (dto.getValues() == null || dto.getValues().isEmpty()) {
             customTableService.remove(SQLStorageConfiguration.getDbTablename(cet));
         } else {
-            Set<Long> ids = new HashSet<>();
+            Set<String> ids = new HashSet<>();
 
             for (CustomTableRecordDto record : dto.getValues()) {
 
                 Object id = record.getValues().get(NativePersistenceService.FIELD_ID);
                 if (id != null) {
-                    // Convert to long
-                    if (id instanceof String) {
-                        id = Long.parseLong((String) id);
-                    } else if (id instanceof BigInteger) {
-                        id = ((BigInteger) id).longValue();
-                    }
-                    ids.add((Long) id);
-
+                    ids.add((String) id);
                 } else {
                     throw new InvalidParameterException("Not all values have an 'id' field specified");
                 }
@@ -316,19 +309,13 @@ public class CustomTableApi extends BaseApi {
             throw new ValidationException("Custom table does not contain a field 'disabled'", "customTable.noDisabledField");
         }
 
-        Set<Long> ids = new HashSet<>();
+        Set<String> ids = new HashSet<>();
 
         for (CustomTableRecordDto record : dto.getValues()) {
 
             Object id = record.getValues().get(NativePersistenceService.FIELD_ID);
             if (id != null) {
-                // Convert to long
-                if (id instanceof String) {
-                    id = Long.parseLong((String) id);
-                } else if (id instanceof BigInteger) {
-                    id = ((BigInteger) id).longValue();
-                }
-                ids.add((Long) id);
+                ids.add((String) id);
 
             } else {
                 throw new InvalidParameterException("Not all values have an 'id' field specified");

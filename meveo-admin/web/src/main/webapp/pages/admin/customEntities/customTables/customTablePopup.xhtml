@@ -83,7 +83,7 @@
 				paginator="true" rows="10" resizableColumns="false"
 				styleClass="custom-grid" reflow="true" editable="false"
 				selection="#{customTablePopupBean.selectedValues}"
-				selectionMode="single" rowKey="#{entity['id']}" sortBy="id">
+				selectionMode="single" rowKey="#{entity['uuid']}">
 
 				<p:ajax event="rowSelect"
 					listener="#{bean.onEntityReferenceSelected}" update="#{update}"
@@ -91,8 +91,8 @@
 
 
 
-				<p:column headerText="id" sortBy="#{id}" selectRow="false">
-					<h:outputText value="#{entity['id']}" />
+				<p:column headerText="uuid" selectRow="false">
+					<h:outputText value="#{entity['uuid']}" />
 				</p:column>
 
 				<p:columns value="#{customTablePopupBean.summaryFields}" var="field"

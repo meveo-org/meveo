@@ -71,7 +71,7 @@ public class NativePersistenceService extends BaseService {
     /**
      * ID field name
      */
-    public static String FIELD_ID = "id";
+    public static String FIELD_ID = "uuid";
 
     /**
      * Valid from field name
@@ -100,17 +100,17 @@ public class NativePersistenceService extends BaseService {
      * Find record by its identifier
      *
      * @param tableName Table name
-     * @param id        Identifier
+     * @param uuid        Identifier
      * @return A map of values with field name as a map key and field value as a map value
      */
     @SuppressWarnings("unchecked")
-    public Map<String, Object> findById(String tableName, Long id) {
+    public Map<String, Object> findById(String tableName, String uuid) {
 
         try {
 
             Session session = getEntityManager().unwrap(Session.class);
-            SQLQuery query = session.createSQLQuery("select * from " + tableName + " e where id=:id");
-            query.setParameter("id", id);
+            SQLQuery query = session.createSQLQuery("select * from " + tableName + " e where uuid=:uuid");
+            query.setParameter("uuid", uuid);
             query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
 
             Map<String, Object> values = (Map<String, Object>) query.uniqueResult();
@@ -118,7 +118,7 @@ public class NativePersistenceService extends BaseService {
             return values;
 
         } catch (Exception e) {
-            log.error("Failed to retrieve values from table by id {}/{} sql {}", tableName, id, e);
+            log.error("Failed to retrieve values from table by uuid {}/{} sql {}", tableName, uuid, e);
             throw e;
         }
     }
@@ -130,11 +130,11 @@ public class NativePersistenceService extends BaseService {
      * @param values    Values to insert
      * @throws BusinessException General exception
      */
-    public Long create(String tableName, Map<String, Object> values) throws BusinessException {
+    public String create(String tableName, Map<String, Object> values) throws BusinessException {
 
-        Long id = create(tableName, values, true);
+        String uuid = create(tableName, values, true);
 
-        return id;
+        return uuid;
     }
 
     /**
@@ -238,14 +238,14 @@ public class NativePersistenceService extends BaseService {
     }
 
     /**
-     * Insert a new record into a table. If returnId=True values parameter will be updated with 'id' field value.
+     * Insert a new record into a table. If returnId=True values parameter will be updated with 'uuid' field value.
      *
      * @param tableName Table name to update
      * @param values    Values
-     * @param returnId  Should identifier be returned - does a lookup in DB by matching same values. If True values will be updated with 'id' field value.
+     * @param returnId  Should identifier be returned - does a lookup in DB by matching same values. If True values will be updated with 'uuid' field value.
      * @throws BusinessException General exception
      */
-    protected Long create(String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+    protected String create(String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
 
         if (tableName == null) {
             throw new BusinessException("Table name must not be null");
@@ -254,15 +254,9 @@ public class NativePersistenceService extends BaseService {
         StringBuffer sql = new StringBuffer();
         try {
 
-            // Change ID field data type to long
-            Object id = values.get(FIELD_ID);
-            if (id != null) {
-                if (id instanceof String) {
-                    id = Long.parseLong((String) id);
-                } else if (id instanceof BigInteger) {
-                    id = ((BigInteger) id).longValue();
-                }
-                values.put(FIELD_ID, id);
+            Object uuid = values.get(FIELD_ID);
+            if (uuid != null) {
+                values.put(FIELD_ID, uuid);
             }
 
             sql.append("insert into ").append(tableName);
@@ -306,11 +300,14 @@ public class NativePersistenceService extends BaseService {
 
             // Find the identifier of the last inserted record
             if (returnId) {
-                if (id != null) {
-                    return (Long) id;
+                if (uuid != null) {
+                    return (String) uuid;
                 }
 
-                query = getEntityManager().createNativeQuery("select id from " + tableName + " where " + findIdFields + " order by id desc").setMaxResults(1);
+                query = getEntityManager()
+                		.createNativeQuery("select uuid from " + tableName + " where " + findIdFields)
+                		.setMaxResults(1);
+                
                 for (String fieldName : values.keySet()) {
                     if (values.get(fieldName) == null) {
                         continue;
@@ -318,15 +315,10 @@ public class NativePersistenceService extends BaseService {
                     query.setParameter(fieldName, values.get(fieldName));
                 }
 
-                id = query.getSingleResult();
-                if (id instanceof BigDecimal) {
-                    id = ((BigDecimal) id).longValue();
-                } else if (id instanceof BigInteger) {
-                    id = ((BigInteger) id).longValue();
-                }
-                values.put(FIELD_ID, id);
+                uuid = query.getSingleResult();
+                values.put(FIELD_ID, uuid);
 
-                return (Long) id;
+                return (String) uuid;
 
             } else {
                 return null;
@@ -339,16 +331,16 @@ public class NativePersistenceService extends BaseService {
     }
 
     /**
-     * Update a record in a table. Record is identified by an "id" field value.
+     * Update a record in a table. Record is identified by an "uuid" field value.
      *
      * @param tableName Table name to update
-     * @param value     Values. Values must contain an "id" (FIELD_ID) field.
+     * @param value     Values. Values must contain an "uuid" (FIELD_ID) field.
      * @throws BusinessException General exception
      */
     public void update(String tableName, Map<String, Object> value) throws BusinessException {
 
         if (value.get(FIELD_ID) == null) {
-            throw new BusinessException("'id' field value not provided to update values in native table");
+            throw new BusinessException("'uuid' field value not provided to update values in native table");
         }
 
         StringBuffer sql = new StringBuffer();
@@ -371,7 +363,7 @@ public class NativePersistenceService extends BaseService {
                 first = false;
             }
 
-            sql.append(" where id=:id");
+            sql.append(" where uuid=:uuid");
 
             Query query = getEntityManager().createNativeQuery(sql.toString());
             for (String fieldName : value.keySet()) {
@@ -391,23 +383,23 @@ public class NativePersistenceService extends BaseService {
      * Update field value in a table
      *
      * @param tableName Table name to update
-     * @param id        Record identifier
+     * @param uuid        Record identifier
      * @param fieldName Field to update
      * @param value     New value
      * @throws BusinessException General exception
      */
-    public void updateValue(String tableName, Long id, String fieldName, Object value) throws BusinessException {
+    public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
 
         try {
             if (value == null) {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where id=" + id).executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=" + uuid).executeUpdate();
             } else {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where id=" + id).setParameter(fieldName, value)
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=" + uuid).setParameter(fieldName, value)
                         .executeUpdate();
             }
 
         } catch (Exception e) {
-            log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, id);
+            log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
             throw e;
         }
     }
@@ -416,12 +408,12 @@ public class NativePersistenceService extends BaseService {
      * Disable a record
      *
      * @param tableName Table name to update
-     * @param id        Record identifier
+     * @param uuid        Record identifier
      * @throws BusinessException General exception
      */
-    public void disable(String tableName, Long id) throws BusinessException {
+    public void disable(String tableName, String uuid) throws BusinessException {
 
-        getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where id=" + id).executeUpdate();
+        getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
     }
 
     /**
@@ -431,21 +423,21 @@ public class NativePersistenceService extends BaseService {
      * @param ids       A list of record identifiers
      * @throws BusinessException General exception
      */
-    public void disable(String tableName, Set<Long> ids) throws BusinessException {
+    public void disable(String tableName, Set<String> ids) throws BusinessException {
 
-        getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where id in :ids").setParameter("ids", ids).executeUpdate();
+        getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
     }
 
     /**
      * Enable a record
      *
      * @param tableName Table name to update
-     * @param id        Record identifier
+     * @param uuid        Record identifier
      * @throws BusinessException General exception
      */
-    public void enable(String tableName, Long id) throws BusinessException {
+    public void enable(String tableName, String uuid) throws BusinessException {
 
-        getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where id=" + id).executeUpdate();
+        getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where uuid=" + uuid).executeUpdate();
     }
 
     /**
@@ -455,21 +447,21 @@ public class NativePersistenceService extends BaseService {
      * @param ids       A list of record identifiers
      * @throws BusinessException General exception
      */
-    public void enable(String tableName, Set<Long> ids) throws BusinessException {
+    public void enable(String tableName, Set<String> ids) throws BusinessException {
 
-        getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where id in :ids").setParameter("ids", ids).executeUpdate();
+        getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
     }
 
     /**
      * Delete a record
      *
      * @param tableName Table name to update
-     * @param id        Record identifier
+     * @param uuid        Record identifier
      * @throws BusinessException General exception
      */
-    public void remove(String tableName, Long id) throws BusinessException {
+    public void remove(String tableName, String uuid) throws BusinessException {
 
-        getEntityManager().createNativeQuery("delete from " + tableName + " where id=" + id).executeUpdate();
+        getEntityManager().createNativeQuery("delete from " + tableName + " where uuid=" + uuid).executeUpdate();
     }
 
     /**
@@ -479,8 +471,8 @@ public class NativePersistenceService extends BaseService {
      * @param ids       A set of record identifiers
      * @throws BusinessException General exception
      */
-    public void remove(String tableName, Set<Long> ids) throws BusinessException {
-        getEntityManager().createNativeQuery("delete from " + tableName + " where id in :ids").setParameter("ids", ids).executeUpdate();
+    public void remove(String tableName, Set<String> ids) throws BusinessException {
+        getEntityManager().createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
     }
 
@@ -818,14 +810,14 @@ public class NativePersistenceService extends BaseService {
     }
     
     /**
-     * Find a record id in table using its exact values
+     * Find a record uuid in table using its exact values
      * 
      * @param cetCodeOrTableName Table name where the record is stored
      * @param queryValues Values used to filter the result
-     * @return The id of the record if it was found or null if it was not
+     * @return The uuid of the record if it was found or null if it was not
      */
-    public Long findIdByValues(String cetCodeOrTableName, Map<String, Object> queryValues) {
-        QueryBuilder queryBuilder = new QueryBuilder("SELECT id FROM " + cetCodeOrTableName + " a ", "a");
+    public String findIdByValues(String cetCodeOrTableName, Map<String, Object> queryValues) {
+        QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + cetCodeOrTableName + " a ", "a");
         queryValues.forEach((key, value) -> {
             queryBuilder.addCriterion(key, "=", value, false);
         });
@@ -833,7 +825,7 @@ public class NativePersistenceService extends BaseService {
         NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);
         try {
         	Map<String, Object> singleResult = query.getSingleResult();
-			return ((Number) singleResult.get("id")).longValue();
+			return (String) singleResult.get("uuid");
         } catch (NoResultException | NonUniqueResultException e) {
             return null;
         } catch(Exception e) {

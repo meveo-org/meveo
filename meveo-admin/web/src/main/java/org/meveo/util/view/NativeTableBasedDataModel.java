@@ -66,13 +66,13 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
     }
 
     @Override
-    public Map<String, Object> getRowData(String rowKey) {
-        return getPersistenceServiceImpl().findById(getTableName(), Long.valueOf(rowKey));
+    public Map<String, Object> getRowData(String uuid) {
+        return getPersistenceServiceImpl().findById(getTableName(), uuid);
     }
 
     @Override
     public Object getRowKey(Map<String, Object> object) {
-        return object.get("id");
+        return object.get("uuid");
     }
 
     @Override
@@ -179,7 +179,7 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
      * @return default sort implementation
      */
     protected String getDefaultSortImpl() {
-        return "id";
+        return "uuid";
     }
 
     protected SortOrder getDefaultSortOrderImpl() {

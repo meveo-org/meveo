@@ -111,12 +111,12 @@ public class CustomTableService extends NativePersistenceService {
 
 
     @Override
-    public Long create(String tableName, Map<String, Object> values) throws BusinessException {
+    public String create(String tableName, Map<String, Object> values) throws BusinessException {
 
-        Long id = super.create(tableName, values, true); // Force to return ID as we need it to retrieve data for Elastic Search population
-        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, id, values, false, true);
+        String uuid = super.create(tableName, values, true); // Force to return ID as we need it to retrieve data for Elastic Search population
+        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, true);
 
-        return id;
+        return uuid;
     }
     
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -135,8 +135,8 @@ public class CustomTableService extends NativePersistenceService {
     public void create(String tableName, List<Map<String, Object>> values) throws BusinessException {
 
         for (Map<String, Object> value : values) {
-            Long id = super.create(tableName, value, true); // Force to return ID as we need it to retrieve data for Elastic Search population
-            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, id, value, false, false);
+            String uuid = super.create(tableName, value, true); // Force to return ID as we need it to retrieve data for Elastic Search population
+            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, value, false, false);
         }
 
         elasticClient.flushChanges();
@@ -172,10 +172,10 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     /**
-     * Update multiple values in a table. Record is identified by an "id" field value.
+     * Update multiple values in a table. Record is identified by an "uuid" field value.
      * 
      * @param tableName Table name to update values
-     * @param values Values to update. Must contain an 'id' field.
+     * @param values Values to update. Must contain an 'uuid' field.
      * @throws BusinessException General exception
      */
     public void update(String tableName, List<Map<String, Object>> values) throws BusinessException {
@@ -188,51 +188,50 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     @Override
-    public void updateValue(String tableName, Long id, String fieldName, Object value) throws BusinessException {
-        super.updateValue(tableName, id, fieldName, value);
-        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, id, MapUtils.putAll(new HashMap<>(), new Object[] { fieldName, value }), true, true);
+    public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
+        super.updateValue(tableName, uuid, fieldName, value);
+        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, MapUtils.putAll(new HashMap<>(), new Object[] { fieldName, value }), true, true);
     }
 
     @Override
-    public void disable(String tableName, Long id) throws BusinessException {
-        super.disable(tableName, id);
-        elasticClient.remove(CustomTableRecord.class, tableName, id, true);
+    public void disable(String tableName, String uuid) throws BusinessException {
+        super.disable(tableName, uuid);
+        elasticClient.remove(CustomTableRecord.class, tableName, uuid, true);
     }
 
     @Override
-    public void disable(String tableName, Set<Long> ids) throws BusinessException {
-
+    public void disable(String tableName, Set<String> ids) throws BusinessException {
         super.disable(tableName, ids);
         elasticClient.remove(CustomTableRecord.class, tableName, ids, true);
     }
 
     @Override
-    public void enable(String tableName, Long id) throws BusinessException {
-        super.enable(tableName, id);
-        Map<String, Object> values = findById(tableName, id);
-        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, id, values, false, true);
+    public void enable(String tableName, String uuid) throws BusinessException {
+        super.enable(tableName, uuid);
+        Map<String, Object> values = findById(tableName, uuid);
+        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, true);
     }
 
     @Override
-    public void enable(String tableName, Set<Long> ids) throws BusinessException {
+    public void enable(String tableName, Set<String> ids) throws BusinessException {
         super.enable(tableName, ids);
-        for (Long id : ids) {
-            Map<String, Object> values = findById(tableName, id);
-            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, id, values, false, false);
+        for (String uuid : ids) {
+            Map<String, Object> values = findById(tableName, uuid);
+            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, false);
         }
         elasticClient.flushChanges();
     }
 
     @Override
-    public void remove(String tableName, Long id) throws BusinessException {
-        super.remove(tableName, id);
-        elasticClient.remove(CustomTableRecord.class, tableName, id, true);
+    public void remove(String tableName, String uuid) throws BusinessException {
+        super.remove(tableName, uuid);
+        elasticClient.remove(CustomTableRecord.class, tableName, uuid, true);
     }
 
     @Override
-    public void remove(String tableName, Set<Long> ids) throws BusinessException {
+    public void remove(String tableName, Set<String> ids) throws BusinessException {
         super.remove(tableName, ids);
-        elasticClient.remove(CustomTableRecord.class, tableName, ids, true);
+//        elasticClient.remove(CustomTableRecord.class, tableName, ids, true); FIXME: Update ES to use UUID instead of ID
     }
 
     @Override
@@ -309,9 +308,9 @@ public class CustomTableService extends NativePersistenceService {
                                         .computeIfAbsent(
                                             customFieldTemplate.getDbFieldname(),
                                             k -> {
-                                                log.info("Fetching {} with id {}", customFieldTemplate.getCode(), value);
-                                                Map<String, Object> entityRefValues = findById(k, ((Number) value).longValue());
-                                                entityRefValues.remove("id");				// We don't want to save the id
+                                                log.info("Fetching {} with uuid {}", customFieldTemplate.getCode(), value);
+                                                Map<String, Object> entityRefValues = findById(k, (String) value);
+                                                entityRefValues.remove("uuid");				// We don't want to save the uuid
                                                 return JacksonUtil.toString(entityRefValues);
                                             }
                                     );
@@ -417,19 +416,19 @@ public class CustomTableService extends NativePersistenceService {
 
         try (Reader reader = new InputStreamReader(inputStream)) {
         	
-    		Map<String, Map<String, Long>> entityReferencesCache = new HashMap<>(); // Cache used to avoid fetching multiple time the same data
+    		Map<String, Map<String, String>> entityReferencesCache = new HashMap<>(); // Cache used to avoid fetching multiple time the same data
 
             MappingIterator<Map<String, Object>> mappingIterator = oReader.readValues(reader);
 
             while (mappingIterator.hasNext()) {
                 Map<String, Object> lineValues = mappingIterator.next();
-            	lineValues.remove("id");
+            	lineValues.remove("uuid");
                 
                 if(append) {
                 	lineValues = convertValue(lineValues, cfts, true, null);
                 	replaceEntityreferences(fields, entityReferencesCache, lineValues);
-                	Long id = findIdByValues(tableName, lineValues);
-                	if(id == null) {
+                	String uuid = findIdByValues(tableName, lineValues);
+                	if(uuid == null) {
                 		createInNewTx(tableName, lineValues);
                 		importedLines++;
                         importedLinesTotal++;
@@ -485,7 +484,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @throws ValidationException
 	 * @throws BusinessException
 	 */
-	private void saveBatch(Map<String, CustomFieldTemplate> cfts, List<CustomFieldTemplate> fields, String tableName, List<Map<String, Object>> values, Map<String, Map<String, Long>> entityReferencesCache) throws ValidationException, BusinessException {
+	private void saveBatch(Map<String, CustomFieldTemplate> cfts, List<CustomFieldTemplate> fields, String tableName, List<Map<String, Object>> values, Map<String, Map<String, String>> entityReferencesCache) throws ValidationException, BusinessException {
 		
 		values = convertValues(values, cfts, false);
 		values = replaceEntityReferences(fields, values, entityReferencesCache);
@@ -497,7 +496,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @param entityReferencesCache 
 	 * @throws BusinessException
 	 */
-	private List<Map<String, Object>> replaceEntityReferences(List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, Long>> entityReferencesCache) throws BusinessException {
+	private List<Map<String, Object>> replaceEntityReferences(List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, String>> entityReferencesCache) throws BusinessException {
 		List<Map<String, Object>> values = new ArrayList<>(oldvalues);
 		/* Create or retrieve entity references */
 		for (Map<String, Object> map : values) {
@@ -512,7 +511,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @param entityRefValueMap
 	 * @throws BusinessException
 	 */
-	private void replaceEntityreferences(List<CustomFieldTemplate> fields, Map<String, Map<String, Long>> entityReferencesCache, Map<String, Object> entityRefValueMap) throws BusinessException {
+	private void replaceEntityreferences(List<CustomFieldTemplate> fields, Map<String, Map<String, String>> entityReferencesCache, Map<String, Object> entityRefValueMap) throws BusinessException {
 		final HashMap<String, Object> iterationMap = new HashMap<>(entityRefValueMap);
 		for (Entry<String, Object> entry : iterationMap.entrySet()) {
 		    String key = entry.getKey();
@@ -521,7 +520,7 @@ public class CustomTableService extends NativePersistenceService {
 		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
 		    	String entityRefTableName = SQLStorageConfiguration.getDbTablename(templateOptional.get().getEntityClazzCetCode());
 		        // Try to retrieve record first
-		        Long id = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
+		        String uuid = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
 		                .computeIfAbsent(
 		                        (String) value,
 		                        serializedValues -> {
@@ -531,13 +530,13 @@ public class CustomTableService extends NativePersistenceService {
 		                );
 
 		        // If record is not found, create it
-		        if (id == null) {
+		        if (uuid == null) {
 		            Map<String, Object> entityRefValues = JacksonUtil.fromString((String) value, GenericTypeReferences.MAP_STRING_OBJECT);
 		            log.info("Creating missing entity reference {}", entityRefValues);
-		            id = create(entityRefTableName, entityRefValues);
+		            uuid = create(entityRefTableName, entityRefValues);
 		        }
 
-		        entityRefValueMap.put(key, id);
+		        entityRefValueMap.put(key, uuid);
 		    }
 		}
 	}
@@ -856,9 +855,9 @@ public class CustomTableService extends NativePersistenceService {
         Map<String, Object> valuesConverted = new HashMap<>();
 
         // Handle ID field
-        Object id = values.get(FIELD_ID);
-        if (id != null) {
-            valuesConverted.put(FIELD_ID, castValue(id, Long.class, false, datePatterns));
+        Object uuid = values.get(FIELD_ID);
+        if (uuid != null) {
+            valuesConverted.put(FIELD_ID, castValue(uuid, Long.class, false, datePatterns));
         }
 
         // Convert field based on data type
@@ -932,7 +931,7 @@ public class CustomTableService extends NativePersistenceService {
 					// Fetch entity reference
             		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
             			String propertyTableName = SQLStorageConfiguration.getDbTablename(cft.getEntityClazzCetCode());
-            			property = customTableService.findById(propertyTableName, ((Number) property).longValue());
+            			property = customTableService.findById(propertyTableName, (String) property);
             		}
             		
             		// Replace db field names to cft name
