@@ -13,6 +13,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BaseEntityDto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents data in custom table - custom entity data stored in a separate table
  * 
@@ -25,7 +27,7 @@ public class CustomTableDataDto extends BaseEntityDto {
     private static final long serialVersionUID = -1209601309024979414L;
 
     /**
-     * Custom table/custom entity template code
+     * Custom table/custom entity (or relation) template code
      */
     @XmlAttribute(required = true)
     private String customTableCode;
@@ -34,13 +36,14 @@ public class CustomTableDataDto extends BaseEntityDto {
      * Should data be overwritten (deleted all data first) instead of appended to existing values. Defaults to false if omitted.
      */
     @XmlAttribute
-    private Boolean overrwrite;
+    private Boolean overwrite;
 
     /**
      * A list of values with field name as map's key and field value as map's value
      */
     @XmlElementWrapper(name = "records")
     @XmlElement(name = "record")
+    @JsonProperty("records")
     private List<CustomTableRecordDto> values;
 
     /**
@@ -60,15 +63,15 @@ public class CustomTableDataDto extends BaseEntityDto {
     /**
      * @return Should data be overwritten (deleted all data first) instead of appended to existing values. Defaults to false if null.
      */
-    public Boolean getOverrwrite() {
-        return overrwrite;
+    public Boolean getOverwrite() {
+        return overwrite;
     }
 
     /**
      * @param overrwrite Should data be overwritten (deleted all data first) instead of appended to existing values.
      */
-    public void setOverrwrite(Boolean overrwrite) {
-        this.overrwrite = overrwrite;
+    public void setOverwrite(Boolean overrwrite) {
+        this.overwrite = overrwrite;
     }
 
     /**

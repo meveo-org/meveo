@@ -44,7 +44,7 @@ import org.meveo.model.persistence.DBStorageType;
                 "AND crt.name = :name")
 })
 @ObservableEntity
-public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {
+public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate>, CustomModelObject {
 
     private static final long serialVersionUID = 8281478284763353310L;
 

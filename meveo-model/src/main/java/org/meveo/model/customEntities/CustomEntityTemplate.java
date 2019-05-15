@@ -49,7 +49,7 @@ import org.meveo.model.scripts.ScriptInstance;
 })
 @ObservableEntity
 @ImportOrder(2)
-public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate> {
+public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate>, CustomModelObject {
 
 	private static final long serialVersionUID = 8281478284763353310L;
 
