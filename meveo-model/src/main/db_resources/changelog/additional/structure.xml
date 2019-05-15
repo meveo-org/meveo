@@ -649,5 +649,10 @@
             <column name="storages" type="${type.json}"/>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="technical_service_drop_notnull_consraint_crt_cet" author="Clément Bareth">
+        <dropNotNullConstraint columnName="cet_id" tableName="technical_services_description"/>
+        <dropNotNullConstraint columnName="crt_id" tableName="technical_services_description"/>
+    </changeSet>
 
 </databaseChangeLog>
