@@ -20,7 +20,7 @@ public class CustomTableRecordDto implements Serializable {
     private static final long serialVersionUID = -1209601309024979418L;
 
     private LinkedHashMap<String, Object> values;
-
+    
     public CustomTableRecordDto() {
 
     }

@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
+import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
 import org.meveo.api.rest.custom.impl.PersistenceRs;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
 import org.meveo.api.rest.filter.RESTCorsResponseFilter;
@@ -30,14 +32,14 @@ public class JaxRsActivator extends Application {
         Reflections reflections = new Reflections("org.meveo.api.rest");
         Set<Class<? extends BaseRs>> allClasses = reflections.getSubTypesOf(BaseRs.class);
         
-        log.debug("Documenting {} rest services...", allClasses.size());
-
         resources.addAll(allClasses);
         resources.add(RESTCorsRequestFilter.class);
         resources.add(RESTCorsResponseFilter.class);
         resources.add(JaxRsExceptionMapper.class);
         resources.add(JacksonJsonProvider.class);
         resources.add(PersistenceRs.class);
+        resources.add(CustomTableRsImpl.class);
+        resources.add(CustomTableRsRelationImpl.class);
 
         return resources;
     }

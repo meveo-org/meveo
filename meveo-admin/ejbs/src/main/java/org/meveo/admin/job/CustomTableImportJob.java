@@ -193,7 +193,7 @@ public class CustomTableImportJob extends Job {
             CustomEntityTemplate customTable = null;
 
             for (CustomEntityTemplate cet : cets) {
-                if (filename.startsWith(SQLStorageConfiguration.getDbTablename(cet.getCode()))) {
+                if (filename.startsWith(SQLStorageConfiguration.getCetDbTablename(cet.getCode()))) {
                     customTable = cet;
                     break;
                 }

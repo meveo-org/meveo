@@ -1,5 +1,22 @@
 package org.meveo.model.customEntities;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -9,10 +26,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.billing.RelationshipDirectionEnum;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import org.meveo.model.persistence.DBStorageType;
 
 @Entity
 @ModuleItem
@@ -30,7 +44,7 @@ import javax.validation.constraints.Size;
                 "AND crt.name = :name")
 })
 @ObservableEntity
-public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate> {
+public class CustomRelationshipTemplate extends BusinessEntity implements Comparable<CustomRelationshipTemplate>, CustomModelObject {
 
     private static final long serialVersionUID = 8281478284763353310L;
 
@@ -52,6 +66,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     @Enumerated(EnumType.STRING)
 	@Column(name = "DIRECTION", length = 100)
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
+    
+    @Column(name = "available_storages", columnDefinition = "TEXT")
+    @Type(type = "jsonList")
+    private List<DBStorageType> availableStorages;
 
     /**
      * Json list type. ex : ["firstName","lastName","birthDate"]
@@ -118,7 +136,15 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
         return null;
     }
 
-    /**
+    public List<DBStorageType> getAvailableStorages() {
+		return availableStorages != null ? availableStorages : new ArrayList<>();
+	}
+
+	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+		this.availableStorages = availableStorages;
+	}
+
+	/**
      * Name of the field that will be added to the source  entity and that refer to the outgoing relationships of this type
      */
     public String getRelationshipsFieldSource() {

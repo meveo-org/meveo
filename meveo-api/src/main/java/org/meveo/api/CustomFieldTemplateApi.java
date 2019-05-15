@@ -22,10 +22,12 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -47,6 +49,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
@@ -417,12 +422,21 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setIdentifier(dto.isIdentifier());
 
         // A cft can't be stored in a db that is not available for its cet
-        String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
-        CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-        for(DBStorageType storageType : cet.getAvailableStorages()){
-            if(!cet.getAvailableStorages().contains(storageType)){
-                String message = "Custom field %s can't be stored to %s as the CET %s is not configure to be stored in this database";
-                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, cetCode));
+        List<DBStorageType> storageTypes = null;
+        if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+            storageTypes = cet.getAvailableStorages();
+        }else if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            String crtCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+            CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(crtCode);
+            storageTypes = crt.getAvailableStorages();
+        }
+
+        for(DBStorageType storageType : cft.getStorages()){
+            if(storageType == null || !storageTypes.contains(storageType)){
+                String message = "Custom field %s can't be stored to %s as the CET / CRT with code %s is not configure to be stored in this database";
+                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, EntityCustomizationUtils.getEntityCode(cft.getAppliesTo())));
             }
         }
 

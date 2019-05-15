@@ -3,6 +3,7 @@ package org.meveo.service.custom;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
@@ -12,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerProvider;
@@ -21,6 +23,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.slf4j.Logger;
 
@@ -34,6 +38,7 @@ import liquibase.change.core.AddColumnChange;
 import liquibase.change.core.AddDefaultValueChange;
 import liquibase.change.core.AddForeignKeyConstraintChange;
 import liquibase.change.core.AddNotNullConstraintChange;
+import liquibase.change.core.AddPrimaryKeyChange;
 import liquibase.change.core.CreateTableChange;
 import liquibase.change.core.DropColumnChange;
 import liquibase.change.core.DropDefaultValueChange;
@@ -42,12 +47,18 @@ import liquibase.change.core.DropNotNullConstraintChange;
 import liquibase.change.core.DropSequenceChange;
 import liquibase.change.core.DropTableChange;
 import liquibase.change.core.ModifyDataTypeChange;
-import liquibase.change.core.RawSQLChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.MigrationFailedException;
+import liquibase.exception.ValidationFailedException;
+import liquibase.precondition.core.NotPrecondition;
+import liquibase.precondition.core.PreconditionContainer;
+import liquibase.precondition.core.PreconditionContainer.ErrorOption;
+import liquibase.precondition.core.PreconditionContainer.FailOption;
+import liquibase.precondition.core.TableExistsPrecondition;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.statement.DatabaseFunction;
 
@@ -55,7 +66,9 @@ import liquibase.statement.DatabaseFunction;
 @TransactionManagement(TransactionManagementType.BEAN)
 public class CustomTableCreatorService implements Serializable {
 
-    private static final long serialVersionUID = -5858023657669249422L;
+    private static final String UUID = "uuid";
+
+	private static final long serialVersionUID = -5858023657669249422L;
 
     @PersistenceUnit(unitName = "MeveoAdmin")
     private EntityManagerFactory emf;
@@ -72,6 +85,116 @@ public class CustomTableCreatorService implements Serializable {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    /**
+     * Create a table with two columns referencing source and target custom tables
+     * 
+     * @param crt {@link CustomRelationshipTemplate} to create table for
+     * @throws BusinessException if the {@link CustomRelationshipTemplate} is not configured to be stored in a custom table
+     */
+    public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+    	if(crt.getAvailableStorages() == null || !crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+    		throw new BusinessException("CustomRelationshipTemplate " + crt.getCode() + " is not configured to be stored in a custom table");
+    	}
+    	
+    	String tableName = SQLStorageConfiguration.getDbTablename(crt);
+    	
+    	DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+    	
+        ChangeSet changeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+        
+        // Make sure table does not exists before creating it
+        TableExistsPrecondition tableExistsPrecondition = new TableExistsPrecondition();
+        tableExistsPrecondition.setTableName(tableName);
+        
+        NotPrecondition notPrecondition = new NotPrecondition();
+        notPrecondition.addNestedPrecondition(tableExistsPrecondition);
+        
+        PreconditionContainer precondition = new PreconditionContainer();
+        precondition.setOnError(ErrorOption.HALT);
+        precondition.setOnFail(FailOption.HALT);
+        precondition.addNestedPrecondition(notPrecondition);
+        
+        changeset.setPreconditions(precondition);
+        
+        // Source column
+        ColumnConfig sourceColumn = new ColumnConfig();
+        sourceColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
+        sourceColumn.setType("varchar(255)");
+        
+        // Target column
+        ColumnConfig targetColumn = new ColumnConfig();
+        targetColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
+        targetColumn.setType("varchar(255)");
+        
+        // Table creation
+        CreateTableChange createTableChange = new CreateTableChange();
+        createTableChange.setTableName(tableName);
+        createTableChange.addColumn(sourceColumn);
+        createTableChange.addColumn(targetColumn);
+        changeset.addChange(createTableChange);
+        
+        // Primary key constraint addition
+        AddPrimaryKeyChange addPrimaryKeyChange = new AddPrimaryKeyChange();
+        addPrimaryKeyChange.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+        addPrimaryKeyChange.setTableName(tableName);
+        changeset.addChange(addPrimaryKeyChange);
+        
+        // Source foreign key if source cet is a custom table
+        if(crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
+	        AddForeignKeyConstraintChange sourceFkChange = new AddForeignKeyConstraintChange();
+	        sourceFkChange.setBaseColumnNames(sourceColumn.getName());
+	        sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
+	        sourceFkChange.setReferencedColumnNames(UUID);
+	        sourceFkChange.setBaseTableName(tableName);
+	        sourceFkChange.setReferencedTableName(sourceColumn.getName());
+	        changeset.addChange(sourceFkChange);
+        }
+        
+        // Target foreign key if target cet is a custom table
+        if(crt.getEndNode().getSqlStorageConfiguration() != null && crt.getEndNode().getSqlStorageConfiguration().isStoreAsTable()) {
+	        AddForeignKeyConstraintChange targetFkChange = new AddForeignKeyConstraintChange();
+	        targetFkChange.setConstraintName(targetColumn.getName() + "_fk");
+	        targetFkChange.setBaseColumnNames(targetColumn.getName());
+	        targetFkChange.setReferencedColumnNames(UUID);
+	        targetFkChange.setBaseTableName(tableName);
+	        targetFkChange.setReferencedTableName(targetColumn.getName());
+	        changeset.addChange(targetFkChange);
+        }
+        
+        dbLog.addChangeSet(changeset);
+        
+        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+
+        Session hibernateSession = em.unwrap(Session.class);
+        
+        AtomicBoolean created = new AtomicBoolean();
+        created.set(true);
+
+        hibernateSession.doWork(connection -> {
+
+            Database database;
+            try {
+                database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+
+                Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+                liquibase.update(new Contexts(), new LabelExpression());
+
+            } catch(MigrationFailedException e) {
+            	if(e.getMessage().toLowerCase().contains("precondition")) {
+                	created.set(false);
+            	}else {
+            		throw new HibernateException(e);
+            	}
+            } catch (Exception e) {
+                log.error("Failed to create a custom table {}", tableName, e);
+                throw new SQLException(e);
+            }
+
+        });
+        
+        return created.get();
+    }
 
     /**
      * Create a table with a single 'id' field. Value is autoincremented for mysql or taken from sequence for Postgress databases.
@@ -89,7 +212,7 @@ public class CustomTableCreatorService implements Serializable {
         createPgTableChange.setTableName(dbTableName);
 
         ColumnConfig pgUuidColumn = new ColumnConfig();
-        pgUuidColumn.setName("uuid");
+        pgUuidColumn.setName(UUID);
         pgUuidColumn.setType("varchar(255)");
         pgUuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
@@ -111,7 +234,7 @@ public class CustomTableCreatorService implements Serializable {
         createMsTableChange.setTableName(dbTableName);
 
         ColumnConfig msUuidcolumn = new ColumnConfig();
-        msUuidcolumn.setName("uuid");
+        msUuidcolumn.setName(UUID);
         msUuidcolumn.setType("varchar(255)");
         msUuidcolumn.setDefaultValueComputed(new DatabaseFunction("uuid()"));
 
@@ -192,7 +315,7 @@ public class CustomTableCreatorService implements Serializable {
             AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
             foreignKeyConstraint.setBaseColumnNames(dbFieldname);
             foreignKeyConstraint.setBaseTableName(dbTableName);
-            foreignKeyConstraint.setReferencedColumnNames("uuid");
+            foreignKeyConstraint.setReferencedColumnNames(UUID);
             foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
             foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
             
@@ -423,6 +546,17 @@ public class CustomTableCreatorService implements Serializable {
         // Remove table changeset
         ChangeSet changeSet = new ChangeSet(dbTableName + "_CT_R_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
         changeSet.setFailOnError(false);
+        
+        // Make sure table exists before dropping it
+        TableExistsPrecondition tableExistsPrecondition = new TableExistsPrecondition();
+        tableExistsPrecondition.setTableName(dbTableName);
+        
+        PreconditionContainer precondition = new PreconditionContainer();
+        precondition.setOnError(ErrorOption.HALT);
+        precondition.setOnFail(FailOption.HALT);
+        precondition.addNestedPrecondition(tableExistsPrecondition);
+        
+        changeSet.setPreconditions(precondition);
 
         DropTableChange dropTableChange = new DropTableChange();
         dropTableChange.setTableName(dbTableName);
@@ -455,6 +589,10 @@ public class CustomTableCreatorService implements Serializable {
                 Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts(), new LabelExpression());
 
+            } catch(MigrationFailedException e) {
+            	if(!e.getMessage().toLowerCase().contains("precondition")) {
+            		throw new HibernateException(e);
+            	}
             } catch (Exception e) {
                 log.error("Failed to drop a custom table {}", dbTableName, e);
                 throw new SQLException(e);

@@ -14,9 +14,9 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+//TODO: Add opencell license
 package org.meveo.api.custom;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +26,8 @@ import java.util.Set;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,20 +54,23 @@ import org.primefaces.model.SortOrder;
 
 /**
  * @author Andrius Karpavicius
- * @lastModifiedVersion 7.0
+ * @author Clément Bareth
+ * @lastModifiedVersion 6.0.15
  **/
 @Stateless
-public class CustomTableApi extends BaseApi {
+@Dependent
+@Default
+public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTableDataDto> {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
-
+    
     @Inject
     private CustomTableService customTableService;
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-
+    
     /**
      * Create new records in a custom table with an option of deleting existing data first
      * 
@@ -73,7 +78,7 @@ public class CustomTableApi extends BaseApi {
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @Override
     public void create(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {
@@ -85,8 +90,8 @@ public class CustomTableApi extends BaseApi {
 
         handleMissingParameters();
 
-        if (dto.getOverrwrite() == null) {
-            dto.setOverrwrite(false);
+        if (dto.getOverwrite() == null) {
+            dto.setOverwrite(false);
         }
 
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(dto.getCustomTableCode());
@@ -99,8 +104,10 @@ public class CustomTableApi extends BaseApi {
         for (CustomTableRecordDto record : dto.getValues()) {
             values.add(record.getValues());
         }
+        
+        String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 
-        customTableService.importData(cet, values, !dto.getOverrwrite());
+        customTableService.importData(dbTablename, cet, values, !dto.getOverwrite());
 
     }
 
@@ -111,7 +118,7 @@ public class CustomTableApi extends BaseApi {
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @Override
     public void update(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {
@@ -163,7 +170,8 @@ public class CustomTableApi extends BaseApi {
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    public void createOrUpdate(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
+    @Override
+	public void createOrUpdate(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {
             missingParameters.add("customTableCode");
@@ -203,7 +211,8 @@ public class CustomTableApi extends BaseApi {
      * @throws EntityDoesNotExistsException Custom table was not matched
      * @throws InvalidParameterException Invalid parameters passed
      */
-    public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering)
+    @Override
+	public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering)
             throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException {
 
         if (StringUtils.isBlank(customTableCode)) {
@@ -249,7 +258,8 @@ public class CustomTableApi extends BaseApi {
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    public void remove(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
+    @Override
+	public void remove(CustomTableDataDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {
             missingParameters.add("customTableCode");
@@ -288,7 +298,8 @@ public class CustomTableApi extends BaseApi {
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    public void enableDisable(CustomTableDataDto dto, boolean enable) throws MeveoApiException, BusinessException {
+    @Override
+	public void enableDisable(CustomTableDataDto dto, boolean enable) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {
             missingParameters.add("customTableCode");
@@ -327,4 +338,5 @@ public class CustomTableApi extends BaseApi {
             customTableService.disable(SQLStorageConfiguration.getDbTablename(cet), ids);
         }
     }
+    
 }

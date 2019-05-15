@@ -37,18 +37,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ejb.TransactionManagement;
 import javax.inject.Inject;
-import javax.transaction.NotSupportedException;
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 
 import org.apache.commons.collections4.MapUtils;
 import org.elasticsearch.action.search.SearchResponse;
@@ -66,6 +61,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -109,6 +106,29 @@ public class CustomTableService extends NativePersistenceService {
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
+    public String createRelation(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    	if(crt == null) {
+    		throw new IllegalArgumentException("Custom relationship template must be provided");
+    	}
+    	
+    	if(startUuid == null) {
+    		throw new IllegalArgumentException("Start entity uuid must be provided");
+    	}
+    	
+    	if(endUuid == null) {
+    		throw new IllegalArgumentException("End entity uuid must be provided");
+    	}
+    	
+    	Map<String, Object> values = new HashMap<>();
+    	values.put(SQLStorageConfiguration.getDbTablename(crt.getStartNode()), startUuid);
+    	values.put(SQLStorageConfiguration.getDbTablename(crt.getEndNode()), endUuid);
+    	if(fieldValues != null) {
+    		values.putAll(fieldValues);
+    	}
+    	
+    	return super.create(SQLStorageConfiguration.getDbTablename(crt), values, false);
+
+    }
 
     @Override
     public String create(String tableName, Map<String, Object> values) throws BusinessException {
@@ -518,7 +538,7 @@ public class CustomTableService extends NativePersistenceService {
 		    Object value = entry.getValue();
 		    final Optional<CustomFieldTemplate> templateOptional = fields.stream().filter(f -> f.getDbFieldname().equals(key)).findFirst();
 		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
-		    	String entityRefTableName = SQLStorageConfiguration.getDbTablename(templateOptional.get().getEntityClazzCetCode());
+		    	String entityRefTableName = SQLStorageConfiguration.getCetDbTablename(templateOptional.get().getEntityClazzCetCode());
 		        // Try to retrieve record first
 		        String uuid = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
 		                .computeIfAbsent(
@@ -544,22 +564,16 @@ public class CustomTableService extends NativePersistenceService {
     /**
      * Import data into custom table
      * 
-     * @param customEntityTemplate Custom table definition
+     * @param customModelObject Custom table definition
      * @param values A list of records to import. Each record is a map of values with field name as a map key and field value as a value.
      * @param append True if data should be appended to the existing data
      * @return Number of records imported
      * @throws BusinessException General business exception
      */
-    @TransactionAttribute(TransactionAttributeType.NEVER)
-    public int importData(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values, boolean append) throws BusinessException {
-
-        final String tableName = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+    public int importData(String tableName, CustomModelObject customModelObject, List<Map<String, Object>> values, boolean append) throws BusinessException {
 
         // Custom table fields. Fields will be sorted by their GUI 'field' position.
-        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
-        if (cfts == null || cfts.isEmpty()) {
-            throw new ValidationException("No fields are defined for custom table " + tableName, "customTable.noFields");
-        }
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customModelObject.getAppliesTo());
         List<CustomFieldTemplate> fields = new ArrayList<>(cfts.values());
 
         fields.sort((cft1, cft2) -> {
@@ -610,7 +624,7 @@ public class CustomTableService extends NativePersistenceService {
 
             // Repopulate ES index
             if (!updateESImediately) {
-                elasticClient.populateAll(currentUser, CustomTableRecord.class, customEntityTemplate.getCode());
+                elasticClient.populateAll(currentUser, CustomTableRecord.class, customModelObject.getCode());
             }
 
         } catch (Exception e) {
@@ -930,7 +944,7 @@ public class CustomTableService extends NativePersistenceService {
 				if(property != null) {
 					// Fetch entity reference
             		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-            			String propertyTableName = SQLStorageConfiguration.getDbTablename(cft.getEntityClazzCetCode());
+            			String propertyTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
             			property = customTableService.findById(propertyTableName, (String) property);
             		}
             		

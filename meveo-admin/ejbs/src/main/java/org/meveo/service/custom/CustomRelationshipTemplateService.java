@@ -39,6 +39,8 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -49,6 +51,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
 
     @Inject
     private PermissionService permissionService;
@@ -70,6 +75,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         try {
             permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+            if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            	customTableCreatorService.createCrtTable(cet);
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -78,13 +86,23 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
         CustomRelationshipTemplate cetUpdated = super.update(cet);
-        try {
-            permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-            permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        
+        permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
+        permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+        
+        // SQL Storage logic
+        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	boolean created = customTableCreatorService.createCrtTable(cet);
+        	// Create the custom fields for the table if the table has been created
+        	if(created) {
+        		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values()) {
+    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+        		}
+        	}
+        }else {
+        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
-
+            
         return cetUpdated;
     }
 
@@ -94,6 +112,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
+        }
+        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
         super.remove(id);
     }
