@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerProvider;
@@ -51,6 +52,7 @@ import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.MigrationFailedException;
 import liquibase.exception.ValidationFailedException;
 import liquibase.precondition.core.NotPrecondition;
 import liquibase.precondition.core.PreconditionContainer;
@@ -142,6 +144,7 @@ public class CustomTableCreatorService implements Serializable {
         if(crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
 	        AddForeignKeyConstraintChange sourceFkChange = new AddForeignKeyConstraintChange();
 	        sourceFkChange.setBaseColumnNames(sourceColumn.getName());
+	        sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
 	        sourceFkChange.setReferencedColumnNames(UUID);
 	        sourceFkChange.setBaseTableName(tableName);
 	        sourceFkChange.setReferencedTableName(sourceColumn.getName());
@@ -151,12 +154,15 @@ public class CustomTableCreatorService implements Serializable {
         // Target foreign key if target cet is a custom table
         if(crt.getEndNode().getSqlStorageConfiguration() != null && crt.getEndNode().getSqlStorageConfiguration().isStoreAsTable()) {
 	        AddForeignKeyConstraintChange targetFkChange = new AddForeignKeyConstraintChange();
+	        targetFkChange.setConstraintName(targetColumn.getName() + "_fk");
 	        targetFkChange.setBaseColumnNames(targetColumn.getName());
 	        targetFkChange.setReferencedColumnNames(UUID);
 	        targetFkChange.setBaseTableName(tableName);
 	        targetFkChange.setReferencedTableName(targetColumn.getName());
 	        changeset.addChange(targetFkChange);
         }
+        
+        dbLog.addChangeSet(changeset);
         
         EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
 
@@ -174,8 +180,12 @@ public class CustomTableCreatorService implements Serializable {
                 Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts(), new LabelExpression());
 
-            } catch(ValidationFailedException e) {
-            	created.set(false);
+            } catch(MigrationFailedException e) {
+            	if(e.getMessage().toLowerCase().contains("precondition")) {
+                	created.set(false);
+            	}else {
+            		throw new HibernateException(e);
+            	}
             } catch (Exception e) {
                 log.error("Failed to create a custom table {}", tableName, e);
                 throw new SQLException(e);
@@ -579,8 +589,10 @@ public class CustomTableCreatorService implements Serializable {
                 Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts(), new LabelExpression());
 
-            } catch(ValidationFailedException ignored) {
-            	
+            } catch(MigrationFailedException e) {
+            	if(!e.getMessage().toLowerCase().contains("precondition")) {
+            		throw new HibernateException(e);
+            	}
             } catch (Exception e) {
                 log.error("Failed to drop a custom table {}", dbTableName, e);
                 throw new SQLException(e);

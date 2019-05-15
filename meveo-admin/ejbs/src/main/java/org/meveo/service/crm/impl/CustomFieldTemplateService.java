@@ -244,14 +244,27 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
+        
+		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
-        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-        if (cet == null) {
-            log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.updateField(SQLStorageConfiguration.getCetDbTablename(cet.getCode()), cft);
-        }
+		// CF applies to a CET
+		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+			if(cet == null) {
+				log.warn("Custom entity template {} was not found", entityCode);
+			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			}
+			
+		// CF Applies to a CRT
+		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+			if(crt == null) {
+				log.warn("Custom relationship template {} was not found", entityCode);
+			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(crt), cft);
+			}
+		}
 
         return cftUpdated;
     }
@@ -260,14 +273,28 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public void remove(CustomFieldTemplate cft) throws BusinessException {
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
+        
+    	String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
-        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-        CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-        if (cet == null) {
-            log.warn("Custom entity template {} was not found", entityCode);
-        } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeField(SQLStorageConfiguration.getCetDbTablename(cet.getCode()), cft);
-        }
+		// CF applies to a CET
+		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+			if(cet == null) {
+				log.warn("Custom entity template {} was not found", entityCode);
+			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			}
+			
+		// CF Applies to a CRT
+		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+			if(crt == null) {
+				log.warn("Custom relationship template {} was not found", entityCode);
+			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
+			}
+		}
+
     }
 
     @Override
