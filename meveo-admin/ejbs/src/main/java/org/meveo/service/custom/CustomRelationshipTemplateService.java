@@ -86,13 +86,23 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
         CustomRelationshipTemplate cetUpdated = super.update(cet);
-        try {
-            permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-            permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        
+        permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
+        permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+        
+        // SQL Storage logic
+        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	boolean created = customTableCreatorService.createCrtTable(cet);
+        	// Create the custom fields for the table if the table has been created
+        	if(created) {
+        		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values()) {
+    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+        		}
+        	}
+        }else {
+        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
-
+            
         return cetUpdated;
     }
 

@@ -3,6 +3,7 @@ package org.meveo.service.custom;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
@@ -45,15 +46,19 @@ import liquibase.change.core.DropNotNullConstraintChange;
 import liquibase.change.core.DropSequenceChange;
 import liquibase.change.core.DropTableChange;
 import liquibase.change.core.ModifyDataTypeChange;
-import liquibase.change.core.RawSQLChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.ValidationFailedException;
+import liquibase.precondition.core.NotPrecondition;
+import liquibase.precondition.core.PreconditionContainer;
+import liquibase.precondition.core.PreconditionContainer.ErrorOption;
+import liquibase.precondition.core.PreconditionContainer.FailOption;
+import liquibase.precondition.core.TableExistsPrecondition;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.statement.DatabaseFunction;
-import liquibase.statement.PrimaryKeyConstraint;
 
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -85,7 +90,7 @@ public class CustomTableCreatorService implements Serializable {
      * @param crt {@link CustomRelationshipTemplate} to create table for
      * @throws BusinessException if the {@link CustomRelationshipTemplate} is not configured to be stored in a custom table
      */
-    public void createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+    public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
     	if(crt.getAvailableStorages() == null || !crt.getAvailableStorages().contains(DBStorageType.SQL)) {
     		throw new BusinessException("CustomRelationshipTemplate " + crt.getCode() + " is not configured to be stored in a custom table");
     	}
@@ -94,7 +99,21 @@ public class CustomTableCreatorService implements Serializable {
     	
     	DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
     	
-        ChangeSet changeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql, mysql", dbLog);
+        ChangeSet changeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+        
+        // Make sure table does not exists before creating it
+        TableExistsPrecondition tableExistsPrecondition = new TableExistsPrecondition();
+        tableExistsPrecondition.setTableName(tableName);
+        
+        NotPrecondition notPrecondition = new NotPrecondition();
+        notPrecondition.addNestedPrecondition(tableExistsPrecondition);
+        
+        PreconditionContainer precondition = new PreconditionContainer();
+        precondition.setOnError(ErrorOption.HALT);
+        precondition.setOnFail(FailOption.HALT);
+        precondition.addNestedPrecondition(notPrecondition);
+        
+        changeset.setPreconditions(precondition);
         
         // Source column
         ColumnConfig sourceColumn = new ColumnConfig();
@@ -139,6 +158,32 @@ public class CustomTableCreatorService implements Serializable {
 	        changeset.addChange(targetFkChange);
         }
         
+        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+
+        Session hibernateSession = em.unwrap(Session.class);
+        
+        AtomicBoolean created = new AtomicBoolean();
+        created.set(true);
+
+        hibernateSession.doWork(connection -> {
+
+            Database database;
+            try {
+                database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+
+                Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+                liquibase.update(new Contexts(), new LabelExpression());
+
+            } catch(ValidationFailedException e) {
+            	created.set(false);
+            } catch (Exception e) {
+                log.error("Failed to create a custom table {}", tableName, e);
+                throw new SQLException(e);
+            }
+
+        });
+        
+        return created.get();
     }
 
     /**
@@ -491,6 +536,17 @@ public class CustomTableCreatorService implements Serializable {
         // Remove table changeset
         ChangeSet changeSet = new ChangeSet(dbTableName + "_CT_R_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
         changeSet.setFailOnError(false);
+        
+        // Make sure table exists before dropping it
+        TableExistsPrecondition tableExistsPrecondition = new TableExistsPrecondition();
+        tableExistsPrecondition.setTableName(dbTableName);
+        
+        PreconditionContainer precondition = new PreconditionContainer();
+        precondition.setOnError(ErrorOption.HALT);
+        precondition.setOnFail(FailOption.HALT);
+        precondition.addNestedPrecondition(tableExistsPrecondition);
+        
+        changeSet.setPreconditions(precondition);
 
         DropTableChange dropTableChange = new DropTableChange();
         dropTableChange.setTableName(dbTableName);
@@ -523,6 +579,8 @@ public class CustomTableCreatorService implements Serializable {
                 Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts(), new LabelExpression());
 
+            } catch(ValidationFailedException ignored) {
+            	
             } catch (Exception e) {
                 log.error("Failed to drop a custom table {}", dbTableName, e);
                 throw new SQLException(e);
