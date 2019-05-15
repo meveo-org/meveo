@@ -14,6 +14,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 
 /**
  * @author Rachid AITYAAZZA
@@ -55,6 +56,13 @@ public class CustomRelationshipTemplateDto extends BaseDto {
 
     @XmlAttribute()
     private List<String> endNodeKeys = new ArrayList<>();
+    
+    /**
+     * Storage where the custom relationship instances should be stored.
+     * If SQL is included, will create a dedicated table
+     */
+    @XmlAttribute()
+    private List<DBStorageType> availableStorages = new ArrayList<>();
 
     /**
      * Name of the field that will be added to the source entity to refer the most recent target entity
@@ -91,7 +99,15 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         return graphQlTypeName;
     }
 
-    public void setGraphQlTypeName(String graphQlTypeName) {
+    public List<DBStorageType> getAvailableStorages() {
+		return availableStorages;
+	}
+
+	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+		this.availableStorages = availableStorages;
+	}
+
+	public void setGraphQlTypeName(String graphQlTypeName) {
         this.graphQlTypeName = graphQlTypeName;
     }
 
@@ -248,6 +264,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
             }
             dto.setFields(fields);
         }
+        dto.setAvailableStorages(cet.getAvailableStorages());
 
 
         return dto;
@@ -275,6 +292,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setTargetNamePlural(dto.getTargetNamePlural());
         crt.setTargetNameSingular(dto.getTargetNameSingular());
         crt.setGraphqlTypeName(dto.getGraphQlTypeName());
+        crt.setAvailableStorages(dto.getAvailableStorages());
         return crt;
     }
 
