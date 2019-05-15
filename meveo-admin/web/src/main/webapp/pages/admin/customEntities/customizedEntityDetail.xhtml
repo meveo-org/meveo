@@ -60,25 +60,32 @@
 				</h:panelGrid>
 				
 				<!--  Advanced options -->
-				<h:panelGrid columns = "2" width="100%">
-				
+				<h:panelGrid columns = "2" width="100%" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
 	                <!-- Inheritance -->
-	                <h:panelGroup>
-						<hftl:decorateFormField field="superTemplate" componentWidth="50" label="#{messages['BusinessEntity.superTemplate']}">
-							<p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}" style="width:90%;">
-								<f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="#{null}" noSelectionOption="true" size="100"/>
-								<f:selectItems value="#{customEntityTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" size="100"/>
-								<hftl:objectConverter />
-							</p:selectOneMenu>
-						</hftl:decorateFormField>
-					</h:panelGroup>
-					
-	                <!-- Pre-persist script -->
-	                <h:panelGroup>
-						<hftl:decorateFormField field="prePersistScript" componentWidth="50" label="#{messages['BusinessEntity.prepersitScript']}">
-							<p:autoComplete value="#{customEntityTemplateBean.entity.prePersistScript}" var="script" size = "85" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
-								<hftl:objectConverter />
-			 				</p:autoComplete>
+                    <h:panelGrid columns = "1">
+                        <h:panelGroup>
+                            <hftl:decorateFormField field="superTemplate" componentWidth="50" label="#{messages['BusinessEntity.superTemplate']}">
+                                <p:selectOneMenu value="#{customEntityTemplateBean.entity.superTemplate}" style="width:90%;">
+                                    <f:selectItem itemLabel="#{messages['customizedRelationships.selectCETEntity']}" itemValue="#{null}" noSelectionOption="true" size="100"/>
+                                    <f:selectItems value="#{customEntityTemplateBean.customEntityTemplates}" var="cetEntity" itemLabel="#{cetEntity.name}" itemValue="#{cetEntity}" size="100"/>
+                                    <hftl:objectConverter />
+                                </p:selectOneMenu>
+                            </hftl:decorateFormField>
+                        </h:panelGroup>
+                        <!-- Pre-persist script -->
+                        <h:panelGroup>
+                            <hftl:decorateFormField field="prePersistScript" componentWidth="50" label="#{messages['BusinessEntity.prepersitScript']}">
+                                <p:autoComplete value="#{customEntityTemplateBean.entity.prePersistScript}" var="script" size = "85" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
+                                    <hftl:objectConverter />
+                                </p:autoComplete>
+                            </hftl:decorateFormField>
+                        </h:panelGroup>
+                    </h:panelGrid>
+					<h:panelGroup id="availableStorages">
+						<hftl:decorateFormField componentWidth="100%" label="#{messages['customEntityTemplate.availableStorages']}">
+							<p:pickList id="pickList" value="#{customEntityTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                                <o:converter converterId="omnifaces.ListConverter" list="#{customEntityTemplateBean.storageTypesList}" />
+							</p:pickList>
 						</hftl:decorateFormField>
 					</h:panelGroup>
 				</h:panelGrid>
