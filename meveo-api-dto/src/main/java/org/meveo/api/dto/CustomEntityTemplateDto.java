@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.persistence.DBStorageType;
 
 
 /**
@@ -87,6 +88,20 @@ public class CustomEntityTemplateDto extends BaseDto {
      */
     @XmlElement()
     private List<GraphQLQueryField> graphqlQueryFields;
+
+    /**
+     * Storage where cfts can be stored
+     */
+    @XmlElement()
+    private List<DBStorageType> availableStorages;
+
+    public List<DBStorageType> getAvailableStorages() {
+        return availableStorages;
+    }
+
+    public void setAvailableStorages(List<DBStorageType> availableStorages) {
+        this.availableStorages = availableStorages;
+    }
 
     /**
      * Instantiates a new custom entity template dto.

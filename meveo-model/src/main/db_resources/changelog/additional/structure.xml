@@ -628,13 +628,31 @@
         </addColumn>
     </changeSet>
     
-    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+    <changeSet id="endpoint_serialize content_type" author="Clément Bareth">
         <addColumn tableName="service_endpoint">
             <column name="content_type" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="#3652-Available_storages" author="Clément Bareth">
+        <addColumn tableName="cust_cet">
+            <column name="available_storages" type="${type.json}"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add_unique_constraint_meveo_function_code" author="Clément Bareth" failOnError="false">
         <addUniqueConstraint tableName="meveo_function" columnNames="code" constraintName="meveo_function_unique_code"/>
     </changeSet>
+
+    <changeSet id="#3655-Storages" author="Clément Bareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="storages" type="${type.json}"/>
+        </addColumn>
+    </changeSet>
+    
+    <changeSet id="technical_service_drop_notnull_consraint_crt_cet" author="Clément Bareth">
+        <dropNotNullConstraint columnName="cet_id" tableName="technical_services_description"/>
+        <dropNotNullConstraint columnName="crt_id" tableName="technical_services_description"/>
+    </changeSet>
+
 </databaseChangeLog>
