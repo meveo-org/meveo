@@ -99,15 +99,45 @@ public class CustomTableRelationService extends NativePersistenceService {
 					.setParameter("startColumn", startUuid)
 					.setParameter("endColumn", endUuid);
 			
-			// Set update parameters
-			for (Entry<String, Object> field : fieldValues.entrySet()) {
-				updateQuery.setParameter(field.getKey(), field.getValue());
-			}
+			setQueryParameterFields(fieldValues, updateQuery);
 			
 			updateQuery.executeUpdate();
-				
 		}
 
+	}
+
+	/**
+	 * Check if a relation exists using its source uuid, target uuid and field values.
+	 * <br>TODO: Current implementation states that all the CRTs are unique. Handle cases where they are not.
+	 * <br>TODO: We currently don't take into account the uniqueness of custom fields and we use the start and end uuids to check row
+	 * 
+	 * @param crt         CustomRelationshipTemplate associated to the table where to search
+	 * @param startUuid   First part of the table's primary key
+	 * @param endUuid     Second part of the table's primary key
+	 * @param fieldValues Field values to be taken into account during the search
+	 * @return {@code true} if the record exists in the table
+	 */
+	public boolean exists(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
+		checkParameters(crt, startUuid, endUuid);
+		
+		String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
+		String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
+		String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		
+		StringBuilder queryBuilder = new StringBuilder("SELECT EXISTS (\n")
+				.append("SELECT 1 \n")
+				.append("FROM ").append(dbTablename).append("\n")
+				.append("WHERE ").append(startColumn).append(" = :startColumn \n")
+				.append("AND ").append(endColumn).append(" = :endColumn \n");
+		
+		queryBuilder.append(");");
+		
+		Query existQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
+			.setParameter("startColumn", startUuid)
+			.setParameter("endColumn", endUuid);
+		
+		return (boolean) existQuery.getSingleResult();
+		
 	}
 	
 	/**
@@ -127,6 +157,18 @@ public class CustomTableRelationService extends NativePersistenceService {
     	if(endUuid == null) {
     		throw new IllegalArgumentException("End entity uuid must be provided");
     	}
+	}
+	
+	/**
+	 * Set the values of the parameters corresponding to fields in the given query
+	 * 
+	 * @param fieldValues Key-Value map of the fields used in the query
+	 * @param query       Request whose parameters has to be set
+	 */
+	private void setQueryParameterFields(Map<String, Object> fieldValues, Query query) {
+		for (Entry<String, Object> field : fieldValues.entrySet()) {
+			query.setParameter(field.getKey(), field.getValue());
+		}
 	}
 
 }

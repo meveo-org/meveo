@@ -93,11 +93,20 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
         }
 	}
 
+	/**
+	 * Insert or update records in a custom table for a given relationship
+	 */
 	@Override
 	public void createOrUpdate(CustomTableDataRelationDto dto) throws MeveoApiException, BusinessException {
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
-    	CustomTableDataDto newDto = turnIntoRecordDto(crt, dto);
-    	customTableApi.createOrUpdate(newDto);
+		
+        for(CustomTableRelationRecordDto record : dto.getRecords()) {
+        	if(customTableRelationService.exists(crt, record.getStartUuid(), record.getEndUuid(), record.getValues())) {
+        		customTableRelationService.updateRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	}else {
+        		customTableRelationService.createRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	}
+        }
 	}
 
 	@Override
@@ -112,13 +121,6 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
     	customTableApi.remove(newDto);
 	}
 
-	@Override
-	public void enableDisable(CustomTableDataRelationDto dto, boolean enable) throws MeveoApiException, BusinessException {
-		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
-    	CustomTableDataDto newDto = turnIntoRecordDto(crt, dto);
-    	customTableApi.enableDisable(newDto, enable);
-	}
-	
 	private CustomTableDataDto turnIntoRecordDto(CustomRelationshipTemplate crt, CustomTableDataRelationDto dto) {
 		
     	CustomEntityTemplate startCet = crt.getStartNode();

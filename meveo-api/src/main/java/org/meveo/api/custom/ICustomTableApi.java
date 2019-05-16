@@ -60,14 +60,4 @@ public interface ICustomTableApi<T extends CustomTableDataDto> {
 	 */
 	void remove(T dto) throws MeveoApiException, BusinessException;
 
-	/**
-	 * Enable or disable records, identified by 'id' value, in a custom table. Applies only to tables that contain field 'disabled'.
-	 * 
-	 * @param dto Values to enable or disable. Should contain only 'id' field values
-	 * @param enable True to enable records, False to disable records.
-	 * @throws MeveoApiException API exception
-	 * @throws BusinessException General exception
-	 */
-	void enableDisable(T dto, boolean enable) throws MeveoApiException, BusinessException;
-
 }
