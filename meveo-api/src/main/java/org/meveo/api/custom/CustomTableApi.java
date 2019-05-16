@@ -298,7 +298,6 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
      * @throws MeveoApiException API exception
      * @throws BusinessException General exception
      */
-    @Override
 	public void enableDisable(CustomTableDataDto dto, boolean enable) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCustomTableCode())) {

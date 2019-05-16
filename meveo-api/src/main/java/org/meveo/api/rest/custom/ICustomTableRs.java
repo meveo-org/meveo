@@ -15,6 +15,7 @@ import org.meveo.api.dto.custom.CustomTableDataResponseDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.PATCH;
 
 /**
  * Rest API for custom table for relation data management
@@ -41,7 +42,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      * @param dto Custom table data. 'id' field is used to identify an existing record.
      * @return Request processing status
      */
-    @PUT
+    @PATCH
     @Path("/")
     void update(T dto) throws MeveoApiException, BusinessException;
 
@@ -72,27 +73,8 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      * @param dto Custom table data. 'id' field is used to identify an existing record. Presence of 'id' field will be treated as update operation.
      * @return Request processing status
      */
-    @POST
-    @Path("/createOrUpdate")
+    @PUT
+    @Path("/")
     void createOrUpdate(T dto) throws MeveoApiException, BusinessException;
 
-    /**
-     * Mark records as enabled in a custom table. Applies only to those custom tables that contain a field 'disabled'
-     * 
-     * @param dto Custom table data. 'id' field is used to identify an existing record.
-     * @return Request processing status
-     */
-    @POST
-    @Path("/enable")
-    void enable(T dto) throws MeveoApiException, BusinessException;
-
-    /**
-     * Mark records as disabled in a custom table. Applies only to those custom tables that contain a field 'disabled'
-     * 
-     * @param dto Custom table data. 'id' field is used to identify an existing record.
-     * @return Request processing status
-     */
-    @POST
-    @Path("/enable")
-    void disable(T dto) throws MeveoApiException, BusinessException;
 }
