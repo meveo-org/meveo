@@ -20,7 +20,7 @@ public class Neo4JRequests {
             .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
             .append("WITH startNode, endNode \n")
             .append("MERGE (startNode)-[relationship :${relationshipLabel} ${fields}]->(endNode) \n")
-            .append("ON CREATE SET relationship." + CREATION_DATE + " = timestamp() \n")
+            .append("ON CREATE SET relationship." + CREATION_DATE + " = timestamp(), relationship.meveo_uuid = apoc.create.uuid() \n")
             .append("ON MATCH SET relationship." + INTERNAL_UPDATE_DATE + " = timestamp() \n")
             .append("RETURN relationship");
 
@@ -39,7 +39,7 @@ public class Neo4JRequests {
             .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys}) \n")
             .append(" MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
             .append(" ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, ${endAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, relationship." + INTERNAL_UPDATE_DATE + " = ${updateDate} \n")
-            .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate} \n");
+            .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate} , relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer crtStatementByNodeIds = new StringBuffer()
             .append("MATCH (${startAlias}:${startNode}) \n")
@@ -50,7 +50,7 @@ public class Neo4JRequests {
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
             .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
-            .append("ON CREATE SET relationship." + CREATION_DATE + " = $updateDate \n");
+            .append("ON CREATE SET relationship." + CREATION_DATE + " = $updateDate, relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer uniqueCrtStatementByNodeIds = new StringBuffer()
             .append("MATCH (${startAlias}:${startNode}) \n")
@@ -61,15 +61,15 @@ public class Neo4JRequests {
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType}]->(${endAlias}) \n")
             .append("ON MATCH SET relationship += ${fields}, ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
-            .append("ON CREATE SET relationship = ${fields}, relationship." + CREATION_DATE + " = $updateDate \n");
+            .append("ON CREATE SET relationship = ${fields}, relationship." + CREATION_DATE + " = $updateDate, relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer mergeCetStatement = new StringBuffer("MERGE (n:${cetCode}${fieldKeys}) \n")
-            .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp() \n")
+            .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp(), n.meveo_uuid = apoc.create.uuid() \n")
             .append("ON MATCH SET n += ${updatableFields}, n." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static StringBuffer createCetStatement = new StringBuffer()
             .append("CREATE (n:${cetCode}${fields}) \n")
-            .append("SET n." + CREATION_DATE + " = timestamp() \n");
+            .append("SET n." + CREATION_DATE + " = timestamp(), n..meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
             .append("SET ${alias} ${labels} \n");
@@ -106,7 +106,7 @@ public class Neo4JRequests {
     public final static String END_NODE_ALIAS = "end";
 
     public final static StringBuffer createSourceNodeStatement = new StringBuffer("MERGE (source:Source { id: ${id} }) \n")
-            .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType} \n")
+            .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType}, meveo_uuid = apoc.create.uuid() \n")
             .append("WITH source \n")
             .append("MERGE (node)-[:HAS_SOURCE]->(source) \n")
             .append("WHERE ID(node) = ${nodeId} \n")
