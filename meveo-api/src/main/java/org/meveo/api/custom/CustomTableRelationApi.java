@@ -114,30 +114,15 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
 		return customTableApi.list(customTableCode, pagingAndFiltering);
 	}
 
+	/**
+	 * Remove specified records from a table associated to a {@link CustomRelationshipTemplate}
+	 */
 	@Override
 	public void remove(CustomTableDataRelationDto dto) throws MeveoApiException, BusinessException {
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
-    	CustomTableDataDto newDto = turnIntoRecordDto(crt, dto);
-    	customTableApi.remove(newDto);
-	}
-
-	private CustomTableDataDto turnIntoRecordDto(CustomRelationshipTemplate crt, CustomTableDataRelationDto dto) {
 		
-    	CustomEntityTemplate startCet = crt.getStartNode();
-    	CustomEntityTemplate endCet = crt.getEndNode();
-    	
-    	// Include the start end end uuids into the records' values
-    	List<CustomTableRecordDto> values = dto.getRecords()
-    			.stream()
-    			.map(r -> {
-    				r.getValues().put(SQLStorageConfiguration.getDbTablename(startCet), r.getStartUuid());
-    				r.getValues().put(SQLStorageConfiguration.getDbTablename(endCet), r.getEndUuid());
-    				return r;
-    			}).collect(Collectors.toList());
-    	
-    	dto.setValues(values);
-    	
-    	CustomTableDataDto newDto = (CustomTableDataDto) dto;
-		return newDto;
+        for(CustomTableRelationRecordDto record : dto.getRecords()) {
+    		customTableRelationService.removeRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        }
 	}
 }

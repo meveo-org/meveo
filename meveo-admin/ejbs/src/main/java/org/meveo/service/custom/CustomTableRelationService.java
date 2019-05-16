@@ -105,6 +105,35 @@ public class CustomTableRelationService extends NativePersistenceService {
 		}
 
 	}
+	
+	/**
+	 * Remove a relation instance using its source uuid, target uuid and field values.
+	 * <br>TODO: Current implementation states that all the CRTs are unique. Handle cases where they are not.
+	 * <br>TODO: We currently don't take into account the uniqueness of custom fields and we use the start and end uuids to check row
+	 * 
+	 * @param crt         CustomRelationshipTemplate associated to the table where to search
+	 * @param startUuid   First part of the table's primary key
+	 * @param endUuid     Second part of the table's primary key
+	 * @param fieldValues Field values to be taken into account during the search
+	 */
+	public void removeRelation(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
+		checkParameters(crt, startUuid, endUuid);
+		
+		String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
+		String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
+		String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		
+		StringBuilder queryBuilder = new StringBuilder("DELETE \n")
+				.append("FROM ").append(dbTablename).append("\n")
+				.append("WHERE ").append(startColumn).append(" = :startColumn \n")
+				.append("AND ").append(endColumn).append(" = :endColumn \n");
+		
+		Query deleteQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
+			.setParameter("startColumn", startUuid)
+			.setParameter("endColumn", endUuid);
+		
+		deleteQuery.executeUpdate();
+	}
 
 	/**
 	 * Check if a relation exists using its source uuid, target uuid and field values.
