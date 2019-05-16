@@ -1,6 +1,5 @@
 package org.meveo.api.rest.custom.impl;
 
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
@@ -46,17 +45,8 @@ public abstract class AbstractCustomTableRsImpl <T extends CustomTableDataDto> i
         customTableApi.createOrUpdate(dto);
     }
 
-    public void enable(T dto) throws MeveoApiException, BusinessException {
-        customTableApi.enableDisable(dto, true);
-    }
-
-    public void disable(T dto) throws MeveoApiException, BusinessException {
-        customTableApi.enableDisable(dto, false);
-    }
-    
 	@Override
 	public ActionStatus index() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

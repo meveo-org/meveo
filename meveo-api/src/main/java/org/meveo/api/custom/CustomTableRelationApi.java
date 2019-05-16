@@ -16,8 +16,9 @@
 
 package org.meveo.api.custom;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
@@ -25,28 +26,33 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.BaseApi;
 import org.meveo.api.dto.custom.CustomTableDataDto;
 import org.meveo.api.dto.custom.CustomTableDataRelationDto;
 import org.meveo.api.dto.custom.CustomTableDataResponseDto;
-import org.meveo.api.dto.custom.CustomTableRecordDto;
 import org.meveo.api.dto.custom.CustomTableRelationRecordDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableRelationService;
+import org.meveo.service.custom.CustomTableService;
+import org.primefaces.model.SortOrder;
 
 /**
  * @author Clément Bareth
  * @lastModifiedVersion 6.0.15
  **/
 @Stateless
-public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRelationDto> {
+public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<CustomTableDataRelationDto> {
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
@@ -56,6 +62,12 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
     
     @Inject
     private CustomTableRelationService customTableRelationService;
+    
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private CustomTableService customTableService;
 	
     /**
      * Create new records in a custom table for a given relationship
@@ -111,7 +123,54 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
 
 	@Override
 	public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException {
-		return customTableApi.list(customTableCode, pagingAndFiltering);
+		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(customTableCode);
+		
+        String startUuid = (String) pagingAndFiltering.getFilters().remove("startUuid");
+        String endUuid = (String) pagingAndFiltering.getFilters().remove("endUuid");
+        
+        Set<String> filtersKeys = new HashSet<>(pagingAndFiltering.getFilters().keySet());
+        for(String filterKey : filtersKeys) {
+        	Object value = pagingAndFiltering.getFilters().remove(filterKey);
+        	String newKey = BaseEntity.cleanUpAndLowercaseCodeOrId(filterKey);
+        	pagingAndFiltering.getFilters().put(newKey, value);
+        }
+		
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
+
+        pagingAndFiltering.setFilters(customTableService.convertValue(pagingAndFiltering.getFilters(), cfts, true, null));
+        
+
+        // Replace the "startUuid" reference with source field
+        if(startUuid != null) {
+			String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
+        	pagingAndFiltering.getFilters().put(startColumn, startUuid);
+        	
+        }
+        
+        // Replace the "endUuid" reference with target field
+        if(endUuid != null) {
+			String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+        	pagingAndFiltering.getFilters().put(endColumn, endUuid);
+        	
+        }
+        
+        pagingAndFiltering.getFilters().put("$FILTER", null);
+
+        // No sort by field
+        PaginationConfiguration paginationConfig = toPaginationConfiguration(null, SortOrder.ASCENDING, null, pagingAndFiltering, null);
+        
+        String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
+		long totalCount = customTableService.count(dbTablename, paginationConfig);
+
+        CustomTableDataResponseDto result = new CustomTableDataResponseDto();
+
+        result.setPaging(pagingAndFiltering);
+        result.getPaging().setTotalNumberOfRecords((int) totalCount);
+        result.getCustomTableData().setCustomTableCode(customTableCode);
+
+        result.getCustomTableData().setValuesFromListofMap(customTableService.list(dbTablename, paginationConfig));
+
+        return result;
 	}
 
 	/**
