@@ -16,9 +16,7 @@
 
 package org.meveo.api.custom;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -41,10 +39,9 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
-import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.custom.CustomTableRelationService;
 
 /**
- * @author Andrius Karpavicius
  * @author Clément Bareth
  * @lastModifiedVersion 6.0.15
  **/
@@ -58,10 +55,10 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
     private ICustomTableApi<CustomTableDataDto> customTableApi;
     
     @Inject
-    private CustomTableService customTableService;
+    private CustomTableRelationService customTableRelationService;
 	
     /**
-     * Create new records in a custom table for a given relationship with an option of deleting existing data first
+     * Create new records in a custom table for a given relationship
      * 
      * @param dto Values to add
      * @throws MeveoApiException API exception
@@ -76,15 +73,24 @@ public class CustomTableRelationApi implements ICustomTableApi<CustomTableDataRe
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
 
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
-        	customTableService.createRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	customTableRelationService.createRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
     }
     
+    /**
+     * Update records in a custom table for a given relationship
+     * 
+     * @param dto Values to update
+     * @throws MeveoApiException API exception
+     * @throws BusinessException General exception
+     */
 	@Override
 	public void update(CustomTableDataRelationDto dto) throws MeveoApiException, BusinessException {
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
-    	CustomTableDataDto newDto = turnIntoRecordDto(crt, dto);
-    	customTableApi.update(newDto);
+		
+        for(CustomTableRelationRecordDto record : dto.getRecords()) {
+        	customTableRelationService.updateRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        }
 	}
 
 	@Override

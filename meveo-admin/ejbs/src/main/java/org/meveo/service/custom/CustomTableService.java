@@ -106,30 +106,6 @@ public class CustomTableService extends NativePersistenceService {
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
-    public String createRelation(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
-    	if(crt == null) {
-    		throw new IllegalArgumentException("Custom relationship template must be provided");
-    	}
-    	
-    	if(startUuid == null) {
-    		throw new IllegalArgumentException("Start entity uuid must be provided");
-    	}
-    	
-    	if(endUuid == null) {
-    		throw new IllegalArgumentException("End entity uuid must be provided");
-    	}
-    	
-    	Map<String, Object> values = new HashMap<>();
-    	values.put(SQLStorageConfiguration.getDbTablename(crt.getStartNode()), startUuid);
-    	values.put(SQLStorageConfiguration.getDbTablename(crt.getEndNode()), endUuid);
-    	if(fieldValues != null) {
-    		values.putAll(fieldValues);
-    	}
-    	
-    	return super.create(SQLStorageConfiguration.getDbTablename(crt), values, false);
-
-    }
-
     @Override
     public String create(String tableName, Map<String, Object> values) throws BusinessException {
 
