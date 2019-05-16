@@ -44,6 +44,10 @@
 	<page view-id=".+\/admin\/properties\/properties" >
 		<constraint>currentUser.hasRole('superAdminManagement')</constraint>
 	</page>
+
+    <page view-id=".+\/admin\/mailer\/mailerConfiguration" >
+        <constraint>currentUser.hasRole('superAdminManagement')</constraint>
+    </page>
 	
 	<page view-id=".+\/reporting\/cache\/.*" >
 		<constraint>currentUser.hasRole('administrationManagement')</constraint>
