@@ -9,7 +9,6 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:s="http://jboss.org/seam/faces">
 
-
 	<o:importConstants
 		type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
 	<o:importConstants
@@ -122,7 +121,7 @@
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="addFieldInTabBtn" icon="ui-icon-plus"
 							oncomplete="PF('cftDialog').show()"
-							actionListener="#{customFieldTemplateBean.newEntity()}"
+							actionListener="#{customFieldTemplateBean.newEntity(customEntityTemplateBean.cetPrefix)}"
 							update=":cftForm">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.backViewSave}"
@@ -534,7 +533,7 @@
 					<h:panelGroup>
 						<hftl:formField label="#{messages['BusinessEntity.code']}"
 							field="code" required="true" allowEdit="false"
-							componentWidth="100" size="56" />
+							componentWidth="100" size="56"/>
 						<hftl:formField
 							label="#{messages['customFieldTemplate.description']}"
 							field="description" required="true" size="56" maxlength="100"
@@ -779,58 +778,74 @@
 						rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.STRING}"
 						size="29" componentWidth="19" />
 				</p:fieldset>
-				<p:fieldset
-					legend="#{messages['customFieldTemplate.versioningAndCaching']}"
-					styleClass="clearfix versioning-and-caching">
-					<hftl:formField
-						label="#{messages['customFieldTemplate.indexType']}"
-						field="indexType" required="false"
-						allowEdit="#{customFieldTemplateBean.entity.indexType==null}"
-						componentWidth="10" />
-					<hftl:formField label="#{messages['customFieldTemplate.filter']}"
-						field="filter" isMessage="true" componentWidth="8" />
-					<hftl:formField label="#{messages['customFieldTemplate.summary']}"
-						field="summary" isMessage="true" componentWidth="8" />
-					<h:panelGroup id="versioning">
-						<hftl:formField
-							label="#{messages['customFieldTemplate.versionable']}"
-							field="versionable" isMessage="true" allowEdit="true"
-							componentWidth="15" listenerUpdate=":cftForm:versionableFields"
-							rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY}" />
-						<h:panelGroup id="versionableFields"
-							rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY}">
-							<hftl:formField
-								label="#{messages['customFieldTemplate.cacheTimeperiod']}"
-								field="cacheValueTimeperiod"
-								rendered="#{customFieldTemplateBean.entity.versionable}"
-								componentWidth="30" />
-							<hftl:formField
-								label="#{messages['customFieldTemplate.triggerEndPeriodEvent']}"
-								field="triggerEndPeriodEvent"
-								rendered="#{customFieldTemplateBean.entity.versionable}"
-								componentWidth="15" />
+				<h:panelGrid columns ="2" width="100%" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
+					<h:panelGrid columns = "1">
+						<p:fieldset
+							legend="#{messages['customFieldTemplate.versioningAndCaching']}"
+							styleClass="clearfix versioning-and-caching">
+							<h:panelGrid columns = "1">
+								<hftl:formField
+									label="#{messages['customFieldTemplate.indexType']}"
+									field="indexType" required="false"
+									allowEdit="#{customFieldTemplateBean.entity.indexType==null}"
+									componentWidth="10" />
+								<h:panelGrid columns = "3">
+									<hftl:formField label="#{messages['customFieldTemplate.filter']}"
+										field="filter" isMessage="true" componentWidth="8" />
+									<hftl:formField label="#{messages['customFieldTemplate.summary']}"
+										field="summary" isMessage="true" componentWidth="8" />
+									<h:panelGroup id="versioning">
+										<hftl:formField
+											label="#{messages['customFieldTemplate.versionable']}"
+											field="versionable" isMessage="true" allowEdit="true"
+											componentWidth="15" listenerUpdate=":cftForm:versionableFields"
+											rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY}" />
+										<h:panelGroup id="versionableFields"
+											rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY}">
+											<hftl:formField
+												label="#{messages['customFieldTemplate.cacheTimeperiod']}"
+												field="cacheValueTimeperiod"
+												rendered="#{customFieldTemplateBean.entity.versionable}"
+												componentWidth="30" />
+											<hftl:formField
+												label="#{messages['customFieldTemplate.triggerEndPeriodEvent']}"
+												field="triggerEndPeriodEvent"
+												rendered="#{customFieldTemplateBean.entity.versionable}"
+												componentWidth="15" />
+										</h:panelGroup>
+									</h:panelGroup>
+								</h:panelGrid>
+							</h:panelGrid>
+						</p:fieldset>
+						<h:panelGroup id="listValuesField">
+							<p:fieldset legend="#{messages['customFieldTemplate.listValues']}"
+								styleClass="clearLeft"
+								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.LIST}">
+								<hftl:formField
+									label="#{messages['customFieldTemplate.listValues']}"
+									field="listValues" mapKeyLabel="#{messages['commons.value']}"
+									mapValueLabel="#{messages['commons.label']}" componentWidth="75"
+									newLine="true" />
+							</p:fieldset>
 						</h:panelGroup>
+						<h:panelGrid columns = "2">
+							<hftl:formField label="#{messages['enableEntity.disabled']}"
+								doNotShowOnNew="true" allowEdit="false" field="disabled"
+								isMessage="true" newLine="true" />
+							<hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}"
+								rendered="#{!customFieldTemplateBean.entity.transient}">
+								<h:outputText value="#{customFieldTemplateBean.partOfModules}" />
+							</hftl:decorateFormField>
+						</h:panelGrid>
+					</h:panelGrid>
+					<h:panelGroup id="storages">
+						<hftl:decorateFormField componentWidth="100%" label="#{messages['customFieldTemplate.storages']}">
+							<p:pickList id="pickList" value="#{customFieldTemplateBean.storagesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+								<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.storageTypesList}" />
+							</p:pickList>
+						</hftl:decorateFormField>
 					</h:panelGroup>
-				</p:fieldset>
-				<h:panelGroup id="listValuesField">
-					<p:fieldset legend="#{messages['customFieldTemplate.listValues']}"
-						styleClass="clearLeft"
-						rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.LIST}">
-						<hftl:formField
-							label="#{messages['customFieldTemplate.listValues']}"
-							field="listValues" mapKeyLabel="#{messages['commons.value']}"
-							mapValueLabel="#{messages['commons.label']}" componentWidth="75"
-							newLine="true" />
-					</p:fieldset>
-				</h:panelGroup>
-				<hftl:formField label="#{messages['enableEntity.disabled']}"
-					doNotShowOnNew="true" allowEdit="false" field="disabled"
-					isMessage="true" newLine="true" />
-				<hftl:decorateFormField
-					label="#{messages['meveoModule.partOfModules']}"
-					rendered="#{!customFieldTemplateBean.entity.transient}">
-					<h:outputText value="#{customFieldTemplateBean.partOfModules}" />
-				</hftl:decorateFormField>
+				</h:panelGrid>
 				<ui:param name="buttons" value="true" />
 				<ui:define name="buttons">
 					<p:remoteCommand action="#{customEntityTemplateBean.refreshFields}"

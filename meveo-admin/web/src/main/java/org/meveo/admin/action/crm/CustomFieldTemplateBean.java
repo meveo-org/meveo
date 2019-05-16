@@ -8,6 +8,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.UpdateMapTypeFieldBean;
 import org.meveo.admin.exception.BusinessException;
@@ -22,6 +23,7 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -58,14 +60,25 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     private CustomFieldTypeEnum fieldType;
 
+    private DualListModel<DBStorageType> storagesDM;
+
     /**
      * To what entity class CFT should be copied to - a appliesTo value
      */
     private String copyCftTo;
 
-    public CustomFieldTemplateBean() {
+    private String appliesTo;
 
+    public CustomFieldTemplateBean() {
         super(CustomFieldTemplate.class);
+    }
+
+    public CustomFieldTemplate newEntity(String appliesTo) {
+        CustomFieldTemplate customFieldTemplate = super.newEntity();
+        entity = customFieldTemplate;
+        storagesDM = null;
+        this.appliesTo = appliesTo;
+        return customFieldTemplate;
     }
 
     @Override
@@ -77,7 +90,17 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
         
         entity = customFieldTemplate;
+        appliesTo = entity.getAppliesTo();
+        storagesDM = null;
         return customFieldTemplate;
+    }
+
+    public String getAppliesTo() {
+        return appliesTo;
+    }
+
+    public void setAppliesTo(String appliesTo) {
+        this.appliesTo = appliesTo;
     }
 
     @Override
@@ -108,6 +131,13 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
         if (entity.getCalendar() != null) {
             entity.setCalendar(calendarService.retrieveIfNotManaged(entity.getCalendar()));
+        }
+
+        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
+            getEntity().getStorages().clear();
+            getEntity().getStorages().addAll(storagesDM.getTarget());
+        } else {
+            getEntity().setStorages(storagesDM.getTarget());
         }
         return super.saveOrUpdate(killConversation);
     }
@@ -321,5 +351,39 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     public void resetFieldType() {
         this.fieldType = null;
+    }
+
+    public DualListModel<DBStorageType> getStoragesDM() {
+        if (storagesDM == null) {
+            List<DBStorageType> perksSource = new ArrayList<>();
+            if (!StringUtils.isBlank(appliesTo)) {
+                String cetCode = appliesTo;
+                if (appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+                    cetCode = cetCode.substring(3);
+                }
+                CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+                if (customEntityTemplate != null && CollectionUtils.isNotEmpty(customEntityTemplate.getAvailableStorages())) {
+                    perksSource.addAll(customEntityTemplate.getAvailableStorages());
+                }
+            }
+            List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
+            if (getEntity().getStorages() != null) {
+                perksTarget.addAll(getEntity().getStorages());
+            }
+            perksSource.removeAll(perksTarget);
+            storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+
+        }
+        return storagesDM;
+    }
+
+    public void setStoragesDM(DualListModel<DBStorageType> storagesDM) {
+        this.storagesDM = storagesDM;
+    }
+
+    public List<DBStorageType> getStorageTypesList(){
+        ArrayList<DBStorageType> arrayList = new ArrayList<>(storagesDM.getSource());
+        arrayList.addAll(storagesDM.getTarget());
+        return arrayList;
     }
 }
