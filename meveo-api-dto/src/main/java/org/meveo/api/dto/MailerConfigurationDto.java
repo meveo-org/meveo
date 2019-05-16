@@ -20,7 +20,7 @@ public class MailerConfigurationDto {
 
     /** The port */
     @XmlAttribute(required = true)
-    private String port;
+    private Integer port;
 
     /** The userName */
     @XmlAttribute(required = true)
@@ -32,7 +32,7 @@ public class MailerConfigurationDto {
 
     /** The tls */
     @XmlAttribute(required = true)
-    private String tls;
+    private boolean tls;
 
     public MailerConfigurationDto(){
 
@@ -46,11 +46,11 @@ public class MailerConfigurationDto {
         this.host = host;
     }
 
-    public String getPort() {
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(String port) {
+    public void setPort(Integer port) {
         this.port = port;
     }
 
@@ -70,11 +70,11 @@ public class MailerConfigurationDto {
         this.password = password;
     }
 
-    public String getTls() {
+    public boolean getTls() {
         return tls;
     }
 
-    public void setTls(String tls) {
+    public void setTls(boolean tls) {
         this.tls = tls;
     }
 }

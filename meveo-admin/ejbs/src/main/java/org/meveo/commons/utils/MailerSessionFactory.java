@@ -1,20 +1,22 @@
 package org.meveo.commons.utils;
 
-import javax.ejb.Stateless;
+import java.util.Properties;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import java.util.Properties;
 
 /**
  * 
  * @author Hien Bach
- * @lastModifiedVersion 5.0
  * 
  */
-@Stateless
+@ApplicationScoped
 public class MailerSessionFactory {
-
-    public MailerConfiguration mailerConfiguration = new MailerConfiguration();
+	
+    @Inject
+	private MailerConfigurationService mailerConfigurationService;
 
     /**
      * Return an session of Session
@@ -22,19 +24,40 @@ public class MailerSessionFactory {
      * @return Session session
      */
     public Session getSession() {
+        return getSession(
+        			mailerConfigurationService.getHost(),
+        			mailerConfigurationService.getPort(),
+        			mailerConfigurationService.getTransportLayerSecurity(),
+        			mailerConfigurationService.getUserName(),
+        			mailerConfigurationService.getPassword()
+        		);
+    }
+    
+    public Session getSession(String host, Integer port, boolean ttls, String username, String password) {
         Properties props = new Properties();
-        props.put("mail.smtp.host", mailerConfiguration.getHost());
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", mailerConfiguration.getTransportLayerSecurity());
-        props.put("mail.smtp.port", mailerConfiguration.getPort());
+        props.put("mail.smtp.host", host);
+        
+        boolean authentication = !StringUtils.isBlank(username)&& !StringUtils.isBlank(password);
+        
+        if(authentication) {
+            props.put("mail.smtp.auth", "true");
+        }else {
+            props.put("mail.smtp.auth", "false");
+        }
+        
+        props.put("mail.smtp.starttls.enable", ttls);
+        props.put("mail.smtp.port", port);
 
-        Session emailSession = Session.getInstance(props,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(mailerConfiguration.getUserName(), mailerConfiguration.getPassword());
-                    }
-                });
+        if(authentication) {
+        	return Session.getInstance(props,
+                    new javax.mail.Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(mailerConfigurationService.getUserName(), mailerConfigurationService.getPassword());
+                        }
+                    });
+        }else {
+        	return Session.getInstance(props);
+        }
 
-        return emailSession;
     }
 }

@@ -1,12 +1,6 @@
 package org.meveo.admin.action.admin;
 
-import org.meveo.admin.util.ResourceBundle;
-import org.meveo.commons.utils.MailerConfiguration;
-import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.ParamBeanFactory;
-import org.meveo.model.ParamProperty;
-import org.primefaces.component.datatable.DataTable;
-import org.primefaces.event.CellEditEvent;
+import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
@@ -15,12 +9,15 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.*;
-import javax.mail.internet.AddressException;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.Serializable;
-import java.util.*;
+
+import org.meveo.admin.util.ResourceBundle;
+import org.meveo.commons.utils.MailerConfigurationService;
+import org.meveo.commons.utils.MailerSessionFactory;
 
 /**
  * Created by Hien Bach
@@ -32,17 +29,30 @@ public class MailerBean implements Serializable {
     private static final long serialVersionUID = -4570971790276879220L;
 
     @Inject
-    private MailerConfiguration mailerConfiguration;
+    private MailerConfigurationService mailerConfigurationService;
+    
+    @Inject
+    private MailerSessionFactory maillerSessionFactory;
 
     @Inject
     protected Conversation conversation;
 
     @Inject
     private transient ResourceBundle bundle;
+    
+    private String sender;
+
+    private String receivers;
+
+    private String cc;
+
+    private String subject;
+
+    private String body;
 
     private String host;
 
-    private String port;
+    private Integer port;
 
     private String userName;
 
@@ -52,15 +62,11 @@ public class MailerBean implements Serializable {
 
     @PostConstruct
     private void init() {
-        host = mailerConfiguration.getHost();
-        port = mailerConfiguration.getPort();
-        userName = mailerConfiguration.getUserName();
-        password = mailerConfiguration.getPassword();
-        if (mailerConfiguration.getTransportLayerSecurity() != null && "true".equals(mailerConfiguration.getTransportLayerSecurity())) {
-            transportLayerSecurity = true;
-        } else {
-            transportLayerSecurity = false;
-        }
+        host = mailerConfigurationService.getHost();
+        port = mailerConfigurationService.getPort();
+        userName = mailerConfigurationService.getUserName();
+        password = mailerConfigurationService.getPassword();
+        transportLayerSecurity = mailerConfigurationService.getTransportLayerSecurity();
     }
 
     private void beginConversation() {
@@ -68,6 +74,47 @@ public class MailerBean implements Serializable {
             conversation.begin();
         }
     }
+    
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public String getReceivers() {
+        return receivers;
+    }
+
+    public void setReceivers(String receivers) {
+        this.receivers = receivers;
+    }
+
+    public String getCc() {
+        return cc;
+    }
+
+    public void setCc(String cc) {
+        this.cc = cc;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
+
 
     public String getHost() {
         return host;
@@ -77,11 +124,11 @@ public class MailerBean implements Serializable {
         this.host = host;
     }
 
-    public String getPort() {
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(String port) {
+    public void setPort(Integer port) {
         this.port = port;
     }
 
@@ -113,53 +160,29 @@ public class MailerBean implements Serializable {
         beginConversation();
     }
 
-    public MailerConfiguration getMailerConfiguration() {
-        return mailerConfiguration;
-    }
-
-    public void setMailerConfiguration(MailerConfiguration mailerConfiguration) {
-        this.mailerConfiguration = mailerConfiguration;
-    }
-
     public void sendEmail() {
         try {
-            Properties props = new Properties();
-            props.put("mail.smtp.host", mailerConfiguration.getHost());
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", mailerConfiguration.getTransportLayerSecurity());
-            props.put("mail.smtp.port", mailerConfiguration.getPort());
-
-            Session emailSession = Session.getInstance(props,
-                    new Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(mailerConfiguration.getUserName(), mailerConfiguration.getPassword());
-                        }
-                    });
+            Session emailSession = maillerSessionFactory.getSession(host, port, transportLayerSecurity, userName, password);
 
             Message emailMessage = new MimeMessage(emailSession);
-            emailMessage.addRecipients(Message.RecipientType.TO, InternetAddress.parse(mailerConfiguration.getReceivers()));
-            emailMessage.setFrom(new InternetAddress(mailerConfiguration.getSender()));
-            emailMessage.setSubject(mailerConfiguration.getSubject());
-            emailMessage.setText(mailerConfiguration.getBody());
+            emailMessage.addRecipients(Message.RecipientType.TO, InternetAddress.parse(getReceivers()));
+            emailMessage.setFrom(new InternetAddress(getSender()));
+            emailMessage.setSubject(getSubject());
+            emailMessage.setText(getBody());
 
             Transport.send(emailMessage);
-        } catch (AddressException e) {
-            e.printStackTrace();
-        } catch (MessagingException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     public void save() {
-        mailerConfiguration.setHost(host);
-        mailerConfiguration.setPort(port);
-        mailerConfiguration.setUserName(userName);
-        mailerConfiguration.setPassword(password);
-        if (transportLayerSecurity) {
-            mailerConfiguration.setTransportLayerSecurity("true");
-        } else {
-            mailerConfiguration.setTransportLayerSecurity("false");
-        }
+        mailerConfigurationService.setHost(host);
+        mailerConfigurationService.setPort(port);
+        mailerConfigurationService.setUserName(userName);
+        mailerConfigurationService.setPassword(password);
+        mailerConfigurationService.setTransportLayerSecurity(transportLayerSecurity);
+        
         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
         FacesContext.getCurrentInstance().addMessage(null, msg);
     }

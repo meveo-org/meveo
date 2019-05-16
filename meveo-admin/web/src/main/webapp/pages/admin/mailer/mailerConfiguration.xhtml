@@ -13,8 +13,8 @@
             </f:facet>
             <h:form id="form">
                 <p:messages/>
-                <h:panelGrid columns = "3" width="100%">
-                    <hftl:decorateFormField field ="host" fieldId="host" label="#{messages['mailer.host']}">
+                <p:fieldset legend="Coordinates">
+                   	<hftl:decorateFormField field ="host" fieldId="host" label="#{messages['mailer.host']}">
                         <p:inputText id="host" value="#{mailerBean.host}" var="host" size="70"/>
                     </hftl:decorateFormField>
                     <hftl:decorateFormField field ="port" fieldId="port" label="#{messages['mailer.port']}">
@@ -23,32 +23,36 @@
                     <hftl:decorateFormField field ="transportLayerSecurity" fieldId="transportLayerSecurity" label="#{messages['mailer.transportLayerSecurity']}">
                         <h:selectBooleanCheckbox id="transportLayerSecurity" value="#{mailerBean.transportLayerSecurity}" var="transportLayerSecurity"/>
                     </hftl:decorateFormField>
-                    <hftl:decorateFormField field ="userName" fieldId="userName" label="#{messages['mailer.userName']}">
+                </p:fieldset>
+                <p:fieldset legend="Authentication" collapsed="true" toggleable="true">
+                	<hftl:decorateFormField field ="userName" fieldId="userName" label="#{messages['mailer.userName']}">
                         <p:inputText id="userName" value="#{mailerBean.userName}" var="userName" size="70"/>
                     </hftl:decorateFormField>
                     <hftl:decorateFormField field ="password" fieldId="password" label="#{messages['mailer.password']}">
                         <p:inputText id="password" value="#{mailerBean.password}" var="password" size="70"/>
                     </hftl:decorateFormField>
-                </h:panelGrid>
-                <p:commandButton action="#{mailerBean.save}" value="#{messages['action.save']}" ajax="false"/>
-                <p:commandButton id="sendMail" value="#{messages['mailer.sendmailer.createnewmail']}" update=":mailerDialog" oncomplete="PF('mailerDialog').show()"/>
-            </h:form>
+                </p:fieldset>
+                <h:panelGroup style="margin-top: 5px;" id="actions" layout="block">
+	                <p:commandButton action="#{mailerBean.save}" value="#{messages['action.save']}" ajax="false"/>
+	                <p:commandButton id="sendMail" value="#{messages['mailer.sendmailer.createnewmail']}" update=":mailerDialog" oncomplete="PF('mailerDialog').show()"/>
+                </h:panelGroup>
+               </h:form>
         </p:panel>
         <p:dialog id="mailerDialog" widgetVar="mailerDialog" header="#{messages['mailer.sendmailer.createnewmail']}" modal="true" closeOnEscape="true" width="50%" closable="true" appendTo="@(body)">
             <hftl:decorateFormPanel formId="mailerSendForm">
                 <ui:define name="fields">
                     <h:panelGrid columns = "1" width="100%">
                         <hftl:decorateFormField field ="sender" fieldId="sender" label="#{messages['mailer.sender']}">
-                            <p:inputText id="sender" value="#{mailerBean.mailerConfiguration.sender}" size="100"/>
+                            <p:inputText id="sender" value="#{mailerBean.sender}" size="100"/>
                         </hftl:decorateFormField>
                         <hftl:decorateFormField field ="receiver" fieldId="receiver" label="#{messages['mailer.receiver']}">
-                            <p:inputText id="receiver" value="#{mailerBean.mailerConfiguration.receivers}" size="100"/>
+                            <p:inputText id="receiver" value="#{mailerBean.receivers}" size="100"/>
                         </hftl:decorateFormField>
                         <hftl:decorateFormField field ="subject" fieldId="subject" label="#{messages['mailer.subject']}">
-                            <p:inputText id="subject" value="#{mailerBean.mailerConfiguration.subject}" size="100"/>
+                            <p:inputText id="subject" value="#{mailerBean.subject}" size="100"/>
                         </hftl:decorateFormField>
                         <hftl:decorateFormField field ="content" fieldId="content" label="#{messages['mailer.body']}">
-                            <p:inputTextarea id="content" value="#{mailerBean.mailerConfiguration.body}" size="100" cols="100" rows="5" autoResize="true"/>
+                            <p:inputTextarea id="content" value="#{mailerBean.body}" size="100" cols="100" rows="5" autoResize="true"/>
                         </hftl:decorateFormField>
                     </h:panelGrid>
                 </ui:define>
