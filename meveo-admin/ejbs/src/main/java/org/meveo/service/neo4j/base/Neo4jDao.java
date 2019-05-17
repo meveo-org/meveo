@@ -3,8 +3,6 @@ package org.meveo.service.neo4j.base;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
-import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.service.neo4j.graph.Neo4jEntity;
 import org.meveo.service.neo4j.graph.Neo4jRelationship;
@@ -114,10 +112,10 @@ public class Neo4jDao {
      * @param labels             Additionnal labels of the node
      * @return the id of the created node, or null if it has failed
      */
-    public Long mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
+    public String mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
-        Long nodeId = null;        // Id of the created node
+        String nodeId = null;        // Id of the created node
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
@@ -150,7 +148,7 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(resolvedStatement);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
-            nodeId = node.id();
+            nodeId = getMeveoUUID(node);
         } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
@@ -173,10 +171,14 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public Long createNode(String neo4JConfiguration, String cetCode, Map<String, Object> fields, List<String> labels) {
+    private String getMeveoUUID(Node node) {
+        return node.get("meveo_uuid").asString();
+    }
+
+    public String createNode(String neo4JConfiguration, String cetCode, Map<String, Object> fields, List<String> labels) {
 
         String alias = "n"; // Alias to use in query
-        Long nodeId = null;        // Id of the created node
+        String nodeId = null;        // Id of the created node
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
@@ -207,7 +209,7 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(resolvedStatement);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
-            nodeId = node.id();
+            nodeId = getMeveoUUID(node);
         } catch (Exception e) {
             transaction.failure();
             LOGGER.error(e.getMessage());
@@ -224,7 +226,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void updateNodeByNodeId(String neo4JConfiguration, Long nodeId, Map<String, Object> fields) {
+    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, Map<String, Object> fields) {
 
         String alias = "startNode"; // Alias to use in query
 
@@ -250,7 +252,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, valuesMap);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
@@ -268,7 +270,7 @@ public class Neo4jDao {
 
     }
 
-    public Set<Long> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
+    public Set<String> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", cetCode);
@@ -288,11 +290,11 @@ public class Neo4jDao {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement, fields);
-            Set<Long> ids = result.list()
+            Set<String> ids = result.list()
                     .stream()
                     .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
                     .filter(value -> !value.isNull())
-                    .map(Value::asLong)
+                    .map(Value::asString)
                     .collect(Collectors.toSet());
 
             transaction.success();
@@ -310,7 +312,7 @@ public class Neo4jDao {
         return Collections.emptySet();
     }
 
-    public void createRelationBetweenNodes(String neo4JConfiguration, Long startNodeId, String label, Long endNodeId, Map<String, Object> fields) {
+    public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String label, String endNodeId, Map<String, Object> fields) {
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();

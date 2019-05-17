@@ -15,6 +15,7 @@ import org.meveo.api.dto.neo4j.Datum;
 import org.meveo.api.dto.neo4j.Neo4jQueryResultDto;
 import org.meveo.api.dto.neo4j.Result;
 import org.meveo.api.dto.neo4j.SearchResultDTO;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
@@ -116,6 +117,9 @@ public class Neo4jService {
     @ApplicationProvider
     protected Provider appProvider;
 
+    @Inject
+    private CustomFieldsCacheContainerProvider customFieldsCache;
+
     @SuppressWarnings("unchecked")
     public Set<NodeReference> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
 
@@ -188,7 +192,7 @@ public class Neo4jService {
                             if (referencedCet.getPrePersistScript() != null) {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
                             }
-                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
+                            String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
                             relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
                         } else {
                             relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
@@ -233,19 +237,19 @@ public class Neo4jService {
             final List<String> labels = getAdditionalLabels(cet);
             if (applicableConstraints.isEmpty()) {
                 if (uniqueFields.isEmpty()) {
-                    Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                    String nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 } else {
                     Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
-                    Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
+                    String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                     nodeReferences.add(new NodeReference(nodeId));
                 }
             } else {
                 /* Apply unique constraints */
                 boolean appliedUniqueConstraint = false;
                 for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
-                    Set<Long> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
+                    Set<String> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
 
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
                         String joinedIds = ids.stream()
@@ -255,14 +259,14 @@ public class Neo4jService {
                                 uniqueConstraint.getCode(), joinedIds);
                     }
 
-                    for (Long id : ids) {
+                    for (String id : ids) {
                         appliedUniqueConstraint = true;
 
                         if (uniqueConstraint.getTrustScore() < 100) {
                             // If the trust rating is lower than 100%, we create the entity and create a relationship between the found one and the created one
                             // XXX: Update the found node too?
                             //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
-                            Long createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                            String createdNodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                             neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
                                     "trustScore", uniqueConstraint.getTrustScore(),
                                     "constraintCode", uniqueConstraint.getCode()
@@ -285,12 +289,12 @@ public class Neo4jService {
 
                 if (!appliedUniqueConstraint) {
                     if (uniqueFields.isEmpty()) {
-                        Long nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
+                        String nodeId = neo4jDao.createNode(neo4JConfiguration, cetCode, fields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     } else {
                         Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
-                        Long nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
+                        String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, editableFields, labels);
                         nodeReferences.add(new NodeReference(nodeId));
                     }
                 }
@@ -310,7 +314,7 @@ public class Neo4jService {
 
                     String relationshipType = relationshipsEntry.getValue();
                     final Map<String, Object> values = Collections.emptyMap();
-                    neo4jDao.createRelationBetweenNodes(neo4JConfiguration, nodeReference.getId(), relationshipType, relatedNodeReference.getId(), values);
+                    neo4jDao.createRelationBetweenNodes(neo4JConfiguration, nodeReference.getUuid(), relationshipType, relatedNodeReference.getUuid(), values);
                 }
             }
         } catch (BusinessException e) {
@@ -421,8 +425,8 @@ public class Neo4jService {
             String neo4JConfiguration,
             String crtCode,
             Map<String, Object> crtValues,
-            Long startNodeId,
-            Long endNodeId
+            String startNodeId,
+            String endNodeId
     ) throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -515,8 +519,8 @@ public class Neo4jService {
         }
     }
 
-    public void saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, Long startNodeId,
-                                       Long endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
+    public void saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, String startNodeId,
+                                       String endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
 
@@ -848,9 +852,15 @@ public class Neo4jService {
                 // Validate that value is not empty when field is mandatory
                 boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
                 if (cft.isValueRequired() && isEmpty) {
-                    final String message = "CFT with code " + cft.getCode() + " is not provided";
-                    log.error(message);
-                    throw new InvalidCustomFieldException(message);
+                    final String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
+                    final CustomEntityTemplate customEntityTemplate = customFieldsCache.getCustomEntityTemplate(cetCode);
+
+                    // If entity is not a custom relation or is a cusotm entity but is not a primitive entity, throw exception
+                    if(customEntityTemplate == null || !customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()){
+                        final String message = "CFT with code " + cft.getCode() + " is not provided";
+                        throw new InvalidCustomFieldException(message);
+                    }
+
                 }
                 // Validate that value is valid (min/max, regexp). When
                 // value is a list or a map, check separately each value

@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -248,6 +249,22 @@ public class GraphQLService {
                     .stream()
                     .map(sourceCet -> graphQLEntities.get(sourceCet.getCode()))
                     .forEach(source -> {
+
+                        // Scan for entity references
+                        final Map<String, CustomFieldTemplate> cftsSource = customFieldTemplateService.findByAppliesTo(startNode.getAppliesTo());
+                        cftsSource.values()
+                                .stream()
+                                .filter(customFieldTemplate -> customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY)
+                                .filter(customFieldTemplate -> customFieldTemplate.getEntityClazzCetCode().equals(endNode.getCode()))
+                                .forEach(customFieldTemplate -> {
+                                    GraphQLField entityRefField = new GraphQLField();
+                                    entityRefField.setFieldName(customFieldTemplate.getCode());
+                                    entityRefField.setMultivalued(customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST);
+                                    entityRefField.setFieldType(endNode.getCode());
+                                    entityRefField.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
+                                    source.getGraphQLFields().add(entityRefField);
+                                });
+
                         // Source singular field
                         if (relationshipTemplate.getSourceNameSingular() != null) {
                             GraphQLField sourceNameSingular = new GraphQLField();

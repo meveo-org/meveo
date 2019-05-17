@@ -669,4 +669,8 @@
     	</addColumn>
     </changeSet>
 
+    <changeSet id="use_uuid_unique_constraint" author="Clément Bareth">
+        <sql>UPDATE cust_cet_unique_constraint SET cypher_query = regexp_replace(cypher_query, '(?:ID)\((\w+)\)', '\1.meveo_uuid')</sql>
+    </changeSet>
+
 </databaseChangeLog>

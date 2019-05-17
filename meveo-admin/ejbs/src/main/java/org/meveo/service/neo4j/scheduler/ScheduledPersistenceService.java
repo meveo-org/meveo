@@ -1,19 +1,13 @@
 package org.meveo.service.neo4j.scheduler;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.service.neo4j.service.Neo4jService;
-
-import javax.inject.Inject;
-import java.util.Iterator;
-import java.util.Set;
 
 public class ScheduledPersistenceService {
 
@@ -93,8 +87,8 @@ public class ScheduledPersistenceService {
                                       neo4JConfiguration,
                                       relation.getCode(),
                                       relation.getValues(),
-                                      startNodeReference.getId(),
-                                      endNodeReference.getId()
+                                      startNodeReference.getUuid(),
+                                      endNodeReference.getUuid()
                                 );
                             }
                         }

@@ -15,9 +15,9 @@ public class Neo4JRequests {
      * - endNodeId : Id of the target node <br>
      * - relationshipLabel : Label of the relationship to create <br>
      */
-    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode) WHERE ID(startNode) = $startNodeId \n")
+    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
             .append("WITH startNode \n")
-            .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
+            .append("MATCH (endNode) WHERE endNode.meveo_uuid = $endNodeId \n")
             .append("WITH startNode, endNode \n")
             .append("MERGE (startNode)-[relationship :${relationshipLabel} ${fields}]->(endNode) \n")
             .append("ON CREATE SET relationship." + CREATION_DATE + " = timestamp(), relationship.meveo_uuid = apoc.create.uuid() \n")
@@ -31,7 +31,7 @@ public class Neo4JRequests {
      * - uniqueFields : unique fields that identify the node
      */
     public final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields}) \n")
-            .append(" WITH n, properties(n) as properties,  labels(n) as labels, ID(n) as id \n")
+            .append(" WITH n, properties(n) as properties,  labels(n) as labels, n.meveo_uuid as id \n")
             .append(" DETACH DELETE n \n")
             .append(" RETURN properties, labels, id");
 
@@ -78,14 +78,14 @@ public class Neo4JRequests {
 
     public final static StringBuffer findStartNodeId = new StringBuffer()
             .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
-            .append(" RETURN ID(startNode)");
+            .append(" RETURN startNode.meveo_uuid");
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append("MATCH (startNode) WHERE ID(startNode) = $id")
+            .append("MATCH (startNode) WHERE startNode.meveo_uuid = $id")
             .append(" SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
-    public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
-            + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
+    public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where a.meveo_uuid =${originNodeId} "
+            + "MATCH (b:${cetCode})where b.meveo_uuid =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
             + "CALL apoc.create.relationship(b, relType, {}, c) YIELD rel "
@@ -93,8 +93,8 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    public final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where ID(a) =${originNodeId} "
-            + "MATCH (b:${cetCode})where ID(b) =${targetNodeId} "
+    public final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where a.meveo_uuid =${originNodeId} "
+            + "MATCH (b:${cetCode})where b.meveo_uuid =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
             + "CALL apoc.create.relationship(c, relType, {}, b) YIELD rel "
@@ -109,6 +109,6 @@ public class Neo4JRequests {
             .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType}, meveo_uuid = apoc.create.uuid() \n")
             .append("WITH source \n")
             .append("MERGE (node)-[:HAS_SOURCE]->(source) \n")
-            .append("WHERE ID(node) = ${nodeId} \n")
+            .append("WHERE node.meveo_uuid = ${nodeId} \n")
             .append("RETURN source");
 }

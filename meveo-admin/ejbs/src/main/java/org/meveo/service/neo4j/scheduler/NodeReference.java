@@ -3,29 +3,29 @@ package org.meveo.service.neo4j.scheduler;
 import com.google.common.base.Objects;
 
 public class NodeReference {
-    private Long id;
+    private String uuid;
     private Integer trustScore;
     private String constraintCode;
 
     public NodeReference() {
     }
 
-    public NodeReference(Long id) {
-        this.id = id;
+    public NodeReference(String uuid) {
+        this.uuid = uuid;
     }
 
-    public NodeReference(Long id, Integer trustScore, String constraintCode) {
-        this.id = id;
+    public NodeReference(String uuid, Integer trustScore, String constraintCode) {
+        this.uuid = uuid;
         this.trustScore = trustScore;
         this.constraintCode = constraintCode;
     }
 
-    public Long getId() {
-        return id;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public boolean isTrusted() {
@@ -57,11 +57,11 @@ public class NodeReference {
             return false;
         }
         NodeReference that = (NodeReference) o;
-        return Objects.equal(id, that.id);
+        return Objects.equal(uuid, that.uuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(uuid);
     }
 }
