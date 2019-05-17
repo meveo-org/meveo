@@ -665,7 +665,7 @@
     
     <changeSet id="crt_available_storages" author="Clément Bareth">
     	<addColumn tableName="cust_crt">
-    		<column name="available_storages" type="${type.json}" defaultValue="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
+    		<column name="available_storages" type="${type.json}" defaultValue="[&quot;NEO4J&quot;]"/>
     	</addColumn>
     </changeSet>
 

@@ -211,30 +211,39 @@ public class GraphQLService {
 
         for (CustomRelationshipTemplate relationshipTemplate : customRelationshipTemplates) {
 
+            final CustomEntityTemplate endNode = relationshipTemplate.getEndNode();
+            final CustomEntityTemplate startNode = relationshipTemplate.getStartNode();
+
+            // IF either the relation, the start entity or the end entity is not configured to be stored in Neo4J, don't include it in the generated graphql
+            if(!relationshipTemplate.getAvailableStorages().contains(DBStorageType.NEO4J) || !endNode.getAvailableStorages().contains(DBStorageType.NEO4J) || !startNode.getAvailableStorages().contains(DBStorageType.NEO4J)){
+                continue;
+            }
+
             // Create Graphql relationship type
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(relationshipTemplate.getAppliesTo());
             GraphQLEntity graphQLEntity = new GraphQLEntity();
-            String typeName = relationshipTemplate.getGraphQlTypeName() == null ? relationshipTemplate.getEndNode().getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
+
+            String typeName = relationshipTemplate.getGraphQlTypeName() == null ? endNode.getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
 
             SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
 
             GraphQLField to = new GraphQLField();
             to.setFieldName("to");
-            to.setFieldType(relationshipTemplate.getEndNode().getCode());
+            to.setFieldType(endNode.getCode());
             to.setQuery("@cypher(statement: \"MATCH ()-[this]->(to) RETURN to\")");
             graphQLFields.add(to);
 
             GraphQLField from = new GraphQLField();
             from.setFieldName("from");
-            from.setFieldType(relationshipTemplate.getStartNode().getCode());
+            from.setFieldType(startNode.getCode());
             from.setQuery("@cypher(statement: \"MATCH (from)-[this]->() RETURN from\")");
             graphQLFields.add(from);
 
             graphQLEntity.setGraphQLFields(graphQLFields);
 
             // Add fields to sources (and sub-sources)
-            cetsByName.get(relationshipTemplate.getStartNode().getCode())
+            cetsByName.get(startNode.getCode())
                     .descendance()
                     .stream()
                     .map(sourceCet -> graphQLEntities.get(sourceCet.getCode()))
@@ -244,7 +253,7 @@ public class GraphQLService {
                             GraphQLField sourceNameSingular = new GraphQLField();
                             sourceNameSingular.setFieldName(relationshipTemplate.getSourceNameSingular());
                             sourceNameSingular.setMultivalued(false);
-                            sourceNameSingular.setFieldType(relationshipTemplate.getEndNode().getCode());
+                            sourceNameSingular.setFieldType(endNode.getCode());
                             sourceNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNameSingular);
                         }
@@ -254,7 +263,7 @@ public class GraphQLService {
                             GraphQLField sourceNamePlural = new GraphQLField();
                             sourceNamePlural.setFieldName(relationshipTemplate.getSourceNamePlural());
                             sourceNamePlural.setMultivalued(true);
-                            sourceNamePlural.setFieldType(relationshipTemplate.getEndNode().getCode());
+                            sourceNamePlural.setFieldType(endNode.getCode());
                             sourceNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNamePlural);
                         }
@@ -269,7 +278,7 @@ public class GraphQLService {
                             final String query = String.format(
                                     "@cypher(statement: \"MATCH (this)-[rel:%s]->(n:%s) RETURN rel\")",
                                     relationshipTemplate.getName(),
-                                    relationshipTemplate.getEndNode().getCode()
+                                    endNode.getCode()
                             );
 
                             outgoingRelationship.setQuery(query);
@@ -279,7 +288,7 @@ public class GraphQLService {
                     });
 
             // Add fields to target (and sub-targets)
-            cetsByName.get(relationshipTemplate.getEndNode().getCode())
+            cetsByName.get(endNode.getCode())
                     .descendance()
                     .stream()
                     .map(targetCet -> graphQLEntities.get(targetCet.getCode()))
@@ -289,7 +298,7 @@ public class GraphQLService {
                             GraphQLField targetNameSingular = new GraphQLField();
                             targetNameSingular.setFieldName(relationshipTemplate.getTargetNameSingular());
                             targetNameSingular.setMultivalued(false);
-                            targetNameSingular.setFieldType(relationshipTemplate.getStartNode().getCode());
+                            targetNameSingular.setFieldType(startNode.getCode());
                             targetNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNameSingular);
                         }
@@ -299,7 +308,7 @@ public class GraphQLService {
                             GraphQLField targetNamePlural = new GraphQLField();
                             targetNamePlural.setFieldName(relationshipTemplate.getTargetNamePlural());
                             targetNamePlural.setMultivalued(true);
-                            targetNamePlural.setFieldType(relationshipTemplate.getStartNode().getCode());
+                            targetNamePlural.setFieldType(startNode.getCode());
                             targetNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNamePlural);
                         }
@@ -313,7 +322,7 @@ public class GraphQLService {
 
                             final String query = String.format(
                                     "@cypher(statement: \"MATCH (n:%s)-[rel:%s]->(this) RETURN rel\")",
-                                    relationshipTemplate.getEndNode().getCode(),
+                                    endNode.getCode(),
                                     relationshipTemplate.getName()
                             );
 
