@@ -8,6 +8,7 @@ import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
+import org.jfree.util.Log;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -216,13 +217,33 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Override
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+		String editView = super.saveOrUpdate(killConversation);
+		if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
+			List<CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesto(appliesTo);
+			if (CollectionUtils.isNotEmpty(customFieldTemplates)){
+				List<DBStorageType> availableStorages = getEntity().getAvailableStorages();
+				for (CustomFieldTemplate customFieldTemplate : customFieldTemplates) {
+					if (CollectionUtils.isNotEmpty(customFieldTemplate.getStorages())) {
+						List<DBStorageType> storages = new ArrayList<>(customFieldTemplate.getStorages());
+						storages.retainAll(availableStorages);
+						customFieldTemplate.getStorages().clear();
+						customFieldTemplate.getStorages().addAll(storages);
+						customFieldTemplateService.update(customFieldTemplate);
+					}
+				}
+			}
+
+		}
+		return editView;
+	}
+
+	public void onChangeAvailableStorages() {
 		if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
 			getEntity().getAvailableStorages().clear();
 			getEntity().getAvailableStorages().addAll(availableStoragesDM.getTarget());
 		} else {
 			getEntity().setAvailableStorages(availableStoragesDM.getTarget());
 		}
-		return super.saveOrUpdate(killConversation);
 	}
 
 	public TreeNode getFields() {
@@ -630,7 +651,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				}
 			}
 		}
-
 		entity.getNeo4JStorageConfiguration().setUniqueConstraints(customEntityTemplateUniqueConstraints);
 		isUpdate = false;
 		String message = "customFieldInstance.childEntity.save.successful";

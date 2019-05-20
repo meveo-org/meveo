@@ -1,47 +1,6 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
                 xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:s="http://jboss.org/seam/faces">
-
-    <h:form id="uniqueConstraintsForm">
-        <p:panel width="100" header="#{messages['customizedEntities.uniqueConstraint']}">
-            <h:panelGroup id="uniqueConstraintsPanel">
-                <p:messages/>
-                <p:dataTable id="uniqueConstaintsDatatable" value="#{customEntityTemplateBean.customEntityTemplateUniqueConstraints}" var="uniqueConstraint" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
-                             paginator="true" rows="30" resizableColumns="true"
-                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
-                             lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
-                    <p:column headerText="#{messages['customUniqueConstraint.code']}">
-                        <h:outputText value="#{uniqueConstraint.code}" styleClass="field-value" />
-                    </p:column>
-                    <p:column headerText="#{messages['customUniqueConstraint.description']}">
-                        <h:outputText value="#{uniqueConstraint.description}" styleClass="field-value" />
-                    </p:column>
-                    <p:column headerText="#{messages['customUniqueConstraint.cypherQuery']}">
-                       <h:outputText value="#{uniqueConstraint.cypherQuery}" styleClass="field-value" />
-                    </p:column>
-                    <p:column headerText="#{messages['customUniqueConstraint.trustScore']}">
-                        <h:outputText value="#{uniqueConstraint.trustScore}" styleClass="field-value" />
-                    </p:column>
-                    <p:column headerText="#{messages['customUniqueConstraint.applicableOnEl']}">
-                        <h:outputText value="#{uniqueConstraint.applicableOnEl}" styleClass="field-value" />
-                    </p:column>
-                    <p:column headerText="#{messages['customUniqueConstraint.position']}">
-                        <h:outputText value="#{uniqueConstraint['position']}" />
-                    </p:column>
-                    <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
-
-                        <p:commandButton action="#{customEntityTemplateBean.removeUniqueConstraint(uniqueConstraint)}" icon="ui-icon-trash" update=":uniqueConstraintsForm:uniqueConstraintsPanel" />
-                        <p:commandButton id="editFieldGroupBtn" icon="ui-icon-document" oncomplete="PF('uniqueConstraintsDialog').show()" update=":uniqueConstraintsDialogForm"
-                                         actionListener="#{customEntityTemplateBean.editUniqueConstraint(uniqueConstraint)}">
-                        </p:commandButton>
-                    </p:column>
-                    <f:facet name="footer">
-                        <p:commandButton action="#{customEntityTemplateBean.addUniqueConstraint}" id="addUniqueConstraints" value="#{messages['customUniqueConstraint.add']}" oncomplete="PF('uniqueConstraintsDialog').show()"  update=":uniqueConstraintsDialogForm"></p:commandButton>
-                    </f:facet>
-                </p:dataTable>
-            </h:panelGroup>
-        </p:panel>
-    </h:form>
     <p:dialog id="uniqueConstraintsDialog" header="#{messages['customUniqueConstraint.addConstraint.header']}" widgetVar="uniqueConstraintsDialog" modal="true" closeOnEscape="true" width="80%" closable="true" appendTo="@(body)">
         <hftl:decorateFormPanel formId="uniqueConstraintsDialogForm">
             <ui:define name="fields">
@@ -75,7 +34,7 @@
                 </h:panelGrid>
             </ui:define>
             <ui:define name="buttons">
-                <p:commandButton value="#{messages['action.save']}" action="#{customEntityTemplateBean.saveUniqueConstraint}" update=":cetForm:messages :uniqueConstraintsForm"
+                <p:commandButton value="#{messages['action.save']}" action="#{customEntityTemplateBean.saveUniqueConstraint}" update=":cetForm:messages :cetForm:uniqueConstraintsPanel"
                                  oncomplete="if (args &amp;&amp; !args.validationFailed){PF('uniqueConstraintsDialog').hide();}" ajax="true" />
                 <p:button value="#{messages['action.cancel']}" onclick="PF('uniqueConstraintsDialog').hide(); return false;" />
             </ui:define>

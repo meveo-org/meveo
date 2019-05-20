@@ -85,39 +85,124 @@
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customEntityTemplate.availableStorages']}">
 							<p:pickList id="pickList" value="#{customEntityTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
                                 <o:converter converterId="omnifaces.ListConverter" list="#{customEntityTemplateBean.storageTypesList}" />
+                                <p:ajax event="transfer" listener="#{customEntityTemplateBean.onChangeAvailableStorages()}" update=":cetForm:persistences" />
 							</p:pickList>
 						</hftl:decorateFormField>
 					</h:panelGroup>
 				</h:panelGrid>
-                
+
 				<!--  SQL Storage -->
-				<p:fieldset id="sql" toggleable="true" collapsed="true" legend="SQL Persistence" width="100%" >
-	                <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable" 
-	                				field="sqlStorageConfiguration"
-	                				childField="storeAsTable"
-	                				allowEdit="false" />
-	                <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" 
-	                						rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
-	                    <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value" />
-	                </hftl:decorateFormField>
-				</p:fieldset>
-				
-				<!--  Neo4J Storage -->
-                <p:fieldset id="neo4j" toggleable="true" collapsed="true" legend="Neo4J Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.neo4JStorageConfiguration}">
-			         <hftl:formField label="#{messages['BusinessEntity.labels']}" field="neo4JStorageConfiguration" childField="labels" />
-					<!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
-	                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" id="primitiveEntity" 
-                					childField="primitiveEntity"
-	                				field="neo4JStorageConfiguration" listenerUpdate="@this primitiveType"/>
-	                <!--  If primitive, ask for primitive type class -->
-	                <h:panelGroup id="primitiveType">
-	                    <hftl:formField id="form_primitiveType" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity}" 
-	                    				label="#{messages['BusinessEntity.primitiveType']}" required="true" field="neo4JStorageConfiguration" childField="primitiveType"/>
-	                </h:panelGroup>
-               </p:fieldset>
-               
+                <h:panelGroup id="persistences">
+                    <p:fieldset id="sql" toggleable="true" collapsed="true" legend="SQL Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.sqlStorageConfiguration}">
+                        <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable"
+                                        field="sqlStorageConfiguration"
+                                        childField="storeAsTable"
+                                        allowEdit="false"/>
+                        <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}"
+                                                rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
+                            <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value"/>
+                        </hftl:decorateFormField>
+                    </p:fieldset>
+
+                    <!--  Neo4J Storage -->
+                    <p:fieldset id="neo4j" toggleable="true" collapsed="true" legend="Neo4J Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.neo4JStorageConfiguration}">
+                        <h:panelGrid columns = "1">
+                            <h:panelGroup>
+                                <hftl:formField label="#{messages['BusinessEntity.labels']}" field="neo4JStorageConfiguration" childField="labels"/>
+                                        <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
+                                <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" id="primitiveEntity"
+                                                        childField="primitiveEntity"
+                                                        field="neo4JStorageConfiguration" listenerUpdate="@this primitiveType"/>
+                                        <!--  If primitive, ask for primitive type class -->
+                                <h:panelGroup id="primitiveType">
+                                    <hftl:formField id="form_primitiveType" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity}"
+                                                            label="#{messages['BusinessEntity.primitiveType']}" required="true" field="neo4JStorageConfiguration" childField="primitiveType"/>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                            <h:panelGroup>
+                                <p:fieldset id="cfUniqueConstraint" toggleable="true" collapsed="true" legend="Entity unique constraint">
+                                    <p:panel width="100" header="#{messages['customizedEntities.uniqueConstraint']}">
+                                        <h:panelGroup id="uniqueConstraintsPanel" >
+                                            <p:messages/>
+                                            <p:dataTable id="uniqueConstaintsDatatable" value="#{customEntityTemplateBean.customEntityTemplateUniqueConstraints}" var="uniqueConstraint" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+                                                         paginator="true" rows="30" resizableColumns="true"
+                                                         paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
+                                                         lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                                                <p:column headerText="#{messages['customUniqueConstraint.code']}">
+                                                    <h:outputText value="#{uniqueConstraint.code}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['customUniqueConstraint.description']}">
+                                                    <h:outputText value="#{uniqueConstraint.description}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['customUniqueConstraint.cypherQuery']}">
+                                                    <h:outputText value="#{uniqueConstraint.cypherQuery}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['customUniqueConstraint.trustScore']}">
+                                                    <h:outputText value="#{uniqueConstraint.trustScore}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['customUniqueConstraint.applicableOnEl']}">
+                                                    <h:outputText value="#{uniqueConstraint.applicableOnEl}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['customUniqueConstraint.position']}">
+                                                    <h:outputText value="#{uniqueConstraint['position']}" />
+                                                </p:column>
+                                                <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
+
+                                                    <p:commandButton id="editFieldGroupBtn" icon="ui-icon-document" oncomplete="PF('uniqueConstraintsDialog').show()" update=":uniqueConstraintsDialogForm"
+                                                                     actionListener="#{customEntityTemplateBean.editUniqueConstraint(uniqueConstraint)}">
+                                                    </p:commandButton>
+                                                    <p:commandButton action="#{customEntityTemplateBean.removeUniqueConstraint(uniqueConstraint)}" icon="ui-icon-trash" update=":cetForm:uniqueConstraintsPanel" />
+                                                </p:column>
+                                                <f:facet name="footer">
+                                                    <p:commandButton action="#{customEntityTemplateBean.addUniqueConstraint}" id="addUniqueConstraints" value="#{messages['customUniqueConstraint.add']}" oncomplete="PF('uniqueConstraintsDialog').show()"  update=":uniqueConstraintsDialogForm"></p:commandButton>
+                                                </f:facet>
+                                            </p:dataTable>
+                                        </h:panelGroup>
+                                    </p:panel>
+                                </p:fieldset>
+                                <!--<p:fieldset id="cfUniqueConstraint" toggleable="true" collapsed="true" legend="Entity unique constraint">-->
+                                    <!--<ui:include src="customEntityTemplateUniqueConstaint.xhtml"/>-->
+                                <!--</p:fieldset>-->
+
+                                <p:fieldset id="cfGraphqlQueryField" toggleable="true" collapsed="true" legend="Graphql query fields">
+                                    <p:panel width="100" header="#{messages['customizedEntities.graphqlQueryField']}">
+                                        <h:panelGroup id="graphqlQueryFieldsPanel">
+                                            <p:messages/>
+                                            <p:dataTable id="graphqlQueryFieldDatatable" value="#{customEntityTemplateBean.graphqlQueryFields}" var="graphqlQueryField" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+                                                         paginator="true" rows="30" resizableColumns="true"
+                                                         paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
+                                                         lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                                                <p:column headerText="#{messages['graphqlQueryField.fieldName']}">
+                                                    <h:outputText value="#{graphqlQueryField.fieldName}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['graphqlQueryField.fieldType']}">
+                                                    <h:outputText value="#{graphqlQueryField.fieldType}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['graphqlQueryField.multivalued']}">
+                                                    <h:outputText value="#{messages[graphqlQueryField.multivalued.toString()=='true'?'commons.yes':'commons.no']}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['graphqlQueryField.query']}">
+                                                    <h:outputText value="#{graphqlQueryField.query}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
+                                                    <p:commandButton id="editfieldBtn" icon="ui-icon-document" oncomplete="PF('graphqlQueryFieldsDialog').show()" update=":graphqlQueryFieldsDialog"
+                                                                     actionListener="#{customEntityTemplateBean.editGraphqlQueryField(graphqlQueryField)}">
+                                                    </p:commandButton>
+                                                    <p:commandButton action="#{customEntityTemplateBean.removeGraphqlQueryField(graphqlQueryField)}" icon="ui-icon-trash" update=":cetForm:graphqlQueryFieldsPanel" />
+                                                </p:column>
+                                                <f:facet name="footer">
+                                                    <p:commandButton action="#{customEntityTemplateBean.addGraphqlQueryField}" id="addGraphqlQueryField" value="#{messages['commons.addNew']}" oncomplete="PF('graphqlQueryFieldsDialog').show()"  update=":graphqlQueryFieldsDialogForm"></p:commandButton>
+                                                </f:facet>
+                                            </p:dataTable>
+                                        </h:panelGroup>
+                                    </p:panel>
+                                </p:fieldset>
+                            </h:panelGroup>
+                        </h:panelGrid>
+                   </p:fieldset>
+                </h:panelGroup>
+
 			</hftl:formPanel>
-                
         </h:panelGroup>
         <h:panelGroup rendered="#{! customEntityTemplateBean.customEntityTemplate}">
             <hftl:decorateFormPanel label="#{messages['customizedEntities.detail']} - #{customEntityTemplateBean.customizedEntity.classnameToDisplayHuman}">
@@ -128,13 +213,9 @@
             <ui:include src="customFieldsAndActions.xhtml"/>
         </h:panelGroup>
 
-        <h:panelGroup id="cfUniqueConstraint">
-            <ui:include src="customEntityTemplateUniqueConstaint.xhtml"/>
-        </h:panelGroup>
+        <ui:include src="customEntityTemplateUniqueConstaint.xhtml"/>
 
-        <h:panelGroup id="cfGraphqlQueryField">
-            <ui:include src="graphqlQueryField.xhtml"/>
-        </h:panelGroup>
+        <ui:include src="graphqlQueryField.xhtml"/>
 
         <h:form>
             <p:panel width="100">

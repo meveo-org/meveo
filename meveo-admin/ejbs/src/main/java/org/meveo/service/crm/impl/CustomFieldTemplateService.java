@@ -127,6 +127,17 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
     /**
+     * Find a list of custom field templates
+     * @param appliesTo
+     * @return
+     */
+    public List<CustomFieldTemplate> findByAppliesto(String appliesTo) {
+        List<CustomFieldTemplate> values = getEntityManager().createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
+                .setParameter("appliesTo", appliesTo).getResultList();
+        return values;
+    }
+
+    /**
      * Find a list of custom field templates corresponding to a given entity - always do a lookup in DB
      * 
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
