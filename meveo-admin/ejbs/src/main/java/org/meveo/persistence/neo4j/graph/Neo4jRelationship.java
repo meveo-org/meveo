@@ -14,29 +14,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.service.graphql;
+package org.meveo.persistence.neo4j.graph;
 
-import java.util.Set;
-import java.util.SortedSet;
+import org.neo4j.driver.internal.InternalRelationship;
+import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.types.Relationship;
 
-public class GraphQLEntity {
+public class Neo4jRelationship extends InternalRelationship implements Neo4jItem {
 
-    private String name;
-    private SortedSet<GraphQLField> graphQLFields;
+    private final String repository;
 
-    public String getName() {
-        return name;
+    public Neo4jRelationship(Relationship relationship, String repository){
+        super(relationship.id(), relationship.startNodeId(), relationship.endNodeId(), relationship.type(), relationship.asMap(Values::value));
+        this.repository = repository;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Set<GraphQLField> getGraphQLFields() {
-        return graphQLFields;
-    }
-
-    public void setGraphQLFields(SortedSet<GraphQLField> graphQLFields) {
-        this.graphQLFields = graphQLFields;
+    @Override
+    public String repository() {
+        return repository;
     }
 }

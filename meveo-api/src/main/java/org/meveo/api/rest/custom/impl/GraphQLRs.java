@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 import org.meveo.model.neo4j.GraphQLRequest;
-import org.meveo.service.neo4j.service.graphql.GraphQLService;
+import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 
 @Path("/graphql/{neo4jConfiguration}/")
 public class GraphQLRs {

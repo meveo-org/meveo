@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.service.graphql;
+package org.meveo.persistence.neo4j.service.graphql;
 
 import java.util.Objects;
 

@@ -1,6 +1,5 @@
 package org.meveo.admin.action.admin.custom;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,22 +16,17 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
-import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.typereferences.GenericTypeReferences;
-import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.neo4j.base.Neo4jConnectionProvider;
-import org.meveo.service.neo4j.service.Neo4jService;
+import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
+import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

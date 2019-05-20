@@ -21,11 +21,11 @@ import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
-import org.meveo.service.neo4j.scheduler.AtomicPersistencePlan;
-import org.meveo.service.neo4j.scheduler.CyclicDependencyException;
-import org.meveo.service.neo4j.scheduler.ScheduledPersistenceService;
-import org.meveo.service.neo4j.scheduler.SchedulingService;
-import org.meveo.service.neo4j.service.Neo4jService;
+import org.meveo.persistence.scheduler.AtomicPersistencePlan;
+import org.meveo.persistence.scheduler.CyclicDependencyException;
+import org.meveo.persistence.scheduler.ScheduledPersistenceService;
+import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.persistence.neo4j.service.Neo4jService;
 
 @Path("/neo4j/persist")
 public class PersistenceRs {

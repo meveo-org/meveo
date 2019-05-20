@@ -1,4 +1,20 @@
-package org.meveo.service.neo4j.scheduler;
+/*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+ * not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.meveo.persistence.scheduler;
 
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
@@ -28,14 +44,14 @@ public class SchedulingService {
 
         /* Extract leafs, add them to the leaf nodes and remove them from the initial list */
         final Set<Entity> leafs = getLeafs(entityOrRelations);
-        final Set<EntityToPersist> leafNodes = leafs.stream()
+        final Set<ItemToPersist> leafNodes = leafs.stream()
                 .map(SchedulingService::entityToNode)
                 .collect(Collectors.toSet());
         entityOrRelations.removeAll(leafs);
 
         /* Extract targets that are not source and add them to the leaf nodes*/
         Set<Entity> targetsNoSources = getTargetsNoSources(entityOrRelations);
-        final Set<EntityToPersist> targetsNoSourcesNodes = targetsNoSources.stream()
+        final Set<ItemToPersist> targetsNoSourcesNodes = targetsNoSources.stream()
                 .map(SchedulingService::entityToNode)
                 .collect(Collectors.toSet());
 
@@ -44,7 +60,7 @@ public class SchedulingService {
         atomicPersistencePlan.addEntities(leafNodes);
 
         /* Enforce unity on node name name */
-        final Comparator<EntityToPersist> codeComparator = Comparator.comparing(EntityToPersist::getName);
+        final Comparator<ItemToPersist> codeComparator = Comparator.comparing(ItemToPersist::getName);
 
         /* Iterate over source nodes until there is no one left */
         while (!targetsNoSources.isEmpty()) {
@@ -52,18 +68,18 @@ public class SchedulingService {
             final List<EntityRelation> relationsWithTargetsOnly = getRelationsWithTargetsOnly(entityOrRelations, targetsNoSources);
 
             /* Extract source nodes */
-            Set<EntityToPersist> sourceNodeSet = relationsWithTargetsOnly
+            Set<ItemToPersist> sourceNodeSet = relationsWithTargetsOnly
                     .stream()
                     .map(entityRelation -> {
-                        Relation r = entityRelationToRelation(entityRelation);
+                        RelationToPersist r = entityRelationToRelation(entityRelation);
                         Entity source = entityRelation.getSource();
-                        return new SourceNode(source.getType(), source.getCompoundName(), source.getProperties(), r);
+                        return new SourceEntityToPersist(source.getType(), source.getCompoundName(), source.getProperties(), r);
                     }).collect(Collectors.toCollection(() -> new TreeSet<>(codeComparator)));
 
             atomicPersistencePlan.addEntities(sourceNodeSet);
 
             /* Persist unique relationships right after their targets */
-            Set<EntityToPersist> relationsWithTargetsOnlyToPersist = relationsWithTargetsOnly.stream()
+            Set<ItemToPersist> relationsWithTargetsOnlyToPersist = relationsWithTargetsOnly.stream()
                     .map(SchedulingService::entityRelationToRelation)
                     .collect(Collectors.toSet());
             atomicPersistencePlan.addEntities(relationsWithTargetsOnlyToPersist);
@@ -81,7 +97,7 @@ public class SchedulingService {
                 .map(EntityRelation.class::cast)
                 .collect(Collectors.toSet());
 
-        final Set<EntityToPersist> relations = remainingRels.stream()
+        final Set<ItemToPersist> relations = remainingRels.stream()
                 .map(SchedulingService::entityRelationToRelation)
                 .collect(Collectors.toSet());
 
@@ -96,12 +112,12 @@ public class SchedulingService {
         return atomicPersistencePlan;
     }
 
-    private static Node entityToNode(Entity e) {
-        return new Node(e.getType(), e.getCompoundName(), e.getProperties());
+    private static EntityToPersist entityToNode(Entity e) {
+        return new EntityToPersist(e.getType(), e.getCompoundName(), e.getProperties());
     }
 
-    private static Relation entityRelationToRelation(EntityRelation e) {
-        return new Relation(e.getType(), e.getCompoundName(), e.getProperties(), entityToNode(e.getSource()), entityToNode(e.getTarget()));
+    private static RelationToPersist entityRelationToRelation(EntityRelation e) {
+        return new RelationToPersist(e.getType(), e.getCompoundName(), e.getProperties(), entityToNode(e.getSource()), entityToNode(e.getTarget()));
     }
 
     private List<EntityRelation> getRelationsWithTargetsOnly(Collection<EntityOrRelation> entityOrRelations, Set<Entity> targetsNoSources) {

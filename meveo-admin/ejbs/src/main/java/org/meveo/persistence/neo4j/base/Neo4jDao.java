@@ -1,12 +1,28 @@
-package org.meveo.service.neo4j.base;
+/*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+ * not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.meveo.persistence.neo4j.base;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
-import org.meveo.service.neo4j.graph.Neo4jEntity;
-import org.meveo.service.neo4j.graph.Neo4jRelationship;
-import org.meveo.service.neo4j.service.Neo4JRequests;
+import org.meveo.persistence.neo4j.graph.Neo4jEntity;
+import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
+import org.meveo.persistence.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
@@ -26,6 +42,7 @@ public class Neo4jDao {
     private static final String FIELDS = "fields";
     private static final String UPDATABLE_FIELDS = "updatableFields";
     public static final String ID = "id";
+    private static final String CET_CODE = "cetCode";
 
     Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
 
@@ -47,6 +64,37 @@ public class Neo4jDao {
     @Inject
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
+
+    public String findNodeId(String neo4jConfiguration, String code, Map<String, Object> fieldsKeys){
+        Transaction transaction = null;
+
+        final Map<String, Object> values = new HashMap<>();
+        values.put(FIELD_KEYS, Values.value(fieldsKeys));
+        values.put(CET_CODE, code);
+
+        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
+            transaction = session.beginTransaction();
+
+            StrSubstitutor sub = new StrSubstitutor(fieldsKeys);
+            String statement = sub.replace(Neo4JRequests.findNodeId);
+
+            final Record result = transaction.run(statement, fieldsKeys).single();
+            transaction.success();
+
+            return result.get(0).asString();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.failure();
+            }
+
+            LOGGER.error("Cannot find id of node with label {} and key values {} for repository {} : {}", code, fieldsKeys, neo4jConfiguration, e.getMessage());
+            return null;
+        } finally {
+            if (transaction != null) {
+                transaction.close();
+            }
+        }
+    }
 
     public void updateIDL(String neo4jConfiguration, String idl) {
         Transaction transaction = null;
@@ -119,7 +167,7 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", cetCode);
+        valuesMap.put(CET_CODE, cetCode);
         valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
         valuesMap.put(FIELDS, Values.value(fields));
         valuesMap.put(UPDATABLE_FIELDS, Values.value(updatableFields));
@@ -182,7 +230,7 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", cetCode);
+        valuesMap.put(CET_CODE, cetCode);
         valuesMap.put(FIELDS, Values.value(fields));
 
         // Build statement
@@ -273,7 +321,7 @@ public class Neo4jDao {
     public Set<String> executeUniqueConstraint(String neo4JConfiguration, CustomEntityTemplateUniqueConstraint uniqueConstraint, Map<String, Object> fields, String cetCode) {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", cetCode);
+        valuesMap.put(CET_CODE, cetCode);
         valuesMap.put(FIELDS, Values.value(fields));
 
         // Build statement
