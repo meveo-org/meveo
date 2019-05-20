@@ -63,8 +63,7 @@ public class SQLStorageConfiguration {
      * @return Database table name
      */
     public static String getDbTablename(CustomRelationshipTemplate crt) {
-    	String tableName = crt.getStartNode().getCode() + "_" + crt.getCode() + "_" + crt.getEndNode().getCode();
-        return BaseEntity.cleanUpAndLowercaseCodeOrId(tableName);
+        return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
     }
 
     public boolean isStoreAsTable() {
