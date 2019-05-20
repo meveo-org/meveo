@@ -11,6 +11,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
@@ -20,11 +21,13 @@ import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
 
 @Named
@@ -50,6 +53,8 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
 
+    private DualListModel<DBStorageType> availableStoragesDM;
+
     private EntityCustomAction selectedEntityAction;
 
     @Inject
@@ -68,8 +73,11 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        if (!validateUniqueFields(this.entity)) {
-            return getEditViewName();
+        if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
+            getEntity().getAvailableStorages().clear();
+            getEntity().getAvailableStorages().addAll(availableStoragesDM.getTarget());
+        } else {
+            getEntity().setAvailableStorages(availableStoragesDM.getTarget());
         }
         return super.saveOrUpdate(killConversation);
     }
@@ -619,5 +627,28 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
             return null;
         }
+    }
+    public DualListModel<DBStorageType> getAvailableStoragesDM() {
+        if (availableStoragesDM == null) {
+            List<DBStorageType> perksSource = new ArrayList<>();
+            for (DBStorageType dbStorageType : DBStorageType.values()) {
+                perksSource.add(dbStorageType);
+            }
+            List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
+            if (getEntity().getAvailableStorages() != null) {
+                perksTarget.addAll(getEntity().getAvailableStorages());
+            }
+            perksSource.removeAll(perksTarget);
+            availableStoragesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+        }
+        return availableStoragesDM;
+    }
+    public void setAvailableStoragesDM(DualListModel<DBStorageType> availableStoragesDM) {
+        this.availableStoragesDM = availableStoragesDM;
+    }
+    public List<DBStorageType> getStorageTypesList(){
+        ArrayList<DBStorageType> arrayList = new ArrayList<>(availableStoragesDM.getSource());
+        arrayList.addAll(availableStoragesDM.getTarget());
+        return arrayList;
     }
 }

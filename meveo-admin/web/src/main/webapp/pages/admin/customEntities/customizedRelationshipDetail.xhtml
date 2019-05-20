@@ -56,15 +56,25 @@
                         </p:selectOneMenu>
                     </hftl:decorateFormField>
                 </h:panelGrid>
-                <h:panelGrid columns="2" rendered="#{customRelationshipTemplateBean.entity.id != null}" styleClass="clearLeft">
+                <h:panelGrid columns="2" styleClass="clearLeft" rendered="#{customRelationshipTemplateBean.entity.id != null}">
                     <hftl:decorateFormField  field = "startNode" fieldId="startNodeLabel" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <h:outputText id="startNodeLabel"  value="#{customRelationshipTemplateBean.entity.startNode.name}" styleClass="field-value" style="width:400px;"></h:outputText>
                     </hftl:decorateFormField>
                     <hftl:decorateFormField field = "endNode" fieldId="endNodeLabel" componentWidth="150" label="#{messages['customizedRelationships.endEntity']}">
                         <h:outputText id="endNodeLabel" value="#{customRelationshipTemplateBean.entity.endNode.name}" styleClass="field-value"/>
                     </hftl:decorateFormField>
+                </h:panelGrid >
+
+                <h:panelGrid columns="3" >
+                    <h:panelGroup id="availableStorages">
+                        <hftl:decorateFormField componentWidth="100%" label="#{messages['customRelationshipTemplate.availableStoragesDM']}">
+                            <p:pickList id="pickList" value="#{customRelationshipTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                            </p:pickList>
+                        </hftl:decorateFormField>
+                    </h:panelGroup>
                 </h:panelGrid>
-				<p:fieldset id="idl" toggleable="true" collapsed="true" legend="#{messages['customFieldTemplate.idl']}" styleClass="validations clearfix">
+
+                <p:fieldset id="idl" toggleable="true" collapsed="true" legend="#{messages['customFieldTemplate.idl']}" styleClass="validations clearfix">
 					<h:panelGrid columns="5" cellpadding = "5">
 		                <hftl:formField label="#{messages['customizedRelationships.sourceNameSingular']}" field="sourceNameSingular"/>
 		                <hftl:formField label="#{messages['customizedRelationships.sourceNamePlural']}" field="sourceNamePlural"/>
