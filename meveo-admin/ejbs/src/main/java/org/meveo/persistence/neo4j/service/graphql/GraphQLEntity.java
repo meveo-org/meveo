@@ -14,10 +14,29 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.graph;
+package org.meveo.persistence.neo4j.service.graphql;
 
-public interface Neo4jItem {
+import java.util.Set;
+import java.util.SortedSet;
 
-    String repository();
+public class GraphQLEntity {
 
+    private String name;
+    private SortedSet<GraphQLField> graphQLFields;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Set<GraphQLField> getGraphQLFields() {
+        return graphQLFields;
+    }
+
+    public void setGraphQLFields(SortedSet<GraphQLField> graphQLFields) {
+        this.graphQLFields = graphQLFields;
+    }
 }

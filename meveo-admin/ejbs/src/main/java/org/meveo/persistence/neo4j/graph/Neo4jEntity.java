@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.graph;
+package org.meveo.persistence.neo4j.graph;
 
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.Values;

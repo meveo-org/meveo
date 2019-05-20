@@ -812,12 +812,12 @@ public class NativePersistenceService extends BaseService {
     /**
      * Find a record uuid in table using its exact values
      * 
-     * @param cetCodeOrTableName Table name where the record is stored
+     * @param tableName Table name where the record is stored
      * @param queryValues Values used to filter the result
      * @return The uuid of the record if it was found or null if it was not
      */
-    public String findIdByValues(String cetCodeOrTableName, Map<String, Object> queryValues) {
-        QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + cetCodeOrTableName + " a ", "a");
+    public String findIdByValues(String tableName, Map<String, Object> queryValues) {
+        QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
             queryBuilder.addCriterion(key, "=", value, false);
         });

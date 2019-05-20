@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.service.graphql;
+package org.meveo.persistence.neo4j.service.graphql;
 
 import java.util.*;
 import java.util.function.Function;
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
-import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -37,7 +36,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
-import org.meveo.service.neo4j.base.Neo4jDao;
+import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.slf4j.Logger;
 
 @Stateless

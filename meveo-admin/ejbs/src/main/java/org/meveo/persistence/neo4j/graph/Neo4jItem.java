@@ -14,23 +14,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.neo4j.graph;
+package org.meveo.persistence.neo4j.graph;
 
-import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.types.Relationship;
+public interface Neo4jItem {
 
-public class Neo4jRelationship extends InternalRelationship implements Neo4jItem {
+    String repository();
 
-    private final String repository;
-
-    public Neo4jRelationship(Relationship relationship, String repository){
-        super(relationship.id(), relationship.startNodeId(), relationship.endNodeId(), relationship.type(), relationship.asMap(Values::value));
-        this.repository = repository;
-    }
-
-    @Override
-    public String repository() {
-        return repository;
-    }
 }

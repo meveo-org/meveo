@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.service.neo4j.service.graphql.GraphQLService;
+import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.slf4j.Logger;
 
 /**
