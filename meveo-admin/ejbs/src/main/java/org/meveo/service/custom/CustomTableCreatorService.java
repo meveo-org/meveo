@@ -305,23 +305,19 @@ public class CustomTableCreatorService implements Serializable {
 
         // Add a foreign key constraint pointing on referenced table if field is an entity reference
         if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY){
-            // Abort if referenced cet is not stored as table
+
+            // Only add foreign key constraint if referenced entity is stored as table
             final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-            if(referenceCet.getSqlStorageConfiguration() == null || !referenceCet.getSqlStorageConfiguration().isStoreAsTable()){
-                String message = String.format("Referenced entity %s is not configured to be stored in a table, it therefore cannot be stored in %s table", referenceCet.getCode(), dbFieldname);
-                throw new BusinessException(message);
+            if(referenceCet.getSqlStorageConfiguration() != null && referenceCet.getSqlStorageConfiguration().isStoreAsTable()){
+                AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
+                foreignKeyConstraint.setBaseColumnNames(dbFieldname);
+                foreignKeyConstraint.setBaseTableName(dbTableName);
+                foreignKeyConstraint.setReferencedColumnNames(UUID);
+                foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
+                foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
+
+                changeSet.addChange(foreignKeyConstraint);
             }
-
-            AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
-            foreignKeyConstraint.setBaseColumnNames(dbFieldname);
-            foreignKeyConstraint.setBaseTableName(dbTableName);
-            foreignKeyConstraint.setReferencedColumnNames(UUID);
-            foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
-            foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
-            
-            
-
-            changeSet.addChange(foreignKeyConstraint);
         }
 
         if(!changeSet.getChanges().isEmpty()){

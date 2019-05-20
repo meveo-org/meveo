@@ -35,6 +35,7 @@ import org.meveo.model.customEntities.CETConstants;
 import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.neo4j.base.Neo4jDao;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
@@ -180,30 +181,32 @@ public class Neo4jService {
                 }
 
                 for (Object value : values) {
-                    Set<NodeReference> relatedNodeReferences;
-                    if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
-                        fields.put(entityReference.getCode(), value);
-                        Map<String, Object> valueMap = new HashMap<>();
-                        valueMap.put("value", value);
+                    Set<NodeReference> relatedNodeReferences = null;
+                    if(referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)){
+                        if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
+                            fields.put(entityReference.getCode(), value);
+                            Map<String, Object> valueMap = new HashMap<>();
+                            valueMap.put("value", value);
 
-                        // If there is no unique constraints defined, directly merge node
-                        if (referencedCet.getNeo4JStorageConfiguration().getUniqueConstraints().isEmpty()) {
-                            List<String> additionalLabels = getAdditionalLabels(referencedCet);
-                            if (referencedCet.getPrePersistScript() != null) {
-                                scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+                            // If there is no unique constraints defined, directly merge node
+                            if (referencedCet.getNeo4JStorageConfiguration().getUniqueConstraints().isEmpty()) {
+                                List<String> additionalLabels = getAdditionalLabels(referencedCet);
+                                if (referencedCet.getPrePersistScript() != null) {
+                                    scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+                                }
+                                String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
+                                relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
+                            } else {
+                                relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                             }
-                            String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
-                            relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
                         } else {
-                            relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
-                        }
-                    } else {
-                        // Referenced CET is not primitive
-                        if (value instanceof Map) {
-                            @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
-                            relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
-                        } else {
-                            throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
+                            // Referenced CET is not primitive
+                            if (value instanceof Map) {
+                                @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
+                                relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
+                            } else {
+                                throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
+                            }
                         }
                     }
                     if (relatedNodeReferences != null) {
@@ -595,7 +598,7 @@ public class Neo4jService {
      * If such a relation does not exists, we create the source node with it fields.
      *
      * @param neo4JConfiguration Neo4J coordinates
-     * @param crtCode            Code of the source node to update or create
+     * @param crtCode            Code of the unique relation
      * @param startNodeValues    Values to assign to the start node
      * @param endNodeValues      Filters on the target node values
      */
