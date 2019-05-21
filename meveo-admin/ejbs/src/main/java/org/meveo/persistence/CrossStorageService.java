@@ -104,7 +104,7 @@ public class CrossStorageService {
 
         } else {
             // Target exists. Let's check if the relation exist.
-            final String relationUUID = findRelationByTargetUuid(configurationCode, targetUUUID, crt);
+            final String relationUUID = findUniqueRelationByTargetUuid(configurationCode, targetUUUID, crt);
 
             // Relation does not exists. We create the source.
             if (relationUUID == null) {
@@ -260,7 +260,7 @@ public class CrossStorageService {
         }
 
         // Neo4J Storage
-        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             neo4jService.addCRTByNodeIds(configurationCode, crt.getCode(), relationValues, sourceUUID, targetUUUID);
         }
 
@@ -288,7 +288,7 @@ public class CrossStorageService {
         }
 
         // Neo4J Storage
-        if(crt.getAvailableStorages().contains(DBStorageType. NEO4J)){
+        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             neo4jService.addCRTByNodeIds(configurationCode, crt.getCode(), relationValues, sourceUuid, targetUuid);
         }
     }
@@ -299,7 +299,7 @@ public class CrossStorageService {
      * @param configurationCode Repository to search in
      * @param valuesFilters     Filter on entity's values
      * @param cet               Template of the entity
-     * @return  UUID of the entity or nul if it was'nt found
+     * @return UUID of the entity or nul if it was'nt found
      */
     public String findEntityId(String configurationCode, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
         String uuid = null;
@@ -326,6 +326,46 @@ public class CrossStorageService {
         return uuid;
     }
 
+    /**
+     * Remove an entity from database
+     *
+     * @param configurationCode Repository
+     * @param cet   Template of the entity
+     * @param uuid UUID of the entity
+     */
+    public void remove(String configurationCode, CustomEntityTemplate cet, String uuid) throws BusinessException {
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+                customTableService.remove(dbTablename, uuid);
+            } else {
+                final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+                customEntityInstanceService.remove(customEntityInstance);
+            }
+        }
+
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jDao.removeNode(configurationCode, cet.getCode(), uuid);
+        }
+    }
+
+    /**
+     * Remove a relation from database
+     *
+     * @param configurationCode Repository
+     * @param crt   Template of the relation
+     * @param uuid UUID of the relation
+     */
+    public void remove(String configurationCode, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
+        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+            final String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
+            customTableRelationService.remove(dbTablename, uuid);
+        }
+
+        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jDao.removeRelation(configurationCode, crt.getCode(), uuid);
+        }
+    }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
         return values.entrySet()
@@ -396,29 +436,29 @@ public class CrossStorageService {
 
     private List<String> getTrustedUuids(Set<EntityRef> createdEntityReferences) {
         return createdEntityReferences.stream()
-                            .filter(EntityRef::isTrusted)
-                            .map(EntityRef::getUuid)
-                            .collect(Collectors.toList());
+                .filter(EntityRef::isTrusted)
+                .map(EntityRef::getUuid)
+                .collect(Collectors.toList());
     }
 
-    private String findRelationByTargetUuid(String configurationCode, String targetUuid, CustomRelationshipTemplate crt){
-        if(crt.getAvailableStorages().contains(DBStorageType.SQL)){
+    private String findUniqueRelationByTargetUuid(String configurationCode, String targetUuid, CustomRelationshipTemplate crt) {
+        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             return customTableRelationService.findIdOfUniqueRelationByTargetId(crt, targetUuid);
         }
 
-        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             return neo4jService.findIdOfUniqueRelationByTargetId(configurationCode, crt, targetUuid);
         }
 
         return null;
     }
 
-    private String findIdOfSourceEntityByRelationId(String configurationCode, String relationUuid, CustomRelationshipTemplate crt){
-        if(crt.getAvailableStorages().contains(DBStorageType.SQL)){
+    private String findIdOfSourceEntityByRelationId(String configurationCode, String relationUuid, CustomRelationshipTemplate crt) {
+        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             return customTableRelationService.findIdOfSourceEntityByRelationId(crt, relationUuid);
         }
 
-        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             return neo4jService.findIdOfUniqueRelationByTargetId(configurationCode, crt, relationUuid);
         }
 
