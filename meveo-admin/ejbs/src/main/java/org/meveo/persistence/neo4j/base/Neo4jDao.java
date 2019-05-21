@@ -87,6 +87,22 @@ public class Neo4jDao {
     }
 
     /**
+     * Remove a relation using its UUID
+     *
+     * @param neo4jconfiguration Repository code
+     * @param label              Label of the relation to remove
+     * @param uuid               UUID of the relation to remove
+     */
+    public void removeRelation(String neo4jconfiguration, String label, String uuid) {
+        StringBuilder queryBuilder = new StringBuilder()
+                .append("MATCH ()-[n:").append(label).append("]-() \n")
+                .append("WHERE n.meveo_uuid = $uuid")
+                .append("DELETE n ;");
+
+        cypherHelper.execute(neo4jconfiguration, queryBuilder.toString(), Collections.singletonMap("uuid", uuid));
+    }
+
+    /**
      * Retrieve relationships instances base on relationship label and target's label and uuid
      *
      * @param neo4jConfiguration    Repository code
