@@ -291,7 +291,7 @@ public class CustomRelationshipTemplateDto extends BaseDto {
         crt.setSourceNameSingular(dto.getSourceNameSingular());
         crt.setTargetNamePlural(dto.getTargetNamePlural());
         crt.setTargetNameSingular(dto.getTargetNameSingular());
-        crt.setGraphqlTypeName(dto.getGraphQlTypeName());
+        crt.setGraphQlTypeName(dto.getGraphQlTypeName());
         crt.setAvailableStorages(dto.getAvailableStorages());
         return crt;
     }

@@ -69,20 +69,25 @@
                     <h:panelGroup id="availableStorages">
                         <hftl:decorateFormField componentWidth="100%" label="#{messages['customRelationshipTemplate.availableStoragesDM']}">
                             <p:pickList id="pickList" value="#{customRelationshipTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                                <o:converter converterId="omnifaces.ListConverter" list="#{customRelationshipTemplateBean.storageTypesList}" />
+                                <p:ajax event="transfer" listener="#{customRelationshipTemplateBean.onChangeAvailableStorages()}" update=":crtForm:group" />
                             </p:pickList>
                         </hftl:decorateFormField>
                     </h:panelGroup>
                 </h:panelGrid>
 
-                <p:fieldset id="idl" toggleable="true" collapsed="true" legend="#{messages['customFieldTemplate.idl']}" styleClass="validations clearfix">
-					<h:panelGrid columns="5" cellpadding = "5">
-		                <hftl:formField label="#{messages['customizedRelationships.sourceNameSingular']}" field="sourceNameSingular"/>
-		                <hftl:formField label="#{messages['customizedRelationships.sourceNamePlural']}" field="sourceNamePlural"/>
-		                <hftl:formField label="#{messages['customizedRelationships.targetNameSingular']}" field="targetNameSingular"/>
-		                <hftl:formField label="#{messages['customizedRelationships.targetNamePlural']}" field="targetNamePlural"/>
-		                <hftl:formField label="#{messages['customizedRelationships.graphqlTypeName']}" field="graphQlTypeName"/>	
-					</h:panelGrid>
-                </p:fieldset>
+                <h:panelGroup id="group">
+                    <p:fieldset id="idl" toggleable="true" collapsed="true" legend="#{messages['customFieldTemplate.idl']}" styleClass="validations clearfix"
+                        rendered="#{customRelationshipTemplateBean.displayNeo4j}">
+                        <h:panelGrid columns="5" cellpadding = "5">
+                            <hftl:formField label="#{messages['customizedRelationships.sourceNameSingular']}" field="sourceNameSingular"/>
+                            <hftl:formField label="#{messages['customizedRelationships.sourceNamePlural']}" field="sourceNamePlural"/>
+                            <hftl:formField label="#{messages['customizedRelationships.targetNameSingular']}" field="targetNameSingular"/>
+                            <hftl:formField label="#{messages['customizedRelationships.targetNamePlural']}" field="targetNamePlural"/>
+                            <hftl:formField label="#{messages['customizedRelationships.graphqlTypeName']}" field="graphQlTypeName"/>
+                        </h:panelGrid>
+                    </p:fieldset>
+                </h:panelGroup>
             </hftl:formPanel>
 			<h:panelGroup id="crFields">
 				<ui:include src="customFieldsRelationships.xhtml" />

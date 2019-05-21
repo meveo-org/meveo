@@ -57,6 +57,8 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     private EntityCustomAction selectedEntityAction;
 
+    private boolean displayNeo4j;
+
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
@@ -73,13 +75,30 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        return super.saveOrUpdate(killConversation);
+    }
+
+    public void onChangeAvailableStorages() {
+        displayNeo4j = false;
         if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
             getEntity().getAvailableStorages().clear();
             getEntity().getAvailableStorages().addAll(availableStoragesDM.getTarget());
         } else {
             getEntity().setAvailableStorages(availableStoragesDM.getTarget());
         }
-        return super.saveOrUpdate(killConversation);
+    }
+
+    public boolean isDisplayNeo4j() {
+        if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
+            if (getEntity().getAvailableStorages().contains(DBStorageType.NEO4J)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void setDisplayNeo4j(boolean displayNeo4j) {
+        this.displayNeo4j = displayNeo4j;
     }
 
     public List<CustomEntityTemplate> getCustomEntityTemplates() {
@@ -104,7 +123,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
      * GUI action button/link
      *
      * @param entityClassName
-     *                            Entity class
+     *
      */
     public void initCustomization(String entityClassName) {
         customizedEntity = null;

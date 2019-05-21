@@ -158,13 +158,13 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 
         return null;
     }
-    
-    public String getGraphQlTypeName(){
+
+    public String getGraphQlTypeName() {
         return graphQlTypeName;
     }
 
-    public void setGraphqlTypeName(String graphqlTypeName) {
-        this.graphQlTypeName = graphqlTypeName;
+    public void setGraphQlTypeName(String graphQlTypeName) {
+        this.graphQlTypeName = graphQlTypeName;
     }
 
     public String getTargetNameSingular() {
