@@ -1,24 +1,29 @@
 package org.meveo.service.custom;
 
-import java.io.Serializable;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
-
+import liquibase.Contexts;
+import liquibase.LabelExpression;
+import liquibase.Liquibase;
+import liquibase.change.AddColumnConfig;
+import liquibase.change.ColumnConfig;
+import liquibase.change.ConstraintsConfig;
+import liquibase.change.core.*;
+import liquibase.changelog.ChangeSet;
+import liquibase.changelog.DatabaseChangeLog;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.MigrationFailedException;
+import liquibase.precondition.core.NotPrecondition;
+import liquibase.precondition.core.PreconditionContainer;
+import liquibase.precondition.core.PreconditionContainer.ErrorOption;
+import liquibase.precondition.core.PreconditionContainer.FailOption;
+import liquibase.precondition.core.TableExistsPrecondition;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.statement.DatabaseFunction;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerProvider;
-import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -28,39 +33,15 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.slf4j.Logger;
 
-import liquibase.Contexts;
-import liquibase.LabelExpression;
-import liquibase.Liquibase;
-import liquibase.change.AddColumnConfig;
-import liquibase.change.ColumnConfig;
-import liquibase.change.ConstraintsConfig;
-import liquibase.change.core.AddColumnChange;
-import liquibase.change.core.AddDefaultValueChange;
-import liquibase.change.core.AddForeignKeyConstraintChange;
-import liquibase.change.core.AddNotNullConstraintChange;
-import liquibase.change.core.AddPrimaryKeyChange;
-import liquibase.change.core.CreateTableChange;
-import liquibase.change.core.DropColumnChange;
-import liquibase.change.core.DropDefaultValueChange;
-import liquibase.change.core.DropForeignKeyConstraintChange;
-import liquibase.change.core.DropNotNullConstraintChange;
-import liquibase.change.core.DropSequenceChange;
-import liquibase.change.core.DropTableChange;
-import liquibase.change.core.ModifyDataTypeChange;
-import liquibase.changelog.ChangeSet;
-import liquibase.changelog.DatabaseChangeLog;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.MigrationFailedException;
-import liquibase.exception.ValidationFailedException;
-import liquibase.precondition.core.NotPrecondition;
-import liquibase.precondition.core.PreconditionContainer;
-import liquibase.precondition.core.PreconditionContainer.ErrorOption;
-import liquibase.precondition.core.PreconditionContainer.FailOption;
-import liquibase.precondition.core.TableExistsPrecondition;
-import liquibase.resource.ClassLoaderResourceAccessor;
-import liquibase.statement.DatabaseFunction;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -69,13 +50,6 @@ public class CustomTableCreatorService implements Serializable {
     private static final String UUID = "uuid";
 
 	private static final long serialVersionUID = -5858023657669249422L;
-
-    @PersistenceUnit(unitName = "MeveoAdmin")
-    private EntityManagerFactory emf;
-
-    @Inject
-    @MeveoJpa
-    private EntityManagerWrapper emWrapper;
 
     @Inject
     private EntityManagerProvider entityManagerProvider;
@@ -126,17 +100,32 @@ public class CustomTableCreatorService implements Serializable {
         ColumnConfig targetColumn = new ColumnConfig();
         targetColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
         targetColumn.setType("varchar(255)");
+
+        // UUID column
+        ColumnConfig uuidColumn = new ColumnConfig();
+        uuidColumn.setName(UUID);
+        uuidColumn.setType("varchar(255)");
+        uuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
+
+        // Unique constraint if CRT is unique
+        if(crt.isUnique()) {
+            AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
+            uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+            uniqueConstraint.setTableName(tableName);
+            changeset.addChange(uniqueConstraint);
+        }
         
         // Table creation
         CreateTableChange createTableChange = new CreateTableChange();
         createTableChange.setTableName(tableName);
         createTableChange.addColumn(sourceColumn);
         createTableChange.addColumn(targetColumn);
+        createTableChange.addColumn(uuidColumn);
         changeset.addChange(createTableChange);
         
         // Primary key constraint addition
         AddPrimaryKeyChange addPrimaryKeyChange = new AddPrimaryKeyChange();
-        addPrimaryKeyChange.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+        addPrimaryKeyChange.setColumnNames(uuidColumn.getName());
         addPrimaryKeyChange.setTableName(tableName);
         changeset.addChange(addPrimaryKeyChange);
         
@@ -271,7 +260,7 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName DB Table name
      * @param cft Field definition
      */
-    public void addField(String dbTableName, CustomFieldTemplate cft) throws BusinessException {
+    public void addField(String dbTableName, CustomFieldTemplate cft) {
 
         String dbFieldname = cft.getDbFieldname();
 
