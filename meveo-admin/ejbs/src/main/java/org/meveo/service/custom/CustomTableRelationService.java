@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.meveo.admin.exception.BusinessException;
@@ -167,6 +168,35 @@ public class CustomTableRelationService extends NativePersistenceService {
 		
 		return (boolean) existQuery.getSingleResult();
 		
+	}
+
+	/**
+	 * Retrieves a unique relationship instance based on the target uuid
+	 *
+	 * @param crt        {@link CustomRelationshipTemplate} to retrieve instance of
+	 * @param targetUuid <i>target field</i>'s UUID value
+	 * @return UUID of the relation of null if not found
+	 */
+	public String findIdOfUniqueRelationByTargetId(CustomRelationshipTemplate crt, String targetUuid) {
+		if (!crt.isUnique()) {
+			throw new IllegalArgumentException("CRT must be unique !");
+		}
+
+		String targetField = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		String tableName = SQLStorageConfiguration.getDbTablename(crt);
+
+		StringBuilder queryBuilder = new StringBuilder()
+				.append("SELECT uuid FROM ").append(tableName).append("\n")
+				.append("WHERE ").append(targetField).append(" = :targetUuid ;");
+
+		Query query = getEntityManager().createNativeQuery(queryBuilder.toString())
+				.setParameter("targetUuid", targetUuid);
+
+		try {
+			return (String) query.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 	
 	/**
