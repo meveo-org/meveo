@@ -134,7 +134,7 @@ public class Neo4jDao {
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
             transaction = session.beginTransaction();
 
-            StrSubstitutor sub = new StrSubstitutor(fieldsKeys);
+            StrSubstitutor sub = new StrSubstitutor(values);
             String statement = sub.replace(Neo4JRequests.findNodeId);
 
             final Record result = transaction.run(statement, fieldsKeys).single();

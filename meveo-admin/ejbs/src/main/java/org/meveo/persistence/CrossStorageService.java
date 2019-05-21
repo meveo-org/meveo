@@ -62,7 +62,7 @@ public class CrossStorageService {
 
     /**
      * Insert / update an entity with the sourceValues. The target entity is retrieved from the target values.
-     * <br> If the target entity and the relation does not exist, create them along with the source entity.
+     * <br> If the target entity does not exist, create the source node.
      * <br> If the target entity and the relation exists, update the source entity with the source values.
      * <br> If the target entity exists but not the relation, create the relation along with the source entity.
      *
@@ -75,29 +75,54 @@ public class CrossStorageService {
     public void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
-        // Neo4j storage
+        if (!crt.isUnique()) {
+            throw new IllegalArgumentException("CRT must be unique !");
+        }
+
+        final CustomEntityTemplate endNode = crt.getEndNode();
+        final CustomEntityTemplate startNode = crt.getStartNode();
+
+        // Everything is stored in Neo4J
         if (
-                crt.getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J)
+                isEverythingStoredInNeo4J(crt)
         ) {
             neo4jService.addSourceNodeUniqueCrt(
                     configurationCode,
                     relationCode,
                     filterValues(sourceValues, crt, DBStorageType.NEO4J),
-                    filterValues(targetValues, crt, DBStorageType.NEO4J));
+                    filterValues(targetValues, crt, DBStorageType.NEO4J)
+            );
+
+            return;
         }
 
-        // SQL Storage
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            //TODO: Check if entity references placed in values maps does not interfer ...
-            final String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-            final String sourceUUID = customTableRelationService.findIdByValues(dbTablename, sourceValues);
-            final String targetUUUID = customTableRelationService.findIdByValues(dbTablename, targetValues);
-//            customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+        String targetUUUID = findEntityId(configurationCode, targetValues, endNode);
+
+        // Target does not exists. We create the source
+        if (targetUUUID == null) {
+            createOrUpdate(configurationCode, startNode.getCode(), sourceValues);
+
+        } else {
+            // Target exists. Let's check if the relation exist.
+            final String relationUUID = findRelationByTargetUuid(configurationCode, targetUUUID, crt);
+
+            // Relation does not exists. We create the source.
+            if (relationUUID == null) {
+                createOrUpdate(configurationCode, startNode.getCode(), sourceValues);
+
+            } else {
+                // Relation exists. We update the source node.
+                String sourceUUID = findIdOfSourceEntityByRelationId(configurationCode, relationUUID, crt);
+                update(configurationCode, startNode, sourceValues, sourceUUID);
+            }
         }
 
+    }
 
+    private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
+        return crt.getAvailableStorages().contains(DBStorageType.NEO4J) &&
+                crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J) &&
+                crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J);
     }
 
     /**
@@ -109,7 +134,7 @@ public class CrossStorageService {
      * @param values            Values of the entity
      * @return the persisted entites
      */
-    public Set<EntityRef> createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException {
+    public PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException {
 
         Map<String, Object> entityValues = new HashMap<>(values);
 
@@ -118,10 +143,14 @@ public class CrossStorageService {
 
         Set<EntityRef> persistedEntities = new HashSet<>();
 
+        String uuid = null;
+
         // Neo4j storage
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> neo4jValues = filterValues(entityValues, cet, DBStorageType.NEO4J);
-            persistedEntities.addAll(neo4jService.addCetNode(configurationCode, cet, neo4jValues));
+            final Set<EntityRef> entityRefs = neo4jService.addCetNode(configurationCode, cet, neo4jValues);
+            uuid = getTrustedUuids(entityRefs).get(0);
+            persistedEntities.addAll(entityRefs);
         }
 
         // SQL Storage
@@ -129,7 +158,7 @@ public class CrossStorageService {
             Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL);
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 String tableName = SQLStorageConfiguration.getDbTablename(cet);
-                String uuid = customTableService.findIdByValues(tableName, sqlValues);
+                uuid = customTableService.findIdByValues(tableName, sqlValues);
                 if (uuid != null) {
                     sqlValues.put("uuid", uuid);
                     customTableService.update(tableName, sqlValues);
@@ -137,7 +166,6 @@ public class CrossStorageService {
                     uuid = customTableService.create(tableName, sqlValues);
                 }
                 persistedEntities.add(new EntityRef(uuid));
-
             } else {
                 final String code = (String) entityValues.get("code");
                 CustomEntityInstance cei = getCustomEntityInstance(entityCode, values);
@@ -158,12 +186,37 @@ public class CrossStorageService {
                 }
 
                 persistedEntities.add(new EntityRef(cei.getUuid()));
+                uuid = cei.getUuid();
             }
         }
 
-        return persistedEntities;
+        return new PersistenceActionResult(persistedEntities, uuid);
+    }
 
+    /**
+     * Update an entity instance
+     *
+     * @param configurationCode Repository code
+     * @param cet               Template of the entity to update
+     * @param values            New values to assign to the entity
+     * @param uuid              UUID identifying the entity to update
+     */
+    public void update(String configurationCode, CustomEntityTemplate cet, Map<String, Object> values, String uuid) throws BusinessException {
+        // Neo4j storage
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            Map<String, Object> neo4jValues = filterValues(values, cet, DBStorageType.NEO4J);
+            neo4jDao.updateNodeByNodeId(configurationCode, uuid, neo4jValues);
+        }
 
+        // SQL Storage
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
+            sqlValues.put("uuid", uuid);
+            customTableService.update(
+                    SQLStorageConfiguration.getDbTablename(cet),
+                    sqlValues
+            );
+        }
     }
 
     private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) throws BusinessException {
@@ -181,11 +234,11 @@ public class CrossStorageService {
         final CustomEntityTemplate endNode = crt.getEndNode();
         final CustomEntityTemplate startNode = crt.getStartNode();
 
-        // Neo4j storage
+        // All Neo4j storage
         if (
-            crt.getAvailableStorages().contains(DBStorageType.NEO4J)
-            && startNode.getAvailableStorages().contains(DBStorageType.NEO4J)
-            && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)
+                crt.getAvailableStorages().contains(DBStorageType.NEO4J)
+                        && startNode.getAvailableStorages().contains(DBStorageType.NEO4J)
+                        && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)
         ) {
             neo4jService.addCRTByNodeValues(
                     configurationCode,
@@ -197,51 +250,19 @@ public class CrossStorageService {
             //TODO: Case where target or source is not in neo4j => create method findNodeId
         }
 
+        String sourceUUID = findEntityId(configurationCode, sourceValues, startNode);
+        String targetUUUID = findEntityId(configurationCode, sourceValues, endNode);
 
         // SQL Storage
         if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             //TODO: Check if entity references placed in values maps does not interfer ...
-            String sourceUUID = null, targetUUUID = null;
-
-            // Look in SQL
-            if(startNode.getAvailableStorages().contains(DBStorageType.SQL)){
-                // Custom table
-                if(startNode.getSqlStorageConfiguration().isStoreAsTable()){
-                    final String dbTablename = SQLStorageConfiguration.getDbTablename(startNode);
-                    sourceUUID = customTableRelationService.findIdByValues(dbTablename, filterValues(sourceValues, crt, DBStorageType.SQL));
-                }else{
-                    final CustomEntityInstance customEntityInstance = getCustomEntityInstance(startNode.getCode(), sourceValues);
-                    if(customEntityInstance != null){
-                        sourceUUID = customEntityInstance.getUuid();
-                    }
-                }
-            }
-
-            if(sourceUUID == null && startNode.getAvailableStorages().contains(DBStorageType.NEO4J)){
-                sourceUUID = neo4jDao.findNodeId(configurationCode, startNode.getCode(), filterValues(sourceValues, crt, DBStorageType.NEO4J));
-            }
-
-            if(endNode.getAvailableStorages().contains(DBStorageType.SQL)){
-                if(endNode.getSqlStorageConfiguration().isStoreAsTable()) {
-                    final String dbTablename = SQLStorageConfiguration.getDbTablename(endNode);
-                    targetUUUID = customTableRelationService.findIdByValues(dbTablename, filterValues(sourceValues, crt, DBStorageType.SQL));
-                }else{
-                    final CustomEntityInstance customEntityInstance = getCustomEntityInstance(endNode.getCode(), sourceValues);
-                    if(customEntityInstance != null){
-                        sourceUUID = customEntityInstance.getUuid();
-                    }
-                }
-
-                //TODO: in CEI
-            }
-
-            if(targetUUUID == null && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)){
-                targetUUUID = neo4jDao.findNodeId(configurationCode, endNode.getCode(), filterValues(sourceValues, crt, DBStorageType.NEO4J));
-            }
-
             customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
         }
 
+        // Neo4J Storage
+        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+            neo4jService.addCRTByNodeIds(configurationCode, crt.getCode(), relationValues, sourceUUID, targetUUUID);
+        }
 
     }
 
@@ -249,17 +270,15 @@ public class CrossStorageService {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
         // All neo4j storage
-        if (
-                crt.getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J)
-        ) {
+        if (isEverythingStoredInNeo4J(crt)) {
             neo4jService.addCRTByNodeIds(
                     configurationCode,
                     relationCode,
                     filterValues(relationValues, crt, DBStorageType.NEO4J),
                     sourceUuid,
                     targetUuid);
+
+            return;
         }
 
         // SQL Storage
@@ -268,8 +287,45 @@ public class CrossStorageService {
             customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
         }
 
-        // TODO: Neo4j storage
+        // Neo4J Storage
+        if(crt.getAvailableStorages().contains(DBStorageType. NEO4J)){
+            neo4jService.addCRTByNodeIds(configurationCode, crt.getCode(), relationValues, sourceUuid, targetUuid);
+        }
     }
+
+    /**
+     * Find an entity instance UUID
+     *
+     * @param configurationCode Repository to search in
+     * @param valuesFilters     Filter on entity's values
+     * @param cet               Template of the entity
+     * @return  UUID of the entity or nul if it was'nt found
+     */
+    public String findEntityId(String configurationCode, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
+        String uuid = null;
+
+        // SQL
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            // Custom table
+            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+                uuid = customTableRelationService.findIdByValues(dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL));
+            } else {
+                final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), valuesFilters);
+                if (customEntityInstance != null) {
+                    uuid = customEntityInstance.getUuid();
+                }
+            }
+        }
+
+        // Neo4J
+        if (uuid == null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            uuid = neo4jDao.findNodeId(configurationCode, cet.getCode(), filterValues(valuesFilters, cet, DBStorageType.NEO4J));
+        }
+
+        return uuid;
+    }
+
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
         return values.entrySet()
@@ -313,20 +369,17 @@ public class CrossStorageService {
                 }
 
                 final Set<EntityRef> createdEntityReferences = new HashSet<>();
+
                 for (Map<String, Object> e : entitiesToCreate) {
-                    final Set<EntityRef> createdEntities = createOrUpdate(configurationCode, customFieldTemplate.getEntityClazzCetCode(), e);
-                    createdEntities.stream()
-                            .filter(EntityRef::isTrusted)
-                            .findFirst()
-                            .ifPresent(createdEntityReferences::add);
+                    final Set<EntityRef> createdEntities = createOrUpdate(configurationCode, customFieldTemplate.getEntityClazzCetCode(), e).getPersistedEntities();
+                    createdEntityReferences.addAll(createdEntities);
                 }
 
-                List<String> uuids = createdEntityReferences.stream()
-                        .map(EntityRef::getUuid)
-                        .collect(Collectors.toList());
+                List<String> uuids = getTrustedUuids(createdEntityReferences);
 
                 // Replace with entity reference's UUID only when target is not primitive
                 if (!referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+
                     if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
                         entityValues.put(customFieldTemplate.getCode(), uuids);
                     } else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
@@ -339,6 +392,37 @@ public class CrossStorageService {
                 }
             }
         }
+    }
+
+    private List<String> getTrustedUuids(Set<EntityRef> createdEntityReferences) {
+        return createdEntityReferences.stream()
+                            .filter(EntityRef::isTrusted)
+                            .map(EntityRef::getUuid)
+                            .collect(Collectors.toList());
+    }
+
+    private String findRelationByTargetUuid(String configurationCode, String targetUuid, CustomRelationshipTemplate crt){
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)){
+            return customTableRelationService.findIdOfUniqueRelationByTargetId(crt, targetUuid);
+        }
+
+        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+            return neo4jService.findIdOfUniqueRelationByTargetId(configurationCode, crt, targetUuid);
+        }
+
+        return null;
+    }
+
+    private String findIdOfSourceEntityByRelationId(String configurationCode, String relationUuid, CustomRelationshipTemplate crt){
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)){
+            return customTableRelationService.findIdOfSourceEntityByRelationId(crt, relationUuid);
+        }
+
+        if(crt.getAvailableStorages().contains(DBStorageType.NEO4J)){
+            return neo4jService.findIdOfUniqueRelationByTargetId(configurationCode, crt, relationUuid);
+        }
+
+        return null;
     }
 
 }
