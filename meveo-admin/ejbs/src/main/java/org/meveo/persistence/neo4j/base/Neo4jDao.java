@@ -22,6 +22,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
+import org.meveo.persistence.neo4j.helper.CypherHelper;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
@@ -65,6 +66,25 @@ public class Neo4jDao {
     @Inject
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
+
+    @Inject
+    private CypherHelper cypherHelper;
+
+    /**
+     * Remove a node using its UUID
+     *
+     * @param neo4jconfiguration Repository code
+     * @param label              Label of the node to remove
+     * @param uuid               UUID of the node to remove
+     */
+    public void removeNode(String neo4jconfiguration, String label, String uuid) {
+        StringBuilder queryBuilder = new StringBuilder()
+                .append("MATCH (n:").append(label).append(") \n")
+                .append("WHERE n.meveo_uuid = $uuid")
+                .append("DETACH DELETE n ;");
+
+        cypherHelper.execute(neo4jconfiguration, queryBuilder.toString(), Collections.singletonMap("uuid", uuid));
+    }
 
     /**
      * Retrieve relationships instances base on relationship label and target's label and uuid
