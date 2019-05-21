@@ -50,4 +50,24 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
         return qb.getQuery(getEntityManager()).getResultList();
     }
+
+    /**
+     * Retrieves a CEI using it's UUID
+     *
+     * @param cetCode Code of the related CET
+     * @param uuid  UUID of the CEI
+     * @return the CEI or null if not found
+     */
+    public CustomEntityInstance findByUuid(String cetCode, String uuid) {
+        QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
+        qb.addCriterion("cei.cetCode", "=", cetCode, true);
+        qb.addCriterion("cei.uuid", "=", uuid, true);
+
+        try {
+            return qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
