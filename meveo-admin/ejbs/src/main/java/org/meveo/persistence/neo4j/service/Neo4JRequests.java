@@ -96,6 +96,11 @@ public class Neo4JRequests {
             .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
             .append(" RETURN startNode.meveo_uuid");
 
+    public final static StringBuffer findRelationIdByTargetId = new StringBuffer()
+            .append("MATCH [r:${relationLabel}]->(t:${targetLabel}) \n")
+            .append("WHERE t.meveo_uuid = $id \n")
+            .append("RETURN r.meveo_uuid");
+
     public final static StringBuffer findNodeId = new StringBuffer()
             .append("MATCH (n:${cetCode} ${fieldKeys})\n")
             .append("RETURN n.meveo_uuid");

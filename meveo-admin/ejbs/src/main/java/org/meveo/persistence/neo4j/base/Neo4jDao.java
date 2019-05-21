@@ -65,6 +65,34 @@ public class Neo4jDao {
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
 
+    /**
+     * Retrieve relationships instances base on relationship label and target's label and uuid
+     *
+     * @param neo4jConfiguration    Repository code
+     * @param targetLabel           Target node's label
+     * @param relationLabel         Relationship's label
+     * @param targetUuid            Target node's UUID
+     * @return the list of matched UUIDs
+     */
+    public List<String> findRelationIdByTargetId(String neo4jConfiguration, String targetLabel, String relationLabel, String targetUuid) {
+        final Map<String, Object> values = new HashMap<>();
+        values.put("relationLabel", relationLabel);
+        values.put("targetLabel", targetLabel);
+
+        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
+             Transaction transaction = session.beginTransaction()) {
+
+            StrSubstitutor sub = new StrSubstitutor(values);
+            String statement = sub.replace(Neo4JRequests.findRelationIdByTargetId);
+
+            final List<Record> result = transaction.run(statement, Collections.singletonMap("id", targetUuid)).list();
+
+            return result.stream()
+                    .map(record -> record.get(0).asString())
+                    .collect(Collectors.toList());
+        }
+    }
+
     public String findNodeId(String neo4jConfiguration, String code, Map<String, Object> fieldsKeys){
         Transaction transaction = null;
 

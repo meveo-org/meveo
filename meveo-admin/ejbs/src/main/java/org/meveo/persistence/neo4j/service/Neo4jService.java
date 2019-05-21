@@ -136,6 +136,37 @@ public class Neo4jService {
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
+    /**
+     * Retrieve the unique relationship instance for the given CRT and target node
+     *
+     * @param neo4JConfiguration    Repository code
+     * @param crt                   Unique CRT to look for
+     * @param targetUuid            Target node's UUID
+     * @return the UUID of the relationship, or null if none was found
+     */
+    public String findIdOfUniqueRelationByTargetId(String neo4JConfiguration, CustomRelationshipTemplate crt, String targetUuid) {
+        if(!crt.isUnique()){
+            throw new IllegalArgumentException("CRT must be unique !");
+        }
+
+        final List<String> relationsIds = neo4jDao.findRelationIdByTargetId(
+                neo4JConfiguration,
+                crt.getEndNode().getCode(),
+                crt.getName(),
+                targetUuid
+        );
+
+        if(relationsIds.isEmpty()){
+            return null;
+        }
+
+        if(relationsIds.size() > 1){
+            log.error("Multiple relationship instances found for relationship {} with target node {}. Please check for data integrity.", crt.getCode(), targetUuid);
+        }
+
+        return relationsIds.get(0);
+    }
+
     public String findNodeId(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fields) throws ELException, BusinessException {
         final Set<CustomEntityTemplateUniqueConstraint> trustedQueries = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
                 .stream()
