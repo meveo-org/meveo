@@ -24,6 +24,7 @@ import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
@@ -90,6 +91,36 @@ public class Neo4jDao {
             return result.stream()
                     .map(record -> record.get(0).asString())
                     .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Retrieve node instances base on relationship's label and uuid
+     *
+     * @param neo4jConfiguration Repository code
+     * @param sourceLabel        Source node's label
+     * @param relationLabel      Relationship's label
+     * @param relationUUID       Relationship's UUID
+     * @return the UUID of the source node
+     * @throws NoSuchRecordException if the relation does not exists
+     */
+    public String findSourceNodeId(String neo4jConfiguration, String sourceLabel, String relationLabel, String relationUUID) throws NoSuchRecordException {
+        final Map<String, Object> values = new HashMap<>();
+        values.put("relationLabel", relationLabel);
+        values.put("sourceLabel", sourceLabel);
+
+        try (
+                Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
+                Transaction transaction = session.beginTransaction()
+        ) {
+
+            StrSubstitutor sub = new StrSubstitutor(values);
+            String statement = sub.replace(Neo4JRequests.findSourceNodeByRelationId);
+
+            return transaction.run(statement, Collections.singletonMap("id", relationUUID))
+                    .single()
+                    .get(0)
+                    .asString();
         }
     }
 

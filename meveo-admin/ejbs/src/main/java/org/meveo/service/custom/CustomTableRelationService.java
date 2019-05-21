@@ -198,6 +198,29 @@ public class CustomTableRelationService extends NativePersistenceService {
 			return null;
 		}
 	}
+
+	/**
+	 * Retrieves the UUID of the source entity of a relationship
+	 *
+	 * @param crt          Template of the relationship from which to retrieve the source entity
+	 * @param relationUuid UUID of the relationship from which to retrieve the source entity
+	 * @return the uuid of the source entity of the relation
+	 * @throws NoResultException if relation is not found
+	 */
+	public String findIdOfSourceEntityByRelationId(CustomRelationshipTemplate crt, String relationUuid) throws NoResultException {
+
+		String sourceField = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
+		String tableName = SQLStorageConfiguration.getDbTablename(crt);
+
+		StringBuilder queryBuilder = new StringBuilder()
+				.append("SELECT ").append(sourceField).append(" FROM ").append(tableName).append("\n")
+				.append("WHERE uuid = :relationUuid ;");
+
+		Query query = getEntityManager().createNativeQuery(queryBuilder.toString())
+				.setParameter("relationUuid", relationUuid);
+
+		return (String) query.getSingleResult();
+	}
 	
 	/**
 	 * Verifies that the given parameters are not null

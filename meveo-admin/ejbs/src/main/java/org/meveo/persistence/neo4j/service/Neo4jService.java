@@ -137,6 +137,24 @@ public class Neo4jService {
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
     /**
+     * Retrieves the UUID of the source node of an unique relationship
+     *
+     * @param neo4JConfiguration Repository code
+     * @param crt        Template of the relationship from which to retrieve the source entity
+     * @param relationUuid UUID of the relationship from which to retrieve the source entity
+     * @return the uuid of the source node of the relation
+     */
+    public String findIdOfSourceEntityByRelationId(String neo4JConfiguration, CustomRelationshipTemplate crt, String relationUuid){
+        return neo4jDao.findSourceNodeId(
+                neo4JConfiguration,
+                crt.getStartNode().getCode(),
+                crt.getName(),
+                relationUuid
+        );
+
+    }
+
+    /**
      * Retrieve the unique relationship instance for the given CRT and target node
      *
      * @param neo4JConfiguration    Repository code
