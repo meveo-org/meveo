@@ -147,11 +147,11 @@ public class Neo4jService {
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
     /**
-     *  Add an index on the CET for the meveo_uuid property
+     * Add an index and unique constraint on the CET for the meveo_uuid property
      *
      * @param customEntityTemplate  {@link CustomEntityTemplate}
      */
-    public void addIndexes(CustomEntityTemplate customEntityTemplate){
+    public void addUUIDIndexes(CustomEntityTemplate customEntityTemplate){
         Set<String> labels = new HashSet<>();
 
         for(CustomEntityTemplate cet : customEntityTemplate.ascendance()){
@@ -164,6 +164,30 @@ public class Neo4jService {
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
                 neo4jDao.createIndex(repositoryCode, label, MEVEO_UUID);
+            }
+        }
+    }
+    
+    /**
+     * Drop an index and unique constraint on the CET for the meveo_uuid property
+     * 
+     * @param customEntityTemplate
+     */
+    public void removeUUIDIndexes(CustomEntityTemplate customEntityTemplate) {
+        Set<String> labels = new HashSet<>();
+        labels.add(customEntityTemplate.getCode());
+
+        for(CustomEntityTemplate cet : customEntityTemplate.ascendance()){
+        	// If super-templates are stored in Neo4J we don't remove indexes
+            if(!cet.getAvailableStorages().contains(DBStorageType.NEO4J)){
+                labels.add(cet.getCode());
+                labels.addAll(cet.getNeo4JStorageConfiguration().getLabels());
+            }
+        }
+
+        for (String repositoryCode : getRepositoriesCode()) {
+            for (String label : labels) {
+                neo4jDao.removeIndex(repositoryCode, label, MEVEO_UUID);
             }
         }
     }

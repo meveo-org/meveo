@@ -236,7 +236,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public List<CustomEntityTemplate> ascendance() {
 		List<CustomEntityTemplate> descendance = new ArrayList<>();
 		descendance.add(this);
-		descendance.addAll(this.getSuperTemplate().ascendance());
+		if(this.getSuperTemplate() != null) {
+			descendance.addAll(this.getSuperTemplate().ascendance());
+		}
 		return descendance;
 	}
 

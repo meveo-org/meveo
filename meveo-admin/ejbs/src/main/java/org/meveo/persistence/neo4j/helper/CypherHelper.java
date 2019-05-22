@@ -16,18 +16,23 @@
 
 package org.meveo.persistence.neo4j.helper;
 
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
-
-import javax.inject.Inject;
-import java.util.Map;
+import org.slf4j.Logger;
 
 public class CypherHelper {
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
+    
+    @Inject
+    private Logger log;
 
     public <T> T execute(
             String neo4jConfiguration,
@@ -51,9 +56,13 @@ public class CypherHelper {
             if (transaction != null) {
                 transaction.failure();
             }
+            
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
+            }else {
+            	log.error("Error executing query \n{} :\n", e);
             }
+            
         } finally {
             if (transaction != null) {
                 transaction.close();
@@ -102,5 +111,9 @@ public class CypherHelper {
 
     public void update(String neo4jConfiguration,  String request){
         update(neo4jConfiguration, request, null, null);
+    }
+    
+    public void update(String neo4jConfiguration,  String request, CypherExceptionHandler cypherExceptionHandler){
+        update(neo4jConfiguration, request, null, cypherExceptionHandler);
     }
 }

@@ -70,29 +70,77 @@ public class Neo4jDao {
 
     @Inject
     private CypherHelper cypherHelper;
+    
+	/**
+	 * Drop an unique constraint on a given label and property if it does not exists yet
+	 * 
+	 * @param neo4jConfiguration Repository code
+	 * @param label              Label on which to drop the constraint
+	 * @param property           Property on which to drop the constraint
+	 */
+    public void dropUniqueConstraint(String neo4jConfiguration, String label, String property) {
+        StringBuilder query = new StringBuilder()
+        		.append("DROP CONSTRAINT ON (n:").append(label).append(")\n")
+        		.append("ASSERT n.").append(property).append(" IS UNIQUE");
+        
+        cypherHelper.update(
+        		neo4jConfiguration, 
+        		query.toString(),
+        		e -> LOGGER.debug("Unique constraint {}({}) does not exists")
+    		);    
+    }
+    
+	/**
+	 * Create an unique constraint on a given label and property if it does not exists yet
+	 * 
+	 * @param neo4jConfiguration Repository code
+	 * @param label              Label on which to add the constraint
+	 * @param property           Property on which to add the constraint
+	 */
+    public void addUniqueConstraint(String neo4jConfiguration, String label, String property) {
+        StringBuilder query = new StringBuilder()
+        		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
+        		.append("ASSERT n.").append(property).append(" IS UNIQUE");
+        
+        cypherHelper.update(
+        		neo4jConfiguration, 
+        		query.toString(),
+        		e -> LOGGER.debug("Unique constraint {}({}) already exists")
+    		);
+    }
 
     /**
-     * Create an index on a given label and property if it does not exists yet
-     *
-     * @param neo4jConfiguration Repository code
-     * @param label Label on which to add the index
-     * @param property Property on which to add the index
-     */
+	 * Create an index on a given label and property if it does not exists yet
+	 *
+	 * @param neo4jConfiguration Repository code
+	 * @param label              Label on which to add the index
+	 * @param property           Property on which to add the index
+	 */
     public void createIndex(String neo4jConfiguration, String label, String property) {
-        String indexExistsQuery = "RETURN apoc.schema.node.indexExists($label, [$property])";
-        final ImmutableMap<String, Object> parameters = ImmutableMap.of("label", label, "property", property);
+        StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
+        
+        cypherHelper.update(
+    		neo4jConfiguration, 
+    		createIndexQuery.toString(),
+    		e -> LOGGER.debug("Index on {}({}) already exists")
+		);
+    }
 
-        boolean indexExists = cypherHelper.execute(
-                neo4jConfiguration,
-                indexExistsQuery,
-                parameters,
-                (transaction, result) -> result.single().get(0).asBoolean()
-        );
-
-        if (!indexExists) {
-            StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
-            cypherHelper.update(neo4jConfiguration, createIndexQuery.toString());
-        }
+    /**
+	 * Drop an index on a given label and property if it does not exists yet
+	 *
+	 * @param neo4jConfiguration Repository code
+	 * @param label              Label on which to drop the index
+	 * @param property           Property on which to drop the index
+	 */
+    public void removeIndex(String neo4jConfiguration, String label, String property){
+        StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
+        
+        cypherHelper.update(
+    		neo4jConfiguration, 
+    		dropIndex.toString(),
+    		e -> LOGGER.debug("Index on {}({}) does not exists")
+		);
     }
 
     /**

@@ -44,6 +44,7 @@ import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -73,6 +74,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomTableCreatorService customTableCreatorService;
+    
+    @Inject
+    private Neo4jService neo4jService;
 
     private static boolean useCETCache = true;
 
@@ -102,6 +106,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 createPrimitiveCft(cet);
             }
+            
+            // Create neoj4 indexes
+            if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            	neo4jService.addUUIDIndexes(cet);
+            }
+            
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -163,6 +173,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         	}
         }
         
+        // Synchronize neoj4 indexes
+        if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        	neo4jService.addUUIDIndexes(cet);
+        }else {
+        	neo4jService.removeUUIDIndexes(cet);
+        }
+        
         return cetUpdated;
     }
 
@@ -181,6 +198,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
+        
+        neo4jService.removeUUIDIndexes(cet);
 
         customFieldsCache.removeCustomEntityTemplate(cet);
     }
