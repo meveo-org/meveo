@@ -62,7 +62,7 @@ public class ScheduledPersistenceService {
 
                     /* Node is target or leaf node */
                     final EntityToPersist entityToPersist = (EntityToPersist) itemToPersist;
-                    Set<EntityRef> persistedEntities = storageService.createOrUpdate(configurationCode, entityToPersist.getCode(), entityToPersist.getValues());
+                    Set<EntityRef> persistedEntities = storageService.createOrUpdate(configurationCode, entityToPersist.getCode(), entityToPersist.getValues()).getPersistedEntities();
                     context.putNodeReferences(entityToPersist.getName(), persistedEntities);
 
                 } else {

@@ -42,6 +42,7 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -138,9 +139,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
         ParamBean paramBean = paramBeanFactory.getInstance();
 
-
-        /* Update */
-
         CustomEntityTemplate cetUpdated = super.update(cet);
 
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -151,8 +149,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-
+        
+        flush();
+        
+        // Synchronize custom fields storages with CET available storages
+        for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
+        	for(DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+        		if(!cet.getAvailableStorages().contains(storage)) {
+        			log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
+        			cft.getStorages().remove(storage);
+        			customFieldTemplateService.update(cft);
+        		}
+        	}
+        }
+        
         return cetUpdated;
     }
 

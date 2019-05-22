@@ -19,6 +19,7 @@
  */
 package org.meveo.service.custom;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,6 +102,19 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         	}
         }else {
         	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        }
+        
+        flush();
+        
+        // Synchronize custom fields storages with CRT available storages
+        for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
+        	for(DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+        		if(!cet.getAvailableStorages().contains(storage)) {
+        			log.info("Remove storage '{}' from CFT '{}' of CRT '{}'", storage, cft.getCode(), cet.getCode());
+        			cft.getStorages().remove(storage);
+        			customFieldTemplateService.update(cft);
+        		}
+        	}
         }
             
         return cetUpdated;
