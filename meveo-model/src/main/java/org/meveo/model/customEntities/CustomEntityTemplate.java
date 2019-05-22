@@ -151,6 +151,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		this.name = name;
 	}
 
+	@Override
 	public String getAppliesTo() {
 		return CFT_PREFIX + "_" + getCode();
 	}
@@ -226,6 +227,16 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		for (CustomEntityTemplate descendant : subTemplates) {
 			descendance.addAll(descendant.descendance());
 		}
+		return descendance;
+	}
+
+	/**
+	 * @return the cet with all of its ascendances
+	 */
+	public List<CustomEntityTemplate> ascendance() {
+		List<CustomEntityTemplate> descendance = new ArrayList<>();
+		descendance.add(this);
+		descendance.addAll(this.getSuperTemplate().ascendance());
 		return descendance;
 	}
 
