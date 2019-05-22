@@ -257,6 +257,11 @@ public class Neo4jService {
         return neo4jDao.findNodeId(neo4JConfiguration, cet.getCode(), uniqueFields);
     }
 
+    public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
+        final CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+        return addCetNode(neo4JConfiguration, cet, fieldValues);
+    }
+
     @SuppressWarnings("unchecked")
     public Set<EntityRef> addCetNode(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues) {
 
