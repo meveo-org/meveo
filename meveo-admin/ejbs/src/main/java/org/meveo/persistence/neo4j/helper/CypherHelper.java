@@ -61,7 +61,6 @@ public class CypherHelper {
         }
 
         return null;
-
     }
 
     public <T> T execute(String neo4jConfiguration,  String request, Map<String, Object> parameters, CypherResultTransformer<T> resultAction){
@@ -74,5 +73,34 @@ public class CypherHelper {
 
     public void execute(String neo4jConfiguration,  String request, Map<String, Object> parameters){
         execute(neo4jConfiguration, request, parameters, null, null);
+    }
+
+    public void update(
+            String neo4jConfiguration,
+            String request,
+            Map<String, Object> parameters,
+            CypherExceptionHandler cypherExceptionHandler
+    ){
+        Transaction transaction = null;
+        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
+            transaction = session.beginTransaction();
+            transaction.run(request, parameters);
+            transaction.success();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.failure();
+            }
+            if(cypherExceptionHandler != null){
+                cypherExceptionHandler.handle(e);
+            }
+        } finally {
+            if (transaction != null) {
+                transaction.close();
+            }
+        }
+    }
+
+    public void update(String neo4jConfiguration,  String request){
+        update(neo4jConfiguration, request, null, null);
     }
 }

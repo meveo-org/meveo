@@ -27,7 +27,11 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
-import org.meveo.api.dto.neo4j.*;
+import org.meveo.api.CETUtils;
+import org.meveo.api.dto.neo4j.Datum;
+import org.meveo.api.dto.neo4j.Neo4jQueryResultDto;
+import org.meveo.api.dto.neo4j.Result;
+import org.meveo.api.dto.neo4j.SearchResultDTO;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -36,7 +40,9 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.export.RemoteAuthenticationException;
+import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -46,21 +52,20 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.customEntities.CETConstants;
-import org.meveo.api.CETUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
+import org.meveo.persistence.neo4j.graph.Neo4jEntity;
+import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
+import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
-import org.meveo.persistence.neo4j.graph.Neo4jEntity;
-import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.*;
@@ -94,6 +99,11 @@ public class Neo4jService {
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
     public static final String ID = "id";
+    private static final String MEVEO_UUID = "meveo_uuid";
+
+    @Inject
+    @MeveoJpa
+    private EntityManagerWrapper emWrapper;
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -135,6 +145,42 @@ public class Neo4jService {
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
+
+    /**
+     *  Add an index on the CET for the meveo_uuid property
+     *
+     * @param customEntityTemplate  {@link CustomEntityTemplate}
+     */
+    public void addIndexes(CustomEntityTemplate customEntityTemplate){
+        Set<String> labels = new HashSet<>();
+
+        for(CustomEntityTemplate cet : customEntityTemplate.ascendance()){
+            labels.add(cet.getCode());
+            if(cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().getLabels() != null){
+                labels.addAll(cet.getNeo4JStorageConfiguration().getLabels());
+            }
+        }
+
+        for (String repositoryCode : getRepositoriesCode()) {
+            for (String label : labels) {
+                neo4jDao.createIndex(repositoryCode, label, MEVEO_UUID);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the repostories from db records
+     *
+     * @return the list of neo4j repositories available
+     */
+    public List<String> getRepositoriesCode(){
+        final List<String> neo4jConfigurations = emWrapper.getEntityManager()
+                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+                .getResultList();
+
+        return neo4jConfigurations;
+    }
+
 
     /**
      * Retrieves the UUID of the source node of an unique relationship

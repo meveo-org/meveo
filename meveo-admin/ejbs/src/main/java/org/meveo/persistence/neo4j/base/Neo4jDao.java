@@ -16,6 +16,7 @@
 
 package org.meveo.persistence.neo4j.base;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
@@ -69,6 +70,30 @@ public class Neo4jDao {
 
     @Inject
     private CypherHelper cypherHelper;
+
+    /**
+     * Create an index on a given label and property if it does not exists yet
+     *
+     * @param neo4jConfiguration Repository code
+     * @param label Label on which to add the index
+     * @param property Property on which to add the index
+     */
+    public void createIndex(String neo4jConfiguration, String label, String property) {
+        String indexExistsQuery = "RETURN apoc.schema.node.indexExists($label, [$property])";
+        final ImmutableMap<String, Object> parameters = ImmutableMap.of("label", label, "property", property);
+
+        boolean indexExists = cypherHelper.execute(
+                neo4jConfiguration,
+                indexExistsQuery,
+                parameters,
+                (transaction, result) -> result.single().get(0).asBoolean()
+        );
+
+        if (!indexExists) {
+            StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
+            cypherHelper.update(neo4jConfiguration, createIndexQuery.toString());
+        }
+    }
 
     /**
      * Remove a node using its UUID
