@@ -1,6 +1,9 @@
 package org.meveo.admin.action.admin.custom;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -8,7 +11,6 @@ import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.jfree.util.Log;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -21,7 +23,6 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
-import org.meveo.model.scripts.FunctionIO;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -218,22 +219,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	@Override
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 		String editView = super.saveOrUpdate(killConversation);
-		if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
-			List<CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesto(appliesTo);
-			if (CollectionUtils.isNotEmpty(customFieldTemplates)){
-				List<DBStorageType> availableStorages = getEntity().getAvailableStorages();
-				for (CustomFieldTemplate customFieldTemplate : customFieldTemplates) {
-					if (CollectionUtils.isNotEmpty(customFieldTemplate.getStorages())) {
-						List<DBStorageType> storages = new ArrayList<>(customFieldTemplate.getStorages());
-						storages.retainAll(availableStorages);
-						customFieldTemplate.getStorages().clear();
-						customFieldTemplate.getStorages().addAll(storages);
-						customFieldTemplateService.update(customFieldTemplate);
-					}
-				}
-			}
-
-		}
 		return editView;
 	}
 
