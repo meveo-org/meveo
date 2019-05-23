@@ -1006,6 +1006,11 @@ public class Neo4jService {
             Object fieldValue = fieldValues.get(cftEntry.getKey());
             try {
 
+                // Check that field should be stored in Neo4J
+                if(!cft.getStorages().contains(DBStorageType.NEO4J)){
+                    continue;
+                }
+
                 // Validate that value is not empty when field is mandatory
                 boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
                 if (cft.isValueRequired() && isEmpty) {
