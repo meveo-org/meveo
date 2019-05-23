@@ -32,6 +32,8 @@ public class MailerConfigurationRsImpl extends BaseRs implements MailerConfigura
             mailerConfigurationService.setUserName(mailerConfigurationDto.getUserName());
             mailerConfigurationService.setPassword(mailerConfigurationDto.getPassword());
             mailerConfigurationService.setTransportLayerSecurity(mailerConfigurationDto.getTls());
+            
+            mailerConfigurationService.saveConfiguration();
         } catch (Exception e) {
             processException(e, result);
         }

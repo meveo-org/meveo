@@ -185,5 +185,7 @@ public class MailerBean implements Serializable {
         
         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
         FacesContext.getCurrentInstance().addMessage(null, msg);
+        
+        mailerConfigurationService.saveConfiguration();
     }
 }

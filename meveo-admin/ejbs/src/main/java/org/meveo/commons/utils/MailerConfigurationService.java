@@ -49,4 +49,8 @@ public class MailerConfigurationService implements Serializable {
     public void setTransportLayerSecurity(boolean transportLayerSecurity) {
         ParamBean.getInstance().setProperty("mail.smtp.starttls.enable", String.valueOf(transportLayerSecurity));
     }
+    
+    public void saveConfiguration() {
+    	ParamBean.getInstance().saveProperties();
+    }
 }
