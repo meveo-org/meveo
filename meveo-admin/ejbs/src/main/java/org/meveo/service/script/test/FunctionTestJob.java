@@ -26,6 +26,7 @@ import org.meveo.service.job.Job;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
 @Stateless
 public class FunctionTestJob extends Job {
@@ -38,8 +39,8 @@ public class FunctionTestJob extends Job {
         final String code = jobInstance.getParametres();
 
         try {
-            jMeterService.executeTest(code)
-                    .forEach(sampleResult -> registerResult(result, sampleResult));
+            final List<SampleResult> sampleResults = jMeterService.executeTest(code);
+            sampleResults.forEach(sampleResult -> registerResult(result, sampleResult));
         } catch (IOException e) {
             result.registerError(e.toString());
         }

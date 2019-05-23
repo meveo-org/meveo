@@ -16,27 +16,26 @@
 
 package org.meveo.service.script.test;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.FileHandler;
 
 @Stateless
 public class JMeterService {
@@ -93,17 +92,29 @@ public class JMeterService {
 
         // Retrieve and create test file
         final Function function = concreteFunctionService.findByCode(functionCode);
+        concreteFunctionService.detach(function);
+
         File jmxFile = File.createTempFile(functionCode, ".jmx");
+
+        String testSuiteString = function.getTestSuite();
+
+        // Activate functional test mode to get full data to be saved
+        testSuiteString = testSuiteString.replace(
+                "<boolProp name=\"TestPlan.functional_mode\">false</boolProp>",
+                "<boolProp name=\"TestPlan.functional_mode\">true</boolProp>"
+        );
+
         FileWriter writer = new FileWriter(jmxFile);
-        writer.write(function.getTestSuite());
+        writer.write(testSuiteString);
         writer.close();
 
         final String accessTokenString = keycloak.tokenManager().getAccessTokenString();
 
         // Execute test
-        File jtlFile = File.createTempFile(functionCode, ".jtl");
+        File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        String commandLine = String.format("%s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s",
+        String commandLine = String.format("%s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
+                        "-Jjmeter.save.saveservice.output_format=xml",
                 JMETER_BIN_FOLDER,
                 jmxFile.getAbsolutePath(),
                 jtlFile.getAbsolutePath(),
@@ -121,28 +132,28 @@ public class JMeterService {
             throw new RuntimeException(e);
         }
 
-        // Read results
-        CSVReader csvReader = new CSVReaderBuilder(new FileReader(jtlFile)).build();
-
         final List<SampleResult> sampleResults = new ArrayList<>();
 
-        String[] nextRecord;
-        boolean hasError = false;
-        while ((nextRecord = csvReader.readNext()) != null) {
-            final boolean success = Boolean.parseBoolean(nextRecord[7]);
-            sampleResults.add(new SampleResult(success, nextRecord[8]));
-            if (!success) {
-                hasError = true;
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+
+        try {
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(jtlFile);
+
+            // Retrieve assertions
+            final NodeList assertionResults = doc.getElementsByTagName("assertionResult");
+            for(int i = 0; i < assertionResults.getLength(); i++){
+                Element n = (Element) assertionResults.item(i);
+                boolean success = !Boolean.parseBoolean(n.getElementsByTagName("failure").item(0).getTextContent());
+                String name = n.getElementsByTagName("name").item(0).getTextContent();
+                String failureMessage = n.getElementsByTagName("failureMessage").item(0).getTextContent();
+                sampleResults.add(new SampleResult(success, name, failureMessage));
             }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        // Append JMeter logs to server logs if contains errors
-        if (hasError) {
-            final String jmeterLogs = FileUtils.readFileToString(logFile);
-            LOG.info(jmeterLogs);
-        }
-
-        csvReader.close();
         logFile.delete();
         jtlFile.delete();
         jmxFile.delete();
