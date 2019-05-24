@@ -62,9 +62,7 @@ import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
-import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
@@ -109,16 +107,10 @@ public class Neo4jService {
     private Neo4jConnectionProvider neo4jSessionFactory;
 
     @Inject
-    private CustomEntityTemplateService customEntityTemplateService;
-
-    @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
-
-    @Inject
-    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
     private Neo4jDao neo4jDao;
@@ -170,8 +162,6 @@ public class Neo4jService {
     
     /**
      * Drop an index and unique constraint on the CET for the meveo_uuid property
-     * 
-     * @param customEntityTemplate
      */
     public void removeUUIDIndexes(CustomEntityTemplate customEntityTemplate) {
         Set<String> labels = new HashSet<>();
@@ -198,11 +188,10 @@ public class Neo4jService {
      * @return the list of neo4j repositories available
      */
     public List<String> getRepositoriesCode(){
-        final List<String> neo4jConfigurations = emWrapper.getEntityManager()
+
+        return emWrapper.getEntityManager()
                 .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
                 .getResultList();
-
-        return neo4jConfigurations;
     }
 
 
@@ -282,7 +271,7 @@ public class Neo4jService {
     }
 
     public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
-        final CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+        final CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(cetCode);
         return addCetNode(neo4JConfiguration, cet, fieldValues);
     }
 
@@ -330,7 +319,7 @@ public class Neo4jService {
             for (CustomFieldTemplate entityReference : entityReferences) {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazzCetCode();
-                CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(referencedCetCode);
+                CustomEntityTemplate referencedCet = customFieldsCache.getCustomEntityTemplate(referencedCetCode);
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
@@ -485,8 +474,7 @@ public class Neo4jService {
     }
 
     private Map<String, Object> getEditableFields(Map<String, CustomFieldTemplate> cetFields, Map<String, Object> convertedFields) {
-        Map<String, Object> editableFields = new HashMap<>();
-        editableFields.putAll(convertedFields);
+        Map<String, Object> editableFields = new HashMap<>(convertedFields);
         cetFields.values()
             .stream()
             .filter(customFieldTemplate -> !customFieldTemplate.isAllowEdit() || customFieldTemplate.isUnique())
@@ -543,7 +531,7 @@ public class Neo4jService {
         log.info("Persisting link with crtCode = {}", crtCode);
 
         /* Try to retrieve the associated CRT */
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+        CustomRelationshipTemplate customRelationshipTemplate = customFieldsCache.getCustomRelationshipTemplate(crtCode);
         if (customRelationshipTemplate == null) {
             log.error("Can't find CRT with code {}", crtCode);
             throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
@@ -551,7 +539,7 @@ public class Neo4jService {
 
         /* Recuperation of the custom fields of the CRT */
         Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
-        log.info("Custom fields are : ", crtCustomFields);
+        log.info("Custom fields are : {}", crtCustomFields);
 
         /* Recuperation of the custom fields of the source node */
         Map<String, CustomFieldTemplate> startNodeFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
@@ -589,7 +577,7 @@ public class Neo4jService {
         log.info("Persisting link with crtCode = {}", crtCode);
 
         /* Try to retrieve the associated CRT */
-        CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+        CustomRelationshipTemplate customRelationshipTemplate = customFieldsCache.getCustomRelationshipTemplate(crtCode);
         if (customRelationshipTemplate == null) {
             log.error("Can't find CRT with code {}", crtCode);
             throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
@@ -597,7 +585,7 @@ public class Neo4jService {
 
         /* Recuperation of the custom fields of the CRT */
         Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
-        log.info("Custom fields are : ", crtCustomFields);
+        log.info("Custom fields are : {}", crtCustomFields);
 
         Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
 
@@ -764,7 +752,7 @@ public class Neo4jService {
                                        Map<String, Object> endNodeValues) throws BusinessException, ELException {
 
         // Get relationship template
-        final CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(crtCode);
+        final CustomRelationshipTemplate customRelationshipTemplate = customFieldsCache.getCustomRelationshipTemplate(crtCode);
 
         // Extract unique fields values for the start node
         Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
@@ -875,7 +863,7 @@ public class Neo4jService {
     public void deleteEntity(String neo4jConfiguration, String cetCode, Map<String, Object> values) throws BusinessException {
 
         /* Get entity template */
-        final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+        final CustomEntityTemplate customEntityTemplate = customFieldsCache.getCustomEntityTemplate(cetCode);
 
         /* Extract unique fields values for node */
         final Map<String, Object> uniqueFields = getNodeKeys(customEntityTemplate.getAppliesTo(), values);
@@ -1143,7 +1131,7 @@ public class Neo4jService {
                     }
                 }
             } catch (NumberFormatException e) {
-                if (cft != null && fieldValue != null) {
+                if (fieldValue != null) {
                     LOGGER.error(
                             "Wrong data type format for {}#{}\nExpected type : {}, value is : {}\nSkipping field value\n",
                             cft.getAppliesTo(),
