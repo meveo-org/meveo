@@ -1,13 +1,22 @@
 package org.meveo.service.custom;
 
+import java.util.HashSet;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.BusinessService;
 
 /**
@@ -16,6 +25,21 @@ import org.meveo.service.base.BusinessService;
  */
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
+
+    @Inject
+    private CustomFieldsCacheContainerProvider cetCache;
+
+    @Override
+    public void create(CustomEntityInstance entity) throws BusinessException {
+        filterValues(entity);
+        super.create(entity);
+    }
+
+    @Override
+    public CustomEntityInstance update(CustomEntityInstance entity) throws BusinessException {
+        filterValues(entity);
+        return super.update(entity);
+    }
 
     public CustomEntityInstance findByCodeByCet(String cetCode, String code) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
@@ -68,6 +92,17 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }
+    }
+
+    private void filterValues(CustomEntityInstance cei){
+        CustomEntityTemplate cet = cetCache.getCustomEntityTemplate(cei.getCetCode());
+        CustomFieldValues cfValues = cei.getCfValues();
+        for(String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())){
+            CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
+            if(!cft.getStorages().contains(DBStorageType.SQL)){
+                cfValues.removeValue(valueCode);
+            }
         }
     }
 }
