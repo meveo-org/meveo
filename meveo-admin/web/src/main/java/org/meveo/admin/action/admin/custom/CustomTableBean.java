@@ -16,23 +16,6 @@
 
 package org.meveo.admin.action.admin.custom;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
@@ -57,6 +40,14 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.UploadedFile;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.*;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Named
 @ViewScoped
@@ -94,7 +85,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
     private LazyDataModel<Map<String, Object>> customTableBasedDataModel;
 
-    private Map<String, Object> newValues = new HashMap<String, Object>();
+    private Map<String, Object> newValues = new HashMap<>();
 
     private boolean appendImportedData;
 
@@ -252,7 +243,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     @Override
     public void clean() {
         customTableBasedDataModel = null;
-        filters = new HashMap<String, Object>();
+        filters = new HashMap<>();
     }
 
     /**
@@ -296,7 +287,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     public void onCellEdit(CellEditEvent event) throws BusinessException {
         DataTable o = (DataTable) event.getSource();
         Map<String, Object> mapValue = (Map<String, Object>) o.getRowData();
-        customTableService.update(customTableName, mapValue);
+        customTableService.update(entity, mapValue);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
@@ -306,14 +297,14 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
     	Object newId = selectedEntityInPopup.get("uuid");
     	selectedRow.put(selectedRowField.getDbFieldname(), newId);
-        customTableService.update(customTableName, selectedRow);
+        customTableService.update(entity, selectedRow);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
     public void onChildEntityUpdated(CustomFieldValues cfValues) throws BusinessException {
     	String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	selectedRow.put(selectedRowField.getDbFieldname(), serializedValues);
-        customTableService.update(customTableName, selectedRow);
+        customTableService.update(entity, selectedRow);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
 
@@ -335,7 +326,8 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
         Map<String, Object> convertedValues = customTableService.convertValue(newValues, fields, false, null);
 
-        customTableService.create(customTableName, convertedValues);
+
+        customTableService.create(entity, convertedValues);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
         newValues = new HashMap<>();
         customTableBasedDataModel = null;
@@ -343,7 +335,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     
     @ActionMethod
     public void update(Map<String, Object> values) throws BusinessException {
-    	customTableService.update(customTableName, values);
+    	customTableService.update(entity, values);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
@@ -351,11 +343,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * Handle a file upload and import the file
      * 
      * @param event File upload event
-     * @throws BusinessException
-     * @throws IOException
      */
     @ActionMethod
-    public void handleFileUpload(FileUploadEvent event) throws BusinessException, IOException {
+    public void handleFileUpload(FileUploadEvent event) {
         UploadedFile file = event.getFile();
 
         if (file == null) {
@@ -401,7 +391,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * @return CSV file field order
      */
     public String getCsvFileFormat() {
-        StringBuffer format = new StringBuffer();
+        StringBuilder format = new StringBuilder();
 
         format.append(NativePersistenceService.FIELD_ID).append("(optional)");
 
@@ -414,7 +404,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     }
     
     @Override
-    public void delete(Long id) throws BusinessException {
+    public void delete(Long id) {
     	// Should not be used
     }
 

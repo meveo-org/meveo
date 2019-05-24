@@ -161,9 +161,9 @@ public class CrossStorageService {
                 uuid = customTableService.findIdByValues(tableName, sqlValues);
                 if (uuid != null) {
                     sqlValues.put("uuid", uuid);
-                    customTableService.update(tableName, sqlValues);
+                    customTableService.update(cet, sqlValues);
                 } else {
-                    uuid = customTableService.create(tableName, sqlValues);
+                    uuid = customTableService.create(cet, sqlValues);
                 }
                 persistedEntities.add(new EntityRef(uuid));
             } else {
@@ -212,10 +212,7 @@ public class CrossStorageService {
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
             sqlValues.put("uuid", uuid);
-            customTableService.update(
-                    SQLStorageConfiguration.getDbTablename(cet),
-                    sqlValues
-            );
+            customTableService.update(cet,sqlValues);
         }
     }
 

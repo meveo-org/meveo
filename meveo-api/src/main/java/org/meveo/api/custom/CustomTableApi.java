@@ -17,19 +17,6 @@
 //TODO: Add opencell license
 package org.meveo.api.custom;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -51,6 +38,12 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.primefaces.model.SortOrder;
+
+import javax.ejb.Stateless;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import java.util.*;
 
 /**
  * @author Andrius Karpavicius
@@ -148,7 +141,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
             if (importedLines >= 500) {
 
                 values = customTableService.convertValues(values, cfts, false);
-                customTableService.update(SQLStorageConfiguration.getDbTablename(cet), values);
+                customTableService.update(cet, values);
 
                 values.clear();
                 importedLines = 0;
@@ -160,7 +153,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 
         // Update remaining records
         values = customTableService.convertValues(values, cfts, false);
-        customTableService.update(SQLStorageConfiguration.getDbTablename(cet), values);
+        customTableService.update(cet, values);
     }
 
     /**
@@ -194,9 +187,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
         for (CustomTableRecordDto record : dto.getValues()) {
 
             if (record.getValues().containsKey(NativePersistenceService.FIELD_ID)) {
-                customTableService.update(SQLStorageConfiguration.getDbTablename(cet), customTableService.convertValue(record.getValues(), cfts, false, null));
+                customTableService.update(cet, customTableService.convertValue(record.getValues(), cfts, false, null));
             } else {
-                customTableService.create(SQLStorageConfiguration.getDbTablename(cet), customTableService.convertValue(record.getValues(), cfts, false, null));
+                customTableService.create(cet, customTableService.convertValue(record.getValues(), cfts, false, null));
             }
         }
     }

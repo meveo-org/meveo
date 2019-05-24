@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
@@ -53,6 +54,7 @@ import org.hibernate.SQLQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
@@ -62,8 +64,8 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.shared.DateUtils;
@@ -106,7 +108,18 @@ public class CustomTableService extends NativePersistenceService {
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
+    @Inject
+    private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
+
+    /**
+     * @param tableName Table name to insert values to
+     * @param values    Values to insert
+     * @return UUID of created row
+     * @deprecated Use {@link CustomTableService#create(CustomEntityTemplate, Map)} instead.
+     * If you have to use, check that all the values has to be stored in SQL
+     */
     @Override
+    @Deprecated
     public String create(String tableName, Map<String, Object> values) throws BusinessException {
 
         String uuid = super.create(tableName, values, true); // Force to return ID as we need it to retrieve data for Elastic Search population
@@ -114,22 +127,29 @@ public class CustomTableService extends NativePersistenceService {
 
         return uuid;
     }
+
+    @SuppressWarnings("deprecation")
+    public String create(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) throws BusinessException {
+        String tableName = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+        return create(tableName, filterValues(values, customEntityTemplate));
+    }
     
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void createInNewTx(String tableName, Map<String, Object> values) throws BusinessException {
-    	create(tableName, values);
+    public void createInNewTx(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) throws BusinessException {
+    	create(customEntityTemplate, values);
     }
 
     /**
      * Insert multiple values into table
-     * 
+     *
      * @param tableName Table name to insert values to
-     * @param values A list of values to insert
+     * @param values    A list of values to insert
      * @throws BusinessException General exception
+     * @deprecated prefer using {@link CustomTableService#create(CustomEntityTemplate, List)} instead for value filtering.
      */
     @Override
+    @Deprecated
     public void create(String tableName, List<Map<String, Object>> values) throws BusinessException {
-
         for (Map<String, Object> value : values) {
             String uuid = super.create(tableName, value, true); // Force to return ID as we need it to retrieve data for Elastic Search population
             elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, value, false, false);
@@ -137,48 +157,72 @@ public class CustomTableService extends NativePersistenceService {
 
         elasticClient.flushChanges();
     }
+
+    /**
+     * Insert multiple values into table
+     *
+     * @param customEntityTemplate Custom entity template to insert values to
+     * @param values               A list of values to insert
+     * @throws BusinessException General exception
+     */
+    @SuppressWarnings("deprecation")
+    public void create(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values) throws BusinessException {
+        String tableName = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+        List<Map<String, Object>> filteredValues = values.stream()
+                .map(v -> filterValues(v, customEntityTemplate))
+                .collect(Collectors.toList());
+
+        this.create(tableName, filteredValues);
+    }
     
 
     /**
      * Insert multiple values into table with optionally not updating ES. Will execute in a new transaction
      * 
-     * @param tableName Table name to insert values to
+     * @param customEntityTemplate CustomEntityTemplate to insert values to
      * @param values Values to insert
      * @param updateES Should Elastic search be updated during record creation. If false, ES population must be done outside this call.
      * @throws BusinessException General exception
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void createInNewTx(String tableName, List<Map<String, Object>> values, boolean updateES) throws BusinessException {
+    public void createInNewTx(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values, boolean updateES) throws BusinessException {
 
         // Insert record to db, with ID returned, but flush to ES after the values are processed
         if (updateES) {
-
-            create(tableName, values);
-
+            create(customEntityTemplate, values);
         } else {
-            super.create(tableName, values);
+            final String tablename = SQLStorageConfiguration.getDbTablename(customEntityTemplate);
+            super.create(tablename, values);
         }
     }
 
     @Override
+    @Deprecated
     public void update(String tableName, Map<String, Object> values) throws BusinessException {
         super.update(tableName, values);
         elasticClient.createOrUpdate(CustomTableRecord.class, tableName, values.get(NativePersistenceService.FIELD_ID), values, false, true);
     }
 
+    @SuppressWarnings("deprecation")
+    public void update(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) throws BusinessException {
+        update(
+                SQLStorageConfiguration.getDbTablename(customEntityTemplate),
+                filterValues(values, customEntityTemplate)
+        );
+    }
+
     /**
      * Update multiple values in a table. Record is identified by an "uuid" field value.
      * 
-     * @param tableName Table name to update values
+     * @param customEntityTemplate CustomEntityTemplate to update values
      * @param values Values to update. Must contain an 'uuid' field.
      * @throws BusinessException General exception
      */
-    public void update(String tableName, List<Map<String, Object>> values) throws BusinessException {
+    public void update(CustomEntityTemplate customEntityTemplate, List<Map<String, Object>> values) throws BusinessException {
 
         for (Map<String, Object> value : values) {
-            super.update(tableName, value);
-            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, value.get(NativePersistenceService.FIELD_ID), value, false, false);
+            update(customEntityTemplate, value);
         }
         elasticClient.flushChanges();
     }
@@ -403,7 +447,6 @@ public class CustomTableService extends NativePersistenceService {
             return pos1 - pos2;
         });
 
-        String tableName = dbTableName;
         int importedLines = 0;
         int importedLinesTotal = 0;
         List<Map<String, Object>> values = new ArrayList<>();
@@ -423,9 +466,9 @@ public class CustomTableService extends NativePersistenceService {
                 if(append) {
                 	lineValues = convertValue(lineValues, cfts, true, null);
                 	replaceEntityreferences(fields, entityReferencesCache, lineValues);
-                	String uuid = findIdByValues(tableName, lineValues);
+                	String uuid = findIdByValues(dbTableName, lineValues);
                 	if(uuid == null) {
-                		createInNewTx(tableName, lineValues);
+                		createInNewTx(customEntityTemplate, lineValues);
                 		importedLines++;
                         importedLinesTotal++;
                 	}
@@ -433,7 +476,7 @@ public class CustomTableService extends NativePersistenceService {
 	            	// Save to DB every 500 records
 	                if (importedLines >= 500) {
 	
-	                    saveBatch(cfts, fields, tableName, values, entityReferencesCache);
+	                    saveBatch(cfts, fields, dbTableName, values, entityReferencesCache);
 	
 	                    values.clear();
 	                    importedLines = 0;
@@ -445,20 +488,20 @@ public class CustomTableService extends NativePersistenceService {
                 
                 
                 if (importedLinesTotal % 30000 == 0) {
-                    log.trace("Imported {} lines to {} table", importedLinesTotal, tableName);
+                    log.trace("Imported {} lines to {} table", importedLinesTotal, dbTableName);
                 }
                 
             }
 
             if(!append) {
                 // Save remaining records
-	            saveBatch(cfts, fields, tableName, values, entityReferencesCache);
+	            saveBatch(cfts, fields, dbTableName, values, entityReferencesCache);
             }
 
             // Re-populate ES index
             elasticClient.populateAll(currentUser, CustomTableRecord.class, customEntityTemplate.getCode());
 
-            log.info("Imported {} lines to {} table", importedLinesTotal, tableName);
+            log.info("Imported {} lines to {} table", importedLinesTotal, dbTableName);
 
         } catch (RuntimeJsonMappingException e) {
             throw new ValidationException("Invalid file format", "message.upload.fail.invalidFormat", e);
@@ -470,28 +513,14 @@ public class CustomTableService extends NativePersistenceService {
         return importedLinesTotal;
     }
 
-	/**
-	 * @param cfts
-	 * @param fields
-	 * @param tableName
-	 * @param values
-	 * @param entityReferencesCache 
-	 * @return
-	 * @throws ValidationException
-	 * @throws BusinessException
-	 */
-	private void saveBatch(Map<String, CustomFieldTemplate> cfts, List<CustomFieldTemplate> fields, String tableName, List<Map<String, Object>> values, Map<String, Map<String, String>> entityReferencesCache) throws ValidationException, BusinessException {
+	private void saveBatch(Map<String, CustomFieldTemplate> cfts, List<CustomFieldTemplate> fields, String tableName, List<Map<String, Object>> values, Map<String, Map<String, String>> entityReferencesCache) throws BusinessException {
 		
 		values = convertValues(values, cfts, false);
 		values = replaceEntityReferences(fields, values, entityReferencesCache);
-		customTableService.createInNewTx(tableName, values, false);
+        final CustomEntityTemplate cet = customEntityTemplateService.findByCodeOrDbTablename(tableName);
+        customTableService.createInNewTx(cet, values, false);
 	}
 
-	/**
-	 * @param fields
-	 * @param entityReferencesCache 
-	 * @throws BusinessException
-	 */
 	private List<Map<String, Object>> replaceEntityReferences(List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, String>> entityReferencesCache) throws BusinessException {
 		List<Map<String, Object>> values = new ArrayList<>(oldvalues);
 		/* Create or retrieve entity references */
@@ -501,12 +530,6 @@ public class CustomTableService extends NativePersistenceService {
 		return values;
 	}
 
-	/**
-	 * @param fields
-	 * @param entityReferencesCache
-	 * @param entityRefValueMap
-	 * @throws BusinessException
-	 */
 	private void replaceEntityreferences(List<CustomFieldTemplate> fields, Map<String, Map<String, String>> entityReferencesCache, Map<String, Object> entityRefValueMap) throws BusinessException {
 		final HashMap<String, Object> iterationMap = new HashMap<>(entityRefValueMap);
 		for (Entry<String, Object> entry : iterationMap.entrySet()) {
@@ -529,7 +552,8 @@ public class CustomTableService extends NativePersistenceService {
 		        if (uuid == null) {
 		            Map<String, Object> entityRefValues = JacksonUtil.fromString((String) value, GenericTypeReferences.MAP_STRING_OBJECT);
 		            log.info("Creating missing entity reference {}", entityRefValues);
-		            uuid = create(entityRefTableName, entityRefValues);
+		            CustomEntityTemplate customEntityTemplate = customFieldsCacheContainerProvider.getCustomEntityTemplate(templateOptional.get().getEntityClazzCetCode());
+		            uuid = create(customEntityTemplate, entityRefValues);
 		        }
 
 		        entityRefValueMap.put(key, uuid);
@@ -576,13 +600,15 @@ public class CustomTableService extends NativePersistenceService {
 
         try {
 
+            CustomEntityTemplate cet = customEntityTemplateService.findByCodeOrDbTablename(tableName);
+
             for (Map<String, Object> value : values) {
 
                 // Save to DB every 1000 records
                 if (importedLines >= 1000) {
 
                     valuesPartial = convertValues(valuesPartial, cfts, false);
-                    customTableService.createInNewTx(tableName, valuesPartial, updateESImediately);
+                    customTableService.createInNewTx(cet, valuesPartial, updateESImediately);
 
                     valuesPartial.clear();
                     importedLines = 0;
@@ -596,7 +622,7 @@ public class CustomTableService extends NativePersistenceService {
 
             // Save to DB remaining records
             valuesPartial = convertValues(valuesPartial, cfts, false);
-            customTableService.createInNewTx(tableName, valuesPartial, updateESImediately);
+            customTableService.createInNewTx(cet, valuesPartial, updateESImediately);
 
             // Repopulate ES index
             if (!updateESImediately) {
@@ -867,26 +893,31 @@ public class CustomTableService extends NativePersistenceService {
                     // String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
                     String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1]; // field name here can be a db field name or a custom field code
 
-                    CustomFieldTemplate customFieldTemplate = fields.values()
+                    Optional<CustomFieldTemplate> customFieldTemplateOpt = fields.values()
                     		.stream()
                     		.filter(f -> f.getDbFieldname().equals(fieldName))
-                    		.findFirst()
-                    		.get();
+                    		.findFirst();
+
+                    if(!customFieldTemplateOpt.isPresent()){
+                        throw new ValidationException("No custom field template for " + fieldName + " was found");
+                    }
+
+                    CustomFieldTemplate customFieldTemplate = customFieldTemplateOpt.get();
                     
 					final CustomFieldTypeEnum fieldType = customFieldTemplate
                     		.getFieldType();
-                    
+
                     Class dataClass = fieldType.getDataClass();
                     if (dataClass == null) {
                         throw new ValidationException("No field definition " + fieldName + " was found");
                     }
 
                     boolean isList = customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST;
-                    
+
                     if(isList && fieldType.isStoredSerializedList()) {
                     	isList = false;
                     }
-                    
+
                     Object value = castValue(valueEntry.getValue(), dataClass, isList, datePatterns);
 
                     // Replace cft code with db field name if needed
@@ -904,9 +935,6 @@ public class CustomTableService extends NativePersistenceService {
     
     /**
      * Search etities, fetching entity references and converting field names from db column name to custom field names
-     * @param cetCode
-     * @param pagination
-     * @return
      */
     public List<Map<String, Object>> searchAndFetch(String cetCode, PaginationConfiguration pagination){
     	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
@@ -914,23 +942,30 @@ public class CustomTableService extends NativePersistenceService {
     	
     	List<Map<String, Object>> entities = customTableService.list(SQLStorageConfiguration.getDbTablename(cet), pagination);
     	
-    	cfts.values().forEach(cft -> {
-    		entities.forEach(entity -> {
-        		Object property = entity.get(cft.getDbFieldname());
-				if(property != null) {
-					// Fetch entity reference
-            		if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-            			String propertyTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
-            			property = customTableService.findById(propertyTableName, (String) property);
-            		}
-            		
-            		// Replace db field names to cft name
-            		entity.remove(cft.getDbFieldname());
-            		entity.put(cft.getCode(), property);
-        		}
-    		});
-    	});
+    	cfts.values().forEach(cft -> entities.forEach(entity -> {
+            Object property = entity.get(cft.getDbFieldname());
+            if(property != null) {
+                // Fetch entity reference
+                if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+                    String propertyTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
+                    property = customTableService.findById(propertyTableName, (String) property);
+                }
+
+                // Replace db field names to cft name
+                entity.remove(cft.getDbFieldname());
+                entity.put(cft.getCode(), property);
+            }
+        }));
     	
     	return entities;
+    }
+
+    private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
+        return values.entrySet()
+                .stream()
+                .filter(entry -> {
+                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
+                    return cft.getStorages().contains(DBStorageType.NEO4J);
+                }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

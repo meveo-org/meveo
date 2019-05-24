@@ -16,24 +16,18 @@
 
 package org.meveo.admin.action.admin.custom;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.typereferences.GenericTypeReferences;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.primefaces.event.SelectEvent;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
 
 @Named
 @ViewScoped
@@ -68,7 +62,8 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		this.values = values;
 	}
 
-	public Collection<CustomFieldTemplate> getFields() {
+	@Override
+    public Collection<CustomFieldTemplate> getFields() {
 		return fields;
 	}
 
@@ -83,7 +78,7 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 	@SuppressWarnings("unchecked")
     @ActionMethod
     @Override
-    public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
+    public void onEntityReferenceSelected(SelectEvent event) {
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
 		Number newId = (Number) selectedEntityInPopup.get("id");
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
