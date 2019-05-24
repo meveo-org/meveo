@@ -218,8 +218,6 @@ public class CrossStorageService {
         final CustomEntityTemplate endNode = crt.getEndNode();
         final CustomEntityTemplate startNode = crt.getStartNode();
 
-        //TODO: Handle multiple storages case -> synchronize UUIDs
-
         // Everything is stored in Neo4J
         if (
                 isEverythingStoredInNeo4J(crt)
@@ -296,11 +294,16 @@ public class CrossStorageService {
             Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL);
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 String tableName = SQLStorageConfiguration.getDbTablename(cet);
-                uuid = customTableService.findIdByValues(tableName, sqlValues);
-                if (uuid != null) {
-                    sqlValues.put("uuid", uuid);
+                String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
+                if (sqlUUID != null) {
+                    sqlValues.put("uuid", sqlUUID);
                     customTableService.update(cet, sqlValues);
+                    uuid = sqlUUID;
                 } else {
+                    if(uuid != null){
+                        sqlValues.put("uuid", uuid);
+                    }
+
                     uuid = customTableService.create(cet, sqlValues);
                 }
                 persistedEntities.add(new EntityRef(uuid));
@@ -316,6 +319,10 @@ public class CrossStorageService {
                     cei.setCetCode(entityCode);
                     cei.setCode(code);
                     cei.setCfValues(customFieldValues);
+
+                    if(uuid != null){
+                        cei.setUuid(uuid);
+                    }
 
                     customEntityInstanceService.create(cei);
                 } else {
@@ -381,8 +388,6 @@ public class CrossStorageService {
                     filterValues(relationValues, crt, DBStorageType.NEO4J),
                     filterValues(sourceValues, crt, DBStorageType.NEO4J),
                     filterValues(targetValues, crt, DBStorageType.NEO4J));
-
-            //TODO: Case where target or source is not in neo4j => create method findNodeId
         }
 
         String sourceUUID = findEntityId(configurationCode, sourceValues, startNode);
