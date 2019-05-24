@@ -17,6 +17,7 @@
 package org.meveo.persistence;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -32,6 +33,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
@@ -60,6 +62,140 @@ public class CrossStorageService {
     @Inject
     private CustomTableRelationService customTableRelationService;
 
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
+
+    /**
+     * Retrieves one entity instance
+     *
+     * @param configurationCode Repository code
+     * @param cet               Template of the entities to retrieve
+     * @param uuid              UUID of the entity
+     * @return list of matching entities
+     */
+    public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid) {
+        return find(configurationCode, cet, uuid, null);
+    }
+
+    /**
+     * Retrieves one entity instance
+     *
+     * @param configurationCode Repository code
+     * @param cet               Template of the entities to retrieve
+     * @param uuid              UUID of the entity
+     * @param selectFields      Fields to select
+     * @return list of matching entities
+     */
+    public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+        Map<String, Object> values = new HashMap<>();
+
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
+            values.putAll(neo4jDao.findNodeById(configurationCode, cet.getCode(), uuid, neo4jFields));
+        }
+
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
+            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                final Map<String, Object> customTableValue = customTableService.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, sqlFields);
+                replaceKeys(cet, sqlFields, customTableValue);
+                values.putAll(customTableValue);
+            } else {
+                final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+                if (sqlFields != null && !sqlFields.isEmpty()) {
+                    for (String field : sqlFields) {
+                        values.put(field, cei.getCfValues().getCfValue(field).getValue());
+                    }
+                } else {
+                    values.putAll(cei.getCfValuesAsValues());
+                }
+
+            }
+        }
+
+        // Fetch entity references
+        fetchEntityReferences(configurationCode, cet, values);
+
+        return values;
+    }
+
+    public Map<String, Object> getMissingData(Map<String, Object> data, String configurationCode, CustomEntityTemplate cet, String uuid, Collection<String> selectFields) {
+        List<String> actualFetchField = new ArrayList<>(selectFields);
+        actualFetchField.removeAll(data.keySet());
+
+        // Every field has been already retrieved
+        if (actualFetchField.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        // Retrieve the missing fields
+        return find(configurationCode, cet, uuid, actualFetchField);
+    }
+
+    /**
+     * Retrieves entity instances
+     *
+     * @param configurationCode       Repository code
+     * @param cet                     Template of the entities to retrieve
+     * @param paginationConfiguration Pagination and filters
+     * @return list of matching entities
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> find(String configurationCode, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+
+        List<Map<String, Object>> valuesList = new ArrayList<>();
+
+        // Collect initial data
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+                final List<Map<String, Object>> values = customTableService.list(dbTablename, paginationConfiguration);
+                values.forEach(v -> replaceKeys(cet, paginationConfiguration.getFetchFields(), v));
+                valuesList.addAll(values);
+            } else {
+                final List<CustomEntityInstance> ceis = customEntityInstanceService.list(paginationConfiguration);
+                final List<Map<String, Object>> values = ceis.stream()
+                        .map(cei -> {
+                            final HashMap<String, Object> map = new HashMap<>(cei.getCfValuesAsValues());
+                            map.put("uuid", cei.getUuid());
+                            return map;
+                        }).collect(Collectors.toList());
+
+                valuesList.addAll(values);
+            }
+        }
+
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+
+            String graphQlQuery = paginationConfiguration.getGraphQlQuery()
+                    .replaceAll("[\\w)]\\s*\\{\\n(\\s*)\\w*", "$0\n$1meveo_uuid");
+
+            final Map<String, Object> result = neo4jDao.executeGraphQLQuery(
+                    configurationCode,
+                    graphQlQuery,
+                    null,
+                    null
+            );
+
+            final List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
+            valuesList.addAll(values);
+        }
+
+        // Complete missing data
+        valuesList.forEach(data -> {
+            String uuid = (String) (data.get("uuid") != null ? data.get("uuid") : data.get("meveo_uuid"));
+
+            Collection<String> fetchFields = paginationConfiguration.getFetchFields() != null
+                    ? paginationConfiguration.getFetchFields()
+                    : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
+
+            final Map<String, Object> missingData = getMissingData(data, configurationCode, cet, uuid, fetchFields);
+            data.putAll(missingData);
+        });
+
+        return valuesList;
+    }
+
     /**
      * Insert / update an entity with the sourceValues. The target entity is retrieved from the target values.
      * <br> If the target entity does not exist, create the source node.
@@ -81,6 +217,8 @@ public class CrossStorageService {
 
         final CustomEntityTemplate endNode = crt.getEndNode();
         final CustomEntityTemplate startNode = crt.getStartNode();
+
+        //TODO: Handle multiple storages case -> synchronize UUIDs
 
         // Everything is stored in Neo4J
         if (
@@ -212,7 +350,7 @@ public class CrossStorageService {
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
             sqlValues.put("uuid", uuid);
-            customTableService.update(cet,sqlValues);
+            customTableService.update(cet, sqlValues);
         }
     }
 
@@ -327,8 +465,8 @@ public class CrossStorageService {
      * Remove an entity from database
      *
      * @param configurationCode Repository
-     * @param cet   Template of the entity
-     * @param uuid UUID of the entity
+     * @param cet               Template of the entity
+     * @param uuid              UUID of the entity
      */
     public void remove(String configurationCode, CustomEntityTemplate cet, String uuid) throws BusinessException {
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
@@ -350,8 +488,8 @@ public class CrossStorageService {
      * Remove a relation from database
      *
      * @param configurationCode Repository
-     * @param crt   Template of the relation
-     * @param uuid UUID of the relation
+     * @param crt               Template of the relation
+     * @param uuid              UUID of the relation
      */
     public void remove(String configurationCode, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
         if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
@@ -371,6 +509,18 @@ public class CrossStorageService {
                     CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
                     return cft.getStorages().contains(storageType);
                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
+        if (fields == null) {
+            return null;
+        }
+
+        return fields.stream()
+                .filter(entry -> {
+                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry, cet.getAppliesTo());
+                    return cft.getStorages().contains(storageType);
+                }).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
@@ -460,6 +610,30 @@ public class CrossStorageService {
         }
 
         return null;
+    }
+
+    private void fetchEntityReferences(String configurationCode, CustomModelObject customModelObject, Map<String, Object> values) {
+        new HashSet<>(values.entrySet()).forEach(entry -> {
+            CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
+            if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+                CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+                Map<String, Object> refValues = find(configurationCode, cet, (String) entry.getValue());
+                values.put(cft.getCode(), refValues);
+            }
+        });
+    }
+
+    private void replaceKeys(CustomEntityTemplate cet, List<String> sqlFields, Map<String, Object> customTableValue) {
+        if (sqlFields != null && !sqlFields.isEmpty()) {
+            List<CustomFieldTemplate> cfts = sqlFields.stream()
+                    .map(field -> customFieldsCacheContainerProvider.getCustomFieldTemplate(field, cet.getAppliesTo()))
+                    .collect(Collectors.toList());
+
+            customTableService.replaceKeys(cfts, customTableValue);
+        } else {
+            final Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
+            customTableService.replaceKeys(cfts, customTableValue);
+        }
     }
 
 }

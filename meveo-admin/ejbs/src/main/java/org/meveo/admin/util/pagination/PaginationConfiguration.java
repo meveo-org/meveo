@@ -57,6 +57,8 @@ public class PaginationConfiguration implements Serializable {
 
     private SortOrder ordering;
 
+    private String graphQlQuery;
+
     /**
      *
      * @param sortField Field to sort by
@@ -132,6 +134,14 @@ public class PaginationConfiguration implements Serializable {
         this.filters = filters;
         this.sortField = sortField;
         this.ordering = sortOrder;
+    }
+
+    public String getGraphQlQuery() {
+        return graphQlQuery;
+    }
+
+    public void setGraphQlQuery(String graphQlQuery) {
+        this.graphQlQuery = graphQlQuery;
     }
 
     public Integer getFirstRow() {

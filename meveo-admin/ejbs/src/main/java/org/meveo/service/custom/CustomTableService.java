@@ -960,6 +960,15 @@ public class CustomTableService extends NativePersistenceService {
     	return entities;
     }
 
+    public void replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
+        for(CustomFieldTemplate cft : cfts){
+            final Object tempVal = values.remove(cft.getDbFieldname());
+            if(tempVal != null){
+                values.put(cft.getCode(), tempVal);
+            }
+        }
+    }
+
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
         return values.entrySet()
                 .stream()

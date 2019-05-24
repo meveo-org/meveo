@@ -233,6 +233,55 @@ public class Neo4jDao {
         }
     }
 
+    /**
+     * Retrieves a node values by UUID
+     *
+     * @param neo4jConfiguration Repository code
+     * @param label              Label of the node
+     * @param uuid               UUID of the node
+     * @return the values of the node
+     */
+    public Map<String, Object> findNodeById(String neo4jConfiguration, String label, String uuid) {
+        return findNodeById(neo4jConfiguration, label, uuid, null);
+
+    }
+
+    /**
+     * Retrieves a node values by UUID
+     *
+     * @param neo4jConfiguration Repository code
+     * @param label              Label of the node
+     * @param uuid               UUID of the node
+     * @param fields             fields to return
+     * @return the values of the node
+     */
+    public Map<String, Object> findNodeById(String neo4jConfiguration, String label, String uuid, List<String> fields) {
+        StringBuilder query = new StringBuilder()
+                .append("MATCH (n:").append(label).append(") \n")
+                .append("WHERE n.meveo_uuid = $uuid \n");
+
+        query.append("RETURN n { ");
+
+        if(fields != null && !fields.isEmpty()){
+            for(String field : fields){
+                query.append(".").append(field).append(", ");
+            }
+            query.delete(query.length() - 2, query.length());
+        } else {
+            query.append(".*");
+        }
+
+        query.append(" }");
+
+        return cypherHelper.execute(
+                neo4jConfiguration,
+                query.toString(),
+                Collections.singletonMap("uuid", uuid),
+                (transaction, result) -> result.single().get(0).asMap()
+        );
+
+    }
+
     public String findNodeId(String neo4jConfiguration, String code, Map<String, Object> fieldsKeys){
         Transaction transaction = null;
 

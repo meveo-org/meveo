@@ -105,11 +105,37 @@ public class NativePersistenceService extends BaseService {
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> findById(String tableName, String uuid) {
+       return findById(tableName, uuid, null);
+    }
+
+    /**
+     * Find record by its identifier
+     *
+     * @param tableName    Table name
+     * @param uuid         Identifier
+     * @param selectFields Fields to return
+     * @return A map of values with field name as a map key and field value as a map value
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> findById(String tableName, String uuid, List<String> selectFields) {
 
         try {
 
             Session session = getEntityManager().unwrap(Session.class);
-            SQLQuery query = session.createSQLQuery("select * from " + tableName + " e where uuid=:uuid");
+
+            StringBuilder selectQuery = new StringBuilder("SELECT ");
+
+            if(selectFields == null && !selectFields.isEmpty()){
+                selectQuery.append("*");
+            }else{
+                for(String field : selectFields){
+                    selectQuery.append(field).append(", ");
+                }
+                selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
+            }
+
+
+            NativeQuery query = session.createSQLQuery(selectQuery + " FROM " + tableName + " e WHERE uuid=:uuid");
             query.setParameter("uuid", uuid);
             query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
 
