@@ -30,15 +30,17 @@
 
 				<p:tabView id="tabView" activeIndex="#{jobInstanceBean.activeTab}">
 					<p:tab title="#{messages['job.info']}">
-						<hftl:formField label="#{messages['timer.jobCategory']}" field="jobCategoryEnum" required="true" edit="#{jobInstanceBean.entity.id==null}" listenerUpdate="@form" />
-						<hftl:decorateFormField fieldId="timerJobName" label="#{messages['timer.jobName']}">
-							<p:selectOneMenu id="timerJobName" value="#{jobInstanceBean.entity.jobTemplate}" rendered="#{jobInstanceBean.entity.id == null}" required="true">
-								<f:selectItem itemLabel="#{messages['commons.select']}" />
-								<f:selectItems value="#{jobInstanceBean.jobNames}" />
-								<p:ajax event="valueChange" listener="#{jobInstanceBean.refreshCustomFieldsAndActions}" update="@form" />
-							</p:selectOneMenu>
-							<h:outputText value="#{jobInstanceBean.entity.jobTemplate}" rendered="#{jobInstanceBean.entity.id!=null}" />
-						</hftl:decorateFormField>
+						<hftl:formField label="#{messages['timer.jobCategory']}" field="jobCategoryEnum" required="true" edit="#{jobInstanceBean.entity.id==null}" listenerUpdate=":formId:tabView:jobType" />
+						<h:panelGroup id="jobType">
+							<hftl:decorateFormField fieldId="timerJobName" label="#{messages['timer.jobName']}">
+								<p:selectOneMenu id="timerJobName" value="#{jobInstanceBean.entity.jobTemplate}" rendered="#{jobInstanceBean.entity.id == null}" required="true">
+									<f:selectItem itemLabel="#{messages['commons.select']}" />
+									<f:selectItems value="#{jobInstanceBean.jobNames}" />
+									<p:ajax event="valueChange" listener="#{jobInstanceBean.refreshCustomFieldsAndActions}" update=":formId:tabView" />
+								</p:selectOneMenu>
+								<h:outputText value="#{jobInstanceBean.entity.jobTemplate}" rendered="#{jobInstanceBean.entity.id!=null}" />
+							</hftl:decorateFormField>
+						</h:panelGroup>
 						<hftl:formField label="#{messages['BusinessEntity.code']}" field="code" validateUnique="true" />
 						<hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
 

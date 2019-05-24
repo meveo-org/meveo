@@ -147,13 +147,15 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
      * Synchronize definition of custom field templates specified in Job class to those found in DB. Register in DB if was missing.
      */
     private void createMissingCustomFieldTemplates() {
-
         if (entity.getJobTemplate() == null) {
             return;
         }
 
         // Get job definition and custom field templates defined in a job
         Job job = jobInstanceService.getJobByName(entity.getJobTemplate());
+        if (job == null) {
+            return;
+        }
         Map<String, CustomFieldTemplate> jobCustomFields = job.getCustomFields();
 
         // Create missing custom field templates if needed
@@ -163,7 +165,6 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         } else {
             jobTemplatesFromJob = jobCustomFields.values();
         }
-
         try {
             customFieldTemplateService.createMissingTemplates((ICustomFieldEntity) entity, jobTemplatesFromJob);
         } catch (BusinessException e) {
