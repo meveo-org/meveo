@@ -27,20 +27,26 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.BaseEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
 @Stateless
 public class CustomTableRelationService extends NativePersistenceService {
 
-    @EJB
-    private CustomTableRelationService customTableService;
+    @Inject
+	private CustomFieldsCacheContainerProvider cacheContainerProvider;
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
+
+    @Inject
+	private CustomFieldTemplateService customFieldTemplateService;
     
 	/**
 	 * Create a single row in the table associated to the {@link CustomRelationshipTemplate}
@@ -80,8 +86,6 @@ public class CustomTableRelationService extends NativePersistenceService {
 			String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
 			String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
 			
-			// TODO: Current implementation states that all the CRTs are unique. Handle cases where they are not.
-			// TODO: We currently don't take into account the uniqueness of custom fields and we use the start and end uuids to target row to update
 			StringBuilder queryBuilder = new StringBuilder("UPDATE ").append(dbTablename).append("\n");
 
 			queryBuilder.append("SET ");
@@ -93,25 +97,27 @@ public class CustomTableRelationService extends NativePersistenceService {
 			queryBuilder.append("\n");
 			
 			queryBuilder.append("WHERE ").append(startColumn).append(" = :startColumn \n")
-				.append("AND ").append(endColumn).append(" = :endColumn ;");
-			
+				.append("AND ").append(endColumn).append(" = :endColumn");
+
+			Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
+
 			// Set source and target uuids
 			Query updateQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
 					.setParameter("startColumn", startUuid)
 					.setParameter("endColumn", endUuid);
-			
+
+			queryParameters.forEach(updateQuery::setParameter);
+
 			setQueryParameterFields(fieldValues, updateQuery);
 			
 			updateQuery.executeUpdate();
 		}
 
 	}
-	
+
 	/**
 	 * Remove a relation instance using its source uuid, target uuid and field values.
-	 * <br>TODO: Current implementation states that all the CRTs are unique. Handle cases where they are not.
-	 * <br>TODO: We currently don't take into account the uniqueness of custom fields and we use the start and end uuids to check row
-	 * 
+	 *
 	 * @param crt         CustomRelationshipTemplate associated to the table where to search
 	 * @param startUuid   First part of the table's primary key
 	 * @param endUuid     Second part of the table's primary key
@@ -128,19 +134,21 @@ public class CustomTableRelationService extends NativePersistenceService {
 				.append("FROM ").append(dbTablename).append("\n")
 				.append("WHERE ").append(startColumn).append(" = :startColumn \n")
 				.append("AND ").append(endColumn).append(" = :endColumn \n");
-		
+
+		Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
+
 		Query deleteQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
 			.setParameter("startColumn", startUuid)
 			.setParameter("endColumn", endUuid);
-		
+
+		queryParameters.forEach(deleteQuery::setParameter);
+
 		deleteQuery.executeUpdate();
 	}
 
 	/**
 	 * Check if a relation exists using its source uuid, target uuid and field values.
-	 * <br>TODO: Current implementation states that all the CRTs are unique. Handle cases where they are not.
-	 * <br>TODO: We currently don't take into account the uniqueness of custom fields and we use the start and end uuids to check row
-	 * 
+	 *
 	 * @param crt         CustomRelationshipTemplate associated to the table where to search
 	 * @param startUuid   First part of the table's primary key
 	 * @param endUuid     Second part of the table's primary key
@@ -159,13 +167,17 @@ public class CustomTableRelationService extends NativePersistenceService {
 				.append("FROM ").append(dbTablename).append("\n")
 				.append("WHERE ").append(startColumn).append(" = :startColumn \n")
 				.append("AND ").append(endColumn).append(" = :endColumn \n");
-		
+
+		Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
+
 		queryBuilder.append(");");
 		
 		Query existQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
 			.setParameter("startColumn", startUuid)
 			.setParameter("endColumn", endUuid);
-		
+
+		queryParameters.forEach(existQuery::setParameter);
+
 		return (boolean) existQuery.getSingleResult();
 		
 	}
@@ -251,6 +263,24 @@ public class CustomTableRelationService extends NativePersistenceService {
 		for (Entry<String, Object> field : fieldValues.entrySet()) {
 			query.setParameter(field.getKey(), field.getValue());
 		}
+	}
+
+	private Map<String, Object> appendUniqueFilters(CustomRelationshipTemplate crt, Map<String, Object> fieldValues, StringBuilder queryBuilder) {
+		Map<String, Object> queryParameters = new HashMap<>();
+
+		if(!crt.isUnique()){
+			customFieldTemplateService.findByAppliesTo(crt.getAppliesTo())
+					.values()
+					.stream()
+					.filter(CustomFieldTemplate::isUnique)
+					.filter(customFieldTemplate -> fieldValues.containsKey(customFieldTemplate.getCode()))
+					.forEach(customFieldTemplate -> {
+						queryBuilder.append("\nOR ").append(customFieldTemplate.getDbFieldname()).append(" = :").append(customFieldTemplate.getCode());
+						queryParameters.put(customFieldTemplate.getCode(), fieldValues.get(customFieldTemplate.getDbFieldname()));
+					});
+		}
+
+		return queryParameters;
 	}
 
 }
