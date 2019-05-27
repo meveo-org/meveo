@@ -115,11 +115,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                     pos++;
                 }
 
-                if (cftDto.getStorageType() != CustomFieldStorageTypeEnum.SINGLE || (cftDto.getFieldType() != CustomFieldTypeEnum.DATE
-                        && cftDto.getFieldType() != CustomFieldTypeEnum.DOUBLE && cftDto.getFieldType() != CustomFieldTypeEnum.LIST
-                        && cftDto.getFieldType() != CustomFieldTypeEnum.LONG && cftDto.getFieldType() != CustomFieldTypeEnum.STRING)
-                        || (cftDto.isVersionable() != null && cftDto.isVersionable())) {
-                    throw new InvalidParameterException("Custom table supports only unversioned and simple Date, Double, Long, String and Select from list type fields");
+                if (cftDto.isVersionable() != null && cftDto.isVersionable()) {
+                    throw new InvalidParameterException("Custom table supports only unversioned data");
                 }
             }
         }
@@ -180,7 +177,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 if (cftDto.getIndexType() == null) {
                     cftDto.setIndexType(CustomFieldIndexTypeEnum.INDEX_NOT_ANALYZE);
                 }
-                //
+
                 if (cftDto.getStorageType() == null) {
                     cftDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
                 }
@@ -189,11 +186,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                     pos++;
                 }
 
-                if (cftDto.getStorageType() != CustomFieldStorageTypeEnum.SINGLE || (cftDto.getFieldType() != CustomFieldTypeEnum.DATE
-                        && cftDto.getFieldType() != CustomFieldTypeEnum.DOUBLE && cftDto.getFieldType() != CustomFieldTypeEnum.LIST
-                        && cftDto.getFieldType() != CustomFieldTypeEnum.LONG && cftDto.getFieldType() != CustomFieldTypeEnum.STRING)
-                        || (cftDto.isVersionable() != null && cftDto.isVersionable())) {
-                    throw new InvalidParameterException("Custom table supports only unversioned and simple Date, Double, Long, String and Select from list type fields");
+                if (cftDto.isVersionable() != null && cftDto.isVersionable()) {
+                    throw new InvalidParameterException("Custom table supports only unversioned data");
                 }
             }
         }

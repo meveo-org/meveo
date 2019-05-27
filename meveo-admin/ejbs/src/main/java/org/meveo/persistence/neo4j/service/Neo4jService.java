@@ -164,6 +164,10 @@ public class Neo4jService {
      * Drop an index and unique constraint on the CET for the meveo_uuid property
      */
     public void removeUUIDIndexes(CustomEntityTemplate customEntityTemplate) {
+        if(!customEntityTemplate.getAvailableStorages().contains(DBStorageType.NEO4J)){
+            return;
+        }
+
         Set<String> labels = new HashSet<>();
         labels.add(customEntityTemplate.getCode());
 
