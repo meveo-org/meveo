@@ -2,6 +2,7 @@ package org.meveo.service.custom;
 
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityCategory;
 
 public class CustomizedEntity {
 
@@ -15,6 +16,8 @@ public class CustomizedEntity {
     private Long customEntityId;
 
     private String description;
+    
+    private CustomEntityCategory customEntityCategory;
 
     @SuppressWarnings("rawtypes")
     public CustomizedEntity(Class entityClass) {
@@ -31,7 +34,13 @@ public class CustomizedEntity {
         this.customEntityId = customEntityId;
         this.description = description;
     }
-
+    
+	@SuppressWarnings("rawtypes")
+	public CustomizedEntity(String entityCode, Class entityClass, Long customEntityId, String description,
+			CustomEntityCategory customEntityCategory) {
+		this(entityCode, entityClass, customEntityId, description);
+		this.customEntityCategory = customEntityCategory;
+	}
     public Long getId() {
         return id;
     }
@@ -65,7 +74,11 @@ public class CustomizedEntity {
         return customEntityId == null;
     }
 
-    public String getClassnameToDisplay() {
+    public CustomEntityCategory getCustomEntityCategory() {
+		return customEntityCategory;
+	}
+
+	public String getClassnameToDisplay() {
         String classNameToDisplay = ReflectionUtils.getCleanClassName(getEntityClass().getName());
         if (!isStandardEntity()) {
             classNameToDisplay = classNameToDisplay + CustomFieldTemplate.ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR + getEntityCode();

@@ -31,11 +31,11 @@
         <module>meveo-ws</module>
     </modules>
     <repositories>
-        <repository>
-            <id>wd</id>
-            <name>webdrone nexus</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/groups/webdrone</url>
-        </repository>
+<!--         <repository> -->
+<!--             <id>wd</id> -->
+<!--             <name>webdrone nexus</name> -->
+<!--             <url>http://maven.webdrone.fr:8081/nexus/content/groups/webdrone</url> -->
+<!--         </repository> -->
         <repository>
             <id>jboss-repo</id>
             <url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
@@ -552,10 +552,10 @@
             <properties>
                 <!-- Properties for liquibase plugin. Can be passed from a command line: mvn -Ddb.schema=ten2 -->
                 <db.driver>org.postgresql.Driver </db.driver>
-                <db.url>jdbc:postgresql://51.75.197.172/meveo</db.url>
+                <db.url>jdbc:postgresql://localhost/meveo</db.url>
                 <db.schema>public</db.schema>
-                <db.username>postgres</db.username>
-                <db.password>5SNjbYYSqm9ow6WV</db.password>
+                <db.username>meveo</db.username>
+                <db.password>meveo</db.password>
             </properties>
             <dependencies>
                 <!-- Dependency for liquibase plugin -->
