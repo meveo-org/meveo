@@ -65,4 +65,9 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	public void cancelFieldGrouping() {
 		// TODO Auto-generated method stub
 	}
+
+	public List<CustomEntityCategory> getCustomEntityCategories() {
+		return customEntityCategories;
+	}
+	
 }

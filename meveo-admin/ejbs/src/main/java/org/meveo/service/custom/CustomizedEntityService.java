@@ -13,8 +13,8 @@ import javax.inject.Inject;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
@@ -31,8 +31,8 @@ public class CustomizedEntityService implements Serializable {
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
-    @Inject
-    private CustomRelationshipTemplateService customRelationshipTemplateService;
+//    @Inject
+//    private CustomRelationshipTemplateService customRelationshipTemplateService;
     /**
      * Get a list of customized/customizable entities optionally filtering by a name and custom entities only and whether to include non-managed entities. Non-managed Entities are
      * entities that will not be shown in the Entity Customization list page.
@@ -54,16 +54,25 @@ public class CustomizedEntityService implements Serializable {
             entityName = entityName.toLowerCase();
         }
 
-        if (!customEntityTemplatesOnly) {
-            entities.addAll(searchAllCustomFieldEntities(entityName, includeNonManagedEntities, includeParentClassesOnly));
-            entities.addAll(searchJobs(entityName));
-        }
-        entities.addAll(searchCustomEntityTemplates(entityName));
-        entities.addAll(searchCustomRelationshipTemplates(entityName));
+		if (!customEntityTemplatesOnly) {
+			entities.addAll(
+					searchAllCustomFieldEntities(entityName, includeNonManagedEntities, includeParentClassesOnly));
+			entities.addAll(searchJobs(entityName));
+		}
+		entities.addAll(searchCustomEntityTemplates(entityName));
+//        entities.addAll(searchCustomRelationshipTemplates(entityName));
         
         Collections.sort(entities, sortEntitiesBy(sortBy, sortOrder));
         return entities;
     }
+    
+	public List<CustomizedEntity> getCustomizedEntities(String entityName, Long cecId, final String sortBy,
+			final String sortOrder) {
+		List<CustomizedEntity> entities = new ArrayList<>();
+		entities.addAll(searchCustomEntityTemplates(entityName, cecId));
+		Collections.sort(entities, sortEntitiesBy(sortBy, sortOrder));
+		return entities;
+	}
 
     /**
      * Searches all custom field entities.
@@ -117,11 +126,33 @@ public class CustomizedEntityService implements Serializable {
             customEntityTemplates = customEntityTemplateService.findByCodeLike(entityName);
         }
 
-        for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
-            entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription()));
-        }
+		CustomEntityCategory cec = null;
+		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
+			cec = customEntityTemplate.getCustomEntityCategory();
+			entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class,
+					customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
+		}
+      
         return entities;
     }
+    
+	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, Long cecId) {
+		List<CustomizedEntity> entities = new ArrayList<>();
+		List<CustomEntityTemplate> customEntityTemplates = null;
+		if (entityName == null || CustomEntityTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
+			customEntityTemplates = customEntityTemplateService.list((Boolean) null);
+		} else if (entityName != null) {
+			customEntityTemplates = customEntityTemplateService.findByCodeLike(entityName);
+		}
+		CustomEntityCategory cec = null;
+		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
+			cec = customEntityTemplate.getCustomEntityCategory();
+			if (cec != null && cec.getId().equals(cecId)) {
+				entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
+			}
+		}
+		return entities;
+	}
     
     /**
      * Searches all custom entity templates.
@@ -130,20 +161,20 @@ public class CustomizedEntityService implements Serializable {
      * 
      * @return A list of custom entity templates.
      */
-    private List<CustomizedEntity> searchCustomRelationshipTemplates(String entityName) {
-        List<CustomizedEntity> entities = new ArrayList<>();
-        List<CustomRelationshipTemplate> crt = null;
-        if (entityName == null || CustomRelationshipTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
-            crt = customRelationshipTemplateService.list();
-        } else if (entityName != null) {
-            crt = customRelationshipTemplateService.findByCodeLike(entityName);
-        }
-
-        for (CustomRelationshipTemplate customEntityTemplate : crt) {
-            entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomRelationshipTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription()));
-        }
-        return entities;
-    }
+//    private List<CustomizedEntity> searchCustomRelationshipTemplates(String entityName) {
+//        List<CustomizedEntity> entities = new ArrayList<>();
+//        List<CustomRelationshipTemplate> crt = null;
+//        if (entityName == null || CustomRelationshipTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
+//            crt = customRelationshipTemplateService.list();
+//        } else if (entityName != null) {
+//            crt = customRelationshipTemplateService.findByCodeLike(entityName);
+//        }
+//
+//        for (CustomRelationshipTemplate customEntityTemplate : crt) {
+//            entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomRelationshipTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription()));
+//        }
+//        return entities;
+//    }
 
     /**
      * Searches all jobs.
@@ -178,12 +209,30 @@ public class CustomizedEntityService implements Serializable {
                 if ("DESCENDING".equalsIgnoreCase(sortOrder)) {
                     order = -1;
                 }
-                if ("description".equals(sortBy)) {
-                    return StringUtils.compare(o1.getDescription(), o2.getDescription()) * order;
+				if ("description".equals(sortBy)) {
+					return StringUtils.compare(o1.getDescription(), o2.getDescription()) * order;
 
-                } else {
-                    return StringUtils.compare(o1.getClassnameToDisplayHuman(), o2.getClassnameToDisplayHuman()) * order;
-                }
+				} else if ("customEntityCategory.code".equals(sortBy)) {
+					CustomEntityCategory c1 = o1.getCustomEntityCategory();
+					CustomEntityCategory c2 = o2.getCustomEntityCategory();
+					if (c1 == null && c2 == null) {
+						int o = StringUtils.compare(o1.getClassnameToDisplayHuman(), o2.getClassnameToDisplayHuman());
+						return o * order;
+					} else if (c1 != null && c2 == null) {
+						return 1 * order;
+					} else if (c1 == null && c2 != null) {
+						return -1 * order;
+					} else {
+						int c = StringUtils.compare(c1.getCode(), c2.getCode());
+						if (c == 0) {
+							int o = StringUtils.compare(o1.getClassnameToDisplayHuman(), o2.getClassnameToDisplayHuman());
+							return o * order;
+						}
+						return c * order;
+					}
+				} else {
+					return StringUtils.compare(o1.getClassnameToDisplayHuman(), o2.getClassnameToDisplayHuman()) * order;
+				}
             }
 
         };
