@@ -8,10 +8,11 @@ import javax.ws.rs.core.Application;
 
 import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
 import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
-import org.meveo.api.rest.custom.impl.PersistenceRs;
+import org.meveo.api.rest.custom.impl.Neo4JPersistenceRs;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
 import org.meveo.api.rest.filter.RESTCorsResponseFilter;
 import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.api.rest.persistence.PersistenceRs;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,19 +28,19 @@ public class JaxRsActivator extends Application {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Set<Class<?>> getClasses() {
-        Set<Class<?>> resources = new HashSet();
 
         Reflections reflections = new Reflections("org.meveo.api.rest");
         Set<Class<? extends BaseRs>> allClasses = reflections.getSubTypesOf(BaseRs.class);
-        
-        resources.addAll(allClasses);
+
+        Set<Class<?>> resources = new HashSet(allClasses);
         resources.add(RESTCorsRequestFilter.class);
         resources.add(RESTCorsResponseFilter.class);
         resources.add(JaxRsExceptionMapper.class);
         resources.add(JacksonJsonProvider.class);
-        resources.add(PersistenceRs.class);
+        resources.add(Neo4JPersistenceRs.class);
         resources.add(CustomTableRsImpl.class);
         resources.add(CustomTableRsRelationImpl.class);
+        resources.add(PersistenceRs.class);
 
         return resources;
     }

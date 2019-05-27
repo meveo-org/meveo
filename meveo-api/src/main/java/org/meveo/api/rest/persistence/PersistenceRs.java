@@ -1,68 +1,94 @@
-package org.meveo.api.rest.custom.impl;
+/*
+ * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+ * not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
+package org.meveo.api.rest.persistence;
 
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.BaseApi;
 import org.meveo.api.dto.PersistenceDto;
+import org.meveo.api.dto.response.PagingAndFiltering;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
-import org.meveo.persistence.neo4j.service.Neo4jService;
 
-@Path("/neo4j/persist")
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Path("/{configuration}/persistence")
 public class PersistenceRs {
 
     protected static final Logger LOGGER = Logger.getLogger(PersistenceRs.class);
 
     @Inject
-    protected SchedulingService schedulingService;
+    private SchedulingService schedulingService;
 
     @Inject
-    protected ScheduledPersistenceService scheduledPersistenceService;
+    private ScheduledPersistenceService scheduledPersistenceService;
 
     @Inject
-    protected Neo4jService neo4jService;
+    private CrossStorageService crossStorageService;
 
-    @QueryParam("neo4jConfiguration")
-    private String neo4jConfiguration;
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
+
+    @QueryParam("configuration")
+    private String configuration;
+
+    @POST
+    @Path("/{cetCode}/list")
+    public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
+        final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+        if(customEntityTemplate == null){
+            throw new NotFoundException();
+        }
+
+        return crossStorageService.find(configuration, customEntityTemplate, paginationConfiguration);
+    }
 
     @DELETE
-    public Response delete(Collection<PersistenceDto> dtos){
+    @Path("/{cetCode}")
+    public Response delete(@PathParam("cetCode") String cetCode, List<String> uuids) throws BusinessException {
+        final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+        if(customEntityTemplate == null){
+            throw new NotFoundException();
+        }
 
-        for (PersistenceDto persistenceDto : dtos) {
-            if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
-                try {
-                    neo4jService.deleteEntity(neo4jConfiguration, persistenceDto.getType(), persistenceDto.getProperties());
-                } catch (BusinessException e) {
-                    Response.serverError();
-                }
-            }
+        for(String uuid : uuids){
+            crossStorageService.remove(configuration, customEntityTemplate, uuid);
         }
 
         return Response.noContent().build();
     }
 
     @POST
-    @Path("/entities")
-    public Response persistEntities(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
+    public Response persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
@@ -105,7 +131,7 @@ public class PersistenceRs {
         try {
 
             /* Persist the entities and return 201 created response */
-            scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
+            scheduledPersistenceService.persist(configuration, atomicPersistencePlan);
             return Response.status(201).build();
 
         } catch (BusinessException | ELException e) {

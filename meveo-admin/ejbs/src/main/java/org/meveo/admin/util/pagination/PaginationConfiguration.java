@@ -188,6 +188,34 @@ public class PaginationConfiguration implements Serializable {
         return ordering != null && ordering == SortOrder.ASCENDING;
     }
 
+    public void setFirstRow(Integer firstRow) {
+        this.firstRow = firstRow;
+    }
+
+    public void setNumberOfRows(Integer numberOfRows) {
+        this.numberOfRows = numberOfRows;
+    }
+
+    public void setFullTextFilter(String fullTextFilter) {
+        this.fullTextFilter = fullTextFilter;
+    }
+
+    public Map<String, String> getSortOrdering() {
+        return sortOrdering;
+    }
+
+    public void setSortOrdering(Map<String, String> sortOrdering) {
+        this.sortOrdering = sortOrdering;
+    }
+
+    public void setSortField(String sortField) {
+        this.sortField = sortField;
+    }
+
+    public void setOrdering(SortOrder ordering) {
+        this.ordering = ordering;
+    }
+
     @Override
     public String toString() {
         return String.format("PaginationConfiguration [firstRow=%s, numberOfRows=%s, fullTextFilter=%s, filters=%s, sortOrdering=%s, fetchFields=%s, sortField=%s, ordering=%s]",
