@@ -170,6 +170,10 @@ public class Neo4jService {
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+                	if(!(referencedCetValue instanceof Collection)) {
+                		throw new BusinessException("Value for CFT "  + entityReference.getCode() + "of CET " + cetCode + " should be a collection");
+                	}
+                	
                     values = ((Collection<Object>) referencedCetValue);
                 } else {
                     values = Collections.singletonList(referencedCetValue);
