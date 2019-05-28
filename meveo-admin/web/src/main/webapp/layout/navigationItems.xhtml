@@ -25,12 +25,22 @@
 			value="#{messages['menu.userGroupHierarchy']}"
 			outcome="userGroupHierarchy"
 			rendered="#{currentUser.hasRole('administrationVisualization')}" />
-        <p:menuitem id="menuConfiguration" value="#{messages['menu.menuConfiguration']}"
-            outcome="menuConfiguration"
-            rendered="#{currentUser.hasRole('administrationVisualization')}" />
         <p:menuitem id="mailerConfiguration" value="#{messages['menu.mailer']}"
             outcome="mailerConfiguration"
             rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        <p:menuitem
+                rendered="#{currentUser.hasRole('administrationVisualization')}"
+                outcome="calendars" id="calendars"
+                value="#{messages['menu.calendars']}" />
+        <p:menuitem id="currencies"
+                    rendered="#{currentUser.hasRole('superAdminManagement')}"
+                    outcome="currencies" value="#{messages['menu.currencies']}" />
+        <p:menuitem id="languages"
+                    rendered="#{currentUser.hasRole('superAdminManagement')}"
+                    outcome="languages" value="#{messages['menu.languages']}" />
+        <p:menuitem id="countries"
+                    rendered="#{currentUser.hasRole('superAdminManagement')}"
+                    outcome="countries" value="#{messages['menu.countries']}" />
         </p:submenu>
 		<p:submenu id="trading" label="#{messages['menu.trading']}"
 			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
@@ -38,20 +48,8 @@
 				value="#{messages['menu.multiLanguageFields']}" />
 			<p:menuitem id="emailTemplates" outcome="emailTemplates"
 				value="#{messages['menu.emailTemplates']}" />
-		</p:submenu>
-		<p:menuitem
-			rendered="#{currentUser.hasRole('administrationVisualization')}"
-			outcome="calendars" id="calendars"
-			value="#{messages['menu.calendars']}" />
-		<p:menuitem id="currencies"
-			rendered="#{currentUser.hasRole('superAdminManagement')}"
-			outcome="currencies" value="#{messages['menu.currencies']}" />
-		<p:menuitem id="languages"
-			rendered="#{currentUser.hasRole('superAdminManagement')}"
-			outcome="languages" value="#{messages['menu.languages']}" />
-		<p:menuitem id="countries"
-			rendered="#{currentUser.hasRole('superAdminManagement')}"
-			outcome="countries" value="#{messages['menu.countries']}" />
+        </p:submenu>
+
 		<p:menuitem id="meveoProperties"
 			rendered="#{currentUser.hasRole('superAdminManagement')}"
 			outcome="meveoProperties" value="#{messages['menu.properties']}" />
