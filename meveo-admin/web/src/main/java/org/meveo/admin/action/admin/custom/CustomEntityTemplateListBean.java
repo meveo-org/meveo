@@ -47,7 +47,11 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 	entities=customizedEntityService.getCustomizedEntities(query, Long.valueOf(cecId), sortField, sortBy);
                 }
                 setRowCount(entities.size());
-
+                
+                if(first>entities.size()) {
+                	this.setRowIndex(0);
+                	first=0;
+                }
                 return entities.subList(first, (first + pageSize) > entities.size() ? entities.size() : (first + pageSize));
             }
         };
