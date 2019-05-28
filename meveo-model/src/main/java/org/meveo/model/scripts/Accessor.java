@@ -1,6 +1,8 @@
 package org.meveo.model.scripts;
 
-public class Accessor {
+import java.io.Serializable;
+
+public class Accessor implements Serializable {
 
     /**
      * Name of the property
