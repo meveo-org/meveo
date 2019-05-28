@@ -83,16 +83,20 @@ public class CrossStorageService {
      * @param configurationCode Repository code
      * @param cet               Template of the entities to retrieve
      * @param uuid              UUID of the entity
-     * @param selectFields      Fields to select
+     * @param fetchFields      Fields to select
      * @return list of matching entities
      */
-    public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+    public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid, List<String> fetchFields) {
+        List<String> selectFields = new ArrayList<>(fetchFields);
         Map<String, Object> values = new HashMap<>();
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
             values.putAll(neo4jDao.findNodeById(configurationCode, cet.getCode(), uuid, neo4jFields));
         }
+
+        // Don't retrieve the fields we already fetched
+        selectFields.removeAll(values.keySet());
 
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
             List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
@@ -285,6 +289,7 @@ public class CrossStorageService {
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> neo4jValues = filterValues(entityValues, cet, DBStorageType.NEO4J);
             final Set<EntityRef> entityRefs = neo4jService.addCetNode(configurationCode, cet, neo4jValues);
+            //TODO: check if created or updated
             uuid = getTrustedUuids(entityRefs).get(0);
             persistedEntities.addAll(entityRefs);
         }
@@ -294,13 +299,14 @@ public class CrossStorageService {
             Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL);
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 String tableName = SQLStorageConfiguration.getDbTablename(cet);
+                //TODO: Find by UUID if updated in Neo4J and throw error if not found
                 String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
                 if (sqlUUID != null) {
                     sqlValues.put("uuid", sqlUUID);
                     customTableService.update(cet, sqlValues);
                     uuid = sqlUUID;
                 } else {
-                    if(uuid != null){
+                    if (uuid != null) {
                         sqlValues.put("uuid", uuid);
                     }
 
@@ -320,7 +326,7 @@ public class CrossStorageService {
                     cei.setCode(code);
                     cei.setCfValues(customFieldValues);
 
-                    if(uuid != null){
+                    if (uuid != null) {
                         cei.setUuid(uuid);
                     }
 
@@ -354,20 +360,21 @@ public class CrossStorageService {
         }
 
         // SQL Storage
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
-            sqlValues.put("uuid", uuid);
-            customTableService.update(cet, sqlValues);
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+            // Custom table
+            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
+                sqlValues.put("uuid", uuid);
+                customTableService.update(cet, sqlValues);
+            } else {
+                // CEI storage
+                final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+                CustomFieldValues customFieldValues = new CustomFieldValues();
+                values.forEach(customFieldValues::setValue);
+                cei.setCfValues(customFieldValues);
+                customEntityInstanceService.update(cei);
+            }
         }
-    }
-
-    private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) throws BusinessException {
-        String code = (String) values.get("code");
-        if (code == null) {
-            throw new BusinessException("Code is missing so we can't find CEI with values " + values);
-        }
-
-        return customEntityInstanceService.findByCodeByCet(entityCode, code);
     }
 
     public void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
@@ -452,6 +459,7 @@ public class CrossStorageService {
                 uuid = customTableRelationService.findIdByValues(dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL));
             } else {
                 final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), valuesFilters);
+                //TODO: Retrieve all instances of the CEI and them filter on that
                 if (customEntityInstance != null) {
                     uuid = customEntityInstance.getUuid();
                 }
@@ -618,6 +626,7 @@ public class CrossStorageService {
     }
 
     private void fetchEntityReferences(String configurationCode, CustomModelObject customModelObject, Map<String, Object> values) {
+        // TODO: extract sub-entities fetch fields. Ex : "a.x"
         new HashSet<>(values.entrySet()).forEach(entry -> {
             CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
             if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
@@ -639,6 +648,15 @@ public class CrossStorageService {
             final Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
             customTableService.replaceKeys(cfts, customTableValue);
         }
+    }
+
+    private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) throws BusinessException {
+        String code = (String) values.get("code");
+        if (code == null) {
+            throw new BusinessException("Code is missing so we can't find CEI with values " + values);
+        }
+
+        return customEntityInstanceService.findByCodeByCet(entityCode, code);
     }
 
 }
