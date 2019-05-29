@@ -150,10 +150,6 @@ public class Neo4jService {
 
             Map<String, Object> uniqueFields = new HashMap<>();
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
-            fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
-            if (!uniqueFields.isEmpty()) {
-                uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
-            }
 
             /* Collect entity references */
             final List<CustomFieldTemplate> entityReferences = cetFields.values().stream()
@@ -213,14 +209,6 @@ public class Neo4jService {
                             relationshipsToCreate.put(nodeReference, relationshipName);
                         }
                     }
-                }
-            }
-
-            if (CETConstants.QUERY_CATEGORY_CODE.equals(cetCode)) {
-                String isSuperCategory = (String) fields.get("isSuperCategory");
-                if (isSuperCategory != null && Boolean.valueOf(isSuperCategory)) {
-                    fields.put(CETConstants.CET_ACTIVE_FIELD, "FALSE");
-                    uniqueFields.remove(CETConstants.CET_ACTIVE_FIELD);
                 }
             }
 
