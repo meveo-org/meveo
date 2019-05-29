@@ -977,7 +977,7 @@ public class Neo4jService {
             } catch (NumberFormatException e) {
                 if (cft != null && fieldValue != null) {
                     LOGGER.error(
-                            "Wrong data type format for {}#{}\nExpected type : {}, value is : {}\nSkipping field value\n",
+                            "Wrong data type format for {}#{}. Expected type : {}, value is : {}. Skipping field value",
                             cft.getAppliesTo(),
                             cft.getCode(),
                             cft.getFieldType(),
