@@ -1,33 +1,27 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:f="http://xmlns.jcp.org/jsf/core"
-	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
-    xmlns:o="http://omnifaces.org/ui"
-	xmlns:p="http://primefaces.org/ui">
-    
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+                xmlns:o="http://omnifaces.org/ui"
+                xmlns:p="http://primefaces.org/ui">
+
     <o:importFunctions type="org.meveo.commons.utils.ParamBean" var="paramBean" />
 
-	<p:submenu id="admin" label="#{messages['menu.configuration']}"
-		rendered="#{currentUser.hasRole('administrationVisualization') or currentUser.hasRole('catalogVisualization') or currentUser.hasRole('userVisualization')}">
-		<p:menuitem id="provider" outcome="providerSelfDetail"
-			value="#{messages['menu.appConfiguration']}"
-			rendered="#{currentUser.hasRole('administrationManagement') or currentUser.hasRole('superAdminManagement')}" />
-		<p:menuitem id="providerContacts" outcome="providerContacts"
-			value="#{messages['menu.providerContacts']}" />
-		<p:menuitem id="users" value="#{messages['menu.users']}"
-			outcome="users"
-			rendered="#{currentUser.hasRole('userVisualization')}" />
-		<p:menuitem id="userRoles" value="#{messages['menu.userRoles']}"
-			outcome="roles"
-			rendered="#{currentUser.hasRole('administrationVisualization')}" />
-		<p:menuitem id="userGroupHierarchy"
-			value="#{messages['menu.userGroupHierarchy']}"
-			outcome="userGroupHierarchy"
-			rendered="#{currentUser.hasRole('administrationVisualization')}" />
+    <p:submenu id="admin" label="#{messages['menu.configuration']}"
+               rendered="#{currentUser.hasRole('administrationVisualization') or currentUser.hasRole('catalogVisualization') or currentUser.hasRole('userVisualization')}">
+        <p:menuitem id="provider" outcome="providerSelfDetail"
+                    value="#{messages['menu.appConfiguration']}"
+                    rendered="#{currentUser.hasRole('administrationManagement') or currentUser.hasRole('superAdminManagement')}" />
+        <p:menuitem id="providerContacts" outcome="providerContacts"
+                    value="#{messages['menu.providerContacts']}" />
+        <p:menuitem id="userGroupHierarchy"
+                    value="#{messages['menu.userGroupHierarchy']}"
+                    outcome="userGroupHierarchy"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
         <p:menuitem id="mailerConfiguration" value="#{messages['menu.mailer']}"
-            outcome="mailerConfiguration"
-            rendered="#{currentUser.hasRole('administrationVisualization')}" />
+                    outcome="mailerConfiguration"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
         <p:menuitem
                 rendered="#{currentUser.hasRole('administrationVisualization')}"
                 outcome="calendars" id="calendars"
@@ -41,94 +35,76 @@
         <p:menuitem id="countries"
                     rendered="#{currentUser.hasRole('superAdminManagement')}"
                     outcome="countries" value="#{messages['menu.countries']}" />
-        </p:submenu>
-		<p:submenu id="trading" label="#{messages['menu.trading']}"
-			rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
-			<p:menuitem id="multiLanguageFields" outcome="multiLanguageFields"
-				value="#{messages['menu.multiLanguageFields']}" />
-			<p:menuitem id="emailTemplates" outcome="emailTemplates"
-				value="#{messages['menu.emailTemplates']}" />
-        </p:submenu>
+    </p:submenu>
+    <p:submenu id="trading" label="#{messages['menu.trading']}"
+               rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
+        <p:menuitem id="multiLanguageFields" outcome="multiLanguageFields"
+                    value="#{messages['menu.multiLanguageFields']}" />
+        <p:menuitem id="emailTemplates" outcome="emailTemplates"
+                    value="#{messages['menu.emailTemplates']}" />
+    </p:submenu>
 
-		<p:menuitem id="meveoProperties"
-			rendered="#{currentUser.hasRole('superAdminManagement')}"
-			outcome="meveoProperties" value="#{messages['menu.properties']}" />
+    <p:menuitem id="meveoProperties"
+                rendered="#{currentUser.hasRole('superAdminManagement')}"
+                outcome="meveoProperties" value="#{messages['menu.properties']}" />
 
-	<p:submenu id="reporting" label="#{messages['menu.reporting']}"
-		rendered="#{currentUser.hasRole('reportingVisualization')}">
-		<p:menuitem id="measurableQuantities"
-			value="#{messages['menu.measurableQuantities']}"
-			outcome="measurableQuantities" />
-		<p:menuitem id="measuredValues"
-			value="#{messages['menu.measuredValues']}"
-			outcome="measuredValueDetail" />
-		<p:menuitem id="charts" value="#{messages['menu.charts']}"
-			outcome="charts" />
-	</p:submenu>
+    <p:submenu id="reporting" label="#{messages['menu.reporting']}"
+               rendered="#{currentUser.hasRole('reportingVisualization')}">
+        <p:menuitem id="measurableQuantities"
+                    value="#{messages['menu.measurableQuantities']}"
+                    outcome="measurableQuantities" />
+        <p:menuitem id="measuredValues"
+                    value="#{messages['menu.measuredValues']}"
+                    outcome="measuredValueDetail" />
+        <p:menuitem id="charts" value="#{messages['menu.charts']}"
+                    outcome="charts" />
+    </p:submenu>
 
-    <p:submenu id="customEntites"
-               label="#{messages['menu.customEntities']}"
-               rendered="#{!empty(customEntityTemplateBean.listMenuCustomEntities()) and currentUser.hasRole('administrationVisualization')}">
-               
-        <c:set var="cetIndex" value="0" />
-        <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
-                <c:if test="#{not empty menu.key}">
-                    <p:submenu label="#{menu.key}">
-                        <c:forEach items="#{menu.value}" var="cet">
-                            <c:if test="#{currentUser.hasRole(cet.readPermission) }">
-                                <p:menuitem id="cet_#{cetIndex}" outcome="#{cet.storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
-                                    <f:param name="cet" value="#{cet.code}" disable="#{cet.storeAsTable}"/>
-                                    <f:param name="objectId" value="#{cet.id}" disable="#{!cet.storeAsTable}"/>
-                                </p:menuitem>
-                                <c:set var="cetIndex" value="#{cetIndex + 1}" />
-                            </c:if>
-                        </c:forEach>
-                    </p:submenu>
-                </c:if>
-        </c:forEach>
-        <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
-            <c:if test="#{empty menu.key}">
+    <c:set var="cetIndex" value="0" />
+    <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
+        <c:if test="#{not empty menu.key}">
+            <p:submenu label="#{menu.key}">
                 <c:forEach items="#{menu.value}" var="cet">
                     <c:if test="#{currentUser.hasRole(cet.readPermission) }">
                         <p:menuitem id="cet_#{cetIndex}" outcome="#{cet.storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
-                            <f:param name="cet" value="#{cet.code}"></f:param>
+                            <f:param name="cet" value="#{cet.code}" disable="#{cet.storeAsTable}"/>
+                            <f:param name="objectId" value="#{cet.id}" disable="#{!cet.storeAsTable}"/>
                         </p:menuitem>
                         <c:set var="cetIndex" value="#{cetIndex + 1}" />
                     </c:if>
                 </c:forEach>
-            </c:if>
-        </c:forEach>
+            </p:submenu>
+        </c:if>
+    </c:forEach>
+    <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
+        <c:if test="#{empty menu.key}">
+            <c:forEach items="#{menu.value}" var="cet">
+                <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+                    <p:menuitem id="cet_#{cetIndex}" outcome="#{cet.storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
+                        <f:param name="cet" value="#{cet.code}"></f:param>
+                    </p:menuitem>
+                    <c:set var="cetIndex" value="#{cetIndex + 1}" />
+                </c:if>
+            </c:forEach>
+        </c:if>
+    </c:forEach>
+
+    <p:submenu label="#{messages['menu.myCompany']}"
+               rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
+        <p:menuitem id="mm_users" value="#{messages['menu.users']}"
+                    outcome="users" />
+        <p:menuitem id="mmUserGroups" outcome="userGroupHierarchy"
+                    value="#{messages['menu.userGroupHierarchy']}" />
     </p:submenu>
 
-	<p:submenu label="#{messages['menu.myCompany']}"
-		rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
-		<p:menuitem id="mm_users" value="#{messages['menu.users']}"
-			outcome="users" />
-		<p:menuitem id="mmUserGroups" outcome="userGroupHierarchy"
-			value="#{messages['menu.userGroupHierarchy']}" />
-	</p:submenu>
-
-	<p:submenu id="automation" label="#{messages['menu.admin']}"
-                           rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+    <p:submenu id="automation" label="#{messages['menu.admin']}"
+               rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
         <p:submenu id="adminJobs" label="#{messages['menu.jobs']}">
             <p:menuitem id="jobs" outcome="jobInstances"
                         value="#{messages['menu.jobInstances']}" />
             <p:menuitem id="timers" outcome="timerEntities"
                         value="#{messages['menu.timerEntities']}" />
         </p:submenu>
-        <p:menuitem id="MeveoInstances" outcome="meveoInstances"
-                    value="#{messages['menu.meveoInstance']}" />
-        <p:menuitem id="meveoModules" outcome="meveoModules"
-                    value="#{messages['menu.meveoModules']}" />
-        <p:menuitem id="customEntityCategories" outcome="customEntityCategorys"
-                    value="#{messages['menu.customEntityCategories']}" />
-        <p:menuitem id="customizedEntities" outcome="customizedEntities"
-                    value="#{messages['menu.customizedEntities']}" />
-        <p:menuitem id="customizedRelationships" outcome="customizedRelationships" value="#{messages['menu.customizedRelationships']}" />
-        <p:menuitem id="scriptInstances" outcome="scriptInstances"
-                    value="#{messages['menu.scriptInstances']}" />
-        <p:menuitem id="filters" outcome="filters"
-                    value="#{messages['menu.filters']}" />
         <p:submenu id="workflows" label="#{messages['menu.workflow']}"
                    outcome="workflows">
             <p:menuitem id="crud_workflows" value="#{messages['menu.workflow']}"
@@ -137,35 +113,6 @@
                         value="#{messages['menu.workflowHistory']}"
                         outcome="workflowHistory" />
         </p:submenu>
-        <p:submenu id="notifications"
-                   label="#{messages['menu.notifications']}" outcome="notifications">
-            <p:menuitem id="internalNotifications"
-                        value="#{messages['menu.notifications']}" outcome="notifications" />
-            <p:menuitem id="webHooks" value="#{messages['menu.webHooks']}"
-                        outcome="webHooks" />
-            <p:menuitem id="emailNotifications"
-                        value="#{messages['menu.emailNotifications']}"
-                        outcome="emailNotifications" />
-            <p:menuitem id="jobTriggers" value="#{messages['menu.jobTriggers']}"
-                        outcome="jobTriggers" />
-            <p:menuitem id="notificationHistory"
-                        value="#{messages['menu.notificationHistories']}"
-                        outcome="notificationHistories" />
-            <p:menuitem id="inboundRequests"
-                        value="#{messages['menu.inboundRequests']}"
-                        outcome="inboundRequests" />
-        </p:submenu>
-        <p:submenu id="tools" label="#{messages['menu.tools']}"
-                   rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
-            <p:menuitem id="import" outcome="import"
-                        rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement')}"
-                        value="#{messages['menu.import']}" />
-            <p:menuitem id="export" outcome="export"
-                        value="#{messages['menu.export']}" />
-        </p:submenu>
-        <p:menuitem id="fileExplorerMenu"
-                    rendered="#{currentUser.hasRole('administrationVisualization')}"
-                    outcome="fileExplorer" value="#{messages['menu.fileExplorer']}" />
         <p:submenu id="auditLogSubMenu" label="#{messages['menu.auditLog']}"
                    rendered="#{currentUser.hasRole('administrationVisualization')}">
             <p:menuitem id="auditConfiguration" outcome="auditConfiguration"
@@ -173,9 +120,6 @@
             <p:menuitem id="auditLog" outcome="auditLog"
                         value="#{messages['menu.auditLogs']}" />
         </p:submenu>
-        <p:menuitem id="cache"
-                    rendered="#{currentUser.hasRole('administrationVisualization')}"
-                    outcome="caches" value="#{messages['menu.cacheInfo']}" />
         <p:submenu id="index" label="#{messages['menu.fullTextSearch']}"
                    rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement') || currentUser.hasRole('administrationVisualization')}">
             <p:menuitem id="ESSearch" rendered="#{currentUser.hasRole('administrationVisualization')}" outcome="fullTextSearch" value="#{messages['menu.fullTextSearch.search']}" />
@@ -185,10 +129,71 @@
         <p:menuitem id="providers" outcome="providers"
                     value="#{messages['menu.tenants']}"
                     rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />
+        <p:menuitem id="users" value="#{messages['menu.users']}"
+                    outcome="users"
+                    rendered="#{currentUser.hasRole('userVisualization')}" />
+        <p:menuitem id="userRoles" value="#{messages['menu.userRoles']}"
+                    outcome="roles"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
     </p:submenu>
-    <p:menuitem id="endpoint" value="#{messages['menu.endpoint']}"
-                outcome="endpoint">
-    </p:menuitem>
+    <p:submenu id="ontology" label="#{messages['menu.ontology']}"
+               rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+        <p:menuitem id="customEntityCategories" outcome="customEntityCategorys"
+                    value="#{messages['menu.customEntityCategories']}" />
+        <p:menuitem id="customizedEntities" outcome="customizedEntities"
+                    value="#{messages['menu.customizedEntities']}" />
+        <p:menuitem id="customizedRelationships" outcome="customizedRelationships"
+                    value="#{messages['menu.customizedRelationships']}" />
+    </p:submenu>
+    <p:submenu id="services" label="#{messages['menu.services']}"
+               rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+        <p:menuitem id="scriptInstances" outcome="scriptInstances"
+                    value="#{messages['menu.scriptInstances']}" />
+        <p:menuitem id="filters" outcome="filters"
+                    value="#{messages['menu.filters']}" />
+        <p:menuitem id="endpoint" value="#{messages['menu.endpoint']}"
+                    outcome="endpoint" />
+        <p:menuitem id="fileExplorerMenu"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}"
+                    outcome="fileExplorer" value="#{messages['menu.fileExplorer']}" />
+    </p:submenu>
+    <p:submenu id="deployment" label="#{messages['menu.deployment']}"
+               rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+        <p:menuitem id="MeveoInstances" outcome="meveoInstances"
+                    value="#{messages['menu.meveoInstance']}" />
+        <p:menuitem id="meveoModules" outcome="meveoModules"
+                    value="#{messages['menu.meveoModules']}" />
+        <p:submenu id="tools" label="#{messages['menu.tools']}"
+                   rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+            <p:menuitem id="import" outcome="import"
+                        rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationManagement')}"
+                        value="#{messages['menu.import']}" />
+            <p:menuitem id="export" outcome="export"
+                        value="#{messages['menu.export']}" />
+        </p:submenu>
+        <p:menuitem id="cache"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}"
+                    outcome="caches" value="#{messages['menu.cacheInfo']}" />
+    </p:submenu>
+    <p:submenu id="notifications" label="#{messages['menu.notifications']}"
+               rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+        <p:menuitem id="internalNotifications"
+                    value="#{messages['menu.notifications']}" outcome="notifications" />
+        <p:menuitem id="webHooks" value="#{messages['menu.webHooks']}"
+                    outcome="webHooks" />
+        <p:menuitem id="emailNotifications"
+                    value="#{messages['menu.emailNotifications']}"
+                    outcome="emailNotifications" />
+        <p:menuitem id="jobTriggers" value="#{messages['menu.jobTriggers']}"
+                    outcome="jobTriggers" />
+        <p:menuitem id="notificationHistory"
+                    value="#{messages['menu.notificationHistories']}"
+                    outcome="notificationHistories" />
+        <p:menuitem id="inboundRequests"
+                    value="#{messages['menu.inboundRequests']}"
+                    outcome="inboundRequests" />
+    </p:submenu>
+
     <c:set var="cetIndex" value="0"/>
     <c:forEach items="#{customEntityTemplateBean.cetConfigurations}" var="cet">
         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
