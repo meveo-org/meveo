@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -231,7 +231,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         String result = super.saveOrUpdate(false);
 
         if (entity.isError()) {
-        	result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
+            result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
         }else {
             if (killConversation) {
                 endConversation();
@@ -248,14 +248,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Override
     public void runListFilter() {
-    	rootNode = computeRootNode();
-    	super.runListFilter();
+        rootNode = computeRootNode();
+        super.runListFilter();
     }
 
     @Override
     public void search() {
-    	super.search();
-    	rootNode = computeRootNode();
+        super.search();
+        rootNode = computeRootNode();
     }
 
     public List<String> getLogs() {
@@ -366,20 +366,18 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public TreeNode getRootNode() {
-    	if(rootNode == null) {
-    		rootNode = computeRootNode();
-    	}
-		return rootNode;
+        if(rootNode == null) {
+            rootNode = computeRootNode();
+        }
+        return rootNode;
     }
 
     public TreeNode computeRootNode() {
-    	log.info("Computing root node");
-
-        rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
-	    rootNode.setExpanded(false);
+        log.info("Computing root node");
 
         Map<String, Object> filters = this.getFilters();
         String code = "";
+        boolean isExpand = false;
         if (this.filters.containsKey("code")) {
             code = (String) filters.get("code");
         }
@@ -387,10 +385,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
             scriptInstances = scriptInstanceService.findByCodeLike(code);
+            isExpand = true;
         } else {
             scriptInstances = scriptInstanceService.list();
         }
-
+        rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
+        rootNode.setExpanded(isExpand);
         List<ScriptInstance> javaScriptInstances = null;
         List<ScriptInstance> es5ScriptInstances = null;
         if (CollectionUtils.isNotEmpty(scriptInstances)) {
@@ -403,20 +403,20 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         if (CollectionUtils.isNotEmpty(javaScriptInstances)) {
             TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode(JAVA, JAVA), rootNode);
-            rootJava.setExpanded(false);
+            rootJava.setExpanded(isExpand);
             for (ScriptInstance scriptInstance : javaScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
-                createTree(JAVA, nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
+                createTree(JAVA, nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
             }
         }
         if (CollectionUtils.isNotEmpty(es5ScriptInstances)) {
             TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode(ES5, ES5), rootNode);
-            rootEs5.setExpanded(false);
+            rootEs5.setExpanded(isExpand);
             for (ScriptInstance scriptInstance : es5ScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
-                createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError());
+                createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
             }
         }
 
@@ -450,7 +450,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         return scriptIO;
     }
 
-    private void createTree(String scripType, List<String> packages, TreeNode rootNode, String fullName, Long id, Boolean error) {
+    private void createTree(String scripType, List<String> packages, TreeNode rootNode, String fullName, Long id, Boolean error, boolean isExpand) {
         if (CollectionUtils.isNotEmpty(packages)) {
             String nodeName = packages.get(0);
             TreeNode newNode = findNode(rootNode, nodeName);
@@ -460,10 +460,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 } else {
                     newNode = new DefaultTreeNode("document", new ScriptInstanceNode(nodeName, scripType), rootNode);
                 }
-                newNode.setExpanded(false);
+                newNode.setExpanded(isExpand);
             }
             packages.remove(0);
-            createTree(scripType, packages, newNode, fullName, id, error);
+            createTree(scripType, packages, newNode, fullName, id, error, isExpand);
         }
     }
 
