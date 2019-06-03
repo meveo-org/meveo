@@ -1,4 +1,4 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html"
+    <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html"
     xmlns:hftl="http://hftl.org" xmlns:hf="http://java.sun.com/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
     xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
 
@@ -36,10 +36,18 @@
             <hftl:formPanel formId="crtForm"
                 label="#{messages['customizedRelationships.detail'].concat(customRelationshipTemplateBean.entity.code!=null?(' - '.concat(customRelationshipTemplateBean.entity.getCode())):'')}"
                 backingBean="#{customRelationshipTemplateBean}">
-                <hftl:formField label="#{messages['BusinessEntity.code']}" field="code" showOnlyOnNew="true" required="true" />
-                <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
-                <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
-				<hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
+                <h:panelGrid columns = "3" width="60%">
+                    <hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customRelationshipTemplateBean.entity.code == null)}">
+                        <p:inputText  id="code" field="code" value="#{customRelationshipTemplateBean.entity.code}" required="true" validateUnique="true" validatorMessage="Code can't contain number" style="width: 180px">
+                            <f:validateRegex pattern="\D+$" />
+                        </p:inputText>
+                    </hftl:decorateFormField>
+                    <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
+                    <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
+                </h:panelGrid>
+                <h:panelGrid columns="1">
+                 <hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
+                </h:panelGrid>
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
                         <p:selectOneMenu id="startNode" value="#{customRelationshipTemplateBean.entity.startNode}" required="true" style="width:150px;">
