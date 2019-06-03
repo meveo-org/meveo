@@ -29,9 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -40,6 +43,7 @@ import javax.persistence.criteria.Root;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Rachid
@@ -47,15 +51,16 @@ import java.util.Map;
  */
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Neo4jConnectionProvider {
 
     @Inject
     @MeveoJpa
-    private EntityManagerWrapper emWrapper;
+    private Provider<EntityManagerWrapper> emWrapperProvider;
 
     private Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
 
-    private static final Map<String, Neo4JConfiguration> configurationMap = new HashMap<>();
+    private static final Map<String, Neo4JConfiguration> configurationMap = new ConcurrentHashMap<>();
 
     private String neo4jUrl;
     private String neo4jLogin;
@@ -145,12 +150,13 @@ public class Neo4jConnectionProvider {
      * @return The configuration corresponding to the code
      */
     public Neo4JConfiguration findByCode(String code){
-        CriteriaBuilder cb = emWrapper.getEntityManager().getCriteriaBuilder();
+        EntityManager entityManager = emWrapperProvider.get().getEntityManager();
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Neo4JConfiguration> query = cb.createQuery(Neo4JConfiguration.class);
         Root<Neo4JConfiguration> root = query.from(Neo4JConfiguration.class);
         query.select(root);
         query.where(cb.equal(root.get("code"), code));
-        return emWrapper.getEntityManager().createQuery(query).getSingleResult();
+        return entityManager.createQuery(query).getSingleResult();
     }
 
 }
