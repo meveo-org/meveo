@@ -80,12 +80,12 @@ public class Neo4JRequests {
             .append("ON CREATE SET relationship = ${fields}, relationship." + CREATION_DATE + " = $updateDate, relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer mergeCetStatement = new StringBuffer("MERGE (n:${cetCode}${fieldKeys}) \n")
-            .append("ON CREATE SET n = ${fields}, n." + CREATION_DATE + " = timestamp(), n.meveo_uuid = apoc.create.uuid() \n")
+            .append("ON CREATE SET n.meveo_uuid = apoc.create.uuid(), n += ${fields}, n." + CREATION_DATE + " = timestamp()\n")
             .append("ON MATCH SET n += ${updatableFields}, n." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static StringBuffer createCetStatement = new StringBuffer()
             .append("CREATE (n:${cetCode}${fields}) \n")
-            .append("SET n." + CREATION_DATE + " = timestamp(), n..meveo_uuid = apoc.create.uuid() \n");
+            .append("SET n." + CREATION_DATE + " = timestamp(), n.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
             .append("SET ${alias} ${labels} \n");

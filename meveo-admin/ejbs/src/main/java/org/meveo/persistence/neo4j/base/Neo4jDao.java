@@ -17,6 +17,7 @@
 package org.meveo.persistence.neo4j.base;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
@@ -587,6 +588,10 @@ public class Neo4jDao {
         final String fieldsString = getFieldsString(fields.keySet());
         values.put(FIELDS, fieldsString);
         values.putAll(fields);
+
+        if(StringUtils.isBlank(label)){
+            throw new IllegalArgumentException("Cannot create relation between " + startNodeId + " and " + endNodeId + " with fields "+ fields + " : relationship label must be provided");
+        }
 
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.createRelationship);

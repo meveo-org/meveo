@@ -263,6 +263,7 @@ public class CustomFieldTemplateDto extends BaseDto {
         }
 
         identifier = cf.isIdentifier();
+        storages = cf.getStorages();
 
     }
 

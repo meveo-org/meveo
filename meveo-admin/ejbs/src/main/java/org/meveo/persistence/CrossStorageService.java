@@ -86,13 +86,16 @@ public class CrossStorageService {
      * @param fetchFields      Fields to select
      * @return list of matching entities
      */
+    //TODO : add "fetchSubEntities" parameter
     public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid, List<String> fetchFields) {
         List<String> selectFields = new ArrayList<>(fetchFields);
         Map<String, Object> values = new HashMap<>();
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
-            values.putAll(neo4jDao.findNodeById(configurationCode, cet.getCode(), uuid, neo4jFields));
+            if(!neo4jFields.isEmpty()) {
+                values.putAll(neo4jDao.findNodeById(configurationCode, cet.getCode(), uuid, neo4jFields));
+            }
         }
 
         // Don't retrieve the fields we already fetched
@@ -147,14 +150,27 @@ public class CrossStorageService {
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> find(String configurationCode, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 
+        final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
+
         List<Map<String, Object>> valuesList = new ArrayList<>();
 
+        // If no pagination nor fetch fields are defined, we consider that we must fetch everything
+        boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
+
+        // In case where only graphql query is passed, we will only use it so we won't fetch sql
+        boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
+
+        boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream()
+                .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
+        boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && paginationConfiguration.getFilters().keySet().stream()
+                .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
         // Collect initial data
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        if (cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-                final List<Map<String, Object>> values = customTableService.list(dbTablename, paginationConfiguration);
-                values.forEach(v -> replaceKeys(cet, paginationConfiguration.getFetchFields(), v));
+                final List<Map<String, Object>> values = customTableService.list(cet, paginationConfiguration);
+                values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
                 valuesList.addAll(values);
             } else {
                 final List<CustomEntityInstance> ceis = customEntityInstanceService.list(paginationConfiguration);
@@ -171,26 +187,39 @@ public class CrossStorageService {
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
-            String graphQlQuery = paginationConfiguration.getGraphQlQuery()
-                    .replaceAll("[\\w)]\\s*\\{\\n(\\s*)\\w*", "$0\n$1meveo_uuid");
+            // Find by graphql if query provided
+            if(paginationConfiguration.getGraphQlQuery() != null){
 
-            final Map<String, Object> result = neo4jDao.executeGraphQLQuery(
-                    configurationCode,
-                    graphQlQuery,
-                    null,
-                    null
-            );
+                String graphQlQuery = paginationConfiguration.getGraphQlQuery()
+                        .replaceAll("[\\w)]\\s*\\{(\\s*)\\w*", "$0,$1meveo_uuid");
 
-            final List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
-            valuesList.addAll(values);
+                final Map<String, Object> result = neo4jDao.executeGraphQLQuery(
+                        configurationCode,
+                        graphQlQuery,
+                        null,
+                        null
+                );
+
+                final List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
+                values.forEach(map -> {
+                    final HashMap<String, Object> resultMap = new HashMap<>(map);
+                    map.keySet().forEach(key -> {
+                        if(!key.equals("uuid") && !key.equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(key)){
+                            resultMap.remove(key);
+                        }
+                    });
+                    valuesList.add(resultMap);
+                });
+            }
+
         }
 
         // Complete missing data
         valuesList.forEach(data -> {
             String uuid = (String) (data.get("uuid") != null ? data.get("uuid") : data.get("meveo_uuid"));
 
-            Collection<String> fetchFields = paginationConfiguration.getFetchFields() != null
-                    ? paginationConfiguration.getFetchFields()
+            Collection<String> fetchFields = actualFetchFields != null
+                    ? actualFetchFields
                     : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
 
             final Map<String, Object> missingData = getMissingData(data, configurationCode, cet, uuid, fetchFields);
@@ -288,56 +317,63 @@ public class CrossStorageService {
         // Neo4j storage
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> neo4jValues = filterValues(entityValues, cet, DBStorageType.NEO4J);
-            final Set<EntityRef> entityRefs = neo4jService.addCetNode(configurationCode, cet, neo4jValues);
-            //TODO: check if created or updated
-            uuid = getTrustedUuids(entityRefs).get(0);
-            persistedEntities.addAll(entityRefs);
+            if(!neo4jValues.isEmpty()) {
+                final Set<EntityRef> entityRefs = neo4jService.addCetNode(configurationCode, cet, neo4jValues);
+                //TODO: check if created or updated
+                uuid = getTrustedUuids(entityRefs).get(0);
+                if(uuid == null){
+                    throw new NullPointerException("Generated UUID from Neo4J cannot be null");
+                }
+                persistedEntities.addAll(entityRefs);
+            }
         }
 
         // SQL Storage
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
             Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL);
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                String tableName = SQLStorageConfiguration.getDbTablename(cet);
-                //TODO: Find by UUID if updated in Neo4J and throw error if not found
-                String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
-                if (sqlUUID != null) {
-                    sqlValues.put("uuid", sqlUUID);
-                    customTableService.update(cet, sqlValues);
-                    uuid = sqlUUID;
+            if(!sqlValues.isEmpty()) {
+                if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                    String tableName = SQLStorageConfiguration.getDbTablename(cet);
+                    //TODO: Find by UUID if updated in Neo4J and throw error if not found
+                    String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
+                    if (sqlUUID != null) {
+                        sqlValues.put("uuid", sqlUUID);
+                        customTableService.update(cet, sqlValues);
+                        uuid = sqlUUID;
+                    } else {
+                        if (uuid != null) {
+                            sqlValues.put("uuid", uuid);
+                        }
+
+                        uuid = customTableService.create(cet, sqlValues);
+                    }
+                    persistedEntities.add(new EntityRef(uuid));
                 } else {
-                    if (uuid != null) {
-                        sqlValues.put("uuid", uuid);
+                    final String code = (String) entityValues.get("code");
+                    CustomEntityInstance cei = getCustomEntityInstance(entityCode, values);
+
+                    CustomFieldValues customFieldValues = new CustomFieldValues();
+                    values.forEach(customFieldValues::setValue);
+
+                    if (cei == null) {
+                        cei = new CustomEntityInstance();
+                        cei.setCetCode(entityCode);
+                        cei.setCode(code);
+                        cei.setCfValues(customFieldValues);
+
+                        if (uuid != null) {
+                            cei.setUuid(uuid);
+                        }
+
+                        customEntityInstanceService.create(cei);
+                    } else {
+                        cei.setCfValues(customFieldValues);
+                        customEntityInstanceService.update(cei);
                     }
 
-                    uuid = customTableService.create(cet, sqlValues);
+                    persistedEntities.add(new EntityRef(cei.getUuid()));
+                    uuid = cei.getUuid();
                 }
-                persistedEntities.add(new EntityRef(uuid));
-            } else {
-                final String code = (String) entityValues.get("code");
-                CustomEntityInstance cei = getCustomEntityInstance(entityCode, values);
-
-                CustomFieldValues customFieldValues = new CustomFieldValues();
-                values.forEach(customFieldValues::setValue);
-
-                if (cei == null) {
-                    cei = new CustomEntityInstance();
-                    cei.setCetCode(entityCode);
-                    cei.setCode(code);
-                    cei.setCfValues(customFieldValues);
-
-                    if (uuid != null) {
-                        cei.setUuid(uuid);
-                    }
-
-                    customEntityInstanceService.create(cei);
-                } else {
-                    cei.setCfValues(customFieldValues);
-                    customEntityInstanceService.update(cei);
-                }
-
-                persistedEntities.add(new EntityRef(cei.getUuid()));
-                uuid = cei.getUuid();
             }
         }
 
@@ -519,6 +555,18 @@ public class CrossStorageService {
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
+                    // Always include UUID
+                    if(entry.getKey().equals("uuid")){
+                        return true;
+                    }
+
+                    // For CEI storage, always include code
+                    if(cet instanceof CustomEntityTemplate && entry.getKey().equals("code")){
+                        if(storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()){
+                            return true;
+                        }
+                    }
+
                     CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
                     return cft.getStorages().contains(storageType);
                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -546,6 +594,7 @@ public class CrossStorageService {
         List<CustomFieldTemplate> cetFields = entityValues.keySet()
                 .stream()
                 .map(fieldName -> customFieldsCacheContainerProvider.getCustomFieldTemplate(fieldName, cet.getAppliesTo()))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         for (CustomFieldTemplate customFieldTemplate : cetFields) {
@@ -578,7 +627,7 @@ public class CrossStorageService {
                 List<String> uuids = getTrustedUuids(createdEntityReferences);
 
                 // Replace with entity reference's UUID only when target is not primitive
-                if (!referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+                if (referencedCet.getNeo4JStorageConfiguration() == null || !referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 
                     if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
                         entityValues.put(customFieldTemplate.getCode(), uuids);
@@ -586,8 +635,8 @@ public class CrossStorageService {
                         entityValues.put(customFieldTemplate.getCode(), uuids.get(0));
                     }
 
-                    // If entity reference is primitive, place the UUID in the map
                 } else {
+                    // If entity reference is primitive, place the UUID in the map along with the value
                     entityValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
                 }
             }
@@ -626,10 +675,10 @@ public class CrossStorageService {
     }
 
     private void fetchEntityReferences(String configurationCode, CustomModelObject customModelObject, Map<String, Object> values) {
-        // TODO: extract sub-entities fetch fields. Ex : "a.x"
+        // TODO: extract sub-entities fetch fields. Ex : "a.x". Fetch level by default is one.
         new HashSet<>(values.entrySet()).forEach(entry -> {
             CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-            if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+            if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
                 CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cft.getEntityClazzCetCode());
                 Map<String, Object> refValues = find(configurationCode, cet, (String) entry.getValue());
                 values.put(cft.getCode(), refValues);
@@ -653,7 +702,7 @@ public class CrossStorageService {
     private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) throws BusinessException {
         String code = (String) values.get("code");
         if (code == null) {
-            throw new BusinessException("Code is missing so we can't find CEI with values " + values);
+            throw new IllegalArgumentException("Code is missing so we can't find CEI with values " + values);
         }
 
         return customEntityInstanceService.findByCodeByCet(entityCode, code);

@@ -37,6 +37,7 @@ import org.meveo.persistence.scheduler.SchedulingService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,15 +59,20 @@ public class PersistenceRs {
     @Inject
     private CustomFieldsCacheContainerProvider cache;
 
-    @QueryParam("configuration")
+    @PathParam("configuration")
     private String configuration;
 
     @POST
     @Path("/{cetCode}/list")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException();
+        }
+
+        if(paginationConfiguration == null){
+            paginationConfiguration = new PaginationConfiguration();
         }
 
         return crossStorageService.find(configuration, customEntityTemplate, paginationConfiguration);

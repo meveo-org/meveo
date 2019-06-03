@@ -15,33 +15,6 @@
  */
 package org.meveo.service.base;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Query;
-
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -59,6 +32,19 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.util.MeveoParamBean;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.*;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods working directly with native DB tables
@@ -127,7 +113,7 @@ public class NativePersistenceService extends BaseService {
 
             if(selectFields == null && !selectFields.isEmpty()){
                 selectQuery.append("*");
-            }else{
+            }else if(!selectFields.isEmpty()){
                 for(String field : selectFields){
                     selectQuery.append(field).append(", ");
                 }
@@ -275,6 +261,10 @@ public class NativePersistenceService extends BaseService {
 
         if (tableName == null) {
             throw new BusinessException("Table name must not be null");
+        }
+
+        if(values == null || values.isEmpty()){
+            throw new IllegalArgumentException("No values to insert");
         }
 
         StringBuffer sql = new StringBuffer();
@@ -610,13 +600,28 @@ public class NativePersistenceService extends BaseService {
      */
     @SuppressWarnings({"rawtypes"})
     public QueryBuilder getQuery(String tableName, PaginationConfiguration config) {
-        String startQuery = "select * from " + tableName + " a ";
+        String startQuery;
+
+        // If no fetch fields are defined, return everyinthing
+        if (config == null || config.getFetchFields() == null) {
+            startQuery = "select * from " + tableName + " a ";
+
+        } else if (config.getFetchFields().isEmpty()) {
+            // If fetch fields are empty, only return UUID
+            startQuery = "select uuid from " + tableName + " a ";
+        } else {
+            StringBuilder builder = new StringBuilder("select uuid, "); // Always return UUID
+            config.getFetchFields().forEach(s -> builder.append(s).append(", "));
+            builder.delete(builder.length() - 2, builder.length());
+            startQuery = builder.append(" from ").append(tableName).append(" a ").toString();
+        }
 
         QueryBuilder queryBuilder = new QueryBuilder(startQuery, "a");
 
         if (config == null) {
             return queryBuilder;
         }
+
         Map<String, Object> filters = config.getFilters();
 
         if (filters != null && !filters.isEmpty()) {

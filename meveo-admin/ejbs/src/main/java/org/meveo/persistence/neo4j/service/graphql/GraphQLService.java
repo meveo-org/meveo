@@ -114,6 +114,11 @@ public class GraphQLService {
         idl.append("scalar GraphQLBigDecimal\n\n");
 
         for (GraphQLEntity graphQLEntity : graphQLEntities) {
+            // Skip if entity ended not having fields
+            if(graphQLEntity.getGraphQLFields().isEmpty()){
+                continue;
+            }
+
             idl.append("type ").append(graphQLEntity.getName()).append(" {\n");
             for (GraphQLField graphQLField : graphQLEntity.getGraphQLFields()) {
                 idl.append("\t").append(graphQLField.getFieldName()).append(": ");
@@ -167,6 +172,8 @@ public class GraphQLService {
             graphQLEntity.setName(cet.getCode());
 
             SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            // Always add "meveo_uuid" field
+            graphQLFields.add(new GraphQLField("meveo_uuid", "String", true));
 
             // Additional queries defined
             for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields()).orElse(Collections.emptyList())) {

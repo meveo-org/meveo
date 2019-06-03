@@ -73,7 +73,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         if (postData.getStorageType() == CustomFieldStorageTypeEnum.MATRIX && (postData.getMatrixColumns() == null || postData.getMatrixColumns().isEmpty())) {
             missingParameters.add("matrixColumns");
             
-        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getRelationshipName() == null){
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
         	 missingParameters.add("relationshipName");
         }
 
@@ -135,7 +135,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             missingParameters.add("appliesTo");
         }
         
-        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getRelationshipName() == null){
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
        	 	missingParameters.add("relationshipName");
         }
 
@@ -427,18 +427,19 @@ public class CustomFieldTemplateApi extends BaseApi {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
             storageTypes = cet.getAvailableStorages();
-        }else if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+        }else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             String crtCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(crtCode);
             storageTypes = crt.getAvailableStorages();
         }
-
         for(DBStorageType storageType : cft.getStorages()){
-            if(storageType == null || !storageTypes.contains(storageType)){
+            if(storageTypes == null || !storageTypes.contains(storageType)){
                 String message = "Custom field %s can't be stored to %s as the CET / CRT with code %s is not configure to be stored in this database";
                 throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, EntityCustomizationUtils.getEntityCode(cft.getAppliesTo())));
             }
         }
+
+        cft.setStorages(dto.getStorages());
 
         return cft;
     }

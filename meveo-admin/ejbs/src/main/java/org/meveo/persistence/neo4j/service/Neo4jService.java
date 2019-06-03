@@ -336,7 +336,7 @@ public class Neo4jService {
                     Set<EntityRef> relatedPersistedEntities = null;
 
                         // If the CET is primitive, copy value in current node's value
-                        if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+                        if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                             fields.put(entityReference.getCode(), value);
 
                             final EntityRef entityRef = new EntityRef((String) fieldValues.remove(entityReference.getCode() + "UUID"));
@@ -351,7 +351,25 @@ public class Neo4jService {
                             // If entity reference's value is a string and the entity reference is not primitive, then the value is likely the UUID of the referenced node
                             } else if(value instanceof String){
                                 UUID.fromString((String) value);
+
+                                if(StringUtils.isBlank(entityReference.getRelationshipName())){
+                                    String errorMessage  = String.format("Attribute relationshipName of CFT %s#%s should not be null", cet.getCode(), entityReference.getCode());
+                                    throw new IllegalArgumentException(errorMessage);
+                                }
                                 relationshipsToCreate.put(new EntityRef((String) value), entityReference.getRelationshipName());
+
+                                // Create a node reprensenting the value if the target is not stored in Neo4J
+                                if(!referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)){
+                                    neo4jDao.mergeNode(
+                                            neo4JConfiguration,
+                                            referencedCet.getCode(),
+                                            Collections.singletonMap("meveo_uuid", value),
+                                            Collections.singletonMap("meveo_uuid", value),
+                                            Collections.emptyMap(),
+                                            Collections.emptyList()
+                                    );
+                                }
+
                             } else {
                                 throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
                             }

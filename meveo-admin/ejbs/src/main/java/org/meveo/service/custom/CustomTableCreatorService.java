@@ -262,6 +262,11 @@ public class CustomTableCreatorService implements Serializable {
      */
     public void addField(String dbTableName, CustomFieldTemplate cft) {
 
+        // Don't add field if not stored in sql
+        if(!cft.getStorages().contains(DBStorageType.SQL)){
+            return;
+        }
+
         String dbFieldname = cft.getDbFieldname();
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");

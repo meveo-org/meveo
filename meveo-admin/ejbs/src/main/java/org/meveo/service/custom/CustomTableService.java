@@ -932,7 +932,38 @@ public class CustomTableService extends NativePersistenceService {
         }
         return valuesConverted;
     }
-    
+
+    public List<Map<String, Object>> list(CustomEntityTemplate cet, PaginationConfiguration config) {
+        PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
+
+        // Only use SQL filters
+        if (config.getFilters() != null) {
+            final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream()
+                    .filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
+                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+            paginationConfiguration.setFilters(sqlFilters);
+        }
+
+        // Only fetch SQL fields
+        if (config.getFetchFields() != null) {
+            List<String> sqlFetchFields = config.getFetchFields().stream()
+                    .filter(s -> sqlCftFilter(cet, s))
+                    .collect(Collectors.toList());
+            paginationConfiguration.setFetchFields(sqlFetchFields);
+        }
+
+        return super.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
+    }
+
+    public boolean sqlCftFilter(CustomEntityTemplate cet, String key) {
+        final CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(key, cet.getAppliesTo());
+        if (cft != null) {
+            return cft.getStorages().contains(DBStorageType.SQL);
+        }
+
+        return true;
+    }
+
     /**
      * Search etities, fetching entity references and converting field names from db column name to custom field names
      */
@@ -973,8 +1004,15 @@ public class CustomTableService extends NativePersistenceService {
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
+                    if(entry.getKey().equals("uuid")) {
+                        return true;
+                    }
+
                     CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
-                    return cft.getStorages().contains(DBStorageType.NEO4J);
-                }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    return cft.getStorages().contains(DBStorageType.SQL);
+                }).collect(Collectors.toMap(
+                        stringObjectEntry -> CustomFieldTemplate.getDbFieldname(stringObjectEntry.getKey()),
+                        Map.Entry::getValue
+                ));
     }
 }

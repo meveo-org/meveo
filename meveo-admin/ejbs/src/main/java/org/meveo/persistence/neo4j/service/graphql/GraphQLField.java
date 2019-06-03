@@ -26,6 +26,14 @@ public class GraphQLField implements Comparable {
     private boolean required;
     private String query;
 
+    public GraphQLField() {}
+
+    public GraphQLField(String fieldName, String fieldType, boolean required) {
+        this.fieldName = fieldName;
+        this.fieldType = fieldType;
+        this.required = required;
+    }
+
     public String getFieldName() {
         return fieldName;
     }

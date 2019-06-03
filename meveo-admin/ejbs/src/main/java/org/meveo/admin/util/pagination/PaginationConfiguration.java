@@ -19,6 +19,8 @@
 package org.meveo.admin.util.pagination;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +68,10 @@ public class PaginationConfiguration implements Serializable {
      */
     public PaginationConfiguration(String sortField, SortOrder sortOrder) {
         this(null, null, null, null, null, sortField, sortOrder, null);
+    }
+
+    public PaginationConfiguration() {
+        this(null, null, null, null, null, null, null, null);
     }
 
     public boolean isRandomize() {
@@ -122,6 +128,34 @@ public class PaginationConfiguration implements Serializable {
     public PaginationConfiguration(Map<String, Object> filters) {
         this.filters = filters;
     }
+
+    public PaginationConfiguration(PaginationConfiguration paginationConfiguration) {
+        if (paginationConfiguration == null) {
+            paginationConfiguration = new PaginationConfiguration();
+        }
+
+        if (paginationConfiguration.fetchFields != null) {
+            this.fetchFields = new ArrayList<>(paginationConfiguration.fetchFields);
+        }
+
+        if (paginationConfiguration.filters != null) {
+            this.filters = new HashMap<>(paginationConfiguration.filters);
+        }
+
+        if (paginationConfiguration.sortOrdering != null) {
+            this.sortOrdering = new HashMap<>(paginationConfiguration.sortOrdering);
+        }
+
+        this.firstRow = paginationConfiguration.firstRow;
+        this.fullTextFilter = paginationConfiguration.fullTextFilter;
+        this.graphQlQuery = paginationConfiguration.graphQlQuery;
+        this.numberOfRows = paginationConfiguration.numberOfRows;
+        this.ordering = paginationConfiguration.ordering;
+        this.randomize = paginationConfiguration.randomize;
+        this.sortField = paginationConfiguration.sortField;
+    }
+
+
 
     /**
      * Constructor
