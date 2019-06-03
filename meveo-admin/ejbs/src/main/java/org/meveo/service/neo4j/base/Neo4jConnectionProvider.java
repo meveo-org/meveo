@@ -101,10 +101,12 @@ public class Neo4jConnectionProvider {
         }
 
         try{
-            Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
-            return driver.session();
+            synchronized (this) {
+                Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
+                return driver.session();
+            }
         }catch (Exception e){
-            LOGGER.error("Can't connect to {} : {}", neo4JConfigurationCode, e.getMessage());
+            LOGGER.error("Can't connect to {} ({})", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e);
             return null;
         }
 
