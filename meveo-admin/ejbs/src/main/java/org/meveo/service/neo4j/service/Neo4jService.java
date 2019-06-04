@@ -265,7 +265,7 @@ public class Neo4jService {
                             Map<String, Object> updatableFields = new HashMap<>(fields);
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields);
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields, labels);
                             nodeReferences.add(new NodeReference(id));
                         }
                     }

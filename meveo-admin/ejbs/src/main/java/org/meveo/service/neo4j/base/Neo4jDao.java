@@ -224,7 +224,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void updateNodeByNodeId(String neo4JConfiguration, Long nodeId, Map<String, Object> fields) {
+    public void updateNodeByNodeId(String neo4JConfiguration, Long nodeId, Map<String, Object> fields, List<String> labels) {
 
         String alias = "startNode"; // Alias to use in query
 
@@ -236,6 +236,10 @@ public class Neo4jDao {
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         StringBuffer statement = Neo4JRequests.updateNodeWithId;
+
+        if (labels != null) {
+            statement = appendAdditionalLabels(statement, labels, alias, valuesMap);
+        }
 
         statement = appendReturnStatement(statement, alias, valuesMap);
         String resolvedStatement = sub.replace(statement);
