@@ -105,9 +105,11 @@ public class FileProcessingJobBean {
                 executeParams.put("archiveDir", archiveDir);
                 script.execute(executeParams);
                 FileUtils.moveFile(archiveDir, file, fileName);
+                result.addNbItemsCorrectlyProcessed(1);
             } catch (Exception e) {
                 report += "\r\n " + e.getMessage();
                 FileUtils.moveFile(rejectDir, file, fileName);
+                result.addNbItemsProcessedWithError(1);
             } finally {
                 try {
                     if (script != null) {
