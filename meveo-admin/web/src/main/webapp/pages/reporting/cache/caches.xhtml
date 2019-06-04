@@ -11,7 +11,7 @@
         <p:panel  header="#{messages['cache.caches']}">
             <p:messages />
 
-            <h:form>
+            <h:form id="formId">
                 <p:dataTable id="datatable_caches" var="cacheInfo" value="#{cacheBean.summaryOfCaches}" paginator="true" rows="10" resizableColumns="true"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="5,10,15"
                     lazy="false" styleClass="custom-grid" rowIndexVar="rowIndex">
@@ -30,16 +30,16 @@
                         <!--                         </p:button> -->
 
                         <p:tooltip for="refreshlink" value="#{messages['cache.reload']}" showEffect="slide" hideEffect="slide" />
-                        <p:commandButton id="refreshlink" icon="ui-icon-refresh" action="#{cacheBean.refresh(cacheInfo['name'])}" update="@all" >
+                        <p:commandButton id="refreshlink" icon="ui-icon-refresh" action="#{cacheBean.refresh(cacheInfo['name'])}" update=":formId" >
                             <p:confirm header="" message="#{messages['cache.confirmReload']}"/>
                         </p:commandButton>
 
                     </p:column>
                 </p:dataTable>
 
-                <p:commandButton value="#{messages['commons.refresh']}" update="@all" />
+                <p:commandButton value="#{messages['commons.refresh']}" update=":formId" />
 
-                <p:commandButton value="#{messages['cache.reload']}" action="#{cacheBean.refresh(null)}" update="@all">
+                <p:commandButton value="#{messages['cache.reload']}" action="#{cacheBean.refresh(null)}" update=":formId">
                     <p:confirm header="" message="#{messages['cache.confirmReloadAll']}"/>
                 </p:commandButton>
 
