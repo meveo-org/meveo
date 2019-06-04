@@ -2,6 +2,8 @@ package org.meveo.service.custom;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -93,6 +95,31 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    public List<CustomEntityInstance> list(String cetCode, Map<String, Object> values){
+        QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
+        qb.addCriterion("cei.cetCode", "=", cetCode, true);
+
+        final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
+
+        if(values != null && !values.isEmpty()){
+            return resultList.stream()
+                    .filter(customEntityInstance -> filterOnValues(values, customEntityInstance))
+                    .collect(Collectors.toList());
+        }
+
+        return resultList;
+    }
+
+    private boolean filterOnValues(Map<String, Object> values, CustomEntityInstance customEntityInstance) {
+        final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
+        for(Map.Entry<String, Object> value : values.entrySet()){
+            if(!cfValuesAsValues.get(value.getKey()).equals(value.getValue())){
+                return false;
+            }
+        }
+        return true;
     }
 
     private void filterValues(CustomEntityInstance cei){

@@ -650,15 +650,6 @@
         </addColumn>
     </changeSet>
     
-    <changeSet id="fill-storages-type" author="Clément Bareth">
-    	<update tableName="cust_cet">
-    		<column name="available_storages" value="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
-    	</update>
-    	<update tableName="crm_custom_field_tmpl">
-    		<column name="storages" value="[&quot;SQL&quot;, &quot;NEO4J&quot;]"/>
-    	</update>
-    </changeSet>
-    
     <changeSet id="uuid-ossp" author="Clément Bareth" dbms="postgresql">
     	<sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
     </changeSet>

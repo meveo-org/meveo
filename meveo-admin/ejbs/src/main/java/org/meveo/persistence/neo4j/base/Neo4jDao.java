@@ -16,7 +16,6 @@
 
 package org.meveo.persistence.neo4j.base;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
@@ -87,7 +86,7 @@ public class Neo4jDao {
         cypherHelper.update(
         		neo4jConfiguration, 
         		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) does not exists")
+        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property)
     		);    
     }
     
@@ -106,7 +105,7 @@ public class Neo4jDao {
         cypherHelper.update(
         		neo4jConfiguration, 
         		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) already exists")
+        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property)
     		);
     }
 
@@ -123,7 +122,7 @@ public class Neo4jDao {
         cypherHelper.update(
     		neo4jConfiguration, 
     		createIndexQuery.toString(),
-    		e -> LOGGER.debug("Index on {}({}) already exists")
+    		e -> LOGGER.debug("Index on {}({}) already exists", label, property)
 		);
     }
 
@@ -140,7 +139,7 @@ public class Neo4jDao {
         cypherHelper.update(
     		neo4jConfiguration, 
     		dropIndex.toString(),
-    		e -> LOGGER.debug("Index on {}({}) does not exists")
+    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property)
 		);
     }
 

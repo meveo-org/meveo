@@ -39,6 +39,7 @@ import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 
 import javax.inject.Inject;
+import javax.persistence.NonUniqueResultException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,7 +89,11 @@ public class CrossStorageService {
      */
     //TODO : add "fetchSubEntities" parameter
     public Map<String, Object> find(String configurationCode, CustomEntityTemplate cet, String uuid, List<String> fetchFields) {
-        List<String> selectFields = new ArrayList<>(fetchFields);
+        if(uuid == null){
+            throw new NullPointerException("Cannot retrieve entity by uuid without uuid");
+        }
+
+        List<String> selectFields = fetchFields == null ? new ArrayList<>() : new ArrayList<>(fetchFields);
         Map<String, Object> values = new HashMap<>();
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
@@ -109,7 +114,7 @@ public class CrossStorageService {
                 values.putAll(customTableValue);
             } else {
                 final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-                if (sqlFields != null && !sqlFields.isEmpty()) {
+                if (sqlFields != null) {
                     for (String field : sqlFields) {
                         values.put(field, cei.getCfValues().getCfValue(field).getValue());
                     }
@@ -119,6 +124,9 @@ public class CrossStorageService {
 
             }
         }
+
+        // Remove null values
+        values.values().removeIf(Objects::isNull);
 
         // Fetch entity references
         fetchEntityReferences(configurationCode, cet, values);
@@ -152,6 +160,8 @@ public class CrossStorageService {
 
         final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
 
+        final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
+
         List<Map<String, Object>> valuesList = new ArrayList<>();
 
         // If no pagination nor fetch fields are defined, we consider that we must fetch everything
@@ -163,7 +173,7 @@ public class CrossStorageService {
         boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream()
                 .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
-        boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && paginationConfiguration.getFilters().keySet().stream()
+        boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream()
                 .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
         // Collect initial data
@@ -173,11 +183,18 @@ public class CrossStorageService {
                 values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
                 valuesList.addAll(values);
             } else {
-                final List<CustomEntityInstance> ceis = customEntityInstanceService.list(paginationConfiguration);
+                final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), filters);
                 final List<Map<String, Object>> values = ceis.stream()
                         .map(cei -> {
                             final HashMap<String, Object> map = new HashMap<>(cei.getCfValuesAsValues());
                             map.put("uuid", cei.getUuid());
+                            if(!fetchAllFields) {
+                                for (String k : cei.getCfValuesAsValues().keySet()) {
+                                    if (!actualFetchFields.contains(k)) {
+                                        map.remove(k);
+                                    }
+                                }
+                            }
                             return map;
                         }).collect(Collectors.toList());
 
@@ -188,10 +205,10 @@ public class CrossStorageService {
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
             // Find by graphql if query provided
-            if(paginationConfiguration.getGraphQlQuery() != null){
+            if(paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null){
 
                 String graphQlQuery = paginationConfiguration.getGraphQlQuery()
-                        .replaceAll("[\\w)]\\s*\\{(\\s*)\\w*", "$0,$1meveo_uuid");
+                        .replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
                 final Map<String, Object> result = neo4jDao.executeGraphQLQuery(
                         configurationCode,
@@ -484,7 +501,7 @@ public class CrossStorageService {
      * @param cet               Template of the entity
      * @return UUID of the entity or nul if it was'nt found
      */
-    public String findEntityId(String configurationCode, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
+    public String findEntityId(String configurationCode, Map<String, Object> valuesFilters, CustomEntityTemplate cet) {
         String uuid = null;
 
         // SQL
@@ -495,7 +512,6 @@ public class CrossStorageService {
                 uuid = customTableRelationService.findIdByValues(dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL));
             } else {
                 final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), valuesFilters);
-                //TODO: Retrieve all instances of the CEI and them filter on that
                 if (customEntityInstance != null) {
                     uuid = customEntityInstance.getUuid();
                 }
@@ -568,13 +584,18 @@ public class CrossStorageService {
                     }
 
                     CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
+
+                    if(cft == null){
+                        return false;
+                    }
+
                     return cft.getStorages().contains(storageType);
                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
         if (fields == null) {
-            return null;
+            return new ArrayList<>();
         }
 
         return fields.stream()
@@ -699,13 +720,21 @@ public class CrossStorageService {
         }
     }
 
-    private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) throws BusinessException {
+    private CustomEntityInstance getCustomEntityInstance(String entityCode, Map<String, Object> values) {
         String code = (String) values.get("code");
-        if (code == null) {
-            throw new IllegalArgumentException("Code is missing so we can't find CEI with values " + values);
+
+        if (code != null) {
+            return customEntityInstanceService.findByCodeByCet(entityCode, code);
         }
 
-        return customEntityInstanceService.findByCodeByCet(entityCode, code);
+        final List<CustomEntityInstance> list = customEntityInstanceService.list(entityCode, values);
+
+        if(list.isEmpty()){
+            return null;
+        }else {
+            throw new NonUniqueResultException(list.size() + " results found for CEI for CET " + entityCode + " with values " + values);
+        }
+
     }
 
 }

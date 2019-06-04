@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -153,7 +154,7 @@ public class GraphQLService {
     private Collection<GraphQLEntity> getEntities() {
 
         Map<String, GraphQLEntity> graphQLEntities = new TreeMap<>();
-        
+
         // Entities
         final List<CustomEntityTemplate> ceTsWithSubTemplates = customEntityTemplateService.getCETsWithSubTemplates();
         final Map<String, CustomEntityTemplate> cetsByName = ceTsWithSubTemplates
@@ -161,51 +162,49 @@ public class GraphQLService {
                 .collect(Collectors.toMap(CustomEntityTemplate::getCode, Function.identity()));
 
         for (CustomEntityTemplate cet : cetsByName.values()) {
-        	
-        	//Skip if cet is not stored in neo4j
-        	if(cet.getAvailableStorages() == null || !cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-        		continue;
-        	}
-        	
+
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
             SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+
             // Always add "meveo_uuid" field
             graphQLFields.add(new GraphQLField("meveo_uuid", "String", true));
 
-            // Additional queries defined
-            for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields()).orElse(Collections.emptyList())) {
-                GraphQLField graphQLField = new GraphQLField();
-                graphQLField.setQuery(graphqlQueryField.getQuery());
-                graphQLField.setFieldType(graphqlQueryField.getFieldType());
-                graphQLField.setFieldName(graphqlQueryField.getFieldName());
-                graphQLField.setMultivalued(graphqlQueryField.isMultivalued());
-                graphQLFields.add(graphQLField);
-            }
+            if(cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+                // Additional queries defined
+                for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields()).orElse(Collections.emptyList())) {
+                    GraphQLField graphQLField = new GraphQLField();
+                    graphQLField.setQuery(graphqlQueryField.getQuery());
+                    graphQLField.setFieldType(graphqlQueryField.getFieldType());
+                    graphQLField.setFieldName(graphqlQueryField.getFieldName());
+                    graphQLField.setMultivalued(graphqlQueryField.isMultivalued());
+                    graphQLFields.add(graphQLField);
+                }
 
-            // Primitive type
-            if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
-                final boolean valueExists = graphQLFields.stream().anyMatch(f -> f.getFieldName().equals("value"));
-                if (!valueExists) {
-                    GraphQLField value = new GraphQLField();
-                    switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
-                        case STRING:
-                            value.setFieldType("String");
-                            break;
-                        case LONG:
-                        case DATE:
-                            value.setFieldType("GraphQLLong");
-                            break;
-                        case DOUBLE:
-                            value.setFieldType("GraphQLBigDecimal");
-                            break;
+                // Primitive type
+                if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+                    final boolean valueExists = graphQLFields.stream().anyMatch(f -> f.getFieldName().equals("value"));
+                    if (!valueExists) {
+                        GraphQLField value = new GraphQLField();
+                        switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
+                            case STRING:
+                                value.setFieldType("String");
+                                break;
+                            case LONG:
+                            case DATE:
+                                value.setFieldType("GraphQLLong");
+                                break;
+                            case DOUBLE:
+                                value.setFieldType("GraphQLBigDecimal");
+                                break;
+                        }
+                        value.setFieldName("value");
+                        value.setMultivalued(false);
+                        value.setRequired(true);
+                        graphQLFields.add(value);
                     }
-                    value.setFieldName("value");
-                    value.setMultivalued(false);
-                    value.setRequired(true);
-                    graphQLFields.add(value);
                 }
             }
 
@@ -366,11 +365,6 @@ public class GraphQLService {
         SortedSet<GraphQLField> graphQLFields = new TreeSet<>();
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
-            // Skip the field if it is an entity reference
-            if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-                continue;
-            }
-            
             // Skip the field if it is not configured to be stored in neo4j
             if(customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
             	continue;
@@ -397,6 +391,14 @@ public class GraphQLService {
                         break;
                     case BOOLEAN:
                         graphQLField.setFieldType("Boolean");
+                        break;
+                    case ENTITY:
+                        if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
+                            throw new NullPointerException("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                        }
+
+                        graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
+                        graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
     				case CHILD_ENTITY:
 					case EMBEDDED_ENTITY:
