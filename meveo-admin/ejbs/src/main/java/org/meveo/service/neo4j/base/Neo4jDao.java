@@ -65,7 +65,7 @@ public class Neo4jDao {
                 transaction.close();
             }
 
-            LOGGER.error("Cannot update IDL for repository {} : {}", neo4jConfiguration, e.getMessage());
+            LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
         }
     }
 
@@ -94,7 +94,7 @@ public class Neo4jDao {
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while executing a GraphQL query", e);
             return null;
         } finally {
             // End session and transaction
@@ -153,7 +153,7 @@ public class Neo4jDao {
             nodeId = node.id();
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while merging Neo4J nodes", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -210,7 +210,7 @@ public class Neo4jDao {
             nodeId = node.id();
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while creating a Neo4J node", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -255,7 +255,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while updating a Neo4J node", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -300,7 +300,7 @@ public class Neo4jDao {
             return ids;
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while executing a UniqueConstraint", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -336,7 +336,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while creating a relation between 2 Neo4J nodes", e);
         } finally {
             // End session and transaction
             transaction.close();
