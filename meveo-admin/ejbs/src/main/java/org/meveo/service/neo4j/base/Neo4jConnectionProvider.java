@@ -61,6 +61,7 @@ public class Neo4jConnectionProvider {
     private Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
 
     private static final Map<String, Neo4JConfiguration> configurationMap = new ConcurrentHashMap<>();
+    private static final Map<String, Driver> DRIVER_MAP = new ConcurrentHashMap<>();
 
     private String neo4jUrl;
     private String neo4jLogin;
@@ -101,8 +102,8 @@ public class Neo4jConnectionProvider {
         }
 
         try{
+            Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfigurationCode, this::generateDriver);
             synchronized (this) {
-                Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
                 return driver.session();
             }
         }catch (Exception e){
@@ -110,6 +111,18 @@ public class Neo4jConnectionProvider {
             return null;
         }
 
+    }
+
+    private synchronized Driver generateDriver(String neo4JConfigurationCode) {
+        Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
+        if (neo4JConfigurationCode != null) {
+            try {
+                neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
+            } catch (NoResultException e) {
+                LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
+            }
+        }
+        return GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
     }
 
     public String getNeo4jUrl() {

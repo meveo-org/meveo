@@ -166,11 +166,14 @@ public class Neo4jService {
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
-                	if(!(referencedCetValue instanceof Collection)) {
-                		throw new BusinessException("Value for CFT "  + entityReference.getCode() + "of CET " + cetCode + " should be a collection");
-                	}
-                	
+                    if (!(referencedCetValue instanceof Collection)) {
+                        throw new BusinessException("Value for CFT " + entityReference.getCode() + "of CET " + cetCode + " should be a collection");
+                    }
+
                     values = ((Collection<Object>) referencedCetValue);
+                    if (referencedCet.isPrimitiveEntity()) {
+                        fields.put(entityReference.getCode(), new ArrayList<>());
+                    }
                 } else {
                     values = Collections.singletonList(referencedCetValue);
                 }
@@ -178,7 +181,6 @@ public class Neo4jService {
                 for (Object value : values) {
                     Set<NodeReference> relatedNodeReferences;
                     if (referencedCet.isPrimitiveEntity()) {    // If the CET is primitive, copy value in current node's value
-                        fields.put(entityReference.getCode(), value);
                         Map<String, Object> valueMap = new HashMap<>();
                         valueMap.put("value", value);
 
@@ -192,6 +194,12 @@ public class Neo4jService {
                             relatedNodeReferences = Collections.singleton(new NodeReference(createdNodeId));
                         } else {
                             relatedNodeReferences = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
+                        }
+
+                        if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+                            ((List<Object>) fields.get(entityReference.getCode())).add(valueMap.get("value"));
+                        } else {
+                            fields.put(entityReference.getCode(), valueMap.get("value"));
                         }
                     } else {
                         // Referenced CET is not primitive
@@ -265,7 +273,7 @@ public class Neo4jService {
                             Map<String, Object> updatableFields = new HashMap<>(fields);
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields);
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields, labels);
                             nodeReferences.add(new NodeReference(id));
                         }
                     }
