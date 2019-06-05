@@ -16,8 +16,8 @@
 
     <scm>
         <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-      <tag>0.0.12</tag>
-  </scm>
+        <tag>0.0.12</tag>
+    </scm>
 
     <modules>
         <module>meveo-security</module>

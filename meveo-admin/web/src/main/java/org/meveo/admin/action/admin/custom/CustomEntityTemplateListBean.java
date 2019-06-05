@@ -7,6 +7,7 @@ import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.view.LazyDataModelWSize;
@@ -20,7 +21,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 
     @Inject
     private CustomizedEntityService customizedEntityService;
-
+    
     private LazyDataModelWSize<CustomizedEntity> customizedEntityDM = null;
 
     public LazyDataModelWSize<CustomizedEntity> getCustomizedEntities() {
@@ -37,12 +38,20 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 
                 List<CustomizedEntity> entities = null;
                 String query = (String) filters.get("entityName");
+				String cecId = (String) filters.get("cecId");
                 boolean isCustomEntityOnly = filters.get("customEntity") != null && (boolean) filters.get("customEntity");
                 String sortBy = sortOrder != null ? sortOrder.name() : null;
-
-                entities = customizedEntityService.getCustomizedEntities(query, isCustomEntityOnly, false, false, sortField, sortBy);
+                if(StringUtils.isBlank(cecId)) {
+                	entities = customizedEntityService.getCustomizedEntities(query, isCustomEntityOnly, false, false, sortField, sortBy);
+                }else {
+                	entities=customizedEntityService.getCustomizedEntities(query, Long.valueOf(cecId), sortField, sortBy);
+                }
                 setRowCount(entities.size());
-
+                
+                if(first>entities.size()) {
+                	this.setRowIndex(0);
+                	first=0;
+                }
                 return entities.subList(first, (first + pageSize) > entities.size() ? entities.size() : (first + pageSize));
             }
         };

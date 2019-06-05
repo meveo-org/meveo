@@ -1399,5 +1399,10 @@
             <to-view-id>/pages/admin/endpoint/technicalServiceEndpointDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>mailerConfiguration</from-outcome>
+            <to-view-id>/pages/admin/mailer/mailerConfiguration.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
 </faces-config>

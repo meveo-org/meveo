@@ -70,10 +70,10 @@ public class Neo4jDao {
 
     @Inject
     private CypherHelper cypherHelper;
-    
+
 	/**
 	 * Drop an unique constraint on a given label and property if it does not exists yet
-	 * 
+	 *
 	 * @param neo4jConfiguration Repository code
 	 * @param label              Label on which to drop the constraint
 	 * @param property           Property on which to drop the constraint
@@ -82,17 +82,17 @@ public class Neo4jDao {
         StringBuilder query = new StringBuilder()
         		.append("DROP CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
-        
+
         cypherHelper.update(
-        		neo4jConfiguration, 
+        		neo4jConfiguration,
         		query.toString(),
         		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property)
-    		);    
+    		);
     }
-    
+
 	/**
 	 * Create an unique constraint on a given label and property if it does not exists yet
-	 * 
+	 *
 	 * @param neo4jConfiguration Repository code
 	 * @param label              Label on which to add the constraint
 	 * @param property           Property on which to add the constraint
@@ -101,9 +101,9 @@ public class Neo4jDao {
         StringBuilder query = new StringBuilder()
         		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
-        
+
         cypherHelper.update(
-        		neo4jConfiguration, 
+        		neo4jConfiguration,
         		query.toString(),
         		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property)
     		);
@@ -118,9 +118,9 @@ public class Neo4jDao {
 	 */
     public void createIndex(String neo4jConfiguration, String label, String property) {
         StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
-        
+
         cypherHelper.update(
-    		neo4jConfiguration, 
+    		neo4jConfiguration,
     		createIndexQuery.toString(),
     		e -> LOGGER.debug("Index on {}({}) already exists", label, property)
 		);
@@ -135,9 +135,9 @@ public class Neo4jDao {
 	 */
     public void removeIndex(String neo4jConfiguration, String label, String property){
         StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
-        
+
         cypherHelper.update(
-    		neo4jConfiguration, 
+    		neo4jConfiguration,
     		dropIndex.toString(),
     		e -> LOGGER.debug("Index on {}({}) does not exists", label, property)
 		);
@@ -328,7 +328,7 @@ public class Neo4jDao {
                 transaction.close();
             }
 
-            LOGGER.error("Cannot update IDL for repository {} : {}", neo4jConfiguration, e.getMessage());
+            LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
         }
     }
 
@@ -357,7 +357,7 @@ public class Neo4jDao {
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while executing a GraphQL query", e);
             return null;
         } finally {
             // End session and transaction
@@ -416,7 +416,7 @@ public class Neo4jDao {
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while merging Neo4J nodes", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -477,7 +477,7 @@ public class Neo4jDao {
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while creating a Neo4J node", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -491,7 +491,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, Map<String, Object> fields) {
+    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, Map<String, Object> fields, List<String> labels) {
 
         String alias = "startNode"; // Alias to use in query
 
@@ -503,6 +503,10 @@ public class Neo4jDao {
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         StringBuffer statement = Neo4JRequests.updateNodeWithId;
+
+        if (labels != null) {
+            statement = appendAdditionalLabels(statement, labels, alias, valuesMap);
+        }
 
         statement = appendReturnStatement(statement, alias, valuesMap);
         String resolvedStatement = sub.replace(statement);
@@ -522,7 +526,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while updating a Neo4J node", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -567,7 +571,7 @@ public class Neo4jDao {
             return ids;
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while executing a UniqueConstraint", e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -607,7 +611,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error while creating a relation between 2 Neo4J nodes", e);
         } finally {
             // End session and transaction
             transaction.close();

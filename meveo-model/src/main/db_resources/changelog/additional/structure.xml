@@ -628,7 +628,7 @@
         </addColumn>
     </changeSet>
     
-    <changeSet id="endpoint_serialize result" author="Clément Bareth">
+    <changeSet id="endpoint_serialize content_type" author="Clément Bareth">
         <addColumn tableName="service_endpoint">
             <column name="content_type" type="varchar(255)"/>
         </addColumn>
@@ -649,11 +649,16 @@
             <column name="storages" type="${type.json}"/>
         </addColumn>
     </changeSet>
-    
+
+    <changeSet id="technical_service_drop_notnull_consraint_crt_cet" author="Clément Bareth">
+        <dropNotNullConstraint columnName="cet_id" tableName="technical_services_description"/>
+        <dropNotNullConstraint columnName="crt_id" tableName="technical_services_description"/>
+    </changeSet>
+
     <changeSet id="uuid-ossp" author="Clément Bareth" dbms="postgresql">
     	<sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
     </changeSet>
-    
+
     <changeSet id="crt_available_storages" author="Clément Bareth">
     	<addColumn tableName="cust_crt">
     		<column name="available_storages" type="${type.json}" defaultValue="[&quot;NEO4J&quot;]"/>

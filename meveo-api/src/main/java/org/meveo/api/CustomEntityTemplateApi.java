@@ -1,10 +1,6 @@
 package org.meveo.api;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -12,13 +8,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.api.dto.CustomEntityTemplateDto;
-import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
-import org.meveo.api.dto.EntityCustomActionDto;
-import org.meveo.api.dto.EntityCustomizationDto;
-import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
+import org.meveo.api.dto.*;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
@@ -215,6 +205,11 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet != null) {
             // Related custom field templates will be removed along with CET
             customEntityTemplateService.remove(cet);
+            Map<String, CustomFieldTemplate> relatedCfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            for(CustomFieldTemplate cft : relatedCfts.values()) {
+            	customFieldTemplateService.remove(cft);
+            }
+
         } else {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);
         }
@@ -508,18 +503,18 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         // Neo4J configuration if defined
         if(dto.getNeo4jStorageConfiguration() != null) {
-        	
+
             if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
             	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
                 customEntityTemplateService.flush();
             }
-            
+
         	Neo4JStorageConfiguration configuration = new Neo4JStorageConfiguration();
         	configuration.setPrimitiveEntity(dto.getNeo4jStorageConfiguration().isPrimitiveEntity());
         	configuration.setPrimitiveType(dto.getNeo4jStorageConfiguration().getPrimitiveType());
         	configuration.setLabels(dto.getNeo4jStorageConfiguration().getLabels());
         	configuration.setGraphqlQueryFields(dto.getNeo4jStorageConfiguration().getGraphqlQueryFields());
-            
+
             if(dto.getNeo4jStorageConfiguration().getUniqueConstraints() != null){
                 final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getNeo4jStorageConfiguration().getUniqueConstraints().stream()
                         .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
@@ -634,14 +629,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         // Neo4J configuration if defined
         if(cet.getNeo4JStorageConfiguration() != null) {
-            
+
         	Neo4JStorageConfigurationDto neo4jConf = new Neo4JStorageConfigurationDto();
 
             neo4jConf.setLabels(cet.getNeo4JStorageConfiguration().getLabels());
             neo4jConf.setGraphqlQueryFields(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields());
             neo4jConf.setPrimitiveEntity(cet.getNeo4JStorageConfiguration().isPrimitiveEntity());
             neo4jConf.setPrimitiveType(cet.getNeo4JStorageConfiguration().getPrimitiveType());
-            
+
 			if (cet.getNeo4JStorageConfiguration().getUniqueConstraints() != null) {
 				List<CustomEntityTemplateUniqueConstraintDto> constraintDtoList = cet.getNeo4JStorageConfiguration()
 						.getUniqueConstraints().stream().map(CustomEntityTemplateApi::toConstraintDto)
@@ -649,10 +644,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 				neo4jConf.setUniqueConstraints(constraintDtoList);
 			}
-            
+
             dto.setNeo4jStorageConfiguration(neo4jConf);
         }
 
+        dto.setUniqueConstraints(constraintDtoList);
+
+        if(cet.getCustomEntityCategory() != null) {
+        	dto.setCustomEntityCategoryCode(cet.getCustomEntityCategory().getCode());
+        }
 
         return dto;
     }

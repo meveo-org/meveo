@@ -108,7 +108,7 @@
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
         <h:outputText value="#{field.entityReferenceValueForGUI.code}" styleClass="field-value" rendered="#{!edit or disabled}" />
         <p:autoComplete value="#{field.entityReferenceValueForGUI}" required="#{cft.valueRequired and !hasInheritedValue}" size="30" maxlength="60" dropdown="true" label="#{cft.description}" placeholder="#{cft.description}"
-            converter="org.jboss.seam.faces.conversion.ObjectConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" itemLabel="#{e.code}"
+            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" itemLabel="#{e.code}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
             <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
@@ -117,6 +117,7 @@
             <p:column width="50" headerText="#{messages['BusinessEntity.description']}">
                 <h:outputText value="#{e.description}" />
             </p:column>
+            <o:converter converterId="omnifaces.ListConverter" list="#{customFieldDataEntryBean.availableEntities}" />
         </p:autoComplete>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">

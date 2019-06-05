@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
@@ -41,6 +43,7 @@ import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.slf4j.Logger;
 
 @Stateless
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class GraphQLService {
 
     @Inject

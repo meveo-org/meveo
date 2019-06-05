@@ -81,7 +81,7 @@ public class UserService extends PersistenceService<User> {
         String queryString = "select distinct u from User u join u.roles as r where r.name in (:roles) ";
         Query query = getEntityManager().createQuery(queryString);
         query.setParameter("roles", Arrays.asList(roles));
-        query.setHint("org.hibernate.flushMode", "NEVER");
+        //query.setHint("org.hibernate.flushMode", "NEVER");
         return query.getResultList();
     }
 
@@ -90,7 +90,7 @@ public class UserService extends PersistenceService<User> {
         Query query = getEntityManager().createQuery(stringQuery);
         query.setParameter("userName", username.toUpperCase());
         query.setParameter("id", id);
-        query.setHint("org.hibernate.flushMode", "NEVER");
+        //query.setHint("org.hibernate.flushMode", "NEVER");
         return ((Long) query.getSingleResult()).intValue() != 0;
     }
 
@@ -98,7 +98,7 @@ public class UserService extends PersistenceService<User> {
         String stringQuery = "select count(*) from User u where u.userName = :userName";
         Query query = getEntityManager().createQuery(stringQuery);
         query.setParameter("userName", username.toUpperCase());
-        query.setHint("org.hibernate.flushMode", "NEVER");
+        //query.setHint("org.hibernate.flushMode", "NEVER");
         return ((Long) query.getSingleResult()).intValue() != 0;
     }
 

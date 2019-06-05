@@ -19,9 +19,10 @@ package org.meveo.service.script.test;
 public class SampleResult {
 
     private boolean success;
+    private String name;
     private String failureMessage;
 
-    public SampleResult(boolean success, String failureMessage) {
+    public SampleResult(boolean success, String name, String failureMessage) {
         this.success = success;
         this.failureMessage = failureMessage;
     }

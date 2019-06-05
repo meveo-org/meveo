@@ -9,8 +9,10 @@ import java.util.List;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.mail.BodyPart;
 import javax.mail.Multipart;
 import javax.mail.Session;
@@ -23,13 +25,21 @@ import javax.mail.internet.MimeMultipart;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.commons.utils.MailerSessionFactory;
 import org.meveo.commons.utils.StringUtils;
 
 @Stateless
 public class EmailSender {
 
-    @Resource(lookup = "java:/MeveoMail")
     private Session mailSession;
+
+    @Inject
+    private MailerSessionFactory mailerSessionFactory;
+
+    @PostConstruct
+    public void init() {
+        mailSession = mailerSessionFactory.getSession();
+    }
 
     /**
      * Deprecated in v.4.7. Just a method name change. Use send() instead.
@@ -42,7 +52,7 @@ public class EmailSender {
      * @param subject email subject
      * @param textContent text content
      * @param htmlContent html content
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     @Deprecated
     public void sent(String from, List<String> replyTo, List<String> to, List<String> cc, List<String> bcc, String subject, String textContent, String htmlContent)
@@ -59,7 +69,7 @@ public class EmailSender {
      * @param subject email subject
      * @param textContent text content
      * @param htmlContent html content
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     @Deprecated
     public void sent(String from, List<String> replyTo, List<String> to, String subject, String textContent, String htmlContent) throws BusinessException {
@@ -79,7 +89,7 @@ public class EmailSender {
      * @param htmlContent html content
      * @param attachments list of attached file.
      * @param sendDate date when email is sent.
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     @Deprecated
     public void sent(String from, List<String> replyTo, List<String> to, List<String> cc, List<String> bcc, String subject, String textContent, String htmlContent,
@@ -98,7 +108,7 @@ public class EmailSender {
      * @param subject Email subject
      * @param textContent Plain text contents
      * @param htmlContent HTML type contents
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     public void send(String from, List<String> replyTo, List<String> to, List<String> cc, List<String> bcc, String subject, String textContent, String htmlContent)
             throws BusinessException {
@@ -114,7 +124,7 @@ public class EmailSender {
      * @param subject Email subject
      * @param textContent Plain text contents
      * @param htmlContent HTML type contents
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     public void send(String from, List<String> replyTo, List<String> to, String subject, String textContent, String htmlContent) throws BusinessException {
         send(from, replyTo, to, null, null, subject, textContent, htmlContent, null, null);
@@ -133,7 +143,7 @@ public class EmailSender {
      * @param htmlContent HTML type contents
      * @param attachments Email attachments
      * @param sendDate Sending date
-     * @throws BusinessException business exception.
+     * @throws org.meveo.admin.exception.BusinessException business exception.
      */
     public void send(String from, List<String> replyTo, List<String> to, List<String> cc, List<String> bcc, String subject, String textContent, String htmlContent,
             List<File> attachments, Date sendDate) throws BusinessException {

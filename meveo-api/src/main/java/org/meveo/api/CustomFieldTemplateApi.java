@@ -49,7 +49,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
-    
+
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 

@@ -22,6 +22,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
@@ -126,6 +127,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 
     private CustomEntityInstance entityInstance;
 
+    private List<BusinessEntity> availableEntities = new ArrayList<>();
+
     /** Logger. */
     private Logger log = LoggerFactory.getLogger(this.getClass()); 
 
@@ -218,13 +221,13 @@ public class CustomFieldDataEntryBean implements Serializable {
             @Override
             @SuppressWarnings("unchecked")
             public int compare(Object o1, Object o2) {
-                return ((Comparable<V>) ((Map.Entry<K, V>) (o1)).getValue()).compareTo(((Map.Entry<K, V>) (o2)).getValue());
+                return ((Comparable<V>) ((Entry<K, V>) (o1)).getValue()).compareTo(((Entry<K, V>) (o2)).getValue());
             }
         });
 
         Map<K, V> result = new LinkedHashMap<>();
         for (Iterator<Entry<K, V>> it = list.iterator(); it.hasNext();) {
-            Map.Entry<K, V> entry = (Map.Entry<K, V>) it.next();
+            Entry<K, V> entry = (Entry<K, V>) it.next();
             result.put(entry.getKey(), entry.getValue());
         }
 
@@ -602,9 +605,25 @@ public class CustomFieldDataEntryBean implements Serializable {
      */
     public List<BusinessEntity> autocompleteEntityForCFV(String wildcode) {
         String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-        return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
+        availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
+        return availableEntities;
     }
 
+    public List<BusinessEntity> allEntityForCFV(){
+        String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
+        return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, "");
+    }
+
+    public List<BusinessEntity> getAvailableEntities() {
+        if (CollectionUtils.isNotEmpty(availableEntities)) {
+            return availableEntities;
+        }
+        return new ArrayList<>();
+    }
+
+    public void setAvailableEntities(List<BusinessEntity> availableEntities) {
+        this.availableEntities = availableEntities;
+    }
     /**
      * Validate complex custom fields
      * 

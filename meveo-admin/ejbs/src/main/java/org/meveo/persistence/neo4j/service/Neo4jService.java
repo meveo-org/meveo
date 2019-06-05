@@ -159,7 +159,7 @@ public class Neo4jService {
             }
         }
     }
-    
+
     /**
      * Drop an index and unique constraint on the CET for the meveo_uuid property
      */
@@ -307,10 +307,6 @@ public class Neo4jService {
 
             Map<String, Object> uniqueFields = new HashMap<>();
             Map<String, Object> fields = validateAndConvertCustomFields(cetFields, fieldValues, uniqueFields, true);
-            fields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
-            if (!uniqueFields.isEmpty()) {
-                uniqueFields.put(CETConstants.CET_ACTIVE_FIELD, "TRUE");
-            }
 
             /* Collect entity references */
             final List<CustomFieldTemplate> entityReferences = cetFields.values().stream()
@@ -327,53 +323,75 @@ public class Neo4jService {
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+                    if (!(referencedCetValue instanceof Collection)) {
+                        throw new BusinessException("Value for CFT " + entityReference.getCode() + "of CET " + cetCode + " should be a collection");
+                    }
+
                     values = ((Collection<Object>) referencedCetValue);
+                    if (referencedCet.isPrimitiveEntity()) {
+                        fields.put(entityReference.getCode(), new ArrayList<>());
+                    }
                 } else {
                     values = Collections.singletonList(referencedCetValue);
                 }
 
                 for (Object value : values) {
                     Set<EntityRef> relatedPersistedEntities = null;
+                    if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+                        Map<String, Object> valueMap = new HashMap<>();
+                        valueMap.put("value", value);
 
-                        // If the CET is primitive, copy value in current node's value
-                        if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
-                            fields.put(entityReference.getCode(), value);
-
-                            final EntityRef entityRef = new EntityRef((String) fieldValues.remove(entityReference.getCode() + "UUID"));
-                            relatedPersistedEntities = Collections.singleton(entityRef);
-
-                        // Referenced CET is not primitive
+                        // If there is no unique constraints defined, directly merge node
+                        if (referencedCet.getUniqueConstraints().isEmpty()) {
+                            List<String> additionalLabels = getAdditionalLabels(referencedCet);
+                            if (referencedCet.getPrePersistScript() != null) {
+                                scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
+                            }
+                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
+                            relatedPersistedEntities = Collections.singleton(new NodeReference(createdNodeId));
                         } else {
-                            if (value instanceof Map && referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-                                @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
-                                relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCet, valueMap);
+                            relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
+                        }
+
+                        if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+                            ((List<Object>) fields.get(entityReference.getCode())).add(valueMap.get("value"));
+                        } else {
+                            fields.put(entityReference.getCode(), valueMap.get("value"));
+                        }
+
+                    // Referenced CET is not primitive
+                    } else {
+                        if (value instanceof Map && referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+                            @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
+                            relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCet, valueMap);
 
                             // If entity reference's value is a string and the entity reference is not primitive, then the value is likely the UUID of the referenced node
-                            } else if(value instanceof String){
-                                UUID.fromString((String) value);
+                        } else if(value instanceof String){
+                            UUID.fromString((String) value);
 
-                                if(StringUtils.isBlank(entityReference.getRelationshipName())){
-                                    String errorMessage  = String.format("Attribute relationshipName of CFT %s#%s should not be null", cet.getCode(), entityReference.getCode());
-                                    throw new IllegalArgumentException(errorMessage);
-                                }
-                                relationshipsToCreate.put(new EntityRef((String) value), entityReference.getRelationshipName());
-
-                                // Create a node reprensenting the value if the target is not stored in Neo4J
-                                if(!referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)){
-                                    neo4jDao.mergeNode(
-                                            neo4JConfiguration,
-                                            referencedCet.getCode(),
-                                            Collections.singletonMap("meveo_uuid", value),
-                                            Collections.singletonMap("meveo_uuid", value),
-                                            Collections.emptyMap(),
-                                            Collections.emptyList()
-                                    );
-                                }
-
-                            } else {
-                                throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
+                            if(StringUtils.isBlank(entityReference.getRelationshipName())){
+                                String errorMessage  = String.format("Attribute relationshipName of CFT %s#%s should not be null", cet.getCode(), entityReference.getCode());
+                                throw new IllegalArgumentException(errorMessage);
                             }
+                            relationshipsToCreate.put(new EntityRef((String) value), entityReference.getRelationshipName());
+
+                            // Create a node reprensenting the value if the target is not stored in Neo4J
+                            if(!referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)){
+                                neo4jDao.mergeNode(
+                                        neo4JConfiguration,
+                                        referencedCet.getCode(),
+                                        Collections.singletonMap("meveo_uuid", value),
+                                        Collections.singletonMap("meveo_uuid", value),
+                                        Collections.emptyMap(),
+                                        Collections.emptyList()
+                                );
+                            }
+
+                        } else {
+                            throw new IllegalArgumentException("CET " + referencedCetCode + " should be a primitive entity");
                         }
+                    }
+
                     if (relatedPersistedEntities != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
                                 .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
@@ -381,14 +399,6 @@ public class Neo4jService {
                             relationshipsToCreate.put(entityRef, relationshipName);
                         }
                     }
-                }
-            }
-
-            if (CETConstants.QUERY_CATEGORY_CODE.equals(cet.getCode())) {
-                String isSuperCategory = (String) fields.get("isSuperCategory");
-                if (isSuperCategory != null && Boolean.valueOf(isSuperCategory)) {
-                    fields.put(CETConstants.CET_ACTIVE_FIELD, "FALSE");
-                    uniqueFields.remove(CETConstants.CET_ACTIVE_FIELD);
                 }
             }
 
@@ -445,7 +455,7 @@ public class Neo4jService {
                             Map<String, Object> updatableFields = new HashMap<>(fields);
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields);
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields, labels);
                             persistedEntities.add(new EntityRef(id));
                         }
                     }
@@ -1155,7 +1165,7 @@ public class Neo4jService {
             } catch (NumberFormatException e) {
                 if (fieldValue != null) {
                     LOGGER.error(
-                            "Wrong data type format for {}#{}\nExpected type : {}, value is : {}\nSkipping field value\n",
+                            "Wrong data type format for {}#{}. Expected type : {}, value is : {}. Skipping field value",
                             cft.getAppliesTo(),
                             cft.getCode(),
                             cft.getFieldType(),

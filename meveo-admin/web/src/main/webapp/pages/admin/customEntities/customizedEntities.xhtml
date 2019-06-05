@@ -21,7 +21,14 @@
                     <p:inputText id="entityName" value="#{customEntityTemplateListBean.filters['entityName']}" />
                 </hftl:decorateFormField>
                 <hftl:decorateFormField fieldId="customEntity" label="#{messages['customizedEntities.customEntity']}">
-                    <p:selectBooleanCheckbox id="customEntity" value="#{customEntityTemplateListBean.filters['customEntity']}" />
+                    <p:selectBooleanCheckbox id="customEntity" value="#{customEntityTemplateListBean.filters['customEntity']}" rendered="#{empty(customEntityTemplateListBean.filters['cecId'])}"/>
+                </hftl:decorateFormField>
+                <hftl:decorateFormField fieldId="cecId" label="#{messages['customizedEntities.category']}">
+                    <p:selectOneMenu id="cecId" value="#{customEntityTemplateListBean.filters['cecId']}" >
+                    	<f:selectItem itemLabel="" itemValue="#{null}" />
+                		<f:selectItems value="#{customEntityCategoryListBean.customEntityCategories}" var="cec" itemLabel="#{cec.code}" itemValue="#{cec.id}" />
+                		<p:ajax event="change" update="searchPanel"></p:ajax>
+                    </p:selectOneMenu>
                 </hftl:decorateFormField>
             </ui:define>
             <ui:define name="buttons">
@@ -40,10 +47,11 @@
 
         <h:form prependId="false">
             <p:panel width="100">
-                <p:dataTable id="searchResults" value="#{customEntityTemplateListBean.customizedEntities}" var="entity" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+                <p:dataTable id="searchResults" value="#{customEntityTemplateListBean.customizedEntities}" var="entity" sortOrder="ascending" sortBy="#{entity.customEntityCategory.code}"
                     paginator="true" rows="30" resizableColumns="true"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
                     lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                    <hftl:column label="#{messages['customizedEntities.category']}" field="customEntityCategory.code" />
                     <p:column headerText="#{messages['customizedEntities.entityName']}" sortBy="#{entity.classnameToDisplayHuman}">
                         <c:if test="#{!currentUser.hasRole('administrationManagement')}">
                             <h:outputText value="#{entity.classnameToDisplayHuman}" />

@@ -41,7 +41,7 @@ public class UniqueConstraintValidator implements Validator<Object> {
     private ValidationService validationService;
     
     @Inject
-    private ResourceBundle resourceMessages;
+    private ResourceBundle resourceMessages = CDI.current().select(ResourceBundle.class).get();;
     
     public void validate(FacesContext context, UIComponent component, Object value) throws ValidatorException {
 

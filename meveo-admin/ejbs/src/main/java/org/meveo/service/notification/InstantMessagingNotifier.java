@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
@@ -11,6 +12,7 @@ import javax.inject.Inject;
 import javax.mail.Session;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.MailerSessionFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.notification.InstantMessagingNotification;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
@@ -27,8 +29,10 @@ public class InstantMessagingNotifier {
     @Inject
     Logger log;
 
-    @Resource(lookup = "java:/MeveoMail")
     private Session mailSession;
+
+    @Inject
+    private MailerSessionFactory mailerSessionFactory;
 
     @Inject
     NotificationHistoryService notificationHistoryService;
@@ -36,6 +40,11 @@ public class InstantMessagingNotifier {
 
     @Inject
     private CurrentUserProvider currentUserProvider;
+
+    @PostConstruct
+    public void init() {
+        mailSession = mailerSessionFactory.getSession();
+    }
 
     // Jabber jabber = new Jabber();
 

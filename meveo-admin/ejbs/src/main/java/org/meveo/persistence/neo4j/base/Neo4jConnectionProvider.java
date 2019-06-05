@@ -27,15 +27,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Rachid
@@ -43,15 +48,29 @@ import java.util.Map;
  */
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Neo4jConnectionProvider {
 
     @Inject
     @MeveoJpa
-    private EntityManagerWrapper emWrapper;
+    private Provider<EntityManagerWrapper> emWrapperProvider;
 
-    private Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
 
-    private static final Map<String, Neo4JConfiguration> configurationMap = new HashMap<>();
+    private static final Map<String, Neo4JConfiguration> configurationMap = new ConcurrentHashMap<>();
+    private static final Map<String, Driver> DRIVER_MAP = new ConcurrentHashMap<>();
+
+    static {
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        for (Map.Entry<String, Driver> driverEntry : DRIVER_MAP.entrySet()) {
+          try {
+            driverEntry.getValue().close();
+          } catch (Exception e) {
+            LOGGER.error("Error in shutdownHOOK : Error close neo4j driver for mission {}", driverEntry.getKey(), e);
+          }
+        }
+      }));
+    }
 
     private String neo4jUrl;
     private String neo4jLogin;
@@ -92,13 +111,27 @@ public class Neo4jConnectionProvider {
         }
 
         try{
-            Driver driver = GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
-            return driver.session();
+            Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfigurationCode, this::generateDriver);
+            synchronized (this) {
+                return driver.session();
+            }
         }catch (Exception e){
-            LOGGER.error("Can't connect to {} : {}", neo4JConfigurationCode, e.getMessage());
+            LOGGER.error("Can't connect to {} ({})", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e);
             return null;
         }
 
+    }
+
+    private synchronized Driver generateDriver(String neo4JConfigurationCode) {
+        Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
+        if (neo4JConfigurationCode != null) {
+            try {
+                neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
+            } catch (NoResultException e) {
+                LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
+            }
+        }
+        return GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
     }
 
     public String getNeo4jUrl() {
@@ -141,12 +174,13 @@ public class Neo4jConnectionProvider {
      * @return The configuration corresponding to the code
      */
     public Neo4JConfiguration findByCode(String code){
-        CriteriaBuilder cb = emWrapper.getEntityManager().getCriteriaBuilder();
+        EntityManager entityManager = emWrapperProvider.get().getEntityManager();
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Neo4JConfiguration> query = cb.createQuery(Neo4JConfiguration.class);
         Root<Neo4JConfiguration> root = query.from(Neo4JConfiguration.class);
         query.select(root);
         query.where(cb.equal(root.get("code"), code));
-        return emWrapper.getEntityManager().createQuery(query).getSingleResult();
+        return entityManager.createQuery(query).getSingleResult();
     }
 
 }
