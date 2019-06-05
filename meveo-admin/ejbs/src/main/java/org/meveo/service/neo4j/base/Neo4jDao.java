@@ -3,8 +3,6 @@ package org.meveo.service.neo4j.base;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
-import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.service.neo4j.graph.Neo4jEntity;
 import org.meveo.service.neo4j.graph.Neo4jRelationship;
@@ -27,7 +25,7 @@ public class Neo4jDao {
     private static final String FIELD_KEYS = "fieldKeys";
     private static final String FIELDS = "fields";
     private static final String UPDATABLE_FIELDS = "updatableFields";
-    public static final String ID = "id";
+    public static final String NODE_ID = "NODE_ID";
 
     Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
 
@@ -122,9 +120,14 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", cetCode);
-        valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
-        valuesMap.put(FIELDS, Values.value(fields));
-        valuesMap.put(UPDATABLE_FIELDS, Values.value(updatableFields));
+        valuesMap.put(FIELD_KEYS, getFieldsString(uniqueFields.keySet()));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+        valuesMap.put(UPDATABLE_FIELDS, getFieldsString(updatableFields.keySet()));
+
+        Map<String, Object> fieldValues = new HashMap<>();
+        fieldValues.putAll(uniqueFields);
+        fieldValues.putAll(fields);
+        fieldValues.putAll(updatableFields);
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -147,7 +150,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = node.id();
@@ -181,7 +184,7 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", cetCode);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -204,7 +207,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, fields);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = node.id();
@@ -230,8 +233,12 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put(ID, nodeId);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(NODE_ID, nodeId);
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+
+        Map<String, Object> fieldValues = new HashMap<>();
+        fieldValues.put(NODE_ID, nodeId);
+        fieldValues.putAll(fields);
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -254,7 +261,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, valuesMap);
+            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
@@ -276,7 +283,7 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put("cetCode", cetCode);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
 
         // Build statement
         StringBuffer statement = new StringBuffer(uniqueConstraint.getCypherQuery());

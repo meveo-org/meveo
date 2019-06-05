@@ -81,7 +81,7 @@ public class Neo4JRequests {
             .append(" RETURN ID(startNode)");
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append("MATCH (startNode) WHERE ID(startNode) = $id")
+            .append("MATCH (startNode) WHERE ID(startNode) = $NODE_ID")
             .append(" SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "
