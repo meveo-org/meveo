@@ -530,6 +530,7 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName Db table name to remove from
      */
     public void removeTable(String dbTableName) {
+        log.info("Removing table {}", dbTableName);
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 

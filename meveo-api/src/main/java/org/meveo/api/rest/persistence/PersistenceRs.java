@@ -79,16 +79,14 @@ public class PersistenceRs {
     }
 
     @DELETE
-    @Path("/{cetCode}")
-    public Response delete(@PathParam("cetCode") String cetCode, List<String> uuids) throws BusinessException {
+    @Path("/{cetCode}/{uuid}")
+    public Response delete(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException();
         }
 
-        for(String uuid : uuids){
-            crossStorageService.remove(configuration, customEntityTemplate, uuid);
-        }
+        crossStorageService.remove(configuration, customEntityTemplate, uuid);
 
         return Response.noContent().build();
     }

@@ -324,11 +324,11 @@ public class Neo4jService {
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
                     if (!(referencedCetValue instanceof Collection)) {
-                        throw new BusinessException("Value for CFT " + entityReference.getCode() + "of CET " + cetCode + " should be a collection");
+                        throw new BusinessException("Value for CFT " + entityReference.getCode() + "of CET " + cet.getCode() + " should be a collection");
                     }
 
                     values = ((Collection<Object>) referencedCetValue);
-                    if (referencedCet.isPrimitiveEntity()) {
+                    if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                         fields.put(entityReference.getCode(), new ArrayList<>());
                     }
                 } else {
@@ -342,13 +342,13 @@ public class Neo4jService {
                         valueMap.put("value", value);
 
                         // If there is no unique constraints defined, directly merge node
-                        if (referencedCet.getUniqueConstraints().isEmpty()) {
+                        if (referencedCet.getNeo4JStorageConfiguration().getUniqueConstraints().isEmpty()) {
                             List<String> additionalLabels = getAdditionalLabels(referencedCet);
                             if (referencedCet.getPrePersistScript() != null) {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
                             }
-                            Long createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
-                            relatedPersistedEntities = Collections.singleton(new NodeReference(createdNodeId));
+                            String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
+                            relatedPersistedEntities = Collections.singleton(new EntityRef(createdNodeId));
                         } else {
                             relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                         }

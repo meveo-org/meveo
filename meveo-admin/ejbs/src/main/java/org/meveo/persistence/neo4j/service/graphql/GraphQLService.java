@@ -224,7 +224,11 @@ public class GraphQLService {
             final CustomEntityTemplate startNode = relationshipTemplate.getStartNode();
 
             // IF either the relation, the start entity or the end entity is not configured to be stored in Neo4J, don't include it in the generated graphql
-            if(!relationshipTemplate.getAvailableStorages().contains(DBStorageType.NEO4J) || !endNode.getAvailableStorages().contains(DBStorageType.NEO4J) || !startNode.getAvailableStorages().contains(DBStorageType.NEO4J)){
+            final List<DBStorageType> relationStorages = relationshipTemplate.getAvailableStorages() != null ? relationshipTemplate.getAvailableStorages() : new ArrayList<>();
+            final List<DBStorageType> endNodeStorages = endNode.getAvailableStorages() != null ? endNode.getAvailableStorages() : new ArrayList<>();
+            final List<DBStorageType> startNodeStorages = startNode.getAvailableStorages() != null ? startNode.getAvailableStorages() : new ArrayList<>();
+
+            if(!relationStorages.contains(DBStorageType.NEO4J) || !endNodeStorages.contains(DBStorageType.NEO4J) || !startNodeStorages.contains(DBStorageType.NEO4J)){
                 continue;
             }
 

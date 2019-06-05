@@ -409,7 +409,10 @@ public class CrossStorageService {
         // Neo4j storage
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             Map<String, Object> neo4jValues = filterValues(values, cet, DBStorageType.NEO4J);
-            neo4jDao.updateNodeByNodeId(configurationCode, uuid, neo4jValues);
+            final List<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
+            List<String> labels = new ArrayList<>(cetLabels);
+            labels.add(cet.getCode());
+            neo4jDao.updateNodeByNodeId(configurationCode, uuid, neo4jValues, labels);
         }
 
         // SQL Storage
@@ -534,6 +537,10 @@ public class CrossStorageService {
      * @param uuid              UUID of the entity
      */
     public void remove(String configurationCode, CustomEntityTemplate cet, String uuid) throws BusinessException {
+        if(uuid == null) {
+            throw new IllegalArgumentException("Cannot remove entity by UUID without uuid");
+        }
+
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);

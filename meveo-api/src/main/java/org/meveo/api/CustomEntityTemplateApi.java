@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.*;
+import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
@@ -204,7 +205,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(code);
         if (cet != null) {
             // Related custom field templates will be removed along with CET
-            customEntityTemplateService.remove(cet);
+            customEntityTemplateService.remove(cet.getId());
             Map<String, CustomFieldTemplate> relatedCfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             for(CustomFieldTemplate cft : relatedCfts.values()) {
             	customFieldTemplateService.remove(cft);
@@ -647,8 +648,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
             dto.setNeo4jStorageConfiguration(neo4jConf);
         }
-
-        dto.setUniqueConstraints(constraintDtoList);
 
         if(cet.getCustomEntityCategory() != null) {
         	dto.setCustomEntityCategoryCode(cet.getCustomEntityCategory().getCode());

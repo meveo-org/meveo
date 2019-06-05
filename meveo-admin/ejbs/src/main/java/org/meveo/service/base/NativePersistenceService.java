@@ -477,7 +477,9 @@ public class NativePersistenceService extends BaseService {
      */
     public void remove(String tableName, String uuid) throws BusinessException {
 
-        getEntityManager().createNativeQuery("delete from " + tableName + " where uuid=" + uuid).executeUpdate();
+        getEntityManager().createNativeQuery("delete from " + tableName + " where uuid= :uuid")
+                .setParameter("uuid", uuid)
+                .executeUpdate();
     }
 
     /**
