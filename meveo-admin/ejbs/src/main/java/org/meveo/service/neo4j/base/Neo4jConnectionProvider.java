@@ -58,10 +58,22 @@ public class Neo4jConnectionProvider {
     @MeveoJpa
     private Provider<EntityManagerWrapper> emWrapperProvider;
 
-    private Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Neo4jConnectionProvider.class);
 
     private static final Map<String, Neo4JConfiguration> configurationMap = new ConcurrentHashMap<>();
     private static final Map<String, Driver> DRIVER_MAP = new ConcurrentHashMap<>();
+
+    static {
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        for (Map.Entry<String, Driver> driverEntry : DRIVER_MAP.entrySet()) {
+          try {
+            driverEntry.getValue().close();
+          } catch (Exception e) {
+            LOGGER.error("Error in shutdownHOOK : Error close neo4j driver for mission {}", driverEntry.getKey(), e);
+          }
+        }
+      }));
+    }
 
     private String neo4jUrl;
     private String neo4jLogin;
