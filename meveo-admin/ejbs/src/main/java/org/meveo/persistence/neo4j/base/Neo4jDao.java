@@ -1,3 +1,4 @@
+
 /*
  * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  *
@@ -13,7 +14,6 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.meveo.persistence.neo4j.base;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +46,7 @@ public class Neo4jDao {
     private static final String UPDATABLE_FIELDS = "updatableFields";
     public static final String ID = "id";
     private static final String CET_CODE = "cetCode";
+    public static final String NODE_ID = "NODE_ID";
 
     Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
 
@@ -384,10 +385,15 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put(CET_CODE, cetCode);
-        valuesMap.put(FIELD_KEYS, Values.value(uniqueFields));
-        valuesMap.put(FIELDS, Values.value(fields));
-        valuesMap.put(UPDATABLE_FIELDS, Values.value(updatableFields));
+        valuesMap.put("CET_CODE", cetCode);
+        valuesMap.put(FIELD_KEYS, getFieldsString(uniqueFields.keySet()));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+        valuesMap.put(UPDATABLE_FIELDS, getFieldsString(updatableFields.keySet()));
+
+        Map<String, Object> fieldValues = new HashMap<>();
+        fieldValues.putAll(uniqueFields);
+        fieldValues.putAll(fields);
+        fieldValues.putAll(updatableFields);
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -410,7 +416,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
@@ -448,7 +454,7 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put(CET_CODE, cetCode);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -471,7 +477,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement);
+            final StatementResult result = transaction.run(resolvedStatement, fields);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
@@ -497,8 +503,12 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put(ID, nodeId);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(NODE_ID, nodeId);
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+
+        Map<String, Object> fieldValues = new HashMap<>();
+        fieldValues.put(NODE_ID, nodeId);
+        fieldValues.putAll(fields);
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -521,12 +531,12 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, valuesMap);
+            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while updating a Neo4J node", e);
+            LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -543,7 +553,7 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put(CET_CODE, cetCode);
-        valuesMap.put(FIELDS, Values.value(fields));
+        valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
 
         // Build statement
         StringBuffer statement = new StringBuffer(uniqueConstraint.getCypherQuery());
@@ -606,12 +616,15 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             final StatementResult result = transaction.run(statement, values);
-            relationship = result.single().get("relationship").asRelationship();
+            relationship = result.list()
+                .stream()
+                .findFirst()
+                .map(record -> record.get("relationship").asRelationship()).orElseThrow(() -> new IllegalStateException("No relationship created"));
 
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while creating a relation between 2 Neo4J nodes", e);
+            LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
         } finally {
             // End session and transaction
             transaction.close();
