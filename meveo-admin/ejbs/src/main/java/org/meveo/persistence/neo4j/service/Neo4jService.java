@@ -86,6 +86,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
+import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
+
 /**
  * @author Rachid AITYAAZZA
  */
@@ -842,12 +844,17 @@ public class Neo4jService implements CustomPersistenceService {
                 // Retrieve ID of the node
                 final Record idRecord = run.single();
                 final Value id = idRecord.get(0);
-                parametersValues.put(ID, id);
+                parametersValues.put(NODE_ID, id);
 
                 // Create statement
                 CustomEntityTemplate startCet = customRelationshipTemplate.getStartNode();
                 List<String> additionalLabels = getAdditionalLabels(startCet);
-                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, additionalLabels, startNodeAlias, valuesMap);
+
+                final Map<String, Object> updatableValues = valuesMap.entrySet().stream()
+                        .filter(s -> startNodeCfts.get(s.getKey()).isAllowEdit())
+                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+                StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, additionalLabels, startNodeAlias, updatableValues);
                 statement = neo4jDao.appendReturnStatement(statement, startNodeAlias, valuesMap);
                 String updateStatement = getStatement(sub, statement);
 

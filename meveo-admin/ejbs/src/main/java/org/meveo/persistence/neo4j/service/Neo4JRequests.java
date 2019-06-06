@@ -16,6 +16,8 @@
 
 package org.meveo.persistence.neo4j.service;
 
+import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
+
 public class Neo4JRequests {
 
     public static final String ADDITIONAL_LABELS = "labels";
@@ -47,15 +49,15 @@ public class Neo4JRequests {
      * - uniqueFields : unique fields that identify the node
      */
     public final static StringBuffer deleteCet = new StringBuffer("MATCH (n:${cetCode} ${uniqueFields}) \n")
-            .append(" WITH n, properties(n) as properties,  labels(n) as labels, n.meveo_uuid as id \n")
-            .append(" DETACH DELETE n \n")
-            .append(" RETURN properties, labels, id");
+            .append("WITH n, properties(n) as properties,  labels(n) as labels, n.meveo_uuid as id \n")
+            .append("DETACH DELETE n \n")
+            .append("RETURN properties, labels, id");
 
     public final static StringBuffer crtStatement = new StringBuffer("MATCH (${startAlias}:${startNode} ${starNodeKeys}) \n")
-            .append(" MATCH (${endAlias}:${endNode} ${endNodeKeys}) \n")
-            .append(" MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
-            .append(" ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, ${endAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, relationship." + INTERNAL_UPDATE_DATE + " = ${updateDate} \n")
-            .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate} , relationship.meveo_uuid = apoc.create.uuid() \n");
+            .append("MATCH (${endAlias}:${endNode} ${endNodeKeys}) \n")
+            .append("MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
+            .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, ${endAlias}." + INTERNAL_UPDATE_DATE + "=${updateDate}, relationship." + INTERNAL_UPDATE_DATE + " = ${updateDate} \n")
+            .append("ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate} , relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer crtStatementByNodeIds = new StringBuffer()
             .append("MATCH (${startAlias}:${startNode}) \n")
@@ -87,23 +89,23 @@ public class Neo4JRequests {
             .append("CREATE (n:${cetCode}${fields}) \n")
             .append("SET n." + CREATION_DATE + " = timestamp(), n.meveo_uuid = apoc.create.uuid() \n");
 
-    public final static StringBuffer additionalLabels = new StringBuffer(" WITH ${alias} ")
+    public final static StringBuffer additionalLabels = new StringBuffer("\nWITH ${alias}\n")
             .append("SET ${alias} ${labels} \n");
 
-    public final static StringBuffer returnStatement = new StringBuffer(" RETURN ${alias} ");
+    public final static StringBuffer returnStatement = new StringBuffer("\nRETURN ${alias}\n");
 
     public final static StringBuffer findStartNodeId = new StringBuffer()
-            .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys})")
-            .append(" RETURN startNode.meveo_uuid");
+            .append("MATCH (startNode:${cetCode})-[:${crtCode}]->(:${endCetcode} ${fieldKeys}) \n")
+            .append("RETURN startNode.meveo_uuid");
 
     public final static StringBuffer findRelationIdByTargetId = new StringBuffer()
             .append("MATCH [r:${relationLabel}]->(t:${targetLabel}) \n")
-            .append("WHERE t.meveo_uuid = $id \n")
+            .append("WHERE t.meveo_uuid = $").append(NODE_ID).append("\n")
             .append("RETURN r.meveo_uuid");
 
     public final static StringBuffer findSourceNodeByRelationId = new StringBuffer()
             .append("MATCH (n:${sourceLabel})-[r:${relationLabel}] \n")
-            .append("WHERE r.meveo_uuid = $id \n")
+            .append("WHERE r.meveo_uuid = $").append(NODE_ID).append(" \n")
             .append("RETURN n.meveo_uuid");
 
     public final static StringBuffer findNodeId = new StringBuffer()
@@ -111,10 +113,10 @@ public class Neo4JRequests {
             .append("RETURN n.meveo_uuid");
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append("MATCH (startNode) WHERE startNode.meveo_uuid = $id")
-            .append(" SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
+            .append("MATCH (startNode) WHERE startNode.meveo_uuid = $").append(NODE_ID).append("\n")
+            .append("SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
-    public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where a.meveo_uuid =${originNodeId} "
+    public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where a.meveo_uuid = ${originNodeId} "
             + "MATCH (b:${cetCode})where b.meveo_uuid =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
@@ -123,7 +125,7 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    public final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where a.meveo_uuid =${originNodeId} "
+    public final static String mergeInGoingRelStatement = "MATCH (a:${cetCode})<-[r]-(c) where a.meveo_uuid = ${originNodeId} "
             + "MATCH (b:${cetCode})where b.meveo_uuid =${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
@@ -134,11 +136,4 @@ public class Neo4JRequests {
 
     public final static String START_NODE_ALIAS = "startNode";
     public final static String END_NODE_ALIAS = "endNode";
-
-    public final static StringBuffer createSourceNodeStatement = new StringBuffer("MERGE (source:Source { id: ${id} }) \n")
-            .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType}, meveo_uuid = apoc.create.uuid() \n")
-            .append("WITH source \n")
-            .append("MERGE (node)-[:HAS_SOURCE]->(source) \n")
-            .append("WHERE node.meveo_uuid = ${nodeId} \n")
-            .append("RETURN source");
 }

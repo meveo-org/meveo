@@ -3,6 +3,9 @@ package org.meveo.service.custom;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
+
+import java.util.Arrays;
 
 public class CustomEntityTemplateUtils {
 	
@@ -22,6 +25,7 @@ public class CustomEntityTemplateUtils {
 	    customFieldTemplate.setFilter(true);                        // Can be used as filter
 	    customFieldTemplate.setValueRequired(true);                    // Always required
 	    customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+	    customFieldTemplate.setStorages(Arrays.asList(DBStorageType.NEO4J));
 	}
 
 }

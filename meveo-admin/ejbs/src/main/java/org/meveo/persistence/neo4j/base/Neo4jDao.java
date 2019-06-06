@@ -196,7 +196,7 @@ public class Neo4jDao {
             StrSubstitutor sub = new StrSubstitutor(values);
             String statement = sub.replace(Neo4JRequests.findRelationIdByTargetId);
 
-            final List<Record> result = transaction.run(statement, Collections.singletonMap("id", targetUuid)).list();
+            final List<Record> result = transaction.run(statement, Collections.singletonMap(NODE_ID, targetUuid)).list();
 
             return result.stream()
                     .map(record -> record.get(0).asString())
@@ -227,7 +227,7 @@ public class Neo4jDao {
             StrSubstitutor sub = new StrSubstitutor(values);
             String statement = sub.replace(Neo4JRequests.findSourceNodeByRelationId);
 
-            return transaction.run(statement, Collections.singletonMap("id", relationUUID))
+            return transaction.run(statement, Collections.singletonMap(NODE_ID, relationUUID))
                     .single()
                     .get(0)
                     .asString();
@@ -385,7 +385,7 @@ public class Neo4jDao {
 
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("CET_CODE", cetCode);
+        valuesMap.put(CET_CODE, cetCode);
         valuesMap.put(FIELD_KEYS, getFieldsString(uniqueFields.keySet()));
         valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
         valuesMap.put(UPDATABLE_FIELDS, getFieldsString(updatableFields.keySet()));
