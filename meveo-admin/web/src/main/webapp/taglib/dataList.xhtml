@@ -189,12 +189,12 @@
                         <f:selectItem itemLabel="#{messages['enum.strategyImportTypeEnum.UPDATED']}" itemValue="UPDATED" />
                         <f:selectItem itemLabel="#{messages['enum.strategyImportTypeEnum.REJECTE_IMPORT']}" itemValue="REJECTE_IMPORT" />
                         <f:selectItem itemLabel="#{messages['enum.strategyImportTypeEnum.REJECT_EXISTING_RECORDS']}" itemValue="REJECT_EXISTING_RECORDS" />
-                        <p:ajax event="valueChange" update="@this"></p:ajax>
+                        <p:ajax event="valueChange" update=":#{formId}"></p:ajax>
                     </p:selectOneMenu>
                 </hftl:decorateFormField>
                 <div class="clearLeft">
                     <p:fileUpload fileUploadListener="#{backingBean.handleFileUpload}" update="datatable_#{resultsId}" rendered="#{importCsv}" multiple="true" mode="advanced" dragDropSupport="true"
-                        fileLimit="5" process="@this #{formId}_strategy" />
+                        fileLimit="5" process=":#{formId}_strategy" />
                 </div>
             </p:dialog>
             <p:panel styleClass="buttons-set-data-table">
