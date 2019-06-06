@@ -15,9 +15,9 @@ public class Neo4JRequests {
      * - endNodeId : Id of the target node <br>
      * - relationshipLabel : Label of the relationship to create <br>
      */
-    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode) WHERE ID(startNode) = $startNodeId \n")
+    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode) WHERE ID(startNode) = toInteger($startNodeId) \n")
             .append("WITH startNode \n")
-            .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
+            .append("MATCH (endNode) WHERE ID(endNode) = toInteger($endNodeId) \n")
             .append("WITH startNode, endNode \n")
             .append("MERGE (startNode)-[relationship :${relationshipLabel} ${fields}]->(endNode) \n")
             .append("ON CREATE SET relationship." + CREATION_DATE + " = timestamp() \n")
@@ -43,10 +43,10 @@ public class Neo4JRequests {
 
     public final static StringBuffer crtStatementByNodeIds = new StringBuffer()
             .append("MATCH (${startAlias}:${startNode}) \n")
-            .append("WHERE ID(${startAlias}) = $startNodeId \n")
+            .append("WHERE ID(${startAlias}) = toInteger($startNodeId) \n")
             .append("WITH ${startAlias} \n")
             .append("MATCH (${endAlias}:${endNode}) \n")
-            .append("WHERE ID(${endAlias}) = $endNodeId \n")
+            .append("WHERE ID(${endAlias}) = toInteger($endNodeId) \n")
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
             .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
@@ -54,10 +54,10 @@ public class Neo4JRequests {
 
     public final static StringBuffer uniqueCrtStatementByNodeIds = new StringBuffer()
             .append("MATCH (${startAlias}:${startNode}) \n")
-            .append("WHERE ID(${startAlias}) = $startNodeId \n")
+            .append("WHERE ID(${startAlias}) = toInteger($startNodeId) \n")
             .append("WITH ${startAlias} \n")
             .append("MATCH (${endAlias}:${endNode}) \n")
-            .append("WHERE ID(${endAlias}) = $endNodeId \n")
+            .append("WHERE ID(${endAlias}) = toInteger($endNodeId) \n")
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType}]->(${endAlias}) \n")
             .append("ON MATCH SET relationship += ${fields}, ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
@@ -81,7 +81,7 @@ public class Neo4JRequests {
             .append(" RETURN ID(startNode)");
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append("MATCH (startNode) WHERE ID(startNode) = $NODE_ID")
+            .append("MATCH (startNode) WHERE ID(startNode) = toInteger($NODE_ID)")
             .append(" SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where ID(a) =${originNodeId} "

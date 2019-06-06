@@ -266,7 +266,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while updating a Neo4J node", e);
+            LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
         } finally {
             // End session and transaction
             transaction.close();
@@ -342,12 +342,15 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             final StatementResult result = transaction.run(statement, values);
-            relationship = result.single().get("relationship").asRelationship();
+            relationship = result.list()
+                .stream()
+                .findFirst()
+                .map(record -> record.get("relationship").asRelationship()).orElseThrow(() -> new IllegalStateException("No relationship created"));
 
             transaction.success();  // Commit transaction
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while creating a relation between 2 Neo4J nodes", e);
+            LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
         } finally {
             // End session and transaction
             transaction.close();
