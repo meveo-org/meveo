@@ -507,13 +507,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
             if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
             	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
+            	cet.getNeo4JStorageConfiguration().getLabels().clear();
                 customEntityTemplateService.flush();
+            } else if(cet.getNeo4JStorageConfiguration() == null) {
+                cet.setNeo4JStorageConfiguration(new Neo4JStorageConfiguration());
             }
 
-        	Neo4JStorageConfiguration configuration = new Neo4JStorageConfiguration();
+        	Neo4JStorageConfiguration configuration = cet.getNeo4JStorageConfiguration();
         	configuration.setPrimitiveEntity(dto.getNeo4jStorageConfiguration().isPrimitiveEntity());
         	configuration.setPrimitiveType(dto.getNeo4jStorageConfiguration().getPrimitiveType());
-        	configuration.setLabels(dto.getNeo4jStorageConfiguration().getLabels());
         	configuration.setGraphqlQueryFields(dto.getNeo4jStorageConfiguration().getGraphqlQueryFields());
 
             if(dto.getNeo4jStorageConfiguration().getUniqueConstraints() != null){
@@ -521,12 +523,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                         .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
                         .collect(Collectors.toList());
 
-
                 configuration.getUniqueConstraints().addAll(constraintList);
             }
+
+            if(dto.getNeo4jStorageConfiguration().getLabels() != null){
+                configuration.getLabels().addAll(dto.getNeo4jStorageConfiguration().getLabels());
+            }
         }
-
-
 
         if(dto.getPrePersistScripCode() != null) {
         	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
