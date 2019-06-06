@@ -34,6 +34,7 @@ import org.meveo.model.ObservableEntity;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.model.notification.ScriptNotification;
 import org.meveo.model.notification.StrategyImportTypeEnum;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.NotificationService;
@@ -63,10 +64,10 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     private static final int CODE = 0;
     private static final int CLASS_NAME_FILTER = 1;
-    private static final int EL_FILTER = 2;
-    private static final int ACTIVE = 3;
+    private static final int EVENT_TYPE_FILTER = 2;
+    private static final int EL_FILTER = 3;
     private static final int SCRIPT_INSTANCE_CODE = 4;
-    private static final int EVENT_TYPE_FILTER = 5;
+    private static final int ACTIVE = 5;
 
     private StrategyImportTypeEnum strategyImportType;
 
@@ -127,7 +128,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
             log.debug("File uploaded " + file.getFileName());
             upload();
             messages.info(new BundleKey("messages", "import.csv.successful"));
-        } catch (Exception e) {
+        } catch (BusinessException e) {
             log.error("Failed to handle uploaded file {}", event.getFile().getFileName(), e);
             messages.error(new BundleKey("messages", "import.csv.failed"), e.getClass().getSimpleName() + " " + e.getMessage());
         }
@@ -168,13 +169,13 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
                 notificationService.create(notif);
             }
         }
-        if (isEntityAlreadyExist && strategyImportType.equals(StrategyImportTypeEnum.REJECT_EXISTING_RECORDS)) {
+        if (isEntityAlreadyExist && StrategyImportTypeEnum.REJECT_EXISTING_RECORDS.equals(strategyImportType)) {
             csv.writeFile(csv.toString().getBytes(), existingEntitiesCsvFile);
         }
     }
 
     public void checkSelectedStrategy(String[] values, ScriptNotification existingEntity, boolean isEntityAlreadyExist) throws BusinessException {
-        if (strategyImportType.equals(StrategyImportTypeEnum.UPDATED)) {
+        if (StrategyImportTypeEnum.UPDATED.equals(strategyImportType)) {
             existingEntity.setClassNameFilter(values[CLASS_NAME_FILTER]);
             existingEntity.setElFilter(values[EL_FILTER]);
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
@@ -184,9 +185,9 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
             }
             existingEntity.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
             notificationService.update(existingEntity);
-        } else if (strategyImportType.equals(StrategyImportTypeEnum.REJECTE_IMPORT)) {
+        } else if (StrategyImportTypeEnum.REJECTE_IMPORT.equals(strategyImportType)) {
             throw new RejectedImportException("notification.rejectImport");
-        } else if (strategyImportType.equals(StrategyImportTypeEnum.REJECT_EXISTING_RECORDS)) {
+        } else if (StrategyImportTypeEnum.REJECT_EXISTING_RECORDS.equals(strategyImportType)) {
             if (!isEntityAlreadyExist) {
                 csv.appendValue("Code");
                 csv.appendValue("Classename filter");
