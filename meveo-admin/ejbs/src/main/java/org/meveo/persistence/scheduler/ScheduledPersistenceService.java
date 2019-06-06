@@ -16,19 +16,24 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
+import org.meveo.persistence.CustomPersistenceService;
+
+import javax.annotation.PostConstruct;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.inject.Inject;
+public abstract class ScheduledPersistenceService<T extends CustomPersistenceService> {
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.elresolver.ELException;
-import org.meveo.persistence.CrossStorageService;
+    private T storageService;
 
-public class ScheduledPersistenceService {
+    @PostConstruct
+    private void init(){
+        storageService = getStorageService();
+    }
 
-    @Inject
-    private CrossStorageService storageService;
+    protected abstract T getStorageService();
 
     /**
      * Iterate over the persistence schedule and persist the provided entities

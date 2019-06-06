@@ -51,7 +51,7 @@ public class PersistenceRs {
     private SchedulingService schedulingService;
 
     @Inject
-    private ScheduledPersistenceService scheduledPersistenceService;
+    private ScheduledPersistenceService<CrossStorageService> scheduledPersistenceService;
 
     @Inject
     private CrossStorageService crossStorageService;

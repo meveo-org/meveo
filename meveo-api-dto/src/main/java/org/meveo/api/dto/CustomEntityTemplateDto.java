@@ -43,10 +43,6 @@ public class CustomEntityTemplateDto extends BaseDto {
     @XmlAttribute()
     private String description;
 
-    /** Whether the CET is an primitiveEntity. */
-    @XmlAttribute()
-    private boolean primitiveEntity = false;
-
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
@@ -115,14 +111,6 @@ public class CustomEntityTemplateDto extends BaseDto {
 	public void setPrePersistScripCode(String prePersistScripCode) {
 		this.prePersistScripCode = prePersistScripCode;
 	}
-
-    public boolean isPrimitiveEntity() {
-        return primitiveEntity;
-    }
-
-    public void setPrimitiveEntity(boolean primitiveEntity) {
-        this.primitiveEntity = primitiveEntity;
-    }
 
     /**
      * Gets the code.

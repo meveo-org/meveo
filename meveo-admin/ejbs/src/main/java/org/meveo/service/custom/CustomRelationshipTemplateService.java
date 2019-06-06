@@ -160,7 +160,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      * 
      * @return A list of custom entity templates
      */
-    public List<CustomRelationshipTemplate> getCETForCache() {
+    public List<CustomRelationshipTemplate> getCRTForCache() {
         return getEntityManager().createNamedQuery("CustomRelationshipTemplate.getCRTForCache", CustomRelationshipTemplate.class).getResultList();
     }
 

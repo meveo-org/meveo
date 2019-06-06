@@ -18,6 +18,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.hibernate.Hibernate;
 import org.infinispan.Cache;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
@@ -196,10 +197,12 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
         }
 
         // Cache custom relationship templates sorted by a crt.name
-        List<CustomRelationshipTemplate> allCrts = customRelationshipTemplateService.list(true);
+        List<CustomRelationshipTemplate> allCrts = customRelationshipTemplateService.getCRTForCache();
 
         for (CustomRelationshipTemplate crt : allCrts) {
             customRelationshipTemplateService.detach(crt);
+            crt.setStartNode((CustomEntityTemplate) Hibernate.unproxy(crt.getStartNode()));
+            crt.setEndNode((CustomEntityTemplate) Hibernate.unproxy(crt.getEndNode()));
             crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentProvider, crt.getCode()), crt);
         }
 

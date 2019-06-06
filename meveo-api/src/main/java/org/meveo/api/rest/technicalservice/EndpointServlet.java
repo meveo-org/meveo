@@ -42,6 +42,7 @@ import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
@@ -80,7 +81,7 @@ public class EndpointServlet extends HttpServlet {
     private SchedulingService schedulingService;
 
     @Inject
-    private ScheduledPersistenceService scheduledPersistenceService;
+    private ScheduledPersistenceService<CrossStorageService> scheduledPersistenceService;
 
     @Inject
     private EndpointResultsCacheContainer endpointResultsCacheContainer;

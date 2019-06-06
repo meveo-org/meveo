@@ -51,10 +51,11 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
-import org.meveo.model.customEntities.CETConstants;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.persistence.CustomPersistenceService;
+import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
@@ -71,7 +72,6 @@ import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
@@ -89,8 +89,7 @@ import java.util.stream.Collectors;
 /**
  * @author Rachid AITYAAZZA
  */
-@Stateless
-public class Neo4jService {
+public class Neo4jService implements CustomPersistenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(Neo4jService.class);
 
     private static final Logger log = LoggerFactory.getLogger(Neo4jService.class);
@@ -1316,5 +1315,30 @@ public class Neo4jService {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         return gson.fromJson(jsonResult, Neo4jQueryResultDto.class);
+    }
+
+    @Override
+    public void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        addSourceNodeUniqueCrt(configurationCode, relationCode, sourceValues, targetValues);
+    }
+
+    @Override
+    public PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException {
+        final Set<EntityRef> entityRefs = addCetNode(configurationCode, entityCode, values);
+        String uuid = getTrustedUuids(entityRefs).get(0);
+        if(uuid == null){
+            throw new NullPointerException("Generated UUID from Neo4J cannot be null");
+        }
+        return new PersistenceActionResult(entityRefs, uuid);
+    }
+
+    @Override
+    public void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        addCRTByNodeValues(configurationCode, relationCode, relationValues, sourceValues, targetValues);
+    }
+
+    @Override
+    public void addCRTByUuids(String configurationCode, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
+        addCRTByNodeIds(configurationCode, relationCode, relationValues, sourceUuid, targetUuid);
     }
 }

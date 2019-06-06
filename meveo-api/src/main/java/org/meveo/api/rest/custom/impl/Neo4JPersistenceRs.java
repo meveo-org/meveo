@@ -1,19 +1,5 @@
 package org.meveo.api.rest.custom.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
@@ -21,11 +7,20 @@ import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
-import org.meveo.persistence.neo4j.service.Neo4jService;
+
+import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Path("/neo4j/persist")
 public class Neo4JPersistenceRs {
@@ -36,7 +31,7 @@ public class Neo4JPersistenceRs {
     protected SchedulingService schedulingService;
 
     @Inject
-    protected ScheduledPersistenceService scheduledPersistenceService;
+    protected ScheduledPersistenceService<Neo4jService> scheduledPersistenceService;
 
     @Inject
     protected Neo4jService neo4jService;

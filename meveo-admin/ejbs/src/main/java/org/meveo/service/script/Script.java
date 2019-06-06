@@ -5,6 +5,8 @@ import java.util.Map;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 
+import javax.enterprise.inject.spi.CDI;
+
 public abstract class Script implements ScriptInterface {
 	
     /**
@@ -97,5 +99,9 @@ public abstract class Script implements ScriptInterface {
 
     protected Object getServiceInterface(String serviceInterfaceName) {
         return EjbUtils.getServiceInterface(serviceInterfaceName);
+    }
+
+    protected <T> T getCDIBean(Class<T> cdiBeanClass){
+        return CDI.current().select(cdiBeanClass).get();
     }
 }

@@ -58,21 +58,21 @@ public class Neo4JRequests {
             .append(" ON CREATE SET relationship." + CREATION_DATE + " = ${updateDate} , relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer crtStatementByNodeIds = new StringBuffer()
-            .append("MERGE (${startAlias}:${startNode}) \n")
+            .append("MATCH (${startAlias}:${startNode}) \n")
             .append("WHERE ${startAlias}.meveo_uuid = $startNodeId \n")
             .append("WITH ${startAlias} \n")
-            .append("MERGE (${endAlias}:${endNode}) \n")
+            .append("MATCH (${endAlias}:${endNode}) \n")
             .append("WHERE ${endAlias}.meveo_uuid = $endNodeId \n")
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType} ${fields}]->(${endAlias}) \n")
-            .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + "= $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
+            .append("ON MATCH SET ${startAlias}." + INTERNAL_UPDATE_DATE + " = $updateDate, ${endAlias}." + INTERNAL_UPDATE_DATE + " = $updateDate, relationship." + INTERNAL_UPDATE_DATE + " = $updateDate \n")
             .append("ON CREATE SET relationship." + CREATION_DATE + " = $updateDate, relationship.meveo_uuid = apoc.create.uuid() \n");
 
     public final static StringBuffer uniqueCrtStatementByNodeIds = new StringBuffer()
-            .append("MERGE (${startAlias}:${startNode}) \n")
+            .append("MATCH (${startAlias}:${startNode}) \n")
             .append("WHERE ${startAlias}.meveo_uuid = $startNodeId \n")
             .append("WITH ${startAlias} \n")
-            .append("MERGE (${endAlias}:${endNode}) \n")
+            .append("MATCH (${endAlias}:${endNode}) \n")
             .append("WHERE ${endAlias}.meveo_uuid = $endNodeId \n")
             .append("WITH ${startAlias}, ${endAlias} \n")
             .append("MERGE (${startAlias})-[relationship :${relationType}]->(${endAlias}) \n")
@@ -132,8 +132,8 @@ public class Neo4JRequests {
             + "SET a.internal_active=FALSE "
             + "RETURN rel";
 
-    public final static String START_NODE_ALIAS = "start";
-    public final static String END_NODE_ALIAS = "end";
+    public final static String START_NODE_ALIAS = "startNode";
+    public final static String END_NODE_ALIAS = "endNode";
 
     public final static StringBuffer createSourceNodeStatement = new StringBuffer("MERGE (source:Source { id: ${id} }) \n")
             .append("ON CREATE SET sourceId = ${sourceId}, sourceType = ${sourceType}, meveo_uuid = apoc.create.uuid() \n")

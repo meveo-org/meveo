@@ -28,6 +28,7 @@ import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -164,13 +165,15 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         
         // Synchronize custom fields storages with CET available storages
         for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
-        	for(DBStorageType storage : new ArrayList<>(cft.getStorages())) {
-        		if(!cet.getAvailableStorages().contains(storage)) {
-        			log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
-        			cft.getStorages().remove(storage);
-        			customFieldTemplateService.update(cft);
-        		}
-        	}
+            if(cft.getStorages() != null) {
+                for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+                    if (!cet.getAvailableStorages().contains(storage)) {
+                        log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
+                        cft.getStorages().remove(storage);
+                        customFieldTemplateService.update(cft);
+                    }
+                }
+            }
         }
         
         // Synchronize neoj4 indexes

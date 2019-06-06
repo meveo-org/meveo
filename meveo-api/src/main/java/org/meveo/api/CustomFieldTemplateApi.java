@@ -432,10 +432,13 @@ public class CustomFieldTemplateApi extends BaseApi {
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(crtCode);
             storageTypes = crt.getAvailableStorages();
         }
-        for(DBStorageType storageType : cft.getStorages()){
-            if(storageTypes == null || !storageTypes.contains(storageType)){
-                String message = "Custom field %s can't be stored to %s as the CET / CRT with code %s is not configure to be stored in this database";
-                throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, EntityCustomizationUtils.getEntityCode(cft.getAppliesTo())));
+
+        if(dto.getStorages() != null) {
+            for (DBStorageType storageType : dto.getStorages()) {
+                if (storageTypes == null || !storageTypes.contains(storageType)) {
+                    String message = "Custom field %s can't be stored to %s as the CET / CRT with code %s is not configure to be stored in this database";
+                    throw new InvalidParameterException(String.format(message, cft.getCode(), storageType, EntityCustomizationUtils.getEntityCode(cft.getAppliesTo())));
+                }
             }
         }
 

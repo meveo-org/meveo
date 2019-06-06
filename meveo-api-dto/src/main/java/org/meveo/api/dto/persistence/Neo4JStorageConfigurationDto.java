@@ -18,7 +18,7 @@ public class Neo4JStorageConfigurationDto {
 	 * Whether the CET is primitive. A primitive entity is an entity containing only
 	 * one property named "value"
 	 */
-	private boolean primitiveEntity;
+	private boolean primitiveEntity = false;
 
 	/**
 	 * The primitive type, if entity is primitive.

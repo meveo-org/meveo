@@ -55,12 +55,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
 
-    @Inject
-    private Neo4jService neo4jService;
-
-    @Inject
-    private Neo4jConnectionProvider neo4jConnectionProvider;
-
     @Override
     protected IPersistenceService<CustomEntityInstance> getPersistenceService() {
         return customEntityInstanceService;
@@ -122,16 +116,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
         if (!fieldValues.isEmpty()) {
             log.info("fieldValues : {}", fieldValues);
-
-            /*
-            * TODO: Add parameter to ask user in which repository he wants to put it.
-            * Could be :
-            * - One repository
-            * - All repostitories (default)
-            * - Default repository - Implemented
-            */
-            /****RAY : i comented out this call, bacause the save in NEO4j must be optional and only for some specific CFT****************/
-           // neo4jService.addCetNode(null, entity.getCetCode(), fieldValues);
         }
 
 

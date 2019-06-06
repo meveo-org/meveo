@@ -582,12 +582,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
 
 		if (dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			if (!dto.getNeo4jStorageConfiguration().isPrimitiveEntity()) {
-				return; // If not a primitive type, skip tests
-			}
-			if (dto.getNeo4jStorageConfiguration() == null) {
-				throw new BusinessException("Primitive type must be defined");
-			}
+            final Neo4JStorageConfigurationDto configuration = dto.getNeo4jStorageConfiguration();
+            if(configuration != null) {
+                if (!configuration.isPrimitiveEntity()) {
+                    return; // If not a primitive type, skip tests
+                }
+                if (configuration.getPrimitiveType() == null) {
+                    throw new BusinessException("Primitive type must be defined");
+                }
+            }
 		}
 
 	}

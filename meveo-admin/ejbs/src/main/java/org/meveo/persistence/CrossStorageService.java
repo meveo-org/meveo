@@ -38,12 +38,15 @@ import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CrossStorageService {
+@Default
+public class CrossStorageService implements CustomPersistenceService {
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
@@ -258,6 +261,7 @@ public class CrossStorageService {
      * @param sourceValues      Values to insert
      * @param targetValues      Filters on target entity
      */
+    @Override
     public void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
@@ -320,6 +324,7 @@ public class CrossStorageService {
      * @param values            Values of the entity
      * @return the persisted entites
      */
+    @Override
     public PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException {
 
         Map<String, Object> entityValues = new HashMap<>(values);
@@ -433,6 +438,7 @@ public class CrossStorageService {
         }
     }
 
+    @Override
     public void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
@@ -469,6 +475,7 @@ public class CrossStorageService {
 
     }
 
+    @Override
     public void addCRTByUuids(String configurationCode, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
@@ -669,13 +676,6 @@ public class CrossStorageService {
                 }
             }
         }
-    }
-
-    private List<String> getTrustedUuids(Set<EntityRef> createdEntityReferences) {
-        return createdEntityReferences.stream()
-                .filter(EntityRef::isTrusted)
-                .map(EntityRef::getUuid)
-                .collect(Collectors.toList());
     }
 
     private String findUniqueRelationByTargetUuid(String configurationCode, String targetUuid, CustomRelationshipTemplate crt) {
