@@ -298,7 +298,7 @@ public class Neo4jService implements CustomPersistenceService {
             // Fallback to when entity is defined as primitive but does not have associated CFT
             if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 CustomFieldTemplate valueCft = cetFields.get("value");
-                if (valueCft == null) {
+                if (valueCft == null || valueCft.getStorages() == null || !valueCft.getStorages().contains(DBStorageType.NEO4J)) {
                     valueCft = new CustomFieldTemplate();
                     CustomEntityTemplateUtils.turnIntoPrimitive(cet, valueCft);
                     customFieldTemplateService.create(valueCft);

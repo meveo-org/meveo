@@ -98,8 +98,13 @@ public class JsonListType implements UserType, DynamicParameterizedType {
             return null;
         } else if (valueType.isCollectionLikeType()) {
             try {
-                Object newValue = value.getClass().newInstance();
-                Collection newValueCollection = (Collection) newValue;
+                Collection newValueCollection;
+                if(value instanceof List){
+                    newValueCollection = new ArrayList();
+                }else{
+                    Object newValue = value.getClass().newInstance();
+                    newValueCollection = (Collection) newValue;
+                }
                 newValueCollection.addAll((Collection) value);
                 return newValueCollection;
             } catch (InstantiationException | IllegalAccessException e) {
