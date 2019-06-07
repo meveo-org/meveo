@@ -65,11 +65,11 @@ public class OntologyObserver {
     @Schedule(minute = "*/5", hour = "*", persistent = false)
     @Asynchronous
     public void updateIDL(){
-        log.debug("Checking for ontology changes");
+        // log.debug("Checking for ontology changes");
         if(hasChange.get()){
             hasChange.set(false);
-            log.info("Ontology has changed, updating IDL definitions");
-            graphQLService.updateIDL();
+            // log.info("Ontology has changed, updating IDL definitions");
+            // graphQLService.updateIDL(); TODO: Reactive once graphql validation feature is done
         }
     }
 
