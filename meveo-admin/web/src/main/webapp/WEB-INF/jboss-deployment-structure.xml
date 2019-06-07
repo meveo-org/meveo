@@ -20,6 +20,7 @@
             <module name="org.yaml.snakeyaml"/>
             <module name="org.keycloak.keycloak-adapter-core"/>
             <module name="org.keycloak.keycloak-core"/>
+            <module name="org.jboss.vfs"/>
         </dependencies>
     </deployment>
 </jboss-deployment-structure>
