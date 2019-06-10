@@ -1001,15 +1001,30 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
+    	Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+    	
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
                     if(entry.getKey().equals("uuid")) {
                         return true;
                     }
-
-                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
-                    return cft.getStorages().contains(DBStorageType.SQL);
+                    
+                    if(entry.getValue() == null) {
+                    	return false;
+                    }
+                    
+                    Optional<CustomFieldTemplate> customFieldTemplateOpt = cfts.stream()
+                    		.filter(f -> f.getCode().equals(entry.getKey()) || f.getDbFieldname().equals(entry.getKey()))
+                    		.findFirst();
+                    
+                    if(customFieldTemplateOpt.isPresent()) {
+                        return customFieldTemplateOpt.get().getStorages().contains(DBStorageType.SQL);
+                    }else {
+                    	log.warn("Column {} of table {} cannot be translated into custom field", entry.getKey(), SQLStorageConfiguration.getCetDbTablename(cet.getCode()));
+                    	return false;
+                    }
+                    
                 }).collect(Collectors.toMap(
                         stringObjectEntry -> CustomFieldTemplate.getDbFieldname(stringObjectEntry.getKey()),
                         Map.Entry::getValue

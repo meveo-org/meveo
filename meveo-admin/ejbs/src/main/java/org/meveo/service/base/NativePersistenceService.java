@@ -111,7 +111,7 @@ public class NativePersistenceService extends BaseService {
 
             StringBuilder selectQuery = new StringBuilder("SELECT ");
 
-            if(selectFields == null && !selectFields.isEmpty()){
+            if(selectFields == null || !selectFields.isEmpty()){
                 selectQuery.append("*");
             }else if(!selectFields.isEmpty()){
                 for(String field : selectFields){
