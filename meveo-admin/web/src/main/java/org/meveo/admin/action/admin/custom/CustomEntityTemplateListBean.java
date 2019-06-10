@@ -42,7 +42,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 boolean isCustomEntityOnly = filters.get("customEntity") != null && (boolean) filters.get("customEntity");
                 String sortBy = sortOrder != null ? sortOrder.name() : null;
                 if(StringUtils.isBlank(cecId)) {
-                	entities = customizedEntityService.getCustomizedEntities(query, isCustomEntityOnly, false, false, sortField, sortBy);
+                	entities = customizedEntityService.getCustomizedEntities(query, isCustomEntityOnly, false, false, sortField, sortBy, false);
                 }else {
                 	entities=customizedEntityService.getCustomizedEntities(query, Long.valueOf(cecId), sortField, sortBy);
                 }

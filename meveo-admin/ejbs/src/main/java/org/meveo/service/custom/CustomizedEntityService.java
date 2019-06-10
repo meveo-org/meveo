@@ -15,6 +15,7 @@ import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
@@ -31,8 +32,9 @@ public class CustomizedEntityService implements Serializable {
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
-//    @Inject
-//    private CustomRelationshipTemplateService customRelationshipTemplateService;
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
+
     /**
      * Get a list of customized/customizable entities optionally filtering by a name and custom entities only and whether to include non-managed entities. Non-managed Entities are
      * entities that will not be shown in the Entity Customization list page.
@@ -47,23 +49,32 @@ public class CustomizedEntityService implements Serializable {
      * @return A list of customized/customizable entities
      */
     public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
-            final String sortBy, final String sortOrder) {
+                                                             final String sortBy, final String sortOrder, boolean includeRelationships) {
         List<CustomizedEntity> entities = new ArrayList<>();
 
         if (entityName != null) {
             entityName = entityName.toLowerCase();
         }
 
-		if (!customEntityTemplatesOnly) {
-			entities.addAll(
-					searchAllCustomFieldEntities(entityName, includeNonManagedEntities, includeParentClassesOnly));
-			entities.addAll(searchJobs(entityName));
-		}
-		entities.addAll(searchCustomEntityTemplates(entityName));
-//        entities.addAll(searchCustomRelationshipTemplates(entityName));
-        
+        if (!customEntityTemplatesOnly) {
+            entities.addAll(
+                    searchAllCustomFieldEntities(entityName, includeNonManagedEntities, includeParentClassesOnly));
+            entities.addAll(searchJobs(entityName));
+        }
+        entities.addAll(searchCustomEntityTemplates(entityName));
+
+        if(includeRelationships) {
+            entities.addAll(searchCustomRelationshipTemplates(entityName));
+        }
+
         Collections.sort(entities, sortEntitiesBy(sortBy, sortOrder));
         return entities;
+    }
+
+    public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
+                                                        final String sortBy, final String sortOrder) {
+
+        return getCustomizedEntities(entityName, customEntityTemplatesOnly, includeNonManagedEntities, includeParentClassesOnly, sortBy, sortOrder, true);
     }
     
 	public List<CustomizedEntity> getCustomizedEntities(String entityName, Long cecId, final String sortBy,
@@ -161,20 +172,20 @@ public class CustomizedEntityService implements Serializable {
      * 
      * @return A list of custom entity templates.
      */
-//    private List<CustomizedEntity> searchCustomRelationshipTemplates(String entityName) {
-//        List<CustomizedEntity> entities = new ArrayList<>();
-//        List<CustomRelationshipTemplate> crt = null;
-//        if (entityName == null || CustomRelationshipTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
-//            crt = customRelationshipTemplateService.list();
-//        } else if (entityName != null) {
-//            crt = customRelationshipTemplateService.findByCodeLike(entityName);
-//        }
-//
-//        for (CustomRelationshipTemplate customEntityTemplate : crt) {
-//            entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomRelationshipTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription()));
-//        }
-//        return entities;
-//    }
+    private List<CustomizedEntity> searchCustomRelationshipTemplates(String entityName) {
+        List<CustomizedEntity> entities = new ArrayList<>();
+        List<CustomRelationshipTemplate> crt = null;
+        if (entityName == null || CustomRelationshipTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
+            crt = customRelationshipTemplateService.list();
+        } else if (entityName != null) {
+            crt = customRelationshipTemplateService.findByCodeLike(entityName);
+        }
+
+        for (CustomRelationshipTemplate customEntityTemplate : crt) {
+            entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomRelationshipTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription()));
+        }
+        return entities;
+    }
 
     /**
      * Searches all jobs.

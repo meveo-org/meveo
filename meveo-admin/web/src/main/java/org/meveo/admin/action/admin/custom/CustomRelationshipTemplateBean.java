@@ -75,7 +75,9 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        return super.saveOrUpdate(killConversation);
+        String returnView =  super.saveOrUpdate(killConversation);
+        customRelationshipTemplateService.synchronizeStorages(getEntity());
+        return returnView;
     }
 
     public void onChangeAvailableStorages() {
