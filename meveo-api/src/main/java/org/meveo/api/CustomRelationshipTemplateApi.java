@@ -122,8 +122,9 @@ public class CustomRelationshipTemplateApi extends BaseApi {
         
         crt = customRelationshipTemplateService.update(crt);
 
-        synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
+        customRelationshipTemplateService.synchronizeStorages(crt);
 
+        synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
     }
 
     public void removeCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
@@ -229,7 +230,7 @@ public class CustomRelationshipTemplateApi extends BaseApi {
             customFieldTemplateService.remove(cft.getId());
         }
 
-      
+
     }
 
    
