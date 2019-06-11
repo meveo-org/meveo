@@ -460,11 +460,9 @@ public class Neo4jService implements CustomPersistenceService {
                     Set<String> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
 
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
-                        String joinedIds = ids.stream()
-                                .map(Object::toString)
-                                .collect(Collectors.joining(", "));
-                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})",
-                                uniqueConstraint.getCode(), joinedIds);
+                        String joinedIds = ids.stream() .map(Object::toString).collect(Collectors.joining(", "));
+                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})", uniqueConstraint.getCode(), joinedIds);
+                        continue;
                     }
 
                     for (String id : ids) {
