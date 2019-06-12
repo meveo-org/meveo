@@ -125,10 +125,12 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
     private void filterValues(CustomEntityInstance cei){
         CustomEntityTemplate cet = cetCache.getCustomEntityTemplate(cei.getCetCode());
         CustomFieldValues cfValues = cei.getCfValues();
-        for(String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())){
-            CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
-            if(cft != null && !cft.getStorages().contains(DBStorageType.SQL)){
-                cfValues.removeValue(valueCode);
+        if (cfValues != null && cfValues.getValuesByCode() != null) {
+            for (String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())) {
+                CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
+                if (cft != null && cft.getStorages().contains(DBStorageType.SQL)) {
+                    cfValues.removeValue(valueCode);
+                }
             }
         }
     }
