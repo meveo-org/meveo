@@ -669,4 +669,10 @@
         <sql>UPDATE cust_cet_unique_constraint SET cypher_query = regexp_replace(cypher_query, '(?:ID)\((\w+)\)', '\1.meveo_uuid')</sql>
     </changeSet>
 
+    <changeSet id="cft_format_date" author="Hien Bach">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="display_format" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
