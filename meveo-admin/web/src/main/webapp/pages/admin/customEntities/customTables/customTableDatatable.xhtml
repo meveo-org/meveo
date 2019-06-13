@@ -334,7 +334,9 @@
 									placeholder="#{field.getDescription(bean.currentLocale.ISO3Language)}"
 									style="margin-left:5px"
 									label="#{field.getDescription(bean.currentLocale.ISO3Language)}">
-									<f:selectItem itemValue="#{null}" itemLabel="" />
+									<c:if test = "#{!field.valueRequired}">
+										<f:selectItem itemValue="#{null}" itemLabel="" />
+									</c:if>
 									<f:selectItems value="#{field.listValues.entrySet()}"
 										var="listVal" itemValue="#{listVal.key}"
 										itemLabel="#{listVal.value} (#{listVal.key})" />
