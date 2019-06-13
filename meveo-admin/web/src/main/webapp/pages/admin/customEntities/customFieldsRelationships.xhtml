@@ -553,7 +553,7 @@
                                     field="fieldType" required="true" componentWidth="30"
                                     actionListenerBean="#{customFieldTemplateBean}"
                                     actionListenerMethod="updateDefaultValues" allowEdit="false"
-                                    listenerUpdate="listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields"
+                                    listenerUpdate="listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
                                     rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
                             <hftl:decorateFormField fieldId="fieldType" field="fieldType"
                                                     label="#{messages['customFieldTemplate.fieldType']}"
@@ -621,6 +621,12 @@
                                     label="#{messages['customFieldTemplate.relationshipName']}"
                                     field="relationshipName" required="true" componentWidth="30"
                                     rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY}" />
+                        </h:panelGroup>
+                        <h:panelGroup id="displayFormat">
+                            <hftl:formField
+                                    label="#{messages['customFieldTemplate.displayFormat']}"
+                                    field="displayFormat" required="true" componentWidth="30"
+                                    rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.DATE}" />
                         </h:panelGroup>
                     </h:panelGroup>
                 </h:panelGrid>

@@ -204,6 +204,9 @@ public class CustomFieldTemplateDto extends BaseDto {
      */
     private String tags;
 
+    @XmlElement()
+    private String displayFormat;
+
     /**
      * Instantiates a new custom field template dto.
      */
@@ -514,7 +517,7 @@ public class CustomFieldTemplateDto extends BaseDto {
     public String toString() {
         return "CustomFieldTemplateDto [code=" + code + ", description=" + description + ", fieldType=" + fieldType + ", accountLevel=" + accountLevel + ", appliesTo=" + appliesTo
                 + ", defaultValue=" + defaultValue + ", storageType=" + storageType + ", mapKeyType=" + mapKeyType + ", valueRequired=" + valueRequired + ", versionable="
-                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + "]";
+                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + ", displayFormat=" + displayFormat + "]";
     }
 
     /**
@@ -852,5 +855,12 @@ public class CustomFieldTemplateDto extends BaseDto {
 	public void setExpressionSeparator(String expressionSeparator) {
 		this.expressionSeparator = expressionSeparator;
 	}
-    
+
+    public String getDisplayFormat() {
+        return displayFormat;
+    }
+
+    public void setDisplayFormat(String displayFormat) {
+        this.displayFormat = displayFormat;
+    }
 }
