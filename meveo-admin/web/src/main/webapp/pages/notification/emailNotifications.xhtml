@@ -30,19 +30,19 @@
             sortBy="code">
             <hftl:actionsColumn editView="/pages/notification/emailNotificationDetail.xhtml"
                 permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" />
-            <hftl:column dis label="#{messages['entity.code']}" field="code" />
+            <hftl:column label="#{messages['entity.code']}" field="code" />
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
             <hftl:column label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" />
+            <!--             <hftl:column style="display:none" label="#{messages['entity.notification.elFilter']}" field="elFilter" /> -->
+            <!--             <hftl:column style="display:none" label="#{messages['entity.notification.scriptInstance']}" field="scriptInstance" /> -->
             <hftl:column label="#{messages['entity.emailNotification.emailFrom']}" field="emailFrom" />
             <hftl:column label="#{messages['entity.emailNotification.emailToEl']}" field="emailToEl" />
+            <!--             <hftl:column style="display:none" label="#{messages['entity.emailNotification.emails']}" field="emails" /> -->
             <hftl:column label="#{messages['entity.emailNotification.subject']}" field="subject" />
+            <!--             <hftl:column style="display:none" label="#{messages['entity.emailNotification.body']}" field="body" /> -->
+            <!--             <hftl:column style="display:none" label="#{messages['entity.emailNotification.htmlBody']}" field="htmlBody" /> -->
+            <!--             <hftl:column style="display:none" label="#{messages['counterTemplate.title']}" field="counterTemplate.code" /> -->
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
-            <hftl:column label="#{messages['entity.notification.scriptInstance']}" field="counterInstance" />
-            <hftl:column label="#{messages['entity.emailNotification.emails']}" field="emails" />
-            <hftl:column label="#{messages['entity.notification.elFilter']}" field="elFilter" />
-            <hftl:column label="#{messages['entity.emailNotification.body']}" field="body" />
-            <hftl:column label="#{messages['entity.emailNotification.htmlBody']}" field="htmlBody" />
-            <hftl:column label="#{messages['counterTemplate.title']}" field="counterTemplate" />
 
 
 
