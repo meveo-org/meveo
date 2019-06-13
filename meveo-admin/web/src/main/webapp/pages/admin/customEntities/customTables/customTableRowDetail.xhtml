@@ -75,7 +75,7 @@
 								</c:when>
 								
 								<!--  Entity reference not null -->
-								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue != null}">
+								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
 
 									<c:set var="fieldCf" value="#{cft}" scope="view" />
 
@@ -86,7 +86,7 @@
 										oncomplete="PF('detail_customTableDialog').show()">
 
 										<h:outputText id="#{cft.code}_field"
-											value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue}"
+											value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue}"
 											styleClass="field-value">
 
 											<f:converter binding="#{entityReferenceConverter}" />
