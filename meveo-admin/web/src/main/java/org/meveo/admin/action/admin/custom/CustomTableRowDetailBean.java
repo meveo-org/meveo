@@ -80,9 +80,9 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     @Override
     public void onEntityReferenceSelected(SelectEvent event) {
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
-		Number newId = (Number) selectedEntityInPopup.get("id");
+		String newId = (String) selectedEntityInPopup.get("uuid");
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
-		cfValue.setLongValue(newId.longValue());
+		cfValue.setStringValue(newId);
     }
 	
 	@Override
