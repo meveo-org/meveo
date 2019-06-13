@@ -123,33 +123,33 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
                 emailNotif.setCode(values[CODE]);
                 emailNotif.setClassNameFilter(values[CLASS_NAME_FILTER]);
                 emailNotif.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
-                emailNotif.setElFilter(values[EL_FILTER]);
+                // emailNotif.setElFilter(values[EL_FILTER]);
                 emailNotif.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
-                if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
-                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                    emailNotif.setFunction(scriptInstance);
-                }
+//                if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
+//                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
+//                    emailNotif.setFunction(scriptInstance);
+//                }
                 emailNotif.setEmailFrom(values[SENT_FROM]);
                 emailNotif.setEmailToEl(values[SEND_TO_EL]);
-                String emails = values[SEND_TO_MAILING_LIST].replace("[", "").replace("]", "");
-                if (!StringUtils.isBlank(emails)) {
-                    String[] emailList = emails.split(",");
-                    List<String> listMail = Arrays.asList(emailList);
-                    for (String email : listMail) {
-                        email = email.trim();
-                        if (emailNotif.getEmails() == null) {
-                            emailNotif.setEmails(new HashSet<>());
-                        }
-                        emailNotif.getEmails().add(email);
-                    }
-                }
+//                String emails = values[SEND_TO_MAILING_LIST].replace("[", "").replace("]", "");
+//                if (!StringUtils.isBlank(emails)) {
+//                    String[] emailList = emails.split(",");
+//                    List<String> listMail = Arrays.asList(emailList);
+//                    for (String email : listMail) {
+//                        email = email.trim();
+//                        if (emailNotif.getEmails() == null) {
+//                            emailNotif.setEmails(new HashSet<>());
+//                        }
+//                        emailNotif.getEmails().add(email);
+//                    }
+//                }
                 emailNotif.setSubject(values[SUBJECT]);
-                emailNotif.setBody(values[TEXT_BODY]);
-                emailNotif.setHtmlBody(values[HTML_BODY]);
-                if (!StringUtils.isBlank(values[COUNTER_TEMPLATE])) {
-                    CounterTemplate counterTemplate = counterTemplateService.findByCode(values[COUNTER_TEMPLATE]);
-                    emailNotif.setCounterTemplate(counterTemplate != null ? counterTemplate : null);
-                }
+//                emailNotif.setBody(values[TEXT_BODY]);
+//                emailNotif.setHtmlBody(values[HTML_BODY]);
+//                if (!StringUtils.isBlank(values[COUNTER_TEMPLATE])) {
+//                    CounterTemplate counterTemplate = counterTemplateService.findByCode(values[COUNTER_TEMPLATE]);
+//                    emailNotif.setCounterTemplate(counterTemplate != null ? counterTemplate : null);
+//                }
 
                 emailNotificationService.create(emailNotif);
             }
@@ -163,34 +163,34 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
         if (StrategyImportTypeEnum.UPDATED.equals(strategyImportType)) {
             existingEntity.setClassNameFilter(values[CLASS_NAME_FILTER]);
             existingEntity.setEventTypeFilter(NotificationEventTypeEnum.valueOf(values[EVENT_TYPE_FILTER]));
-            existingEntity.setElFilter(values[EL_FILTER]);
+//            existingEntity.setElFilter(values[EL_FILTER]);
             existingEntity.setDisabled(Boolean.parseBoolean(values[ACTIVE]));
-            if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
-                ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
-                existingEntity.setFunction(scriptInstance);
-            }
+//            if (!StringUtils.isBlank(values[SCRIPT_INSTANCE_CODE])) {
+//                ScriptInstance scriptInstance = scriptInstanceService.findByCode(values[SCRIPT_INSTANCE_CODE]);
+//                existingEntity.setFunction(scriptInstance);
+//            }
             existingEntity.setEmailFrom(values[SENT_FROM]);
             existingEntity.setEmailToEl(values[SEND_TO_EL]);
-            String emails = values[SEND_TO_MAILING_LIST].replace("[", "").replace("]", "");
-            if (!StringUtils.isBlank(emails)) {
-                String[] emailList = emails.split(",");
-                List<String> listMail = Arrays.asList(emailList);
-                for (String email : listMail) {
-                    email = email.trim();
-                    if (existingEntity.getEmails() == null) {
-                        Set<String> setEmail = new HashSet<>();
-                        existingEntity.setEmails(setEmail);
-                    }
-                    existingEntity.getEmails().add(email);
-                }
-            }
+//            String emails = values[SEND_TO_MAILING_LIST].replace("[", "").replace("]", "");
+//            if (!StringUtils.isBlank(emails)) {
+//                String[] emailList = emails.split(",");
+//                List<String> listMail = Arrays.asList(emailList);
+//                for (String email : listMail) {
+//                    email = email.trim();
+//                    if (existingEntity.getEmails() == null) {
+//                        Set<String> setEmail = new HashSet<>();
+//                        existingEntity.setEmails(setEmail);
+//                    }
+//                    existingEntity.getEmails().add(email);
+//                }
+//            }
             existingEntity.setSubject(values[SUBJECT]);
-            existingEntity.setBody(values[TEXT_BODY]);
-            existingEntity.setHtmlBody(values[HTML_BODY]);
-            if (!StringUtils.isBlank(values[COUNTER_TEMPLATE])) {
-                CounterTemplate counterTemplate = counterTemplateService.findByCode(values[COUNTER_TEMPLATE]);
-                existingEntity.setCounterTemplate(counterTemplate != null ? counterTemplate : null);
-            }
+//            existingEntity.setBody(values[TEXT_BODY]);
+//            existingEntity.setHtmlBody(values[HTML_BODY]);
+//            if (!StringUtils.isBlank(values[COUNTER_TEMPLATE])) {
+//                CounterTemplate counterTemplate = counterTemplateService.findByCode(values[COUNTER_TEMPLATE]);
+//                existingEntity.setCounterTemplate(counterTemplate != null ? counterTemplate : null);
+//            }
             emailNotificationService.update(existingEntity);
         } else if (StrategyImportTypeEnum.REJECTE_IMPORT.equals(strategyImportType)) {
             throw new RejectedImportException("notification.rejectImport");
@@ -214,16 +214,16 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
             csv.appendValue(values[CODE]);
             csv.appendValue(values[CLASS_NAME_FILTER]);
             csv.appendValue(values[EVENT_TYPE_FILTER]);
-            csv.appendValue(values[EL_FILTER]);
+//            csv.appendValue(values[EL_FILTER]);
             csv.appendValue(values[ACTIVE]);
-             csv.appendValue(values[SCRIPT_INSTANCE_CODE]);
+            // csv.appendValue(values[SCRIPT_INSTANCE_CODE]);
             csv.appendValue(values[SENT_FROM]);
             csv.appendValue(values[SEND_TO_EL]);
-            csv.appendValue(values[SEND_TO_MAILING_LIST]);
+//            csv.appendValue(values[SEND_TO_MAILING_LIST]);
             csv.appendValue(values[SUBJECT]);
-            csv.appendValue(values[TEXT_BODY]);
-            csv.appendValue(values[HTML_BODY]);
-            csv.appendValue(values[COUNTER_TEMPLATE]);
+//            csv.appendValue(values[TEXT_BODY]);
+//            csv.appendValue(values[HTML_BODY]);
+//            csv.appendValue(values[COUNTER_TEMPLATE]);
         }
     }
 
