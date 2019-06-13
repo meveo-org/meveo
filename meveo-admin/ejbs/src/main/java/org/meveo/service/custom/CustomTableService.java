@@ -208,7 +208,7 @@ public class CustomTableService extends NativePersistenceService {
     public void update(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) throws BusinessException {
         update(
                 SQLStorageConfiguration.getDbTablename(customEntityTemplate),
-                filterValues(values, customEntityTemplate)
+                filterValues(values, customEntityTemplate, false)
         );
     }
 
@@ -999,8 +999,12 @@ public class CustomTableService extends NativePersistenceService {
             }
         }
     }
-
+    
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
+    	return filterValues(values, cet, true);
+    }
+
+    private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, boolean removeNullValues) {
     	Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
     	
         return values.entrySet()
@@ -1010,7 +1014,7 @@ public class CustomTableService extends NativePersistenceService {
                         return true;
                     }
                     
-                    if(entry.getValue() == null) {
+                    if(entry.getValue() == null && removeNullValues) {
                     	return false;
                     }
                     
@@ -1025,9 +1029,6 @@ public class CustomTableService extends NativePersistenceService {
                     	return false;
                     }
                     
-                }).collect(Collectors.toMap(
-                        stringObjectEntry -> CustomFieldTemplate.getDbFieldname(stringObjectEntry.getKey()),
-                        Map.Entry::getValue
-                ));
+                }).collect(HashMap::new, (m,v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
     }
 }
