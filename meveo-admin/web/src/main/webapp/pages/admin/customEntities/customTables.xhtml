@@ -209,9 +209,7 @@
 							value="#{customTableBean.filters[field.dbFieldname]}"
 							placeholder="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
 							label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}">
-							<c:if test="#{!field.valueRequired}">
-								<f:selectItem itemValue="#{null}" itemLabel="" />
-							</c:if>
+							<f:selectItem itemValue="#{null}" itemLabel="" />
 							<f:selectItems value="#{field.listValues.entrySet()}"
 								var="listVal" itemValue="#{listVal.key}"
 								itemLabel="#{listVal.value} (#{listVal.key})" />

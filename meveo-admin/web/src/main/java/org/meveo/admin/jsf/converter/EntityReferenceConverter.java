@@ -52,7 +52,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
         CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
     	
         // This converter only applies on entity references
-    	if(field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
+    	if(uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
     		return null;
     	}
     	
