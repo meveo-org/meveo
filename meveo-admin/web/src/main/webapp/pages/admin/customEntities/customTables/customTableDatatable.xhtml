@@ -15,6 +15,7 @@
 		<p:dataTable id="#{id}ctSearchResults" value="#{bean.dataModel}"
 			var="entity" lazy="true" widgetVar="ctTable"
 			paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+			currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
 			paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
 			resizableColumns="true" styleClass="custom-grid" reflow="true"
 			editable="#{bean.edit}" editMode="cell" rowSelectMode="checkbox"
