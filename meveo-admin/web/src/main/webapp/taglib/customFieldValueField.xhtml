@@ -123,7 +123,9 @@
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">
         <h:outputText rendered="#{(!edit or disabled) and field.stringValue!=null}" value="#{cft.listValues[field.stringValue]} (#{field.stringValue})" styleClass="field-value" />
         <p:selectOneMenu value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" placeholder="#{cft.description}">
-            <f:selectItem itemValue="#{null}" itemLabel="" />
+            <c:if test="#{!cft.valueRequired}">
+            	<f:selectItem itemValue="#{null}" itemLabel="" />
+            </c:if>
             <f:selectItems value="#{cft.listValues.entrySet()}" var="listVal" itemValue="#{listVal.key}" itemLabel="#{listVal.value} (#{listVal.key})" />
         </p:selectOneMenu>
     </c:if>
