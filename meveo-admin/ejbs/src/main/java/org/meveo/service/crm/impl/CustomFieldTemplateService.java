@@ -193,7 +193,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Override
     public void create(CustomFieldTemplate cft) throws BusinessException {
-
+        if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
+            throw new IllegalArgumentException();
+        }
         checkIdentifierTypeAndUniqueness(cft);
 
         super.create(cft);
@@ -212,7 +214,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
-
+        if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
+            throw new IllegalArgumentException();
+        }
         checkIdentifierTypeAndUniqueness(cft);
 
         CustomFieldTemplate cftUpdated = super.update(cft);

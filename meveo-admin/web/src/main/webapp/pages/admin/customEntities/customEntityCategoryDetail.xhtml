@@ -36,7 +36,7 @@
 
 				<h:panelGrid columns = "3" width="60%">
 					<hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customEntityCategoryBean.entity.code == null)}">
-						<p:inputText  id="code" field="code" value="#{customEntityCategoryBean.entity.code}" required="true" validateUnique="true" validatorMessage="Code can't contain number" style="width: 180px">
+						<p:inputText  id="code" field="code" value="#{customEntityCategoryBean.entity.code}" required="true" validateUnique="true" validatorMessage="#{messages['message.ontology.code.error']}" style="width: 180px">
 							<f:validateRegex pattern="\D+$" />
 						</p:inputText>
 					</hftl:decorateFormField>

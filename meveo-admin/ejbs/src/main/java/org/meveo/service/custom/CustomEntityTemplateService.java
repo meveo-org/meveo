@@ -46,6 +46,7 @@ import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * @author Wassim Drira
@@ -81,7 +82,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
-
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException();
+        }
         ParamBean paramBean = paramBeanFactory.getInstance();
         super.create(cet);
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -135,9 +138,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException();
+        }
         ParamBean paramBean = paramBeanFactory.getInstance();
-
-
         /* Update */
 
         CustomEntityTemplate cetUpdated = super.update(cet);
