@@ -252,8 +252,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
-			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			} else if(!cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
 		// CF Applies to a CRT
@@ -263,6 +265,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(crt), cft);
+			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
 

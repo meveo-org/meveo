@@ -38,6 +38,8 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -346,6 +348,26 @@ public class CustomTableCreatorService implements Serializable {
     public void updateField(String dbTableName, CustomFieldTemplate cft) {
 
         String dbFieldname = cft.getDbFieldname();
+        
+        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        
+        String columnExistsQueryStr = 
+        		"SELECT EXISTS(\n" + 
+        		"	SELECT column_name\n" + 
+        		"	FROM information_schema.columns \n" + 
+        		"	WHERE table_name=:tableName and column_name=:columnName\n" + 
+        		");";
+        
+        Query columnExistsQuery = em.createNativeQuery(columnExistsQueryStr)
+	        .setParameter("tableName", dbTableName)
+	        .setParameter("columnName", dbFieldname);
+        
+        boolean columnExists = (boolean) columnExistsQuery.getSingleResult();
+        
+        if(!columnExists) {
+        	addField(dbTableName, cft);
+        	return;
+        }
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
@@ -452,8 +474,6 @@ public class CustomTableCreatorService implements Serializable {
             changeSet.addChange(modifyDataTypeChange);
             dbLog.addChangeSet(changeSet);
         }
-
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
 
         Session hibernateSession = em.unwrap(Session.class);
 

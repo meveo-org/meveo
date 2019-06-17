@@ -239,6 +239,13 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     List<DBStorageType> storages = new ArrayList<>();
 
     /**
+     * Display format for Date type only
+     */
+    @Column(name = "display_format", length = 20)
+    @Size(max = 20)
+    private String displayFormat;
+
+    /**
      * Database field name - derived from code
      */
     @Transient
@@ -971,5 +978,13 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         }
 
         return valBuilder.toString();
+    }
+
+    public String getDisplayFormat() {
+        return displayFormat;
+    }
+
+    public void setDisplayFormat(String displayFormat) {
+        this.displayFormat = displayFormat;
     }
 }

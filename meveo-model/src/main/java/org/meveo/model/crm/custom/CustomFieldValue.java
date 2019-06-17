@@ -3,7 +3,6 @@ package org.meveo.model.crm.custom;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

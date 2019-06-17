@@ -16,9 +16,33 @@
 
 package org.meveo.persistence.neo4j.service;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -67,26 +91,19 @@ import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
-
-import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * @author Rachid AITYAAZZA
@@ -349,7 +366,11 @@ public class Neo4jService implements CustomPersistenceService {
                                 scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
                             }
                             String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
-                            relatedPersistedEntities = Collections.singleton(new EntityRef(createdNodeId));
+                            if(createdNodeId != null) {
+                            	relatedPersistedEntities = Collections.singleton(new EntityRef(createdNodeId));
+                            }else {
+                            	relatedPersistedEntities = new HashSet<>();
+                            }
                         } else {
                             relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
                         }
@@ -418,12 +439,19 @@ public class Neo4jService implements CustomPersistenceService {
             if (applicableConstraints.isEmpty()) {
                 if (uniqueFields.isEmpty()) {
                     String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
-                    persistedEntities.add(new EntityRef(nodeId));
+                    
+                    if(nodeId != null) {
+                    	persistedEntities.add(new EntityRef(nodeId));
+                    }
+                    
                 } else {
                     Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
                     String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels);
-                    persistedEntities.add(new EntityRef(nodeId));
+                    
+                    if(nodeId != null) {
+                    	persistedEntities.add(new EntityRef(nodeId));
+                    }
                 }
             } else {
                 /* Apply unique constraints */
@@ -432,11 +460,9 @@ public class Neo4jService implements CustomPersistenceService {
                     Set<String> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
 
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
-                        String joinedIds = ids.stream()
-                                .map(Object::toString)
-                                .collect(Collectors.joining(", "));
-                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})",
-                                uniqueConstraint.getCode(), joinedIds);
+                        String joinedIds = ids.stream() .map(Object::toString).collect(Collectors.joining(", "));
+                        LOGGER.error("UniqueConstraints with 100 trust score shouldn't return more than 1 ID (code = {}; IDs = {})", uniqueConstraint.getCode(), joinedIds);
+                        continue;
                     }
 
                     for (String id : ids) {
@@ -447,12 +473,14 @@ public class Neo4jService implements CustomPersistenceService {
                             // XXX: Update the found node too?
                             //TODO: Handle case where the unique constraint query return more than one elements and that the trust score is below 100
                             String createdNodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
-                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
-                                    "trustScore", uniqueConstraint.getTrustScore(),
-                                    "constraintCode", uniqueConstraint.getCode()
-                            ));
-                            persistedEntities.add(new EntityRef(createdNodeId));
-                            persistedEntities.add(new EntityRef(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
+                            if(createdNodeId != null) {
+	                            neo4jDao.createRelationBetweenNodes(neo4JConfiguration, createdNodeId, "SIMILAR_TO", id, ImmutableMap.of(
+	                                    "trustScore", uniqueConstraint.getTrustScore(),
+	                                    "constraintCode", uniqueConstraint.getCode()
+	                            ));
+	                            persistedEntities.add(new EntityRef(createdNodeId));
+	                            persistedEntities.add(new EntityRef(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode()));
+                            }
                         } else {
                             Map<String, Object> updatableFields = new HashMap<>(fields);
                             uniqueFields.keySet().forEach(updatableFields::remove);
@@ -470,12 +498,16 @@ public class Neo4jService implements CustomPersistenceService {
                 if (!appliedUniqueConstraint) {
                     if (uniqueFields.isEmpty()) {
                         String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
-                        persistedEntities.add(new EntityRef(nodeId));
+                        if(nodeId != null) {
+                        	persistedEntities.add(new EntityRef(nodeId));
+                        }
                     } else {
                         Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
                         String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels);
-                        persistedEntities.add(new EntityRef(nodeId));
+                        if(nodeId != null) {
+                        	persistedEntities.add(new EntityRef(nodeId));
+                        }
                     }
                 }
             }
