@@ -127,6 +127,7 @@
 									<hftl:customFieldValueField
 										entity="#{customEntityInstanceBean.entity}" cft="#{cft}"
 										field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}"
+										datePattern="#{cft.displayFormat}"
 										edit="true" />
 								</c:otherwise>
 							</c:choose>
