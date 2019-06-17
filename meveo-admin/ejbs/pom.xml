@@ -287,53 +287,7 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports</artifactId>
-			<scope>compile</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>jackson-databind</artifactId>
-					<groupId>com.fasterxml.jackson.core</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jackson-core</artifactId>
-					<groupId>com.fasterxml.jackson.core</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jackson-annotations</artifactId>
-					<groupId>com.fasterxml.jackson.core</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jdtcore</artifactId>
-					<groupId>eclipse</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jfreechart</artifactId>
-					<groupId>jfree</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>xml-apis</artifactId>
-					<groupId>xml-apis</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>lucene-core</artifactId>
-					<groupId>org.apache.lucene</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>lucene-analyzers-common</artifactId>
-					<groupId>org.apache.lucene</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>lucene-queryparser</artifactId>
-					<groupId>org.apache.lucene</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.spec.javax.servlet</groupId>
 			<artifactId>jboss-servlet-api_4.0_spec</artifactId>
