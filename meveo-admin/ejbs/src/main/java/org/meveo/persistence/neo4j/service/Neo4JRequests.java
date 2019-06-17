@@ -24,7 +24,7 @@ public class Neo4JRequests {
     public static final String ALIAS = "alias";
 
     public static final String INTERNAL_UPDATE_DATE = "updateDate";
-    private static final String CREATION_DATE = "creationDate";
+    public static final String CREATION_DATE = "creationDate";
 
     /**
      * Create a relationship between node with given ids

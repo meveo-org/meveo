@@ -16,6 +16,7 @@
  */
 package org.meveo.persistence.neo4j.base;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
@@ -37,6 +38,9 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.meveo.persistence.neo4j.service.Neo4JRequests.CREATION_DATE;
+import static org.meveo.persistence.neo4j.service.Neo4JRequests.INTERNAL_UPDATE_DATE;
 
 @Stateless
 public class Neo4jDao {
@@ -432,7 +436,7 @@ public class Neo4jDao {
         if (node != null) {
             final Neo4jEntity neo4jEntity = new Neo4jEntity(node, neo4JConfiguration);
             //  If node has been created, fire creation event. If it was updated, fire update event.
-            if (node.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)) {
+            if (node.containsKey(INTERNAL_UPDATE_DATE)) {
                 nodeUpdatedEvent.fire(neo4jEntity);
             } else {
                 nodeCreatedEvent.fire(neo4jEntity);
@@ -634,7 +638,7 @@ public class Neo4jDao {
         if (relationship != null) {
             //  If relationship has been created, fire creation event. If it was updated, fire update event.
             final Neo4jRelationship neo4jRelationship = new Neo4jRelationship(relationship, neo4JConfiguration);
-            if (relationship.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE)) {
+            if (relationship.containsKey(INTERNAL_UPDATE_DATE)) {
                 edgeUpdatedEvent.fire(neo4jRelationship);
             } else {
                 edgeCreatedEvent.fire(neo4jRelationship);
@@ -691,6 +695,89 @@ public class Neo4jDao {
                 .stream()
                 .map(s -> s + ": $" + s)
                 .collect(Collectors.joining(", ")) + " }";
+    }
+
+    /**
+     * Update the first node with the properties of the second node
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param firstNodeId        First node to merge
+     * @param secondNodeId       Second node to merge
+     */
+    public void mergeNodes(String neo4JConfiguration, String firstNodeId, String secondNodeId) {
+        String queryStr = "MATCH (n1) WHERE n1.meveo_uuid = $firstId \n" +
+                "WITH n1, n1.creationDate as creationDate \n" +
+                "MATCH (n2) WHERE n2.meveo_uuid = $secondId \n" +
+                "SET n1 += properties(n2), n1.meveo_uuid = $firstId, n1.creationDate = creationDate;";
+
+        cypherHelper.update(
+                neo4JConfiguration,
+                queryStr,
+                ImmutableMap.of("firstNodeId", firstNodeId, "secondNodeId", secondNodeId),
+                e -> LOGGER.error("Error while merging nodes {} and {}", firstNodeId, secondNodeId, e)
+        );
+    }
+
+    /**
+     * Find all the relationships related to a node
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param nodeId             Node id
+     */
+    public List<Relationship> findRelationships(String neo4JConfiguration, String nodeId){
+        // First, retrieves relationships of second node
+        String findAllRelationshipQuery = "MATCH (n)-[r]-() \n" +
+                "WHERE n.meveo_uuid = $secondNodeId \n" +
+                "RETURN r";
+
+        return cypherHelper.execute(
+                neo4JConfiguration,
+                findAllRelationshipQuery,
+                ImmutableMap.of("secondNodeId", nodeId),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asRelationship).collect(Collectors.toList()),
+                e -> LOGGER.error("Error retriving relationships of node {}", nodeId, e)
+        );
+
+    }
+
+    /**
+     * Create or update a given relationship
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param startNodeId        Source node UUID of the relation
+     * @param endNodeId          Target node UUID of the relation
+     * @param relationId         UUID of the relation to merge
+     * @param label              Type of the relation
+     * @param uniqueFields       Unique fields used to do the merge
+     * @param fields             Fields to update
+     * @param date               Date of the operation
+     */
+    public void mergeRelationship(String neo4JConfiguration, String startNodeId, String endNodeId, String relationId, String label, Map<String, Object> uniqueFields, Map<String, Object> fields, Long date) {
+
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("startNodeId", startNodeId);
+        arguments.put("endNodeId", endNodeId);
+        arguments.put("relationId", relationId);
+        arguments.put("uniqueFields", uniqueFields);
+        arguments.put("fields", fields);
+        arguments.put("date", date);
+
+        String createRelationshipQuery = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
+                .append("WITH startNode \n")
+                .append("MATCH (endNode) WHERE endNode.meveo_uuid = $endNodeId \n")
+                .append("WITH startNode, endNode \n")
+                .append("MERGE (startNode)-[relationship :").append(label).append(" $uniqueFields]-(endNode) \n")
+                .append("ON CREATE SET relationship += $fields, relationship.").append(CREATION_DATE).append(" = $date, relationship.meveo_uuid = $relationId \n")
+                .append("ON MATCH SET += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
+                .toString();
+
+        cypherHelper.update(
+                neo4JConfiguration,
+                createRelationshipQuery,
+                arguments,
+                e -> LOGGER.error("Error merging relationship {} on node {}", relationId, startNodeId, e)
+        );
+
     }
 
 }
