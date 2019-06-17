@@ -53,6 +53,8 @@ public class CustomFieldTemplateApi extends BaseApi {
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
+    private String displayFormat;
+
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -339,7 +341,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             cft.setTriggerEndPeriodEvent(dto.isTriggerEndPeriodEvent());
         }
         if (dto.getEntityClazz() != null) {
-            cft.setEntityClazz(org.apache.commons.lang3.StringUtils.trimToNull(dto.getEntityClazz()));
+            cft.setEntityClazz(StringUtils.trimToNull(dto.getEntityClazz()));
         }
         if (dto.isAllowEdit() != null) {
             cft.setAllowEdit(dto.isAllowEdit());
@@ -441,6 +443,9 @@ public class CustomFieldTemplateApi extends BaseApi {
                 }
             }
         }
+        if (dto.getDisplayFormat() != null) {
+            cft.setDisplayFormat(dto.getDisplayFormat());
+        }
 
         cft.setStorages(dto.getStorages());
 
@@ -454,5 +459,13 @@ public class CustomFieldTemplateApi extends BaseApi {
             cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));
         }
         return cftAppliesto;
+    }
+
+    public String getDisplayFormat() {
+        return displayFormat;
+    }
+
+    public void setDisplayFormat(String displayFormat) {
+        this.displayFormat = displayFormat;
     }
 }
