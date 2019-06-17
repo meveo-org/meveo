@@ -354,9 +354,12 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     public void update(String tableName, Map<String, Object> value) throws BusinessException {
-
         if (value.get(FIELD_ID) == null) {
             throw new BusinessException("'uuid' field value not provided to update values in native table");
+        }
+        
+        if(value.size() < 2) {
+        	return;	// Nothing to update a there is only "uuid" value inside the map
         }
 
         StringBuffer sql = new StringBuffer();
