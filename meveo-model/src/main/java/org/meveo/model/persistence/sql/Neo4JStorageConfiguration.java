@@ -37,7 +37,7 @@ public class Neo4JStorageConfiguration {
 	 */
 	@Column(name = "primitive_entity")
 	@Type(type = "numeric_boolean")
-	private boolean primitiveEntity;
+	private boolean primitiveEntity = true;
 
 	/**
 	 * The primitive type, if entity is primitive.
@@ -52,7 +52,10 @@ public class Neo4JStorageConfiguration {
 	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<GraphQLQueryField> graphqlQueryFields;
-	
+
+	@Column(name = "max_value")
+	private Long maxValue;
+
 	/**
 	 * Unique constraint to be applied when persisiting custom entities
 	 */
@@ -103,5 +106,8 @@ public class Neo4JStorageConfiguration {
 	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
 		this.graphqlQueryFields = graphqlQueryFields;
 	}
-	
+
+	public Long getMaxValue() { return maxValue; }
+
+	public void setMaxValue(Long maxValue) { this.maxValue = maxValue; }
 }

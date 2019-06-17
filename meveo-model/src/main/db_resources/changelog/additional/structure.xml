@@ -675,4 +675,9 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="#3718" author="HienBach">
+        <addColumn tableName="cust_cet">
+            <column name="max_value" type="bigint"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -136,13 +136,15 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
             if (valueCft == null) {
                 createPrimitiveCft(cet);
-            } else if (valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType()) {
+            } else if (valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType() && valueCft.getMaxValue() != cet.getNeo4JStorageConfiguration().getMaxValue()) {
                 flush();
                 valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
+                valueCft.setMaxValue(cet.getNeo4JStorageConfiguration().getMaxValue());
                 customFieldTemplateService.update(valueCft);
             }
         } else {
         	cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
+        	cet.getNeo4JStorageConfiguration().setMaxValue(null);
         }
     }
 
