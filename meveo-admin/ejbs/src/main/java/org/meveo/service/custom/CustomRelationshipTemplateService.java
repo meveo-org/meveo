@@ -68,7 +68,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public void create(CustomRelationshipTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         super.create(cet);
         try {
@@ -82,7 +82,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     @Override
     public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         CustomRelationshipTemplate cetUpdated = super.update(cet);
         try {

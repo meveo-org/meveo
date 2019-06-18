@@ -194,7 +194,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @Override
     public void create(CustomFieldTemplate cft) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         checkIdentifierTypeAndUniqueness(cft);
 
@@ -215,7 +215,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         checkIdentifierTypeAndUniqueness(cft);
 

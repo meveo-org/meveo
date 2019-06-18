@@ -83,7 +83,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         ParamBean paramBean = paramBeanFactory.getInstance();
         super.create(cet);
@@ -139,7 +139,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         ParamBean paramBean = paramBeanFactory.getInstance();
         /* Update */
