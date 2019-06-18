@@ -37,7 +37,6 @@ import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
-import org.olap4j.metadata.XmlaConstants.DBType;
 
 /**
  * @author Wassim Drira

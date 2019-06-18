@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
@@ -442,6 +443,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     public CustomRelationshipTemplate getCustomRelationshipTemplate(String code) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
         return crtsByCode.get(key);
+    }
+
+    public List<CustomRelationshipTemplate> getCustomRelationshipTemplateByCet(String code) {
+        return crtsByCode.values()
+                .stream()
+                .filter(crt -> crt.getStartNode().getCode().equals(code) || crt.getEndNode().getCode().equals(code))
+                .collect(Collectors.toList());
     }
 
     /**
