@@ -207,6 +207,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		checkIdentifierTypeAndUniqueness(cft);
 
+        //  if CFT is of type DATE
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+            if(!cft.getDisplayFormat().matches("\\d{4}-\\d{2}-\\d{2}")) {
+                throw new IllegalArgumentException("Format of date not right!");
+            }
+        }
+
 		super.create(cft);
 
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
@@ -222,13 +229,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
-			if(crt == null) {
-				log.warn("Custom relationship template {} was not found", entityCode);
-			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
-			}
-		}
+            CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+            if (crt == null) {
+                log.warn("Custom relationship template {} was not found", entityCode);
+            } else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+            }
+        }
 
 		customFieldsCache.addUpdateCustomFieldTemplate(cft);
 		elasticClient.updateCFMapping(cft);
@@ -236,6 +243,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
+
+        //  if CFT is of type DATE
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+            if(!cft.getDisplayFormat().matches("\\d{4}-\\d{2}-\\d{2}")) {
+                throw new IllegalArgumentException("Format of date not right!");
+            }
+        }
 
         checkIdentifierTypeAndUniqueness(cft);
 
