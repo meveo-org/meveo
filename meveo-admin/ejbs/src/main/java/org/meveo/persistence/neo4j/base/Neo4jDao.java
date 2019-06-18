@@ -158,10 +158,15 @@ public class Neo4jDao {
     public void removeNode(String neo4jconfiguration, String label, String uuid) {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("MATCH (n:").append(label).append(") \n")
-                .append("WHERE n.meveo_uuid = $uuid")
+                .append("WHERE n.meveo_uuid = $uuid \n")
                 .append("DETACH DELETE n ;");
 
-        cypherHelper.execute(neo4jconfiguration, queryBuilder.toString(), Collections.singletonMap("uuid", uuid));
+        cypherHelper.update(
+                neo4jconfiguration,
+                queryBuilder.toString(),
+                Collections.singletonMap("uuid", uuid),
+                e -> LOGGER.error("Cannot remove node with label {} and UUID {}", label, uuid, e)
+        );
     }
 
     /**
@@ -752,7 +757,7 @@ public class Neo4jDao {
      * @param fields             Fields to update
      * @param date               Date of the operation
      */
-    public void mergeRelationship(String neo4JConfiguration, String startNodeId, String endNodeId, String relationId, String label, Map<String, Object> uniqueFields, Map<String, Object> fields, Long date) {
+    public void mergeRelationshipById(String neo4JConfiguration, String startNodeId, Long endNodeId, String relationId, String label, Map<String, Object> uniqueFields, Map<String, Object> fields, Long date) {
 
         Map<String, Object> arguments = new HashMap<>();
         arguments.put("startNodeId", startNodeId);
@@ -762,13 +767,15 @@ public class Neo4jDao {
         arguments.put("fields", fields);
         arguments.put("date", date);
 
+        String uniqueFieldLiteral =  uniqueFields.isEmpty() ? "" : " " + getFieldsString(uniqueFields.keySet()) + " ";
+
         String createRelationshipQuery = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
                 .append("WITH startNode \n")
-                .append("MATCH (endNode) WHERE endNode.meveo_uuid = $endNodeId \n")
+                .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
                 .append("WITH startNode, endNode \n")
-                .append("MERGE (startNode)-[relationship :").append(label).append(" $uniqueFields]-(endNode) \n")
+                .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]-(endNode) \n")
                 .append("ON CREATE SET relationship += $fields, relationship.").append(CREATION_DATE).append(" = $date, relationship.meveo_uuid = $relationId \n")
-                .append("ON MATCH SET += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
+                .append("ON MATCH SET relationship += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
                 .toString();
 
         cypherHelper.update(
@@ -778,6 +785,21 @@ public class Neo4jDao {
                 e -> LOGGER.error("Error merging relationship {} on node {}", relationId, startNodeId, e)
         );
 
+    }
+
+    public List<String> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration){
+        String orderByQuery = new StringBuffer("MATCH (n) WHERE n.meveo_uuid IN $uuids \n")
+                .append("RETURN n.meveo_uuid \n")
+                .append("ORDER BY n.").append(property).append(" ASC \n")
+                .toString();
+
+        return cypherHelper.execute(
+                neo4JConfiguration,
+                orderByQuery,
+                ImmutableMap.of("uuids", uuids),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asString).collect(Collectors.toList()),
+                e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property)
+        );
     }
 
 }
