@@ -50,6 +50,7 @@ import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * @author Wassim Drira
@@ -75,7 +76,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomTableCreatorService customTableCreatorService;
-    
+
     @Inject
     private Neo4jService neo4jService;
 
@@ -88,7 +89,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
-
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
         ParamBean paramBean = paramBeanFactory.getInstance();
         super.create(cet);
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -107,12 +110,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 createPrimitiveCft(cet);
             }
-            
+
             // Create neoj4 indexes
             if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             	neo4jService.addUUIDIndexes(cet);
             }
-            
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -148,7 +151,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
         ParamBean paramBean = paramBeanFactory.getInstance();
+
+        /* Update */
 
         CustomEntityTemplate cetUpdated = super.update(cet);
 
@@ -160,9 +168,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        
+
         flush();
-        
+
         // Synchronize custom fields storages with CET available storages
         for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
             if(cft.getStorages() != null) {
@@ -175,14 +183,14 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 }
             }
         }
-        
+
         // Synchronize neoj4 indexes
         if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
         	neo4jService.addUUIDIndexes(cet);
         }else {
         	neo4jService.removeUUIDIndexes(cet);
         }
-        
+
         return cetUpdated;
     }
 
@@ -201,7 +209,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
-        
+
         neo4jService.removeUUIDIndexes(cet);
 
         customFieldsCache.removeCustomEntityTemplate(cet);

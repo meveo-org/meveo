@@ -46,6 +46,7 @@ import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.util.EntityCustomizationUtils;
 
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
@@ -72,6 +73,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Override
     public void create(CustomRelationshipTemplate cet) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
         super.create(cet);
         try {
             permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
@@ -86,6 +90,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Override
     public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
         CustomRelationshipTemplate cetUpdated = super.update(cet);
         
         permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));

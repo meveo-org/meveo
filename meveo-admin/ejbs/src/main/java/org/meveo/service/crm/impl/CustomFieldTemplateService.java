@@ -57,7 +57,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
-    
+
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
@@ -203,14 +203,16 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
     @Override
-	public void create(CustomFieldTemplate cft) throws BusinessException {
-
-		checkIdentifierTypeAndUniqueness(cft);
+    public void create(CustomFieldTemplate cft) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
+        checkIdentifierTypeAndUniqueness(cft);
 
 		super.create(cft);
 
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-		
+
 		// CF applies to a CET
 		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
@@ -219,7 +221,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
-			
+
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
 			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
@@ -236,14 +238,16 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
-
+        if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
+            throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
+        }
         checkIdentifierTypeAndUniqueness(cft);
 
         CustomFieldTemplate cftUpdated = super.update(cft);
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
-        
+
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
 		// CF applies to a CET
@@ -256,7 +260,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			} else if(!cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
-			
+
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
 			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
@@ -276,7 +280,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public void remove(CustomFieldTemplate cft) throws BusinessException {
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
-        
+
     	String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
 		// CF applies to a CET
@@ -287,7 +291,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
-			
+
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
 			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
