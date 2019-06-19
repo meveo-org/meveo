@@ -137,15 +137,32 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity() && cet.getNeo4JStorageConfiguration().getPrimitiveType() != null) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
             CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
-            if (valueCft == null) {
+
+            if(valueCft == null) {
                 createPrimitiveCft(cet);
-            } else if (valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType()) {
-                flush();
-                valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
-                customFieldTemplateService.update(valueCft);
+            } else {
+                boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
+                boolean maxValueChanged = valueCft.getMaxValue() != cet.getNeo4JStorageConfiguration().getMaxValue();
+                boolean shouldUpdate = typeChanged || maxValueChanged;
+                if (shouldUpdate) {
+                    flush();
+                }
+
+                if (typeChanged) {
+                    valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
+                }
+
+                if (maxValueChanged) {
+                    valueCft.setMaxValue(cet.getNeo4JStorageConfiguration().getMaxValue());
+                }
+
+                if (shouldUpdate) {
+                    customFieldTemplateService.update(valueCft);
+                }
             }
         } else {
         	cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
+        	cet.getNeo4JStorageConfiguration().setMaxValue(null);
         }
     }
 
