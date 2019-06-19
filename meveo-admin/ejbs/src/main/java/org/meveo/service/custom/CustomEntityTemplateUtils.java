@@ -26,6 +26,7 @@ public class CustomEntityTemplateUtils {
 	    customFieldTemplate.setValueRequired(true);                    // Always required
 	    customFieldTemplate.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
 	    customFieldTemplate.setStorages(Arrays.asList(DBStorageType.NEO4J));
+		customFieldTemplate.setMaxValue(cet.getNeo4JStorageConfiguration().getMaxValue());
 	}
 
 }

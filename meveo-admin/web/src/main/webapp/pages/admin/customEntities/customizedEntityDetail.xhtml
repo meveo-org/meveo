@@ -116,11 +116,16 @@
                                         <!--  Whether the CET is primitive. Cannot be edited unless the CET is already a primitive type -->
                                 <hftl:formField label="#{messages['BusinessEntity.primitiveEntity']}" id="primitiveEntity"
                                                         childField="primitiveEntity"
-                                                        field="neo4JStorageConfiguration" listenerUpdate="@this primitiveType"/>
+                                                        field="neo4JStorageConfiguration" listenerUpdate="@this primitiveType maxValue"/>
                                         <!--  If primitive, ask for primitive type class -->
                                 <h:panelGroup id="primitiveType">
-                                    <hftl:formField id="form_primitiveType" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity}"
+                                    <hftl:formField id="form_primitiveType" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity == true}"
                                                             label="#{messages['BusinessEntity.primitiveType']}" required="true" field="neo4JStorageConfiguration" childField="primitiveType"/>
+                                </h:panelGroup>
+                                        <!--When the CET is primitive, display a maxValue field -->
+                                <h:panelGroup id="maxValue">
+                                    <hftl:formField id="form_maxValue" rendered="#{customEntityTemplateBean.entity.neo4JStorageConfiguration.primitiveEntity == true}"
+                                                    label="#{messages['BusinessEntity.maxValue']}" required="true" field="neo4JStorageConfiguration" childField="maxValue"/>
                                 </h:panelGroup>
                             </h:panelGroup>
                             <h:panelGroup>
