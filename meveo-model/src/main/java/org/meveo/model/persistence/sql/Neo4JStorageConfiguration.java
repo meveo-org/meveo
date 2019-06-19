@@ -37,7 +37,7 @@ public class Neo4JStorageConfiguration {
 	 */
 	@Column(name = "primitive_entity")
 	@Type(type = "numeric_boolean")
-	private boolean primitiveEntity = false;
+	private boolean primitiveEntity;
 
 	/**
 	 * The primitive type, if entity is primitive.
