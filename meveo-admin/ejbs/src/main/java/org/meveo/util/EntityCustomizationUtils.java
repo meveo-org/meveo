@@ -1,6 +1,8 @@
 package org.meveo.util;
 
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -48,5 +50,12 @@ public class EntityCustomizationUtils {
         } else {
             return null;
         }
+    }
+
+    public static boolean validateOntologyCode(String code) {
+        if (code != null && !StringUtils.isMatch(code, ParamBean.getInstance().getProperty("ontology.code.pattern", StringUtils.CODE_ONTOLOGY_REGEX))) {
+            return false;
+        }
+        return true;
     }
 }

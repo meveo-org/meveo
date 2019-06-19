@@ -34,15 +34,19 @@
 				backingBean="#{customEntityCategoryBean}"
 				showEnableDisableButton="true">
 
-				<hftl:formField label="#{messages['BusinessEntity.code']}"
-					field="code" showOnlyOnNew="true" required="true"
-					validateUnique="true" />
+				<h:panelGrid columns = "3" width="60%">
+					<hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customEntityCategoryBean.entity.code == null)}">
+						<p:inputText  id="code" field="code" value="#{customEntityCategoryBean.entity.code}" required="true" validateUnique="true" validatorMessage="#{messages['message.ontology.code.error']}" style="width: 180px">
+							<f:validateRegex pattern="\D+$" />
+						</p:inputText>
+					</hftl:decorateFormField>
 
-				<hftl:formField label="#{messages['customizedEntities.name']}"
-					field="name" required="true" validateUnique="true"/>
+					<hftl:formField label="#{messages['customizedEntities.name']}"
+						field="name" required="true" validateUnique="true"/>
 
-				<hftl:formField label="#{messages['BusinessEntity.description']}"
-					field="description" />
+					<hftl:formField label="#{messages['BusinessEntity.description']}"
+						field="description" />
+				</h:panelGrid>
 
 			</hftl:formPanel>
 		</h:panelGroup>
