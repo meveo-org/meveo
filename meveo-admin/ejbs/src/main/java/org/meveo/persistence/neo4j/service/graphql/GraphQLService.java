@@ -18,6 +18,8 @@ package org.meveo.persistence.neo4j.service.graphql;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ejb.ConcurrencyManagement;
@@ -25,6 +27,7 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
@@ -41,6 +44,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.slf4j.Logger;
+
+import static org.bouncycastle.crypto.tls.ContentType.alert;
 
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -91,19 +96,26 @@ public class GraphQLService {
                 .getResultList();
 
         for (String neo4jConfiguration : neo4jConfigurations) {
-            neo4jDao.updateIDL(neo4jConfiguration, idl);
+            List<String> missingEntities = validateGraphql(idl);
+            if (CollectionUtils.isEmpty(missingEntities)) {
+                neo4jDao.updateIDL(neo4jConfiguration, idl);
+            }
         }
 
     }
 
     /**
      * Update the IDL for the specified neo4j repository
+     *
      * @param neo4jConfiguration Repository to update
      */
     public void updateIDL(String neo4jConfiguration) {
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
-        neo4jDao.updateIDL(neo4jConfiguration, idl);
+        List<String> missingEntities = validateGraphql(idl);
+        if (CollectionUtils.isEmpty(missingEntities)) {
+            neo4jDao.updateIDL(neo4jConfiguration, idl);
+        }
     }
 
     public String getIDL() {
@@ -119,7 +131,7 @@ public class GraphQLService {
 
         for (GraphQLEntity graphQLEntity : graphQLEntities) {
             // Skip if entity ended not having fields
-            if(graphQLEntity.getGraphQLFields().isEmpty()){
+            if (graphQLEntity.getGraphQLFields().isEmpty()) {
                 continue;
             }
 
@@ -175,7 +187,7 @@ public class GraphQLService {
             // Always add "meveo_uuid" field
             graphQLFields.add(new GraphQLField("meveo_uuid", "String", true));
 
-            if(cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
                 // Additional queries defined
                 for (GraphQLQueryField graphqlQueryField : Optional.ofNullable(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields()).orElse(Collections.emptyList())) {
                     GraphQLField graphQLField = new GraphQLField();
@@ -228,7 +240,7 @@ public class GraphQLService {
             final List<DBStorageType> endNodeStorages = endNode.getAvailableStorages() != null ? endNode.getAvailableStorages() : new ArrayList<>();
             final List<DBStorageType> startNodeStorages = startNode.getAvailableStorages() != null ? startNode.getAvailableStorages() : new ArrayList<>();
 
-            if(!relationStorages.contains(DBStorageType.NEO4J) || !endNodeStorages.contains(DBStorageType.NEO4J) || !startNodeStorages.contains(DBStorageType.NEO4J)){
+            if (!relationStorages.contains(DBStorageType.NEO4J) || !endNodeStorages.contains(DBStorageType.NEO4J) || !startNodeStorages.contains(DBStorageType.NEO4J)) {
                 continue;
             }
 
@@ -373,8 +385,8 @@ public class GraphQLService {
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
             // Skip the field if it is not configured to be stored in neo4j
-            if(customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
-            	continue;
+            if (customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
+                continue;
             }
 
             GraphQLField graphQLField = new GraphQLField();
@@ -400,15 +412,15 @@ public class GraphQLService {
                         graphQLField.setFieldType("Boolean");
                         break;
                     case ENTITY:
-                        if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
+                        if (StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
                             throw new NullPointerException("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
                         }
 
                         graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
                         graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
-    				case CHILD_ENTITY:
-					case EMBEDDED_ENTITY:
+                    case CHILD_ENTITY:
+                    case EMBEDDED_ENTITY:
                     case LIST:
                     case STRING:
                     case TEXT_AREA:
@@ -423,11 +435,32 @@ public class GraphQLService {
         return graphQLFields;
     }
 
-    private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity){
+    private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity) {
         graphQLEntityMap.merge(graphQLEntity.getName(), graphQLEntity, (oldEntity, newEntity) -> {
             oldEntity.getGraphQLFields().addAll(newEntity.getGraphQLFields());
             return oldEntity;
         });
     }
 
+    public List<String> validateGraphql(String graphQl) {
+        List<String> result = new ArrayList<>();
+        String pattern = "/: \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s /mg";
+        // Create a Pattern object
+        Pattern r = Pattern.compile(pattern);
+        // Now create matcher object.
+        Matcher m = r.matcher(graphQl);
+        while(m.find()) {
+            if (m.start() == m.end()) {
+                continue;
+            }
+            boolean typeExists = graphQl.contains("type " + m.group(1));
+            if (!typeExists) {
+                result.add(m.group(1));
+            }
+        }
+        return result;
+    }
 }
+
+
+
