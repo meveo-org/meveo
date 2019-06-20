@@ -2,10 +2,7 @@ package org.meveo.model.customEntities;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.model.BusinessCFEntity;
-import org.meveo.model.CustomFieldEntity;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ObservableEntity;
+import org.meveo.model.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -14,6 +11,7 @@ import javax.validation.constraints.Size;
 @Entity
 @ObservableEntity
 @Cacheable
+@ModuleItem
 @CustomFieldEntity(cftCodePrefix = "CE", cftCodeFields = "cetCode")
 @ExportIdentifier({ "code", "cetCode"})
 @Table(name = "cust_cei", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "cet_code"}))
