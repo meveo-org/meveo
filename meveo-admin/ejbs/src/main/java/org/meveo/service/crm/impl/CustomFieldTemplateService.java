@@ -1,5 +1,6 @@
 package org.meveo.service.crm.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -209,9 +210,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
-            if(!cft.getDisplayFormat().matches("\\d{4}-\\d{2}-\\d{2}")) {
-                throw new IllegalArgumentException("Format of date not right!");
-            }
+            new SimpleDateFormat(cft.getDisplayFormat());
         }
 
 		super.create(cft);
@@ -246,9 +245,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
-            if(!cft.getDisplayFormat().matches("\\d{4}-\\d{2}-\\d{2}")) {
-                throw new IllegalArgumentException("Format of date not right!");
-            }
+            new SimpleDateFormat(cft.getDisplayFormat());
         }
 
         checkIdentifierTypeAndUniqueness(cft);
