@@ -45,8 +45,6 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.slf4j.Logger;
 
-import static org.bouncycastle.crypto.tls.ContentType.alert;
-
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class GraphQLService {
@@ -96,7 +94,7 @@ public class GraphQLService {
                 .getResultList();
 
         for (String neo4jConfiguration : neo4jConfigurations) {
-            List<String> missingEntities = validateGraphql(idl);
+            List<String> missingEntities = validateIdl(idl);
             if (CollectionUtils.isEmpty(missingEntities)) {
                 neo4jDao.updateIDL(neo4jConfiguration, idl);
             }
@@ -112,7 +110,7 @@ public class GraphQLService {
     public void updateIDL(String neo4jConfiguration) {
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
-        List<String> missingEntities = validateGraphql(idl);
+        List<String> missingEntities = validateIdl(idl);
         if (CollectionUtils.isEmpty(missingEntities)) {
             neo4jDao.updateIDL(neo4jConfiguration, idl);
         }
@@ -442,18 +440,18 @@ public class GraphQLService {
         });
     }
 
-    public List<String> validateGraphql(String graphQl) {
+    public List<String> validateIdl(String idl) {
         List<String> result = new ArrayList<>();
-        String pattern = "/: \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s /mg";
+        String pattern = ": \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s";
         // Create a Pattern object
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.
-        Matcher m = r.matcher(graphQl);
+        Matcher m = r.matcher(idl);
         while(m.find()) {
             if (m.start() == m.end()) {
                 continue;
             }
-            boolean typeExists = graphQl.contains("type " + m.group(1));
+            boolean typeExists = idl.contains("type " + m.group(1));
             if (!typeExists) {
                 result.add(m.group(1));
             }
