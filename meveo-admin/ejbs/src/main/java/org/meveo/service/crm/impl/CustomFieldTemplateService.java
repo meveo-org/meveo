@@ -210,7 +210,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
-            new SimpleDateFormat(cft.getDisplayFormat());
+        	checkDateFormat(cft);
         }
 
 		super.create(cft);
@@ -240,12 +240,24 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		elasticClient.updateCFMapping(cft);
 	}
 
+	/**
+	 * @param cft
+	 * @throws BusinessException
+	 */
+	public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
+		try {
+			new SimpleDateFormat(cft.getDisplayFormat());
+		}catch(IllegalArgumentException e) {
+			throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
+		}
+	}
+
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
-            new SimpleDateFormat(cft.getDisplayFormat());
+        	checkDateFormat(cft);
         }
 
         checkIdentifierTypeAndUniqueness(cft);
