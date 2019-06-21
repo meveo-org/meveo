@@ -47,7 +47,11 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     	values = new CustomFieldValues();
     	this.cetCode = cetCode;
     	this.fields = fields;
-    	valuesMap.forEach((k,v) -> values.setValue(k, v));
+    	valuesMap.forEach((k,v) -> {
+    		values.setValue(k, v);
+    	});
+    	
+    	System.out.println(valuesMap);
     }
     
 	public CustomFieldValues getValues() {

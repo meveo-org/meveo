@@ -239,7 +239,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
         result.getPaging().setTotalNumberOfRecords((int) totalCount);
         result.getCustomTableData().setCustomTableCode(customTableCode);
 
-        result.getCustomTableData().setValuesFromListofMap(customTableService.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfig));
+        result.getCustomTableData().setValuesFromListofMap(customTableService.list(cet, paginationConfig));
 
         return result;
     }

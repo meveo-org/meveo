@@ -163,7 +163,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 	}
 
 	public List<Map<String, Object>> list(){
-		List<Map<String, Object>> list = customTableService.list(customTableName);
+		List<Map<String, Object>> list = customTableService.list(entity);
 		listSize = list.size();
 		return list;
     }
@@ -210,6 +210,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
                 protected String getTableName() {
                     return CustomTableBean.this.getCustomTableName();
                 }
+
+				@Override
+				protected CustomEntityTemplate getCet() {
+					return entity;
+				}
             };
         }
 
