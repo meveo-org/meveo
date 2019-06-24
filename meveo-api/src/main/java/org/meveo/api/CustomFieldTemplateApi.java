@@ -448,6 +448,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
 
         cft.setStorages(dto.getStorages());
+        cft.setSummary(dto.isSummary());
 
         return cft;
     }

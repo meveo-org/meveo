@@ -193,6 +193,9 @@ public class CustomFieldTemplateDto extends BaseDto {
 
     @XmlElement()
     private List<DBStorageType> storages;
+    
+    @XmlElement
+    private boolean summary;
 
     /**
      * If and how custom field values should be indexed in Elastic Search.
@@ -267,6 +270,7 @@ public class CustomFieldTemplateDto extends BaseDto {
 
         identifier = cf.isIdentifier();
         storages = cf.getStorages();
+        summary=cf.isSummary();
 
     }
 
@@ -863,4 +867,13 @@ public class CustomFieldTemplateDto extends BaseDto {
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
+
+	public boolean isSummary() {
+		return summary;
+	}
+
+	public void setSummary(boolean summary) {
+		this.summary = summary;
+	}
+    
 }
