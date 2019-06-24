@@ -933,6 +933,15 @@ public class CustomTableService extends NativePersistenceService {
         return valuesConverted;
     }
 
+    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid) {
+        return findById(cet, uuid, null);
+    }
+
+    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+        final Map<String, Object> values = findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+        return convertData(values, cet);
+    }
+
     public List<Map<String, Object>> list(CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
@@ -956,13 +965,17 @@ public class CustomTableService extends NativePersistenceService {
         return convertData(data, cet);
     }
 
-	/**
-	 * Convert the data to the expected format. For instance, deserializes lists
-	 * 
-	 * @param data Raw data
-	 * @param cet  Template of the data
-	 * @return the converted data
-	 */
+    private Map<String, Object> convertData(Map<String, Object> data, CustomEntityTemplate cet) {
+        return convertData(Collections.singletonList(data), cet).get(0);
+    }
+
+    /**
+     * Convert the data to the expected format. For instance, deserializes lists
+     *
+     * @param data Raw data
+     * @param cet  Template of the data
+     * @return the converted data
+     */
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
         final Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
         final List<Map<String, Object>> convertedData = new ArrayList<>(data);
