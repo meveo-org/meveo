@@ -933,6 +933,15 @@ public class CustomTableService extends NativePersistenceService {
         return valuesConverted;
     }
 
+    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid) {
+        return findById(cet, uuid, null);
+    }
+
+    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+        final Map<String, Object> values = findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+        return convertData(values, cet);
+    }
+
     public List<Map<String, Object>> list(CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
@@ -952,7 +961,40 @@ public class CustomTableService extends NativePersistenceService {
             paginationConfiguration.setFetchFields(sqlFetchFields);
         }
 
-        return super.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
+        final List<Map<String, Object>> data = super.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
+        return convertData(data, cet);
+    }
+
+    private Map<String, Object> convertData(Map<String, Object> data, CustomEntityTemplate cet) {
+        return convertData(Collections.singletonList(data), cet).get(0);
+    }
+
+    /**
+     * Convert the data to the expected format. For instance, deserializes lists
+     *
+     * @param data Raw data
+     * @param cet  Template of the data
+     * @return the converted data
+     */
+    private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
+        final Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+        final List<Map<String, Object>> convertedData = new ArrayList<>(data);
+        int i = 0;
+        for(Map<String, Object> datum : data){
+            for(Entry<String, Object> field : datum.entrySet()){
+            	if(field.getKey().equals("uuid")) {
+            		continue;
+            	}
+                CustomFieldTemplate cft = getCustomFieldTemplate(cfts, field).get();
+                if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)){
+                    if(!(field.getValue() instanceof Collection) && field.getValue() != null){
+                        convertedData.get(i).put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
+                    }
+                }
+            }
+            i++;
+        }
+        return convertedData;
     }
 
     public boolean sqlCftFilter(CustomEntityTemplate cet, String key) {
@@ -962,6 +1004,10 @@ public class CustomTableService extends NativePersistenceService {
         }
 
         return true;
+    }
+
+    public List<Map<String, Object>> list(CustomEntityTemplate cet) {
+        return list(cet, null);
     }
 
     /**
@@ -999,7 +1045,7 @@ public class CustomTableService extends NativePersistenceService {
             }
         }
     }
-    
+
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
     	return filterValues(values, cet, true);
     }
@@ -1017,11 +1063,9 @@ public class CustomTableService extends NativePersistenceService {
                     if(entry.getValue() == null && removeNullValues) {
                     	return false;
                     }
-                    
-                    Optional<CustomFieldTemplate> customFieldTemplateOpt = cfts.stream()
-                    		.filter(f -> f.getCode().equals(entry.getKey()) || f.getDbFieldname().equals(entry.getKey()))
-                    		.findFirst();
-                    
+
+                    Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
+
                     if(customFieldTemplateOpt.isPresent()) {
                         return customFieldTemplateOpt.get().getStorages().contains(DBStorageType.SQL);
                     }else {
@@ -1030,5 +1074,11 @@ public class CustomTableService extends NativePersistenceService {
                     }
                     
                 }).collect(HashMap::new, (m,v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
+    }
+
+    private Optional<CustomFieldTemplate> getCustomFieldTemplate(Collection<CustomFieldTemplate> cfts, Entry<String, Object> entry) {
+        return cfts.stream()
+                                .filter(f -> f.getCode().equals(entry.getKey()) || f.getDbFieldname().equals(entry.getKey()))
+                                .findFirst();
     }
 }

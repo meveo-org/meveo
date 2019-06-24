@@ -1,5 +1,6 @@
 package org.meveo.service.crm.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -209,6 +210,11 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         checkIdentifierTypeAndUniqueness(cft);
 
+        //  if CFT is of type DATE
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+        	checkDateFormat(cft);
+        }
+
 		super.create(cft);
 
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
@@ -224,16 +230,28 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
-			if(crt == null) {
-				log.warn("Custom relationship template {} was not found", entityCode);
-			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
-			}
-		}
+            CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+            if (crt == null) {
+                log.warn("Custom relationship template {} was not found", entityCode);
+            } else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+            }
+        }
 
 		customFieldsCache.addUpdateCustomFieldTemplate(cft);
 		elasticClient.updateCFMapping(cft);
+	}
+
+	/**
+	 * @param cft
+	 * @throws BusinessException
+	 */
+	public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
+		try {
+			new SimpleDateFormat(cft.getDisplayFormat());
+		}catch(IllegalArgumentException e) {
+			throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
+		}
 	}
 
     @Override
@@ -241,6 +259,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         if (!EntityCustomizationUtils.validateOntologyCode(cft.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+
+        //  if CFT is of type DATE
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+        	checkDateFormat(cft);
+        }
+
         checkIdentifierTypeAndUniqueness(cft);
 
         CustomFieldTemplate cftUpdated = super.update(cft);
