@@ -680,4 +680,35 @@
             <column name="max_value" type="bigint"/>
         </addColumn>
     </changeSet>
+
+	<changeSet id="binary_storage_configuration"
+		author="Edward P. Legaspi">
+		<createTable tableName="binary_storage_configuration">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="binary_storage_configuration_pkey" />
+			</column>
+			<column name="version" type="int4" />
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false" unique="true" />
+			</column>
+			<column name="root_path" type="varchar(255)">
+				<constraints nullable="false" unique="true" />
+			</column>
+		</createTable>
+		<createSequence
+			sequenceName="binary_storage_configuration_seq" />
+	</changeSet>
+
+	<changeSet id="binary_storage_configuration_seq_mysql" author="Edward P. Legaspi"
+		dbms="mysql">
+		<createTable tableName="binary_storage_configuration_seq">
+			<column name="next_val" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="binary_storage_configuration_seq_pk" />
+			</column>
+		</createTable>
+		<sql>insert into ${db.schema.adapted}binary_storage_configuration_seq values(1)</sql>
+	</changeSet>
+       
 </databaseChangeLog>

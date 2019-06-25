@@ -1,0 +1,25 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{binaryStorageConfigurationBean.objectId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem outcome="binaryStorageConfigurations" value="#{messages['binaryStorageConfiguration.title']}" />
+                <p:menuitem value="#{messages['commons.new']} #{messages['binaryStorageConfiguration.title']}" disabled="true" rendered="#{binaryStorageConfigurationBean.entity.transient}" />
+                <p:menuitem value="#{messages['binaryStorageConfiguration.title']} - #{binaryStorageConfigurationBean.entity.code}" disabled="true" rendered="#{!binaryStorageConfigurationBean.entity.transient}" />
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel label="#{messages['binaryStorageConfiguration.title']}" backingBean="#{binaryStorageConfigurationBean}">
+            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
+            <hftl:formField label="#{messages['binaryStorageConfiguration.rootPath']}" field="rootPath" required="true" />
+        </hftl:formPanel>
+    </ui:define>
+</ui:composition>

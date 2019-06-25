@@ -1404,5 +1404,15 @@
             <to-view-id>/pages/admin/mailer/mailerConfiguration.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>binaryStorageConfigurations</from-outcome>
+            <to-view-id>/pages/admin/storages/binaryStorageConfigurations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>binaryStorageConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/binaryStorageConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
 </faces-config>
