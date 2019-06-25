@@ -50,6 +50,12 @@
         <tag-name>customFieldValueField</tag-name>
         <source>customFieldValueField.xhtml</source>
     </tag>
+    
+     <tag>
+        <tag-name>listCustomFieldValue</tag-name>
+        <source>listCustomFieldValue.xhtml</source>
+    </tag>
+    
     <tag>
         <tag-name>customFieldValueMuteField</tag-name>
         <source>customFieldValueMuteField.xhtml</source>

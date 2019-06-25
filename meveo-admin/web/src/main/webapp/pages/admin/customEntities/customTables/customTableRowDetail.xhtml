@@ -8,8 +8,8 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:o="http://omnifaces.org/ui">
 
-	<o:importConstants
-		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldStorageTypeEnum" />
 
 	<ui:include
 		src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
@@ -141,6 +141,9 @@
 											value="#{fieldCf}" />
 
 									</p:commandLink>
+								</c:when>
+								<c:when test="#{cft.storageType eq CustomFieldStorageTypeEnum.LIST}">
+									<hftl:listCustomFieldValue cft="#{cft}" field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" />
 								</c:when>
 								<c:otherwise>
 									<hftl:customFieldValueField

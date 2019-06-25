@@ -1,24 +1,60 @@
 package org.meveo.model.crm;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OrderBy;
+import javax.persistence.QueryHint;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.*;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
-import org.meveo.model.crm.custom.*;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
+import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.shared.DateUtils;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author clement.bareth
@@ -987,4 +1023,28 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
+    
+	public List<?> getNewListValue() {
+		if (storageType != CustomFieldStorageTypeEnum.LIST) {
+			return null;
+		}
+
+		switch (fieldType) {
+		case BOOLEAN:
+			return new ArrayList<Boolean>();
+		case DATE:
+			return new ArrayList<Date>();
+		case DOUBLE:
+			return new ArrayList<Double>();
+		case EXPRESSION:
+		case TEXT_AREA:
+		case LIST:
+		case STRING:
+			return new ArrayList<String>();
+		case LONG:
+			return new ArrayList<Long>();
+		default:
+			return new ArrayList<Object>();
+		}
+	}
 }

@@ -340,7 +340,8 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     
     @ActionMethod
     public void update(Map<String, Object> values) throws BusinessException {
-    	customTableService.update(entity, values);
+        Map<String, Object> convertedValues = customTableService.convertValue(values, fields, false, null);
+    	customTableService.update(entity, convertedValues);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
