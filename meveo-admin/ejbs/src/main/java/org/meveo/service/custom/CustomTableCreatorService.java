@@ -296,7 +296,8 @@ public class CustomTableCreatorService implements Serializable {
 
             addColumnChange.setColumns(Collections.singletonList(column));
             changeSet.addChange(addColumnChange);
-
+            
+            createOrUpdateUniqueField(dbTableName,cft,changeSet);
         }
 
         // Add a foreign key constraint pointing on referenced table if field is an entity reference
@@ -311,7 +312,7 @@ public class CustomTableCreatorService implements Serializable {
                 foreignKeyConstraint.setReferencedColumnNames(UUID);
                 foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
                 foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
-
+                
                 changeSet.addChange(foreignKeyConstraint);
             }
         }
@@ -474,6 +475,7 @@ public class CustomTableCreatorService implements Serializable {
             changeSet.addChange(modifyDataTypeChange);
             dbLog.addChangeSet(changeSet);
         }
+        createOrUpdateUniqueField(dbTableName,cft,changeSet);
 
         Session hibernateSession = em.unwrap(Session.class);
 
@@ -491,6 +493,34 @@ public class CustomTableCreatorService implements Serializable {
                 throw new SQLException(e);
             }
         });
+    }
+    /**
+     * create or update unique key for SQLStorage
+     * @param dbTableName
+     * @param cft
+     * @param changeSet
+     */
+    private void createOrUpdateUniqueField(String dbTableName,CustomFieldTemplate cft,ChangeSet changeSet) {
+    	final CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+        String dbFieldname=cft.getDbFieldname();
+        if(cft.isUnique()) {
+            if(cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()&&cft.isSqlStorage()){
+            	AddUniqueConstraintChange uniqueConstraint=new AddUniqueConstraintChange();
+            	uniqueConstraint.setColumnNames(dbFieldname);
+            	uniqueConstraint.setConstraintName("uk_"+dbFieldname);
+            	uniqueConstraint.setDeferrable(false);
+            	uniqueConstraint.setDisabled(false);
+            	uniqueConstraint.setInitiallyDeferred(false);
+            	uniqueConstraint.setTableName(dbTableName);
+            	changeSet.addChange(uniqueConstraint);
+            }
+        }else {
+        	DropUniqueConstraintChange dropUniqueConstraint=new DropUniqueConstraintChange();
+        	dropUniqueConstraint.setConstraintName("uk_"+dbFieldname);
+        	dropUniqueConstraint.setTableName(dbTableName);
+        	dropUniqueConstraint.setUniqueColumns(dbFieldname);
+        	changeSet.addChange(dropUniqueConstraint);
+        }
     }
 
     /**

@@ -1023,7 +1023,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
-    
+
+    public boolean isSqlStorage() {
+    	if(storages!=null&&storages.contains(DBStorageType.SQL)) {
+    		return true;
+    	}
+    	return false;
+    }
+
 	public List<?> getNewListValue() {
 		if (storageType != CustomFieldStorageTypeEnum.LIST) {
 			return null;
