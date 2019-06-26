@@ -763,11 +763,13 @@ public class Neo4jDao {
         arguments.put("startNodeId", startNodeId);
         arguments.put("endNodeId", endNodeId);
         arguments.put("relationId", relationId);
-        arguments.put("uniqueFields", uniqueFields);
+        arguments.putAll(uniqueFields);
         arguments.put("fields", fields);
         arguments.put("date", date);
 
         String uniqueFieldLiteral =  uniqueFields.isEmpty() ? "" : " " + getFieldsString(uniqueFields.keySet()) + " ";
+
+        LOGGER.info("Attaching relation {} to node {}", relationId, startNodeId);
 
         String createRelationshipQuery = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
                 .append("WITH startNode \n")
@@ -776,14 +778,27 @@ public class Neo4jDao {
                 .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]-(endNode) \n")
                 .append("ON CREATE SET relationship += $fields, relationship.").append(CREATION_DATE).append(" = $date, relationship.meveo_uuid = $relationId \n")
                 .append("ON MATCH SET relationship += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
+                .append("RETURN relationship")
                 .toString();
 
-        cypherHelper.update(
+        cypherHelper.execute(
                 neo4JConfiguration,
                 createRelationshipQuery,
                 arguments,
+                (t, r) -> {
+                    final Record single = r.single();
+                    final Relationship relationship = single.get(0).asRelationship();
+                    if(relationship == null){
+                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
+                    }else{
+                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
+                        t.success();
+                    }
+                    return relationship;
+                },
                 e -> LOGGER.error("Error merging relationship {} on node {}", relationId, startNodeId, e)
         );
+
 
     }
 
