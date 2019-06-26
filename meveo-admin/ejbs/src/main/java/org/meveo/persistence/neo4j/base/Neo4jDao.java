@@ -152,20 +152,31 @@ public class Neo4jDao {
      * Remove a node using its UUID
      *
      * @param neo4jconfiguration Repository code
-     * @param label              Label of the node to remove
-     * @param uuid               UUID of the node to remove
      */
-    public void removeNode(String neo4jconfiguration, String label, String uuid) {
+    public void removeNode(String neo4jconfiguration, Long id) {
         StringBuilder queryBuilder = new StringBuilder()
-                .append("MATCH (n:").append(label).append(") \n")
-                .append("WHERE n.meveo_uuid = $uuid \n")
-                .append("DETACH DELETE n ;");
+                .append("MATCH (n) \n")
+                .append("WHERE ID(n) = $id \n")
+                .append("DETACH DELETE n \n")
+                .append("RETURN n");
 
-        cypherHelper.update(
+        cypherHelper.execute(
                 neo4jconfiguration,
                 queryBuilder.toString(),
-                Collections.singletonMap("uuid", uuid),
-                e -> LOGGER.error("Cannot remove node with label {} and UUID {}", label, uuid, e)
+                Collections.singletonMap("id", id),
+                (transaction, result) -> {
+                    final Record single = result.single();
+                    final Node deletedNode = single.get(0).asNode();
+                    if(deletedNode != null){
+                        LOGGER.info("Node with id {} deleted", deletedNode.id());
+                        transaction.success();
+                    } else {
+                        LOGGER.error("Node with id {} not deleted", id);
+                        transaction.failure();
+                    }
+                    return null;
+                },
+                e -> LOGGER.error("Cannot remove node with id {}", id, e)
         );
     }
 
@@ -709,16 +720,30 @@ public class Neo4jDao {
      * @param firstNodeId        First node to merge
      * @param secondNodeId       Second node to merge
      */
-    public void mergeNodes(String neo4JConfiguration, String firstNodeId, String secondNodeId) {
-        String queryStr = "MATCH (n1) WHERE n1.meveo_uuid = $firstId \n" +
+    public void mergeNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId) {
+        String queryStr = "MATCH (n1) WHERE ID(n1) = $firstId \n" +
                 "WITH n1, n1.creationDate as creationDate \n" +
-                "MATCH (n2) WHERE n2.meveo_uuid = $secondId \n" +
-                "SET n1 += properties(n2), n1.meveo_uuid = $firstId, n1.creationDate = creationDate;";
+                "MATCH (n2) WHERE ID(n2) = $secondId \n" +
+                "SET n1 += properties(n2), n1.meveo_uuid = $firstId, n1.creationDate = creationDate \n" +
+                "RETURN n1, n2";
 
-        cypherHelper.update(
+        cypherHelper.execute(
                 neo4JConfiguration,
                 queryStr,
-                ImmutableMap.of("firstNodeId", firstNodeId, "secondNodeId", secondNodeId),
+                ImmutableMap.of("firstId", firstNodeId, "secondId", secondNodeId),
+                (transaction, result) -> {
+                    final Record single = result.single();
+                    final Node nodeA = single.get(0).asNode();
+                    final Node nodeB = single.get(1).asNode();
+                    if(nodeA != null & nodeB != null){
+                        LOGGER.info("Properties of node {} added to node {}", nodeA.id(), nodeB.id());
+                        transaction.success();
+                    } else {
+                        LOGGER.error("Properties of node {} and {} not merged", firstNodeId, secondNodeId);
+                        transaction.failure();
+                    }
+                    return null;
+                },
                 e -> LOGGER.error("Error while merging nodes {} and {}", firstNodeId, secondNodeId, e)
         );
     }
@@ -729,10 +754,10 @@ public class Neo4jDao {
      * @param neo4JConfiguration Configuration code of the neo4j instance
      * @param nodeId             Node id
      */
-    public List<Relationship> findRelationships(String neo4JConfiguration, String nodeId){
+    public List<Relationship> findRelationships(String neo4JConfiguration, Long nodeId, String label){
         // First, retrieves relationships of second node
-        String findAllRelationshipQuery = "MATCH (n)-[r]-() \n" +
-                "WHERE n.meveo_uuid = $secondNodeId \n" +
+        String findAllRelationshipQuery = "MATCH (n:" + label + ")-[r]-() \n" +
+                "WHERE ID(n) = $secondNodeId \n" +
                 "RETURN r";
 
         return cypherHelper.execute(
@@ -757,7 +782,7 @@ public class Neo4jDao {
      * @param fields             Fields to update
      * @param date               Date of the operation
      */
-    public void mergeRelationshipById(String neo4JConfiguration, String startNodeId, Long endNodeId, String relationId, String label, Map<String, Object> uniqueFields, Map<String, Object> fields, Long date) {
+    public void mergeRelationshipById(String neo4JConfiguration, Long startNodeId, Long endNodeId, String relationId, String label, Map<String, Object> uniqueFields, Map<String, Object> fields, Long date) {
 
         Map<String, Object> arguments = new HashMap<>();
         arguments.put("startNodeId", startNodeId);
@@ -771,7 +796,7 @@ public class Neo4jDao {
 
         LOGGER.info("Attaching relation {} to node {}", relationId, startNodeId);
 
-        String createRelationshipQuery = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
+        String createRelationshipQuery = new StringBuffer("MATCH (startNode) WHERE ID(startNode) = $startNodeId \n")
                 .append("WITH startNode \n")
                 .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
                 .append("WITH startNode, endNode \n")
@@ -802,9 +827,11 @@ public class Neo4jDao {
 
     }
 
-    public List<String> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration){
+    public List<Node> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration){
+        // Use labels to speed up things
+
         String orderByQuery = new StringBuffer("MATCH (n) WHERE n.meveo_uuid IN $uuids \n")
-                .append("RETURN n.meveo_uuid \n")
+                .append("RETURN n \n")
                 .append("ORDER BY n.").append(property).append(" ASC \n")
                 .toString();
 
@@ -812,7 +839,7 @@ public class Neo4jDao {
                 neo4JConfiguration,
                 orderByQuery,
                 ImmutableMap.of("uuids", uuids),
-                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asString).collect(Collectors.toList()),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
                 e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property)
         );
     }
