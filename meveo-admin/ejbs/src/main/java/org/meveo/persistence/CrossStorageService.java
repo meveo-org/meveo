@@ -559,7 +559,7 @@ public class CrossStorageService implements CustomPersistenceService {
         }
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jDao.removeNode(configurationCode, cet.getCode(), uuid);
+            //FIXME: neo4jDao.removeNode(configurationCode, cet.getCode(), uuid);
         }
     }
 
