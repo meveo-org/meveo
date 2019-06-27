@@ -108,6 +108,7 @@ public class JSONSchemaGenerator {
 		primary.addAll(
 				templates
 						.stream()
+						.filter(item -> item.getCustomEntityCategory() != null && categoryCode.equals(item.getCustomEntityCategory().getCode()))
 						.map(CustomEntityTemplate::getCode)
 						.collect(Collectors.toSet())
 		);
@@ -119,6 +120,7 @@ public class JSONSchemaGenerator {
 		primary.addAll(
 				templates
 						.stream()
+						.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode())) || (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
 						.map(CustomRelationshipTemplate::getCode)
 						.collect(Collectors.toSet())
 		);
