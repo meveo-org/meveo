@@ -350,18 +350,21 @@ public class CustomTableCreatorService implements Serializable {
                     throw new SQLException(e);
                 }
             });
-            ChangeSet changeSetUpdateUK = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AF_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+            DatabaseChangeLog dbLogUpdateUK = new DatabaseChangeLog("path");
+            ChangeSet changeSetUpdateUK = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AF_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLogUpdateUK);
             createOrUpdateUniqueField(dbTableName,cft,changeSetUpdateUK);
-            hibernateSession.doWork(connection->{
-            	Database database1;
-            	try {
-            		database1=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-            		Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database1);
-                    liquibase.update(new Contexts(), new LabelExpression());
-            	}catch(Exception e) {
-            		log.error("failed to createOrUpdateUniqueField {}",e.getLocalizedMessage());
-            	}
-            });
+            if(!changeSetUpdateUK.getChanges().isEmpty()) {
+            	hibernateSession.doWork(connection->{
+                	Database database1;
+                	try {
+                		database1=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+                		Liquibase liquibase = new Liquibase(dbLogUpdateUK, new ClassLoaderResourceAccessor(), database1);
+                        liquibase.update(new Contexts(), new LabelExpression());
+                	}catch(Exception e) {
+                		log.error("failed to createOrUpdateUniqueField {}",e.getLocalizedMessage());
+                	}
+                });
+            }
         }
     }
 
