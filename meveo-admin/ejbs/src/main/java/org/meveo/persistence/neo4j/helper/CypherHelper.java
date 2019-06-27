@@ -96,11 +96,11 @@ public class CypherHelper {
             transaction.run(request, parameters);
             transaction.success();
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.failure();
-            }
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
+            }
+            if (transaction != null) {
+                transaction.failure();
             }
         } finally {
             if (transaction != null) {

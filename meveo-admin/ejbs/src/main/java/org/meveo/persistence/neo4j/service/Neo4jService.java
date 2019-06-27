@@ -99,6 +99,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
+import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -468,6 +469,7 @@ public class Neo4jService implements CustomPersistenceService {
                         String joinedIds = ids.stream() .map(Object::toString).collect(Collectors.joining(", "));
                         LOGGER.warn("UniqueConstraints with 100 trust score shouldn't return more than 1 ID : duplicated nodes will be merged (code = {}; IDs = {})", uniqueConstraint.getCode(), joinedIds);
                         String id = mergeNodes(neo4JConfiguration, cet, ids);
+                        LOGGER.info("Nodes {} were merge into node {}", joinedIds, id);
                         ids = Collections.singleton(id);
                     }
 
@@ -1072,6 +1074,11 @@ public class Neo4jService implements CustomPersistenceService {
             try {
 
                 // Check that field should be stored in Neo4J
+                if(cft.getStorages() == null){
+                    log.error("No storages configured for CFT {}#{}", cft.getAppliesTo(), cft.getCode());
+                    continue;
+                }
+
                 if(!cft.getStorages().contains(DBStorageType.NEO4J)){
                     continue;
                 }
@@ -1398,13 +1405,18 @@ public class Neo4jService implements CustomPersistenceService {
      * @throws ELException if we cannot determine if a custom field can apply
      */
     public String mergeNodes(String configurationCode, CustomEntityTemplate customEntityTemplate, Collection<String> uuids) throws ELException, BusinessException {
-        List<String> uuidsToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode);
-        String persistentNodeUuid = uuidsToTreat.remove(0);
+        List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode);
+
+        Node persistentNode = nodesToTreat.remove(0);
+        LOGGER.info("Merging nodes {} into node {}", uuids, persistentNode.get("meveo_uuid"));
 
         final List<CustomRelationshipTemplate> availableCrts = customFieldsCache.getCustomRelationshipTemplateByCet(customEntityTemplate.getCode());
 
-        for (String uuid : uuidsToTreat) {
-            final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, uuid);
+        for (Node node : nodesToTreat) {
+            final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, node.id(), customEntityTemplate.getCode());
+            List<Long> relIds = relationships.stream().map(org.neo4j.driver.v1.types.Entity::id).collect(Collectors.toList());
+
+            LOGGER.info("Merging relationships {} of node {} into node {}", relIds, node.id(), persistentNode.id());
             for (Relationship relationship : relationships) {
                 Map<String, Object> uniqueFields = new HashMap<>();
                 final Map<String, Object> relationProperties = relationship.asMap();
@@ -1414,16 +1426,21 @@ public class Neo4jService implements CustomPersistenceService {
                         .filter(crt -> crt.getName().equals(type))
                         .collect(Collectors.toList());
 
-                // Determine unique fields
-                if(correspondingCrt.isEmpty()){
-                    log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
-                    uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
-                } else {
-                    final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(correspondingCrt.get(0).getAppliesTo());
-                    validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
-                    if(correspondingCrt.size() > 1){
-                        log.warn("Multiple CRT available for relation type {} and node label {} : {}", type, customEntityTemplate.getCode(), correspondingCrt);
+                try {
+                    // Determine unique fields
+                    if (correspondingCrt.isEmpty()) {
+                        log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
+                        uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
+                    } else {
+                        final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(correspondingCrt.get(0).getAppliesTo());
+                        validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
+                        if (correspondingCrt.size() > 1) {
+                            log.warn("Multiple CRT available for relation type {} and node label {} : {}", type, customEntityTemplate.getCode(), correspondingCrt);
+                        }
                     }
+                }catch(Exception e){
+                    log.error("Cannot determine unique fields for relation {}", type, e);
+                    uniqueFields = relationProperties;
                 }
 
                 Long creationOrUpdateDate = (Long) (relationProperties.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE) ?
@@ -1432,19 +1449,20 @@ public class Neo4jService implements CustomPersistenceService {
 
                 neo4jDao.mergeRelationshipById(
                         configurationCode,
-                        persistentNodeUuid,
+                        persistentNode.id(),
                         relationship.endNodeId(),
-                        relationship.get("meveo_uuid").asString(),
+                        relationship.get(MEVEO_UUID).asString(),
                         type,
                         uniqueFields,
                         relationProperties,
                         creationOrUpdateDate
                 );
 
-                neo4jDao.mergeNodes(configurationCode, persistentNodeUuid, uuid);
-                neo4jDao.removeNode(configurationCode, customEntityTemplate.getCode(), uuid);
             }
+
+            LOGGER.info("Merging properties of node {} into node {} then removing node {}", node.id(), persistentNode.id(), node.id());
+            neo4jDao.mergeAndRemoveNodes(configurationCode, persistentNode.id(), node.id());
         }
-        return persistentNodeUuid;
+        return persistentNode.get(MEVEO_UUID).asString();
     }
 }

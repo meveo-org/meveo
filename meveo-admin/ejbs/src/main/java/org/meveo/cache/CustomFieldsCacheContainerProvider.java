@@ -32,6 +32,7 @@ import org.meveo.model.catalog.CalendarYearly;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.CustomFieldException;
@@ -396,6 +397,22 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
         cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
     }
 
+    public void addUpdateCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
+        if (!useCETCache) {
+            return;
+        }
+        log.trace("Adding / Updating CRT template {} to CRT cache", crt.getCode());
+        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
+    }
+
+    public void removeCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
+        if (!useCETCache) {
+            return;
+        }
+        log.trace("Removing CRT template {} from CRT cache", crt.getCode());
+        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
+    }
+
     private CacheKeyStr getCFTCacheKeyByAppliesTo(CustomFieldTemplate cft) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), cft.getAppliesTo());
         return key;
@@ -448,8 +465,35 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     public List<CustomRelationshipTemplate> getCustomRelationshipTemplateByCet(String code) {
         return crtsByCode.values()
                 .stream()
-                .filter(crt -> crt.getStartNode().getCode().equals(code) || crt.getEndNode().getCode().equals(code))
+                .filter(crt -> crtHasSourceOrTargetConcerned(code, crt))
                 .collect(Collectors.toList());
+    }
+
+    private boolean crtHasSourceOrTargetConcerned(String code, CustomRelationshipTemplate crt) {
+        // First look directly in target and source
+        boolean match = crt.getStartNode().getCode().equals(code) || crt.getEndNode().getCode().equals(code);
+
+        // If no direct match, try to see if we can match using labels of the source CET ...
+        if(!match && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J)){
+            match = crt.getStartNode().getNeo4JStorageConfiguration().getLabels().contains(code);
+        }
+
+        // ... or the target CET
+        if(!match && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J)){
+            match = crt.getEndNode().getNeo4JStorageConfiguration().getLabels().contains(code);
+        }
+
+        // In last resort, try to see in the ancestors of the source CET ...
+        if(!match && crt.getStartNode().getSuperTemplate() != null){
+            match = crtHasSourceOrTargetConcerned(crt.getStartNode().getSuperTemplate().getCode(), crt);
+        }
+
+        // ... or the target CET
+        if(!match && crt.getEndNode().getSuperTemplate() != null){
+            match = crtHasSourceOrTargetConcerned(crt.getEndNode().getSuperTemplate().getCode(), crt);
+        }
+
+        return match;
     }
 
     /**

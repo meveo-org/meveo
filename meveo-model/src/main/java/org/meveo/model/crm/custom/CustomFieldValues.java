@@ -309,6 +309,16 @@ public class CustomFieldValues implements Serializable {
         valuesByCode.get(cfCode).add(cfValue);
         return cfValue;
     }
+    
+    public CustomFieldValue setValue(String cfCode, List<?> listValue, Class<?> itemClass) {
+        if (valuesByCode == null) {
+            valuesByCode = new HashMap<>();
+        }
+        valuesByCode.put(cfCode, new ArrayList<>());
+        CustomFieldValue cfValue = new CustomFieldValue(listValue, itemClass);
+        valuesByCode.get(cfCode).add(cfValue);
+        return cfValue;
+    }
 
     /**
      * Set custom field value for a given period

@@ -72,44 +72,50 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     private ParamBean paramBean = ParamBean.getInstance();
 
     @Override
-    public void create(CustomRelationshipTemplate cet) throws BusinessException {
-        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+    public void create(CustomRelationshipTemplate crt) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(crt.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
-        super.create(cet);
+        super.create(crt);
         try {
-            permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-            permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
-            if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            	customTableCreatorService.createCrtTable(cet);
+            permissionService.createIfAbsent("modify", crt.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
+            permissionService.createIfAbsent("read", crt.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+            if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+            	customTableCreatorService.createCrtTable(crt);
             }
+            customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public CustomRelationshipTemplate update(CustomRelationshipTemplate cet) throws BusinessException {
-        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+    public CustomRelationshipTemplate update(CustomRelationshipTemplate crt) throws BusinessException {
+        if (!EntityCustomizationUtils.validateOntologyCode(crt.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
-        CustomRelationshipTemplate cetUpdated = super.update(cet);
+        CustomRelationshipTemplate cetUpdated = super.update(crt);
         
-        permissionService.createIfAbsent("modify", cet.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-        permissionService.createIfAbsent("read", cet.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+        permissionService.createIfAbsent("modify", crt.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
+        permissionService.createIfAbsent("read", crt.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
         
         // SQL Storage logic
-        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-        	boolean created = customTableCreatorService.createCrtTable(cet);
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	boolean created = customTableCreatorService.createCrtTable(crt);
         	// Create the custom fields for the table if the table has been created
         	if(created) {
-        		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values()) {
-    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+        		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(crt.getAppliesTo()).values()) {
+    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
         		}
         	}
         }else {
-        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+            // Remove table if storage previously contained SQL
+            if(customFieldsCache.getCustomRelationshipTemplate(crt.getCode()).getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(crt));
+            }
         }
+
+        customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
         return cetUpdated;
     }
@@ -117,6 +123,10 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     public void synchronizeStorages(CustomRelationshipTemplate crt) throws BusinessException {
         // Synchronize custom fields storages with CRT available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(crt.getAppliesTo()).values()) {
+            if(cft.getStorages() == null){
+                    cft.setStorages(new ArrayList<>());
+            }
+
             for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
                 if (!crt.getAvailableStorages().contains(storage)) {
                     log.info("Remove storage '{}' from CFT '{}' of CRT '{}'", storage, cft.getCode(), crt.getCode());
@@ -130,15 +140,16 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Override
     public void remove(Long id) throws BusinessException {
-        CustomRelationshipTemplate cet = findById(id);
-        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+        CustomRelationshipTemplate crt = findById(id);
+        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
-        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(crt));
         }
         super.remove(id);
+        customFieldsCache.removeCustomRelationshipTemplate(crt);
     }
 
     /**

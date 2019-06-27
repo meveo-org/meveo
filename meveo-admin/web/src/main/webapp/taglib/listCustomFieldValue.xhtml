@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:hftl="http://hftl.org"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags">
+
+<ui:composition>
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+	
+	<p:dataTable id="#{cft.code}_list" var="var" value="#{field.listValue}" editable="false">
+		<p:column>
+			<h:outputText value="#{var}" style="width:100%" />
+		</p:column>
+		<p:column headerText="Action">
+			<p:commandLink value="Remove" update="#{cft.code}_list" process="#{cft.code}_list">
+				<p:collector value="#{var}" removeFrom="#{field.listValue}" unique="true" />
+			</p:commandLink>
+		</p:column>
+		<f:facet name="footer">
+			<p:inputText id="tempInput" value="#{customFieldDataEntryBean.tempValues[cft.code]}"/>
+			<p:commandButton id="btn_add" value="Add" update="@form">
+				<p:collector value="#{customFieldDataEntryBean.tempValues[cft.code]}" addTo="#{field.listValue}" unique="true" />
+				<p:resetInput target="tempInput"/>
+			</p:commandButton>
+		</f:facet>
+	</p:dataTable>
+
+</ui:composition>
+</html>

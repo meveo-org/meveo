@@ -16,8 +16,10 @@
 
 package org.meveo.admin.action.admin.custom;
 
+import org.apache.commons.collections4.functors.NullPredicate;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.JacksonUtil;
@@ -47,11 +49,14 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     	values = new CustomFieldValues();
     	this.cetCode = cetCode;
     	this.fields = fields;
+    	
     	valuesMap.forEach((k,v) -> {
     		values.setValue(k, v);
     	});
     	
-    	System.out.println(valuesMap);
+    	fields.stream().filter(f -> CustomFieldStorageTypeEnum.LIST.equals(f.getStorageType()))
+    		.filter(f -> valuesMap.get(f.getDbFieldname()) == null)
+			.forEach(f -> values.setValue(f.getDbFieldname(), f.getNewListValue(), f.getFieldType().getDataClass()));
     }
     
 	public CustomFieldValues getValues() {
@@ -95,6 +100,11 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
 		cfValue.setStringValue(serializedValues);
+	}
+	
+	@ActionMethod
+	public void onListElementUpdated() {
+		
 	}
 
 	public CustomFieldTemplate getSelectedCft() {

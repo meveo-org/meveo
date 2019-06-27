@@ -1,25 +1,17 @@
 package org.meveo.service.custom;
 
-import liquibase.Contexts;
-import liquibase.LabelExpression;
-import liquibase.Liquibase;
-import liquibase.change.AddColumnConfig;
-import liquibase.change.ColumnConfig;
-import liquibase.change.ConstraintsConfig;
-import liquibase.change.core.*;
-import liquibase.changelog.ChangeSet;
-import liquibase.changelog.DatabaseChangeLog;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.MigrationFailedException;
-import liquibase.precondition.core.NotPrecondition;
-import liquibase.precondition.core.PreconditionContainer;
-import liquibase.precondition.core.PreconditionContainer.ErrorOption;
-import liquibase.precondition.core.PreconditionContainer.FailOption;
-import liquibase.precondition.core.TableExistsPrecondition;
-import liquibase.resource.ClassLoaderResourceAccessor;
-import liquibase.statement.DatabaseFunction;
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
@@ -33,17 +25,40 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.slf4j.Logger;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
-import java.io.Serializable;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
+import liquibase.Contexts;
+import liquibase.LabelExpression;
+import liquibase.Liquibase;
+import liquibase.change.AddColumnConfig;
+import liquibase.change.ColumnConfig;
+import liquibase.change.ConstraintsConfig;
+import liquibase.change.core.AddColumnChange;
+import liquibase.change.core.AddDefaultValueChange;
+import liquibase.change.core.AddForeignKeyConstraintChange;
+import liquibase.change.core.AddNotNullConstraintChange;
+import liquibase.change.core.AddPrimaryKeyChange;
+import liquibase.change.core.AddUniqueConstraintChange;
+import liquibase.change.core.CreateTableChange;
+import liquibase.change.core.DropColumnChange;
+import liquibase.change.core.DropDefaultValueChange;
+import liquibase.change.core.DropForeignKeyConstraintChange;
+import liquibase.change.core.DropNotNullConstraintChange;
+import liquibase.change.core.DropSequenceChange;
+import liquibase.change.core.DropTableChange;
+import liquibase.change.core.DropUniqueConstraintChange;
+import liquibase.change.core.ModifyDataTypeChange;
+import liquibase.changelog.ChangeSet;
+import liquibase.changelog.DatabaseChangeLog;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.MigrationFailedException;
+import liquibase.precondition.core.NotPrecondition;
+import liquibase.precondition.core.PreconditionContainer;
+import liquibase.precondition.core.PreconditionContainer.ErrorOption;
+import liquibase.precondition.core.PreconditionContainer.FailOption;
+import liquibase.precondition.core.TableExistsPrecondition;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.statement.DatabaseFunction;
 
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -296,7 +311,6 @@ public class CustomTableCreatorService implements Serializable {
 
             addColumnChange.setColumns(Collections.singletonList(column));
             changeSet.addChange(addColumnChange);
-
         }
 
         // Add a foreign key constraint pointing on referenced table if field is an entity reference
@@ -311,7 +325,7 @@ public class CustomTableCreatorService implements Serializable {
                 foreignKeyConstraint.setReferencedColumnNames(UUID);
                 foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
                 foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
-
+                
                 changeSet.addChange(foreignKeyConstraint);
             }
         }
@@ -336,6 +350,21 @@ public class CustomTableCreatorService implements Serializable {
                     throw new SQLException(e);
                 }
             });
+            DatabaseChangeLog dbLogUpdateUK = new DatabaseChangeLog("path");
+            ChangeSet changeSetUpdateUK = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AF_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLogUpdateUK);
+            createOrUpdateUniqueField(dbTableName,cft,changeSetUpdateUK);
+            if(!changeSetUpdateUK.getChanges().isEmpty()) {
+            	hibernateSession.doWork(connection->{
+                	Database database1;
+                	try {
+                		database1=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+                		Liquibase liquibase = new Liquibase(dbLogUpdateUK, new ClassLoaderResourceAccessor(), database1);
+                        liquibase.update(new Contexts(), new LabelExpression());
+                	}catch(Exception e) {
+                		log.error("failed to createOrUpdateUniqueField {}",e.getLocalizedMessage());
+                	}
+                });
+            }
         }
     }
 
@@ -474,6 +503,7 @@ public class CustomTableCreatorService implements Serializable {
             changeSet.addChange(modifyDataTypeChange);
             dbLog.addChangeSet(changeSet);
         }
+        createOrUpdateUniqueField(dbTableName,cft,changeSet);
 
         Session hibernateSession = em.unwrap(Session.class);
 
@@ -491,6 +521,33 @@ public class CustomTableCreatorService implements Serializable {
                 throw new SQLException(e);
             }
         });
+    }
+    /**
+     * create or update unique key for SQLStorage
+     * @param dbTableName
+     * @param cft
+     * @param changeSet
+     */
+    private void createOrUpdateUniqueField(String dbTableName,CustomFieldTemplate cft,ChangeSet changeSet) {
+        String dbFieldname=cft.getDbFieldname();
+        if(cft.isSqlStorage()){
+        	if(cft.isUnique()) {
+            	AddUniqueConstraintChange uniqueConstraint=new AddUniqueConstraintChange();
+            	uniqueConstraint.setColumnNames(dbFieldname);
+            	uniqueConstraint.setConstraintName("uk_"+dbFieldname);
+            	uniqueConstraint.setDeferrable(false);
+            	uniqueConstraint.setDisabled(false);
+            	uniqueConstraint.setInitiallyDeferred(false);
+            	uniqueConstraint.setTableName(dbTableName);
+            	changeSet.addChange(uniqueConstraint);
+            }else {
+            	DropUniqueConstraintChange dropUniqueConstraint=new DropUniqueConstraintChange();
+            	dropUniqueConstraint.setConstraintName("uk_"+dbFieldname);
+            	dropUniqueConstraint.setTableName(dbTableName);
+            	dropUniqueConstraint.setUniqueColumns(dbFieldname);
+            	changeSet.addChange(dropUniqueConstraint);
+            }
+        }
     }
 
     /**

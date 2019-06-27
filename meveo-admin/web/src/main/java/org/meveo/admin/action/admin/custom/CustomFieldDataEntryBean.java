@@ -59,6 +59,7 @@ import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.primefaces.event.CellEditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +129,8 @@ public class CustomFieldDataEntryBean implements Serializable {
     private CustomEntityInstance entityInstance;
 
     private List<BusinessEntity> availableEntities = new ArrayList<>();
+    
+    private Map<String, Object> tempValues = new HashMap<>();
 
     /** Logger. */
     private Logger log = LoggerFactory.getLogger(this.getClass()); 
@@ -143,8 +146,16 @@ public class CustomFieldDataEntryBean implements Serializable {
         initFields(entity);
         initCustomActions(entity);
     }
+    
+	public Map<String, Object> getTempValues() {
+		return tempValues;
+	}
 
-    /**
+	public void setTempValues(Map<String, Object> tempValue) {
+		this.tempValues = tempValue;
+	}
+
+	/**
      * Explicitly refresh fields and action definitions while preserving field values. Should be used when entity customization is managed as part of some page that contains CF
      * data entry and CF fields should be refreshed when entity customization is finished. Job template.
      * 
@@ -1725,4 +1736,5 @@ public class CustomFieldDataEntryBean implements Serializable {
         customEntityInstanceCode = null;
         entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
     }
+    
 }

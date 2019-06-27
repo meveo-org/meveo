@@ -1,7 +1,9 @@
 package org.meveo.model.crm.custom;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -73,7 +75,7 @@ public class CustomFieldValue implements Serializable {
      */
     @JsonUnwrapped()
     private DatePeriod period;
-
+    
     /**
      * Value priority if periods overlapp. The higher the number, the higher the priority is.
      */
@@ -217,6 +219,10 @@ public class CustomFieldValue implements Serializable {
     public CustomFieldValue(Object value) {
         setValue(value);
     }
+    
+    public CustomFieldValue(List<?> listValue, Class<?> listClass) {
+        setListValue(listValue, listClass);
+    }
 
     public CustomFieldValue(DatePeriod period, Integer priority, Object value) {
         this.period = period;
@@ -304,19 +310,9 @@ public class CustomFieldValue implements Serializable {
 
         return null;
     }
-
-    /**
-     * Set a list of values.
-     * 
-     * @param listValue list of values to set.
-     */
-    @SuppressWarnings({ "rawtypes" })
-    public void setListValue(List listValue) {
-
-        Iterator iterator = ((List) listValue).iterator();
-        Class itemClass = findItemClass(iterator);
-
-        if (itemClass == String.class) {
+    
+    public void setListValue(List listValue, Class<?> itemClass) {
+    	if (itemClass == String.class) {
             listStringValue = new ArrayList<>();
             for (Object listItem : listValue) {
                 listStringValue.add(listItem.toString());
@@ -354,6 +350,20 @@ public class CustomFieldValue implements Serializable {
                 listEntityValue.add((EntityReferenceWrapper) listItem);
             }
         }
+    }
+
+    /**
+     * Set a list of values.
+     * 
+     * @param listValue list of values to set.
+     */
+    @SuppressWarnings({ "rawtypes" })
+    public void setListValue(List listValue) {
+
+        Iterator iterator = ((List) listValue).iterator();
+        Class itemClass = findItemClass(iterator);
+        
+        setListValue(listValue, itemClass);
     }
 
     @SuppressWarnings("rawtypes")

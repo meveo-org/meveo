@@ -211,7 +211,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         checkIdentifierTypeAndUniqueness(cft);
 
         //  if CFT is of type DATE
-        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
         	checkDateFormat(cft);
         }
 
@@ -260,17 +260,16 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
 
+        CustomFieldTemplate cachedCft = customFieldsCache.getCustomFieldTemplate(cft.getCode(), cft.getAppliesTo());
+
         //  if CFT is of type DATE
-        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType())) {
+        if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
         	checkDateFormat(cft);
         }
 
         checkIdentifierTypeAndUniqueness(cft);
 
         CustomFieldTemplate cftUpdated = super.update(cft);
-
-        customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
-        elasticClient.updateCFMapping(cftUpdated);
 
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
@@ -281,7 +280,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom entity template {} was not found", entityCode);
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
-			} else if(!cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+			} else if(!cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 
@@ -292,10 +291,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(crt), cft);
-			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
+
+        customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
+        elasticClient.updateCFMapping(cftUpdated);
 
         return cftUpdated;
     }
