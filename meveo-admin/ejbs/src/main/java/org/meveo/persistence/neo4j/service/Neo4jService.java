@@ -1074,6 +1074,11 @@ public class Neo4jService implements CustomPersistenceService {
             try {
 
                 // Check that field should be stored in Neo4J
+                if(cft.getStorages() == null){
+                    log.error("No storages configured for CFT {}#{}", cft.getAppliesTo(), cft.getCode());
+                    continue;
+                }
+
                 if(!cft.getStorages().contains(DBStorageType.NEO4J)){
                     continue;
                 }
@@ -1421,16 +1426,21 @@ public class Neo4jService implements CustomPersistenceService {
                         .filter(crt -> crt.getName().equals(type))
                         .collect(Collectors.toList());
 
-                // Determine unique fields
-                if(correspondingCrt.isEmpty()){
-                    log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
-                    uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
-                } else {
-                    final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(correspondingCrt.get(0).getAppliesTo());
-                    validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
-                    if(correspondingCrt.size() > 1){
-                        log.warn("Multiple CRT available for relation type {} and node label {} : {}", type, customEntityTemplate.getCode(), correspondingCrt);
+                try {
+                    // Determine unique fields
+                    if (correspondingCrt.isEmpty()) {
+                        log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
+                        uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
+                    } else {
+                        final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(correspondingCrt.get(0).getAppliesTo());
+                        validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
+                        if (correspondingCrt.size() > 1) {
+                            log.warn("Multiple CRT available for relation type {} and node label {} : {}", type, customEntityTemplate.getCode(), correspondingCrt);
+                        }
                     }
+                }catch(Exception e){
+                    log.error("Cannot determine unique fields for relation {}", type, e);
+                    uniqueFields = relationProperties;
                 }
 
                 Long creationOrUpdateDate = (Long) (relationProperties.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE) ?
@@ -1439,18 +1449,19 @@ public class Neo4jService implements CustomPersistenceService {
 
                 neo4jDao.mergeRelationshipById(
                         configurationCode,
-                        node.id(),
+                        persistentNode.id(),
                         relationship.endNodeId(),
-                        relationship.get("meveo_uuid").asString(),
+                        relationship.get(MEVEO_UUID).asString(),
                         type,
                         uniqueFields,
                         relationProperties,
                         creationOrUpdateDate
                 );
 
-                neo4jDao.mergeNodes(configurationCode, persistentNode.id(), node.id());
-                neo4jDao.removeNode(configurationCode, node.id());
             }
+
+            LOGGER.info("Merging properties of node {} into node {} then removing node {}", node.id(), persistentNode.id(), node.id());
+            neo4jDao.mergeAndRemoveNodes(configurationCode, persistentNode.id(), node.id());
         }
         return persistentNode.get(MEVEO_UUID).asString();
     }

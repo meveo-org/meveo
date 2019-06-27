@@ -397,6 +397,22 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
         cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
     }
 
+    public void addUpdateCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
+        if (!useCETCache) {
+            return;
+        }
+        log.trace("Adding / Updating CRT template {} to CRT cache", crt.getCode());
+        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
+    }
+
+    public void removeCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
+        if (!useCETCache) {
+            return;
+        }
+        log.trace("Removing CRT template {} from CRT cache", crt.getCode());
+        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
+    }
+
     private CacheKeyStr getCFTCacheKeyByAppliesTo(CustomFieldTemplate cft) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), cft.getAppliesTo());
         return key;

@@ -720,11 +720,14 @@ public class Neo4jDao {
      * @param firstNodeId        First node to merge
      * @param secondNodeId       Second node to merge
      */
-    public void mergeNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId) {
+    public void mergeAndRemoveNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId) {
         String queryStr = "MATCH (n1) WHERE ID(n1) = $firstId \n" +
-                "WITH n1, n1.creationDate as creationDate \n" +
+                "WITH n1, n1.creationDate as creationDate, n1.meveo_uuid as uuid \n" +
                 "MATCH (n2) WHERE ID(n2) = $secondId \n" +
-                "SET n1 += properties(n2), n1.meveo_uuid = $firstId, n1.creationDate = creationDate \n" +
+                "WITH n1, n2, creationDate, uuid, properties(n2) as props \n" +
+                "DETACH DELETE (n2) \n" +
+                "WITH n1, n2, creationDate, props, uuid \n" +
+                "SET n1 += props, n1.creationDate = creationDate, n1.meveo_uuid = uuid \n" +
                 "RETURN n1, n2";
 
         cypherHelper.execute(
@@ -736,10 +739,10 @@ public class Neo4jDao {
                     final Node nodeA = single.get(0).asNode();
                     final Node nodeB = single.get(1).asNode();
                     if(nodeA != null & nodeB != null){
-                        LOGGER.info("Properties of node {} added to node {}", nodeA.id(), nodeB.id());
+                        LOGGER.info("Properties of node {} added to node {} and node {} removed", nodeB.id(), nodeA.id(), nodeB.id());
                         transaction.success();
                     } else {
-                        LOGGER.error("Properties of node {} and {} not merged", firstNodeId, secondNodeId);
+                        LOGGER.error("Properties of node {} and {} not merged and node {} not removed", secondNodeId, firstNodeId, secondNodeId);
                         transaction.failure();
                     }
                     return null;
