@@ -56,7 +56,7 @@ public interface BinaryStorageConfigurationRs {
 	 */
 	@GET
 	@Path("/{code}")
-	BinaryStorageConfigurationResponseDto find(@QueryParam("code") String code);
+	BinaryStorageConfigurationResponseDto find(@PathParam("code") String code);
 
 	/**
 	 * List binary storage
