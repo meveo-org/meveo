@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.persistence.neo4j.service.graphql;
+package idl.meveo;
 
 import org.junit.Assert;
 import org.junit.Before;
