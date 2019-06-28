@@ -16,26 +16,16 @@
 
 package org.meveo.persistence.neo4j.service.graphql;
 
-import org.elasticsearch.common.inject.Inject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
-import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
 public class TestIDL {
 
-    @Inject
-    GraphQLService graphQLService;
+    private GraphQLService graphQLService;
 
     @Before
     public void before() {
