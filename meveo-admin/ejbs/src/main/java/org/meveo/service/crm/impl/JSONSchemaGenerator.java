@@ -105,25 +105,29 @@ public class JSONSchemaGenerator {
 	private void processCustomEntityTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
 		Collection<CustomEntityTemplate> templates = entityTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
-		primary.addAll(
-				templates
-						.stream()
-						.filter(item -> item.getCustomEntityCategory() != null && categoryCode.equals(item.getCustomEntityCategory().getCode()))
-						.map(CustomEntityTemplate::getCode)
-						.collect(Collectors.toSet())
-		);
+		if(StringUtils.isEmpty(categoryCode)) {
+			primary.addAll(
+					templates
+							.stream()
+							.filter(item -> item.getCustomEntityCategory() != null && categoryCode.equals(item.getCustomEntityCategory().getCode()))
+							.map(CustomEntityTemplate::getCode)
+							.collect(Collectors.toSet())
+			);
+		}
 	}
 
 	private void processCustomRelationshipTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
 		Collection<CustomRelationshipTemplate> templates = relationshipTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
-		primary.addAll(
-				templates
-						.stream()
-						.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode())) || (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
-						.map(CustomRelationshipTemplate::getCode)
-						.collect(Collectors.toSet())
-		);
+		if(StringUtils.isEmpty(categoryCode)) {
+			primary.addAll(
+					templates
+							.stream()
+							.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode())) || (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
+							.map(CustomRelationshipTemplate::getCode)
+							.collect(Collectors.toSet())
+			);
+		}
 	}
 
 	public String generateEntityTemplateSchema(String schemaLocation, String templateCode, String categoryCode) {
