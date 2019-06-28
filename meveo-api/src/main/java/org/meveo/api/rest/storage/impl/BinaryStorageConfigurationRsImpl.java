@@ -3,6 +3,7 @@ package org.meveo.api.rest.storage.impl;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.ws.rs.NotFoundException;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -13,6 +14,7 @@ import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.storage.BinaryStorageConfigurationRs;
 import org.meveo.api.storage.BinaryStorageConfigurationApi;
 import org.meveo.api.storage.BinaryStorageConfigurationDto;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 
 /**
  * @author Edward P. Legaspi
@@ -63,9 +65,11 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 	@Override
 	public BinaryStorageConfigurationResponseDto find(String code) {
 		BinaryStorageConfigurationResponseDto result = new BinaryStorageConfigurationResponseDto();
+		
 		try {
 			result.setBinaryStorageConfiguration(binaryStorageConfigurationApi.find(code));
-
+		} catch(EntityDoesNotExistsException e) { 
+			throw new NotFoundException();
 		} catch (Exception e) {
 			processException(e, result.getActionStatus());
 		}
