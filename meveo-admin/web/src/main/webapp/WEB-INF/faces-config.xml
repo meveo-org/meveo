@@ -1406,12 +1406,22 @@
         </navigation-case>
         <navigation-case>
             <from-outcome>binaryStorageConfigurations</from-outcome>
-            <to-view-id>/pages/admin/storages/binaryStorageConfigurations.xhtml</to-view-id>
+            <to-view-id>/pages/admin/storages/binaryStorageConfigurations/binaryStorageConfigurations.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
             <from-outcome>binaryStorageConfigurationDetail</from-outcome>
-            <to-view-id>/pages/admin/storages/binaryStorageConfigurationDetail.xhtml</to-view-id>
+            <to-view-id>/pages/admin/storages/binaryStorageConfigurations/binaryStorageConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>repositories</from-outcome>
+            <to-view-id>/pages/admin/storages/repositories/repositories.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>repositoryDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/repositories/repositoryDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
     </navigation-rule>

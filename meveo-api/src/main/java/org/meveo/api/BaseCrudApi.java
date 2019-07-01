@@ -1,6 +1,6 @@
 package org.meveo.api;
 
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
@@ -15,7 +15,7 @@ import org.meveo.model.IEntity;
  * @param <E> Entity class
  * @param <T> Dto class
  */
-public abstract class BaseCrudApi<E extends IEntity, T extends BaseDto> extends BaseApi implements ApiService<E, T> {
+public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi implements ApiService<E, T> {
 
     /*
      * (non-Javadoc)

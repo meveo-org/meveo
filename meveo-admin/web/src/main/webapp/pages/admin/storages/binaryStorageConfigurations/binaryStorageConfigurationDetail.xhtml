@@ -11,6 +11,7 @@
         <h:form id="crumbmenuForm">
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
                 <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
                 <p:menuitem outcome="binaryStorageConfigurations" value="#{messages['binaryStorageConfiguration.title']}" />
                 <p:menuitem value="#{messages['commons.new']} #{messages['binaryStorageConfiguration.title']}" disabled="true" rendered="#{binaryStorageConfigurationBean.entity.transient}" />
                 <p:menuitem value="#{messages['binaryStorageConfiguration.title']} - #{binaryStorageConfigurationBean.entity.code}" disabled="true" rendered="#{!binaryStorageConfigurationBean.entity.transient}" />

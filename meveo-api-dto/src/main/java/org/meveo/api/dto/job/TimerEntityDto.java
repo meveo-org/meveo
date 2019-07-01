@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.jobs.TimerEntity;
 
@@ -16,7 +16,7 @@ import org.meveo.model.jobs.TimerEntity;
  */
 @XmlRootElement(name = "TimerEntity")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TimerEntityDto extends BusinessDto {
+public class TimerEntityDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 5166093858617578774L;

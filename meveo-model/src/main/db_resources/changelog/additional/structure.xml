@@ -710,5 +710,62 @@
 		</createTable>
 		<sql>insert into ${db.schema.adapted}binary_storage_configuration_seq values(1)</sql>
 	</changeSet>
-       
+
+	<changeSet id="#3726 - Add storage repository"
+		author="Edward P. Legaspi">
+		<createTable tableName="storage_repository">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="version" type="INT4" />
+			<column name="disabled" type="${type.boolean}">
+				<constraints nullable="false" />
+			</column>
+			<column name="created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated" type="datetime" />
+			<column name="description" type="VARCHAR(100)" />
+			<column name="code" type="VARCHAR(50)" />
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+			<column name="data_separation_type" type="VARCHAR(25)"></column>
+
+			<column name="parent_id" type="BIGINT" />
+			<column name="binary_storage_configuration_id" type="BIGINT" />
+			<column name="neo4j_configuration_code" type="VARCHAR(50)"></column>
+		</createTable>
+
+		<addPrimaryKey tableName="storage_repository" columnNames="id"/>
+		<createSequence
+			sequenceName="storage_repository_seq" />
+		<addForeignKeyConstraint
+			constraintName="storage_repository_parent_fk"
+			referencedTableName="storage_repository" baseColumnNames="parent_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+		<addForeignKeyConstraint
+			constraintName="binary_storage_configuration_fk"
+			referencedTableName="binary_storage_configuration"
+			baseColumnNames="binary_storage_configuration_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+		<addForeignKeyConstraint
+			constraintName="neo4j_configuration_code_fk"
+			referencedTableName="neo4j_configuration"
+			baseColumnNames="neo4j_configuration_code"
+			baseTableName="storage_repository" referencedColumnNames="code" />
+	</changeSet>
+
+	<changeSet
+		id="#3726 - Add storage repository sequence (mysql)"
+		author="Edward P. Legaspi" dbms="mysql">
+		<createTable tableName="storage_repository_seq">
+			<column name="next_val" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="storage_repository_seq_pk" />
+			</column>
+		</createTable>
+		<sql>insert into ${db.schema.adapted}storage_repository_seq
+			values(1)
+		</sql>
+	</changeSet>
 </databaseChangeLog>

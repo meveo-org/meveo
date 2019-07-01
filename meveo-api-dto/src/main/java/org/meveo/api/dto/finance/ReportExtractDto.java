@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 
 /**

@@ -1,6 +1,6 @@
 package org.meveo.api.dto;
 
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "hitFilter")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class HitFilterDto extends BaseDto {
+public class HitFilterDto extends BaseEntityDto {
 
 	private static final long serialVersionUID = -763450889692487278L;
 

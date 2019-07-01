@@ -30,6 +30,7 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 
 		try {
 			binaryStorageConfigurationApi.create(postData);
+
 		} catch (Exception e) {
 			processException(e, result);
 		}
@@ -42,6 +43,7 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 
 		try {
 			binaryStorageConfigurationApi.update(postData);
+
 		} catch (Exception e) {
 			processException(e, result);
 		}
@@ -54,6 +56,7 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 
 		try {
 			binaryStorageConfigurationApi.createOrUpdate(postData);
+
 		} catch (Exception e) {
 			processException(e, result);
 		}
@@ -92,6 +95,7 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 
 		try {
 			binaryStorageConfigurationApi.remove(code);
+
 		} catch (Exception e) {
 			processException(e, result);
 		}

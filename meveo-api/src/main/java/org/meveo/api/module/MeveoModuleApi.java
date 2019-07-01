@@ -6,7 +6,7 @@ import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.*;
 import org.meveo.api.catalog.ServiceTemplateApi;
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.catalog.BusinessServiceModelDto;
@@ -384,7 +384,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
             meveoModule.getModuleItems().clear();
 
-            for (BaseDto dto : moduleDto.getModuleItems()) {
+            for (BaseEntityDto dto : moduleDto.getModuleItems()) {
 
                 try {
 
@@ -558,7 +558,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             for (MeveoModuleItem item : moduleItems) {
 
                 try {
-                    BaseDto itemDto = null;
+                    BaseEntityDto itemDto = null;
 
                     if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
                         itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());

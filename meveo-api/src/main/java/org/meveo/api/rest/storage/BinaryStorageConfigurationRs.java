@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationsResponseDto;
+import org.meveo.api.rest.IBaseRs;
 import org.meveo.api.storage.BinaryStorageConfigurationDto;
 
 /**
@@ -22,7 +23,7 @@ import org.meveo.api.storage.BinaryStorageConfigurationDto;
 @Path("/storages/binaries")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-public interface BinaryStorageConfigurationRs {
+public interface BinaryStorageConfigurationRs extends IBaseRs {
 
 	/**
 	 * Create a new binary storage

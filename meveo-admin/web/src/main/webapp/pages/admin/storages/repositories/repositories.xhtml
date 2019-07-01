@@ -6,7 +6,7 @@
 
 	<ui:define name="metadata">
 		<f:metadata>
-			<f:event type="preRenderView" listener="#{binaryStorageConfigurationBean.preRenderView}" />
+			<f:event type="preRenderView" listener="#{repositoryBean.preRenderView}" />
 		</f:metadata>
 	</ui:define>
 
@@ -14,19 +14,23 @@
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-				<p:menuitem value="#{messages['binaryStorageConfiguration.title']}" outcome="binaryStorageConfigurations" />
+				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
+				<p:menuitem value="#{messages['repository.title']}" outcome="repositories" />
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:searchPanel label="#{messages['binaryStorageConfiguration.search']}"
-			backingBean="#{binaryStorageConfigurationListBean}" columns="3">
+		<hftl:searchPanel label="#{messages['repository.search']}"
+			backingBean="#{repositoryListBean}" columns="3">
 			<hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
+			<hftl:searchField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 		</hftl:searchPanel>
 
-		<hftl:dataList label="#{messages['binaryStorageConfiguration.title']}"
-			backingBean="#{binaryStorageConfigurationBean}" sortBy="code">
+		<hftl:dataList label="#{messages['repository.title']}"
+			backingBean="#{repositoryBean}" sortBy="code">
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
-			<hftl:column label="#{messages['binaryStorageConfiguration.rootPath']}" field="rootPath" />
+			<hftl:column label="#{messages['businessEntity.description']}" field="description" />
+			<hftl:column label="#{messages['repository.parentRepository']}" field="parentRepository.code" />
+			<hftl:column label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 
 			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
 		</hftl:dataList>

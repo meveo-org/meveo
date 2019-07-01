@@ -1,0 +1,56 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{repositoryBean.objectId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+		<hftl:entityPopup id="parentRepositoryPopup"
+			header="#{messages['repository.title']}"
+			updateField=":formRepository:parentRepositoryId :formRepository:parentRepositoryId_text"
+			selection="#{repositoryBean.entity.parentRepository}"
+			backingBean="#{repositoryBean}"
+			searchField1Label="#{messages['businessEntity.code']}"
+			searchField1="code"
+			column1Label="#{messages['businessEntity.code']}"
+			column1="code"
+			column2Label="#{messages['businessEntity.description']}"
+			column2="description">
+		</hftl:entityPopup>
+		<hftl:entityPopup id="binaryStorageConfigurationPopup"
+			header="#{messages['binaryStorageConfiguration.title']}"
+			updateField=":formRepository:binaryStorageConfigurationId :formRepository:binaryStorageConfigurationId_text"
+			selection="#{repositoryBean.entity.binaryStorageConfiguration}"
+			backingBean="#{binaryStorageConfigurationBean}"
+			searchField1Label="#{messages['businessEntity.code']}"
+			searchField1="code"
+			column1Label="#{messages['businessEntity.code']}"
+			column1="code"
+			column2Label="#{messages['binaryStorageConfiguration.rootPath']}"
+			column2="rootPath">
+		</hftl:entityPopup>
+
+		<h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
+                <p:menuitem outcome="repositories" value="#{messages['repository.title']}" />
+                <p:menuitem value="#{messages['commons.new']} #{messages['repository.title']}" disabled="true" rendered="#{repositoryBean.entity.transient}" />
+                <p:menuitem value="#{messages['repository.title']} - #{repositoryBean.entity.code}" disabled="true" rendered="#{!repositoryBean.entity.transient}" />
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel formId="formRepository" label="#{messages['repository.title']}" backingBean="#{repositoryBean}">
+            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
+            <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:formField id="parentRepositoryId" label="#{messages['repository.parentRepository']}" field="parentRepository" 
+            	valueLabelField="code" popup="true" popupId="parentRepositoryPopup" />
+           	<hftl:formField id="binaryStorageConfigurationId" label="#{messages['binaryStorageConfiguration.title']}" field="binaryStorageConfiguration" 
+            	valueLabelField="code" popup="true" popupId="binaryStorageConfigurationPopup" />
+            <hftl:formField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
+        </hftl:formPanel>
+    </ui:define>
+</ui:composition>

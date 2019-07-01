@@ -1,6 +1,6 @@
 package org.meveo.api.dto.catalog;
 
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.catalog.CounterTemplateLevel;
 import org.meveo.model.catalog.CounterTypeEnum;
@@ -19,7 +19,7 @@ import java.math.BigDecimal;
  */
 @XmlRootElement(name = "CounterTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CounterTemplateDto extends BusinessDto implements Serializable {
+public class CounterTemplateDto extends BusinessEntityDto implements Serializable {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 2587489734648000805L;
@@ -36,9 +36,6 @@ public class CounterTemplateDto extends BusinessDto implements Serializable {
 
     /** The ceiling. */
     private BigDecimal ceiling;
-
-    /** The disabled. */
-    private boolean disabled;
 
     /** The counter level. */
     private CounterTemplateLevel counterLevel;
@@ -65,7 +62,7 @@ public class CounterTemplateDto extends BusinessDto implements Serializable {
         unity = counterTemplate.getUnityDescription();
         type = counterTemplate.getCounterType();
         ceiling = counterTemplate.getCeiling();
-        disabled = counterTemplate.isDisabled();
+        setDisabled(counterTemplate.isDisabled());
         calendar = counterTemplate.getCalendar().getCode();
         counterLevel = counterTemplate.getCounterLevel();
         ceilingExpressionEl = counterTemplate.getCeilingExpressionEl();
@@ -124,24 +121,6 @@ public class CounterTemplateDto extends BusinessDto implements Serializable {
      */
     public void setCeiling(BigDecimal ceiling) {
         this.ceiling = ceiling;
-    }
-
-    /**
-     * Checks if is disabled.
-     *
-     * @return true, if is disabled
-     */
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    /**
-     * Sets the disabled.
-     *
-     * @param disabled the new disabled
-     */
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
     }
 
     /**
@@ -244,6 +223,6 @@ public class CounterTemplateDto extends BusinessDto implements Serializable {
     public String toString() {
         return String.format(
             "CounterTemplateDto [code=%s, description=%s, calendar=%s, unity=%s, type=%s, ceiling=%s, disabled=%s, counterLevel=%s, ceilingExpressionEl=%s, notificationLevels=%s]",
-            getCode(), getDescription(), calendar, unity, type, ceiling, disabled, counterLevel, ceilingExpressionEl, notificationLevels);
+            getCode(), getDescription(), calendar, unity, type, ceiling, isDisabled(), counterLevel, ceilingExpressionEl, notificationLevels);
     }    
 }

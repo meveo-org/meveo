@@ -1,0 +1,77 @@
+package org.meveo.model.storage;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.neo4j.Neo4JConfiguration;
+
+/**
+ * Storage for logical repository separation.
+ * 
+ * @author Edward P. Legaspi
+ */
+@Entity
+@Table(name = "storage_repository")
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@Parameter(name = "sequence_name", value = "storage_repository_seq"), })
+public class Repository extends BusinessEntity {
+
+	private static final long serialVersionUID = -93688572926121511L;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_id")
+	private Repository parentRepository;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "binary_storage_configuration_id")
+	private BinaryStorageConfiguration binaryStorageConfiguration;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "neo4j_configuration_code")
+	private Neo4JConfiguration neo4jConfiguration;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "data_separation_type", length = 25)
+	private DataSeparationTypeEnum dataSeparationType = DataSeparationTypeEnum.PHYSICAL;
+
+	public Repository getParentRepository() {
+		return parentRepository;
+	}
+
+	public void setParentRepository(Repository parentRepository) {
+		this.parentRepository = parentRepository;
+	}
+
+	public BinaryStorageConfiguration getBinaryStorageConfiguration() {
+		return binaryStorageConfiguration;
+	}
+
+	public void setBinaryStorageConfiguration(BinaryStorageConfiguration binaryStorageConfiguration) {
+		this.binaryStorageConfiguration = binaryStorageConfiguration;
+	}
+
+	public Neo4JConfiguration getNeo4jConfiguration() {
+		return neo4jConfiguration;
+	}
+
+	public void setNeo4jConfiguration(Neo4JConfiguration neo4jConfiguration) {
+		this.neo4jConfiguration = neo4jConfiguration;
+	}
+
+	public DataSeparationTypeEnum getDataSeparationType() {
+		return dataSeparationType;
+	}
+
+	public void setDataSeparationType(DataSeparationTypeEnum dataSeparationType) {
+		this.dataSeparationType = dataSeparationType;
+	}
+}
