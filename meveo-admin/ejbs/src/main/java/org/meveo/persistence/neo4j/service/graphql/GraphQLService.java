@@ -97,6 +97,8 @@ public class GraphQLService {
             List<String> missingEntities = validateIdl(idl);
             if (CollectionUtils.isEmpty(missingEntities)) {
                 neo4jDao.updateIDL(neo4jConfiguration, idl);
+            } else{
+                log.error("Cannot update IDL, missing entities : {}", missingEntities);
             }
         }
 
@@ -113,6 +115,8 @@ public class GraphQLService {
         List<String> missingEntities = validateIdl(idl);
         if (CollectionUtils.isEmpty(missingEntities)) {
             neo4jDao.updateIDL(neo4jConfiguration, idl);
+        } else{
+            log.error("Cannot update IDL, missing entities : {}", missingEntities);
         }
     }
 

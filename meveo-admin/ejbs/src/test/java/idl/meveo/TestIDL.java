@@ -19,6 +19,7 @@ package idl.meveo;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +34,10 @@ public class TestIDL {
     }
 
     /**
-     * The goal is to test case 01
+     * The goal is to test case where IDL is correct
      */
     @Test
-    public void test01() {
+    public void testCorrectIdl() {
 
         List<String> result = new ArrayList<>();
         String testCase1 = "type TypeA {\n" +
@@ -52,10 +53,10 @@ public class TestIDL {
     }
 
     /**
-     * The goal is to test case 02
+     * The goal is to test case case where IDL is not correct
      */
     @Test
-    public void test02() {
+    public void testIncorrectIdl() {
 
         List<String> result = new ArrayList<>();
         result.add("TypeB");
