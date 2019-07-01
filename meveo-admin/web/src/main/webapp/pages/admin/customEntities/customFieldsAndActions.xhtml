@@ -620,7 +620,7 @@
 							<hftl:formField
 								label="#{messages['customFieldTemplate.relationshipName']}"
 								field="relationshipName" required="true" componentWidth="30"
-								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY and (not empty customEntityTemplateBean.entity.neo4JStorageConfiguration)}" />
+								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY and (not empty customEntityTemplateBean.entity.neo4JStorageConfiguration) and (not empty customFieldTemplateBean.entity.neo4JStorageConfiguration)}" />
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField
