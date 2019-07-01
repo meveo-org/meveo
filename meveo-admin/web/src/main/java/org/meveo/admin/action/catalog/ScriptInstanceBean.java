@@ -56,7 +56,7 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
 
 /**
- * Standard backing bean for {@link org.meveo.model.scripts.ScriptInstance} (extends {@link org.meveo.admin.action.BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
+ * Standard backing bean for {@link ScriptInstance} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
  * create, edit, view, delete operations). It works with Manaty custom JSF components.
  */
 @Named
@@ -140,7 +140,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     /**
-     * Constructor. Invokes super constructor and provides class type of this bean for {@link org.meveo.admin.action.BaseBean}.
+     * Constructor. Invokes super constructor and provides class type of this bean for {@link BaseBean}.
      */
     public ScriptInstanceBean() {
         super(ScriptInstance.class);
@@ -148,7 +148,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     /**
-     * @see org.meveo.admin.action.BaseBean#getPersistenceService()
+     * @see BaseBean#getPersistenceService()
      */
     @Override
     protected IPersistenceService<ScriptInstance> getPersistenceService() {
@@ -228,15 +228,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
-        String result = super.saveOrUpdate(false);
+        super.saveOrUpdate(false);
 
-        if (entity.isError()) {
-            result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
-        }else {
-            if (killConversation) {
-                endConversation();
-            }
-        }
+        String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
 
         return result;
     }
