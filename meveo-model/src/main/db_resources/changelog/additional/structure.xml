@@ -734,6 +734,7 @@
 			<column name="parent_id" type="BIGINT" />
 			<column name="binary_storage_configuration_id" type="BIGINT" />
 			<column name="neo4j_configuration_code" type="VARCHAR(50)"></column>
+			<column name="path" type="VARCHAR(255)"></column>
 		</createTable>
 
 		<addPrimaryKey tableName="storage_repository" columnNames="id"/>

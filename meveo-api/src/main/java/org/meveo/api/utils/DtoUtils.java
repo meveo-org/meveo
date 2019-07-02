@@ -39,7 +39,9 @@ public class DtoUtils {
 
 	public static EnableEntity toEnableEntity(EnableEntityDto source, EnableEntity target) {
 		toAuditableEntity(source, target);
-		target.setActive(source.isActive());
+		if (source.isActive() != null) {
+			target.setActive(source.isActive());
+		}
 
 		return target;
 	}
@@ -49,7 +51,7 @@ public class DtoUtils {
 		if (source.getAuditable() != null) {
 			if (source.getAuditable().getUpdated() != null) {
 				target.setUpdated(source.getAuditable().getUpdated());
-				
+
 			} else {
 				target.setUpdated(source.getAuditable().getCreated());
 			}

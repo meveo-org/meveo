@@ -15,12 +15,14 @@ public class RepositoryDto extends BusinessEntityDto {
 	private String binaryStorageConfigurationCode;
 	private String neo4jConfigurationCode;
 	private DataSeparationTypeEnum dataSeparationType;
+	private String path;
 
 	public RepositoryDto() {
 
 	}
 
 	public RepositoryDto(Repository e) {
+		super(e);
 		if (e.getParentRepository() != null) {
 			parentCode = e.getParentRepository().getCode();
 		}
@@ -31,6 +33,7 @@ public class RepositoryDto extends BusinessEntityDto {
 			neo4jConfigurationCode = e.getNeo4jConfiguration().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
+		path = e.getPath();
 	}
 
 	public String getParentCode() {
@@ -63,5 +66,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setDataSeparationType(DataSeparationTypeEnum dataSeparationType) {
 		this.dataSeparationType = dataSeparationType;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 }
