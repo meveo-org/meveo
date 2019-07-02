@@ -17,8 +17,8 @@ public class OntologyRs extends BaseRs {
     private JSONSchemaGenerator jsonSchemaGenerator;
 
     @GET
-    public Response getSchema(@DefaultValue("true") @QueryParam("onlyActivated") boolean onlyActivated){
-        final String ontology = jsonSchemaGenerator.generateSchema("ontology", onlyActivated);
+    public Response getSchema(@DefaultValue("true") @QueryParam("onlyActivated") boolean onlyActivated, @QueryParam("category") String categoryCode){
+        final String ontology = jsonSchemaGenerator.generateSchema("ontology", onlyActivated, categoryCode);
 
         CacheControl cacheControl = new CacheControl();
         cacheControl.setMaxAge(86400);
