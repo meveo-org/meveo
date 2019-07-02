@@ -26,6 +26,7 @@ public class EnableEntityDto extends AuditableEntityDto {
 		}
 	}
 
+	@JsonIgnore
 	public Boolean isDisabled() {
 		return disabled;
 	}
@@ -34,12 +35,18 @@ public class EnableEntityDto extends AuditableEntityDto {
 		this.disabled = disabled;
 	}
 
-	@JsonIgnore
 	public Boolean isActive() {
-		return disabled == null ? null : !disabled;
+		if(active == null) {
+			return disabled == null ? null : !disabled;
+		}
+
+		return active;
 	}
 
 	public void setActive(Boolean active) {
-		setDisabled(!active);
+		this.active = active;
+		if (active != null) {
+			setDisabled(!active);
+		}
 	}
 }

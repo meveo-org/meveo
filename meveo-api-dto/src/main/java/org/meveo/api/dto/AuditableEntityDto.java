@@ -23,6 +23,7 @@ public class AuditableEntityDto extends BaseEntityDto {
 	/**
 	 * created date.
 	 */
+	@JsonIgnore
 	private Date created;
 
 	@JsonIgnore

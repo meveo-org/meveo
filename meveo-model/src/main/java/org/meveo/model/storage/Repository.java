@@ -8,6 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
@@ -43,6 +44,10 @@ public class Repository extends BusinessEntity {
 	@Column(name = "data_separation_type", length = 25)
 	private DataSeparationTypeEnum dataSeparationType = DataSeparationTypeEnum.PHYSICAL;
 
+	@NotNull
+	@Column(name = "path", length = 255)
+	private String path;
+
 	public Repository getParentRepository() {
 		return parentRepository;
 	}
@@ -73,5 +78,13 @@ public class Repository extends BusinessEntity {
 
 	public void setDataSeparationType(DataSeparationTypeEnum dataSeparationType) {
 		this.dataSeparationType = dataSeparationType;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 }

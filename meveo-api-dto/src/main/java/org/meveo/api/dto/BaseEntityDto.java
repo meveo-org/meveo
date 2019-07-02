@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import org.meveo.api.message.exception.InvalidDTOException;
 import org.meveo.model.BaseEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -22,7 +23,7 @@ public abstract class BaseEntityDto implements Serializable {
 	private static final long serialVersionUID = 4456089256601996946L;
 
 	/** The id. */
-	@XmlAttribute()
+	@JsonIgnore
 	protected Long id;
 
 	public BaseEntityDto() {

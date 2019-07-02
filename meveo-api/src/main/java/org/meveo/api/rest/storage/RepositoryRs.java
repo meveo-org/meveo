@@ -57,7 +57,7 @@ public interface RepositoryRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/{code}")
-	RepositoryResponseDto find(@QueryParam("code") String code);
+	RepositoryResponseDto find(@PathParam("code") String code);
 
 	/**
 	 * List repository

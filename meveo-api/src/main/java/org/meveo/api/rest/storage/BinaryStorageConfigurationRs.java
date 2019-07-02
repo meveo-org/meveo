@@ -8,7 +8,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
@@ -57,7 +56,7 @@ public interface BinaryStorageConfigurationRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/{code}")
-	BinaryStorageConfigurationResponseDto find(@QueryParam("code") String code);
+	BinaryStorageConfigurationResponseDto find(@PathParam("code") String code);
 
 	/**
 	 * List binary storage
