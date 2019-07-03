@@ -29,6 +29,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.Set;
 
@@ -45,6 +47,9 @@ public class EndpointService extends BusinessService<Endpoint> {
     public static final String ENDPOINTS_CLIENT = "endpoints";
     public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
     public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
+
+    @Context
+    private HttpServletRequest request;
 
     private static String getEndpointPermission(Endpoint endpoint) {
         return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
@@ -130,6 +135,7 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpoint.setContentType(entity.getContentType());
         
         super.update(endpoint);
+        keycloakAdminClientService.updateClient( ENDPOINTS_CLIENT, getEndpointPermission(entity), ENDPOINT_MANAGEMENT );
         
         return entity;
     }

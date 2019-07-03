@@ -1,5 +1,6 @@
 package org.meveo.keycloak.client;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
@@ -109,6 +110,34 @@ public class KeycloakAdminClientService {
 
         if(clients.findByClientId(name).isEmpty()){
             clients.create(clientRepresentation);
+        }
+    }
+
+
+    public void updateClient(String name , String role, String roleUpdate){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+
+        RoleRepresentation roleRepresentation = new RoleRepresentation();
+        roleRepresentation.setId(name);
+        roleRepresentation.setClientRole(true);
+        roleRepresentation.setName(name);
+        roleRepresentation.setComposite(true);
+        roleRepresentation.setDescription(roleUpdate);
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        try {
+            keycloak.realm(keycloakAdminClientConfig.getRealm())
+                    .clients()
+                    .get(name)
+                    .roles()
+                    .get(role)
+                    .update(roleRepresentation);
+
+        } catch (NotFoundException ignored){
+
         }
     }
 
