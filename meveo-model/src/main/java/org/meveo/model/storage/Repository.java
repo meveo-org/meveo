@@ -8,6 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -18,10 +19,10 @@ import org.meveo.model.neo4j.Neo4JConfiguration;
 /**
  * Storage for logical repository separation.
  * 
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  */
 @Entity
-@Table(name = "storage_repository")
+@Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "storage_repository_seq"), })
 public class Repository extends BusinessEntity {
@@ -37,7 +38,7 @@ public class Repository extends BusinessEntity {
 	private BinaryStorageConfiguration binaryStorageConfiguration;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "neo4j_configuration_code")
+	@JoinColumn(name = "neo4j_configuration_id")
 	private Neo4JConfiguration neo4jConfiguration;
 
 	@Enumerated(EnumType.STRING)

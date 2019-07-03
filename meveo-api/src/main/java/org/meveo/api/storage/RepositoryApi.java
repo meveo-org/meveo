@@ -14,8 +14,10 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 import org.meveo.service.storage.RepositoryService;
 
@@ -30,6 +32,9 @@ public class RepositoryApi extends BaseApi {
 
 	@Inject
 	private BinaryStorageConfigurationService binaryStorageConfigurationService;
+
+	@Inject
+	private Neo4jConfigurationService neo4jConfigurationService;
 
 	public Repository toRepository(RepositoryDto source, Repository target) throws EntityDoesNotExistsException {
 		if (target == null) {
@@ -66,13 +71,19 @@ public class RepositoryApi extends BaseApi {
 			}
 		}
 
-//		if(source.getNeo4jConfigurationCode() !=null) {
-//			if(!StringUtils.isBlank(source.getNeo4jConfigurationCode())) {
-//				Neo4JConfiguration neo4jConfiguration
-//			} else {
-//				target.setNeo4jConfiguration(null);
-//			}
-//		}
+		if (source.getNeo4jConfigurationCode() != null) {
+			if (!StringUtils.isBlank(source.getNeo4jConfigurationCode())) {
+				Neo4JConfiguration neo4jConfiguration = neo4jConfigurationService.findByCode(source.getNeo4jConfigurationCode());
+				if (neo4jConfiguration != null) {
+					target.setNeo4jConfiguration(neo4jConfiguration);
+
+				} else {
+					throw new EntityDoesNotExistsException(Neo4JConfiguration.class, source.getNeo4jConfigurationCode());
+				}
+			} else {
+				target.setNeo4jConfiguration(null);
+			}
+		}
 
 		if (source.getDataSeparationType() != null && !StringUtils.isBlank(source.getDataSeparationType())) {
 			target.setDataSeparationType(source.getDataSeparationType());
