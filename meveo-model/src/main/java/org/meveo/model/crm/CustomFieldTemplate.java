@@ -279,36 +279,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         this.storages = storages;
     }
 
-    @Embedded
-    private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
-
-    @Embedded
-    private Neo4JStorageConfiguration neo4JStorageConfiguration = new Neo4JStorageConfiguration();
-
-    public SQLStorageConfiguration getSqlStorageConfiguration() {
-        if(storages != null && storages.contains(DBStorageType.SQL)) {
-            return sqlStorageConfiguration;
-        }
-
-        return null;
-    }
-
-    public Neo4JStorageConfiguration getNeo4JStorageConfiguration() {
-        if(storages != null && storages.contains(DBStorageType.NEO4J)) {
-            return neo4JStorageConfiguration;
-        }
-
-        return null;
-    }
-
-    public void setNeo4JStorageConfiguration(Neo4JStorageConfiguration neo4jStorageConfiguration) {
-        neo4JStorageConfiguration = neo4jStorageConfiguration;
-    }
-
-    public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
-        this.sqlStorageConfiguration = sqlStorageConfiguration;
-    }
-
     /**
      * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
      *

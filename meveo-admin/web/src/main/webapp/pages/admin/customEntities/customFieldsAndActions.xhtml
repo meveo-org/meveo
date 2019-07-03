@@ -9,12 +9,10 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:s="http://jboss.org/seam/faces">
 
-	<o:importConstants
-		type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
-	<o:importConstants
-		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
-	<o:importConstants
-		type="org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldMapKeyEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum" />
+	<o:importConstants type="org.meveo.model.persistence.DBStorageType" />
 
 	<h:form id="fieldsForm">
 		<p:panel width="100"
@@ -620,7 +618,7 @@
 							<hftl:formField
 								label="#{messages['customFieldTemplate.relationshipName']}"
 								field="relationshipName" required="true" componentWidth="30"
-								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY and (not empty customEntityTemplateBean.entity.neo4JStorageConfiguration) and (not empty customFieldTemplateBean.entity.neo4JStorageConfiguration)}" />
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J)}" />
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField
@@ -847,6 +845,7 @@
 					<h:panelGroup id="storages">
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customFieldTemplate.storages']}">
 							<p:pickList id="pickList" value="#{customFieldTemplateBean.storagesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+								<p:ajax event="transfer" update="relationshipName"/>
 								<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.storageTypesList}" />
 							</p:pickList>
 						</hftl:decorateFormField>
