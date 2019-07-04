@@ -188,7 +188,7 @@ public class Neo4jService implements CustomPersistenceService {
      * Drop an index and unique constraint on the CET for the meveo_uuid property
      */
     public void removeUUIDIndexes(CustomEntityTemplate customEntityTemplate) {
-        if(!customEntityTemplate.getAvailableStorages().contains(DBStorageType.NEO4J)){
+        if(customEntityTemplate.getAvailableStorages() == null || !customEntityTemplate.getAvailableStorages().contains(DBStorageType.NEO4J)){
             return;
         }
 

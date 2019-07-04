@@ -584,7 +584,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
      */
 	private void checkPrimitiveEntity(CustomEntityTemplateDto dto) throws BusinessException {
 
-		if (dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+		if (dto.getAvailableStorages() != null && dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             final Neo4JStorageConfigurationDto configuration = dto.getNeo4jStorageConfiguration();
             if(configuration != null) {
                 if (!configuration.isPrimitiveEntity()) {

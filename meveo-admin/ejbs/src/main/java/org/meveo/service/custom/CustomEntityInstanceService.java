@@ -128,7 +128,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
         if (cfValues != null && cfValues.getValuesByCode() != null) {
             for (String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())) {
                 CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
-                if (cft != null && cft.getStorages().contains(DBStorageType.SQL)) {
+                if (cft != null && cft.getStorages() != null && cft.getStorages().contains(DBStorageType.SQL)) {
                     cfValues.removeValue(valueCode);
                 }
             }
