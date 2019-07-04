@@ -1,9 +1,11 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -12,6 +14,7 @@ import javax.inject.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
+import org.meveo.admin.action.crm.CustomFieldTemplateBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
@@ -25,8 +28,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
-import org.meveo.persistence.neo4j.service.Neo4jService;
+import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.custom.CustomizedEntityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +48,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
     public CustomEntityInstanceBean() {
         super(CustomEntityInstance.class);
     }
+    
+    @Inject
+    private CustomizedEntityService customizedEntityService;
 
     @Inject
     private CustomEntityInstanceService customEntityInstanceService;
@@ -54,7 +60,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
-
+    
     @Override
     protected IPersistenceService<CustomEntityInstance> getPersistenceService() {
         return customEntityInstanceService;
@@ -218,5 +224,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
         searchCriteria.put("cetCode", customEntityTemplateCode);
         return searchCriteria;
+    }
+    
+    public List<String> autocompleteClassNamesHuman(String input){
+        return customizedEntityService.getCustomizedEntities(input, true, true, true, "code", "ASC", false)
+        		.stream()
+        		.map(CustomizedEntity::getEntityCode)
+        		.collect(Collectors.toList());
     }
 }
