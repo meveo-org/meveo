@@ -1,11 +1,24 @@
 package org.meveo.api;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldDto;
-import org.meveo.api.exception.*;
+import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.EntityAlreadyExistsException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -13,18 +26,11 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Andrius Karpavicius
  **/
 @Stateless
-public class CustomEntityInstanceApi extends BaseApi {
+public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, CustomEntityInstanceDto> {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -185,7 +191,7 @@ public class CustomEntityInstanceApi extends BaseApi {
         return customEntityInstanceDtos;
     }
 
-    public void createOrUpdate(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
+    public CustomEntityInstance createOrUpdate(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 
         CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(dto.getCetCode(), dto.getCode());
         if (cei == null) {
@@ -193,6 +199,8 @@ public class CustomEntityInstanceApi extends BaseApi {
         } else {
             update(dto);
         }
+        
+        return customEntityInstanceService.findByCodeByCet(dto.getCetCode(), dto.getCode());
     }
 
     /**
@@ -223,4 +231,14 @@ public class CustomEntityInstanceApi extends BaseApi {
         validateAndConvertCustomFields(customFieldTemplates, ceiDto.getCustomFields() != null ? ceiDto.getCustomFields().getCustomField() : new ArrayList<CustomFieldDto>(), true,
             isNew, cei);
     }
+
+	@Override
+	public CustomEntityInstanceDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+		CustomEntityInstance cei = customEntityInstanceService.findByCode(code);
+		if(cei == null) {
+			throw new EntityDoesNotExistsException(CustomEntityInstance.class.getSimpleName(), code);
+		}
+		return CustomEntityInstanceDto.toDTO(cei, entityToDtoConverter.getCustomFieldsDTO(cei, true));
+	}
+
 }

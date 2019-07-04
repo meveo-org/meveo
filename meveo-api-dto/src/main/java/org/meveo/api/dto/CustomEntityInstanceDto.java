@@ -17,7 +17,7 @@ import org.meveo.model.customEntities.CustomEntityInstance;
  */
 @XmlRootElement(name = "CustomEntityInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomEntityInstanceDto implements Serializable {
+public class CustomEntityInstanceDto extends BaseDto implements Serializable {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 9156372453581362595L;
