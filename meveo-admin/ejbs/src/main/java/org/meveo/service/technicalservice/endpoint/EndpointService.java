@@ -135,7 +135,19 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpoint.setContentType(entity.getContentType());
         
         super.update(endpoint);
-        keycloakAdminClientService.updateClient( ENDPOINTS_CLIENT, getEndpointPermission(entity), ENDPOINT_MANAGEMENT );
+
+        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, getEndpointPermission(entity));
+
+        // Create client if not exitsts
+        keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+
+        String endointPermission = getEndpointPermission(entity);
+
+        // Create endpoint permission and add it to Execute_All_Endpoints composite
+        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
+
+        // Update Execute_All_Endpoints to endpointManagement composite
+        keycloakAdminClientService.updateToCompositeCrossClient( ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS );
         
         return entity;
     }
