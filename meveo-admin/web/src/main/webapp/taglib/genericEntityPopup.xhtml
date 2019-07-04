@@ -53,6 +53,9 @@
                         <c:if test="#{genericEntityPickerBean.selectedEntityClass!=null}">
                             <hftl:searchField id="searchCode" label="#{messages['businessEntity.code']}" backingBean="#{genericEntityPickerBean}" field="code" />
                             <hftl:searchField id="searchDescription" label="#{messages['businessEntity.description']}" backingBean="#{genericEntityPickerBean}" field="description" />
+                            <hftl:searchField id="searchCet" label="#{messages['meveoModuleItem.customEntityTemplate']}" backingBean="#{genericEntityPickerBean}" field="cetCode"
+                                              isAutocomplete="true" autocompleteBean="#{customEntityInstanceBean}" autocompleteMethod="autocompleteClassNamesHuman" converter="customEntityCodeConverter"
+                                              rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'cetCode')}"/>
                             <hftl:searchField id="searchFieldAppliesTo" label="#{messages['meveoModuleItem.appliesTo']}" backingBean="#{genericEntityPickerBean}" field="appliesTo"
                                 isAutocomplete="true" autocompleteBean="#{customFieldTemplateBean}" autocompleteMethod="autocompleteClassNamesHuman" converter="customFieldAppliesToConverter"
                                 rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'appliesTo')}" />
@@ -86,6 +89,9 @@
                 </p:column>
                 <p:column headerText="#{messages['businessEntity.description']}">
                     <h:outputText value="#{e.description}" />
+                </p:column>
+                <p:column headerText="#{messages['meveoModuleItem.customEntityTemplate']}" rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'cetCode')}">
+                    <h:outputText value="#{e['cetCode']}" converterId="customEntityCode" />
                 </p:column>
                 <p:column headerText="#{messages['meveoModuleItem.appliesTo']}" rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'appliesTo')}">
                     <h:outputText value="#{e['appliesTo']}" converterId="customFieldAppliesTo" />

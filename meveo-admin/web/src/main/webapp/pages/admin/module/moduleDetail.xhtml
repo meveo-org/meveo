@@ -65,7 +65,7 @@
             <ui:define name="buttons">
                 <hf:formButtons backingBean="#{meveoModuleBean}" edit="true" showEditButton="#{!meveoModuleBean.entity.downloaded}"
                     showEnableDisableButton="#{!meveoModuleBean.entity.downloaded}" showDeleteButton="#{!meveoModuleBean.entity.downloaded}" formId="moduleId"
-                    useCustomIdParam="true">
+                    useCustomIdParam="true" ajaxSubmit="">
 
                     <p:commandButton value="#{messages['meveoModule.install']}" action="#{meveoModuleBean.install}" update="@form"
                         rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}" />

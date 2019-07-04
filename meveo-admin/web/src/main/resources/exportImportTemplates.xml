@@ -32,7 +32,10 @@
             </relatedEntity>
         </relatedEntities>
     </template>
-     <template name="Endpoint" entityToExport="org.meveo.model.technicalservice.endpoint.Endpoint">
+    <template name="CustomEntityInstance" entityToExport="org.meveo.model.customEntities.CustomEntityInstance">
+        <exportAllClassesAsFull>true</exportAllClassesAsFull>
+    </template>
+    <template name="Endpoint" entityToExport="org.meveo.model.technicalservice.endpoint.Endpoint">
           <classesToExportAsFull>
             <java-class>org.meveo.model.technicalservice.endpoint.EndpointPathParameter</java-class>
             <java-class>org.meveo.model.technicalservice.endpoint.TSParameterMapping</java-class>

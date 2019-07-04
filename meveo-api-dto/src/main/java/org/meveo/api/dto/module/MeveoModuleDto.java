@@ -65,6 +65,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 			@XmlElement(name = "pieChart", type = PieChartDto.class),
 			@XmlElement(name = "lineChart", type = LineChartDto.class),
 			@XmlElement(name = "barChart", type = BarChartDto.class),
+            @XmlElement(name = "customEntityInstance", type = CustomEntityInstanceDto.class),
             })
     private List<BaseDto> moduleItems;
 
