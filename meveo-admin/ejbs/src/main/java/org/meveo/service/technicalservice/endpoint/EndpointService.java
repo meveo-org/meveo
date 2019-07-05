@@ -98,10 +98,10 @@ public class EndpointService extends BusinessService<Endpoint> {
         // Create client if not exitsts
         keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-        String endointPermission = getEndpointPermission(entity);
+        String endpointPermission = getEndpointPermission(entity);
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
-        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
+        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
         // Add Execute_All_Endpoints to endpointManagement composite if not already in
         keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);
@@ -117,6 +117,7 @@ public class EndpointService extends BusinessService<Endpoint> {
     @Override
     public Endpoint update(Endpoint entity) throws BusinessException {
         Endpoint endpoint = findById(entity.getId());
+        String oldEndpointPermission = getEndpointPermission(endpoint);
         endpoint.getPathParameters().clear();
         endpoint.getParametersMapping().clear();
         
@@ -136,15 +137,15 @@ public class EndpointService extends BusinessService<Endpoint> {
         
         super.update(endpoint);
 
-        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, getEndpointPermission(entity));
+        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
 
         // Create client if not exitsts
         keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-        String endointPermission = getEndpointPermission(entity);
+        String endpointPermission = getEndpointPermission(entity);
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
-        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
+        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
         // Update Execute_All_Endpoints to endpointManagement composite
         keycloakAdminClientService.updateToCompositeCrossClient( ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS );
