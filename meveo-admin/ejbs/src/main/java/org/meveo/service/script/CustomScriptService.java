@@ -46,6 +46,9 @@ import javax.tools.JavaFileObject;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -315,7 +318,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
             }
         }
-
     }
 
     private void checkEndpoints(CustomScript scriptInstance, List<Accessor> setters) throws BusinessException {
@@ -566,7 +568,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String fullClassName = getFullClassname(javaSrc);
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classpath);
-
+        
         compiler = new CharSequenceCompiler<ScriptInterface>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<JavaFileObject>();
         Class<ScriptInterface> compiledScript = compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
@@ -741,6 +743,23 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
         return null;
+    }
+    
+    public static void addLibrary(String location) {
+        File file = new File(location);
+		URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+		Method method;
+		
+		try {
+	        URL url = file.toURI().toURL();
+			method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+			method.setAccessible(true);
+			method.invoke(classLoader, url);
+		} catch (Exception  e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+		}
     }
 
 }
