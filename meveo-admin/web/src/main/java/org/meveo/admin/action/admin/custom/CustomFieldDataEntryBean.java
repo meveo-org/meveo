@@ -764,7 +764,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
             Object newKey = null;
 
-            if (column.getKeyType() == CustomFieldMapKeyEnum.STRING) {
+            if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
                 newKey = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
                 // No reason to support Long and Double as key values as it us covered by a range, but - why not??
@@ -814,7 +814,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
                 Object newValue = null;
 
-                if (column.getKeyType() == CustomFieldMapKeyEnum.STRING) {
+                if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
                     newValue = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
                 } else if (column.getKeyType() == CustomFieldMapKeyEnum.LONG) {
