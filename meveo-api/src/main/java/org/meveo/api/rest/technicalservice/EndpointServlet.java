@@ -93,7 +93,8 @@ public class EndpointServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         String requestBody = StringUtils.readBuffer(req.getReader());
-        final Map<String, Object> parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
+        final Map<String, Object> parameters = StringUtils.isBlank(requestBody) ?  new HashMap<>() :
+                JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
                 .setParameters(parameters)
