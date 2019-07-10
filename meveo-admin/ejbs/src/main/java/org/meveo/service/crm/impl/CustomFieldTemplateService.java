@@ -247,11 +247,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	 * @throws BusinessException
 	 */
 	public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
-		try {
-			new SimpleDateFormat(cft.getDisplayFormat());
-		}catch(IllegalArgumentException e) {
-			throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
-		}
+        if (cft.getDisplayFormat() != null) {
+            try {
+                new SimpleDateFormat(cft.getDisplayFormat());
+            }catch(IllegalArgumentException e){
+                throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
+            }
+        }
 	}
 
     @Override
