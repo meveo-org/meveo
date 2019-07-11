@@ -8,7 +8,7 @@ function delayDisable(button) {
 function handleUpdateWithMessageComplete(formId, xhr, status, args) {
 	console.log("handleUpdateWithMessageComplete with id=" + formId);
 	var result = args.result;
-	if (typeof (result) != "undefined" && !result) {
+	if (PF != null && typeof (result) != "undefined" && !result) {
 		PF(formId).show();
 	}
 }
