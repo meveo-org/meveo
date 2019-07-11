@@ -94,7 +94,6 @@ public class EndpointServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         String requestBody = StringUtils.readBuffer(req.getReader());
-        requestBody = new String(requestBody.getBytes(Charsets.ISO_8859_1), Charsets.UTF_8);
 
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
