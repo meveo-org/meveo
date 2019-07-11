@@ -467,4 +467,67 @@ public class KeycloakAdminClientService {
         return createUser(httpServletRequest, postData, null);
     }
 
+    /**
+     * update a role from target client to a composite role of an default client.
+     * Both roles should already exists.
+     *
+     * @param clientTarget Id of the client holding the composite role
+     * @param roleCompositeSource composite role of the default client=
+     * @param roleTargetToUpdate role of the target client to update
+     */
+    public void updateToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToUpdate) {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final String defaultSourceClient = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(keycloakAdminClientConfig.getClientId())
+                .get(0)
+                .getId();
+
+        final RoleRepresentation roleToUpdate = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(clientTarget)
+                .roles()
+                .get(roleTargetToUpdate)
+                .toRepresentation();
+
+        keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(defaultSourceClient)
+                .roles()
+                .get(roleCompositeSource)
+                .update(roleToUpdate);
+    }
+
+    /**
+     * retrieve all the roles for a given client & realm
+     * @param clientId
+     * @param realm
+     * @return
+     */
+    public List<String> getCompositeRolesByRealmClientId(String clientId, String realm){
+        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+        Keycloak keycloak = KeycloakUtils.getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+        RolesResource rolesResource = keycloak.realm(realm)
+                .clients()
+                .get(clientId)
+                .roles();
+        List<RoleRepresentation> roleRepresentations = rolesResource.list();
+        if(roleRepresentations == null){
+            return Collections.emptyList();
+        }
+        List<String> roles = new ArrayList<>();
+        for (RoleRepresentation roleRepresentation : roleRepresentations) {
+            if (roleRepresentation.isComposite()) {
+                roles.add(roleRepresentation.getName());
+            }
+        }
+        return roles;
+    }
 }

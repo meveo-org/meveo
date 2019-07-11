@@ -67,6 +67,9 @@ public class EndpointDto extends BusinessDto implements Serializable {
     @JsonProperty
     private List<String> pathParameters = new ArrayList<>();
 
+    @JsonProperty
+    private List<String> roles = new ArrayList<>();
+
     /**
      * JSONata query used to transform the result
      */
@@ -161,5 +164,13 @@ public class EndpointDto extends BusinessDto implements Serializable {
 
     public void setParameterMappings(List<TSParameterMappingDto> parameterMappings) {
         this.parameterMappings = parameterMappings;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }

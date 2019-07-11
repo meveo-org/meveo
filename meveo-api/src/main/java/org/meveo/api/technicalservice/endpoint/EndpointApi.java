@@ -16,10 +16,14 @@
 package org.meveo.api.technicalservice.endpoint;
 
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.*;
 import org.meveo.service.script.ConcreteFunctionService;
@@ -50,6 +54,9 @@ public class EndpointApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
 
     public EndpointApi(){
 
@@ -149,6 +156,7 @@ public class EndpointApi {
      * @return the created Endpoint
      */
     public Endpoint create(EndpointDto endpointDto) throws BusinessException {
+        validateCompositeRoles(endpointDto);
         Endpoint endpoint = fromDto(endpointDto);
         endpointService.create(endpoint);
         return endpoint;
@@ -221,7 +229,7 @@ public class EndpointApi {
     }
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-
+        validateCompositeRoles(endpointDto);
     	Endpoint updatedEndpoint = new Endpoint();
     	updatedEndpoint.setId(endpoint.getId());
     	updatedEndpoint.setCode(endpointDto.getCode());
@@ -340,4 +348,18 @@ public class EndpointApi {
         return endpointParameter;
     }
 
+    public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
+        if (CollectionUtils.isNotEmpty(roles)) {
+            for (String compositeRole : roles) {
+                for (String selectedRole : endpointDto.getRoles()) {
+                    if (!compositeRole.equals(selectedRole)) {
+                        throw new IllegalArgumentException("The roles does not exists");
+                    }
+                }
+            }
+        }
+        return roles;
+    }
 }
