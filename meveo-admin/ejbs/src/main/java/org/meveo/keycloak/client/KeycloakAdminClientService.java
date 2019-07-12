@@ -55,7 +55,7 @@ public class KeycloakAdminClientService {
     private SessionContext ctx;
 
     public Set<String> getCurrentUserRoles(String client){
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
 
         final AccessToken.Access resourceAccess = keycloakSecurityContext.getToken()
@@ -70,7 +70,7 @@ public class KeycloakAdminClientService {
     }
 
     public void removeRole(String client, String role){
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
 
@@ -90,7 +90,7 @@ public class KeycloakAdminClientService {
     }
 
     public void createClient(String name){
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
 
@@ -122,7 +122,7 @@ public class KeycloakAdminClientService {
      */
     public void addToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToAdd) {
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
 
         Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
@@ -157,7 +157,7 @@ public class KeycloakAdminClientService {
      * @param compositeRole Composite role to create and / or where to add the given role
      */
     public void addToComposite(String client, String role, String compositeRole){
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
 
@@ -477,7 +477,7 @@ public class KeycloakAdminClientService {
      */
     public void updateToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToUpdate) {
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
 
         Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
@@ -510,14 +510,22 @@ public class KeycloakAdminClientService {
      * @return
      */
     public List<String> getCompositeRolesByRealmClientId(String clientId, String realm){
-        final KeycloakPrincipal callerPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
         KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
         Keycloak keycloak = KeycloakUtils.getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+        
+        final String clientUuid = keycloak.realm(realm)
+                .clients()
+                .findByClientId(clientId)
+                .get(0)
+                .getId();
+        
         RolesResource rolesResource = keycloak.realm(realm)
                 .clients()
-                .get(clientId)
+                .get(clientUuid)
                 .roles();
+        
         List<RoleRepresentation> roleRepresentations = rolesResource.list();
         if(roleRepresentations == null){
             return Collections.emptyList();

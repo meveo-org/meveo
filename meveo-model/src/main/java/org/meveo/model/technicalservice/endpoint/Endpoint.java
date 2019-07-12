@@ -63,7 +63,7 @@ public class Endpoint extends BusinessEntity {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
-    @Column(name = "roles")
+    @Column(name = "role")
     private List<String> roles = new ArrayList<>();
 
     /**
