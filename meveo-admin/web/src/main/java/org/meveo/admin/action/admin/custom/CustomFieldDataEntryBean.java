@@ -27,6 +27,7 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -60,6 +61,7 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.event.CellEditEvent;
+import org.primefaces.event.SelectEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,8 +133,18 @@ public class CustomFieldDataEntryBean implements Serializable {
     private List<BusinessEntity> availableEntities = new ArrayList<>();
     
     private Map<String, Object> tempValues = new HashMap<>();
+    
+    private List<Object> listValues;
 
-    /** Logger. */
+    public List<Object> getListValues() {
+		return listValues;
+	}
+
+	public void setListValues(List<Object> listValues) {
+		this.listValues = listValues;
+	}
+
+	/** Logger. */
     private Logger log = LoggerFactory.getLogger(this.getClass()); 
 
     /**
@@ -1735,6 +1747,14 @@ public class CustomFieldDataEntryBean implements Serializable {
     public void clean() {
         customEntityInstanceCode = null;
         entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+    }
+    
+	@SuppressWarnings("unchecked")
+    @ActionMethod
+    public void onEntityReferenceSelected(SelectEvent event) {
+		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
+		String newId = (String) selectedEntityInPopup.get("uuid");
+    	listValues.add(newId);
     }
     
 }

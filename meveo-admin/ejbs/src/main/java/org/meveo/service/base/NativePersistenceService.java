@@ -15,6 +15,30 @@
  */
 package org.meveo.service.base;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -32,19 +56,6 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.util.MeveoParamBean;
-
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Query;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.*;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods working directly with native DB tables
@@ -111,7 +122,7 @@ public class NativePersistenceService extends BaseService {
 
             StringBuilder selectQuery = new StringBuilder("SELECT ");
 
-            if(selectFields == null || !selectFields.isEmpty()){
+            if(selectFields == null || selectFields.isEmpty()){
                 selectQuery.append("*");
             }else if(!selectFields.isEmpty()){
                 for(String field : selectFields){
@@ -258,7 +269,6 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     protected String create(String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
-
         if (tableName == null) {
             throw new BusinessException("Table name must not be null");
         }
@@ -307,10 +317,16 @@ public class NativePersistenceService extends BaseService {
 
             Query query = getEntityManager().createNativeQuery(sql.toString());
             for (String fieldName : values.keySet()) {
-                if (values.get(fieldName) == null) {
+                Object fieldValue = values.get(fieldName);
+				if (fieldValue == null) {
                     continue;
                 }
-                query.setParameter(fieldName, values.get(fieldName));
+                
+				// Serialize list values
+                if(fieldValue instanceof Collection) {
+                	fieldValue = JacksonUtil.toString(fieldValue);
+                }
+                query.setParameter(fieldName, fieldValue);
             }
             query.executeUpdate();
 
@@ -386,8 +402,13 @@ public class NativePersistenceService extends BaseService {
 
             Query query = getEntityManager().createNativeQuery(sql.toString());
             for (String fieldName : value.keySet()) {
-                if (value.get(fieldName) != null) {
-                    query.setParameter(fieldName, value.get(fieldName));
+                Object fieldValue = value.get(fieldName);
+				if (fieldValue != null) {
+    				// Serialize list values
+                    if(fieldValue instanceof Collection) {
+                    	fieldValue = JacksonUtil.toString(fieldValue);
+                    }
+                    query.setParameter(fieldName, fieldValue);
                 }
             }
             query.executeUpdate();
@@ -408,6 +429,10 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
+    	// Serialize collections
+    	if(value instanceof Collection) {
+    		value = JacksonUtil.toString(value);
+    	}
 
         try {
             if (value == null) {

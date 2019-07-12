@@ -92,6 +92,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 
             Map<String, Object> summaryValues = values.entrySet()
             	.stream()
+            	.filter(e -> e.getValue() != null)
             	.filter(e -> summaryFields.contains(e.getKey()))
                 .collect(Collectors.toMap(e->e.getKey(),e->e.getValue()));
 

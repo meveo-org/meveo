@@ -978,22 +978,31 @@ public class CustomTableService extends NativePersistenceService {
      */
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
         final Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
-        final List<Map<String, Object>> convertedData = new ArrayList<>(data);
-        int i = 0;
-        for(Map<String, Object> datum : data){
-            for(Entry<String, Object> field : datum.entrySet()){
+        final List<Map<String, Object>> convertedData = new ArrayList<>();
+        
+        for(int i = 0; i < data.size(); i++){
+        	Map<String, Object> modifiableMap = new HashMap<>();
+        	convertedData.add(i, modifiableMap);
+            
+            for(Entry<String, Object> field : data.get(i).entrySet()){
             	if(field.getKey().equals("uuid")) {
+            		modifiableMap.put(field.getKey(), field.getValue());
             		continue;
             	}
-                CustomFieldTemplate cft = getCustomFieldTemplate(cfts, field).get();
+            	
+            	CustomFieldTemplate cft = getCustomFieldTemplate(cfts, field).get();
+            	
+            	// De-serialize lists
                 if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)){
                     if(!(field.getValue() instanceof Collection) && field.getValue() != null){
-                        convertedData.get(i).put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
+                        modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
                     }
+                } else {
+                	modifiableMap.put(field.getKey(), field.getValue());
                 }
             }
-            i++;
         }
+        
         return convertedData;
     }
 
