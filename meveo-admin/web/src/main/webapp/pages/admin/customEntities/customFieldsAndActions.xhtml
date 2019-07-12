@@ -844,8 +844,8 @@
 					</h:panelGrid>
 					<h:panelGroup id="storages">
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customFieldTemplate.storages']}">
-							<p:pickList id="pickList" value="#{customFieldTemplateBean.storagesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
-								<p:ajax event="transfer" update="relationshipName"/>
+							<p:pickList id="pickList" value="#{customEntityTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+								<p:ajax event="transfer" listener="#{customFieldTemplateBean.onChangeAvailableStorages()}" update="relationshipName"/>
 								<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.storageTypesList}" />
 							</p:pickList>
 						</hftl:decorateFormField>
