@@ -356,15 +356,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public DualListModel<DBStorageType> getStoragesDM() {
         if (storagesDM == null) {
             List<DBStorageType> perksSource = new ArrayList<>();
-            if (!StringUtils.isBlank(appliesTo)) {
-                String cetCode = appliesTo;
-                if (appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-                    cetCode = cetCode.substring(3);
-                }
-                CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
-                if (customEntityTemplate != null && CollectionUtils.isNotEmpty(customEntityTemplate.getAvailableStorages())) {
-                    perksSource.addAll(customEntityTemplate.getAvailableStorages());
-                }
+            for (DBStorageType dbStorageType : DBStorageType.values()) {
+                perksSource.add(dbStorageType);
             }
             List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
             if (getEntity().getStorages() != null) {
@@ -372,7 +365,6 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             }
             perksSource.removeAll(perksTarget);
             storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
-
         }
         return storagesDM;
     }
@@ -385,5 +377,14 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         ArrayList<DBStorageType> arrayList = new ArrayList<>(storagesDM.getSource());
         arrayList.addAll(storagesDM.getTarget());
         return arrayList;
+    }
+
+    public void onChangeAvailableStorages() {
+        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
+            getEntity().getStorages().clear();
+            getEntity().getStorages().addAll(storagesDM.getTarget());
+        } else {
+            getEntity().setStorages(storagesDM.getTarget());
+        }
     }
 }
