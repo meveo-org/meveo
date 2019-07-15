@@ -15,6 +15,8 @@ public class CustomTableRecord implements Serializable, IEntity, ISearchable {
      */
     private Long id;
 
+    private String uuid;
+
     /**
      * Custom entity template code
      */
@@ -33,6 +35,14 @@ public class CustomTableRecord implements Serializable, IEntity, ISearchable {
     @Override
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     /**
