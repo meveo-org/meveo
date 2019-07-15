@@ -1,24 +1,62 @@
 package org.meveo.model.crm;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OrderBy;
+import javax.persistence.QueryHint;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.*;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
-import org.meveo.model.crm.custom.*;
+import org.meveo.model.converter.StringListConverter;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
+import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.shared.DateUtils;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author clement.bareth
@@ -244,12 +282,44 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "display_format", length = 20)
     @Size(max = 20)
     private String displayFormat;
+    
+	/**
+	 * List of content types
+	 */
+	@Column(name = "content_types", length = 2000)
+	@Convert(converter = StringListConverter.class)
+	private List<String> contentTypes = new ArrayList<String>();
 
+	/**
+	 * List of file extensions
+	 */
+	@Column(name = "file_extensions", length = 2000)
+	@Convert(converter = StringListConverter.class)
+	private List<String> fileExtensions = new ArrayList<String>();
+
+	/**
+	 * Maximum size in bytes.
+	 */
+	@Column(name = "maximum_size")
+	private Integer maximumSize;
+
+	/**
+	 * Supports EL variables.
+	 */
+	@Column(name = "file_path", length = 255)
+	private String filePath;
+    
     /**
      * Database field name - derived from code
      */
     @Transient
     private String dbFieldname;
+    
+    @Transient
+    private String contentType;
+    
+    @Transient
+    private String fileExtension;
 
     public List<DBStorageType> getStorages() {
         return storages;
@@ -987,4 +1057,68 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
+
+	public List<String> getContentTypes() {
+		return contentTypes;
+	}
+
+	public void setContentTypes(List<String> contentTypes) {
+		this.contentTypes = contentTypes;
+	}
+
+	public List<String> getFileExtensions() {
+		return fileExtensions;
+	}
+
+	public void setFileExtensions(List<String> fileExtensions) {
+		this.fileExtensions = fileExtensions;
+	}
+
+	public Integer getMaximumSize() {
+		return maximumSize;
+	}
+
+	public void setMaximumSize(Integer maximumSize) {
+		this.maximumSize = maximumSize;
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public String getFileExtension() {
+		return fileExtension;
+	}
+
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
+
+	public void addContentType(String ct) {
+		if (getContentTypes() == null) {
+			contentTypes = new ArrayList<String>();
+		}
+
+		contentTypes.add(ct);
+	}
+
+	public void addFileExtension(String fe) {
+		if (getFileExtensions() == null) {
+			fileExtensions = new ArrayList<String>();
+		}
+
+		fileExtensions.add(fe);
+	}
 }

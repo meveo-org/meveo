@@ -810,4 +810,13 @@
 			baseTableName="storage_repository" referencedColumnNames="id" />
 	</changeSet>
 	
+	<changeSet id="#3705 - Binary CFT type" author="EdwardPLegaspi">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="content_types" type="VARCHAR(2000)"></column>
+			<column name="file_extensions" type="VARCHAR(2000)"></column>
+			<column name="maximum_size" type="INT"></column>
+			<column name="file_path" type="VARCHAR(255)"></column>
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>

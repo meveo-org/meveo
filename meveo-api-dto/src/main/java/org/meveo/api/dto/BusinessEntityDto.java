@@ -15,7 +15,7 @@ import org.meveo.model.BusinessEntity;
  **/
 @XmlTransient
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class BusinessEntityDto extends EnableEntityDto {
+public class BusinessEntityDto extends EnableEntityDto {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 4451119256601996946L;

@@ -386,4 +386,36 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         arrayList.addAll(storagesDM.getTarget());
         return arrayList;
     }
+    
+	public void addContentTypes() {
+		if (!StringUtils.isBlank(entity.getContentType())) {
+			entity.addContentType(entity.getContentType());
+		}
+	}
+
+	public void addFileExtensions() {
+		if (!StringUtils.isBlank(entity.getFileExtension())) {
+			entity.addFileExtension(entity.getFileExtension());
+		}
+	}
+	
+	public void clearContentType() {
+		entity.setContentType(null);
+	}
+
+	public void clearFileExtension() {
+		entity.setFileExtension(null);
+	}
+	
+	public String reinitContentType() {
+		entity.setContentType(null);
+         
+        return null;
+    }
+	
+	public String reinitFileExtension() {
+		entity.setFileExtension(null);
+         
+        return null;
+    }
 }
