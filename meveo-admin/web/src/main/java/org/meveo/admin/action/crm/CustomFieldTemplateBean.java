@@ -74,9 +74,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     public CustomFieldTemplate newEntity(String appliesTo) {
+        storagesDM = new DualListModel<>();
         CustomFieldTemplate customFieldTemplate = super.newEntity();
         entity = customFieldTemplate;
-        storagesDM = null;
         this.appliesTo = appliesTo;
         return customFieldTemplate;
     }
@@ -354,16 +354,19 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     public DualListModel<DBStorageType> getStoragesDM() {
+        return storagesDM;
+    }
+
+    public DualListModel<DBStorageType> getStoragesDMList(DualListModel<DBStorageType> storageTypeList) {
+
         if (storagesDM == null) {
             List<DBStorageType> perksSource = new ArrayList<>();
-            for (DBStorageType dbStorageType : DBStorageType.values()) {
-                perksSource.add(dbStorageType);
-            }
+            perksSource = storageTypeList.getTarget();
+
             List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
             if (getEntity().getStorages() != null) {
                 perksTarget.addAll(getEntity().getStorages());
             }
-            perksSource.removeAll(perksTarget);
             storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
         }
         return storagesDM;
