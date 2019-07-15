@@ -49,13 +49,32 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
+import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.util.MeveoParamBean;
+
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.*;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods working directly with native DB tables
@@ -92,6 +111,14 @@ public class NativePersistenceService extends BaseService {
     @Inject
     @MeveoParamBean
     protected ParamBean paramBean;
+
+    @Inject
+    @Updated
+    private Event<CustomTableRecord> customTableRecordUpdate;
+
+    @Inject
+    @Removed
+    private Event<CustomTableRecord> customTableRecordRemoved;
 
     /**
      * Find record by its identifier
@@ -321,7 +348,7 @@ public class NativePersistenceService extends BaseService {
 				if (fieldValue == null) {
                     continue;
                 }
-                
+
 				// Serialize list values
                 if(fieldValue instanceof Collection) {
                 	fieldValue = JacksonUtil.toString(fieldValue);
@@ -413,6 +440,12 @@ public class NativePersistenceService extends BaseService {
             }
             query.executeUpdate();
 
+            CustomTableRecord record = new CustomTableRecord();
+            record.setUuid((String) value.get(FIELD_ID));
+            record.setCetCode(tableName);
+
+            customTableRecordUpdate.fire(record);
+
         } catch (Exception e) {
             log.error("Failed to insert values into table {} {} sql {}", tableName, value, sql, e);
             throw e;
@@ -441,6 +474,11 @@ public class NativePersistenceService extends BaseService {
                 getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=" + uuid).setParameter(fieldName, value)
                         .executeUpdate();
             }
+
+            CustomTableRecord record = new CustomTableRecord();
+            record.setUuid(uuid);
+            record.setCetCode(tableName);
+            customTableRecordUpdate.fire(record);
 
         } catch (Exception e) {
             log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
@@ -508,6 +546,11 @@ public class NativePersistenceService extends BaseService {
         getEntityManager().createNativeQuery("delete from " + tableName + " where uuid= :uuid")
                 .setParameter("uuid", uuid)
                 .executeUpdate();
+
+        CustomTableRecord record = new CustomTableRecord();
+        record.setCetCode(tableName);
+        record.setUuid(uuid);
+        customTableRecordRemoved.fire(record);
     }
 
     /**
@@ -520,6 +563,12 @@ public class NativePersistenceService extends BaseService {
     public void remove(String tableName, Set<String> ids) throws BusinessException {
         getEntityManager().createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
+        for(String id : ids){
+            CustomTableRecord record = new CustomTableRecord();
+            record.setCetCode(tableName);
+            record.setUuid(id);
+            customTableRecordRemoved.fire(record);
+        }
     }
 
     /**
