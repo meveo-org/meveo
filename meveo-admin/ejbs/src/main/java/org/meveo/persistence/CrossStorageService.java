@@ -112,7 +112,7 @@ public class CrossStorageService implements CustomPersistenceService {
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
             List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final Map<String, Object> customTableValue = customTableService.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, sqlFields);
+                final Map<String, Object> customTableValue = customTableService.findById(cet, uuid, sqlFields);
                 replaceKeys(cet, sqlFields, customTableValue);
                 values.putAll(customTableValue);
             } else {
@@ -706,11 +706,12 @@ public class CrossStorageService implements CustomPersistenceService {
         // TODO: extract sub-entities fetch fields. Ex : "a.x". Fetch level by default is one.
         new HashSet<>(values.entrySet()).forEach(entry -> {
             CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-            if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+            if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
                 CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cft.getEntityClazzCetCode());
                 Map<String, Object> refValues = find(configurationCode, cet, (String) entry.getValue());
                 values.put(cft.getCode(), refValues);
             }
+            //TODO: fetch list of referefences
         });
     }
 
