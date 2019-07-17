@@ -352,11 +352,9 @@ public class EndpointApi {
         KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
         List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
         if (CollectionUtils.isNotEmpty(roles)) {
-            for (String compositeRole : roles) {
-                for (String selectedRole : endpointDto.getRoles()) {
-                    if (!compositeRole.equals(selectedRole)) {
-                        throw new IllegalArgumentException("The roles does not exists");
-                    }
+            for (String selectedRole : endpointDto.getRoles()) {
+                if (!roles.contains(selectedRole)) {
+                    throw new IllegalArgumentException("The roles does not exists");
                 }
             }
         }

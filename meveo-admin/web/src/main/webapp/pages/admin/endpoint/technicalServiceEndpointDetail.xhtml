@@ -123,15 +123,19 @@
 	                </h:panelGroup>
                 </h:panelGroup>
 
+                <h:panelGroup>
+                    <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.roles']}">
+                        <p:pickList id="pickListRoles" value="#{endpointBean.rolesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                        </p:pickList>
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+
                 <h:panelGrid id="endpointUrl" columns="1">
                     <hftl:decorateFormField field ="endpointUrl" fieldId="endpointUrlId" label="#{messages['endpoint.accessUrl']}">
                         <p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}" size="100" readonly="true" />
                     </hftl:decorateFormField>
                 </h:panelGrid>
 
-                <h:panelGroup>
-                    <hftl:formField label="#{messages['endpoint.roles']}" field="roles" listType="pickUpList" dualListModel="#{endpointBean.rolesDM}" componentWidth="50" />
-                </h:panelGroup>
         </hftl:formPanel>
     </ui:define>
 
