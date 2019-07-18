@@ -21,6 +21,10 @@
 					<f:converter binding="#{entityReferenceConverter}" />
 					<f:attribute name="field" value="#{cft}" />
 				</c:if>
+				<c:if test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}">
+					<f:converter converterId="jsonConverter" />
+					<f:attribute name="field" value="#{cft}" />
+				</c:if>
 			
 			</h:outputText>
 		</p:column>
@@ -38,6 +42,17 @@
 						value = "Add a #{cft.code}"
 						rendered="true"
 						oncomplete="PF('detail_customTableDialog').show()">
+						
+						<f:setPropertyActionListener
+							target="#{customTableRowDetailBean.selectedCft}"
+							value="#{cft}" />
+
+					</p:commandButton>
+				</c:when>
+				<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}">
+					<p:commandButton oncomplete="PF('detail_childEntityPopup').show()"
+						action="#{childEntityPopupBean.initEntity(cft.entityClazzCetCode, customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue)}"
+						value = "Add a #{cft.code}" update=":detail_childEntityPopup" >
 						
 						<f:setPropertyActionListener
 							target="#{customTableRowDetailBean.selectedCft}"
