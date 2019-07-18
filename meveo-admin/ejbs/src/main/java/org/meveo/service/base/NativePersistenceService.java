@@ -368,10 +368,16 @@ public class NativePersistenceService extends BaseService {
                 		.setMaxResults(1);
                 
                 for (String fieldName : values.keySet()) {
-                    if (values.get(fieldName) == null) {
+                    Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
                         continue;
                     }
-                    query.setParameter(fieldName, values.get(fieldName));
+					
+					// Serialize list values
+                    if(fieldValue instanceof Collection) {
+                    	fieldValue = JacksonUtil.toString(fieldValue);
+                    }
+                    query.setParameter(fieldName, fieldValue);
                 }
 
                 uuid = query.getSingleResult();
@@ -929,7 +935,9 @@ public class NativePersistenceService extends BaseService {
     public String findIdByValues(String tableName, Map<String, Object> queryValues) {
         QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
-            queryBuilder.addCriterion(key, "=", value, false);
+        	if(!(value instanceof Collection)) {
+                queryBuilder.addCriterion(key, "=", value, false);
+        	}
         });
 
         NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);
