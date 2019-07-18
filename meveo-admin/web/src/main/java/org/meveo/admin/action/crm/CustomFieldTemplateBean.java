@@ -61,6 +61,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     private CustomFieldTypeEnum fieldType;
 
     private DualListModel<DBStorageType> storagesDM;
+    
+    private DualListModel<DBStorageType> cetStorageDM;
 
     /**
      * To what entity class CFT should be copied to - a appliesTo value
@@ -102,8 +104,18 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public void setAppliesTo(String appliesTo) {
         this.appliesTo = appliesTo;
     }
+    
+    
 
-    @Override
+    public DualListModel<DBStorageType> getCetStorageDM() {
+		return cetStorageDM;
+	}
+
+	public void setCetStorageDM(DualListModel<DBStorageType> cetStorageDM) {
+		this.cetStorageDM = cetStorageDM;
+	}
+
+	@Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
@@ -353,28 +365,23 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         this.fieldType = null;
     }
 
-    public DualListModel<DBStorageType> getStoragesDM() {
-        return storagesDM;
-    }
-
     /**
      * The possible storages of a CFT are the available storages of the CET / CRT <br>
      * If CFT is being created, the storage list has by default all the storages of its CET or CRT <br>
      * If the CFT is being edited, the target list is filled with persisted data, and the remaining available storages are put in the source list
      * 
-     * @param storageTypeList Dual list for storages of the CET / CRT
      * @return The dual list for storages of the CFT
      */
-    public DualListModel<DBStorageType> getStoragesDMList(DualListModel<DBStorageType> storageTypeList) {
-        if (storagesDM == null) {
-            List<DBStorageType> perksSource = new ArrayList<>();
+    public DualListModel<DBStorageType> getStoragesDM() {
+    	if(storagesDM == null) {
+    		List<DBStorageType> perksSource = new ArrayList<>();
             List<DBStorageType> perksTarget = new ArrayList<>();
 
             // If the CFT has no id, then it's being created, otherwise it's being edited
         	if(getEntity().getId() == null) {
-        		perksTarget.addAll(storageTypeList.getTarget());
+        		perksTarget.addAll(cetStorageDM.getTarget());
         	} else {
-        		perksSource.addAll(storageTypeList.getTarget());
+        		perksSource.addAll(cetStorageDM.getTarget());
 	            if (getEntity().getStorages() != null) {
 	                perksTarget.addAll(getEntity().getStorages());		// Persistent data
 	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
@@ -382,11 +389,11 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         	}
         	
             storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
-        }
-        
+    	}
+    	
         return storagesDM;
     }
-
+    
     public void setStoragesDM(DualListModel<DBStorageType> storagesDM) {
         this.storagesDM = storagesDM;
     }

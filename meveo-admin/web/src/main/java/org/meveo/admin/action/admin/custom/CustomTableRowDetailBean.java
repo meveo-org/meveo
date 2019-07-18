@@ -114,7 +114,18 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 	public void onChildEntityUpdated(CustomFieldValues cfValues) {
 		String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
-		cfValue.setStringValue(serializedValues);
+    	if(selectedCft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+    		List<String> listValue = cfValue.getListValue();
+    		if(listValue == null) {
+    			listValue = new ArrayList<String>();
+        		listValue.add(serializedValues);
+    		} else {
+        		listValue.add(serializedValues);
+        		listValue = listValue.stream().distinct().collect(Collectors.toList());
+    		}
+    	} else {
+        	cfValue.setStringValue(serializedValues);
+    	}
 	}
 	
 	@ActionMethod
