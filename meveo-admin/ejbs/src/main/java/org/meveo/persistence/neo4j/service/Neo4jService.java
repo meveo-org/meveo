@@ -1083,6 +1083,14 @@ public class Neo4jService implements CustomPersistenceService {
                     continue;
                 }
 
+                if (fieldValue == null && cft.getDefaultValue() != null) {
+                    if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
+                        fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, String.class);
+                    } else {
+                        fieldValue = cft.getDefaultValue();
+                    }
+                }
+
                 // Validate that value is not empty when field is mandatory
                 boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
                 if (cft.isValueRequired() && isEmpty) {
