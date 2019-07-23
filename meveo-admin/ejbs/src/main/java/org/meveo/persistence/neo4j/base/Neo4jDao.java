@@ -611,13 +611,15 @@ public class Neo4jDao {
         return Collections.emptySet();
     }
 
-    public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String label, String endNodeId, Map<String, Object> fields) {
+    public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String startNodeLabel, String label, String endNodeId, String endNodeLabel, Map<String, Object> fields) {
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
         values.put("startNodeId", startNodeId);
         values.put("relationshipLabel", label);
         values.put("endNodeId", endNodeId);
+        values.put("startNodeLabel", startNodeLabel);
+        values.put("endNodeLabel", endNodeLabel);
         final String fieldsString = getFieldsString(fields.keySet());
         values.put(FIELDS, fieldsString);
         values.putAll(fields);

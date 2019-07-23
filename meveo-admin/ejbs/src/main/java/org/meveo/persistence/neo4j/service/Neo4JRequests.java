@@ -33,9 +33,9 @@ public class Neo4JRequests {
      * - endNodeId : Id of the target node <br>
      * - relationshipLabel : Label of the relationship to create <br>
      */
-    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode) WHERE startNode.meveo_uuid = $startNodeId \n")
+    public final static StringBuffer createRelationship = new StringBuffer("MATCH (startNode:${startNodeLabel}) WHERE startNode.meveo_uuid = $startNodeId \n")
             .append("WITH startNode \n")
-            .append("MATCH (endNode) WHERE endNode.meveo_uuid = $endNodeId \n")
+            .append("MATCH (endNode:${endNodeLabel}) WHERE endNode.meveo_uuid = $endNodeId \n")
             .append("WITH startNode, endNode \n")
             .append("MERGE (startNode)-[relationship :${relationshipLabel} ${fields}]->(endNode) \n")
             .append("ON CREATE SET relationship." + CREATION_DATE + " = timestamp(), relationship.meveo_uuid = apoc.create.uuid() \n")

@@ -38,7 +38,6 @@ import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 
-import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
@@ -369,7 +368,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
                         uuid = customTableService.create(cet, sqlValues);
                     }
-                    persistedEntities.add(new EntityRef(uuid));
+                    persistedEntities.add(new EntityRef(uuid, cet.getCode()));
                 } else {
                     final String code = (String) entityValues.get("code");
                     CustomEntityInstance cei = getCustomEntityInstance(entityCode, values);
@@ -393,7 +392,7 @@ public class CrossStorageService implements CustomPersistenceService {
                         customEntityInstanceService.update(cei);
                     }
 
-                    persistedEntities.add(new EntityRef(cei.getUuid()));
+                    persistedEntities.add(new EntityRef(cei.getUuid(), cet.getCode()));
                     uuid = cei.getUuid();
                 }
             }
