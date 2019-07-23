@@ -517,7 +517,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, Map<String, Object> fields, List<String> labels) {
+    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, String cetCode, Map<String, Object> fields, List<String> labels) {
 
         String alias = "startNode"; // Alias to use in query
 
@@ -525,6 +525,7 @@ public class Neo4jDao {
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put(NODE_ID, nodeId);
         valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+        valuesMap.put(CET_CODE, cetCode);
 
         Map<String, Object> fieldValues = new HashMap<>();
         fieldValues.put(NODE_ID, nodeId);

@@ -113,7 +113,7 @@ public class Neo4JRequests {
             .append("RETURN n.meveo_uuid");
 
     public final static StringBuffer updateNodeWithId = new StringBuffer()
-            .append("MATCH (startNode) WHERE startNode.meveo_uuid = $").append(NODE_ID).append("\n")
+            .append("MATCH (startNode:${cetCode}) WHERE startNode.meveo_uuid = $").append(NODE_ID).append("\n")
             .append("SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where a.meveo_uuid = ${originNodeId} "
