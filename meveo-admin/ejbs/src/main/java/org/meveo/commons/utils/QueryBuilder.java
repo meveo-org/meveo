@@ -776,6 +776,28 @@ public class QueryBuilder {
         return result;
     }
 
+    /**
+     * @param em entity manager
+     * @return instance of Query.
+     */
+    public Query getQueryUsers(EntityManager em, List<String> roleNames) {
+        if (q.toString().indexOf("where") > 0) {
+            q.append(" and role.name IN (:roleNames)");
+        } else {
+            q.append(" where role.name IN (:roleNames)");
+        }
+        applyPaginationUsers(paginationSortAlias);
+        String query = q.toString().replace("a.roles", "a.roles role");
+        Query result = em.createQuery(query);
+        applyPagination(result);
+
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            result.setParameter(e.getKey(), e.getValue());
+        }
+        result.setParameter("roleNames", roleNames);
+        return result;
+    }
+
     public <Z> TypedQuery<Z> getTypedQuery(EntityManager em, Class<Z> clazz){
         applyPagination(paginationSortAlias);
         TypedQuery<Z> result = em.createQuery(q.toString(), clazz);
@@ -893,6 +915,23 @@ public class QueryBuilder {
 
         if (paginationConfiguration.isSorted() && q.indexOf("ORDER BY") == -1) {
             addOrderCriterion(((alias != null) ? (alias + ".") : "") + paginationConfiguration.getSortField(), paginationConfiguration.isAscendingSorting());
+        }
+    }
+
+    /**
+     * @param alias alias of column?
+     */
+    private void applyPaginationUsers(String alias) {
+        if (paginationConfiguration == null) {
+            return;
+        }
+
+        if (paginationConfiguration.isSorted() && q.indexOf("ORDER BY") == -1) {
+            if ("name.fullName".equals(paginationConfiguration.getSortField())) {
+                addOrderDoubleCriterion(((alias != null) ? (alias + ".") : "") + "name.firstName", paginationConfiguration.isAscendingSorting(), ((alias != null) ? (alias + ".") : "") + "name.lastName", paginationConfiguration.isAscendingSorting());
+            } else {
+                addOrderCriterion(((alias != null) ? (alias + ".") : "") + paginationConfiguration.getSortField(), paginationConfiguration.isAscendingSorting());
+            }
         }
     }
 

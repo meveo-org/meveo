@@ -21,17 +21,22 @@ package org.meveo.service.admin.impl;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UsernameAlreadyExistsException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.commons.utils.FilteredQueryBuilder;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.admin.User;
+import org.meveo.model.filter.Filter;
 import org.meveo.model.security.Role;
 import org.meveo.service.base.PersistenceService;
 
@@ -156,6 +161,23 @@ public class UserService extends PersistenceService<User> {
             return (User) qb.getQuery(getEntityManager()).getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }
+    }
+
+    @Override
+    public List<User> list(PaginationConfiguration config) {
+        Map<String, Object> filters = config.getFilters();
+
+        if (filters != null && filters.containsKey("$FILTER")) {
+            Filter filter = (Filter) filters.get("$FILTER");
+            FilteredQueryBuilder queryBuilder = (FilteredQueryBuilder) getQuery(config);
+            queryBuilder.processOrderCondition(filter.getOrderCondition(), filter.getPrimarySelector().getAlias());
+            Query query = queryBuilder.getQueryUsers(getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            return query.getResultList();
+        } else {
+            QueryBuilder queryBuilder = getQuery(config);
+            Query query = queryBuilder.getQueryUsers(getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            return query.getResultList();
         }
     }
 
