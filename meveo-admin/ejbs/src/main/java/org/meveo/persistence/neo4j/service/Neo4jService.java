@@ -477,7 +477,7 @@ public class Neo4jService implements CustomPersistenceService {
                             Map<String, Object> updatableFields = new HashMap<>(fields);
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
-                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, updatableFields, labels);
+                            neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, cet.getCode(), updatableFields, labels);
                             persistedEntities.add(new EntityRef(id, cet.getCode()));
                         }
                     }

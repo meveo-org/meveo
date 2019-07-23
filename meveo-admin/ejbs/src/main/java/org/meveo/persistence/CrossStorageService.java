@@ -416,7 +416,7 @@ public class CrossStorageService implements CustomPersistenceService {
             final List<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
             List<String> labels = new ArrayList<>(cetLabels);
             labels.add(cet.getCode());
-            neo4jDao.updateNodeByNodeId(configurationCode, uuid, neo4jValues, labels);
+            neo4jDao.updateNodeByNodeId(configurationCode, uuid, cet.getCode(), neo4jValues, labels);
         }
 
         // SQL Storage
