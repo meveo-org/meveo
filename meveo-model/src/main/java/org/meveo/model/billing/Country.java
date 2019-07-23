@@ -47,6 +47,10 @@ public class Country extends AuditableEntity {
     @Size(max = 100)
     private String description;
 
+    @Column(name = "nationality", length = 100)
+    @Size(max = 100)
+    private String nationality;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "currency_id")
     private Currency currency;
@@ -79,6 +83,20 @@ public class Country extends AuditableEntity {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * @return the nationality
+     */
+    public String getNationality() {
+        return nationality;
+    }
+
+    /**
+     * @param nationality the nationality to set
+     */
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
     }
 
     public Currency getCurrency() {
