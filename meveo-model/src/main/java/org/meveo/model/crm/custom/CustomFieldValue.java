@@ -144,6 +144,12 @@ public class CustomFieldValue implements Serializable {
      */
     @JsonProperty("listEntity")
     private List<EntityReferenceWrapper> listEntityValue = null;
+    
+    /**
+     * List of map values
+     */
+    @JsonProperty("listMap")
+    private List<Map<?,?>> listMapValue;
 
     /**
      * Map of String type value
@@ -266,8 +272,16 @@ public class CustomFieldValue implements Serializable {
     public void setMapValuesForGUI(List<Map<String, Object>> mapValuesForGUI) {
         this.mapValuesForGUI = mapValuesForGUI;
     }
+    
+    public List<Map<?, ?>> getListMapValue() {
+		return listMapValue;
+	}
 
-    public List<Map<String, Object>> getMapValuesForGUI() {
+	public void setListMapValue(List<Map<?, ?>> listMapValue) {
+		this.listMapValue = listMapValue;
+	}
+
+	public List<Map<String, Object>> getMapValuesForGUI() {
         return mapValuesForGUI;
     }
 
@@ -294,18 +308,20 @@ public class CustomFieldValue implements Serializable {
         this.entityReferenceValue = entityReferenceValue;
     }
 
-    @SuppressWarnings("rawtypes")
-    public List getListValue() {
+    @SuppressWarnings({ "unchecked" })
+    public <T> List<T> getListValue() {
         if (listStringValue != null) {
-            return listStringValue;
+            return (List<T>) listStringValue;
         } else if (listDateValue != null) {
-            return listDateValue;
+            return (List<T>) listDateValue;
         } else if (listLongValue != null) {
-            return listLongValue;
+            return (List<T>) listLongValue;
         } else if (listDoubleValue != null) {
-            return listDoubleValue;
+            return (List<T>) listDoubleValue;
         } else if (listEntityValue != null) {
-            return listEntityValue;
+            return (List<T>) listEntityValue;
+        } else if(listMapValue != null) {
+        	return (List<T>) listMapValue;
         }
 
         return null;
@@ -349,6 +365,11 @@ public class CustomFieldValue implements Serializable {
             for (Object listItem : listValue) {
                 listEntityValue.add((EntityReferenceWrapper) listItem);
             }
+        } else if(Map.class.isAssignableFrom(itemClass)) {
+        	listMapValue = new ArrayList<>();
+        	for(Object listItem : listValue) {
+        		listMapValue.add((Map<?,?>) listItem);
+        	}
         }
     }
 

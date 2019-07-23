@@ -61,7 +61,6 @@ public class CustomFieldValues implements Serializable {
      * @return A map of values with key being custom field code.
      */
     public Map<String, Object> getValues() {
-
         Map<String, Object> values = new HashMap<>();
 
         for (Entry<String, List<CustomFieldValue>> valueInfo : valuesByCode.entrySet()) {
@@ -69,16 +68,15 @@ public class CustomFieldValues implements Serializable {
             List<CustomFieldValue> cfValues = valueInfo.getValue();
             if (cfValues != null && !cfValues.isEmpty()) {
                 CustomFieldValue valueFound = null;
+                // If there is only one value, get this one as the value
                 if (cfValues.size() == 1) {
                     valueFound = cfValues.get(0);
-
                 } else {
+                	// If there is multiple values, get the most recent one
                     Date date = new Date();
-
                     for (CustomFieldValue cfValue : cfValues) {
                         if (cfValue.getPeriod() == null && (valueFound == null || valueFound.getPriority() < cfValue.getPriority())) {
                             valueFound = cfValue;
-
                         } else if (cfValue.getPeriod() != null && cfValue.getPeriod().isCorrespondsToPeriod(date)) {
                             if (valueFound == null || valueFound.getPriority() < cfValue.getPriority()) {
                                 valueFound = cfValue;
@@ -86,11 +84,18 @@ public class CustomFieldValues implements Serializable {
                         }
                     }
                 }
+                
+                // If value was found, add it to the values map
                 if (valueFound != null) {
-                    values.put(cfCode, valueFound.getValue());
+                	if(valueFound.getValue() != null) {
+                        values.put(cfCode, valueFound.getValue());
+                	}else if(valueFound.getListValue() != null) {
+                		values.put(cfCode, valueFound.getListValue());
+                	}
                 }
             }
         }
+        
         return values;
     }
 

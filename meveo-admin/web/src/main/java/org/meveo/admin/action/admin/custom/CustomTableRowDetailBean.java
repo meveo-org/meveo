@@ -112,20 +112,20 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 	@Override
 	@ActionMethod
 	public void onChildEntityUpdated(CustomFieldValues cfValues) {
-		String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
     	if(selectedCft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
-    		List<String> listValue = cfValue.getListValue();
+    		List<Map<?,?>> listValue = cfValue.getListValue();
     		if(listValue == null) {
-    			listValue = new ArrayList<String>();
-        		listValue.add(serializedValues);
+    			listValue = new ArrayList<>();
+        		listValue.add(cfValues.getValues());
     		} else {
-        		listValue.add(serializedValues);
+        		listValue.add(cfValues.getValues());
         		listValue = listValue.stream().distinct().collect(Collectors.toList());
     		}
     		
     		cfValue.setListValue(listValue);
     	} else {
+    		String serializedValues = JacksonUtil.toString(cfValues.getValues());
         	cfValue.setStringValue(serializedValues);
     	}
 	}
