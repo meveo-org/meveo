@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -190,6 +191,29 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     // protected String providerFilePath = paramBean.getCet("providers.rootDir", "./meveodata/");
 
     private UploadedFile uploadedFile;
+
+    private int rows;
+
+    public int getRows() {
+        return rows;
+    }
+
+    public void setRows(int rows) {
+        this.rows = rows;
+    }
+
+    @PostConstruct
+    public void setup() {
+        //default rows value
+        rows = 10;
+    }
+
+    public void saveRows(){
+        FacesContext context = FacesContext.getCurrentInstance();
+        Map map = context.getExternalContext().getRequestParameterMap();
+        String rowsStr = (String) map.get("rows");
+        rows = Integer.parseInt(rowsStr);
+    }
 
     /**
      * Constructor
@@ -773,7 +797,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                     // Omit empty or null values
                     Map<String, Object> cleanFilters = new HashMap<String, Object>();
 
-                    for (Map.Entry<String, Object> filterEntry : filters.entrySet()) {
+                    for (Entry<String, Object> filterEntry : filters.entrySet()) {
                         if (filterEntry.getValue() == null) {
                             continue;
                         }

@@ -4,6 +4,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
     xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org"
     xmlns:l="http://www.lapis.com/jsf/exporter">
+<head>
+    <script type="script">
+        jQuery(document).ready(function() {
+            cellEntity_results.paginator.rppSelect.change(function() {
+                persistRows([{name: 'rows', value: this.value}]);
+            });
+        });
+    </script>
+</head>
 
 <!-- 
 
@@ -38,7 +47,6 @@
         		</hftl:datalist>
          
 -->
-
 <ui:composition>
 
     <!--     <c:if test="${empty pdf}"> -->
@@ -129,7 +137,7 @@
     <p:panel id="#{resultsId}_panel" width="100">
 
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
-            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="10" editable="#{editable}" editMode="#{editMode}"
+            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="#{backingBean.rows}" editable="#{editable}" editMode="#{editMode}"
                 widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
                 paginatorTemplate="${prePaginatorControls} {RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
                 rowsPerPageTemplate="#{rowsPerPage}" lazy="true" resizableColumns="true" styleClass="custom-grid #{styleClass}" rowKey="#{entity.id}" first="#{backingBean.dataTableFirstAttribute}"
@@ -143,6 +151,11 @@
                 <c:if test="#{editable}">
                     <p:ajax event="cellEdit" listener="#{backingBean.onCellEdit}" />
                 </c:if>
+
+                <p:remoteCommand name="persistRows" action="#{backingBean.saveRows}" process="@this"
+                                 update="rows" global="false" />
+
+                <h:outputText id="rows" value="#{backingBean.rows}" />
 
                 <c:if test="${showFullTextSearch}">
                     <f:facet name="header">
@@ -210,7 +223,6 @@
                 <h:graphicImage library="img" name="ajax-loader1.gif" style="margin-right: 12px; vertical-align: middle;" />
                 <h:outputText value="#{messages['message.loading.data']}" style="white-space: nowrap;" />
             </p:panelGrid>
-
         </h:form>
 
         <c:if test="#{exportToXml}">
@@ -219,5 +231,4 @@
     </p:panel>
 
 </ui:composition>
-
 </html>
