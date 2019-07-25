@@ -23,6 +23,7 @@
         exportXlsxButton - show "export to xlsx" button
         exportToXml - show "export to xml" button. Defaults to True if any of the export buttons are enabled
         exportToCsv - show "export to Csv" button
+        exportToJson - show "export to Json" button
         importCsv - show "import from Csv" button
         sortBy and sortOrder - a default field to sort by and a default sort order
         rowsPerPage - possible paging sizes separated by a comma
@@ -82,6 +83,10 @@
 
     <c:if test="${empty exportToCsv}">
         <c:set var="exportToCsv" value="false" />
+    </c:if>
+    
+     <c:if test="${empty exportToJson}">
+        <c:set var="exportToJson" value="false" />
     </c:if>
 
     <c:if test="${empty importCsv}">
@@ -168,16 +173,37 @@
                 </p:commandButton>
                 <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
-                    <l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
+                    <c:if test="#{backingBean.getBaseCrudApi() != null}">
+                    	<p:fileDownload value = "#{backingBean.exportCSV()}" />
+                	</c:if>
+                	<c:if test="#{backingBean.getBaseCrudApi() == null}">
+                		<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
+                	</c:if>
+                </p:commandButton>
+                <p:commandButton id="#{formId}buttonJsonExport" value="Export JSON" ajax="false" rendered="#{exportToJson and (backingBean.getBaseCrudApi() != null)}">
+                    <p:fileDownload value = "#{backingBean.exportJSON()}" />
                 </p:commandButton>
                 <c:if test="#{exportToXml}">
-                    <p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
-                        oncomplete="PF('exportParametersDialog').show()">
-                        <f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
-                        <f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
-                        <f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
-                    </p:commandButton>
-                </c:if>
+
+					<p:commandButton id="#{formId}exportToXml"
+						value="#{messages['export.exportToXml']}"
+						update=":#{p:component('exportParametersDialog')}"
+						oncomplete="PF('exportParametersDialog').show()">
+						<c:choose>
+
+							<c:when test="#{backingBean.getBaseCrudApi() == null}">
+								<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
+								<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
+								<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
+							</c:when>
+							<c:otherwise>
+								<p:fileDownload value="#{backingBean.exportXML()}" />
+							</c:otherwise>
+						</c:choose>
+
+					</p:commandButton>
+
+				</c:if>
 
             </h:panelGroup>
 

@@ -28,8 +28,9 @@ public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
      * @throws InvalidParameterException Some search parameter is incorrect
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
-    T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException;
+    T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException;
 
     /**
      * Find entity identified by code. Return null if not found
@@ -40,8 +41,9 @@ public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
      * @throws InvalidParameterException Some search parameter is incorrect
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
-    T findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException;
+    T findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException;
 
     /**
      * Create or update an entity from DTO.

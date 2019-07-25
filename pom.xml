@@ -12,6 +12,7 @@
         <version.keycloak>4.8.3.Final</version.keycloak>
         <dbtype>generic</dbtype>
         <releaseOption />
+        <jackson.version>2.9.5</jackson.version>
     </properties>
 
     <scm>
@@ -348,29 +349,29 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-csv</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

@@ -8,7 +8,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseApi;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
@@ -17,6 +17,7 @@ import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 import org.meveo.service.storage.RepositoryService;
@@ -25,7 +26,7 @@ import org.meveo.service.storage.RepositoryService;
  * @author Edward P. Legaspi
  */
 @Stateless
-public class RepositoryApi extends BaseApi {
+public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 	@Inject
 	private RepositoryService repositoryService;
@@ -35,6 +36,21 @@ public class RepositoryApi extends BaseApi {
 
 	@Inject
 	private Neo4jConfigurationService neo4jConfigurationService;
+
+	@Override
+	public RepositoryDto toDto(Repository entity) throws BusinessException {
+		return new RepositoryDto(entity);
+	}
+
+	@Override
+	public Repository fromDto(RepositoryDto dto) throws BusinessException {
+		return toRepository(dto, null);
+	}
+
+	@Override
+	public IPersistenceService<Repository> getPersistenceService() throws BusinessException {
+		return repositoryService;
+	}
 
 	public Repository toRepository(RepositoryDto source, Repository target) throws EntityDoesNotExistsException {
 		if (target == null) {
@@ -92,7 +108,7 @@ public class RepositoryApi extends BaseApi {
 		return target;
 	}
 
-	public void create(RepositoryDto postData) throws BusinessException, MeveoApiException {
+	public Repository create(RepositoryDto postData) throws BusinessException, MeveoApiException {
 		validate(postData);
 
 		if (repositoryService.findByCode(postData.getCode()) != null) {
@@ -100,11 +116,12 @@ public class RepositoryApi extends BaseApi {
 		}
 
 		Repository entity = toRepository(postData, null);
-
 		repositoryService.create(entity);
+		
+		return entity;
 	}
 
-	public void update(RepositoryDto postData) throws BusinessException, MeveoApiException {
+	public Repository update(RepositoryDto postData) throws BusinessException, MeveoApiException {
 		validate(postData);
 
 		Repository entity = repositoryService.findByCode(postData.getCode());
@@ -114,16 +131,16 @@ public class RepositoryApi extends BaseApi {
 
 		entity = toRepository(postData, entity);
 
-		repositoryService.update(entity);
+		return repositoryService.update(entity);
 	}
 
-	public void createOrUpdate(RepositoryDto postData) throws BusinessException, MeveoApiException {
+	public Repository createOrUpdate(RepositoryDto postData) throws BusinessException, MeveoApiException {
 		Repository entity = repositoryService.findByCode(postData.getCode());
 		if (entity == null) {
-			create(postData);
+			return create(postData);
 
 		} else {
-			update(postData);
+			return update(postData);
 		}
 
 	}
