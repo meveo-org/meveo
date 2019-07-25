@@ -18,6 +18,7 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.meveo.admin.exception.UsernameAlreadyExistsException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.FilteredQueryBuilder;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.admin.User;
 import org.meveo.model.filter.Filter;
 import org.meveo.model.security.Role;
@@ -167,17 +169,20 @@ public class UserService extends PersistenceService<User> {
     @Override
     public List<User> list(PaginationConfiguration config) {
         Map<String, Object> filters = config.getFilters();
-
         if (filters != null && filters.containsKey("$FILTER")) {
             Filter filter = (Filter) filters.get("$FILTER");
             FilteredQueryBuilder queryBuilder = (FilteredQueryBuilder) getQuery(config);
             queryBuilder.processOrderCondition(filter.getOrderCondition(), filter.getPrimarySelector().getAlias());
-            Query query = queryBuilder.getQueryUsers(getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
-            return query.getResultList();
+            String alias = filter.getPrimarySelector().getAlias();
+            StringBuffer q = queryBuilder.getSqlStringBuffer();
+            Query result = getQueryUsers(q, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            return result.getResultList();
         } else {
+            String alias = "a";
             QueryBuilder queryBuilder = getQuery(config);
-            Query query = queryBuilder.getQueryUsers(getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
-            return query.getResultList();
+            StringBuffer q = queryBuilder.getSqlStringBuffer();
+            Query result = getQueryUsers(q, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            return result.getResultList();
         }
     }
 
@@ -194,4 +199,109 @@ public class UserService extends PersistenceService<User> {
         return users;
     }
 
+    /**
+     * @param orderColumn orderBy column
+     * @param ascending true/false
+     * @param orderColumn2 orderBy column 2
+     * @param ascending2 true/false
+     * @return instance of QueryBuilder
+     */
+    private void addOrderDoubleCriterion(StringBuffer q, String orderColumn, boolean ascending, String orderColumn2, boolean ascending2) {
+        q.append(" ORDER BY " + orderColumn);
+        if (ascending) {
+            q.append(" ASC ");
+        } else {
+            q.append(" DESC ");
+        }
+        q.append(", " + orderColumn2);
+        if (ascending2) {
+            q.append(" ASC ");
+        } else {
+            q.append(" DESC ");
+        }
+    }
+
+    private void addOrderCriterion(StringBuffer q, String orderColumn, boolean ascending) {
+        Class<?> clazz = User.class;
+        if (clazz != null) {
+            Field field = ReflectionUtils.getField(clazz, orderColumn.substring(orderColumn.indexOf(".") + 1));
+            if (field != null && field.getType().isAssignableFrom(String.class)) {
+                q.append(" ORDER BY UPPER(CAST(" + orderColumn + " AS string))");
+            } else {
+                q.append(" ORDER BY " + orderColumn);
+            }
+        } else {
+            q.append(" ORDER BY " + orderColumn);
+        }
+
+        if (ascending) {
+            q.append(" ASC ");
+        } else {
+            q.append(" DESC ");
+        }
+    }
+
+
+    /**
+     * @param alias alias of column?
+     */
+    private void applyPaginationUsers(StringBuffer q, PaginationConfiguration config, String alias) {
+        if (config == null) {
+            return;
+        } else {
+            if (config.isSorted() && q.indexOf("ORDER BY") == -1) {
+                if ("name.fullName".equals(config.getSortField())) {
+                    addOrderDoubleCriterion(q, ((alias != null) ? (alias + ".") : "") + "name.firstName", config.isAscendingSorting(), ((alias != null) ? (alias + ".") : "") + "name.lastName", config.isAscendingSorting());
+                } else {
+                    addOrderCriterion(q, ((alias != null) ? (alias + ".") : "") + config.getSortField(), config.isAscendingSorting());
+                }
+            }
+        }
+    }
+
+    /**
+     * @param query query using for pagination.
+     */
+    private void applyPagination(PaginationConfiguration paginationConfiguration, Query query) {
+        if (paginationConfiguration == null) {
+            return;
+        }
+
+        applyPagination(query, paginationConfiguration.getFirstRow(), paginationConfiguration.getNumberOfRows());
+    }
+
+    /**
+     * @param query query instance
+     * @param firstRow the index of first row
+     * @param numberOfRows number of rows shoud return.
+     */
+    public void applyPagination(Query query, Integer firstRow, Integer numberOfRows) {
+        if (firstRow != null) {
+            query.setFirstResult(firstRow);
+        }
+        if (numberOfRows != null) {
+            query.setMaxResults(numberOfRows);
+        }
+    }
+
+    /**
+     * @param em entity manager
+     * @return instance of Query.
+     */
+    public Query getQueryUsers(StringBuffer q,PaginationConfiguration config, String alias, EntityManager em, List<String> roleNames) {
+        if (q.toString().indexOf("where") > 0) {
+            q.append(" and role.name IN (:roleNames)");
+        } else {
+            q.append(" where role.name IN (:roleNames)");
+        }
+        applyPaginationUsers(q, config, alias);
+        String query = q.toString().replace("a.roles", "a.roles role");
+        Query result = em.createQuery(query);
+        applyPagination(config, result);
+        for (Map.Entry<String, Object> e :getQuery(config).getParams().entrySet()) {
+            result.setParameter(e.getKey(), e.getValue());
+        }
+        result.setParameter("roleNames", roleNames);
+        return result;
+    }
 }
