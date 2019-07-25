@@ -331,6 +331,9 @@ public class CustomTableCreatorService implements Serializable {
         }
 
         if(!changeSet.getChanges().isEmpty()){
+        	
+            createOrUpdateUniqueField(dbTableName, cft, changeSet);
+
             dbLog.addChangeSet(changeSet);
 
             EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
@@ -350,21 +353,6 @@ public class CustomTableCreatorService implements Serializable {
                     throw new SQLException(e);
                 }
             });
-            DatabaseChangeLog dbLogUpdateUK = new DatabaseChangeLog("path");
-            ChangeSet changeSetUpdateUK = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AF_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLogUpdateUK);
-            createOrUpdateUniqueField(dbTableName,cft,changeSetUpdateUK);
-            if(!changeSetUpdateUK.getChanges().isEmpty()) {
-            	hibernateSession.doWork(connection->{
-                	Database database1;
-                	try {
-                		database1=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-                		Liquibase liquibase = new Liquibase(dbLogUpdateUK, new ClassLoaderResourceAccessor(), database1);
-                        liquibase.update(new Contexts(), new LabelExpression());
-                	}catch(Exception e) {
-                		log.error("failed to createOrUpdateUniqueField {}",e.getLocalizedMessage());
-                	}
-                });
-            }
         }
     }
 
@@ -522,33 +510,35 @@ public class CustomTableCreatorService implements Serializable {
             }
         });
     }
-    /**
-     * create or update unique key for SQLStorage
-     * @param dbTableName
-     * @param cft
-     * @param changeSet
-     */
-    private void createOrUpdateUniqueField(String dbTableName,CustomFieldTemplate cft,ChangeSet changeSet) {
-        String dbFieldname=cft.getDbFieldname();
-        if(cft.isSqlStorage()){
-        	if(cft.isUnique()) {
-            	AddUniqueConstraintChange uniqueConstraint=new AddUniqueConstraintChange();
-            	uniqueConstraint.setColumnNames(dbFieldname);
-            	uniqueConstraint.setConstraintName("uk_"+dbFieldname);
-            	uniqueConstraint.setDeferrable(false);
-            	uniqueConstraint.setDisabled(false);
-            	uniqueConstraint.setInitiallyDeferred(false);
-            	uniqueConstraint.setTableName(dbTableName);
-            	changeSet.addChange(uniqueConstraint);
-            }else {
-            	DropUniqueConstraintChange dropUniqueConstraint=new DropUniqueConstraintChange();
-            	dropUniqueConstraint.setConstraintName("uk_"+dbFieldname);
-            	dropUniqueConstraint.setTableName(dbTableName);
-            	dropUniqueConstraint.setUniqueColumns(dbFieldname);
-            	changeSet.addChange(dropUniqueConstraint);
-            }
-        }
-    }
+
+	/**
+	 * Add a change for dropping or creating a unique constraint for a CFT
+	 * 
+	 * @param dbTableName Table concerned by the changeset
+	 * @param cft         Concernced CFT
+	 * @param changeSet   Changeset to add the change
+	 */
+	private void createOrUpdateUniqueField(String dbTableName, CustomFieldTemplate cft, ChangeSet changeSet) {
+		String dbFieldname = cft.getDbFieldname();
+		if (cft.isSqlStorage()) {
+			if (cft.isUnique()) {
+				AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
+				uniqueConstraint.setColumnNames(dbFieldname);
+				uniqueConstraint.setConstraintName("uk_" + dbFieldname);
+				uniqueConstraint.setDeferrable(false);
+				uniqueConstraint.setDisabled(false);
+				uniqueConstraint.setInitiallyDeferred(false);
+				uniqueConstraint.setTableName(dbTableName);
+				changeSet.addChange(uniqueConstraint);
+			} else {
+				DropUniqueConstraintChange dropUniqueConstraint = new DropUniqueConstraintChange();
+				dropUniqueConstraint.setConstraintName("uk_" + dbFieldname);
+				dropUniqueConstraint.setTableName(dbTableName);
+				dropUniqueConstraint.setUniqueColumns(dbFieldname);
+				changeSet.addChange(dropUniqueConstraint);
+			}
+		}
+	}
 
     /**
      * Remove a field from a table

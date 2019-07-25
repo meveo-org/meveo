@@ -179,7 +179,7 @@ public class CrossStorageService implements CustomPersistenceService {
                 .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
         // Collect initial data
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
+        if (cet.getAvailableStorages() !=null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
             if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 final List<Map<String, Object>> values = customTableService.list(cet, paginationConfiguration);
                 values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
