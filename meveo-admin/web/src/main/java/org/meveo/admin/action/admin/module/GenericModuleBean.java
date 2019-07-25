@@ -93,13 +93,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
     private ElasticClient elasticClient;
 
     @Inject
-    protected CustomEntityTemplateService customEntityTemplateService;
-
-    @Inject
     protected CustomFieldTemplateService customFieldTemplateService;
-
-    @Inject
-    protected CustomRelationshipTemplateService customRelationshipTemplateService;
 
     private BusinessEntity moduleItemEntity;
 
@@ -151,8 +145,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                     itemsToRemove.add(item);
                     continue;
                 }
-                String itemClass = item.getItemClass();
-                if ("org.meveo.model.crm.CustomFieldTemplate".equals(itemClass)) {
+                if (item.getItemEntity() instanceof CustomFieldTemplate) {
                     TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
                     new DefaultTreeNode("item", item, classNode);
                 } else {
@@ -171,8 +164,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                 }
 
                 for (BaseDto itemDto : dto.getModuleItems()) {
-                    String itemClass = itemDto.getClass().getName();
-                    if ("org.meveo.api.dto.CustomFieldTemplateDto".equals(itemClass)) {
+                    if (itemDto instanceof CustomFieldTemplateDto) {
                         CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;
                         TreeNode classNode = getOrCreateNodeByAppliesTo(customFieldTemplateDto.getAppliesTo(), itemDto.getClass().getName());
                         new DefaultTreeNode("item", itemDto, classNode);
@@ -201,13 +193,13 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
             MeveoModuleItem item = new MeveoModuleItem(itemEntity);
             if (!entity.getModuleItems().contains(item)) {
                 entity.addModuleItem(item);
-                if (CustomFieldTemplate.class.getName().equals(item.getItemClass())) {
+                if (itemEntity instanceof CustomFieldTemplate) {
                     CustomFieldTemplate customFieldTemplate = (CustomFieldTemplate)itemEntity;
                     new DefaultTreeNode("item", item, getOrCreateNodeByAppliesTo(customFieldTemplate.getAppliesTo(), customFieldTemplate.getClass().getName()));
                 } else {
                     new DefaultTreeNode("item", item, getOrCreateNodeByClass(itemEntity.getClass().getName()));
                 }
-                if (CustomEntityTemplate.class.getName().equals(item.getItemClass())) {
+                if (itemEntity instanceof CustomEntityTemplate) {
                     CustomEntityTemplate customEntityTemplate = (CustomEntityTemplate)itemEntity;
                     Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
                     for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
@@ -219,7 +211,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                         }
                     }
                 }
-                if (CustomRelationshipTemplate.class.getName().equals(item.getItemClass())) {
+                if (itemEntity instanceof CustomRelationshipTemplate) {
                     CustomRelationshipTemplate customRelationshipTemplate = (CustomRelationshipTemplate)itemEntity;
                     Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
                     for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
