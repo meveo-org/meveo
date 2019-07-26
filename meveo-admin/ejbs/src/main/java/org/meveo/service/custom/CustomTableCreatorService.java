@@ -46,6 +46,8 @@ import liquibase.change.core.DropSequenceChange;
 import liquibase.change.core.DropTableChange;
 import liquibase.change.core.DropUniqueConstraintChange;
 import liquibase.change.core.ModifyDataTypeChange;
+import liquibase.change.core.RawSQLChange;
+import liquibase.change.core.SQLFileChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
@@ -531,11 +533,9 @@ public class CustomTableCreatorService implements Serializable {
 				uniqueConstraint.setTableName(dbTableName);
 				changeSet.addChange(uniqueConstraint);
 			} else {
-				DropUniqueConstraintChange dropUniqueConstraint = new DropUniqueConstraintChange();
-				dropUniqueConstraint.setConstraintName("uk_" + dbFieldname);
-				dropUniqueConstraint.setTableName(dbTableName);
-				dropUniqueConstraint.setUniqueColumns(dbFieldname);
-				changeSet.addChange(dropUniqueConstraint);
+				RawSQLChange sqlChange = new RawSQLChange();
+				sqlChange.setSql("ALTER TABLE " + dbTableName + " DROP CONSTRAINT IF EXISTS uk_" + dbFieldname);
+				changeSet.addChange(sqlChange);
 			}
 		}
 	}
