@@ -10,13 +10,14 @@ import org.meveo.commons.utils.StringUtils;
 
 /**
  * Converts a string database column field into a list of strings with a given
- * delimiter which defaults to comma ';'.
+ * delimiter which defaults to comma '|'.
  * 
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  */
 public class StringListConverter implements AttributeConverter<List<String>, String> {
 
 	private static final String SPLIT_CHAR = "|";
+	private static final String SPLIT_CHAR_DELIM = "\\|";
 
 	@Override
 	public String convertToDatabaseColumn(List<String> stringList) {
@@ -25,6 +26,6 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
 
 	@Override
 	public List<String> convertToEntityAttribute(String string) {
-		return StringUtils.isBlank(string) ? new ArrayList<String>() : Arrays.asList(string.split(SPLIT_CHAR));
+		return StringUtils.isBlank(string) ? new ArrayList<>() : Arrays.asList(string.split(SPLIT_CHAR_DELIM));
 	}
 }

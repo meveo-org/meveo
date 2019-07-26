@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:cc="http://xmlns.jcp.org/jsf/composite"
+	xmlns:o="http://omnifaces.org/ui" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions"
+	xmlns:of="http://omnifaces.org/functions">
+
+<!-- 
+    A tag displaying a list of child entities for custom field value of child entities type
+    Makes part of custom field management tag group 
+
+    Attributes
+        cft - custom field template containing field definition
+        edit - should value be displayed, or edit control be shown
+        field - field storing a value - CustomFieldValue type variable only
+        entity - entity, custom fields are related to
+        messagesId - messages id tag to update for general errors
+        updateOnAddEdit - ids of controlls to update uppon data changes (value edit/create/delete)
+        disabled - is field non-editable
+        prefix - prefix for component to distinguish when used multiple times in the same page (for different entities)
+ -->
+
+<ui:composition>
+
+
+	<o:importFunctions type="org.meveo.model.crm.custom.CustomFieldValue"
+		var="cfv" />
+	<o:importFunctions
+		type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
+
+	<h:outputText value="#{''}" />
+	<c:set var="cfValueHolder"
+		value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />
+	<c:set var="fieldPrefix"
+		value="#{prefix}_#{fn:replace(cft.code, ' ','_')}_" />
+
+	<hftl:decorateFormField for="viewBinaryValue"
+		label="#{cft.description}#{cft.valueRequired?' *':''}"
+		componentWidth="100" displayOneLine="false">
+
+		<h:outputText title="#{field.stringValue}"
+			value="#{of:abbreviate(field.stringValue, 25)}"></h:outputText>
+		<p:commandButton ajax="false"
+			onclick="PrimeFaces.monitorDownload(start, stop);"
+			icon="fa fa-arrow-down" immediate="true">
+			<p:fileDownload
+				value="#{customFieldDataEntryBean.downloadFile(field.stringValue)}">
+			</p:fileDownload>
+		</p:commandButton>
+		<p:inputText id="viewBinaryValue" type="hidden"
+			value="#{field.stringValue}"></p:inputText>
+
+		<p:commandButton type="button" onclick="PF('dlgBinary').show();"
+			value="#{messages['action.uploadBinary']}"></p:commandButton>
+	</hftl:decorateFormField>
+
+	<p:dialog header="" widgetVar="dlgBinary" minHeight="300"
+		minWidth="500">
+		<h:form id="binaryFileUploadForm" enctype="multipart/form-data">
+			<p:panelGrid columns="1" layout="grid" style="width: 100%">
+				<hftl:decorateFormField for="repository"
+					label="#{messages['binary.repository']}">
+					<p:messages id="binaryFileUploadMessages"></p:messages>
+					<p:selectOneMenu id="repository" required="true"
+						value="#{customFieldDataEntryBean.repository}">
+						<hftl:objectConverter />
+						<f:selectItem itemValue="#{null}" itemLabel="" />
+						<f:selectItems value="#{repositoryListBean.listActive()}" var="e"
+							itemValue="#{e}" itemLabel="#{e.code}" />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+				<hftl:decorateFormField for="showOnExplorer"
+					label="#{messages['binary.showOnExplorer']}">
+					<p:selectBooleanButton id="showOnExplorer"
+						value="#{customFieldDataEntryBean.showOnExplorer}"
+						onLabel="#{messages['commons.yes']}"
+						offLabel="#{messages['commons.no']}" style="width:60px" />
+				</hftl:decorateFormField>
+				<p:fileUpload value="#{customFieldDataEntryBean.uploadedBinaryFile}"
+					mode="simple" skinSimple="true"
+					required="#{cft.valueRequired and !hasInheritedValue}"
+					rendered="#{edit and !disabled}" label="#{cft.description}" />
+			</p:panelGrid>
+			<h:panelGroup layout="block" styleClass="form-panel-actions">
+				<p:commandButton value="#{messages['action.save']}" ajax="false"
+					process="binaryFileUploadForm"
+					update="binaryFileUploadForm :viewBinaryValue :p:component('messages')"
+					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
+			</h:panelGroup>
+		</h:form>
+	</p:dialog>
+
+</ui:composition>
+
+</html>

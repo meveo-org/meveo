@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -727,4 +726,42 @@ public final class FileUtils {
             return false;
         }
     }
+    
+	/**
+	 * Copy the content of inputStream to a file.
+	 * 
+	 * @param filePath path where to save the file
+	 * @param in       input stream
+	 * @throws IOException when saving file
+	 */
+	public static void copyFile(String filePath, InputStream in) throws IOException {
+
+		OutputStream out = new FileOutputStream(new File(filePath));
+
+		int read = 0;
+		byte[] bytes = new byte[1024];
+
+		while ((read = in.read(bytes)) != -1) {
+			out.write(bytes, 0, read);
+		}
+
+		in.close();
+		out.flush();
+		out.close();
+	}
+	
+	public static byte[] toByteArray(InputStream is) throws IOException {
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+		byte[] buffer = new byte[1024];
+		int len;
+
+		// read bytes from the input stream and store them in buffer
+		while ((len = is.read(buffer)) != -1) {
+			// write bytes from the buffer into output stream
+			os.write(buffer, 0, len);
+		}
+
+		return os.toByteArray();
+	}
 }

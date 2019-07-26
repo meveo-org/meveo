@@ -49,6 +49,9 @@
     <c:if test="${empty(defaultTabLabel)}">
         <c:set var="defaultTabLabel" value="#{messages['customFieldTemplate.cfValues']}" />
     </c:if>
+    <c:if test="${empty(enctype)}">
+        <c:set var="enctype" value="application/x-www-form-urlencoded" />
+    </c:if>
     <c:set var="newEntity" value="#{entity.transient}" />
     <c:set var="cfValueHolder" value="#{customFieldDataEntryBean.getFieldValueHolderByUUID(entity.uuid)}" />
     <c:set var="edit" value="#{edit and backingBean.canUserUpdateEntity()}" />
@@ -69,7 +72,7 @@
         <p:tab title="#{tabLabel}" rendered="#{renderTab}">
         
             <c:if test="#{renderForm}">
-                <h:form id="#{prefix}_form_group_#{cfTabStatus.index}">
+                <h:form enctype="#{enctype}" id="#{prefix}_form_group_#{cfTabStatus.index}">
                     <h:panelGroup id="form_panel">
                         <hftl:customFieldFormOrPanel cfTag="#{cfTab}" entity="#{entity}" cft="#{cft}" edit="#{edit}" messagesId="#{messagesId}" datePattern="#{datePattern}"
                             dateTimePattern="#{dateTimePattern}" prefix="#{prefix}_form_#{cfTabStatus.index}" />

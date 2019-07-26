@@ -39,13 +39,18 @@
     <o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
     <o:importFunctions type="org.meveo.model.crm.custom.CustomFieldValue" var="cfv" />
 
-    <c:if test="#{cc.attrs.cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}">
+    <c:if test="#{cc.attrs.cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and cc.attrs.cft.fieldType ne CustomFieldTypeEnum.BINARY}">
         <hftl:customFieldCHEListTable edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" entity="#{cc.attrs.entity}" clientGuiId="#{cc.clientId}" prefix="#{cc.attrs.prefix}"
             field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" messagesId="#{cc.attrs.messagesId}" disabled="#{cc.attrs.disabled}" datePattern="#{cc.attrs.datePattern}"
             dateTimePattern="#{cc.attrs.dateTimePattern}" />
     </c:if>
+    
+    <c:if test="#{cc.attrs.cft.fieldType eq CustomFieldTypeEnum.BINARY}">
+        <hftl:customFieldBinary edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" entity="#{cc.attrs.entity}" prefix="#{cc.attrs.prefix}"
+            field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" messagesId="#{cc.attrs.messagesId}" disabled="#{cc.attrs.disabled}" />
+    </c:if>
 
-    <c:if test="#{cc.attrs.cft.fieldType ne CustomFieldTypeEnum.CHILD_ENTITY}">
+    <c:if test="#{cc.attrs.cft.fieldType ne CustomFieldTypeEnum.CHILD_ENTITY and cc.attrs.cft.fieldType ne CustomFieldTypeEnum.BINARY}">
         <c:if test="#{!cc.attrs.cft.versionable}">
             <c:if test="#{cc.attrs.cft.storageType eq CustomFieldStorageTypeEnum.SINGLE }">
 
