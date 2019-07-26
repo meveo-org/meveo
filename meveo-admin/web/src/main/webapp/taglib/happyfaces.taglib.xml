@@ -178,6 +178,10 @@
         <tag-name>getFieldInformation</tag-name>
         <handler-class>org.meveo.util.view.GetFieldInformationHandler</handler-class>
     </tag>
+    <tag>
+        <tag-name>customFieldBinary</tag-name>
+        <source>customFieldBinary.xhtml</source>
+    </tag>
     
     <tag>
         <description><![CDATA[Menu is a navigation component for Meveo Layout.]]></description>

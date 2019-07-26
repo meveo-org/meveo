@@ -54,5 +54,4 @@ public class BinaryStorageConfiguration extends BaseEntity {
 	public void setRootPath(String rootPath) {
 		this.rootPath = rootPath;
 	}
-
 }

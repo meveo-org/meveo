@@ -129,13 +129,5 @@
             <f:selectItems value="#{cft.listValues.entrySet()}" var="listVal" itemValue="#{listVal.key}" itemLabel="#{listVal.value} (#{listVal.key})" />
         </p:selectOneMenu>
     </c:if>
-    <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.BINARY}">
-        <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
-        <p:inputText value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" size="30" maxlength="#{cft.maxValue}" placeholder="#{cft.description}">
-            <c:if test="#{cft.regExp!=null}">
-                <f:validateRegex pattern="#{cft.regExp}" />
-            </c:if>
-        </p:inputText>
-    </c:if>
 </ui:composition>
 </html>
