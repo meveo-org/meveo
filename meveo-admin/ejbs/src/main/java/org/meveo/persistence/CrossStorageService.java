@@ -116,12 +116,18 @@ public class CrossStorageService implements CustomPersistenceService {
                 values.putAll(customTableValue);
             } else {
                 final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+                values.put("code", cei.getCode());
+                values.put("description", cei.getDescription());
                 if (sqlFields != null) {
                     for (String field : sqlFields) {
-                        values.put(field, cei.getCfValues().getCfValue(field).getValue());
+                    	if(cei.getCfValues() != null) {
+                    		values.put(field, cei.getCfValues().getCfValue(field).getValue());
+                    	}
                     }
                 } else {
-                    values.putAll(cei.getCfValuesAsValues());
+                	if(cei.getCfValuesAsValues() != null) {
+                		values.putAll(cei.getCfValuesAsValues());
+                	}
                 }
 
             }
@@ -186,19 +192,21 @@ public class CrossStorageService implements CustomPersistenceService {
                 valuesList.addAll(values);
             } else {
                 final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), filters);
-                final List<Map<String, Object>> values = ceis.stream()
-                        .map(cei -> {
-                            final HashMap<String, Object> map = new HashMap<>(cei.getCfValuesAsValues());
-                            map.put("uuid", cei.getUuid());
-                            if(!fetchAllFields) {
-                                for (String k : cei.getCfValuesAsValues().keySet()) {
-                                    if (!actualFetchFields.contains(k)) {
-                                        map.remove(k);
-                                    }
-                                }
+                final List<Map<String, Object>> values = new ArrayList<>();
+                
+                for(CustomEntityInstance cei : ceis) {
+                	Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
+                	final HashMap<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
+                	map.put("uuid", cei.getUuid());
+                	if(!fetchAllFields) {
+                        for (String k : cei.getCfValuesAsValues().keySet()) {
+                            if (!actualFetchFields.contains(k)) {
+                                map.remove(k);
                             }
-                            return map;
-                        }).collect(Collectors.toList());
+                        }
+                    }
+                	values.add(map);
+                }
 
                 valuesList.addAll(values);
             }
