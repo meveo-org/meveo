@@ -218,7 +218,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public MeveoModuleDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public MeveoModuleDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code [BOM: businessOfferModelCode, BSM: businessServiceModelCode, BAM: businessAccountModelCode]");
@@ -519,9 +519,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @param module Module object
      * @return MeveoModuleDto object
      * @throws MeveoApiException meveo api exception.
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException {
+    public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (module.isDownloaded() && !module.isInstalled()) {
             try {

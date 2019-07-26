@@ -18,16 +18,29 @@
  */
 package org.meveo.service.base;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  * @author phung
@@ -163,5 +176,22 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return null;
         }
     }
+    
+	/**
+	 * Import a list of entities into the database
+	 * 
+	 * @param entities  Entities to import
+	 * @param overwrite Whether we should update existing entities
+	 */
+	public void importEntities(List<P> entities, boolean overwrite) throws BusinessException {
+		for (P entity : entities) {
+			P existingEntity = findByCode(entity.getCode());
+			if (existingEntity != null && overwrite) {
+				update(entity);
+			} else {
+				create(entity);
+			}
+		}
+	}
 
 }

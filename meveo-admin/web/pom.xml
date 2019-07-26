@@ -161,7 +161,7 @@
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api</artifactId>
 		</dependency>
-			<dependency>
+		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
 		</dependency>

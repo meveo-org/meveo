@@ -25,7 +25,7 @@
 			<hftl:searchField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 		</hftl:searchPanel>
 
-		<hftl:dataList label="#{messages['repository.title']}"
+		<hftl:dataList label="#{messages['repository.title']}" exportToCsv="true" exportXlsxButton="false" exportToJson="true"
 			backingBean="#{repositoryBean}" sortBy="code">
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['businessEntity.description']}" field="description" />

@@ -5,6 +5,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.action.BaseBean;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.storage.RepositoryApi;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.storage.RepositoryService;
@@ -22,7 +24,10 @@ public class RepositoryBean extends BaseBean<Repository> {
 
 	@Inject
 	private RepositoryService repositoryService;
-
+	
+	@Inject
+	private RepositoryApi repositoryApi;
+	
 	public RepositoryBean() {
 		super(Repository.class);
 	}
@@ -41,4 +46,11 @@ public class RepositoryBean extends BaseBean<Repository> {
 	protected IPersistenceService<Repository> getPersistenceService() {
 		return repositoryService;
 	}
+
+	@Override
+	public BaseCrudApi<Repository, ?> getBaseCrudApi() {
+		return repositoryApi;
+	}
+	
+	
 }
