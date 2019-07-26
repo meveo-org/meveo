@@ -1849,12 +1849,14 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setCetCode(cetCode);
 		params.setUuid(uuid);
 		params.setCftCode(cft.getCode());
+		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
 		params.setContents(uploadedBinaryFile.getContents());
+		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
-		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
+		params.setMaxFileSizeAllowedInKb(cft.getMaximumSize());
 
 		rootPath = fileSystemService.persists(params);
 

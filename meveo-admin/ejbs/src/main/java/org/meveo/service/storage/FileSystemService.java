@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
@@ -49,6 +50,12 @@ public class FileSystemService {
 		path = path.append(params.getUuid());
 		path = path.append(File.separator);
 		path = path.append(params.getCftCode());
+
+		if (!StringUtils.isBlank(params.getFilePath())) {
+			path = path.append(File.separator);
+			path = path.append(params.getFilePath());
+		}
+
 		return path.toString();
 	}
 

@@ -24,13 +24,14 @@ public class BinaryStoragePathParam {
 	private String contentType;
 	private InputStream is;
 	private File file;
+	private String filePath;
 	private long fileSizeInBytes;
-	private long maxFileSizeAllowedInKb;
 
 	// constraints
 	private List<String> fileExtensions;
 	private List<String> contentTypes;
 	private int maximumSize;
+	private long maxFileSizeAllowedInKb;
 
 	public boolean isValidFileExtension() {
 		final String ext = FilenameUtils.getExtension(getFilename());
@@ -43,7 +44,7 @@ public class BinaryStoragePathParam {
 
 	public boolean isValidFilesize() {
 		final long fileSizeInKB = getFileSizeInBytes() / 1024;
-		return fileSizeInKB <= getMaxFileSizeAllowedInKb();
+		return maxFileSizeAllowedInKb != 0 ? fileSizeInKB <= getMaxFileSizeAllowedInKb() : true;
 	}
 
 	public boolean isShowOnExplorer() {
@@ -178,5 +179,13 @@ public class BinaryStoragePathParam {
 
 	public void setFileSizeInBytes(long fileSizeInBytes) {
 		this.fileSizeInBytes = fileSizeInBytes;
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 }
