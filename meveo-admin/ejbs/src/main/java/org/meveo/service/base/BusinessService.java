@@ -177,21 +177,4 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
         }
     }
     
-	/**
-	 * Import a list of entities into the database
-	 * 
-	 * @param entities  Entities to import
-	 * @param overwrite Whether we should update existing entities
-	 */
-	public void importEntities(List<P> entities, boolean overwrite) throws BusinessException {
-		for (P entity : entities) {
-			P existingEntity = findByCode(entity.getCode());
-			if (existingEntity != null && overwrite) {
-				update(entity);
-			} else {
-				create(entity);
-			}
-		}
-	}
-
 }

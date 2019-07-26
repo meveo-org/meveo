@@ -2,6 +2,7 @@ package org.meveo.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,8 @@ import org.meveo.service.base.local.IPersistenceService;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -46,7 +49,11 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	public IPersistenceService<E> getPersistenceService() throws BusinessException{
 		throw new BusinessException("getPersistenceService not implemented");
 	}
-
+	
+	public boolean exists(T dto) throws BusinessException {
+		throw new BusinessException("exists not implemented");
+	}
+	
     /*
      * (non-Javadoc)
      * 
@@ -102,25 +109,41 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		return exportFile;
 	}
 	
+	/**
+	 * Import a list of entities into the database
+	 * 
+	 * @param entities  Entities to import
+	 * @param overwrite Whether we should update existing entities
+	 * @throws MeveoApiException 
+	 */
+	public void importEntities(List<T> entities, boolean overwrite) throws BusinessException, MeveoApiException {
+		for (T entity : entities) {
+			boolean exists = exists(entity);
+			if (!exists || overwrite) {
+				createOrUpdate(entity);
+			}
+		}
+	}
+	
 //TODO: Write javadoc
-//	public void importXML(InputStream xml, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException {
-//		XmlMapper xmlMapper = new XmlMapper();
-//		TypeReference<List<E>> typeReference = new TypeReference<List<E>>() {};
-//		List<E> entities = xmlMapper.readValue(xml, typeReference);
-//		importEntities(entities, overwrite);
-//	}
-//	
-//	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, JsonParseException, JsonMappingException, IOException {
-//		ObjectMapper jsonMapper = new ObjectMapper();
-//		TypeReference<List<E>> typeReference = new TypeReference<List<P>>() {};
-//		List<P> entities = jsonMapper.readValue(json, typeReference);
-//		importEntities(entities, overwrite);
-//	}
-//	
-//	public void importCSV(InputStream csv, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException {
-//		CsvMapper csvMapper = new CsvMapper();
-//		TypeReference<List<P>> typeReference = new TypeReference<List<P>>() {};
-//		List<P> entities = csvMapper.readValue(csv, typeReference);
-//		importEntities(entities, overwrite);
-//	}
+	public void importXML(InputStream xml, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException, MeveoApiException {
+		XmlMapper xmlMapper = new XmlMapper();
+		TypeReference<List<T>> typeReference = new TypeReference<List<T>>() {};
+		List<T> entities = xmlMapper.readValue(xml, typeReference);
+		importEntities(entities, overwrite);
+	}
+	
+	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, JsonParseException, JsonMappingException, IOException, MeveoApiException {
+		ObjectMapper jsonMapper = new ObjectMapper();
+		TypeReference<List<T>> typeReference = new TypeReference<List<T>>() {};
+		List<T> entities = jsonMapper.readValue(json, typeReference);
+		importEntities(entities, overwrite);
+	}
+	
+	public void importCSV(InputStream csv, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException, MeveoApiException {
+		CsvMapper csvMapper = new CsvMapper();
+		TypeReference<List<T>> typeReference = new TypeReference<List<T>>() {};
+		List<T> entities = csvMapper.readValue(csv, typeReference);
+		importEntities(entities, overwrite);
+	}
 }

@@ -172,6 +172,7 @@
                     <pe:exporter type="xlsx" target="datatable_#{resultsId}" fileName="data" pageOnly="false" skipComponents="true" selectionOnly="#{backingBean.selectedEntities.size()>0}" />
                 </p:commandButton>
                 <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
+                <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
                     <c:if test="#{backingBean.getBaseCrudApi() != null}">
                     	<p:fileDownload value = "#{backingBean.exportCSV()}" />
@@ -183,6 +184,7 @@
                 <p:commandButton id="#{formId}buttonJsonExport" value="Export JSON" ajax="false" rendered="#{exportToJson and (backingBean.getBaseCrudApi() != null)}">
                     <p:fileDownload value = "#{backingBean.exportJSON()}" />
                 </p:commandButton>
+
                 <c:if test="#{exportToXml}">
 
 					<p:commandButton id="#{formId}exportToXml"
@@ -223,6 +225,15 @@
                         fileLimit="5" process=":#{formId}_strategy" />
                 </div>
             </p:dialog>
+            
+            <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
+			     <p:messages autoUpdate="true" />
+			     <h:form id="#{formId}_import_options">
+                    <p:selectBooleanCheckbox value="#{backingBean.override}" itemLabel="Override existing data" />
+                    <p:fileUpload mode="advanced" dragDropSupport="true" fileUploadListener="#{backingBean.importData}" />
+                </h:form>
+            </p:dialog>
+            
             <p:panel styleClass="buttons-set-data-table">
                 <ui:insert name="add-on-buttons" />
             </p:panel>

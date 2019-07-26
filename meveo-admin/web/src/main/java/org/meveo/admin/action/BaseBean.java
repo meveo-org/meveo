@@ -21,6 +21,7 @@ package org.meveo.admin.action;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -201,6 +202,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private UploadedFile uploadedFile;
     
     private BaseCrudApi<T,?> baseCrudApi;
+    
+    private boolean override;
 
     /**
      * Constructor
@@ -223,8 +226,16 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public void init() {
     	baseCrudApi = getBaseCrudApi();
     }
+    
+    public boolean isOverride() {
+		return override;
+	}
 
-    /**
+	public void setOverride(boolean override) {
+		this.override = override;
+	}
+
+	/**
      * Returns entity class
      * 
      * @return Class
@@ -1278,6 +1289,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         defaultStreamedContent.setName(exportCSV.getName());
         
 		return defaultStreamedContent;
+	}
+	
+	public void importData(FileUploadEvent event) throws IOException {
+		System.out.println(isOverride());
+		String contentType = event.getFile().getContentType();
+		InputStream inputStream = event.getFile().getInputstream();
 	}
     
     
