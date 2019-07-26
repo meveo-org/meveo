@@ -87,12 +87,4 @@ public class FileSystemService {
 
 		return storage;
 	}
-
-	public void delete() {
-
-	}
-
-	public void retrieve(boolean showOnExplorer, String binaryStorageConfigurationRootPath) {
-
-	}
 }
