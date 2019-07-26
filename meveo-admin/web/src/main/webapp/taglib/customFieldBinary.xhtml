@@ -93,7 +93,7 @@
 				<p:commandButton value="#{messages['action.save']}" ajax="false"
 					process="binaryFileUploadForm"
 					update="binaryFileUploadForm :viewBinaryValue :p:component('messages')"
-					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.code, cft, field)}" />
+					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
 			</h:panelGroup>
 		</h:form>
 	</p:dialog>
