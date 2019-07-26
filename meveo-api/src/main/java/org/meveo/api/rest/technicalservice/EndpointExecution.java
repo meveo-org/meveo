@@ -16,7 +16,6 @@
 
 package org.meveo.api.rest.technicalservice;
 
-import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +29,6 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 public class EndpointExecution {
     private final Map<String, Object> parameters;
     private final HttpServletResponse resp;
-    private final PrintWriter writer;
     private final String[] pathInfo;
     private final String firstUriPart;
     private final boolean keep;
@@ -46,10 +44,9 @@ public class EndpointExecution {
     private final EndpointResponse response;
     private final Endpoint endpoint;
 
-    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, PrintWriter writer, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue, EndpointRequest request, Endpoint endpoint) {
+    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue, EndpointRequest request, Endpoint endpoint) {
         this.parameters = parameters;
         this.resp = resp;
-        this.writer = writer;
         this.pathInfo = pathInfo;
         this.firstUriPart = firstUriPart;
         this.keep = keep;
@@ -100,10 +97,6 @@ public class EndpointExecution {
 
     public HttpServletResponse getResp() {
         return resp;
-    }
-
-    public PrintWriter getWriter() {
-        return writer;
     }
 
     public String[] getPathInfo() {

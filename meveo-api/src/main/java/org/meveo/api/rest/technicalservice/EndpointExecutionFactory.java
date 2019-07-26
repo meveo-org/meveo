@@ -36,7 +36,6 @@ public class EndpointExecutionFactory {
 
     public EndpointExecutionBuilder getExecutionBuilder(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        final PrintWriter writer = resp.getWriter();
         resp.setCharacterEncoding("UTF-8");
 
         String[] pathInfo = req.getPathInfo().split("/");
@@ -50,7 +49,6 @@ public class EndpointExecutionFactory {
         return new EndpointExecutionBuilder()
                 .setRequest(new EndpointRequest(req, endpoint))
                 .setResponse(resp)
-                .setWriter(writer)
                 .setEndpoint(endpoint)
                 .setPathInfo(pathInfo)
                 .setFirstUriPart(pathInfo[1])

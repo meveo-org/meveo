@@ -130,7 +130,7 @@ public class EndpointServlet extends HttpServlet {
         doRequest(endpointExecution);
     }
 
-    private void doRequest(EndpointExecution endpointExecution) {
+    private void doRequest(EndpointExecution endpointExecution) throws IOException {
 
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
@@ -139,7 +139,7 @@ public class EndpointServlet extends HttpServlet {
         boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
         if(endpointSecurityEnabled && endpoint != null && !endpointService.isUserAuthorized(endpoint)){
             endpointExecution.getResp().setStatus(403);
-            endpointExecution.getWriter().print("You are not authorized to access this endpoint");
+            endpointExecution.getResp().getWriter().print("You are not authorized to access this endpoint");
             return;
         }
 
@@ -149,7 +149,7 @@ public class EndpointServlet extends HttpServlet {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setStatus(200);
                     endpointExecution.getResp().setContentType(endpoint.getContentType());
-                    endpointExecution.getWriter().print(execResult.get());
+                    endpointExecution.getResp().getWriter().print(execResult.get());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         endpointResultsCacheContainer.remove(endpointExecution.getFirstUriPart());
@@ -163,10 +163,10 @@ public class EndpointServlet extends HttpServlet {
         } catch (Exception e) {
             log.error("Error while executing request", e);
             endpointExecution.getResp().setStatus(500);
-            endpointExecution.getWriter().print(e.toString());
+            endpointExecution.getResp().getWriter().print(e.toString());
         } finally {
-            endpointExecution.getWriter().flush();
-            endpointExecution.getWriter().close();
+            endpointExecution.getResp().getWriter().flush();
+            endpointExecution.getResp().getWriter().close();
         }
     }
 
@@ -211,9 +211,9 @@ public class EndpointServlet extends HttpServlet {
         	endpointExecution.getResp().setStatus(404);    // Not found
             try {
                 UUID uuid = UUID.fromString(endpointExecution.getFirstUriPart());
-                endpointExecution.getWriter().print("No results for execution id " + uuid.toString());
+                endpointExecution.getResp().getWriter().print("No results for execution id " + uuid.toString());
             } catch (IllegalArgumentException e) {
-                endpointExecution.getWriter().print("No endpoint for " + endpointExecution.getFirstUriPart() + " has been found");
+                endpointExecution.getResp().getWriter().print("No endpoint for " + endpointExecution.getFirstUriPart() + " has been found");
             }
             return;
         }
@@ -221,7 +221,7 @@ public class EndpointServlet extends HttpServlet {
     	// Endpoint is called with wrong method
     	if (endpoint.getMethod() != endpointExecution.getMethod()) {
     		endpointExecution.getResp().setStatus(400);
-            endpointExecution.getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
+            endpointExecution.getResp().getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
             return;
     	}
     	
@@ -251,7 +251,7 @@ public class EndpointServlet extends HttpServlet {
         // Don't wait execution to finish
         if(!endpointExecution.isWait()) {
         	// Return the id of the execution so the user can retrieve it later
-        	endpointExecution.getWriter().println(id.toString().trim());
+        	endpointExecution.getResp().getWriter().println(id.toString().trim());
             endpointExecution.getResp().setStatus(202);    // Accepted
             return;
         }
@@ -263,10 +263,10 @@ public class EndpointServlet extends HttpServlet {
             Map<String, Object> returnedValue = new HashMap<>();
             returnedValue.put("id", id.toString());
             returnedValue.put("data", execResult);
-            endpointExecution.getWriter().println(JacksonUtil.toString(returnedValue));
+            endpointExecution.getResp().getWriter().println(JacksonUtil.toString(returnedValue));
         }else{
         	// If user doesn't want to keep the result in cache, only return the data
-            endpointExecution.getWriter().println(JacksonUtil.toString(execResult));
+            endpointExecution.getResp().getWriter().println(JacksonUtil.toString(execResult));
             endpointResultsCacheContainer.remove(id.toString());
         }
 
@@ -289,7 +289,7 @@ public class EndpointServlet extends HttpServlet {
     	
     	// Body of the response
     	if(!StringUtils.isBlank(endpointExecution.getResponse().getErrorMessage())) {	// Priority to error message
-    		endpointExecution.getWriter().print(endpointExecution.getResponse().getErrorMessage());
+    		endpointExecution.getResp().getWriter().print(endpointExecution.getResponse().getErrorMessage());
     	} else if(endpointExecution.getResponse().getOutput() != null) {				// Output has been set
     		ByteArrayInputStream in = new ByteArrayInputStream(endpointExecution.getResponse().getOutput());
             ServletOutputStream out = endpointExecution.getResp().getOutputStream();
@@ -300,7 +300,7 @@ public class EndpointServlet extends HttpServlet {
             }
             out.flush();
     	} else {																		// Use the endpoint script's result
-    		endpointExecution.getWriter().print(transformedResult);
+    		endpointExecution.getResp().getWriter().print(transformedResult);
     	}
     }
 
