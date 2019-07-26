@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.Charsets;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.ParamBean;
@@ -40,11 +41,14 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -201,83 +205,103 @@ public class EndpointServlet extends HttpServlet {
 
     }
 
-    private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException {
-        if (endpoint != null) {
-            if (endpoint.getMethod() == endpointExecution.getMethod()) {
-                // Execute service
-                if (endpoint.isSynchronous()) {
-
-                    final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
-                    endpointExecution.getWriter().print(transformData(endpoint, result));
-                    endpointExecution.getResp().setContentType(endpoint.getContentType());
-                    endpointExecution.getResp().setStatus(200);    // OK
-                    if(endpointExecution.getPersistenceContextId() != null){
-                        saveResult(endpointExecution, result);
-                    }
-                } else {
-                    final UUID id = UUID.randomUUID();
-                    log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-                    final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
-                        try {
-                            final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
-                            return transformData(endpoint, result);
-                        } catch (BusinessException | ExecutionException | InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    endpointResultsCacheContainer.put(id.toString(), execution);
-
-//                    if(endpointExecution.getPersistenceContextId() != null){
-//                        execution.thenAccept(map -> saveResult(endpointExecution, map));
-//                    }
-
-                    /*
-                        If header wait was true, wait for execution of the service.
-                        If header keep was true, return the id of the execution and the result,
-                        if it was false, return only the results and remove the execution from the cache
-                    */
-                    if(endpointExecution.isWait()){
-                        endpointExecution.getResp().setStatus(200);    // Accepted
-                        final String execResult = execution.get();
-                        if(endpointExecution.isKeep()){
-                            Map<String, Object> returnedValue = new HashMap<>();
-                            returnedValue.put("id", id.toString());
-                            returnedValue.put("data", execResult);
-                            endpointExecution.getWriter().println(JacksonUtil.toString(returnedValue));
-                        }else{
-                            endpointExecution.getWriter().println(JacksonUtil.toString(execResult));
-                            endpointResultsCacheContainer.remove(id.toString());
-                        }
-
-                    }else{
-                        endpointExecution.getWriter().println(id.toString().trim());
-                        endpointExecution.getResp().setStatus(202);    // Accepted
-                    }
-                }
-            } else {
-                endpointExecution.getResp().setStatus(400);
-                endpointExecution.getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
-            }
-        } else {
-            endpointExecution.getResp().setStatus(404);    // Not found
+    private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException, IOException {
+        // Endpoint does not exists
+    	if(endpoint == null) {
+        	endpointExecution.getResp().setStatus(404);    // Not found
             try {
                 UUID uuid = UUID.fromString(endpointExecution.getFirstUriPart());
                 endpointExecution.getWriter().print("No results for execution id " + uuid.toString());
             } catch (IllegalArgumentException e) {
                 endpointExecution.getWriter().print("No endpoint for " + endpointExecution.getFirstUriPart() + " has been found");
             }
+            return;
         }
-    }
+    	
+    	// Endpoint is called with wrong method
+    	if (endpoint.getMethod() != endpointExecution.getMethod()) {
+    		endpointExecution.getResp().setStatus(400);
+            endpointExecution.getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
+            return;
+    	}
+    	
+		// If endpoint is synchronous, execute the script straight and return the response
+        if (endpoint.isSynchronous()) {
+            final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
+            String transformedResult = transformData(endpoint, result);
+            setReponse(transformedResult, endpointExecution);
+            return;
+        }
+            
+        // Execute the endpoint asynchronously
+        final UUID id = UUID.randomUUID();
+        log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
+        final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
+            try {
+                final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
+                return transformData(endpoint, result);
+            } catch (BusinessException | ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        
+        // Store the pending result
+        endpointResultsCacheContainer.put(id.toString(), execution);
+        
+        // Don't wait execution to finish
+        if(!endpointExecution.isWait()) {
+        	// Return the id of the execution so the user can retrieve it later
+        	endpointExecution.getWriter().println(id.toString().trim());
+            endpointExecution.getResp().setStatus(202);    // Accepted
+            return;
+        }
 
-    private void saveResult(EndpointExecution endpointExecution, Map<String, Object> results){
-        final List<EntityOrRelation> resultsToSave = JacksonUtil.OBJECT_MAPPER .convertValue(results.get("results"), new TypeReference<List<EntityOrRelation>>() {});
-        try {
-            //TODO: Rethink persistence
-            AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(resultsToSave);
-            scheduledPersistenceService.persist(endpointExecution.getPersistenceContextId(), atomicPersistencePlan);
-        } catch (CyclicDependencyException | BusinessException | ELException e) {
-            throw new RuntimeException(e);
+		final String execResult = execution.get(); 	// Wait until execution is over
+		endpointExecution.getResp().setStatus(200); // OK
+        if(endpointExecution.isKeep()){
+        	// If user wants to keep the result in cache, return the data along with its id
+            Map<String, Object> returnedValue = new HashMap<>();
+            returnedValue.put("id", id.toString());
+            returnedValue.put("data", execResult);
+            endpointExecution.getWriter().println(JacksonUtil.toString(returnedValue));
+        }else{
+        	// If user doesn't want to keep the result in cache, only return the data
+            endpointExecution.getWriter().println(JacksonUtil.toString(execResult));
+            endpointResultsCacheContainer.remove(id.toString());
         }
+
+    }
+    
+    private void setReponse(String transformedResult, EndpointExecution endpointExecution) throws IOException {
+    	// HTTP Status
+    	if(endpointExecution.getResponse().getStatus() != null) {
+    		endpointExecution.getResp().setStatus(endpointExecution.getResponse().getStatus());
+    	} else {
+    		endpointExecution.getResp().setStatus(200);	// OK
+    	}
+    	
+    	// Content type
+    	if(!StringUtils.isBlank(endpointExecution.getResponse().getContentType())) {
+    		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
+    	} else {
+    		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
+    	}
+    	
+    	// Body of the response
+    	if(!StringUtils.isBlank(endpointExecution.getResponse().getErrorMessage())) {	// Priority to error message
+    		endpointExecution.getWriter().print(endpointExecution.getResponse().getErrorMessage());
+    	} else if(endpointExecution.getResponse().getOutput() != null) {				// Output has been set
+    		ByteArrayInputStream in = new ByteArrayInputStream(endpointExecution.getResponse().getOutput());
+            ServletOutputStream out = endpointExecution.getResp().getOutputStream();
+            byte[] buffer = new byte[1024];
+            int len = 0;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            out.flush();
+    	} else {																		// Use the endpoint script's result
+    		endpointExecution.getWriter().print(transformedResult);
+    	}
     }
 
 }
