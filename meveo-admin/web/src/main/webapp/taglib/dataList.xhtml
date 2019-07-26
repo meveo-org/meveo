@@ -7,7 +7,8 @@
 <head>
     <script type="script">
         jQuery(document).ready(function() {
-            cellEntity_results.paginator.rppSelect.change(function() {
+            var cellEntity = "cellEntity_results";
+            cellEntity.paginator.rppSelect.change(function() {
                 persistRows([{name: 'rows', value: this.value}]);
             });
         });
