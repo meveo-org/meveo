@@ -9,12 +9,14 @@ import java.util.List;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
+import org.primefaces.model.SortOrder;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -39,12 +41,14 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi implements ApiService<E, T> {
 	
 	private Class<T> dtoClass;
+	private Class<E> jpaClass;
     
-	public BaseCrudApi(Class<T> dtoClass) {
+	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();
 		this.dtoClass = dtoClass;
+		this.jpaClass = jpaClass;
 	}
-    
+
 	/**
 	 * Function used to construct a dto representation of a given JPA entity
 	 * 
@@ -222,5 +226,29 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 				.readValues(csv);
 		
 		importEntities(reader.readAll(), overwrite);
+	}
+
+	/**
+	 * @see BaseCrudApi#exportCSV(PaginationConfiguration)
+	 */
+	public File exportCSV(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+		return exportCSV(pagination);
+	}
+
+	/**
+	 * @see BaseCrudApi#exportXML(PaginationConfiguration)
+	 */
+	public File exportXML(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+		return exportXML(pagination);
+	}
+
+	/**
+	 * @see BaseCrudApi#exportJSON(PaginationConfiguration)
+	 */
+	public File exportJSON(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+		return exportJSON(pagination);
 	}
 }

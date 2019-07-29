@@ -87,7 +87,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     }
     
     public MeveoModuleApi() {
-    	super(MeveoModuleDto.class);
+    	super(MeveoModule.class, MeveoModuleDto.class);
     }
 
     public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {

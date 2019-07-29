@@ -29,7 +29,7 @@ import org.meveo.service.storage.RepositoryService;
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 	public RepositoryApi() {
-		super(RepositoryDto.class);
+		super(Repository.class, RepositoryDto.class);
 	}
 
 	@Inject

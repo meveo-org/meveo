@@ -29,7 +29,7 @@ import org.meveo.service.script.ScriptInstanceService;
 public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 
     public JobTriggerApi() {
-		super(JobTriggerDto.class);
+		super(JobTrigger.class, JobTriggerDto.class);
 	}
 
 	@Inject

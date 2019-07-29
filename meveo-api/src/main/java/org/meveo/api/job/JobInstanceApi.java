@@ -30,7 +30,7 @@ import org.meveo.service.job.TimerEntityService;
 public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
     public JobInstanceApi() {
-		super(JobInstanceDto.class);
+		super(JobInstance.class, JobInstanceDto.class);
 	}
 
 	@Inject

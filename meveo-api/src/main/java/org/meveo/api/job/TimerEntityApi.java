@@ -23,7 +23,7 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
     private TimerEntityService timerEntityService;
     
     public TimerEntityApi() {
-    	super(TimerEntityDto.class);
+    	super(TimerEntity.class, TimerEntityDto.class);
     }
 
     public TimerEntity create(TimerEntityDto timerEntityDto) throws MeveoApiException, BusinessException {

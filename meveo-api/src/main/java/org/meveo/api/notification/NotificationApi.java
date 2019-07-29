@@ -55,7 +55,7 @@ public class NotificationApi extends BaseCrudApi<Notification, NotificationDto> 
     private InboundRequestService inboundRequestService;
     
     public NotificationApi() {
-    	super(NotificationDto.class);
+    	super(Notification.class, NotificationDto.class);
     }
 
     /**

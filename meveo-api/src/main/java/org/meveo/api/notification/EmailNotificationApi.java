@@ -30,7 +30,7 @@ import org.meveo.service.script.ScriptInstanceService;
 public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNotificationDto> {
 
     public EmailNotificationApi() {
-		super(EmailNotificationDto.class);
+		super(EmailNotification.class, EmailNotificationDto.class);
 	}
 
 	@Inject

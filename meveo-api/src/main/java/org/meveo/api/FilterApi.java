@@ -22,7 +22,7 @@ import org.meveo.service.filter.FilterService;
 public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 
     public FilterApi() {
-		super(FilterDto.class);
+		super(Filter.class, FilterDto.class);
 	}
 
 	@Inject

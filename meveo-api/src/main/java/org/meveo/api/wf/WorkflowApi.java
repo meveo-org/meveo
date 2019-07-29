@@ -46,7 +46,7 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
     private WFTransitionService wfTransitionService;
     
     public WorkflowApi() {
-    	super(WorkflowDto.class);
+    	super(Workflow.class, WorkflowDto.class);
     }
 
     /**

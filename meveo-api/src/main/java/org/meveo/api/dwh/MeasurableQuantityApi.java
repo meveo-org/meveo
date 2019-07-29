@@ -37,7 +37,7 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
     private MeasuredValueService mvService;
     
     public MeasurableQuantityApi() {
-    	super(MeasurableQuantityDto.class);
+    	super(MeasurableQuantity.class, MeasurableQuantityDto.class);
     }
 
     public MeasurableQuantity create(MeasurableQuantityDto postData) throws MeveoApiException, BusinessException {

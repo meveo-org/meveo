@@ -41,7 +41,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
     private RoleService roleService;
     
     public ScriptInstanceApi() {
-    	super(ScriptInstanceDto.class);
+    	super(ScriptInstance.class, ScriptInstanceDto.class);
     }
 
     public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)

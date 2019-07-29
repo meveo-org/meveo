@@ -34,7 +34,7 @@ import org.meveocrm.services.dwh.MeasurableQuantityService;
 public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
 
     public ChartApi() {
-		super(ChartDto.class);
+		super(Chart.class, ChartDto.class);
 	}
 
 	@Inject

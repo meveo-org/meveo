@@ -38,7 +38,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
     private ScriptInstanceService scriptInstanceService;
     
     public WebHookApi() {
-    	super(WebHookDto.class);
+    	super(WebHook.class, WebHookDto.class);
     }
 
     public WebHook create(WebHookDto postData) throws MeveoApiException, BusinessException {

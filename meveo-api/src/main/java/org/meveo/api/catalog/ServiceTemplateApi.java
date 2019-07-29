@@ -35,7 +35,7 @@ public class ServiceTemplateApi extends BaseCrudApi<ServiceTemplate, ServiceTemp
     private CalendarService calendarService;
     
     public ServiceTemplateApi() {
-    	super(ServiceTemplateDto.class);
+    	super(ServiceTemplate.class, ServiceTemplateDto.class);
     }
 
 

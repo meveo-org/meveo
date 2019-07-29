@@ -50,7 +50,7 @@ import org.meveo.util.EntityCustomizationUtils;
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
 
     public CustomEntityTemplateApi() {
-		super(CustomEntityTemplateDto.class);
+		super(CustomEntityTemplate.class, CustomEntityTemplateDto.class);
 	}
 
 	@Inject
