@@ -28,6 +28,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
@@ -76,12 +77,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     private ModuleScriptService moduleScriptService;
 
     private static JAXBContext jaxbCxt;
+    
     static {
         try {
             jaxbCxt = JAXBContext.newInstance(MeveoModuleDto.class);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
+    }
+    
+    public MeveoModuleApi() {
+    	super(MeveoModuleDto.class);
     }
 
     public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
@@ -621,4 +627,28 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         dto.setDuplicatePricePlan(bsm.isDuplicatePricePlan());
 
     }
+
+	@Override
+	public MeveoModuleDto toDto(MeveoModule entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<MeveoModule> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(MeveoModuleDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

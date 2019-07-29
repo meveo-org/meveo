@@ -32,6 +32,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -48,7 +49,11 @@ import org.meveo.util.EntityCustomizationUtils;
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
 
-    @Inject
+    public CustomEntityTemplateApi() {
+		super(CustomEntityTemplateDto.class);
+	}
+
+	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
     @Inject
@@ -661,4 +666,25 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         return dto;
     }
+
+	@Override
+	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		return fromDTO(dto, null);
+	}
+
+	@Override
+	public IPersistenceService<CustomEntityTemplate> getPersistenceService() {
+		return customEntityTemplateService;
+	}
+
+	@Override
+	public boolean exists(CustomEntityTemplateDto dto) {
+		return customEntityTemplateService.findByCode(dto.getCode()) != null;
+	}
 }

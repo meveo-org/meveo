@@ -185,29 +185,25 @@
                     <p:fileDownload value = "#{backingBean.exportJSON()}" />
                 </p:commandButton>
 
-                <c:if test="#{exportToXml}">
-
-					<p:commandButton id="#{formId}exportToXml"
-						value="#{messages['export.exportToXml']}"
-						update=":#{p:component('exportParametersDialog')}"
-						oncomplete="PF('exportParametersDialog').show()">
-						<c:choose>
-
-							<c:when test="#{backingBean.getBaseCrudApi() == null}">
+				<c:if test="#{exportToXml}">
+					<c:choose>
+						<c:when test="#{backingBean.getBaseCrudApi() == null}">
+							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
+								oncomplete="PF('exportParametersDialog').show()">
 								<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
 								<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
 								<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
-							</c:when>
-							<c:otherwise>
+							</p:commandButton>
+						</c:when>
+						<c:otherwise>
+							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" >
 								<p:fileDownload value="#{backingBean.exportXML()}" />
-							</c:otherwise>
-						</c:choose>
-
-					</p:commandButton>
-
+							</p:commandButton>
+						</c:otherwise>
+					</c:choose>
 				</c:if>
 
-            </h:panelGroup>
+			</h:panelGroup>
 
             <p:dialog header="#{messages['commons.importCsv']}" id="#{formId}_strategyDlg" widgetVar="csvDialog" modal="true" closeOnEscape="true" >
                 <p:messages autoUpdate="true" />
@@ -227,11 +223,16 @@
             </p:dialog>
             
             <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
-			     <p:messages autoUpdate="true" />
-			     <h:form id="#{formId}_import_options">
-                    <p:selectBooleanCheckbox value="#{backingBean.override}" itemLabel="Override existing data" />
-                    <p:fileUpload mode="advanced" dragDropSupport="true" fileUploadListener="#{backingBean.importData}" />
-                </h:form>
+			     <hftl:decorateFormField fieldId="#{formId}_override" componentWidth = "100" >
+                    <p:selectBooleanCheckbox immediate="true" id="#{formId}_override"
+                    	value="#{backingBean.override}" itemLabel="Override existing data">
+                        <p:ajax event="valueChange" update=":#{formId}_override"/>
+                    </p:selectBooleanCheckbox>
+                </hftl:decorateFormField>
+                <div class="clearLeft">
+                	<p:fileUpload accept=".xml,.csv,.json" mode="advanced" dragDropSupport="true" allowTypes="/(\.|\/)(xml|json|csv)$/"
+                	fileUploadListener="#{backingBean.importData}" update=":#{formId} :datatable_#{resultsId}"/>
+                </div>
             </p:dialog>
             
             <p:panel styleClass="buttons-set-data-table">

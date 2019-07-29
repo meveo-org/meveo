@@ -163,6 +163,10 @@
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
+			<artifactId>meveo-api-dto</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
 		</dependency>
 		<!-- Libraries included in JBoss -->

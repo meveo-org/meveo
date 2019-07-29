@@ -25,16 +25,19 @@
 			<hftl:searchField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 		</hftl:searchPanel>
 
-		<hftl:dataList label="#{messages['repository.title']}" exportToCsv="true" exportXlsxButton="false" exportToJson="true"
-			backingBean="#{repositoryBean}" sortBy="code">
-			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
-			<hftl:column label="#{messages['businessEntity.description']}" field="description" />
-			<hftl:column label="#{messages['repository.parentRepository']}" field="parentRepository.code" />
-			<hftl:column label="#{messages['repository.path']}" field="path" />
-			<hftl:column label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
-
-			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
-		</hftl:dataList>
+			<hftl:dataList exportToCsv="true" exportXlsxButton="false"
+						   exportToJson="true" formId="repositories" 
+						   backingBean="#{repositoryBean}" sortBy="code">
+						   
+				<hftl:column label="#{messages['businessEntity.code']}" field="code" />
+				<hftl:column label="#{messages['businessEntity.description']}" field="description" />
+				<hftl:column label="#{messages['repository.parentRepository']}" field="parentRepository.code" />
+				<hftl:column label="#{messages['repository.path']}" field="path" />
+				<hftl:column label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
+	
+				<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
+				
+			</hftl:dataList>
 
 	</ui:define>
 

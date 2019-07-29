@@ -28,6 +28,10 @@ import org.meveo.service.storage.RepositoryService;
 @Stateless
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
+	public RepositoryApi() {
+		super(RepositoryDto.class);
+	}
+
 	@Inject
 	private RepositoryService repositoryService;
 
@@ -38,17 +42,17 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	private Neo4jConfigurationService neo4jConfigurationService;
 
 	@Override
-	public RepositoryDto toDto(Repository entity) throws BusinessException {
+	public RepositoryDto toDto(Repository entity) {
 		return new RepositoryDto(entity);
 	}
 
 	@Override
-	public Repository fromDto(RepositoryDto dto) throws BusinessException {
+	public Repository fromDto(RepositoryDto dto) throws EntityDoesNotExistsException {
 		return toRepository(dto, null);
 	}
 
 	@Override
-	public IPersistenceService<Repository> getPersistenceService() throws BusinessException {
+	public IPersistenceService<Repository> getPersistenceService() {
 		return repositoryService;
 	}
 
@@ -170,5 +174,10 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		}
 
 		repositoryService.remove(entity);
+	}
+
+	@Override
+	public boolean exists(RepositoryDto dto) {
+		return repositoryService.findByCode(dto.getCode()) != null;
 	}
 }

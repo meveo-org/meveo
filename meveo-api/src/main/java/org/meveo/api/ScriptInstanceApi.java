@@ -23,6 +23,7 @@ import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
 
@@ -38,6 +39,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
     @Inject
     private RoleService roleService;
+    
+    public ScriptInstanceApi() {
+    	super(ScriptInstanceDto.class);
+    }
 
     public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
             throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
@@ -208,4 +213,28 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
         return scriptInstance;
     }
+
+	@Override
+	public ScriptInstanceDto toDto(ScriptInstance entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ScriptInstance fromDto(ScriptInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<ScriptInstance> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(ScriptInstanceDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
