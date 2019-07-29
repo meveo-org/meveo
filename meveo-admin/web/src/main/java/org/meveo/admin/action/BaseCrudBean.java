@@ -192,8 +192,6 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 		String contentType = event.getFile().getContentType();
 		InputStream inputStream = event.getFile().getInputstream();
 		
-		System.out.println(contentType + " : " + contentType.equals("application/vnd.ms-excel"));
-		
 		switch(contentType.trim()) {
 			case "text/xml": 
 			case "application/xml":

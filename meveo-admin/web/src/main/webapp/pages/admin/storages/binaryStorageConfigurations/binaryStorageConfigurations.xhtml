@@ -24,8 +24,8 @@
 			<hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
 		</hftl:searchPanel>
 
-		<hftl:dataList label="#{messages['binaryStorageConfiguration.title']}"
-			backingBean="#{binaryStorageConfigurationBean}" sortBy="code">
+		<hftl:dataList exportToCsv="true" exportXlsxButton="false" exportToJson="true"
+			formId="binaryStorageConfigurations" backingBean="#{binaryStorageConfigurationBean}" sortBy="code">
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['binaryStorageConfiguration.rootPath']}" field="rootPath" />
 

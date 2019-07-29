@@ -196,7 +196,7 @@
 							</p:commandButton>
 						</c:when>
 						<c:otherwise>
-							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" >
+							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" ajax="false">
 								<p:fileDownload value="#{backingBean.exportXML()}" />
 							</p:commandButton>
 						</c:otherwise>
