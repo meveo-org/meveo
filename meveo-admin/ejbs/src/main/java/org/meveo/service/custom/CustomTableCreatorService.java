@@ -648,6 +648,9 @@ public class CustomTableCreatorService implements Serializable {
                 return "numeric(23, 12)";
             case LONG:
                 return "bigint";
+    		case BINARY:
+    		case EXPRESSION:
+    		case MULTI_VALUE:
             case STRING:
             case TEXT_AREA:
             case ENTITY:
@@ -659,6 +662,9 @@ public class CustomTableCreatorService implements Serializable {
                 return "text";
             case BOOLEAN:
                 return "int";
+
+			default:
+				break;
         }
 
         return null;
