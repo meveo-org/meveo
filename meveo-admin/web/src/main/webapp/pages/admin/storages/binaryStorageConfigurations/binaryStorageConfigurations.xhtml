@@ -19,13 +19,12 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:searchPanel label="#{messages['binaryStorageConfiguration.search']}"
+		<hftl:searchPanel label="#{messages['binaryStorageConfiguration.search']}" exportToCsv="true" exportToJson="true" exportToXml="true"
 			backingBean="#{binaryStorageConfigurationListBean}" columns="3">
 			<hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
 		</hftl:searchPanel>
 
-		<hftl:dataList exportToCsv="true" exportXlsxButton="false" exportToJson="true"
-			formId="binaryStorageConfigurations" backingBean="#{binaryStorageConfigurationBean}" sortBy="code">
+		<hftl:dataList exportXlsxButton="false" formId="binaryStorageConfigurations" backingBean="#{binaryStorageConfigurationBean}" sortBy="code">
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['binaryStorageConfiguration.rootPath']}" field="rootPath" />
 

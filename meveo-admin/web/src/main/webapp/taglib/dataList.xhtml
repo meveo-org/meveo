@@ -174,33 +174,15 @@
                 <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
                 <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
-                    <c:if test="#{backingBean.getBaseCrudApi() != null}">
-                    	<p:fileDownload value = "#{backingBean.exportCSV()}" />
-                	</c:if>
-                	<c:if test="#{backingBean.getBaseCrudApi() == null}">
-                		<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
-                	</c:if>
+                	<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
                 </p:commandButton>
-                <p:commandButton id="#{formId}buttonJsonExport" value="Export JSON" ajax="false" rendered="#{exportToJson and (backingBean.getBaseCrudApi() != null)}">
-                    <p:fileDownload value = "#{backingBean.exportJSON()}" />
-                </p:commandButton>
-
 				<c:if test="#{exportToXml}">
-					<c:choose>
-						<c:when test="#{backingBean.getBaseCrudApi() == null}">
-							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
-								oncomplete="PF('exportParametersDialog').show()">
-								<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
-								<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
-								<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
-							</p:commandButton>
-						</c:when>
-						<c:otherwise>
-							<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" ajax="false">
-								<p:fileDownload value="#{backingBean.exportXML()}" />
-							</p:commandButton>
-						</c:otherwise>
-					</c:choose>
+					<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
+						oncomplete="PF('exportParametersDialog').show()">
+						<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
+						<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
+						<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
+					</p:commandButton>
 				</c:if>
 
 			</h:panelGroup>
