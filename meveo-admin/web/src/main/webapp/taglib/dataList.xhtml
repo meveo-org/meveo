@@ -138,23 +138,20 @@
     <p:panel id="#{resultsId}_panel" width="100">
 
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
-            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="#{backingBean.rows}" editable="#{editable}" editMode="#{editMode}"
+            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" multiViewState="true" paginator="true" rows="#{backingBean.cacheNumRows}" editable="#{editable}" editMode="#{editMode}"
                 widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
                 paginatorTemplate="${prePaginatorControls} {RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
                 rowsPerPageTemplate="#{rowsPerPage}" lazy="true" resizableColumns="true" styleClass="custom-grid #{styleClass}" rowKey="#{entity.id}" first="#{backingBean.dataTableFirstAttribute}"
                 reflow="true" paginatorPosition="#{paginatorPosition}">
                 <p:ajax event="page" listener="#{backingBean.onPageChange}" />
                 <p:ajax event="toggleSelect" update="@this" process="@this" />
-                <p:ajax event="rowSelectCheckbox" />
+                <p:ajax event="rowSelectCheckbox"/>
                 <p:ajax event="rowUnselectCheckbox" />
-                <p:ajax event="rowSelect" />
+                <p:ajax event="rowSelect"/>
                 <p:ajax event="rowUnselect" />
                 <c:if test="#{editable}">
                     <p:ajax event="cellEdit" listener="#{backingBean.onCellEdit}" />
                 </c:if>
-
-                <p:remoteCommand name="persistRows" action="#{backingBean.saveRows}" process="@this"
-                                 update="rows" global="false" />
 
                 <h:outputText id="rows" value="#{backingBean.rows}" />
 

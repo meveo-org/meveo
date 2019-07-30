@@ -29,9 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.Asynchronous;
 import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -41,18 +39,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.infinispan.Cache;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.keycloak.common.util.CollectionUtil;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -198,36 +193,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private UploadedFile uploadedFile;
 
-    private int rows = 0;
-
-    public int getRows() {
-        return rows;
-    }
-
-    public void setRows(int rows) {
-        this.rows = rows;
-    }
-
-    @PostConstruct
-    public void setup() {
-        //default rows value
-        // rows = 10;
-        FacesContext context = FacesContext.getCurrentInstance();
-        Map map = context.getExternalContext().getRequestParameterMap();
-        if (!map.isEmpty()) {
-            String rowsStr = (String) map.get("rows");
-            rows = Integer.parseInt(rowsStr);
-        } else {
-            rows = 10;
-        }
-    }
-
-    public void saveRows(){
-        FacesContext context = FacesContext.getCurrentInstance();
-        Map map = context.getExternalContext().getRequestParameterMap();
-        String rowsStr = (String) map.get("rows");
-        rows = Integer.parseInt(rowsStr);
-    }
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-rows-page-cache")
+    private Cache<String, Map<String, Integer>> cacheNumberRow;
 
     /**
      * Constructor
@@ -967,6 +934,19 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     }
 
     public void onPageChange(PageEvent event) {
+        DataTable dataTable = (DataTable) event.getSource();
+        int rows =dataTable.getRows();
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+        if (numberRow != null && numberRow.get(clazzName) != null) {
+            numberRow.put(clazzName, rows);
+        } else {
+            numberRow = new HashMap<>();
+            numberRow.put(clazzName, rows);
+        }
+        cacheNumberRow.put(username, numberRow);
         this.setDataTableFirstAttribute(((DataTable) event.getSource()).getFirst());
     }
 
@@ -1250,24 +1230,15 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         return matchedEntityInfo;
     }
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-cet-cache")
-    private Cache<String, Map<String, Integer>> cacheNumberRow;
-
-    public void getCacheNumRow(PageEvent event) {
-        String currentProvider = currentUser.getProviderCode();
-        Map<String,Integer> numberRow = null;
+    public int getCacheNumRows() {
+        String username = currentUser.getUserName();
 
         String clazzName = clazz.getName();
-        int rowNum = ((DataTable) event.getSource()).getFirst();
-
-        numberRow.put(clazzName, rowNum);
-        cacheNumberRow.put(currentProvider, numberRow);
-    }
-
-    @Asynchronous
-    public void refreshCache(String cacheName, PageEvent event) {
-        if(cacheName == null || cacheName.equals(cacheNumberRow.getName())) {
-            getCacheNumRow(event);
+        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+        if (numberRow != null && numberRow.get(clazzName) != null) {
+            return numberRow.get(clazzName);
+        } else {
+            return 10;
         }
     }
 }
