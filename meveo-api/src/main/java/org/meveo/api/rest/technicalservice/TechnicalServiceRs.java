@@ -18,12 +18,14 @@
 package org.meveo.api.rest.technicalservice;
 
 import org.jboss.resteasy.annotations.Form;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.ListTechnicalServiceResponse;
 import org.meveo.api.dto.response.TechnicalServiceResponse;
 import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.IBaseRs;
 
 import javax.ws.rs.*;
@@ -197,4 +199,11 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     ActionStatus renameVersion(@PathParam("name") String name, @FormParam("oldVersion") Integer oldVersion, @FormParam("newVersion") Integer newVersion);
 
+    @Path("/{name}/{version}/disable")
+    @POST
+    void disable(@PathParam("name") String name, @PathParam("version") Integer version) throws EntityDoesNotExistsException, BusinessException;
+
+    @Path("/{name}/{version}/disable")
+    @POST
+    void enable(@PathParam("name") String name, @PathParam("version") Integer version) throws EntityDoesNotExistsException, BusinessException;
 }

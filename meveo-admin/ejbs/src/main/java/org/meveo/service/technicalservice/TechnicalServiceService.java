@@ -222,6 +222,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         }else if(filters.getLikeName() != null){
             qb.addCriterion("service.name", "like", filters.getName(), true);
         }
+
+        if(filters.isOnlyActive()){
+            qb.addCriterion("service.disabled", "=", false, false);
+        }
+
         return qb;
     }
 

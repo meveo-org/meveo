@@ -19,6 +19,7 @@ package org.meveo.api.rest.technicalservice.impl;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.resteasy.core.ServerResponse;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.TechnicalServiceApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.TechnicalServicesDto;
@@ -258,5 +259,15 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService,
             processException(e, result);
         }
         return result;
+    }
+
+    @Override
+    public void enable(String name, Integer version) throws EntityDoesNotExistsException, BusinessException {
+        tsApi.disable(name, version, false);
+    }
+
+    @Override
+    public void disable(String name, Integer version) throws EntityDoesNotExistsException, BusinessException {
+        tsApi.disable(name, version, true);
     }
 }
