@@ -30,8 +30,7 @@ public class BinaryStoragePathParam {
 	// constraints
 	private List<String> fileExtensions;
 	private List<String> contentTypes;
-	private int maximumSize;
-	private long maxFileSizeAllowedInKb;
+	private Long maxFileSizeAllowedInKb;
 
 	public boolean isValidFileExtension() {
 		final String ext = FilenameUtils.getExtension(getFilename());
@@ -43,8 +42,8 @@ public class BinaryStoragePathParam {
 	}
 
 	public boolean isValidFilesize() {
-		final long fileSizeInKB = getFileSizeInBytes() / 1024;
-		return maxFileSizeAllowedInKb != 0 ? fileSizeInKB <= getMaxFileSizeAllowedInKb() : true;
+		final long fileSizeInKB = fileSizeInBytes / 1024;
+		return maxFileSizeAllowedInKb == null || (maxFileSizeAllowedInKb != 0 && fileSizeInKB <= maxFileSizeAllowedInKb);
 	}
 
 	public boolean isShowOnExplorer() {
@@ -133,14 +132,6 @@ public class BinaryStoragePathParam {
 		this.contentTypes = contentTypes;
 	}
 
-	public int getMaximumSize() {
-		return maximumSize;
-	}
-
-	public void setMaximumSize(int maximumSize) {
-		this.maximumSize = maximumSize;
-	}
-
 	public InputStream getIs() {
 		return is;
 	}
@@ -165,11 +156,11 @@ public class BinaryStoragePathParam {
 		this.file = file;
 	}
 
-	public long getMaxFileSizeAllowedInKb() {
+	public Long getMaxFileSizeAllowedInKb() {
 		return maxFileSizeAllowedInKb;
 	}
 
-	public void setMaxFileSizeAllowedInKb(long maxFileSizeAllowedInKb) {
+	public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
 		this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
 	}
 

@@ -814,7 +814,7 @@
 		<addColumn tableName="crm_custom_field_tmpl">
 			<column name="content_types" type="VARCHAR(2000)"></column>
 			<column name="file_extensions" type="VARCHAR(2000)"></column>
-			<column name="maximum_size" type="INT"></column>
+			<column name="max_file_size_allowed_kb" type="BIGINT"></column>
 			<column name="file_path" type="VARCHAR(255)"></column>
 		</addColumn>
 	</changeSet>

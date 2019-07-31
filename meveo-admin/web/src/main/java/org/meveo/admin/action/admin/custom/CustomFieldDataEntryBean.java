@@ -1856,7 +1856,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
-		params.setMaxFileSizeAllowedInKb(cft.getMaximumSize());
+		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
 
 		rootPath = fileSystemService.persists(params);
 
@@ -1898,5 +1898,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 		String mimeType = Files.probeContentType(file.toPath());
 		
 		return new DefaultStreamedContent(stream, mimeType, filename);
+	}
+	
+	public void ping() {
+		log.debug("ping");
 	}
 }

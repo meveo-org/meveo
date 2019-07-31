@@ -46,10 +46,16 @@
     </c:if>
     
     <c:if test="#{cc.attrs.cft.fieldType eq CustomFieldTypeEnum.BINARY}">
-        <hftl:customFieldBinary edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" entity="#{cc.attrs.entity}" prefix="#{cc.attrs.prefix}"
-            field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" messagesId="#{cc.attrs.messagesId}" disabled="#{cc.attrs.disabled}" />
+    	<c:if test="#{cc.attrs.cft.storageType eq CustomFieldStorageTypeEnum.SINGLE}">
+	        <hftl:customFieldBinary edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" entity="#{cc.attrs.entity}" prefix="#{cc.attrs.prefix}"
+	            field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" messagesId="#{cc.attrs.messagesId}" disabled="#{cc.attrs.disabled}" />
+        </c:if>
+       	<c:if test="#{cc.attrs.cft.storageType eq CustomFieldStorageTypeEnum.LIST}">
+       		<hftl:customFieldBinaryList edit="#{cc.attrs.edit}" cft="#{cc.attrs.cft}" entity="#{cc.attrs.entity}" prefix="#{cc.attrs.prefix}"
+            	field="#{cc.attrs.cfValueHolder.getFirstValue(cc.attrs.cft.code)}" messagesId="#{cc.attrs.messagesId}" disabled="#{cc.attrs.disabled}" />
+       	</c:if>
     </c:if>
-
+    
     <c:if test="#{cc.attrs.cft.fieldType ne CustomFieldTypeEnum.CHILD_ENTITY and cc.attrs.cft.fieldType ne CustomFieldTypeEnum.BINARY}">
         <c:if test="#{!cc.attrs.cft.versionable}">
             <c:if test="#{cc.attrs.cft.storageType eq CustomFieldStorageTypeEnum.SINGLE }">

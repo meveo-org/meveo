@@ -43,24 +43,28 @@
 		value="#{prefix}_#{fn:replace(cft.code, ' ','_')}_" />
 	<c:set var="dlgBinary" value="#{fieldPrefix}_dlgBinary" />
 
-	<hftl:decorateFormField for="#{fieldPrefix}viewBinaryValue"
+	<hftl:decorateFormField
 		label="#{cft.description}#{cft.valueRequired?' *':''}"
-		componentWidth="100" displayOneLine="false">
+		componentWidth="#{componentWidth}" displayOneLine="false">
 
-		<h:outputText title="#{field.stringValue}"
-			value="#{of:abbreviate(field.stringValue, 25)}"></h:outputText>
-		<p:commandButton ajax="false"
-			onclick="PrimeFaces.monitorDownload(start, stop);"
-			icon="fa fa-arrow-down" immediate="true">
-			<p:fileDownload
-				value="#{customFieldDataEntryBean.downloadFile(field.stringValue)}">
-			</p:fileDownload>
-		</p:commandButton>
-		<p:inputText id="#{fieldPrefix}viewBinaryValue" type="hidden"
-			value="#{field.stringValue}"></p:inputText>
+		<p:messages id="#{fieldPrefix}_cfMessages" globalOnly="false"
+			redisplay="false" />
 
-		<p:commandButton type="button" onclick="PF('#{dlgBinary}').show();"
-			value="#{messages['action.uploadBinary']}"></p:commandButton>
+		<p:dataTable id="#{fieldPrefix}_customFields_binaries" lazy="false"
+			editable="#{edit and !disabled}" editMode="cell" reflow="false"
+			resizableColumns="true" rowIndexVar="rowIndex">
+
+			<p:column headerText="#{messages['commons.key']}">
+			</p:column>
+
+
+			<c:if test="#{!inherited}">
+				<f:facet name="footer" layout="block">
+					<p:commandButton type="button" onclick="PF('#{dlgBinary}').show();"
+						value="#{messages['action.uploadBinary']}"></p:commandButton>
+				</f:facet>
+			</c:if>
+		</p:dataTable>
 	</hftl:decorateFormField>
 
 	<p:dialog id="#{fieldPrefix}#{dlgBinary}" header=""
@@ -87,7 +91,7 @@
 						onLabel="#{messages['commons.yes']}"
 						offLabel="#{messages['commons.no']}" style="width:60px" />
 				</hftl:decorateFormField>
-				<p:fileUpload id="#{fieldPrefix}FileUpload"
+				<p:fileUpload id="#{fieldPrefix}fileUpload"
 					value="#{customFieldDataEntryBean.uploadedBinaryFile}"
 					mode="simple" skinSimple="true"
 					required="#{cft.valueRequired and !hasInheritedValue}"
@@ -97,12 +101,11 @@
 				<p:commandButton id="#{fieldPrefix}uploadButton"
 					value="#{messages['action.save']}" ajax="false"
 					process="#{fieldPrefix}binaryFileUploadForm @this"
-					update="#{fieldPrefix}binaryFileUploadForm #{fieldPrefix}viewBinaryValue}"
+					update="#{fieldPrefix}binaryFileUploadForm #{fieldPrefix}_customFields_binaries"
 					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
 			</h:panelGroup>
 		</h:form>
 	</p:dialog>
-
 </ui:composition>
 
 </html>

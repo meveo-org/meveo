@@ -298,10 +298,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	private List<String> fileExtensions = new ArrayList<String>();
 
 	/**
-	 * Maximum size in bytes.
+	 * Maximum size in kb.
 	 */
-	@Column(name = "maximum_size")
-	private Integer maximumSize;
+	@Column(name = "max_file_size_allowed_kb")
+	private Long maxFileSizeAllowedInKb;
 
 	/**
 	 * Supports EL variables.
@@ -1073,15 +1073,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	public void setFileExtensions(List<String> fileExtensions) {
 		this.fileExtensions = fileExtensions;
 	}
-
-	public Integer getMaximumSize() {
-		return maximumSize;
-	}
-
-	public void setMaximumSize(Integer maximumSize) {
-		this.maximumSize = maximumSize;
-	}
-
 	public String getFilePath() {
 		return filePath;
 	}
@@ -1120,5 +1111,13 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		}
 
 		fileExtensions.add(fe);
+	}
+
+	public Long getMaxFileSizeAllowedInKb() {
+		return maxFileSizeAllowedInKb;
+	}
+
+	public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
+		this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
 	}
 }
