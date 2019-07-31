@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,9 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.export.RemoteAuthenticationException;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,6 +185,27 @@ public class CETUtils {
         writer.flush();
         writer.close();
 
+    }
+    
+    /**
+     * Init a {@link CustomFieldValues} container from values map and fields definitions
+     * 
+     * @param valuesMap	Values map
+     * @param fields	Fields definition
+     * @return instance of {@link CustomFieldValues}
+     */
+    public static CustomFieldValues initCustomFieldValues(Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
+    	CustomFieldValues values = new CustomFieldValues();
+    	
+    	valuesMap.forEach((k,v) -> {
+    		values.setValue(k, v);
+    	});
+    	
+    	fields.stream().filter(f -> CustomFieldStorageTypeEnum.LIST.equals(f.getStorageType()))
+    		.filter(f -> valuesMap.get(f.getDbFieldname()) == null)
+			.forEach(f -> values.setValue(f.getDbFieldname(), f.getNewListValue(), f.getFieldType().getDataClass()));
+    	
+    	return values;
     }
 
 }

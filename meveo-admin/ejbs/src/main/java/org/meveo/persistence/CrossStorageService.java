@@ -120,7 +120,7 @@ public class CrossStorageService implements CustomPersistenceService {
                 values.put("description", cei.getDescription());
                 if (sqlFields != null) {
                     for (String field : sqlFields) {
-                    	if(cei.getCfValues() != null) {
+                    	if(cei.getCfValues() != null && cei.getCfValues().getCfValue(field) != null) {
                     		values.put(field, cei.getCfValues().getCfValue(field).getValue());
                     	}
                     }

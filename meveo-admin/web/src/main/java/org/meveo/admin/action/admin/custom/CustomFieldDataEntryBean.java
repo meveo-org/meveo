@@ -3,6 +3,7 @@ package org.meveo.admin.action.admin.custom;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -28,6 +29,8 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.CETUtils;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -45,6 +48,7 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -110,6 +114,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 
     @Inject
     private CustomEntityInstanceService customEntityInstanceService;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
 
     @Inject
     @CurrentUser
@@ -364,41 +371,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 
         return cfisPrepared;
     }
-
-    //
-    // /**
-    // * Load available custom fields (templates) and their values for a given entity
-    // *
-    // * @param entity Entity to load definitions and field values for
-    // * @param cfisAsMap Custom field instances mapped by a CFT code
-    // */
-    // private void initFields(ICustomFieldEntity entity, Map<String, List<CustomFieldInstance>> cfisAsMap) {
-    //
-    // Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
-    // log.debug("Found {} custom field templates for entity {}", customFieldTemplates.size(), entity.getClass());
-    //
-    // GroupedCustomField groupedCustomField = new GroupedCustomField(customFieldTemplates.values(), "Custom fields", false);
-    // groupedFieldTemplates.put(entity.getUuid(), groupedCustomField);
-    //
-    // CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(customFieldTemplates, cfisAsMap, entity);
-    // fieldsValues.put(entity.getUuid(), entityFieldsValues);
-    // }
-
-    // /**
-    // * Load available custom fields (templates) for a given child entity field definition
-    // *
-    // * @param childEntityFieldDefinition Custom field template of child entity type, definition
-    // */
-    // private void initGroupedCustomFieldsForChildEntity(CustomFieldTemplate childEntityFieldDefinition) {
-    //
-    // Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(
-    // EntityCustomizationUtils.getAppliesTo(CustomEntityTemplate.class, CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz())));
-    //
-    // log.debug("Found {} custom field templates for entity {}", customFieldTemplates.size(), childEntityFieldDefinition.getEntityClazz());
-    //
-    // GroupedCustomField groupedCustomField = new GroupedCustomField(customFieldTemplates.values(), "Custom fields", false);
-    // groupedFieldTemplates.put(childEntityFieldDefinition.getEntityClazz(), groupedCustomField);
-    // }
 
     /**
      * Increase priority of a custom field value period
@@ -1378,12 +1350,32 @@ public class CustomFieldDataEntryBean implements Serializable {
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
             customFieldValue.setEntityReferenceValueForGUI(deserializeEntityReferenceForGUI(customFieldValue.getEntityReferenceValue()));
 
-            // Populate childEntityValuesForGUI field - ONLY LIST storage is supported
         } else if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
+            // Populate childEntityValuesForGUI field - ONLY LIST storage is supported
             List<CustomFieldValueHolder> cheHolderList = new ArrayList<>();
+            
             if (customFieldValue.getListValue() != null) {
                 for (Object listItem : customFieldValue.getListValue()) {
-                    CustomFieldValueHolder childEntityValueHolder = loadChildEntityForGUI((EntityReferenceWrapper) listItem);
+                	EntityReferenceWrapper entityReferenceWrapper = null;
+                	CustomFieldValueHolder childEntityValueHolder = null;
+                	
+                	if(listItem instanceof EntityReferenceWrapper) {
+                		entityReferenceWrapper = (EntityReferenceWrapper) listItem;
+                		childEntityValueHolder = loadChildEntityForGUI(entityReferenceWrapper);
+                		
+                	} else if(listItem instanceof Map) {
+                		Map<String, Object> values = (Map<String, Object>) listItem;
+                		String entityCode = (String) values.get("code");
+                		
+                		entityReferenceWrapper = new EntityReferenceWrapper(
+                				CustomEntityInstance.class.getName(), 
+                				CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()), 
+                				entityCode
+            				);
+                		
+                		childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
+                	}
+                	
                     if (childEntityValueHolder != null) {
                         cheHolderList.add(childEntityValueHolder);
                     }
@@ -1391,10 +1383,10 @@ public class CustomFieldDataEntryBean implements Serializable {
             }
             customFieldValue.setChildEntityValuesForGUI(cheHolderList);
 
-            // Populate mapValuesForGUI field
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-
+            // Populate mapValuesForGUI field
             List<Map<String, Object>> listOfMapValues = new ArrayList<Map<String, Object>>();
+            
             if (customFieldValue.getListValue() != null) {
                 for (Object listItem : customFieldValue.getListValue()) {
                     Map<String, Object> listEntry = new HashMap<String, Object>();
@@ -1524,6 +1516,32 @@ public class CustomFieldDataEntryBean implements Serializable {
         }
         initFields(cei);
         return fieldsValues.get(cei.getUuid());
+    }
+    
+    /**
+     * Convert childEntity field type value of EntityReferenceWrapper type to GUI suitable format - CustomFieldValueHolder.
+     * Entity is created from map values.
+     * 
+     * @param childEntityWrapper EntityReferenceWrapper value to convert
+     * @return CustomFieldValueHolder instance
+     */
+    private CustomFieldValueHolder initCustomFieldValueHolderFromMap(EntityReferenceWrapper childEntityWrapper, Map<String, Object> values) {
+
+    	// Init CEI
+    	CustomEntityInstance cei = new CustomEntityInstance();
+    	cei.setCetCode(childEntityWrapper.getClassnameCode());
+    	cei.setCode(childEntityWrapper.getCode());
+    	cei.setUuid((String) values.get("uuid"));
+    	cei.setDescription((String) values.get("description"));
+    	
+    	// Init fields of CEI
+    	Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
+    	CustomFieldValues customFieldValues = CETUtils.initCustomFieldValues(values, fields.values());
+    	cei.setCfValues(customFieldValues);
+    	
+    	// Init holder
+        CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(fields, customFieldValues.getValuesByCode(), cei);
+    	return entityFieldsValues;
     }
 
     /**

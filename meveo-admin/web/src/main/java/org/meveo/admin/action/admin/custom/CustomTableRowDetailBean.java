@@ -27,6 +27,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.CETUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
@@ -49,17 +50,12 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     private String cetCode;
     
     public void initEntity(String cetCode, Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
-    	values = new CustomFieldValues();
     	this.cetCode = cetCode;
     	this.fields = fields;
     	
-    	valuesMap.forEach((k,v) -> {
-    		values.setValue(k, v);
-    	});
+    	values = CETUtils.initCustomFieldValues(valuesMap, fields);
     	
-    	fields.stream().filter(f -> CustomFieldStorageTypeEnum.LIST.equals(f.getStorageType()))
-    		.filter(f -> valuesMap.get(f.getDbFieldname()) == null)
-			.forEach(f -> values.setValue(f.getDbFieldname(), f.getNewListValue(), f.getFieldType().getDataClass()));
+
     }
     
 	public CustomFieldValues getValues() {
