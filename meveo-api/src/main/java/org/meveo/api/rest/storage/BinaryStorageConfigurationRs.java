@@ -13,16 +13,16 @@ import javax.ws.rs.core.MediaType;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationsResponseDto;
-import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.api.storage.BinaryStorageConfigurationDto;
 
 /**
  * @author Edward P. Legaspi
  */
 @Path("/storages/binaries")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-public interface BinaryStorageConfigurationRs extends IBaseRs {
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv" })
+public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 
 	/**
 	 * Create a new binary storage

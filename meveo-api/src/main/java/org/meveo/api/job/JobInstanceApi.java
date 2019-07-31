@@ -20,6 +20,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
@@ -28,7 +29,11 @@ import org.meveo.service.job.TimerEntityService;
 @Stateless
 public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
-    @Inject
+    public JobInstanceApi() {
+		super(JobInstance.class, JobInstanceDto.class);
+	}
+
+	@Inject
     private JobInstanceService jobInstanceService;
 
     @Inject
@@ -276,4 +281,28 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
         return dto;
     }
+
+	@Override
+	public JobInstanceDto toDto(JobInstance entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JobInstance fromDto(JobInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<JobInstance> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(JobInstanceDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

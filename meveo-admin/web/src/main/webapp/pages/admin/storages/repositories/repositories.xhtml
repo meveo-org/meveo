@@ -1,8 +1,5 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:hftl="http://hftl.org"
-	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:hftl="http://hftl.org" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 
 	<ui:define name="metadata">
 		<f:metadata>
@@ -19,14 +16,14 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:searchPanel label="#{messages['repository.search']}"
+		<hftl:searchPanel label="#{messages['repository.search']}" exportToXml="true" exportToCsv="true" exportToJson="true"
 			backingBean="#{repositoryListBean}" columns="3">
 			<hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:searchField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 		</hftl:searchPanel>
 
-		<hftl:dataList label="#{messages['repository.title']}" exportToCsv="true" exportXlsxButton="false" exportToJson="true"
-			backingBean="#{repositoryBean}" sortBy="code">
+		<hftl:dataList exportXlsxButton="false" formId="repositories" backingBean="#{repositoryBean}" sortBy="code">
+
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['businessEntity.description']}" field="description" />
 			<hftl:column label="#{messages['repository.parentRepository']}" field="parentRepository.code" />
@@ -34,6 +31,7 @@
 			<hftl:column label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
 
 			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
+
 		</hftl:dataList>
 
 	</ui:define>

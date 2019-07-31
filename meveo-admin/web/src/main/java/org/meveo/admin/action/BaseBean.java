@@ -21,6 +21,7 @@ package org.meveo.admin.action;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -51,6 +52,7 @@ import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -201,6 +203,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private UploadedFile uploadedFile;
     
     private BaseCrudApi<T,?> baseCrudApi;
+    
+    private boolean override;
 
     /**
      * Constructor
@@ -223,8 +227,16 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public void init() {
     	baseCrudApi = getBaseCrudApi();
     }
+    
+    public boolean isOverride() {
+		return override;
+	}
 
-    /**
+	public void setOverride(boolean override) {
+		this.override = override;
+	}
+
+	/**
      * Returns entity class
      * 
      * @return Class
@@ -1231,56 +1243,5 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         return matchedEntityInfo;
     }
-    
-	public StreamedContent exportXML() throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-        if(baseCrudApi == null) {
-        	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
-        }
-        PaginationConfiguration configuration = new PaginationConfiguration(getFilters());
-        File exportXML = baseCrudApi.exportXML(configuration);
-        
-        DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
-        defaultStreamedContent.setContentEncoding("UTF-8");
-        defaultStreamedContent.setContentType("application/xml");
-        defaultStreamedContent.setStream(new FileInputStream(exportXML));
-        defaultStreamedContent.setName(exportXML.getName());
-        
-        return defaultStreamedContent;
-	}
-	
-	public StreamedContent exportJSON() throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-        if(baseCrudApi == null) {
-        	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
-        }
-        PaginationConfiguration configuration = new PaginationConfiguration(getFilters());
-        File exportJSON = baseCrudApi.exportJSON(configuration);
-		
-        DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
-        defaultStreamedContent.setContentEncoding("UTF-8");
-        defaultStreamedContent.setContentType("application/json");
-        defaultStreamedContent.setStream(new FileInputStream(exportJSON));
-        defaultStreamedContent.setName(exportJSON.getName());
-        
-		return defaultStreamedContent;
-	}
-	
-	public StreamedContent exportCSV() throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-        if(baseCrudApi == null) {
-        	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
-        }
-        PaginationConfiguration configuration = new PaginationConfiguration(getFilters());
-        File exportCSV = baseCrudApi.exportCSV(configuration);
-		
-        DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
-        defaultStreamedContent.setContentEncoding("UTF-8");
-        defaultStreamedContent.setContentType("application/csv");
-        defaultStreamedContent.setStream(new FileInputStream(exportCSV));
-        defaultStreamedContent.setName(exportCSV.getName());
-        
-		return defaultStreamedContent;
-	}
-    
-    
-    
     
 }

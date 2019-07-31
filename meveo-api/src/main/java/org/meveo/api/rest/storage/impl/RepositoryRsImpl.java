@@ -4,22 +4,24 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.response.storage.RepositoriesResponseDto;
 import org.meveo.api.dto.response.storage.RepositoryResponseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
-import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.api.rest.storage.RepositoryRs;
 import org.meveo.api.storage.RepositoryApi;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.model.storage.Repository;
 
 /**
  * @author Edward P. Legaspi
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
-public class RepositoryRsImpl extends BaseRs implements RepositoryRs {
+public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> implements RepositoryRs {
 
 	@Inject
 	private RepositoryApi repositoryApi;
@@ -100,6 +102,11 @@ public class RepositoryRsImpl extends BaseRs implements RepositoryRs {
 			processException(e, result);
 		}
 		return result;
+	}
+
+	@Override
+	public BaseCrudApi<Repository, RepositoryDto> getBaseCrudApi() {
+		return repositoryApi;
 	}
 
 }

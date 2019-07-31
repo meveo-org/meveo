@@ -4,22 +4,24 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationsResponseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
-import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.api.rest.storage.BinaryStorageConfigurationRs;
 import org.meveo.api.storage.BinaryStorageConfigurationApi;
 import org.meveo.api.storage.BinaryStorageConfigurationDto;
+import org.meveo.model.storage.BinaryStorageConfiguration;
 
 /**
  * @author Edward P. Legaspi
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
-public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinaryStorageConfigurationRs {
+public class BinaryStorageConfigurationRsImpl extends BaseCrudRs<BinaryStorageConfiguration, BinaryStorageConfigurationDto> implements BinaryStorageConfigurationRs {
 
 	@Inject
 	private BinaryStorageConfigurationApi binaryStorageConfigurationApi;
@@ -100,6 +102,11 @@ public class BinaryStorageConfigurationRsImpl extends BaseRs implements BinarySt
 			processException(e, result);
 		}
 		return result;
+	}
+
+	@Override
+	public BaseCrudApi<BinaryStorageConfiguration, BinaryStorageConfigurationDto> getBaseCrudApi() {
+		return binaryStorageConfigurationApi;
 	}
 
 }

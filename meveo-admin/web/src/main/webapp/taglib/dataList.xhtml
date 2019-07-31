@@ -172,40 +172,20 @@
                     <pe:exporter type="xlsx" target="datatable_#{resultsId}" fileName="data" pageOnly="false" skipComponents="true" selectionOnly="#{backingBean.selectedEntities.size()>0}" />
                 </p:commandButton>
                 <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
+                <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
-                    <c:if test="#{backingBean.getBaseCrudApi() != null}">
-                    	<p:fileDownload value = "#{backingBean.exportCSV()}" />
-                	</c:if>
-                	<c:if test="#{backingBean.getBaseCrudApi() == null}">
-                		<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
-                	</c:if>
+                	<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
                 </p:commandButton>
-                <p:commandButton id="#{formId}buttonJsonExport" value="Export JSON" ajax="false" rendered="#{exportToJson and (backingBean.getBaseCrudApi() != null)}">
-                    <p:fileDownload value = "#{backingBean.exportJSON()}" />
-                </p:commandButton>
-                <c:if test="#{exportToXml}">
-
-					<p:commandButton id="#{formId}exportToXml"
-						value="#{messages['export.exportToXml']}"
-						update=":#{p:component('exportParametersDialog')}"
+				<c:if test="#{exportToXml}">
+					<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
 						oncomplete="PF('exportParametersDialog').show()">
-						<c:choose>
-
-							<c:when test="#{backingBean.getBaseCrudApi() == null}">
-								<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
-								<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
-								<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
-							</c:when>
-							<c:otherwise>
-								<p:fileDownload value="#{backingBean.exportXML()}" />
-							</c:otherwise>
-						</c:choose>
-
+						<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
+						<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
+						<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
 					</p:commandButton>
-
 				</c:if>
 
-            </h:panelGroup>
+			</h:panelGroup>
 
             <p:dialog header="#{messages['commons.importCsv']}" id="#{formId}_strategyDlg" widgetVar="csvDialog" modal="true" closeOnEscape="true" >
                 <p:messages autoUpdate="true" />
@@ -223,6 +203,20 @@
                         fileLimit="5" process=":#{formId}_strategy" />
                 </div>
             </p:dialog>
+            
+            <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
+			     <hftl:decorateFormField fieldId="#{formId}_override" componentWidth = "100" >
+                    <p:selectBooleanCheckbox immediate="true" id="#{formId}_override"
+                    	value="#{backingBean.override}" itemLabel="Override existing data">
+                        <p:ajax event="valueChange" update=":#{formId}_override"/>
+                    </p:selectBooleanCheckbox>
+                </hftl:decorateFormField>
+                <div class="clearLeft">
+                	<p:fileUpload accept=".xml,.csv,.json" mode="advanced" dragDropSupport="true" allowTypes="/(\.|\/)(xml|json|csv)$/"
+                	fileUploadListener="#{backingBean.importData}" update=":#{formId} :datatable_#{resultsId}"/>
+                </div>
+            </p:dialog>
+            
             <p:panel styleClass="buttons-set-data-table">
                 <ui:insert name="add-on-buttons" />
             </p:panel>

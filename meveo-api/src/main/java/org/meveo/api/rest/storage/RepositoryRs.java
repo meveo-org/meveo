@@ -8,22 +8,21 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.RepositoriesResponseDto;
 import org.meveo.api.dto.response.storage.RepositoryResponseDto;
-import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.api.storage.RepositoryDto;
 
 /**
  * @author Edward P. Legaspi
  */
 @Path("/storages/repositories")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-public interface RepositoryRs extends IBaseRs {
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv" })
+public interface RepositoryRs extends IBaseBaseCrudRs {
 
 	/**
 	 * Create a new repository

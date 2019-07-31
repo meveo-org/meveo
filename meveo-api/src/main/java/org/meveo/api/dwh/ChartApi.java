@@ -23,6 +23,7 @@ import org.meveo.model.dwh.Chart;
 import org.meveo.model.dwh.LineChart;
 import org.meveo.model.dwh.MeasurableQuantity;
 import org.meveo.model.dwh.PieChart;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveocrm.services.dwh.ChartService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 
@@ -32,7 +33,11 @@ import org.meveocrm.services.dwh.MeasurableQuantityService;
 @Stateless
 public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
 
-    @Inject
+    public ChartApi() {
+		super(Chart.class, ChartDto.class);
+	}
+
+	@Inject
     private ChartService<PieChart> pieChartService;
 
     @Inject
@@ -305,4 +310,28 @@ public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
         chartToUpdate.setExtender(dto.getExtender());
         chartToUpdate.setVisible(dto.getVisible());
     }
+
+	@Override
+	public ChartDto toDto(Chart entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Chart fromDto(ChartDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<Chart> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(ChartDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

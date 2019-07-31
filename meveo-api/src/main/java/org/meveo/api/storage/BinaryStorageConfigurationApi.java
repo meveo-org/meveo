@@ -8,34 +8,39 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseApi;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.storage.BinaryStorageConfiguration;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 
 /**
  * @author Edward P. Legaspi
  */
 @Stateless
-public class BinaryStorageConfigurationApi extends BaseApi {
+public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConfiguration, BinaryStorageConfigurationDto> {
+
+	public BinaryStorageConfigurationApi() {
+		super(BinaryStorageConfiguration.class, BinaryStorageConfigurationDto.class);
+	}
 
 	@Inject
 	private BinaryStorageConfigurationService binaryStorageConfigurationService;
 
-	public void create(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
+	public BinaryStorageConfiguration create(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
 		validate(postData);
 
 		if (binaryStorageConfigurationService.findByCode(postData.getCode()) != null) {
 			throw new EntityAlreadyExistsException(BinaryStorageConfiguration.class, postData.getCode());
 		}
 
-		BinaryStorageConfiguration entity = new BinaryStorageConfiguration();
-		entity.setCode(postData.getCode());
-		entity.setRootPath(postData.getRootPath());
+		BinaryStorageConfiguration entity = fromDto(postData);
 
 		binaryStorageConfigurationService.create(entity);
+		
+		return entity;
 	}
 
 	public void update(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
@@ -51,13 +56,14 @@ public class BinaryStorageConfigurationApi extends BaseApi {
 		binaryStorageConfigurationService.update(entity);
 	}
 
-	public void createOrUpdate(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
+	public BinaryStorageConfiguration createOrUpdate(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
 		BinaryStorageConfiguration entity = binaryStorageConfigurationService.findByCode(postData.getCode());
 		if (entity == null) {
-			create(postData);
+			return create(postData);
 
 		} else {
 			update(postData);
+			return entity;
 		}
 
 	}
@@ -88,6 +94,33 @@ public class BinaryStorageConfigurationApi extends BaseApi {
 		}
 
 		binaryStorageConfigurationService.remove(entity);
+	}
+
+	@Override
+	public BinaryStorageConfigurationDto toDto(BinaryStorageConfiguration entity) {
+		return new BinaryStorageConfigurationDto(entity);
+	}
+
+	@Override
+	public BinaryStorageConfiguration fromDto(BinaryStorageConfigurationDto dto) throws EntityDoesNotExistsException {
+		BinaryStorageConfiguration entity = new BinaryStorageConfiguration();
+		entity.setCode(dto.getCode());
+		entity.setRootPath(dto.getRootPath());
+		return entity;
+	}
+
+	@Override
+	public IPersistenceService<BinaryStorageConfiguration> getPersistenceService() {
+		return binaryStorageConfigurationService;
+	}
+
+	@Override
+	public boolean exists(BinaryStorageConfigurationDto dto) {
+		try {
+			return find(dto.getCode()) != null;
+		} catch (EntityDoesNotExistsException e) {
+			return false;
+		}
 	}
 
 }

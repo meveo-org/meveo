@@ -14,6 +14,7 @@ import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.CounterTemplate;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 
@@ -23,7 +24,11 @@ import org.meveo.service.catalog.impl.CounterTemplateService;
 @Stateless
 public class CounterTemplateApi extends BaseCrudApi<CounterTemplate, CounterTemplateDto> {
 
-    @Inject
+    public CounterTemplateApi() {
+		super(CounterTemplate.class, CounterTemplateDto.class);
+	}
+
+	@Inject
     private CounterTemplateService counterTemplateService;
 
     @Inject
@@ -149,4 +154,28 @@ public class CounterTemplateApi extends BaseCrudApi<CounterTemplate, CounterTemp
             return update(postData);
         }
     }
+
+	@Override
+	public CounterTemplateDto toDto(CounterTemplate entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CounterTemplate fromDto(CounterTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<CounterTemplate> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(CounterTemplateDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

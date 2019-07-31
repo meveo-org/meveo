@@ -16,6 +16,7 @@ import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.HttpProtocol;
 import org.meveo.model.notification.WebHook;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.WebHookService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -35,6 +36,10 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
+    
+    public WebHookApi() {
+    	super(WebHook.class, WebHookDto.class);
+    }
 
     public WebHook create(WebHookDto postData) throws MeveoApiException, BusinessException {
 
@@ -245,4 +250,28 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
             return update(postData);
         }
     }
+
+	@Override
+	public WebHookDto toDto(WebHook entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public WebHook fromDto(WebHookDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<WebHook> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(WebHookDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
