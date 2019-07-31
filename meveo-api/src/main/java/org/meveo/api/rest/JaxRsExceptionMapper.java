@@ -1,7 +1,6 @@
 package org.meveo.api.rest;
 
 import javax.ejb.Singleton;
-import javax.inject.Inject;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
@@ -17,6 +16,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -26,8 +26,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 @Singleton
 public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(JaxRsExceptionMapper.class);
 
     @Override
     public Response toResponse(Exception e) {
