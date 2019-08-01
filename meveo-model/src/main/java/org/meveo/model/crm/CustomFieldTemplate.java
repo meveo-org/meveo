@@ -1120,4 +1120,8 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
 		this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
 	}
+	
+	public Long getMaxFileSizeAllowedInBytes() {
+		return maxFileSizeAllowedInKb != null ? maxFileSizeAllowedInKb * 1000 : 0L;
+	}
 }

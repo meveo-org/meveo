@@ -34,11 +34,11 @@ public class BinaryStoragePathParam {
 
 	public boolean isValidFileExtension() {
 		final String ext = FilenameUtils.getExtension(getFilename());
-		return (ext.equals("*") || getFileExtensions().contains(ext));
+		return (getFileExtensions().contains("*") || getFileExtensions().contains(ext));
 	}
 
 	public boolean isValidContentTypes() {
-		return (getContentType().equals("*") || getContentTypes().contains(getContentType()));
+		return (getContentTypes().contains("*") || getContentTypes().contains(getContentType()));
 	}
 
 	public boolean isValidFilesize() {
@@ -178,5 +178,12 @@ public class BinaryStoragePathParam {
 
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
+	}
+
+	@Override
+	public String toString() {
+		return "BinaryStoragePathParam [showOnExplorer=" + showOnExplorer + ", rootPath=" + rootPath + ", cetCode=" + cetCode + ", uuid=" + uuid + ", cftCode=" + cftCode
+				+ ", filename=" + filename + ", contentType=" + contentType + ", is=" + is + ", file=" + file + ", filePath=" + filePath + ", fileSizeInBytes=" + fileSizeInBytes
+				+ ", fileExtensions=" + fileExtensions + ", contentTypes=" + contentTypes + ", maxFileSizeAllowedInKb=" + maxFileSizeAllowedInKb + "]";
 	}
 }

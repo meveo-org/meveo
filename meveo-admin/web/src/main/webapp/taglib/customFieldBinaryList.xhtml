@@ -30,7 +30,6 @@
 
 <ui:composition>
 
-
 	<o:importFunctions type="org.meveo.model.crm.custom.CustomFieldValue"
 		var="cfv" />
 	<o:importFunctions
@@ -52,16 +51,38 @@
 
 		<p:dataTable id="#{fieldPrefix}_customFields_binaries" lazy="false"
 			editable="#{edit and !disabled}" editMode="cell" reflow="false"
-			resizableColumns="true" rowIndexVar="rowIndex">
+			resizableColumns="true" rowIndexVar="rowIndex"
+			value="#{field.mapValuesForGUI}" var="path">
 
-			<p:column headerText="#{messages['commons.key']}">
+			<p:column headerText="#{messages['customFieldTemplate.filePath']}">
+				<h:outputText title="#{path['value']}"
+					value="#{of:abbreviate(path['value'], 25)}"></h:outputText>
 			</p:column>
 
+			<p:column headerText="#{messages['commons.actions']}"
+				rendered="#{edit and !disabled}" width="15%">
+				<p:commandButton ajax="false"
+					onclick="PrimeFaces.monitorDownload(start, stop);"
+					icon="fa fa-arrow-down" immediate="true">
+					<p:fileDownload
+						value="#{customFieldDataEntryBean.downloadFile(path['value'])}">
+					</p:fileDownload>
+				</p:commandButton>
+				<p:commandButton icon="ui-icon-minus" partialSubmit="true"
+					process="@this" update="#{fieldPrefix}_customFields_binaries"
+					action="#{field.listValue.remove(path['value'])}">
+					<p:confirm header="#{messages['commons.confirmationHeader']}"
+						message="#{messages['commons.confirmDelete']}"
+						icon="ui-icon-alert" />
+				</p:commandButton>
+			</p:column>
 
 			<c:if test="#{!inherited}">
 				<f:facet name="footer" layout="block">
-					<p:commandButton type="button" onclick="PF('#{dlgBinary}').show();"
-						value="#{messages['action.uploadBinary']}"></p:commandButton>
+					<p:commandButton immediate="true"
+						update=":#{p:component(of:concat(fieldPrefix, 'binaryFileUploadForm'))}"
+						onclick="PF('#{dlgBinary}').show();"
+						value="#{messages['action.uploadBinary']}" />
 				</f:facet>
 			</c:if>
 		</p:dataTable>
@@ -73,7 +94,7 @@
 			enctype="multipart/form-data" style="width: 100%">
 			<p:messages id="#{fieldPrefix}binaryFileUploadMessages"></p:messages>
 
-			<p:panelGrid columns="1" layout="grid" style="width: 300px">
+			<p:panelGrid columns="1" layout="grid" style="width: 500px">
 				<hftl:decorateFormField for="#{fieldPrefix}repository"
 					label="#{messages['binary.repository']}">
 					<p:selectOneMenu id="#{fieldPrefix}repository" required="true"
@@ -82,6 +103,7 @@
 						<f:selectItem itemValue="#{null}" itemLabel="" />
 						<f:selectItems value="#{repositoryListBean.listActive()}" var="e"
 							itemValue="#{e}" itemLabel="#{e.code}" />
+						<p:ajax update="@form" process="@this"></p:ajax>
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
 				<hftl:decorateFormField for="#{fieldPrefix}showOnExplorer"
@@ -89,21 +111,27 @@
 					<p:selectBooleanButton id="#{fieldPrefix}showOnExplorer"
 						value="#{customFieldDataEntryBean.showOnExplorer}"
 						onLabel="#{messages['commons.yes']}"
-						offLabel="#{messages['commons.no']}" style="width:60px" />
+						offLabel="#{messages['commons.no']}" style="width:60px">
+						<p:ajax update="@form" process="@this"></p:ajax>
+					</p:selectBooleanButton>
 				</hftl:decorateFormField>
-				<p:fileUpload id="#{fieldPrefix}fileUpload"
-					value="#{customFieldDataEntryBean.uploadedBinaryFile}"
-					mode="simple" skinSimple="true"
+				<p:fileUpload id="#{fieldPrefix}fileUpload" immediate="true"
+					sequential="true"
+					process="@this, #{fieldPrefix}repository, #{fieldPrefix}showOnExplorer"
 					required="#{cft.valueRequired and !hasInheritedValue}"
-					rendered="#{edit and !disabled}" label="#{cft.description}" />
+					rendered="#{edit and !disabled}" label="#{cft.description}"
+					fileUploadListener="#{customFieldDataEntryBean.handleFileUpload}"
+					mode="advanced" dragDropSupport="false" multiple="true"
+					oncomplete="PF('#{dlgBinary}').hide();"
+					sizeLimit="#{cft.getMaxFileSizeAllowedInBytes()}"
+					update="#{fieldPrefix}binaryFileUploadForm :#{p:component(of:concat(fieldPrefix, '_customFields_binaries'))}">
+					<f:attribute name="uuid" value="#{entity.uuid}" />
+					<f:attribute name="cetCode" value="#{entity.cetCode}" />
+					<f:attribute name="cft" value="#{cft}" />
+					<f:attribute name="cfv" value="#{field}" />
+					<f:attribute name="isSingle" value="false" />
+				</p:fileUpload>
 			</p:panelGrid>
-			<h:panelGroup layout="block" styleClass="form-panel-actions">
-				<p:commandButton id="#{fieldPrefix}uploadButton"
-					value="#{messages['action.save']}" ajax="false"
-					process="#{fieldPrefix}binaryFileUploadForm @this"
-					update="#{fieldPrefix}binaryFileUploadForm #{fieldPrefix}_customFields_binaries"
-					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
-			</h:panelGroup>
 		</h:form>
 	</p:dialog>
 </ui:composition>

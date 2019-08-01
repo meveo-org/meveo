@@ -68,6 +68,7 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.BinaryStoragePathParam;
 import org.meveo.service.storage.FileSystemService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -138,6 +139,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	@Inject
 	private FileSystemService fileSystemService;
+	
+	@Inject
+	private RepositoryService repositoryService;
 
 	private ICustomFieldEntity entity;
 
@@ -152,9 +156,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private List<BusinessEntity> availableEntities = new ArrayList<>();
 
 	private transient UploadedFile uploadedBinaryFile;
-
 	private transient Repository repository;
-
 	private boolean showOnExplorer = true;
 
 	/**
@@ -1114,9 +1116,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 					// instantiates automatically)
 					// Also don't save if CFT does not apply in a given entity lifecycle or because
 					// cft.applicableOnEL evaluates to false
-					if ((cfValue.isValueEmptyForGui() && (cft.getDefaultValue() == null || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) && !cft.isVersionable())
-							|| ((isNewEntity && cft.isHideOnNew())
-									|| (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity)))) {
+					if ((cfValue.isValueEmptyForGui() //
+							&& (cft.getDefaultValue() == null || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) && !cft.isVersionable()) //
+						|| ((isNewEntity && cft.isHideOnNew()) //
+							|| (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity))) //
+					) {
 						log.trace("Will ommit from saving cfi {}", cfValue);
 
 						// Existing value update
@@ -1838,9 +1842,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 	public void setUploadedBinaryFile(UploadedFile uploadedBinaryFile) {
 		this.uploadedBinaryFile = uploadedBinaryFile;
 	}
-
+	
 	@ActionMethod
 	public void uploadBinaryFile(String uuid, String cetCode, CustomFieldTemplate cft, CustomFieldValue fieldValue) throws BusinessException, IOException {
+		
 		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
 
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
@@ -1864,13 +1869,73 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		fieldValue.setStringValue(rootPath);
 
+		initAfterUpload();
+	}
+
+	@SuppressWarnings("unchecked")
+	public void handleFileUpload(FileUploadEvent event) throws BusinessException, IOException {
+
+		log.debug("handleFileUpload {}", event.getFile().getFileName());
+
+		uploadedBinaryFile = event.getFile();
+
+		if (repository != null) {
+			repository = repositoryService.retrieveIfNotManaged(repository);
+		}
+
+		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
+
+		String uuid = (String) event.getComponent().getAttributes().get("uuid");
+		String cetCode = (String) event.getComponent().getAttributes().get("cetCode");
+		CustomFieldTemplate cft = (CustomFieldTemplate) event.getComponent().getAttributes().get("cft");
+		CustomFieldValue cfv = (CustomFieldValue) event.getComponent().getAttributes().get("cfv");
+		String strIsSingle = (String) event.getComponent().getAttributes().get("isSingle");
+		boolean isSingle = Boolean.parseBoolean(strIsSingle);
+
+		BinaryStoragePathParam params = new BinaryStoragePathParam();
+		params.setShowOnExplorer(showOnExplorer);
+		params.setRootPath(rootPath);
+		params.setCetCode(cetCode);
+		params.setUuid(uuid);
+		params.setCftCode(cft.getCode());
+		params.setFilePath(cft.getFilePath());
+		params.setContentType(uploadedBinaryFile.getContentType());
+		params.setFilename(uploadedBinaryFile.getFileName());
+		params.setContents(uploadedBinaryFile.getContents());
+		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
+		params.setFileExtensions(cft.getFileExtensions());
+		params.setContentTypes(cft.getContentTypes());
+		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
+
+		rootPath = fileSystemService.persists(params);
+
+		log.debug("binary path={}", rootPath);
+
+		if (isSingle) {
+			cfv.setStringValue(rootPath);
+
+			initAfterUpload();
+
+		} else {
+			List<Map<String, Object>> mapValues = cfv.getMapValuesForGUI();
+			Map<String, Object> mapValue = new HashMap<>();
+			if (mapValues != null && !mapValues.isEmpty()) {
+				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
+				mapValues.add(mapValue);
+
+			} else {
+				mapValues = new ArrayList<>();
+				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
+				mapValues.add(mapValue);
+			}
+			cfv.setMapValuesForGUI(mapValues);
+		}
+	}
+	
+	private void initAfterUpload() {
 		uploadedBinaryFile = null;
 		repository = null;
 		showOnExplorer = true;
-	}
-
-	public void handleFileUpload(FileUploadEvent event) {
-		log.debug("handleFileUpload");
 	}
 
 	public Repository getRepository() {
@@ -1898,9 +1963,5 @@ public class CustomFieldDataEntryBean implements Serializable {
 		String mimeType = Files.probeContentType(file.toPath());
 		
 		return new DefaultStreamedContent(stream, mimeType, filename);
-	}
-	
-	public void ping() {
-		log.debug("ping");
 	}
 }
