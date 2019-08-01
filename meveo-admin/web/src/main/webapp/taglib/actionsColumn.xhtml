@@ -55,6 +55,10 @@
 		<c:set var="editView" value="#{backingBean.getEditViewName()}" />
 	</c:if>
 
+	<c:if test="${empty renderAddModule}">
+		<c:set var="renderAddModule" value="false" />
+	</c:if>
+
     <c:if test="${empty width}">
         <c:set var="width" value="#{(renderEnableLink or renderDuplicateLink)?100:60}" />
     </c:if>
@@ -138,6 +142,12 @@
 			<f:setPropertyActionListener target="#{backingBean.entity}" value="#{entity}" />
 			<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
 		</p:commandButton>
+
+		<p:commandButton id="#{resultsId}addModule" icon="ui-icon-newwin"
+						 rendered="#{renderAddModule and backingBean.canUserUpdateEntity()}" action="#{backingBean.addToModule()}" update="@form">
+			<f:setPropertyActionListener target="#{backingBean.entity}" value="#{entity}" />
+		</p:commandButton>
+		<p:tooltip for="#{resultsId}addModule" rendered="#{renderAddModule}" value="#{messages['commons.addToModule']}" showEffect="slide" hideEffect="slide" />
 		<ui:insert />
 	</p:column>
 </ui:composition>

@@ -96,6 +96,10 @@
         <c:set var="importStrategy" value="false" />
     </c:if>
 
+    <c:if test="${empty addToModule}">
+        <c:set var="addToModule" value="false" />
+    </c:if>
+
     <c:if test="${empty resultsId}">
         <c:set var="resultsId" value="results" />
     </c:if>
@@ -178,6 +182,7 @@
                         <f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
                     </p:commandButton>
                 </c:if>
+                <p:commandButton value="#{messages['commons.addToModule']}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" type="button" oncomplete="PF('dlg_addModuleItem').show()"  />
 
             </h:panelGroup>
 

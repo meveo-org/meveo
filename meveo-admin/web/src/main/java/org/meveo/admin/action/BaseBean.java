@@ -157,6 +157,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private String backViewSave;
 
+    private String addModule;
+
     /**
      * Object identifier to load
      */
@@ -434,6 +436,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             return getListViewName();
         }
         return backViewSave;
+    }
+
+    public String addToModule() {
+        return addModule;
     }
 
     /**
@@ -773,7 +779,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                     // Omit empty or null values
                     Map<String, Object> cleanFilters = new HashMap<String, Object>();
 
-                    for (Map.Entry<String, Object> filterEntry : filters.entrySet()) {
+                    for (Entry<String, Object> filterEntry : filters.entrySet()) {
                         if (filterEntry.getValue() == null) {
                             continue;
                         }
