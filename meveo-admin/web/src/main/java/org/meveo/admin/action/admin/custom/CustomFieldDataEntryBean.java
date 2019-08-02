@@ -1878,6 +1878,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 		log.debug("handleFileUpload {}", event.getFile().getFileName());
 
 		uploadedBinaryFile = event.getFile();
+		
+		log.info("" + repository);
 
 		if (repository != null) {
 			repository = repositoryService.retrieveIfNotManaged(repository);

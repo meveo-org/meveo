@@ -61,11 +61,11 @@ public class FileSystemService {
 
 	public String persists(BinaryStoragePathParam params) throws BusinessException, IOException {
 		// checks for extension and type
-		if (params.getFileExtensions() != null && !params.isValidFileExtension()) {
+		if (params.getFileExtensions() != null && !params.getFileExtensions().isEmpty() && !params.isValidFileExtension()) {
 			throw new BusinessException("Invalid file extension");
 		}
 
-		if (params.getContentTypes() != null && !params.isValidContentTypes()) {
+		if (params.getContentTypes() != null && !params.getContentTypes().isEmpty() && !params.isValidContentTypes()) {
 			throw new BusinessException("Invalid content type");
 		}
 

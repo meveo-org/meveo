@@ -76,11 +76,13 @@
 						icon="ui-icon-alert" />
 				</p:commandButton>
 			</p:column>
+			
+<!-- 									update=":#{p:component(of:concat(fieldPrefix, 'binaryFileUploadForm'))}" -->
+			
 
 			<c:if test="#{!inherited}">
 				<f:facet name="footer" layout="block">
 					<p:commandButton immediate="true"
-						update=":#{p:component(of:concat(fieldPrefix, 'binaryFileUploadForm'))}"
 						onclick="PF('#{dlgBinary}').show();"
 						value="#{messages['action.uploadBinary']}" />
 				</f:facet>
@@ -88,51 +90,63 @@
 		</p:dataTable>
 	</hftl:decorateFormField>
 
-	<p:dialog id="#{fieldPrefix}#{dlgBinary}" header=""
-		widgetVar="#{dlgBinary}" minHeight="300" minWidth="500">
-		<h:form id="#{fieldPrefix}binaryFileUploadForm"
-			enctype="multipart/form-data" style="width: 100%">
+	<p:dialog id="#{fieldPrefix}#{dlgBinary}" header="" widgetVar="#{dlgBinary}" minHeight="300" minWidth="500">
+		
 			<p:messages id="#{fieldPrefix}binaryFileUploadMessages"></p:messages>
 
 			<p:panelGrid columns="1" layout="grid" style="width: 500px">
-				<hftl:decorateFormField for="#{fieldPrefix}repository"
+			
+				<hftl:decorateFormField for="#{fieldPrefix}repository" 
+					fieldId="#{fieldPrefix}repository"
 					label="#{messages['binary.repository']}">
-					<p:selectOneMenu id="#{fieldPrefix}repository" required="true"
-						value="#{customFieldDataEntryBean.repository}">
-						<hftl:objectConverter />
+					
+					<p:selectOneMenu id="#{fieldPrefix}repository" 
+						required="true" 
+						value="#{customFieldDataEntryBean.repository}" 
+						immediate="true">
+						
+						<hftl:objectConverter/>
 						<f:selectItem itemValue="#{null}" itemLabel="" />
-						<f:selectItems value="#{repositoryListBean.listActive()}" var="e"
-							itemValue="#{e}" itemLabel="#{e.code}" />
-						<p:ajax update="@form" process="@this"></p:ajax>
+						<f:selectItems value="#{repositoryListBean.listActive()}" var="e" itemValue="#{e}" itemLabel="#{e.code}" />
+						<p:ajax event="valueChange" update="#{fieldPrefix}repository"/>
+						
 					</p:selectOneMenu>
+					
 				</hftl:decorateFormField>
-				<hftl:decorateFormField for="#{fieldPrefix}showOnExplorer"
-					label="#{messages['binary.showOnExplorer']}">
-					<p:selectBooleanButton id="#{fieldPrefix}showOnExplorer"
+				
+				<hftl:decorateFormField for="#{fieldPrefix}showOnExplorer" 
+					label="#{messages['binary.showOnExplorer']}" 
+					fieldId="#{fieldPrefix}showOnExplorer">
+					
+					<p:selectBooleanButton id="#{fieldPrefix}showOnExplorer" 
 						value="#{customFieldDataEntryBean.showOnExplorer}"
-						onLabel="#{messages['commons.yes']}"
-						offLabel="#{messages['commons.no']}" style="width:60px">
-						<p:ajax update="@form" process="@this"></p:ajax>
+						immediate="true" onLabel="#{messages['commons.yes']}" 
+						offLabel="#{messages['commons.no']}" 
+						style="width:60px">
+						
+						<p:ajax event="valueChange" update="#{fieldPrefix}showOnExplorer"/>
+						
 					</p:selectBooleanButton>
+					
 				</hftl:decorateFormField>
-				<p:fileUpload id="#{fieldPrefix}fileUpload" immediate="true"
-					sequential="true"
-					process="@this, #{fieldPrefix}repository, #{fieldPrefix}showOnExplorer"
+				
+				<p:fileUpload id="#{fieldPrefix}fileUpload"
 					required="#{cft.valueRequired and !hasInheritedValue}"
 					rendered="#{edit and !disabled}" label="#{cft.description}"
 					fileUploadListener="#{customFieldDataEntryBean.handleFileUpload}"
-					mode="advanced" dragDropSupport="false" multiple="true"
+					mode="advanced"
+					multiple="true"
 					oncomplete="PF('#{dlgBinary}').hide();"
-					sizeLimit="#{cft.getMaxFileSizeAllowedInBytes()}"
-					update="#{fieldPrefix}binaryFileUploadForm :#{p:component(of:concat(fieldPrefix, '_customFields_binaries'))}">
+					update=":#{p:component(of:concat(fieldPrefix, '_customFields_binaries'))}" >
+					
 					<f:attribute name="uuid" value="#{entity.uuid}" />
 					<f:attribute name="cetCode" value="#{entity.cetCode}" />
 					<f:attribute name="cft" value="#{cft}" />
 					<f:attribute name="cfv" value="#{field}" />
 					<f:attribute name="isSingle" value="false" />
+					
 				</p:fileUpload>
 			</p:panelGrid>
-		</h:form>
 	</p:dialog>
 </ui:composition>
 
