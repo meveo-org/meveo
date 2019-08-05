@@ -551,12 +551,8 @@
                 </property>
             </activation>
             <properties>
-                <!-- Properties for liquibase plugin. Can be passed from a command line: mvn -Ddb.schema=ten2 -->
                 <db.driver>org.postgresql.Driver </db.driver>
-                <db.url>jdbc:postgresql://51.75.197.172/meveo</db.url>
                 <db.schema>public</db.schema>
-                <db.username>postgres</db.username>
-                <db.password>5SNjbYYSqm9ow6WV</db.password>
             </properties>
             <dependencies>
                 <!-- Dependency for liquibase plugin -->
