@@ -275,7 +275,7 @@ public class EndpointServlet extends HttpServlet {
             //TODO: Rethink persistence
             AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(resultsToSave);
             scheduledPersistenceService.persist(endpointExecution.getPersistenceContextId(), atomicPersistencePlan);
-        } catch (CyclicDependencyException | BusinessException | ELException e) {
+        } catch (CyclicDependencyException | BusinessException | ELException | IOException e) {
             throw new RuntimeException(e);
         }
     }

@@ -4,15 +4,22 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.storage.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  */
 public class BinaryStoragePathParam {
+
+	private static Logger logger = LoggerFactory.getLogger(BinaryStoragePathParam.class);
 
 	private boolean showOnExplorer;
 	private String rootPath;
@@ -31,6 +38,10 @@ public class BinaryStoragePathParam {
 	private List<String> fileExtensions;
 	private List<String> contentTypes;
 	private Long maxFileSizeAllowedInKb;
+
+	public BinaryStoragePathParam() {
+
+	}
 
 	public boolean isValidFileExtension() {
 		final String ext = FilenameUtils.getExtension(getFilename());
@@ -154,6 +165,29 @@ public class BinaryStoragePathParam {
 
 	public void setFile(File file) {
 		this.file = file;
+
+		if(this.contentType == null) {
+			try {
+				String mimeType = Files.probeContentType(file.toPath());
+				this.setContentType(mimeType);
+			} catch (IOException e) {
+				logger.warn("Cannot determine content type", e);
+			}
+		}
+	}
+
+	public void setCft(CustomFieldTemplate customFieldTemplate){
+		this.cftCode = customFieldTemplate.getCode();
+		this.maxFileSizeAllowedInKb = customFieldTemplate.getMaxFileSizeAllowedInKb();
+		this.filePath = customFieldTemplate.getFilePath();
+		this.contentTypes = customFieldTemplate.getContentTypes();
+		this.fileExtensions = customFieldTemplate.getFileExtensions();
+	}
+
+	public void setRepository(Repository repository){
+		if(repository.getBinaryStorageConfiguration() != null) {
+			this.rootPath = repository.getBinaryStorageConfiguration().getRootPath();
+		}
 	}
 
 	public Long getMaxFileSizeAllowedInKb() {

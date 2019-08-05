@@ -20,6 +20,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
 import org.meveo.persistence.scheduler.EntityRef;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,9 +28,9 @@ import java.util.stream.Collectors;
 
 public interface CustomPersistenceService {
 
-    void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException;
+    void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException;
 
-    PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException;
+    PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException, IOException;
 
     void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException;
 

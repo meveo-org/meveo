@@ -118,6 +118,8 @@ public class Neo4jService implements CustomPersistenceService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     private static final String MEVEO_UUID = "meveo_uuid";
+    private static final String FILE_LABEL = "Binary";
+    private static final String HAS_BINARY = "HAS_BINARY";
 
     @Inject
     @MeveoJpa
@@ -1446,5 +1448,39 @@ public class Neo4jService implements CustomPersistenceService {
             }
         }
         return persistentNodeUuid;
+    }
+
+    public void updateBinary(String uuid, String neo4jConfigurationCode, CustomFieldTemplate customFieldTemplate, String binaryPath){
+        final List<Relationship> relationships = neo4jDao.findRelationships(neo4jConfigurationCode, uuid, customFieldTemplate.getRelationshipName());
+
+        // First, delete existing relationships
+        for (Relationship relationship : relationships) {
+            neo4jDao.removeRelation(
+                    neo4jConfigurationCode,
+                    customFieldTemplate.getRelationshipName(),
+                    relationship.get("meveo_uuid").asString()
+            );
+        }
+
+        addBinaries(uuid, neo4jConfigurationCode, customFieldTemplate, Collections.singletonList(binaryPath));
+    }
+
+    public void addBinaries(String uuid, String neo4jConfigurationCode, CustomFieldTemplate customFieldTemplate, Collection<String> binariesPath) {
+        for(String binaryPath : binariesPath) {
+            final String fileUuid = neo4jDao.createNode(
+                    neo4jConfigurationCode,
+                    FILE_LABEL,
+                    Collections.singletonMap("value", binaryPath),
+                    null
+            );
+
+            neo4jDao.createRelationBetweenNodes(
+                    neo4jConfigurationCode,
+                    uuid,
+                    customFieldTemplate.getRelationshipName(),
+                    fileUuid,
+                    Collections.emptyMap()
+            );
+        }
     }
 }

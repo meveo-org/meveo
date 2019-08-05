@@ -21,6 +21,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.persistence.CustomPersistenceService;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public void persist(String configurationCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException {
+    public void persist(String configurationCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException {
 
         /* Iterate over persistence schedule and persist the node */
 
