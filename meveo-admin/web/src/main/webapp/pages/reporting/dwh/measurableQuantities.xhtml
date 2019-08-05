@@ -32,7 +32,7 @@
 
 			<!-- ===================================== SEARCH USERS RESULTS ================================= -->
 
-			<hftl:dataList backingBean="#{measurableQuantityListBean}" exportButton="false" exportToCsv="true"  fileName="MeasurableQuantity" importCsv="true" importStrategy="true" sortBy="code">
+			<hftl:dataList backingBean="#{measurableQuantityListBean}" exportButton="false" exportToCsv="true"  fileName="MeasurableQuantity" importCsv="true" importStrategy="true" addToModule="true" sortBy="code">
 			    <hftl:column label="#{messages['entity.measurablequantity.code']}"
 					field="code" />
 				<hftl:column
@@ -62,7 +62,7 @@
 				<hftl:column
 					label="#{messages['entity.measurablequantity.editable']}"
 					field="editable" isMessage="true" />
-				<hftl:actionsColumn editView="/pages/reporting/dwh/measurableQuantityDetail.xhtml" permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}"  />
+				<hftl:actionsColumn editView="/pages/reporting/dwh/measurableQuantityDetail.xhtml" permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderAddModule="true"/>
 			</hftl:dataList>
 	</ui:define>
 </ui:composition>

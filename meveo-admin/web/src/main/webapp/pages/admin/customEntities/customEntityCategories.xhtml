@@ -23,11 +23,11 @@
 
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['customEntityCategory.title']}" backingBean="#{customEntityCategoryListBean}" sortBy="code">
+        <hftl:dataList label="#{messages['customEntityCategory.title']}" backingBean="#{customEntityCategoryListBean}" addToModule="true" sortBy="code">
             <hftl:column label="#{messages['customEntityCategory.code']}" field="code" />
             <hftl:column label="#{messages['customEntityCategory.description']}" field="description" />
 
-            <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
+            <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderAddModule="true" />
         </hftl:dataList>
 
     </ui:define>

@@ -19,7 +19,7 @@
             <hftl:searchField label="#{messages['businessEntity.description']}" field="description" />
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['counterTemplate.title']}" backingBean="#{counterTemplateListBean}">
+        <hftl:dataList label="#{messages['counterTemplate.title']}" backingBean="#{counterTemplateListBean}"  addToModule="true">
             <hftl:column label="#{messages['businessEntity.code']}" field="code" />
             <hftl:column label="#{messages['businessEntity.description']}" field="description" />
             <hftl:column label="#{messages['usageChargeTemplate.unityDescription']}" field="unityDescription" />
@@ -29,7 +29,7 @@
             <hftl:column label="#{messages['billingCycle.calendar']}" field="calendar.code" />
 
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
-            <hftl:actionsColumn renderEnableLink="true" permission="#{currentUser.hasRole('catalogManagement')}" />
+            <hftl:actionsColumn renderEnableLink="true" permission="#{currentUser.hasRole('catalogManagement')}" renderAddModule="true"/>
         </hftl:dataList>
 
     </ui:define>

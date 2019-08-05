@@ -24,11 +24,11 @@
             <hftl:searchField label="#{messages['enableEntity.disabled']}" field="disabled" />
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['customEntityInstance.title']}" noClose="false" backingBean="#{customEntityInstanceListBean}">
+        <hftl:dataList label="#{messages['customEntityInstance.title']}" noClose="false" backingBean="#{customEntityInstanceListBean}" addToModule="true">
             <hftl:column label="#{messages['BusinessEntity.code']}" field="code" />
             <hftl:column label="#{messages['BusinessEntity.description']}" field="description" />
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
-            <hftl:actionsColumn permission="#{currentUser.hasRole(customEntityInstanceListBean.customEntityTemplate.modifyPermission)}" renderEnableLink="true" />
+            <hftl:actionsColumn permission="#{currentUser.hasRole(customEntityInstanceListBean.customEntityTemplate.modifyPermission)}" renderEnableLink="true" renderAddModule="true"/>
         </hftl:dataList>
 
     </ui:define>

@@ -1,7 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" 
+	xmlns:f="http://xmlns.jcp.org/jsf/core"  xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+    xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 
@@ -43,7 +43,7 @@
 		<hftl:formPanel formId="notificationForm"
 			label="#{messages['menu.notification']}"
 			backingBean="#{notificationBean}" columns="2"
-			showEnableDisableButton="true">
+			showEnableDisableButton="true" showAddModuleButton="true">
 			<hftl:formField label="#{messages['entity.code']}" field="code"
 				required="true" />
 			<hftl:formField
@@ -102,7 +102,6 @@
 				<h:outputText value="#{notificationBean.getPartOfModules()}" />
 			</hftl:decorateFormField>
 		</hftl:formPanel>
-
 	</ui:define>
 
 </ui:composition>
