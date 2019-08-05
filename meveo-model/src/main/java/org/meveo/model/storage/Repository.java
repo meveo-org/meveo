@@ -33,11 +33,11 @@ public class Repository extends BusinessEntity {
 	@JoinColumn(name = "parent_id")
 	private Repository parentRepository;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "binary_storage_configuration_id")
 	private BinaryStorageConfiguration binaryStorageConfiguration;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "neo4j_configuration_id")
 	private Neo4JConfiguration neo4jConfiguration;
 

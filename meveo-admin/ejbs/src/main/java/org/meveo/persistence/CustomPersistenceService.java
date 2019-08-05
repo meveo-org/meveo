@@ -16,25 +16,26 @@
 
 package org.meveo.persistence;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.elresolver.ELException;
-import org.meveo.persistence.scheduler.EntityRef;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.elresolver.ELException;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.scheduler.EntityRef;
+
 public interface CustomPersistenceService {
 
-    void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException;
+    void addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException;
 
-    PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException, IOException;
+    PersistenceActionResult createOrUpdate(Repository repository, String entityCode, Map<String, Object> values) throws BusinessException, IOException;
 
-    void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException;
+    void addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException;
 
-    void addCRTByUuids(String configurationCode, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException;
+    void addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException;
 
     default List<String> getTrustedUuids(Set<EntityRef> createdEntityReferences) {
         return createdEntityReferences.stream()

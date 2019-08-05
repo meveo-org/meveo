@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -42,7 +41,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -79,6 +77,9 @@ public class PersistenceRs {
 
     @Inject
     private CustomFieldsCacheContainerProvider cache;
+    
+    @Inject 
+    private RepositoryService repositoryService;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -100,7 +101,8 @@ public class PersistenceRs {
             paginationConfiguration = new PaginationConfiguration();
         }
 
-        return crossStorageService.find(repositoryCode, customEntityTemplate, paginationConfiguration);
+        Repository repository = repositoryService.findByCode(repositoryCode);
+        return crossStorageService.find(repository, customEntityTemplate, paginationConfiguration);
     }
 
     @DELETE
@@ -130,12 +132,10 @@ public class PersistenceRs {
     		String entityName = splittedKey[0];
     		String propertyName = splittedKey[1];
     		
-    		if(formPart.getValue().size() == 0) {
+    		if(formPart.getValue().size() == 1) {
     			InputStream inputStream = formPart.getValue()
     					.get(0)
     					.getBody(InputStream.class, null);
-    			
-    			byte[] bytes = IOUtils.toByteArray(inputStream);
     			
     			File file = Files.createTempFile(entityName, propertyName).toFile();
     			FileUtils.copyInputStreamToFile(inputStream, file);
@@ -143,7 +143,7 @@ public class PersistenceRs {
     			dtos.stream()
     				.filter(dto -> dto.getName().equals(entityName))
     				.findFirst()
-    				.ifPresent(dto -> dto.getProperties().put(propertyName, bytes));
+    				.ifPresent(dto -> dto.getProperties().put(propertyName, file));
     			
     		} else {
     			

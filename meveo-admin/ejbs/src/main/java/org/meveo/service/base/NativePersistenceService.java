@@ -15,6 +15,31 @@
  */
 package org.meveo.service.base;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -32,19 +57,6 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.util.MeveoParamBean;
-
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Query;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.*;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods working directly with native DB tables
@@ -408,13 +420,21 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
+    	
+    	if(value instanceof Collection) {
+    		value = JacksonUtil.toString(value);
+    	}
 
         try {
             if (value == null) {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=" + uuid).executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             } else {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=" + uuid).setParameter(fieldName, value)
-                        .executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+	                .setParameter(fieldName, value)
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             }
 
         } catch (Exception e) {
@@ -855,7 +875,9 @@ public class NativePersistenceService extends BaseService {
     public String findIdByValues(String tableName, Map<String, Object> queryValues) {
         QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
-            queryBuilder.addCriterion(key, "=", value, false);
+        	if(!(value instanceof Collection) && !(value instanceof File)) {
+        		queryBuilder.addCriterion(key, "=", value, false);
+        	}
         });
 
         NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);
