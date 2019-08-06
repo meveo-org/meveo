@@ -22,6 +22,7 @@ import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -40,6 +41,10 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+
+    public CustomEntityInstanceApi(Class<CustomEntityInstance> jpaClass, Class<CustomEntityInstanceDto> dtoClass) {
+        super(jpaClass, dtoClass);
+    }
 
     public void create(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 
@@ -191,6 +196,7 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
         return customEntityInstanceDtos;
     }
 
+    @Override
     public CustomEntityInstance createOrUpdate(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 
         CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(dto.getCetCode(), dto.getCode());
@@ -233,7 +239,7 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
     }
 
 	@Override
-	public CustomEntityInstanceDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+	public CustomEntityInstanceDto find(String code) throws MeveoApiException {
 		CustomEntityInstance cei = customEntityInstanceService.findByCode(code);
 		if(cei == null) {
 			throw new EntityDoesNotExistsException(CustomEntityInstance.class.getSimpleName(), code);
@@ -241,4 +247,27 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		return CustomEntityInstanceDto.toDTO(cei, entityToDtoConverter.getCustomFieldsDTO(cei, true));
 	}
 
+    @Override
+    public CustomEntityInstanceDto toDto(CustomEntityInstance entity) {
+        return CustomEntityInstanceDto.toDTO(entity, entityToDtoConverter.getCustomFieldsDTO(entity, true));
+    }
+
+    @Override
+    public CustomEntityInstance fromDto(CustomEntityInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+        return CustomEntityInstanceDto.fromDTO(dto, null);
+    }
+
+    @Override
+    public IPersistenceService<CustomEntityInstance> getPersistenceService() {
+        return customEntityInstanceService;
+    }
+
+    @Override
+    public boolean exists(CustomEntityInstanceDto dto) {
+        try {
+            return find(dto.getCode()) != null;
+        } catch (Exception e){
+            return false;
+        }
+    }
 }

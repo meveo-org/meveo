@@ -1491,8 +1491,10 @@ public class Neo4jService implements CustomPersistenceService {
             neo4jDao.createRelationBetweenNodes(
                     neo4jConfigurationCode,
                     uuid,
+                    customFieldTemplate.getCode(),
                     customFieldTemplate.getRelationshipName(),
                     fileUuid,
+                    Neo4JConstants.FILE_LABEL,
                     Collections.emptyMap()
             );
         }

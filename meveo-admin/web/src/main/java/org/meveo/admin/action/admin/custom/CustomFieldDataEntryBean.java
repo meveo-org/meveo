@@ -180,9 +180,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.listValues = listValues;
 	}
 
-	/** Logger. */
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-
 	/**
 	 * Explicitly refresh fields and action definitions. Should be used on some
 	 * field value change event when that field is used to determine what fields and

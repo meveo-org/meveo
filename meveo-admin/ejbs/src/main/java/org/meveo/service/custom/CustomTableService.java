@@ -937,11 +937,6 @@ public class CustomTableService extends NativePersistenceService {
         return findById(cet, uuid, null);
     }
 
-    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
-        final Map<String, Object> values = findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
-        return convertData(values, cet);
-    }
-
     public List<Map<String, Object>> list(CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 

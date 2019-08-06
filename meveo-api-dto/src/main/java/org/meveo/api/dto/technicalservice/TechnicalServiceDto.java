@@ -110,7 +110,8 @@ public class TechnicalServiceDto extends BusinessEntityDto {
         this.serviceType = serviceType;
     }
 
-    public boolean isDisabled() {
+    @Override
+    public Boolean isDisabled() {
         return disabled;
     }
 
