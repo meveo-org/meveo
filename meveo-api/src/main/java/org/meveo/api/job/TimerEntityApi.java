@@ -13,6 +13,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.jobs.TimerEntity;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.job.TimerEntityService;
 
 @Stateless
@@ -20,6 +21,10 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 
     @Inject
     private TimerEntityService timerEntityService;
+    
+    public TimerEntityApi() {
+    	super(TimerEntity.class, TimerEntityDto.class);
+    }
 
     public TimerEntity create(TimerEntityDto timerEntityDto) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(timerEntityDto.getCode()) || StringUtils.isBlank(timerEntityDto.getHour()) || StringUtils.isBlank(timerEntityDto.getMinute())
@@ -127,4 +132,28 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 
         timerEntityService.remove(timerEntity);
     }
+
+	@Override
+	public TimerEntityDto toDto(TimerEntity entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TimerEntity fromDto(TimerEntityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<TimerEntity> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(TimerEntityDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

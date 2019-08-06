@@ -61,7 +61,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     private CustomFieldTypeEnum fieldType;
 
     private DualListModel<DBStorageType> storagesDM;
-    
+
     private DualListModel<DBStorageType> cetStorageDM;
 
     /**
@@ -104,8 +104,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public void setAppliesTo(String appliesTo) {
         this.appliesTo = appliesTo;
     }
-    
-    
+
+
 
     public DualListModel<DBStorageType> getCetStorageDM() {
 		return cetStorageDM;
@@ -369,7 +369,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
      * The possible storages of a CFT are the available storages of the CET / CRT <br>
      * If CFT is being created, the storage list has by default all the storages of its CET or CRT <br>
      * If the CFT is being edited, the target list is filled with persisted data, and the remaining available storages are put in the source list
-     * 
+     *
      * @return The dual list for storages of the CFT
      */
     public DualListModel<DBStorageType> getStoragesDM() {
@@ -387,13 +387,13 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
 	            }
         	}
-        	
+
             storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
     	}
-    	
+
         return storagesDM;
     }
-    
+
     public void setStoragesDM(DualListModel<DBStorageType> storagesDM) {
         this.storagesDM = storagesDM;
     }
@@ -402,6 +402,38 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         ArrayList<DBStorageType> arrayList = new ArrayList<>(storagesDM.getSource());
         arrayList.addAll(storagesDM.getTarget());
         return arrayList;
+    }
+
+	public void addContentTypes() {
+		if (!StringUtils.isBlank(entity.getContentType())) {
+			entity.addContentType(entity.getContentType());
+		}
+	}
+
+	public void addFileExtensions() {
+		if (!StringUtils.isBlank(entity.getFileExtension())) {
+			entity.addFileExtension(entity.getFileExtension());
+		}
+	}
+
+	public void clearContentType() {
+		entity.setContentType(null);
+	}
+
+	public void clearFileExtension() {
+		entity.setFileExtension(null);
+	}
+
+	public String reinitContentType() {
+		entity.setContentType(null);
+
+        return null;
+    }
+
+	public String reinitFileExtension() {
+		entity.setFileExtension(null);
+
+        return null;
     }
 
     public void onChangeAvailableStorages() {

@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 
@@ -21,7 +21,7 @@ import org.meveo.model.notification.NotificationEventTypeEnum;
  */
 @XmlRootElement(name = "Notification")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NotificationDto extends BusinessDto {
+public class NotificationDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 3931479706274647165L;
@@ -49,9 +49,6 @@ public class NotificationDto extends BusinessDto {
     /** The priority. */
     private int priority;
     
-    /** The active. */
-    private Boolean active = null;
-
     /**
      * Instantiates a new notification dto.
      */
@@ -79,7 +76,6 @@ public class NotificationDto extends BusinessDto {
             scriptParams.putAll(notification.getParams());
         }
         priority = notification.getPriority();
-        active = notification.isActive();
         // scriptParams = e.getParams();
     }
 
@@ -207,28 +203,6 @@ public class NotificationDto extends BusinessDto {
      */
     public void setPriority(int priority) {
         this.priority = priority;
-    }
-
-    /**
-     * Getter for active state.
-     *
-     * @author akadid abdelmounaim
-     * @return isActive
-     * @lastModifiedVersion 5.0
-     */
-    public Boolean isActive() {
-        return active;
-    }
-
-    /**
-     * Setter for active state.
-     *
-     * @author akadid abdelmounaim
-     * @param active active state
-     * @lastModifiedVersion 5.0
-     */
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 
     @Override

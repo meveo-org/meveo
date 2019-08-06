@@ -67,7 +67,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 			@XmlElement(name = "barChart", type = BarChartDto.class),
             @XmlElement(name = "customEntityInstance", type = CustomEntityInstanceDto.class),
             })
-    private List<BaseDto> moduleItems;
+    private List<BaseEntityDto> moduleItems;
 
     /**
      * Instantiates a new meveo module dto.
@@ -84,7 +84,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
         super(meveoModule);
         this.license = meveoModule.getLicense();
         this.logoPicture = meveoModule.getLogoPicture();
-        this.moduleItems = new ArrayList<BaseDto>();
+        this.moduleItems = new ArrayList<BaseEntityDto>();
         if (meveoModule.getScript() != null) {
             this.setScript(new ScriptInstanceDto(meveoModule.getScript()));
         }
@@ -149,7 +149,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
      *
      * @return the module items
      */
-    public List<BaseDto> getModuleItems() {
+    public List<BaseEntityDto> getModuleItems() {
         return moduleItems;
     }
 
@@ -158,7 +158,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
      *
      * @param moduleItems the new module items
      */
-    public void setModuleItems(List<BaseDto> moduleItems) {
+    public void setModuleItems(List<BaseEntityDto> moduleItems) {
         this.moduleItems = moduleItems;
     }
 
@@ -167,7 +167,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
      *
      * @param item the item
      */
-    public void addModuleItem(BaseDto item) {
+    public void addModuleItem(BaseEntityDto item) {
         if (!moduleItems.contains(item)) {
             moduleItems.add(item);
         }

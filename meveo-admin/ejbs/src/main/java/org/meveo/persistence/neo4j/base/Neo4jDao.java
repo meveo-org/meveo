@@ -777,6 +777,29 @@ public class Neo4jDao {
     }
 
     /**
+     * Find all the relationships of a given type related to a node
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param nodeId             Node id
+     * @param type               Type of the relationships to retrieve
+     */
+    public List<Relationship> findRelationships(String neo4JConfiguration, String nodeId, String type){
+        // First, retrieves relationships of second node
+        String findAllRelationshipQuery = "MATCH (n)-[r:" + type + "]-() \n" +
+                "WHERE n.meveo_uuid = $nodeId \n" +
+                "RETURN r";
+
+        return cypherHelper.execute(
+                neo4JConfiguration,
+                findAllRelationshipQuery,
+                ImmutableMap.of("nodeId", nodeId),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asRelationship).collect(Collectors.toList()),
+                e -> LOGGER.error("Error retriving relationships of type {} of node {}", type, nodeId, e)
+        );
+
+    }
+
+    /**
      * Create or update a given relationship
      *
      * @param neo4JConfiguration Configuration code of the neo4j instance

@@ -16,6 +16,7 @@ import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.notification.JobTrigger;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.notification.JobTriggerService;
@@ -27,7 +28,11 @@ import org.meveo.service.script.ScriptInstanceService;
 @Stateless
 public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 
-    @Inject
+    public JobTriggerApi() {
+		super(JobTrigger.class, JobTriggerDto.class);
+	}
+
+	@Inject
     private JobTriggerService jobTriggerService;
 
     @Inject
@@ -209,4 +214,28 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
             return update(postData);
         }
     }
+
+	@Override
+	public JobTriggerDto toDto(JobTrigger entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JobTrigger fromDto(JobTriggerDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<JobTrigger> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(JobTriggerDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

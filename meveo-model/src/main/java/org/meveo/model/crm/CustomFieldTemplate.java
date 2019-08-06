@@ -13,6 +13,38 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OrderBy;
+import javax.persistence.QueryHint;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
@@ -26,6 +58,10 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
+import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
+import org.meveo.model.converter.StringListConverter;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
@@ -265,11 +301,43 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Size(max = 20)
     private String displayFormat;
 
+	/**
+	 * List of content types
+	 */
+	@Column(name = "content_types", length = 2000)
+	@Convert(converter = StringListConverter.class)
+	private List<String> contentTypes = new ArrayList<String>();
+
+	/**
+	 * List of file extensions
+	 */
+	@Column(name = "file_extensions", length = 2000)
+	@Convert(converter = StringListConverter.class)
+	private List<String> fileExtensions = new ArrayList<String>();
+
+	/**
+	 * Maximum size in kb.
+	 */
+	@Column(name = "max_file_size_allowed_kb")
+	private Long maxFileSizeAllowedInKb;
+
+	/**
+	 * Supports EL variables.
+	 */
+	@Column(name = "file_path", length = 255)
+	private String filePath;
+
     /**
      * Database field name - derived from code
      */
     @Transient
     private String dbFieldname;
+
+    @Transient
+    private String contentType;
+
+    @Transient
+    private String fileExtension;
 
     public List<DBStorageType> getStorages() {
         return storages;
@@ -1007,6 +1075,73 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
+
+	public List<String> getContentTypes() {
+		return contentTypes;
+	}
+
+	public void setContentTypes(List<String> contentTypes) {
+		this.contentTypes = contentTypes;
+	}
+
+	public List<String> getFileExtensions() {
+		return fileExtensions;
+	}
+
+	public void setFileExtensions(List<String> fileExtensions) {
+		this.fileExtensions = fileExtensions;
+	}
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public String getFileExtension() {
+		return fileExtension;
+	}
+
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
+
+	public void addContentType(String ct) {
+		if (getContentTypes() == null) {
+			contentTypes = new ArrayList<String>();
+		}
+
+		contentTypes.add(ct);
+	}
+
+	public void addFileExtension(String fe) {
+		if (getFileExtensions() == null) {
+			fileExtensions = new ArrayList<String>();
+		}
+
+		fileExtensions.add(fe);
+	}
+
+	public Long getMaxFileSizeAllowedInKb() {
+		return maxFileSizeAllowedInKb;
+	}
+
+	public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
+		this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
+	}
+
+	public Long getMaxFileSizeAllowedInBytes() {
+		return maxFileSizeAllowedInKb != null ? maxFileSizeAllowedInKb * 1000 : 0L;
+	}
 
     public boolean isSqlStorage() {
     	if(storages!=null&&storages.contains(DBStorageType.SQL)) {

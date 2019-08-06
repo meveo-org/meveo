@@ -6,7 +6,7 @@ import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.*;
 import org.meveo.api.catalog.ServiceTemplateApi;
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.catalog.BusinessServiceModelDto;
@@ -28,6 +28,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
@@ -76,12 +77,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     private ModuleScriptService moduleScriptService;
 
     private static JAXBContext jaxbCxt;
+    
     static {
         try {
             jaxbCxt = JAXBContext.newInstance(MeveoModuleDto.class);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
+    }
+    
+    public MeveoModuleApi() {
+    	super(MeveoModule.class, MeveoModuleDto.class);
     }
 
     public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
@@ -218,7 +224,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public MeveoModuleDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public MeveoModuleDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code [BOM: businessOfferModelCode, BSM: businessServiceModelCode, BAM: businessAccountModelCode]");
@@ -384,7 +390,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
             meveoModule.getModuleItems().clear();
 
-            for (BaseDto dto : moduleDto.getModuleItems()) {
+            for (BaseEntityDto dto : moduleDto.getModuleItems()) {
 
                 try {
 
@@ -519,9 +525,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @param module Module object
      * @return MeveoModuleDto object
      * @throws MeveoApiException meveo api exception.
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException {
+    public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (module.isDownloaded() && !module.isInstalled()) {
             try {
@@ -558,7 +565,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             for (MeveoModuleItem item : moduleItems) {
 
                 try {
-                    BaseDto itemDto = null;
+                    BaseEntityDto itemDto = null;
 
                     if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
                         itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
@@ -620,4 +627,28 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         dto.setDuplicatePricePlan(bsm.isDuplicatePricePlan());
 
     }
+
+	@Override
+	public MeveoModuleDto toDto(MeveoModule entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<MeveoModule> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(MeveoModuleDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

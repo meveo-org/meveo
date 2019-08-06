@@ -54,6 +54,7 @@ import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
@@ -101,7 +102,7 @@ public class Neo4jService implements CustomPersistenceService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     private static final String MEVEO_UUID = "meveo_uuid";
-
+    
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
@@ -1368,13 +1369,13 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Override
-    public void addSourceEntityUniqueCrt(String configurationCode, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
-        addSourceNodeUniqueCrt(configurationCode, relationCode, sourceValues, targetValues);
+    public void addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        addSourceNodeUniqueCrt(repository.getNeo4jConfiguration().getCode(), relationCode, sourceValues, targetValues);
     }
 
     @Override
-    public PersistenceActionResult createOrUpdate(String configurationCode, String entityCode, Map<String, Object> values) throws BusinessException {
-        final Set<EntityRef> entityRefs = addCetNode(configurationCode, entityCode, values);
+    public PersistenceActionResult createOrUpdate(Repository repository, String entityCode, Map<String, Object> values) throws BusinessException {
+        final Set<EntityRef> entityRefs = addCetNode(repository.getNeo4jConfiguration().getCode(), entityCode, values);
         String uuid = getTrustedUuids(entityRefs).get(0);
         if(uuid == null){
             throw new NullPointerException("Generated UUID from Neo4J cannot be null");
@@ -1383,13 +1384,13 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Override
-    public void addCRTByValues(String configurationCode, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
-        addCRTByNodeValues(configurationCode, relationCode, relationValues, sourceValues, targetValues);
+    public void addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        addCRTByNodeValues(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceValues, targetValues);
     }
 
     @Override
-    public void addCRTByUuids(String configurationCode, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
-        addCRTByNodeIds(configurationCode, relationCode, relationValues, sourceUuid, targetUuid);
+    public void addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
+        addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceUuid, targetUuid);
     }
 
     /**
@@ -1461,5 +1462,39 @@ public class Neo4jService implements CustomPersistenceService {
             neo4jDao.mergeAndRemoveNodes(configurationCode, persistentNode.id(), node.id());
         }
         return persistentNode.get(MEVEO_UUID).asString();
+    }
+
+    public void updateBinary(String uuid, String neo4jConfigurationCode, CustomFieldTemplate customFieldTemplate, String binaryPath){
+        final List<Relationship> relationships = neo4jDao.findRelationships(neo4jConfigurationCode, uuid, customFieldTemplate.getRelationshipName());
+
+        // First, delete existing relationships
+        for (Relationship relationship : relationships) {
+            neo4jDao.removeRelation(
+                    neo4jConfigurationCode,
+                    customFieldTemplate.getRelationshipName(),
+                    relationship.get("meveo_uuid").asString()
+            );
+        }
+
+        addBinaries(uuid, neo4jConfigurationCode, customFieldTemplate, Collections.singletonList(binaryPath));
+    }
+
+    public void addBinaries(String uuid, String neo4jConfigurationCode, CustomFieldTemplate customFieldTemplate, Collection<String> binariesPath) {
+        for(String binaryPath : binariesPath) {
+            final String fileUuid = neo4jDao.createNode(
+                    neo4jConfigurationCode,
+                    Neo4JConstants.FILE_LABEL,
+                    Collections.singletonMap("value", binaryPath),
+                    null
+            );
+
+            neo4jDao.createRelationBetweenNodes(
+                    neo4jConfigurationCode,
+                    uuid,
+                    customFieldTemplate.getRelationshipName(),
+                    fileUuid,
+                    Collections.emptyMap()
+            );
+        }
     }
 }

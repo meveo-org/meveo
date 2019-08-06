@@ -941,4 +941,143 @@
             update adm_country set nationality='Zimbabwean' where country_code='ZW';
         </sql>
     </changeSet>
+
+	<changeSet id="binary_storage_configuration"
+		author="Edward P. Legaspi">
+		<createTable tableName="binary_storage_configuration">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="binary_storage_configuration_pkey" />
+			</column>
+			<column name="version" type="int4" />
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false" unique="true" />
+			</column>
+			<column name="root_path" type="varchar(255)">
+				<constraints nullable="false" unique="true" />
+			</column>
+		</createTable>
+		<createSequence
+			sequenceName="binary_storage_configuration_seq" />
+	</changeSet>
+
+	<changeSet id="binary_storage_configuration_seq_mysql" author="Edward P. Legaspi"
+		dbms="mysql">
+		<createTable tableName="binary_storage_configuration_seq">
+			<column name="next_val" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="binary_storage_configuration_seq_pk" />
+			</column>
+		</createTable>
+		<sql>insert into ${db.schema.adapted}binary_storage_configuration_seq values(1)</sql>
+	</changeSet>
+
+	<changeSet id="#3726 - Add storage repository"
+		author="Edward P. Legaspi">
+		<createTable tableName="storage_repository">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="version" type="INT4" />
+			<column name="disabled" type="${type.boolean}">
+				<constraints nullable="false" />
+			</column>
+			<column name="created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated" type="datetime" />
+			<column name="description" type="VARCHAR(100)" />
+			<column name="code" type="VARCHAR(50)" />
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+			<column name="data_separation_type" type="VARCHAR(25)"></column>
+
+			<column name="parent_id" type="BIGINT" />
+			<column name="binary_storage_configuration_id" type="BIGINT" />
+			<column name="path" type="VARCHAR(255)"></column>
+		</createTable>
+
+		<addPrimaryKey tableName="storage_repository" columnNames="id"/>
+		<createSequence
+			sequenceName="storage_repository_seq" />
+		<addForeignKeyConstraint
+			constraintName="storage_repository_parent_fk"
+			referencedTableName="storage_repository" baseColumnNames="parent_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+		<addForeignKeyConstraint
+			constraintName="binary_storage_configuration_fk"
+			referencedTableName="binary_storage_configuration"
+			baseColumnNames="binary_storage_configuration_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+	</changeSet>
+
+	<changeSet
+		id="#3726 - Add storage repository sequence (mysql)"
+		author="Edward P. Legaspi" dbms="mysql">
+		<createTable tableName="storage_repository_seq">
+			<column name="next_val" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="storage_repository_seq_pk" />
+			</column>
+		</createTable>
+		<sql>insert into ${db.schema.adapted}storage_repository_seq
+			values(1)
+		</sql>
+	</changeSet>
+
+	<changeSet
+		id="#3726 - Convert neo4jConfiguration to businessEntity"
+		author="Edward P. Legaspi">
+		<createSequence sequenceName="neo4j_configuration_seq" />
+		<addColumn tableName="neo4j_configuration">
+			<column name="id" type="BIGINT" defaultValueSequenceNext="neo4j_configuration_seq"></column>
+			<column name="version" type="INT4" />
+			<column name="disabled" type="${type.boolean}"
+				defaultValue="0">
+				<constraints nullable="true" />
+			</column>
+			<column name="created" type="datetime">
+				<constraints nullable="true" />
+			</column>
+			<column name="updated" type="datetime" />
+			<column name="description" type="VARCHAR(100)" />
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+		</addColumn>
+
+		<update tableName="neo4j_configuration">
+			<column name="created" type="datetime" value="${now()}"></column>
+			<column name="version" value="0"></column>
+			<column name="creator" value="MEVEO.ADMIN"></column>
+		</update>
+
+		<dropPrimaryKey tableName="neo4j_configuration" />
+
+		<addNotNullConstraint
+			tableName="neo4j_configuration" columnName="id" />
+		<addNotNullConstraint
+			tableName="neo4j_configuration" columnName="created" />
+		<addPrimaryKey tableName="neo4j_configuration"
+			columnNames="id" constraintName="pk_neo4_configuration" />
+
+		<addColumn tableName="storage_repository">
+			<column name="neo4j_configuration_id" type="BIGINT"></column>
+		</addColumn>
+
+		<addForeignKeyConstraint
+			constraintName="neo4j_configuration_id_fk"
+			referencedTableName="neo4j_configuration"
+			baseColumnNames="neo4j_configuration_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+	</changeSet>
+
+	<changeSet id="#3705 - Binary CFT type" author="EdwardPLegaspi">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="content_types" type="VARCHAR(2000)"></column>
+			<column name="file_extensions" type="VARCHAR(2000)"></column>
+			<column name="max_file_size_allowed_kb" type="BIGINT"></column>
+			<column name="file_path" type="VARCHAR(255)"></column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

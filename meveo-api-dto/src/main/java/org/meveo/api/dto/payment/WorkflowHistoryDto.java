@@ -18,7 +18,7 @@
  */
 package org.meveo.api.dto.payment;
 
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.wf.WorkflowHistory;
 import org.meveo.model.wf.WorkflowHistoryAction;
 
@@ -34,7 +34,7 @@ import java.util.List;
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
-public class WorkflowHistoryDto extends BaseDto {
+public class WorkflowHistoryDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 8309866046667741458L;

@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomFieldsDto;
 import org.meveo.model.jobs.JobCategoryEnum;
 
@@ -17,7 +17,7 @@ import org.meveo.model.jobs.JobCategoryEnum;
  */
 @XmlRootElement(name = "JobInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class JobInstanceDto extends BusinessDto {
+public class JobInstanceDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 5166093858617578774L;
@@ -35,10 +35,6 @@ public class JobInstanceDto extends BusinessDto {
 
     /** Parameter to job execution. */
     private String parameter;
-
-    /** Is job active. */
-    @XmlElement(required = true)
-    private boolean active = false;
 
     /** Custom fields. */
     private CustomFieldsDto customFields;
@@ -130,24 +126,6 @@ public class JobInstanceDto extends BusinessDto {
     }
 
     /**
-     * Checks if is active.
-     *
-     * @return true, if is active
-     */
-    public boolean isActive() {
-        return active;
-    }
-
-    /**
-     * Sets the active.
-     *
-     * @param active the new active
-     */
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    /**
      * Gets the custom fields.
      *
      * @return the custom fields
@@ -221,7 +199,7 @@ public class JobInstanceDto extends BusinessDto {
 
     @Override
     public String toString() {
-        return "JobInstanceDto [jobCategory=" + jobCategory + ", jobTemplate=" + jobTemplate + ", followingJob=" + followingJob + ", parameter=" + parameter + ", active=" + active
+        return "JobInstanceDto [jobCategory=" + jobCategory + ", jobTemplate=" + jobTemplate + ", followingJob=" + followingJob + ", parameter=" + parameter + ", active=" + isActive()
                 + ", customFields=" + customFields + ", timerCode=" + timerCode + ", runOnNodes=" + runOnNodes + ", limitToSingleNode=" + limitToSingleNode + "]";
     }
 }
