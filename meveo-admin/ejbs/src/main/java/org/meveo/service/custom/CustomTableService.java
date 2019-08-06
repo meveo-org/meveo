@@ -956,12 +956,27 @@ public class CustomTableService extends NativePersistenceService {
         return convertData(data, cet);
     }
     
-    
-    
+	/**
+	 * Retrieves and convert data from database table
+	 * 
+	 * @param cet          Template of the data
+	 * @param uuid         UUID of the row
+	 * @param selectFields Fields to retrieve. Will retrieve all fields if null or empty
+	 * @return the converted row data
+	 */
 	@SuppressWarnings("deprecation")
 	public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+		// Retrieve fields of the template
+		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+		
+		// Get raw data
 		Map<String, Object> data = super.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
-		return convertData(data, cet);
+		
+		// Format the data to the representation defined by the fields
+		Map<String, Object> convertedData = convertData(data, cet);
+		
+		// Replace the db column names by the fields codes
+		return replaceKeys(cfts, convertedData);
 	}
 
 	/**
@@ -1043,13 +1058,15 @@ public class CustomTableService extends NativePersistenceService {
     	return entities;
     }
 
-    public void replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
+    public Map<String, Object> replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
         for(CustomFieldTemplate cft : cfts){
             final Object tempVal = values.remove(cft.getDbFieldname());
             if(tempVal != null){
                 values.put(cft.getCode(), tempVal);
             }
         }
+        
+        return values;
     }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
