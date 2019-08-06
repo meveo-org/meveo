@@ -232,7 +232,9 @@
                     <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" partialSubmit="true"
                                      partialSubmitFilter=":not([name*='omitFromSubmit'])"
                                      oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlg_#{id}').hide()"
-                                     action="#{baseBean.addToModule()}"/>
+                                     actionListener="#{actionListenerBean.addToModule}">
+                        <p:resetInput target="@form" />
+                    </p:commandButton>
                     <p:commandButton value="#{messages['commons.close']}"
                                      oncomplete="PF('dlg_#{id}').hide()">
                         <p:resetInput target="@form" />

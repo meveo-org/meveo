@@ -7,7 +7,9 @@
             <f:event type="preRenderView" listener="#{customEntityTemplateListBean.preRenderView}" />
         </f:metadata>
     </ui:define>
-
+    <c:if test="${empty addToModule}">
+        <c:set var="addToModule" value="true" />
+    </c:if>
     <ui:define name="body">
             <h:form id="crumbmenuForm">
                 <p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -47,6 +49,17 @@
 
         <h:form prependId="false">
             <p:panel width="100">
+                <hftl:entityPopup id="addModulePopup"
+                                  header="#{messages['meveoModule.title']}"
+                                  backingBean="#{meveoModuleListBean}"
+                                  selection="#{backingBean.meveoModule}"
+                                  searchField1Label="#{messages['BusinessEntity.code']}"
+                                  searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                                  column1="code"
+                                  column2Label="#{messages['BusinessEntity.description']}"
+                                  column2="description" selectionListenerBean="#{backingBean}"
+                                  selectionListenerMethod="addToModule">
+                </hftl:entityPopup>
                 <p:dataTable id="searchResults" value="#{customEntityTemplateListBean.customizedEntities}" var="entity" sortOrder="ascending" sortBy="#{entity.customEntityCategory.code}"
                     paginator="true" rows="30" resizableColumns="true"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
@@ -75,6 +88,7 @@
                     <hftl:column label="#{messages['customizedEntities.description']}" field="description" />
                     <hftl:column label="#{messages['customizedEntities.customEntity']}" field="customEntity" isMessage="true" sort="false" />
                 </p:dataTable>
+                <p:commandButton value="#{messages['commons.addToModule']}" type="button"  onclick="PF('dlg_addModulePopup').show()"/>
             </p:panel>
         </h:form>
     </ui:define>

@@ -74,12 +74,13 @@
 	<hftl:entityPopup id="addModulePopup"
 					  header="#{messages['meveoModule.title']}"
 					  backingBean="#{meveoModuleListBean}"
+					  selection="#{backingBean.meveoModule}"
 					  searchField1Label="#{messages['BusinessEntity.code']}"
 					  searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
 					  column1="code"
 					  column2Label="#{messages['BusinessEntity.description']}"
-					  column2="description"
-					  selectionListenerBean="#{baseBean.meveoModule}">
+					  column2="description" selectionListenerBean="#{backingBean}"
+					  selectionListenerMethod="addToModule">
 	</hftl:entityPopup>
 
 	<p:column exportable="false" toggleable="false" width="#{width}">

@@ -132,16 +132,17 @@
 
     <p:panel id="#{resultsId}_panel" width="100">
 
-        <hftl:selectEntityPopup id="addModulePopup"
-                                header="#{messages['meveoModule.title']}"
-                                backingBean="#{meveoModuleListBean}"
-                                searchField1Label="#{messages['BusinessEntity.code']}"
-                                searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-                                column1="code"
-                                column2Label="#{messages['BusinessEntity.description']}"
-                                column2="description"
-                                selectionListenerBean="#{baseBean.meveoModule}">
-        </hftl:selectEntityPopup>
+        <hftl:entityPopup id="addModulePopup"
+                          header="#{messages['meveoModule.title']}"
+                          backingBean="#{meveoModuleListBean}"
+                          selection="#{backingBean.meveoModule}"
+                          searchField1Label="#{messages['BusinessEntity.code']}"
+                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                          column1="code"
+                          column2Label="#{messages['BusinessEntity.description']}"
+                          column2="description" selectionListenerBean="#{backingBean}"
+                          selectionListenerMethod="addToModule">
+        </hftl:entityPopup>
 
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
             <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="10" editable="#{editable}" editMode="#{editMode}"

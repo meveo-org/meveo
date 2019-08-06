@@ -441,7 +441,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         return backViewSave;
     }
 
-    public void addToModule() throws BusinessException {
+    public void addToModule()  {
         if (entity != null && !meveoModule.equals(entity)) {
             BusinessEntity businessEntity = (BusinessEntity)entity;
             MeveoModule module = meveoModuleService.findByCode(meveoModule.getCode());
@@ -449,7 +449,11 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             if (!module.getModuleItems().contains(item)) {
                 module.addModuleItem(item);
             }
-            meveoModuleService.update(module);
+            try {
+                meveoModuleService.update(module);
+            } catch (BusinessException e) {
+
+            }
         }
     }
 

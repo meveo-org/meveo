@@ -27,7 +27,7 @@
         </hftl:searchPanel>
 
         <h:panelGroup id="resultsDatatable">
-            <hftl:dataList backingBean="#{jobInstanceListBean}" resultsId="timersBean_results" sortBy="code">
+            <hftl:dataList backingBean="#{jobInstanceListBean}" resultsId="timersBean_results" addToModule="true" sortBy="code">
                 <p:column headerText="#{messages['timer.name']}" sortBy="#{entity.code}">
                     <h:link outcome="jobInstanceDetail" value="#{entity.code}">
                         <f:param name="objectId" value="#{entity.id}" />
@@ -43,7 +43,7 @@
                     <h:outputText styleClass="ui-icon ui-icon-circle-check" title="#{messages['timer.isRunning.this']}" rendered="#{jobInstanceListBean.isTimerRunning(entity)== JobRunningStatusEnum.RUNNING_THIS}" />
                     <h:outputText styleClass="ui-icon ui-icon-check" title="#{messages['timer.isRunning.other']}" rendered="#{jobInstanceListBean.isTimerRunning(entity)== JobRunningStatusEnum.RUNNING_OTHER}" />
                 </p:column>
-                <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderEnableLink="true" />
+                <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderEnableLink="true" renderAddModule="true"/>
             </hftl:dataList>
         </h:panelGroup>
         <h:form>

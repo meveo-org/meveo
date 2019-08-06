@@ -68,15 +68,17 @@
 <cc:implementation>
 	<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
-	<hftl:selectEntityPopup id="addModulePopup"
+	<hftl:entityPopup id="addModulePopup"
 							header="#{messages['meveoModule.title']}"
 							backingBean="#{meveoModuleListBean}"
+					  		selection="#{cc.attrs.backingBean.meveoModule}"
 							searchField1Label="#{messages['BusinessEntity.code']}"
 							searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
 							column1="code"
 							column2Label="#{messages['BusinessEntity.description']}"
-							column2="description" selection="#{baseBean.meveoModule}">
-	</hftl:selectEntityPopup>
+							column2="description" selectionListenerBean="#{cc.attrs.backingBean}"
+					  		selectionListenerMethod="addToModule">
+	</hftl:entityPopup>
 
 	<h:panelGroup layout="block" styleClass="form-panel-actions" id="formPanelActions">
 		<p:button value="#{messages['commons.edit']}" includeViewParams="true"
