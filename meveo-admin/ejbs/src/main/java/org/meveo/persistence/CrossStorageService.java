@@ -356,7 +356,7 @@ public class CrossStorageService implements CustomPersistenceService {
                 // Update binaries stored in SQL
                 List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream()
                         .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
-                        .filter(f -> sqlValues.containsKey(f.getCode()))
+                        .filter(f -> sqlValues.get(f.getCode()) != null)
                         .collect(Collectors.toList());
 
                 if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -379,20 +379,22 @@ public class CrossStorageService implements CustomPersistenceService {
             cei = new CustomEntityInstance();
             cei.setCetCode(entityCode);
             cei.setCode(code);
+            
+            if (uuid != null) {
+                cei.setUuid(uuid);
+            }
+            
+            if(CollectionUtils.isNotEmpty(binariesInSql)) {
+                updateBinaries(repository, cei.getUuid(), cei.getCetCode(), binariesInSql, values, Collections.EMPTY_MAP);
+            }
 
             CustomFieldValues customFieldValues = new CustomFieldValues();
             values.forEach(customFieldValues::setValue);
             cei.setCfValues(customFieldValues);
 
-            if (uuid != null) {
-                cei.setUuid(uuid);
-            }
-
             customEntityInstanceService.create(cei);
 
-            if(CollectionUtils.isNotEmpty(binariesInSql)) {
-                updateBinaries(repository, cei.getUuid(), cei.getCetCode(), binariesInSql, values, Collections.EMPTY_MAP);
-            }
+
         } else {
 
             if(CollectionUtils.isNotEmpty(binariesInSql)) {
@@ -861,7 +863,7 @@ public class CrossStorageService implements CustomPersistenceService {
     private Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, String cetCode, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessException {
         Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
         for (CustomFieldTemplate field : fields) {
-            if(field.getFieldType().equals(CustomFieldTypeEnum.BINARY) && values.containsKey(field.getCode())){
+            if(field.getFieldType().equals(CustomFieldTypeEnum.BINARY) && values.get(field.getCode()) != null){
                 BinaryStoragePathParam binaryStoragePathParam = new BinaryStoragePathParam();
                 binaryStoragePathParam.setCft(field);
                 binaryStoragePathParam.setUuid(uuid);
@@ -879,7 +881,7 @@ public class CrossStorageService implements CustomPersistenceService {
                     binariesSaved.put(field, persistedPath);
 
                     // Remove old file
-                    if(previousValues.containsKey(field.getCode())){
+                    if(previousValues.get(field.getCode()) != null){
                         String oldFile = (String) previousValues.get(field.getCode());
                         new File(oldFile).delete();
                     }
@@ -888,7 +890,7 @@ public class CrossStorageService implements CustomPersistenceService {
                     List<File> tempFiles = (List<File>) values.get(field.getCode());
 
                     // Append new persisted files path to existing ones
-                    List<String> persistedPaths = previousValues.containsKey(field.getCode()) ? (List<String>) previousValues.get(field.getCode()) : new ArrayList<>();
+                    List<String> persistedPaths = previousValues.get(field.getCode()) != null ? (List<String>) previousValues.get(field.getCode()) : new ArrayList<>();
 
                     for (File tempFile : new ArrayList<>(tempFiles)) {
                         binaryStoragePathParam.setFile(tempFile);
