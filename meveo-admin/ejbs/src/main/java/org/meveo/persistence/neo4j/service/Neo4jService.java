@@ -119,9 +119,7 @@ public class Neo4jService implements CustomPersistenceService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     private static final String MEVEO_UUID = "meveo_uuid";
-    private static final String FILE_LABEL = "Binary";
-    private static final String HAS_BINARY = "HAS_BINARY";
-
+    
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
@@ -1470,7 +1468,7 @@ public class Neo4jService implements CustomPersistenceService {
         for(String binaryPath : binariesPath) {
             final String fileUuid = neo4jDao.createNode(
                     neo4jConfigurationCode,
-                    FILE_LABEL,
+                    Neo4JConstants.FILE_LABEL,
                     Collections.singletonMap("value", binaryPath),
                     null
             );

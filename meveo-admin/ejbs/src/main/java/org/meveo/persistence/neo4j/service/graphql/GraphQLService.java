@@ -40,6 +40,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
+import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.slf4j.Logger;
 
 @Stateless
@@ -155,8 +156,10 @@ public class GraphQLService {
     }
 
     private Collection<GraphQLEntity> getEntities() {
-
         Map<String, GraphQLEntity> graphQLEntities = new TreeMap<>();
+        
+        // Binary entity
+        add(graphQLEntities, Neo4JConstants.BINARY_ENTITY);
 
         // Entities
         final List<CustomEntityTemplate> ceTsWithSubTemplates = customEntityTemplateService.getCETsWithSubTemplates();
@@ -405,6 +408,14 @@ public class GraphQLService {
                         }
 
                         graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
+                        graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
+                        break;
+                    case BINARY:
+                        if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
+                            throw new NullPointerException("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                        }
+                        
+                        graphQLField.setFieldType(Neo4JConstants.FILE_LABEL);
                         graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
     				case CHILD_ENTITY:
