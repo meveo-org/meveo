@@ -1857,7 +1857,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setContents(uploadedBinaryFile.getContents());
+		params.setInputStream(uploadedBinaryFile.getInputstream());
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
@@ -1903,7 +1903,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setContents(uploadedBinaryFile.getContents());
+		params.setInputStream(uploadedBinaryFile.getInputstream());
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());

@@ -2,6 +2,7 @@ package org.meveo.service.storage;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -27,7 +28,6 @@ public class BinaryStoragePathParam {
 	private String uuid;
 	private String cftCode;
 	private String filename;
-	private byte[] contents;
 	private String contentType;
 	private InputStream is;
 	private File file;
@@ -105,26 +105,22 @@ public class BinaryStoragePathParam {
 		this.filename = filename;
 	}
 
-	public byte[] getContents() {
+	public InputStream getContents() {
 		if (file != null) {
+			
 			try {
-				InputStream isTemp = new FileInputStream(file);
-				contents = FileUtils.toByteArray(isTemp);
-			} catch (IOException e) {
+				return new FileInputStream(file);
+			} catch (FileNotFoundException e) {
+				return null;
 			}
+			
 		} else {
-			if (is != null) {
-				try {
-					contents = FileUtils.toByteArray(is);
-				} catch (IOException e) {
-				}
-			}
+			return is;
 		}
-		return contents;
 	}
 
-	public void setContents(byte[] contents) {
-		this.contents = contents;
+	public void setInputStream(InputStream is) {
+		this.is = is;
 	}
 
 	public List<String> getFileExtensions() {

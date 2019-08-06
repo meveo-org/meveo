@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -41,12 +42,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.FileUtils;
-import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.PersistenceDto;
+import org.meveo.api.rest.RestUtils;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
@@ -60,11 +61,13 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.storage.RepositoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path("/{repository}/persistence")
 public class PersistenceRs {
 
-    protected static final Logger LOGGER = Logger.getLogger(PersistenceRs.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(PersistenceRs.class);
 
     @Inject
     private SchedulingService schedulingService;
@@ -122,54 +125,70 @@ public class PersistenceRs {
 	@POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
-    	Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
-    	InputPart dtosPart = uploadForm.remove("data").get(0);
-    	GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {};
-    	Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
     	
-    	for(Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
-    		String[] splittedKey = formPart.getKey().split("\\.");
-    		String entityName = splittedKey[0];
-    		String propertyName = splittedKey[1];
+    	java.nio.file.Path tempDir = Files.createTempDirectory("dataUpload");
+    	
+    	try {
+    	
+	    	Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+	    	InputPart dtosPart = uploadForm.remove("data").get(0);
+	    	GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {};
+	    	Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
+	    	
+	    	for(Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
+	    		String[] splittedKey = formPart.getKey().split("\\.");
+	    		String entityName = splittedKey[0];
+	    		String propertyName = splittedKey[1];
+	    		
+	    		if(formPart.getValue().size() == 1) {
+	    			InputPart inputPart = formPart.getValue().get(0);
+					InputStream inputStream = inputPart.getBody(InputStream.class, null);
+	    			
+    				File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
+	    			FileUtils.copyInputStreamToFile(inputStream, file);
+	    			
+	    			dtos.stream()
+	    				.filter(dto -> dto.getName().equals(entityName))
+	    				.findFirst()
+	    				.ifPresent(dto -> dto.getProperties().put(propertyName, file));
+	    			
+	    		} else {
+	    			
+	    			for(InputPart inputPart : formPart.getValue()) {
+	    				InputStream inputStream = inputPart.getBody(InputStream.class, null);
+	    				
+	    				File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
+	        			FileUtils.copyInputStreamToFile(inputStream, file);
+	        			
+	        			dtos.stream()
+	        				.filter(dto -> dto.getName().equals(entityName))
+	        				.findFirst()
+	        				.ifPresent(dto -> { 
+	        					List<File> property = (List<File>) dto.getProperties().computeIfAbsent(propertyName, s -> new ArrayList<File>());
+	        					property.add(file);
+	        				});
+	        			
+	    			}
+	    			
+	    		}
+	    	}
+	    	
+	    	return persist(dtos);
+	    	
+    	} finally {
     		
-    		if(formPart.getValue().size() == 1) {
-    			InputStream inputStream = formPart.getValue()
-    					.get(0)
-    					.getBody(InputStream.class, null);
-    			
-    			File file = Files.createTempFile(entityName, propertyName).toFile();
-    			FileUtils.copyInputStreamToFile(inputStream, file);
-    			
-    			dtos.stream()
-    				.filter(dto -> dto.getName().equals(entityName))
-    				.findFirst()
-    				.ifPresent(dto -> dto.getProperties().put(propertyName, file));
-    			
-    		} else {
-    			
-    			int i = 0;
-    			for(InputPart inputPart : formPart.getValue()) {
-    				InputStream inputStream = inputPart.getBody(InputStream.class, null);
-        			File file = Files.createTempFile(entityName, propertyName + i).toFile();
-        			FileUtils.copyInputStreamToFile(inputStream, file);
-        			
-        			dtos.stream()
-        				.filter(dto -> dto.getName().equals(entityName))
-        				.findFirst()
-        				.ifPresent(dto -> { 
-        					
-        					List<File> property = (List<File>) dto.getProperties().computeIfAbsent(propertyName, s -> new ArrayList<File>());
-        					property.add(file);
-        					
-        				});
-        			
-        			i++;
-    			}
-    			
+    		Files.list(tempDir).forEach(path -> {
+				try {
+					Files.delete(path);
+				} catch (IOException e) {
+					LOGGER.warn("{} cannot be deleted", path.toString(), e);
+				}
+			});
+    		
+    		if(Files.list(tempDir).count() == 0) {
+    			Files.delete(tempDir);
     		}
     	}
-    	
-    	return persist(dtos);
     }
 
     @POST
@@ -202,7 +221,7 @@ public class PersistenceRs {
                                 .properties(persistenceDto.getProperties())
                                 .build();
                     }
-                    LOGGER.warnv("Relationship of type {} between {} and {} will not be persisted because of missing source or target", persistenceDto.getType(), persistenceDto.getSource(), persistenceDto.getTarget());
+                    LOGGER.warn("Relationship of type {} between {} and {} will not be persisted because of missing source or target", persistenceDto.getType(), persistenceDto.getSource(), persistenceDto.getTarget());
                     return null;
                 })
                 .filter(Objects::nonNull)

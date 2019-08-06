@@ -873,11 +873,10 @@ public class CrossStorageService implements CustomPersistenceService {
                 if(field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)){
                     File tempFile = (File) values.get(field.getCode());
                     binaryStoragePathParam.setFile(tempFile);
-                    binaryStoragePathParam.setFilename(field.getCode());
+                    binaryStoragePathParam.setFilename(tempFile.getName());
 
                     final String persistedPath = fileSystemService.persists(binaryStoragePathParam);
                     values.put(field.getCode(), persistedPath);
-                    tempFile.delete();
                     binariesSaved.put(field, persistedPath);
 
                     // Remove old file
@@ -895,15 +894,14 @@ public class CrossStorageService implements CustomPersistenceService {
                     for (File tempFile : new ArrayList<>(tempFiles)) {
                         binaryStoragePathParam.setFile(tempFile);
                         // Use list size to name the file
-                        binaryStoragePathParam.setFilename(field.getCode() + persistedPaths.size());
+                        binaryStoragePathParam.setFilename(tempFile.getName());
 
                         final String persistedPath = fileSystemService.persists(binaryStoragePathParam);
-                        persistedPaths.add(persistedPath);
+                        if(!persistedPaths.contains(persistedPath)) {
+                        	persistedPaths.add(persistedPath);
+                        }
                     }
                     
-                    // Delete all temp files
-                    tempFiles.forEach(File::delete);
-
                     values.put(field.getCode(), persistedPaths);
                     binariesSaved.put(field, persistedPaths);
                 }

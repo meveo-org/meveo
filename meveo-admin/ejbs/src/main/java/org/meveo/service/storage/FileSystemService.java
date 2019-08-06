@@ -82,8 +82,9 @@ public class FileSystemService {
 
 		storage = storage + File.separator + params.getFilename();
 
-		InputStream is = new ByteArrayInputStream(params.getContents());
-		FileUtils.copyFile(storage, is);
+		try(InputStream is = params.getContents()){
+			FileUtils.copyFile(storage, is);
+		}
 
 		return storage;
 	}
