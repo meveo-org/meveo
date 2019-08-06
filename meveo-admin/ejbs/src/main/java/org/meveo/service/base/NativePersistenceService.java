@@ -56,6 +56,7 @@ import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
 /**
@@ -112,9 +113,11 @@ public class NativePersistenceService extends BaseService {
      * @param tableName    Table name
      * @param uuid         Identifier
      * @param selectFields Fields to return
+     * @deprecated Use {@link CustomTableService#findById(org.meveo.model.customEntities.CustomEntityTemplate, String, List)} instead
      * @return A map of values with field name as a map key and field value as a map value
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public Map<String, Object> findById(String tableName, String uuid, List<String> selectFields) {
 
         try {

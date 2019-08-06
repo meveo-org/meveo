@@ -955,6 +955,25 @@ public class CustomTableService extends NativePersistenceService {
         final List<Map<String, Object>> data = super.list(SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
         return convertData(data, cet);
     }
+    
+    
+    
+	@SuppressWarnings("deprecation")
+	public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+		Map<String, Object> data = super.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+		return convertData(data, cet);
+	}
+
+	/**
+	 * Convert the data to the expected format. For instance, deserializes lists
+	 * 
+	 * @param data Raw data
+	 * @param cet  Template of the data
+	 * @return the converted data
+	 */
+    private Map<String, Object> convertData(Map<String, Object> data, CustomEntityTemplate cet){
+    	return convertData(Collections.singletonList(data), cet).get(0);
+    }
 
 	/**
 	 * Convert the data to the expected format. For instance, deserializes lists
@@ -1043,6 +1062,19 @@ public class CustomTableService extends NativePersistenceService {
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
+                	// Do not allow files to be stored directly in table
+                	if(entry.getValue() instanceof File) {
+                		return false;
+                	}
+                	
+                	// Do not allow list of files to be stored directly in table
+                	if(entry.getValue() instanceof List) {
+                		List<?> listValue = (List<?>) entry.getValue();
+                		if(!listValue.isEmpty() && (listValue.get(0) instanceof File)) {
+                			return false;
+                		}
+                	}
+                	
                     if(entry.getKey().equals("uuid")) {
                         return true;
                     }

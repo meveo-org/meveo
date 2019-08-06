@@ -477,13 +477,14 @@ public class CrossStorageService implements CustomPersistenceService {
 
             uuid = customTableService.create(cet, sqlValues);
         }
-
+        
+        // Save binaries
         if(CollectionUtils.isNotEmpty(binariesInSql)) {
             List<String> binariesFieldsToFetch = binariesInSql.stream()
                     .map(CustomFieldTemplate::getCode)
                     .collect(Collectors.toList());
 
-            final Map<String, Object> existingBinariesFields = customTableService.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, binariesFieldsToFetch);
+            final Map<String, Object> existingBinariesFields = customTableService.findById(cet, uuid, binariesFieldsToFetch);
             final Map<CustomFieldTemplate, Object> binariesPaths = updateBinaries(
                     repository,
                     uuid,
@@ -689,11 +690,6 @@ public class CrossStorageService implements CustomPersistenceService {
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
-                	// Don't use directly files
-                	if(entry.getValue() instanceof File) {
-                		return false;
-                	}
-                	
                     // Always include UUID
                     if(entry.getKey().equals("uuid")){
                         return true;
