@@ -1080,4 +1080,11 @@
 		</addColumn>
 	</changeSet>
 
+    <changeSet id="fix_meveo_function_code_length" author="Aurélien Ponçon">
+        <modifyDataType tableName="meveo_function" columnName="code" newDataType="varchar(255)"/>
+    </changeSet>
+
+    <changeSet id="drop_meveo_script_instance_function_version_column" author="Aurélien Ponçon">
+        <dropColumn tableName="meveo_script_instance" columnName="function_version" />
+    </changeSet>
 </databaseChangeLog>
