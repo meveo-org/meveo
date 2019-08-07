@@ -42,8 +42,8 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
-    public CustomEntityInstanceApi(Class<CustomEntityInstance> jpaClass, Class<CustomEntityInstanceDto> dtoClass) {
-        super(jpaClass, dtoClass);
+    public CustomEntityInstanceApi() {
+        super(CustomEntityInstance.class, CustomEntityInstanceDto.class);
     }
 
     public void create(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
