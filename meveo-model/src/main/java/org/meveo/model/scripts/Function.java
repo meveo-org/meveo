@@ -24,7 +24,7 @@ public class Function extends BusinessEntity {
 
     private static final long serialVersionUID = -1615762108685208441L;
 
-    @Column(name = "function_version", nullable = false)
+    @Column(name = "function_version")
     private Integer functionVersion = 1;
 
     @Column(name = "test_suite", columnDefinition = "TEXT")

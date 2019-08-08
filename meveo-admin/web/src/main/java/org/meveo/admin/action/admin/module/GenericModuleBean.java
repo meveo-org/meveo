@@ -42,6 +42,7 @@ import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.dto.BaseDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -111,6 +112,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
         super(clazz);
     }
 
+    @Override
     @PostConstruct
     public void init() {
         root = new DefaultTreeNode("Root");
@@ -163,7 +165,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                     return module;
                 }
 
-                for (BaseDto itemDto : dto.getModuleItems()) {
+                for (BaseEntityDto itemDto : dto.getModuleItems()) {
                     if (itemDto instanceof CustomFieldTemplateDto) {
                         CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;
                         TreeNode classNode = getOrCreateNodeByAppliesTo(customFieldTemplateDto.getAppliesTo(), itemDto.getClass().getName());

@@ -66,6 +66,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         dto.setDescriptions(descriptionDtos);
         dto.setName(technicalService.getName());
         dto.setVersion(technicalService.getFunctionVersion());
+        dto.setDisabled(technicalService.isDisabled());
         return dto;
     }
 
@@ -76,6 +77,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         technicalService.setDescriptions(descriptions);
         technicalService.setName(postData.getName());
         technicalService.setFunctionVersion(postData.getVersion());
+        technicalService.setDisabled(postData.isDisabled());
         return technicalService;
     }
 
@@ -141,6 +143,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final List<Description> descriptions = descriptionApi.fromDescriptionsDto(service, data);
         checkEndpoints(service, descriptions);
         service.setDescriptions(descriptions);
+        service.setDisabled(data.isDisabled());
         return service;
     }
 
@@ -370,6 +373,25 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final Integer finalVersion = version;
         List<Description> description = persistenceService.description(buildCode(name, finalVersion));
         return InputOutputDescription.fromDescriptions(description);
+    }
+
+    /**
+     * Enable / disable a given version of a service
+     *
+     * @param name    Name of the service to disable / enable
+     * @param version Version of the service to disable / enable
+     * @param state   Whether to enable / disable the service
+     * @throws EntityDoesNotExistsException if the entity does not exists
+     */
+    public void disable(String name, Integer version, Boolean state) throws EntityDoesNotExistsException, BusinessException {
+        TechnicalService technicalService = technicalServiceService().findByNameAndVersion(name, version)
+                .orElseThrow(() -> getEntityDoesNotExistsException(name));
+
+        if (state) {
+            technicalServiceService().disable(technicalService.getId());
+        } else {
+            technicalServiceService().enable(technicalService.getId());
+        }
     }
 
 

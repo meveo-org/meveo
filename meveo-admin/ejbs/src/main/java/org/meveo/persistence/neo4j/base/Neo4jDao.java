@@ -517,7 +517,7 @@ public class Neo4jDao {
         return nodeId;
     }
 
-    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, Map<String, Object> fields, List<String> labels) {
+    public void updateNodeByNodeId(String neo4JConfiguration, String nodeId, String cetCode, Map<String, Object> fields, List<String> labels) {
 
         String alias = "startNode"; // Alias to use in query
 
@@ -525,6 +525,7 @@ public class Neo4jDao {
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put(NODE_ID, nodeId);
         valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
+        valuesMap.put(CET_CODE, cetCode);
 
         Map<String, Object> fieldValues = new HashMap<>();
         fieldValues.put(NODE_ID, nodeId);
@@ -611,13 +612,15 @@ public class Neo4jDao {
         return Collections.emptySet();
     }
 
-    public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String label, String endNodeId, Map<String, Object> fields) {
+    public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String startNodeLabel, String label, String endNodeId, String endNodeLabel, Map<String, Object> fields) {
 
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
         values.put("startNodeId", startNodeId);
         values.put("relationshipLabel", label);
         values.put("endNodeId", endNodeId);
+        values.put("startNodeLabel", startNodeLabel);
+        values.put("endNodeLabel", endNodeLabel);
         final String fieldsString = getFieldsString(fields.keySet());
         values.put(FIELDS, fieldsString);
         values.putAll(fields);
@@ -769,6 +772,29 @@ public class Neo4jDao {
                 ImmutableMap.of("secondNodeId", nodeId),
                 (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asRelationship).collect(Collectors.toList()),
                 e -> LOGGER.error("Error retriving relationships of node {}", nodeId, e)
+        );
+
+    }
+
+    /**
+     * Find all the relationships of a given type related to a node
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param nodeId             Node id
+     * @param type               Type of the relationships to retrieve
+     */
+    public List<Relationship> findRelationships(String neo4JConfiguration, String nodeId, String type){
+        // First, retrieves relationships of second node
+        String findAllRelationshipQuery = "MATCH (n)-[r:" + type + "]-() \n" +
+                "WHERE n.meveo_uuid = $nodeId \n" +
+                "RETURN r";
+
+        return cypherHelper.execute(
+                neo4JConfiguration,
+                findAllRelationshipQuery,
+                ImmutableMap.of("nodeId", nodeId),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asRelationship).collect(Collectors.toList()),
+                e -> LOGGER.error("Error retriving relationships of type {} of node {}", type, nodeId, e)
         );
 
     }

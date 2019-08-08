@@ -1,6 +1,6 @@
 package org.meveo.api.dto.module;
 
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
 
@@ -9,7 +9,7 @@ import org.meveo.model.IEntity;
  * 
  * @author andrius
  */
-abstract class BaseDataModelDto extends BusinessDto implements IEntity {
+abstract class BaseDataModelDto extends BusinessEntityDto implements IEntity {
 
     /**
      * Instantiates a new base data model dto.

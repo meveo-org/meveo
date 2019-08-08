@@ -20,6 +20,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.dwh.MeasurableQuantity;
 import org.meveo.model.dwh.MeasuredValue;
 import org.meveo.model.dwh.MeasurementPeriodEnum;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
 
@@ -34,6 +35,10 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
     
     @Inject
     private MeasuredValueService mvService;
+    
+    public MeasurableQuantityApi() {
+    	super(MeasurableQuantity.class, MeasurableQuantityDto.class);
+    }
 
     public MeasurableQuantity create(MeasurableQuantityDto postData) throws MeveoApiException, BusinessException {
 
@@ -189,6 +194,30 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
 		}
 
 		return result;
+	}
+
+	@Override
+	public MeasurableQuantityDto toDto(MeasurableQuantity entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MeasurableQuantity fromDto(MeasurableQuantityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<MeasurableQuantity> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(MeasurableQuantityDto dto) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 }

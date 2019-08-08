@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.notification.NotificationHistory;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 
@@ -17,7 +17,7 @@ import org.meveo.model.notification.NotificationHistoryStatusEnum;
  */
 @XmlRootElement(name = "NotificationHistory")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NotificationHistoryDto extends BaseDto {
+public class NotificationHistoryDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 200495187386477746L;

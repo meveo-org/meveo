@@ -39,6 +39,31 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -60,6 +85,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
 import javax.enterprise.event.Event;
@@ -138,9 +164,11 @@ public class NativePersistenceService extends BaseService {
      * @param tableName    Table name
      * @param uuid         Identifier
      * @param selectFields Fields to return
+     * @deprecated Use {@link CustomTableService#findById(org.meveo.model.customEntities.CustomEntityTemplate, String, List)} instead
      * @return A map of values with field name as a map key and field value as a map value
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public Map<String, Object> findById(String tableName, String uuid, List<String> selectFields) {
 
         try {
@@ -368,10 +396,16 @@ public class NativePersistenceService extends BaseService {
                 		.setMaxResults(1);
                 
                 for (String fieldName : values.keySet()) {
-                    if (values.get(fieldName) == null) {
+                    Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
                         continue;
                     }
-                    query.setParameter(fieldName, values.get(fieldName));
+
+					// Serialize list values
+                    if(fieldValue instanceof Collection) {
+                    	fieldValue = JacksonUtil.toString(fieldValue);
+                    }
+                    query.setParameter(fieldName, fieldValue);
                 }
 
                 uuid = query.getSingleResult();
@@ -467,12 +501,20 @@ public class NativePersistenceService extends BaseService {
     		value = JacksonUtil.toString(value);
     	}
 
+    	if(value instanceof Collection) {
+    		value = JacksonUtil.toString(value);
+    	}
+
         try {
             if (value == null) {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=" + uuid).executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             } else {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=" + uuid).setParameter(fieldName, value)
-                        .executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+	                .setParameter(fieldName, value)
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             }
 
             CustomTableRecord record = new CustomTableRecord();
@@ -929,7 +971,9 @@ public class NativePersistenceService extends BaseService {
     public String findIdByValues(String tableName, Map<String, Object> queryValues) {
         QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
-            queryBuilder.addCriterion(key, "=", value, false);
+        	if(!(value instanceof Collection) && !(value instanceof File)) {
+                queryBuilder.addCriterion(key, "=", value, false);
+        	}
         });
 
         NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);

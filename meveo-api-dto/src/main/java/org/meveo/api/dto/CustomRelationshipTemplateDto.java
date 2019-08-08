@@ -22,7 +22,7 @@ import org.meveo.model.persistence.DBStorageType;
 
 @XmlRootElement(name = "CustomRelationshipTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomRelationshipTemplateDto extends BaseDto {
+public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
     private static final long serialVersionUID = -6633504145323452803L;
 

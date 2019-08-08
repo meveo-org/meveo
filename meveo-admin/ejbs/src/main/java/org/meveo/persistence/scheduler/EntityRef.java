@@ -22,18 +22,25 @@ public class EntityRef {
     private String uuid;
     private Integer trustScore;
     private String constraintCode;
+    private String label;
 
     public EntityRef() {
     }
 
-    public EntityRef(String uuid) {
+    public EntityRef(String uuid, String label) {
         this.uuid = uuid;
+        this.label = label;
     }
 
-    public EntityRef(String uuid, Integer trustScore, String constraintCode) {
+    public EntityRef(String uuid, Integer trustScore, String constraintCode, String label) {
         this.uuid = uuid;
         this.trustScore = trustScore;
         this.constraintCode = constraintCode;
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     public String getUuid() {

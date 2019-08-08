@@ -19,7 +19,7 @@ import org.meveo.model.billing.Country;
  */
 @XmlRootElement(name = "CountryIso")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CountryIsoDto extends BaseDto {
+public class CountryIsoDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -4175660113940481232L;
@@ -31,6 +31,10 @@ public class CountryIsoDto extends BaseDto {
     /** The description. */
     @XmlAttribute()
     private String description;
+
+    /** The nationality. */
+    @XmlAttribute()
+    private String nationality;
 
     /** The language descriptions. */
     private List<LanguageDescriptionDto> languageDescriptions;
@@ -58,6 +62,7 @@ public class CountryIsoDto extends BaseDto {
     public CountryIsoDto(Country e) {
         countryCode = e.getCountryCode();
         description = e.getDescription();
+        nationality = e.getNationality();
         setLanguageDescriptions(LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(e.getDescriptionI18n()));
         currencyCode = e.getCurrency().getCurrencyCode();
 
@@ -100,6 +105,24 @@ public class CountryIsoDto extends BaseDto {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * Gets the nationality.
+     *
+     * @return the nationality
+     */
+    public String getNationality() {
+        return nationality;
+    }
+
+    /**
+     * Sets the nationality.
+     *
+     * @param nationality the nationality to set
+     */
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
     }
 
     /**

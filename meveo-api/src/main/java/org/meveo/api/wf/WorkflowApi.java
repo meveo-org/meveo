@@ -25,6 +25,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.model.wf.WorkflowHistory;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowHistoryService;
 import org.meveo.service.wf.WorkflowService;
@@ -43,6 +44,10 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
 
     @Inject
     private WFTransitionService wfTransitionService;
+    
+    public WorkflowApi() {
+    	super(Workflow.class, WorkflowDto.class);
+    }
 
     /**
      * 
@@ -323,4 +328,28 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
         }
         return result;
     }
+
+	@Override
+	public WorkflowDto toDto(Workflow entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Workflow fromDto(WorkflowDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<Workflow> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(WorkflowDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

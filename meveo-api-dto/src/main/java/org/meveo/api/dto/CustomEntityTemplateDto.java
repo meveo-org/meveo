@@ -23,7 +23,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 @XmlRootElement(name = "CustomEntityTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomEntityTemplateDto extends BaseDto {
+public class CustomEntityTemplateDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6633504145323452803L;

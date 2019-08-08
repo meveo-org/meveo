@@ -937,11 +937,6 @@ public class CustomTableService extends NativePersistenceService {
         return findById(cet, uuid, null);
     }
 
-    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
-        final Map<String, Object> values = findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
-        return convertData(values, cet);
-    }
-
     public List<Map<String, Object>> list(CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
@@ -965,8 +960,38 @@ public class CustomTableService extends NativePersistenceService {
         return convertData(data, cet);
     }
 
-    private Map<String, Object> convertData(Map<String, Object> data, CustomEntityTemplate cet) {
-        return convertData(Collections.singletonList(data), cet).get(0);
+	/**
+	 * Retrieves and convert data from database table
+	 *
+	 * @param cet          Template of the data
+	 * @param uuid         UUID of the row
+	 * @param selectFields Fields to retrieve. Will retrieve all fields if null or empty
+	 * @return the converted row data
+	 */
+	@SuppressWarnings("deprecation")
+	public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+		// Retrieve fields of the template
+		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+
+		// Get raw data
+		Map<String, Object> data = super.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+
+		// Format the data to the representation defined by the fields
+		Map<String, Object> convertedData = convertData(data, cet);
+
+		// Replace the db column names by the fields codes
+		return replaceKeys(cfts, convertedData);
+	}
+
+	/**
+	 * Convert the data to the expected format. For instance, deserializes lists
+	 *
+	 * @param data Raw data
+	 * @param cet  Template of the data
+	 * @return the converted data
+	 */
+    private Map<String, Object> convertData(Map<String, Object> data, CustomEntityTemplate cet){
+    	return convertData(Collections.singletonList(data), cet).get(0);
     }
 
     /**
@@ -979,19 +1004,19 @@ public class CustomTableService extends NativePersistenceService {
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
         final Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
         final List<Map<String, Object>> convertedData = new ArrayList<>();
-        
+
         for(int i = 0; i < data.size(); i++){
         	Map<String, Object> modifiableMap = new HashMap<>();
         	convertedData.add(i, modifiableMap);
-            
+
             for(Entry<String, Object> field : data.get(i).entrySet()){
             	if(field.getKey().equals("uuid")) {
             		modifiableMap.put(field.getKey(), field.getValue());
             		continue;
             	}
-            	
+
             	CustomFieldTemplate cft = getCustomFieldTemplate(cfts, field).get();
-            	
+
             	// De-serialize lists
                 if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)){
                     if(!(field.getValue() instanceof Collection) && field.getValue() != null){
@@ -1002,7 +1027,7 @@ public class CustomTableService extends NativePersistenceService {
                 }
             }
         }
-        
+
         return convertedData;
     }
 
@@ -1046,13 +1071,15 @@ public class CustomTableService extends NativePersistenceService {
     	return entities;
     }
 
-    public void replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
+    public Map<String, Object> replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
         for(CustomFieldTemplate cft : cfts){
             final Object tempVal = values.remove(cft.getDbFieldname());
             if(tempVal != null){
                 values.put(cft.getCode(), tempVal);
             }
         }
+
+        return values;
     }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet) {
@@ -1065,6 +1092,19 @@ public class CustomTableService extends NativePersistenceService {
         return values.entrySet()
                 .stream()
                 .filter(entry -> {
+                	// Do not allow files to be stored directly in table
+                	if(entry.getValue() instanceof File) {
+                		return false;
+                	}
+
+                	// Do not allow list of files to be stored directly in table
+                	if(entry.getValue() instanceof List) {
+                		List<?> listValue = (List<?>) entry.getValue();
+                		if(!listValue.isEmpty() && (listValue.get(0) instanceof File)) {
+                			return false;
+                		}
+                	}
+
                     if(entry.getKey().equals("uuid")) {
                         return true;
                     }

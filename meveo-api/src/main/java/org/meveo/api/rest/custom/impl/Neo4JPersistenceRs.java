@@ -19,6 +19,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,7 +104,7 @@ public class Neo4JPersistenceRs {
             scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
             return Response.status(201).build();
 
-        } catch (BusinessException | ELException e) {
+        } catch (BusinessException | ELException | IOException e) {
 
             /* An error happened */
             return Response.serverError().entity(e).build();

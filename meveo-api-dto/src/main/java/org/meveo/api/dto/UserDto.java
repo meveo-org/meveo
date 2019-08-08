@@ -43,7 +43,7 @@ import org.meveo.model.security.Role;
  */
 @XmlRootElement(name = "User")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class UserDto extends BaseDto {
+public class UserDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6633504145323452803L;

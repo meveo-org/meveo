@@ -28,7 +28,7 @@ import org.meveo.model.persistence.DBStorageType;
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomFieldTemplateDto extends BaseDto {
+public class CustomFieldTemplateDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;

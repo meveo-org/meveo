@@ -33,7 +33,7 @@ import java.util.List;
  */
 @XmlRootElement(name = "Connectors")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TechnicalServicesDto extends BusinessDto {
+public class TechnicalServicesDto extends BusinessEntityDto {
 
     private static final long serialVersionUID = -5952076128269784073L;
 

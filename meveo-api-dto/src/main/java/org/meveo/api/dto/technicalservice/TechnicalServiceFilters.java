@@ -12,11 +12,18 @@ public class TechnicalServiceFilters {
     @QueryParam("likeName")
     private String likeName;
 
+    @QueryParam("onlyActive")
+    private boolean onlyActive = false;
+
     public String getName() {
         return name;
     }
 
     public String getLikeName() {
         return likeName;
+    }
+
+    public boolean isOnlyActive() {
+        return onlyActive;
     }
 }

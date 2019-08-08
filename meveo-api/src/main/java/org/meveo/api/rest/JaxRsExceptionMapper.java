@@ -14,6 +14,7 @@ import org.jboss.resteasy.api.validation.Validation;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,16 +26,16 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 @Singleton
 public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
+    private static Logger log = LoggerFactory.getLogger(JaxRsExceptionMapper.class);
+
     @Override
     public Response toResponse(Exception e) {
-
-        Logger log = LoggerFactory.getLogger(getClass());
-        log.error("REST request failed with an error {}", e);
+        log.error("REST request failed : ", e);
 
         if (e instanceof UnrecognizedPropertyException) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
 
-        } else if (e instanceof NotFoundException || e instanceof NotAllowedException) {
+        } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
             return Response.status(Response.Status.NOT_FOUND).build();
 
         } else if (e instanceof JsonParseException || e instanceof JsonMappingException) {
@@ -42,28 +43,6 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
         }
         return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
-
-        // if (exception instanceof ConstraintDefinitionException) {
-        // return buildResponse(unwrapException(exception), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
-        // }
-        // if (exception instanceof ConstraintDeclarationException) {
-        // return buildResponse(unwrapException(exception), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
-        // }
-        // if (exception instanceof GroupDefinitionException) {
-        // return buildResponse(unwrapException(exception), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
-        // }
-        // if (exception instanceof ResteasyViolationException) {
-        // ResteasyViolationException resteasyViolationException = ResteasyViolationException.class.cast(exception);
-        // Exception e = resteasyViolationException.getException();
-        // if (e != null) {
-        // return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
-        // } else if (resteasyViolationException.getReturnValueViolations().size() == 0) {
-        // return buildViolationReportResponse(resteasyViolationException, Status.BAD_REQUEST);
-        // } else {
-        // return buildViolationReportResponse(resteasyViolationException, Status.INTERNAL_SERVER_ERROR);
-        // }
-        // }
-
     }
 
     protected Response buildResponse(Object entity, String mediaType, Status status) {
@@ -91,40 +70,4 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
         }
     }
 
-    // protected Response buildViolationReportResponse(ResteasyViolationException exception, Status status) {
-    // ResponseBuilder builder = Response.status(status);
-    // builder.header(Validation.VALIDATION_HEADER, "true");
-    //
-    // // Check standard media types.
-    // MediaType mediaType = getAcceptMediaType(exception.getAccept());
-    // if (mediaType != null) {
-    // builder.type(mediaType);
-    // builder.entity(new ViolationReport(exception));
-    // return builder.build();
-    // }
-    //
-    // // Default media type.
-    // builder.type(MediaType.TEXT_PLAIN);
-    // builder.entity(exception.toString());
-    // return builder.build();
-    // }
-
-    // private MediaType getAcceptMediaType(List<MediaType> accept) {
-    // Iterator<MediaType> it = accept.iterator();
-    // while (it.hasNext()) {
-    // MediaType mt = it.next();
-    // /*
-    // * application/xml media type causes an exception: org.jboss.resteasy.core.NoMessageBodyWriterFoundFailure: Could not find MessageBodyWriter for response object of
-    // * type: org.jboss.resteasy.api.validation.ViolationReport of media type: application/xml
-    // */
-    // /*
-    // * if (MediaType.APPLICATION_XML_TYPE.getType().equals(mt.getType()) && MediaType.APPLICATION_XML_TYPE.getSubtype().equals(mt.getSubtype())) { return
-    // * MediaType.APPLICATION_XML_TYPE; }
-    // */
-    // if (MediaType.APPLICATION_JSON_TYPE.getType().equals(mt.getType()) && MediaType.APPLICATION_JSON_TYPE.getSubtype().equals(mt.getSubtype())) {
-    // return MediaType.APPLICATION_JSON_TYPE;
-    // }
-    // }
-    // return null;
-    // }
 }
