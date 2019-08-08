@@ -493,19 +493,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
 
     private TreeNode getOrCreateNodeByAppliesTo(String appliesTo, String classname) {
         TreeNode appliesToNode = getOrCreateNodeByClass(classname);
-        String code = appliesTo.split("_")[1];
-        String prefix = appliesTo.split("_")[0];
-        String data = ReflectionUtils.getHumanClassName(CustomRelationshipTemplate.class.getSimpleName()) + " - " + code;
-        if (CustomEntityTemplate.CFT_PREFIX.equals(prefix)) {
-            data = ReflectionUtils.getHumanClassName(CustomEntityTemplate.class.getSimpleName()) + " - " + code;
-        }
+        String code = appliesTo.split("_", 2)[1];
+        String prefix = appliesTo.split("_", 2)[0];
         for (TreeNode node : appliesToNode.getChildren()) {
-            if (data.equals((String)node.getData())) {
+            if (code.equals((String)node.getData())) {
                 return node;
             }
         }
 
-        TreeNode node = new DefaultTreeNode(appliesTo, data, getOrCreateNodeByClass(classname));
+        TreeNode node = new DefaultTreeNode(appliesTo, code, getOrCreateNodeByClass(classname));
         node.setExpanded(true);
         return node;
     }
