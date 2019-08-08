@@ -31,6 +31,7 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.communication.MeveoInstance;
@@ -45,6 +46,7 @@ import org.meveo.service.script.module.ModuleScriptService;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.ws.rs.core.Response;
 
 import java.util.Arrays;
@@ -257,5 +259,27 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             return sb.toString();
         }
         return null;
+    }
+
+    /**
+     * Find entity by code - match the beginning of code.
+     *
+     * @param code Beginning of code
+     * @return A list of entities which code starts with a given value
+     */
+    @SuppressWarnings("unchecked")
+    public List<MeveoModule> findLikeWithCode(String code) {
+        try {
+            QueryBuilder qb = new QueryBuilder(getEntityClass(), "be");
+            if (!StringUtils.isBlank(code)) {
+                qb.like("be.code", code, QueryBuilder.QueryLikeStyleEnum.MATCH_ANYWHERE, false);
+            }
+
+            return (List<MeveoModule>) qb.getQuery(getEntityManager()).getResultList();
+        } catch (NoResultException ne) {
+            return null;
+        } catch (NonUniqueResultException nre) {
+            return null;
+        }
     }
 }

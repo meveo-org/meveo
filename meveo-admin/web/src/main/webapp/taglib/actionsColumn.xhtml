@@ -71,17 +71,17 @@
 		<c:set var="objectIdParamName" value="#{backingBean.idParameterName}" />
 	</c:if>
 
-	<hftl:entityPopup id="addModulePopup"
-					  header="#{messages['meveoModule.title']}"
-					  backingBean="#{meveoModuleListBean}"
-					  selection="#{backingBean.meveoModule}"
-					  searchField1Label="#{messages['BusinessEntity.code']}"
-					  searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-					  column1="code"
-					  column2Label="#{messages['BusinessEntity.description']}"
-					  column2="description" selectionListenerBean="#{backingBean}"
-					  selectionListenerMethod="addToModule">
-	</hftl:entityPopup>
+	<hftl:selectEntityPopup id="addModulePopup"
+							  header="#{messages['meveoModule.title']}"
+							  backingBean="#{meveoModuleBean}"
+							  selection="#{backingBean.meveoModule}"
+							  searchField1Label="#{messages['BusinessEntity.code']}"
+							  searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+							  column1="code"
+							  column2Label="#{messages['BusinessEntity.description']}"
+							  column2="description" selectionListenerBean="#{backingBean}"
+							  selectionListenerMethod="addToModule">
+	</hftl:selectEntityPopup>
 
 	<p:column exportable="false" toggleable="false" width="#{width}">
 		<f:facet name="header">
@@ -156,10 +156,56 @@
 		</p:commandButton>
 
 		<p:commandButton id="#{resultsId}addModule" icon="ui-icon-newwin"
-						 rendered="#{renderAddModule and backingBean.canUserUpdateEntity()}" onclick="PF('dlg_addModulePopup').show()">
-			<f:setPropertyActionListener target="#{backingBean.entity}" value="#{entity}" />
+						 partialSubmit="true" process="@this" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{renderAddModule and backingBean.canUserUpdateEntity()}" onclick="PF('addModuleDlg').show()">
+			<f:setPropertyActionListener value="#{entity}" target="#{backingBean.entity}" />
 		</p:commandButton>
 		<p:tooltip for="#{resultsId}addModule" rendered="#{renderAddModule}" value="#{messages['commons.addToModule']}" showEffect="slide" hideEffect="slide" />
+
+		<p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+			<h:form id="addModuleForm">
+				<h:panelGroup layout="block" styleClass="search-panel">
+					<p:outputPanel styleClass="search-panel-fields">
+						<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+							<c:if test="#{not empty converter}">
+								<f:converter converterId="#{converter}" />
+							</c:if>
+						</p:inputText>
+					</p:outputPanel>
+					<h:panelGroup layout="block" styleClass="search-panel-actions">
+						<p:commandButton id="buttonSearch" process="@this :addModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+						<p:commandButton id="buttonClear" process="@this :addModuleForm" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+					</h:panelGroup>
+				</h:panelGroup>
+
+				<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.meveoModule}"
+							 rowKey="#{e.id}" lazy="#{lazy}">
+					<p:column selectionMode="single" style="width:16px;text-align:center"/>
+					<p:column>
+						<f:facet name="header">
+							<h:outputText value="#{messages['BusinessEntity.code']}" />
+						</f:facet>
+						<h:outputText value="#{e['code']}" />
+					</p:column>
+					<p:column>
+						<f:facet name="header">
+							<h:outputText value="#{messages['BusinessEntity.description']}" />
+						</f:facet>
+						<h:outputText value="#{e['description']}" />
+					</p:column>
+					<f:facet name="footer">
+						<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this :addModuleForm" partialSubmit="true"
+										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :datatable_#{resultsId}"
+										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
+										 action="#{backingBean.addToModule}"/>
+						<p:commandButton value="#{messages['commons.close']}" update="@this :datatable_#{resultsId}"
+										 oncomplete="PF('addModuleDlg').hide()">
+							<p:resetInput target="@form" />
+						</p:commandButton>
+					</f:facet>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
 		<ui:insert />
 	</p:column>
 </ui:composition>

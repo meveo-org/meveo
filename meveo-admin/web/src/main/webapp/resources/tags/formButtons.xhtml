@@ -68,18 +68,6 @@
 <cc:implementation>
 	<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
-	<hftl:entityPopup id="addModulePopup"
-							header="#{messages['meveoModule.title']}"
-							backingBean="#{meveoModuleListBean}"
-					  		selection="#{cc.attrs.backingBean.meveoModule}"
-							searchField1Label="#{messages['BusinessEntity.code']}"
-							searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-							column1="code"
-							column2Label="#{messages['BusinessEntity.description']}"
-							column2="description" selectionListenerBean="#{cc.attrs.backingBean}"
-					  		selectionListenerMethod="addToModule">
-	</hftl:entityPopup>
-
 	<h:panelGroup layout="block" styleClass="form-panel-actions" id="formPanelActions">
 		<p:button value="#{messages['commons.edit']}" includeViewParams="true"
 				  rendered="#{!cc.attrs.edit and cc.attrs.showEditButton}">
@@ -202,9 +190,9 @@
 			<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
 		</p:commandButton>
 
-		<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin"
+		<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" partialSubmit="true" process="@this" actionListener="#{meveoModuleBean.initializeModules()}"
 						 rendered="#{not empty cc.attrs.backingBean.objectId and cc.attrs.showAddModuleButton and cc.attrs.backingBean.canUserUpdateEntity()}"
-						 onclick="PF('dlg_addModulePopup').show()">
+						 oncomplete="PF('addModuleDlg').show()">
 		</p:commandButton>
 
 		<p:confirmDialog id="confirmCannotUpdateWithMessageDialog" styleClass="confirm-dialog"
@@ -215,6 +203,52 @@
 								 oncomplete="PF('#{cc.attrs.formId}confirmCannotUpdateWithMessageDialog').hide()" update="@this" />
 			</p:panel>
 		</p:confirmDialog>
+
+		<p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+			<h:form id="addModuleForm">
+				<h:panelGroup layout="block" styleClass="search-panel">
+					<p:outputPanel styleClass="search-panel-fields">
+						<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+							<c:if test="#{not empty converter}">
+								<f:converter converterId="#{converter}" />
+							</c:if>
+						</p:inputText>
+					</p:outputPanel>
+					<h:panelGroup layout="block" styleClass="search-panel-actions">
+						<p:commandButton id="buttonSearch" process="@this" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+						<p:commandButton id="buttonClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+					</h:panelGroup>
+				</h:panelGroup>
+
+				<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.meveoModule}"
+							 rowKey="#{e.id}" lazy="#{lazy}">
+					<p:column selectionMode="single" style="width:16px;text-align:center"/>
+					<p:column>
+						<f:facet name="header">
+							<h:outputText value="#{messages['BusinessEntity.code']}" />
+						</f:facet>
+						<h:outputText value="#{e['code']}" />
+					</p:column>
+					<p:column>
+						<f:facet name="header">
+							<h:outputText value="#{messages['BusinessEntity.description']}" />
+						</f:facet>
+						<h:outputText value="#{e['description']}" />
+					</p:column>
+					<f:facet name="footer">
+						<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this" partialSubmit="true"
+										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@this"
+										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
+										 action="#{cc.attrs.backingBean.addToModule}"/>
+						<p:commandButton value="#{messages['commons.close']}" update="@this"
+										 oncomplete="PF('addModuleDlg').hide()">
+							<p:resetInput target="@form" />
+						</p:commandButton>
+					</f:facet>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
 	</h:panelGroup>
 </cc:implementation>
 

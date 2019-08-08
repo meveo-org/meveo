@@ -457,6 +457,29 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         }
     }
 
+    public void addManyToModule()  {
+        if (selectedEntities == null || selectedEntities.isEmpty()) {
+            messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
+            return;
+        }
+
+        MeveoModule module = meveoModuleService.findByCode(meveoModule.getCode());
+        for (IEntity entity : selectedEntities) {
+            if (entity != null && !meveoModule.equals(entity)) {
+                BusinessEntity businessEntity = (BusinessEntity) entity;
+                MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+                if (!module.getModuleItems().contains(item)) {
+                    module.addModuleItem(item);
+                }
+            }
+        }
+        try {
+            meveoModuleService.update(module);
+        } catch (BusinessException e) {
+
+        }
+    }
+
     /**
      * Go back and end conversation. BeforeRedirect flag is set to true, so conversation is first ended and then redirect is proceeded, that means that after redirect new
      * conversation will have to be created (temp or long running) so that view will have all most up to date info because it will load everything from db when starting new

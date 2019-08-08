@@ -132,18 +132,6 @@
 
     <p:panel id="#{resultsId}_panel" width="100">
 
-        <hftl:entityPopup id="addModulePopup"
-                          header="#{messages['meveoModule.title']}"
-                          backingBean="#{meveoModuleListBean}"
-                          selection="#{backingBean.meveoModule}"
-                          searchField1Label="#{messages['BusinessEntity.code']}"
-                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
-                          column1="code"
-                          column2Label="#{messages['BusinessEntity.description']}"
-                          column2="description" selectionListenerBean="#{backingBean}"
-                          selectionListenerMethod="addToModule">
-        </hftl:entityPopup>
-
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
             <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="10" editable="#{editable}" editMode="#{editMode}"
                          widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
@@ -194,7 +182,9 @@
                         <f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
                     </p:commandButton>
                 </c:if>
-                <p:commandButton value="#{messages['commons.addToModule']}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" type="button"  onclick="PF('dlg_addModulePopup').show()"/>
+                <p:commandButton value="#{messages['commons.addToModule']}" partialSubmit="true" process="@this" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" onclick="PF('addModuleDlg').show()">
+                    <p:resetInput target=":#{formId} :addModuleForm" />
+                </p:commandButton>
 
             </h:panelGroup>
 
@@ -213,6 +203,50 @@
                     <p:fileUpload fileUploadListener="#{backingBean.handleFileUpload}" update=":#{formId} :datatable_#{resultsId}" rendered="#{importCsv}" multiple="true" mode="advanced" dragDropSupport="true"
                                   fileLimit="5" process=":#{formId}_strategy" />
                 </div>
+            </p:dialog>
+            <p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+                <h:form id="addModuleForm">
+                    <h:panelGroup layout="block" styleClass="search-panel">
+                        <p:outputPanel styleClass="search-panel-fields">
+                            <p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+                                <c:if test="#{not empty converter}">
+                                    <f:converter converterId="#{converter}" />
+                                </c:if>
+                            </p:inputText>
+                        </p:outputPanel>
+                        <h:panelGroup layout="block" styleClass="search-panel-actions">
+                            <p:commandButton id="buttonSearch" process="@this :addModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+                            <p:commandButton id="buttonClear" process="@this :addModuleForm" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.meveoModule}"
+                                 rowKey="#{e.id}" lazy="#{lazy}">
+                        <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{messages['BusinessEntity.code']}" />
+                            </f:facet>
+                            <h:outputText value="#{e['code']}" />
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{messages['BusinessEntity.description']}" />
+                            </f:facet>
+                            <h:outputText value="#{e['description']}" />
+                        </p:column>
+                        <f:facet name="footer">
+                            <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this :addModuleForm" partialSubmit="true"
+                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :datatable_#{resultsId}"
+                                             oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
+                                             action="#{backingBean.addManyToModule}"/>
+                            <p:commandButton value="#{messages['commons.close']}" update="@this :datatable_#{resultsId}"
+                                             oncomplete="PF('addModuleDlg').hide()">
+                                <p:resetInput target="@form" />
+                            </p:commandButton>
+                        </f:facet>
+                    </p:dataTable>
+                </h:form>
             </p:dialog>
             <p:panel styleClass="buttons-set-data-table">
                 <ui:insert name="add-on-buttons" />
