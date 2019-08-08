@@ -16,7 +16,9 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.BusinessService;
@@ -97,6 +99,10 @@ public class EndpointService extends BusinessService<Endpoint> {
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
         keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
+        
+        // Create endpointManagement role in default client if not exists
+        KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+        keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
 
         // Add Execute_All_Endpoints to endpointManagement composite if not already in
         keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);

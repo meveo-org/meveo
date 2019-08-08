@@ -111,6 +111,32 @@ public class KeycloakAdminClientService {
             clients.create(clientRepresentation);
         }
     }
+    
+    public void createRole(String client, String name){
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+        KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+        
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        final String clientId = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(client)
+                .get(0)
+                .getId();
+
+        RoleRepresentation roleRepresentation = new RoleRepresentation();
+        roleRepresentation.setComposite(true);
+        roleRepresentation.setName(name);
+        roleRepresentation.setId(name);
+
+        keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(clientId)
+                .roles()
+                .create(roleRepresentation);
+
+    }
 
     /**
      * Add a role from target client to a composite role of an default client.
@@ -119,8 +145,9 @@ public class KeycloakAdminClientService {
      * @param clientTarget Id of the client holding the composite role
      * @param roleCompositeSource composite role of the default client=
      * @param roleTargetToAdd role of the target client to add
+     * @throws BusinessException if the source composite role does not exists in default client
      */
-    public void addToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToAdd) {
+    public void addToCompositeCrossClient(String clientTarget, String roleCompositeSource, String roleTargetToAdd) throws BusinessException {
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
         final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
@@ -140,12 +167,14 @@ public class KeycloakAdminClientService {
                 .get(roleTargetToAdd)
                 .toRepresentation();
 
-        keycloak.realm(keycloakAdminClientConfig.getRealm())
-                .clients()
-                .get(defaultSourceClient)
-                .roles()
-                .get(roleCompositeSource)
-                .addComposites(Collections.singletonList(roleToAdd));
+        ClientResource defaultClient = keycloak.realm(keycloakAdminClientConfig.getRealm()).clients().get(defaultSourceClient);
+        RoleResource roleResource = defaultClient.roles().get(roleCompositeSource);
+        
+        try {
+        	roleResource.addComposites(Collections.singletonList(roleToAdd));
+        } catch(NotFoundException e) {
+        	throw new BusinessException("Role " + roleCompositeSource + " does not exists in client " + keycloakAdminClientConfig.getClientId());
+        }
 
     }
 
