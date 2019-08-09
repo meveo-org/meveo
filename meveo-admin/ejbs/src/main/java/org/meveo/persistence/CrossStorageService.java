@@ -281,7 +281,7 @@ public class CrossStorageService implements CustomPersistenceService {
      * @param targetValues Filters on target entity
      */
     @Override
-    public void addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException {
+    public PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
         if (!crt.isUnique()) {
@@ -295,21 +295,19 @@ public class CrossStorageService implements CustomPersistenceService {
         if (
                 isEverythingStoredInNeo4J(crt)
         ) {
-            neo4jService.addSourceNodeUniqueCrt(
+            return neo4jService.addSourceNodeUniqueCrt(
                     repository.getNeo4jConfiguration().getCode(),
                     relationCode,
                     filterValues(sourceValues, crt, DBStorageType.NEO4J),
                     filterValues(targetValues, crt, DBStorageType.NEO4J)
             );
-
-            return;
         }
 
         String targetUUUID = findEntityId(repository, targetValues, endNode);
 
         // Target does not exists. We create the source
         if (targetUUUID == null) {
-            createOrUpdate(repository, startNode.getCode(), sourceValues);
+            return createOrUpdate(repository, startNode.getCode(), sourceValues);
 
         } else {
             // Target exists. Let's check if the relation exist.
@@ -317,15 +315,15 @@ public class CrossStorageService implements CustomPersistenceService {
 
             // Relation does not exists. We create the source.
             if (relationUUID == null) {
-                createOrUpdate(repository, startNode.getCode(), sourceValues);
+                return createOrUpdate(repository, startNode.getCode(), sourceValues);
 
             } else {
                 // Relation exists. We update the source node.
                 String sourceUUID = findIdOfSourceEntityByRelationId(repository, relationUUID, crt);
                 update(repository, startNode, sourceValues, sourceUUID);
+                return new PersistenceActionResult(sourceUUID);
             }
         }
-
     }
 
     private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
@@ -554,7 +552,7 @@ public class CrossStorageService implements CustomPersistenceService {
     }
 
     @Override
-    public void addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+    public PersistenceActionResult addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
         final CustomEntityTemplate endNode = crt.getEndNode();
@@ -566,7 +564,7 @@ public class CrossStorageService implements CustomPersistenceService {
                         && startNode.getAvailableStorages().contains(DBStorageType.NEO4J)
                         && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)
         ) {
-            neo4jService.addCRTByNodeValues(
+            return neo4jService.addCRTByNodeValues(
                     repository.getNeo4jConfiguration().getCode(),
                     relationCode,
                     filterValues(relationValues, crt, DBStorageType.NEO4J),
@@ -580,42 +578,46 @@ public class CrossStorageService implements CustomPersistenceService {
         // SQL Storage
         if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             //TODO: Check if entity references placed in values maps does not interfer ...
-            customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+            String relationUuid = customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+            return new PersistenceActionResult(relationUuid);
         }
 
         // Neo4J Storage
         if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUUID, targetUUUID);
+            return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUUID, targetUUUID);
         }
 
+        return null;
     }
 
     @Override
-    public void addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
+    public PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
         CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
         // All neo4j storage
         if (isEverythingStoredInNeo4J(crt)) {
-            neo4jService.addCRTByNodeIds(
+            return neo4jService.addCRTByNodeIds(
                     repository.getNeo4jConfiguration().getCode(),
                     relationCode,
                     filterValues(relationValues, crt, DBStorageType.NEO4J),
                     sourceUuid,
                     targetUuid);
-
-            return;
         }
 
         // SQL Storage
         if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             //TODO: Check if entity references placed in values maps does not interfer ...
-            customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
+            String relationUuid = customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
+            return new PersistenceActionResult(relationUuid);
+
         }
 
         // Neo4J Storage
         if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
+            return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
         }
+
+        return null;
     }
 
     /**

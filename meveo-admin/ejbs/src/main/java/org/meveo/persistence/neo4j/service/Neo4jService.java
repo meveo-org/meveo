@@ -584,7 +584,7 @@ public class Neo4jService implements CustomPersistenceService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRTByNodeValues(
+    public PersistenceActionResult addCRTByNodeValues(
             String neo4JConfiguration,
             String crtCode,
             Map<String, Object> crtValues,
@@ -623,14 +623,19 @@ public class Neo4jService implements CustomPersistenceService {
         /* If matching source and target exists, persist the link */
         if (startNodeKeysMap.size() > 0 && endNodeKeysMap.size() > 0) {
             Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
-            saveCRT2Neo4j(neo4JConfiguration, customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
+            final List<String> relationIds = saveCRT2Neo4j(neo4JConfiguration, customRelationshipTemplate, startNodeKeysMap, endNodeKeysMap, crtFields, false);
+            if(!relationIds.isEmpty()) {
+                return new PersistenceActionResult(relationIds.get(0));
+            }
         }
+
+        return null;
 
     }
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addCRTByNodeIds(
+    public PersistenceActionResult addCRTByNodeIds(
             String neo4JConfiguration,
             String crtCode,
             Map<String, Object> crtValues,
@@ -653,7 +658,12 @@ public class Neo4jService implements CustomPersistenceService {
 
         Map<String, Object> crtFields = validateAndConvertCustomFields(crtCustomFields, crtValues, null, true);
 
-        saveCRT2Neo4jByNodeIds(neo4JConfiguration, customRelationshipTemplate, startNodeId, endNodeId, crtFields, false);
+        final List<String> relationIds = saveCRT2Neo4jByNodeIds(neo4JConfiguration, customRelationshipTemplate, startNodeId, endNodeId, crtFields, false);
+        if(!relationIds.isEmpty()) {
+            return new PersistenceActionResult(relationIds.get(0));
+        }
+
+        return null;
     }
 
     /**
@@ -665,7 +675,7 @@ public class Neo4jService implements CustomPersistenceService {
      * @param endNodeKeysMap             Unique fields values of the start node
      * @param crtFields                  Fields values of the relationship
      */
-    public void saveCRT2Neo4j(String neo4JConfiguration,
+    public List<String> saveCRT2Neo4j(String neo4JConfiguration,
                               CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
                               Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
@@ -717,8 +727,13 @@ public class Neo4jService implements CustomPersistenceService {
             session.close();        // Close Neo4J session
         }
 
+        List<String> relationUuids = new ArrayList<>();
+
         for (Record record : recordList) {
             final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
+            if(relationship.containsKey(MEVEO_UUID)){
+                relationUuids.add(relationship.get(MEVEO_UUID).asString());
+            }
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
@@ -726,9 +741,11 @@ public class Neo4jService implements CustomPersistenceService {
                 edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
             }
         }
+
+        return relationUuids;
     }
 
-    public void saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, String startNodeId,
+    public List<String> saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, String startNodeId,
                                        String endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
@@ -786,8 +803,13 @@ public class Neo4jService implements CustomPersistenceService {
             session.close();        // Close Neo4J session
         }
 
+        List<String> relationUuids = new ArrayList<>();
+
         for (Record record : recordList) {
             final Neo4jRelationship relationship = new Neo4jRelationship(record.get(relationshipAlias).asRelationship(), neo4JConfiguration);  // Parse relationship
+            if(relationship.containsKey(MEVEO_UUID)){
+                relationUuids.add(relationship.get(MEVEO_UUID).asString());
+            }
 
             if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
@@ -795,6 +817,8 @@ public class Neo4jService implements CustomPersistenceService {
                 edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
             }
         }
+
+        return relationUuids;
     }
 
     /**
@@ -810,7 +834,7 @@ public class Neo4jService implements CustomPersistenceService {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void addSourceNodeUniqueCrt(String neo4JConfiguration,
+    public PersistenceActionResult addSourceNodeUniqueCrt(String neo4JConfiguration,
                                        String crtCode,
                                        Map<String, Object> startNodeValues,
                                        Map<String, Object> endNodeValues) throws BusinessException, ELException {
@@ -920,6 +944,7 @@ public class Neo4jService implements CustomPersistenceService {
             nodeUpdatedEvent.fire(startNode);
         }
 
+        return new PersistenceActionResult(startNode.get("meveo_uuid").asString());
     }
 
     private List<String> getAdditionalLabels(CustomEntityTemplate cet) {
@@ -1369,8 +1394,8 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Override
-    public void addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
-        addSourceNodeUniqueCrt(repository.getNeo4jConfiguration().getCode(), relationCode, sourceValues, targetValues);
+    public PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        return addSourceNodeUniqueCrt(repository.getNeo4jConfiguration().getCode(), relationCode, sourceValues, targetValues);
     }
 
     @Override
@@ -1384,13 +1409,13 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Override
-    public void addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
-        addCRTByNodeValues(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceValues, targetValues);
+    public PersistenceActionResult addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+        return addCRTByNodeValues(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceValues, targetValues);
     }
 
     @Override
-    public void addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
-        addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceUuid, targetUuid);
+    public PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
+        return addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), relationCode, relationValues, sourceUuid, targetUuid);
     }
 
     /**

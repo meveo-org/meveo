@@ -50,10 +50,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
-import org.meveo.persistence.scheduler.AtomicPersistencePlan;
-import org.meveo.persistence.scheduler.CyclicDependencyException;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
-import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.persistence.scheduler.*;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,10 +77,6 @@ public class PersistenceRs {
 
     @PathParam("repository")
     private String repositoryCode;
-
-    /*
-     *  TODO: Update by UUID method
-     */
 
     @POST
     @Path("/{cetCode}/list")
@@ -117,6 +110,7 @@ public class PersistenceRs {
 
     @GET
     @Path("/{cetCode}/{uuid}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
@@ -142,7 +136,8 @@ public class PersistenceRs {
     @SuppressWarnings("unchecked")
 	@POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PersistedItem> persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
     	
     	java.nio.file.Path tempDir = Files.createTempDirectory("dataUpload");
     	
@@ -210,7 +205,8 @@ public class PersistenceRs {
     }
 
     @POST
-    public Response persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
@@ -253,13 +249,12 @@ public class PersistenceRs {
         try {
 
             /* Persist the entities and return 201 created response */
-            scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
-            return Response.status(201).build();
+            return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 
         } catch (BusinessException | ELException | IOException e) {
 
             /* An error happened */
-            return Response.serverError().entity(e).build();
+            throw new ServerErrorException(Response.serverError().entity(e).build());
         }
 
     }
