@@ -35,7 +35,7 @@
 
             <hftl:formPanel formId="cetForm"
                             label="#{messages['customizedEntities.detail'].concat(customEntityTemplateBean.entity.code!=null?(' - '.concat(customEntityTemplateBean.entity.code)):'')}"
-                            showEnableDisableButton="true" showAddModuleButton="true"
+                            showEnableDisableButton="true"
                             backingBean="#{customEntityTemplateBean}">
 
 				<!--  Generic information -->
@@ -233,8 +233,60 @@
                         <f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />
                     </c:if>
                 </p:button>
+                <p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
+                                 rendered="#{not empty customEntityTemplateBean.objectId and customEntityTemplateBean.canUserUpdateEntity()}"
+                                 update="addToModuleForCETForm" oncomplete="PF('addToModuleForCETDlg').show()">
+                </p:commandButton>
             </p:panel>
         </h:form>
+
+        <p:dialog widgetVar="addToModuleForCETDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+            <h:form id="addToModuleForCETForm">
+                <h:panelGroup layout="block" styleClass="search-panel">
+                    <p:outputPanel styleClass="search-panel-fields">
+                        <p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+                            <c:if test="#{not empty converter}">
+                                <f:converter converterId="#{converter}" />
+                            </c:if>
+                        </p:inputText>
+                    </p:outputPanel>
+                    <h:panelGroup layout="block" styleClass="search-panel-actions">
+                        <p:commandButton id="buttonOneSearch" process="@this,addToModuleForCETForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+                        <p:commandButton id="buttonOneClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                    </h:panelGroup>
+                </h:panelGroup>
+
+                <p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{customEntityTemplateBean.meveoModule}"
+                             rowKey="#{e.id}" lazy="#{lazy}">
+                    <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="#{messages['BusinessEntity.code']}" />
+                        </f:facet>
+                        <h:outputText value="#{e['code']}" />
+                    </p:column>
+                    <p:column>
+                        <f:facet name="header">
+                            <h:outputText value="#{messages['BusinessEntity.description']}" />
+                        </f:facet>
+                        <h:outputText value="#{e['description']}" />
+                    </p:column>
+                    <f:facet name="footer">
+                        <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
+                                         partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+                                         oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addToModuleForCETDlg').hide()"
+                                         action="#{customEntityTemplateBean.addToModuleForCET}">
+                            <p:resetInput target="@form" />
+                        </p:commandButton>
+                        <p:commandButton value="#{messages['commons.close']}" update="@form"
+                                         oncomplete="PF('addToModuleForCETDlg').hide()">
+                            <p:resetInput target="@form" />
+                        </p:commandButton>
+                    </f:facet>
+                </p:dataTable>
+            </h:form>
+        </p:dialog>
+
     </ui:define>
 
 </ui:composition>

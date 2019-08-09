@@ -13,7 +13,6 @@ import javax.inject.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -860,14 +859,25 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return arrayList;
 	}
 
-	@Override
-	public void addToModule() {
+	/**
+	 *  Add CET and its CFTs to selected module
+	 */
+	public void addToModuleForCET() {
 		if (entity != null && !getMeveoModule().equals(entity)) {
+			Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 			BusinessEntity businessEntity = (BusinessEntity) entity;
 			MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
 				module.addModuleItem(item);
+			}
+
+			for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
+				CustomFieldTemplate cft = entry.getValue();
+				MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
+				if (!module.getModuleItems().contains(moduleItem)) {
+					module.addModuleItem(moduleItem);
+				}
 			}
 			try {
 				meveoModuleService.update(module);
@@ -875,21 +885,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 			}
 		}
-	}
-//		String itemClass = item.getItemClass();
-//		Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
-//		for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()){
-//			CustomFieldTemplate cft = entry.getValue();
-//			MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
-//			if (!entity.getModuleItems().contains(moduleItem)) {
-//				}
-//			}
-//	}
-
-
-	@Override
-	public CustomEntityTemplate initEntity() {
-		return super.initEntity();
 	}
 }
 

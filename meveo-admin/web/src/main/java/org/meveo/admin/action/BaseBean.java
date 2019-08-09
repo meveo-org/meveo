@@ -459,7 +459,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     public void addManyToModule()  {
         if (selectedEntities == null || selectedEntities.isEmpty()) {
-            messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
             return;
         }
 
@@ -475,9 +474,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         }
         try {
             meveoModuleService.update(module);
-        } catch (BusinessException e) {
-
-        }
+        } catch (BusinessException e) { }
     }
 
     /**

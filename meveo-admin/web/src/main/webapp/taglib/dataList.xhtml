@@ -182,8 +182,7 @@
                         <f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
                     </p:commandButton>
                 </c:if>
-                <p:commandButton value="#{messages['commons.addToModule']}" partialSubmit="true" process="@this" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" onclick="PF('addModuleDlg').show()">
-                    <p:resetInput target=":#{formId} :addModuleForm" />
+                <p:commandButton value="#{messages['commons.addToModule']}" update=":addModuleForm" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" oncomplete="PF('addModuleDlg').show()">
                 </p:commandButton>
 
             </h:panelGroup>
@@ -237,9 +236,11 @@
                         </p:column>
                         <f:facet name="footer">
                             <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this :addModuleForm" partialSubmit="true"
-                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :datatable_#{resultsId}"
+                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
                                              oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
-                                             action="#{backingBean.addManyToModule}"/>
+                                             action="#{backingBean.addManyToModule}">
+                                <p:resetInput target="@form" />
+                            </p:commandButton>
                             <p:commandButton value="#{messages['commons.close']}" update="@this :datatable_#{resultsId}"
                                              oncomplete="PF('addModuleDlg').hide()">
                                 <p:resetInput target="@form" />

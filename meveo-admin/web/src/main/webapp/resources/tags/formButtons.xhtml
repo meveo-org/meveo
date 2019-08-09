@@ -190,9 +190,9 @@
 			<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
 		</p:commandButton>
 
-		<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" partialSubmit="true" process="@this" actionListener="#{meveoModuleBean.initializeModules()}"
+		<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
 						 rendered="#{not empty cc.attrs.backingBean.objectId and cc.attrs.showAddModuleButton and cc.attrs.backingBean.canUserUpdateEntity()}"
-						 oncomplete="PF('addModuleDlg').show()">
+						 update="addToModuleForm" oncomplete="PF('addToModuleDlg').show()">
 		</p:commandButton>
 
 		<p:confirmDialog id="confirmCannotUpdateWithMessageDialog" styleClass="confirm-dialog"
@@ -204,8 +204,8 @@
 			</p:panel>
 		</p:confirmDialog>
 
-		<p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
-			<h:form id="addModuleForm">
+		<p:dialog widgetVar="addToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+			<h:form id="addToModuleForm">
 				<h:panelGroup layout="block" styleClass="search-panel">
 					<p:outputPanel styleClass="search-panel-fields">
 						<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
@@ -215,8 +215,8 @@
 						</p:inputText>
 					</p:outputPanel>
 					<h:panelGroup layout="block" styleClass="search-panel-actions">
-						<p:commandButton id="buttonSearch" process="@this" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
-						<p:commandButton id="buttonClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+						<p:commandButton id="buttonOneSearch" process="@this,addToModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+						<p:commandButton id="buttonOneClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
 					</h:panelGroup>
 				</h:panelGroup>
 
@@ -236,12 +236,14 @@
 						<h:outputText value="#{e['description']}" />
 					</p:column>
 					<f:facet name="footer">
-						<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this" partialSubmit="true"
-										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@this"
-										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
-										 action="#{cc.attrs.backingBean.addToModule}"/>
-						<p:commandButton value="#{messages['commons.close']}" update="@this"
-										 oncomplete="PF('addModuleDlg').hide()">
+						<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
+										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addToModuleDlg').hide()"
+										 action="#{backingBean.addToModule}">
+							<p:resetInput target="@form" />
+						</p:commandButton>
+						<p:commandButton value="#{messages['commons.close']}" update="@form"
+										 oncomplete="PF('addToModuleDlg').hide()">
 							<p:resetInput target="@form" />
 						</p:commandButton>
 					</f:facet>

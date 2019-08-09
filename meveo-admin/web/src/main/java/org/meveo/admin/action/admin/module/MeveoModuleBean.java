@@ -61,6 +61,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
         return meveoModuleService;
     }
 
+    /**
+     * initialize Modules
+     */
     public void initializeModules() {
         meveoModules = meveoModuleService.findLikeWithCode(moduleCode);
     }
@@ -81,6 +84,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
         this.meveoModules = meveoModules;
     }
 
+    /**
+     * Searching module by module code
+     */
     public void searchModules() {
         meveoModules = meveoModuleService.findLikeWithCode(moduleCode);
     }
