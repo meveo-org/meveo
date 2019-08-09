@@ -30,13 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -119,6 +113,30 @@ public class PersistenceRs {
         crossStorageService.remove(repositoryCode, customEntityTemplate, uuid);
 
         return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/{cetCode}/{uuid}")
+    public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) {
+        final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+        if(customEntityTemplate == null){
+            throw new NotFoundException();
+        }
+
+        final Repository repository = repositoryService.findByCode(repositoryCode);
+        return crossStorageService.find(repository, customEntityTemplate, uuid);
+    }
+
+    @PUT
+    @Path("/{cetCode}/{uuid}")
+    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException {
+        final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+        if(customEntityTemplate == null){
+            throw new NotFoundException();
+        }
+
+        final Repository repository = repositoryService.findByCode(repositoryCode);
+        crossStorageService.update(repository, customEntityTemplate, body, uuid);
     }
     
     @SuppressWarnings("unchecked")
