@@ -108,8 +108,21 @@ public class CrossStorageService implements CustomPersistenceService {
             throw new NullPointerException("Cannot retrieve entity by uuid without uuid");
         }
 
-        List<String> selectFields = fetchFields == null ? new ArrayList<>() : new ArrayList<>(fetchFields);
+        List<String> selectFields;
         Map<String, Object> values = new HashMap<>();
+
+        // Retrieve only asked fields
+        if(fetchFields != null){
+            selectFields = new ArrayList<>(fetchFields);
+
+        // No restrictions about fields - retrieve all fields
+        } else {
+            selectFields = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo())
+                    .values()
+                    .stream()
+                    .map(CustomFieldTemplate::getCode)
+                    .collect(Collectors.toList());
+        }
 
         if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
@@ -725,6 +738,7 @@ public class CrossStorageService implements CustomPersistenceService {
     }
 
     private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
+    	// If fields are null return all avaiblable fields for the given storage
         if (fields == null) {
             return new ArrayList<>();
         }
