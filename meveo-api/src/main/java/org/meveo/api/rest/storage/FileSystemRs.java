@@ -1,10 +1,19 @@
 package org.meveo.api.rest.storage;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 
-import org.meveo.api.dto.ActionStatus;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -27,9 +36,10 @@ public interface FileSystemRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
-	ActionStatus findBinary(@QueryParam("showOnExplorer") Boolean showOnExplorer,
-							@PathParam("repositoryCode") String repositoryCode,
-							@PathParam("cetCode") String cetCode,
-							@PathParam("uuid") String uuid,
-							@PathParam("cftCode") String cftCode);
+    Response findBinary(@QueryParam("showOnExplorer") Boolean showOnExplorer,
+						@QueryParam("index") Integer index,
+						@PathParam("repositoryCode") String repositoryCode,
+						@PathParam("cetCode") String cetCode,
+						@PathParam("uuid") String uuid,
+						@PathParam("cftCode") String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException;
 }

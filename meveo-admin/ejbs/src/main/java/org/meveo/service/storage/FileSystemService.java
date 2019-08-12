@@ -43,17 +43,13 @@ public class FileSystemService {
 
 	public String getStoragePath(BinaryStoragePathParam params) {
 
-		StringBuilder path = new StringBuilder(getRootPath(params.isShowOnExplorer(), params.getRootPath()));
-		path = path.append(File.separator);
-		path = path.append(params.getCetCode());
-		path = path.append(File.separator);
-		path = path.append(params.getUuid());
-		path = path.append(File.separator);
-		path = path.append(params.getCftCode());
+		StringBuilder path = new StringBuilder(getRootPath(params.isShowOnExplorer(), params.getRootPath()))
+				.append(File.separator).append(params.getCetCode())
+				.append(File.separator).append(params.getUuid())
+				.append(File.separator).append(params.getCftCode());
 
 		if (!StringUtils.isBlank(params.getFilePath())) {
-			path = path.append(File.separator);
-			path = path.append(params.getFilePath());
+			path.append(File.separator).append(params.getFilePath());
 		}
 
 		return path.toString();

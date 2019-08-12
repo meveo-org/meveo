@@ -3,14 +3,18 @@ package org.meveo.api.rest.storage.impl;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
-import org.meveo.api.dto.ActionStatus;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.storage.FileSystemRs;
 import org.meveo.api.storage.FileSystemApi;
+import org.meveo.exceptions.EntityDoesNotExistsException;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -19,24 +23,19 @@ import org.meveo.api.storage.FileSystemApi;
 @Interceptors({ WsRestApiInterceptor.class })
 public class FileSystemRsImpl extends BaseRs implements FileSystemRs {
 
-	@Context
-	private HttpServletResponse httpServletResponse;
 
 	@Inject
 	private FileSystemApi fileSystemApi;
 
 	@Override
-	public ActionStatus findBinary(Boolean showOnExplorer, String repositoryCode, String cetCode, String uuid, String cftCode) {
-		ActionStatus result = new ActionStatus();
+	public Response findBinary(Boolean showOnExplorer, Integer index, String repositoryCode, String cetCode, String uuid, String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException {
+			File file = fileSystemApi.findBinary(showOnExplorer, repositoryCode, cetCode, uuid, cftCode, index);
 
-		try {
-			fileSystemApi.findBinary(showOnExplorer, repositoryCode, cetCode, uuid, cftCode, httpServletResponse);
+			if(file == null){
+				return Response.status(404).build();
+			}
 
-		} catch (Exception e) {
-			processException(e, result);
-		}
-
-		return result;
+			return Response.ok(file, Files.probeContentType(file.toPath())).build();
 	}
 
 }
