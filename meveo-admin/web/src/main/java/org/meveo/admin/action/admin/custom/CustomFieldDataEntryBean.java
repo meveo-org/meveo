@@ -167,8 +167,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	private transient UploadedFile uploadedBinaryFile;
 	private transient Repository repository;
-	private boolean showOnExplorer = true;
     private Map<String, Object> tempValues = new HashMap<>();
+    
+    private List<String> filesToDeleteOnExit = new ArrayList<>();
 
     private List<Object> listValues;
 
@@ -1874,8 +1875,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
 
+		if(fieldValue.getStringValue() != null) {
+			filesToDeleteOnExit.add(fieldValue.getStringValue());
+		}
+		
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		params.setShowOnExplorer(showOnExplorer);
+		params.setShowOnExplorer(cft.isSaveOnExplorer());
 		params.setRootPath(rootPath);
 		params.setCetCode(cetCode);
 		params.setUuid(uuid);
@@ -1921,7 +1926,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		boolean isSingle = Boolean.parseBoolean(strIsSingle);
 
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		params.setShowOnExplorer(showOnExplorer);
+		params.setShowOnExplorer(cft.isSaveOnExplorer());
 		params.setRootPath(rootPath);
 		params.setCetCode(cetCode);
 		params.setUuid(uuid);
@@ -1963,7 +1968,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private void initAfterUpload() {
 		uploadedBinaryFile = null;
 		repository = null;
-		showOnExplorer = true;
 	}
 
 	public Repository getRepository() {
@@ -1972,14 +1976,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public void setRepository(Repository repository) {
 		this.repository = repository;
-	}
-
-	public boolean isShowOnExplorer() {
-		return showOnExplorer;
-	}
-
-	public void setShowOnExplorer(boolean showOnExplorer) {
-		this.showOnExplorer = showOnExplorer;
 	}
 
 	public StreamedContent downloadFile(String path) throws IOException {
@@ -2000,5 +1996,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 		String newId = (String) selectedEntityInPopup.get("uuid");
     	listValues.add(newId);
     }
+
+	public List<String> getFilesToDeleteOnExit() {
+		return filesToDeleteOnExit;
+	}
 
 }

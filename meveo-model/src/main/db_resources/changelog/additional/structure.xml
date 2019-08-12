@@ -536,7 +536,7 @@
             <column name="jsonata_transformer" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    
+
     <changeSet id="endpoint_parmeter_id_string" author="Clément Bareth">
         <dropForeignKeyConstraint baseTableName="service_parameter_mapping" constraintName="fk_service_parameter_mapping_parameter_id"/>
         <dropForeignKeyConstraint baseTableName="endpoint_path_parameter" constraintName="fk_endpoint_path_parameter_parameter_id"/>
@@ -548,7 +548,7 @@
             </column>
         </addColumn>
     </changeSet>
-    
+
     <changeSet id="#3553" author="Clément Bareth">
         <addColumn tableName="cust_crt">
             <column name="source_name_singular" type="varchar(255)"/>
@@ -573,7 +573,7 @@
             <column name="graphql_query_fields" type="${type.json}"/>
         </addColumn>
     </changeSet>
-    
+
       <changeSet id="#3607_20190123" author="andrius.karpavicius">
         <addColumn tableName="cust_cet">
             <column name="store_as_table" type="${type.boolean}" defaultValueNumeric="0"/>
@@ -627,7 +627,7 @@
             </column>
         </addColumn>
     </changeSet>
-    
+
     <changeSet id="endpoint_serialize content_type" author="Clément Bareth">
         <addColumn tableName="service_endpoint">
             <column name="content_type" type="varchar(255)"/>
@@ -1079,5 +1079,17 @@
 			<column name="file_path" type="VARCHAR(255)"></column>
 		</addColumn>
 	</changeSet>
+
+    <changeSet id="#3815 - Binary Storage - Save on explorer param should be at CFT level" author="ClémentBareth">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="save_on_explorer" type="${type.boolean}"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="#3815 - Binary Storage - Save on explorer param should be at CFT level - Set  default value" author="ClémentBareth">
+        <update tableName="crm_custom_field_tmpl">
+            <column name="save_on_explorer" value="0"/>
+        </update>
+    </changeSet>
 
 </databaseChangeLog>
