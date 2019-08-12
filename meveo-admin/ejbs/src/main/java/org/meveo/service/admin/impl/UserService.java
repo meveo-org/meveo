@@ -174,14 +174,12 @@ public class UserService extends PersistenceService<User> {
             FilteredQueryBuilder queryBuilder = (FilteredQueryBuilder) getQuery(config);
             queryBuilder.processOrderCondition(filter.getOrderCondition(), filter.getPrimarySelector().getAlias());
             String alias = filter.getPrimarySelector().getAlias();
-            StringBuffer q = queryBuilder.getSqlStringBuffer();
-            Query result = getQueryUsers(q, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
             return result.getResultList();
         } else {
             String alias = "a";
             QueryBuilder queryBuilder = getQuery(config);
-            StringBuffer q = queryBuilder.getSqlStringBuffer();
-            Query result = getQueryUsers(q, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
             return result.getResultList();
         }
     }
@@ -200,60 +198,18 @@ public class UserService extends PersistenceService<User> {
     }
 
     /**
-     * @param orderColumn orderBy column
-     * @param ascending true/false
-     * @param orderColumn2 orderBy column 2
-     * @param ascending2 true/false
-     * @return instance of QueryBuilder
-     */
-    private void addOrderDoubleCriterion(StringBuffer q, String orderColumn, boolean ascending, String orderColumn2, boolean ascending2) {
-        q.append(" ORDER BY " + orderColumn);
-        if (ascending) {
-            q.append(" ASC ");
-        } else {
-            q.append(" DESC ");
-        }
-        q.append(", " + orderColumn2);
-        if (ascending2) {
-            q.append(" ASC ");
-        } else {
-            q.append(" DESC ");
-        }
-    }
-
-    private void addOrderCriterion(StringBuffer q, String orderColumn, boolean ascending) {
-        Class<?> clazz = User.class;
-        if (clazz != null) {
-            Field field = ReflectionUtils.getField(clazz, orderColumn.substring(orderColumn.indexOf(".") + 1));
-            if (field != null && field.getType().isAssignableFrom(String.class)) {
-                q.append(" ORDER BY UPPER(CAST(" + orderColumn + " AS string))");
-            } else {
-                q.append(" ORDER BY " + orderColumn);
-            }
-        } else {
-            q.append(" ORDER BY " + orderColumn);
-        }
-
-        if (ascending) {
-            q.append(" ASC ");
-        } else {
-            q.append(" DESC ");
-        }
-    }
-
-
-    /**
      * @param alias alias of column?
      */
-    private void applyPaginationUsers(StringBuffer q, PaginationConfiguration config, String alias) {
+    private void applyPaginationUsers(QueryBuilder queryBuilder, PaginationConfiguration config, String alias) {
         if (config == null) {
             return;
         } else {
+            StringBuffer q = queryBuilder.getSqlStringBuffer();
             if (config.isSorted() && q.indexOf("ORDER BY") == -1) {
                 if ("name.fullName".equals(config.getSortField())) {
-                    addOrderDoubleCriterion(q, ((alias != null) ? (alias + ".") : "") + "name.firstName", config.isAscendingSorting(), ((alias != null) ? (alias + ".") : "") + "name.lastName", config.isAscendingSorting());
+                    queryBuilder.addOrderDoubleCriterion(((alias != null) ? (alias + ".") : "") + "name.firstName", config.isAscendingSorting(), ((alias != null) ? (alias + ".") : "") + "name.lastName", config.isAscendingSorting());
                 } else {
-                    addOrderCriterion(q, ((alias != null) ? (alias + ".") : "") + config.getSortField(), config.isAscendingSorting());
+                    queryBuilder.addOrderCriterion(((alias != null) ? (alias + ".") : "") + config.getSortField(), config.isAscendingSorting());
                 }
             }
         }
@@ -288,13 +244,10 @@ public class UserService extends PersistenceService<User> {
      * @param em entity manager
      * @return instance of Query.
      */
-    public Query getQueryUsers(StringBuffer q,PaginationConfiguration config, String alias, EntityManager em, List<String> roleNames) {
-        if (q.toString().indexOf("where") > 0) {
-            q.append(" and role.name IN (:roleNames)");
-        } else {
-            q.append(" where role.name IN (:roleNames)");
-        }
-        applyPaginationUsers(q, config, alias);
+    public Query getQueryUsers(QueryBuilder queryBuilder,PaginationConfiguration config, String alias, EntityManager em, List<String> roleNames) {
+        queryBuilder.addSql("role.name IN (:roleNames)");
+        applyPaginationUsers(queryBuilder, config, alias);
+        StringBuffer q = queryBuilder.getSqlStringBuffer();
         String query = q.toString().replace("a.roles", "a.roles role");
         Query result = em.createQuery(query);
         applyPagination(config, result);
