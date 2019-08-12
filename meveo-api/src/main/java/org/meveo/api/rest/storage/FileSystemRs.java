@@ -1,10 +1,6 @@
 package org.meveo.api.rest.storage;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
@@ -12,6 +8,7 @@ import org.meveo.api.rest.IBaseRs;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Clément Bareth <clement.bareth@web-drone.fr>
  */
 @Path("/fileSystem")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -29,7 +26,10 @@ public interface FileSystemRs extends IBaseRs {
 	 * @return ActionStatus request status
 	 */
 	@GET
-	@Path("/binaries")
-	ActionStatus findBinary(@QueryParam("showOnExplorer") Boolean showOnExplorer, @QueryParam("repositoryCode") String repositoryCode, @QueryParam("cetCode") String cetCode,
-			@QueryParam("uuid") String uuid, @QueryParam("cftCode") String cftCode);
+	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
+	ActionStatus findBinary(@QueryParam("showOnExplorer") Boolean showOnExplorer,
+							@PathParam("repositoryCode") String repositoryCode,
+							@PathParam("cetCode") String cetCode,
+							@PathParam("uuid") String uuid,
+							@PathParam("cftCode") String cftCode);
 }
