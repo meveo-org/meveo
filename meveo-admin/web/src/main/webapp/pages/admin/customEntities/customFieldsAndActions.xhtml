@@ -622,8 +622,6 @@
 								label="#{messages['customFieldTemplate.relationshipName']}"
 								field="relationshipName" required="true" componentWidth="30"
 								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and (customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY)}" />
-
-                            />
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField
@@ -849,9 +847,12 @@
 						<hftl:formField newLine="true"
 							label="#{messages['customFieldTemplate.maximumSize']}"
 							field="maxFileSizeAllowedInKb" />
+
 						<hftl:formField
 							label="#{messages['customFieldTemplate.filePath']}"
 							field="filePath" />
+
+						<hftl:formField label="#{messages['binary.showOnExplorer']}" field="saveOnExplorer" />
 					</p:fieldset>
 				</p:outputPanel>
 

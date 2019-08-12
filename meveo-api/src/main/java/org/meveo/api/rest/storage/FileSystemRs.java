@@ -26,18 +26,16 @@ public interface FileSystemRs extends IBaseRs {
 
 	/**
 	 * Retrieve a binary from a repository
-	 * 
-	 * @param showOnExplorer whether to show the file in explorer or not
 	 * @param repositoryCode storage
 	 * @param cetCode        custom entity code
 	 * @param uuid           entity id
 	 * @param cftCode        custom field template code
+	 * 
 	 * @return ActionStatus request status
 	 */
 	@GET
 	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
-    Response findBinary(@QueryParam("showOnExplorer") Boolean showOnExplorer,
-						@QueryParam("index") Integer index,
+    Response findBinary(@QueryParam("index") Integer index,
 						@PathParam("repositoryCode") String repositoryCode,
 						@PathParam("cetCode") String cetCode,
 						@PathParam("uuid") String uuid,

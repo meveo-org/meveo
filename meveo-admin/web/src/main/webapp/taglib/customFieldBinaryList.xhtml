@@ -68,14 +68,22 @@
 						value="#{customFieldDataEntryBean.downloadFile(path['value'])}">
 					</p:fileDownload>
 				</p:commandButton>
-				<p:commandButton icon="ui-icon-minus" partialSubmit="true"
-					process="@this" update="#{fieldPrefix}_customFields_binaries"
-					action="#{field.listValue.remove(path['value'])}">
+				<p:commandButton icon="ui-icon-minus" partialSubmit="false"
+					process="@this" update="@form"
+					action="#{field.mapValuesForGUI.remove(path)}" >
+					
+					<p:collector unique="true" value="#{path['value']}" removeFrom="#{field.listValue}"/>
+					<p:collector unique="true" value="#{path['value']}" addTo="#{customFieldDataEntryBean.filesToDeleteOnExit}"/>
+					
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 						message="#{messages['commons.confirmDelete']}"
 						icon="ui-icon-alert" />
 				</p:commandButton>
 			</p:column>
+			
+<!-- 			action="#{field.getListValue().remove(path['value'])}" -->
+			
+<!-- 			<p:remoteCommand action="#{customFieldDataEntryBean.filesToDeleteOnExit.add(path['value'])}" /> -->
 			
 <!-- 									update=":#{p:component(of:concat(fieldPrefix, 'binaryFileUploadForm'))}" -->
 			
@@ -111,22 +119,6 @@
 						<p:ajax event="valueChange" update="#{fieldPrefix}repository"/>
 						
 					</p:selectOneMenu>
-					
-				</hftl:decorateFormField>
-				
-				<hftl:decorateFormField for="#{fieldPrefix}showOnExplorer" 
-					label="#{messages['binary.showOnExplorer']}" 
-					fieldId="#{fieldPrefix}showOnExplorer">
-					
-					<p:selectBooleanButton id="#{fieldPrefix}showOnExplorer" 
-						value="#{customFieldDataEntryBean.showOnExplorer}"
-						immediate="true" onLabel="#{messages['commons.yes']}" 
-						offLabel="#{messages['commons.no']}" 
-						style="width:60px">
-						
-						<p:ajax event="valueChange" update="#{fieldPrefix}showOnExplorer"/>
-						
-					</p:selectBooleanButton>
 					
 				</hftl:decorateFormField>
 				

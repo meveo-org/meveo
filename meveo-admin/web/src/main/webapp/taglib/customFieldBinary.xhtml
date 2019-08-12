@@ -80,13 +80,6 @@
 							itemValue="#{e}" itemLabel="#{e.code}" />
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
-				<hftl:decorateFormField for="#{fieldPrefix}showOnExplorer"
-					label="#{messages['binary.showOnExplorer']}">
-					<p:selectBooleanButton id="#{fieldPrefix}showOnExplorer"
-						value="#{customFieldDataEntryBean.showOnExplorer}"
-						onLabel="#{messages['commons.yes']}"
-						offLabel="#{messages['commons.no']}" style="width:60px" />
-				</hftl:decorateFormField>
 				<p:fileUpload id="#{fieldPrefix}FileUpload"
 					value="#{customFieldDataEntryBean.uploadedBinaryFile}"
 					mode="simple" skinSimple="true"

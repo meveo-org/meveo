@@ -328,6 +328,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	private String filePath;
 
     /**
+     * Whether the binaries will be accessible through the file explorer
+     */
+	@Column(name = "save_on_explorer")
+    @Type(type = "numeric_boolean")
+    @ColumnDefault("0")
+    private boolean saveOnExplorer;
+
+    /**
      * Database field name - derived from code
      */
     @Transient
@@ -338,6 +346,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Transient
     private String fileExtension;
+
+    public boolean isSaveOnExplorer() {
+        return saveOnExplorer;
+    }
+
+    public void setSaveOnExplorer(boolean saveOnExplorer) {
+        this.saveOnExplorer = saveOnExplorer;
+    }
 
     public List<DBStorageType> getStorages() {
         return storages;

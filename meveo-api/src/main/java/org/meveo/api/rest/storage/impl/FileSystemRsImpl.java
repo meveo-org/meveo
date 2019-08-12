@@ -28,8 +28,8 @@ public class FileSystemRsImpl extends BaseRs implements FileSystemRs {
 	private FileSystemApi fileSystemApi;
 
 	@Override
-	public Response findBinary(Boolean showOnExplorer, Integer index, String repositoryCode, String cetCode, String uuid, String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException {
-			File file = fileSystemApi.findBinary(showOnExplorer, repositoryCode, cetCode, uuid, cftCode, index);
+	public Response findBinary(Integer index, String repositoryCode, String cetCode, String uuid, String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException {
+			File file = fileSystemApi.findBinary(repositoryCode, cetCode, uuid, cftCode, index);
 
 			if(file == null){
 				return Response.status(404).build();

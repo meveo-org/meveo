@@ -40,7 +40,7 @@ public class FileSystemApi extends BaseApi {
 	@Inject
 	private CrossStorageService crossStorageService;
 
-	public File findBinary(Boolean showOnExplorer, String repositoryCode, String cetCode, String uuid, String cftCode, Integer index) throws EntityDoesNotExistsException, BusinessApiException, IOException {
+	public File findBinary(String repositoryCode, String cetCode, String uuid, String cftCode, Integer index) throws EntityDoesNotExistsException, BusinessApiException, IOException {
 
 		// Retrieve repository
 		Repository repository = repositoryService.findByCode(repositoryCode);
@@ -62,7 +62,7 @@ public class FileSystemApi extends BaseApi {
 
 		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
 		} else {
-			return findBinaryStaticPath(showOnExplorer, repository, cetCode, uuid, cft, index);
+			return findBinaryStaticPath(repository, cetCode, uuid, cft, index);
 		}
 
 	}
@@ -99,7 +99,7 @@ public class FileSystemApi extends BaseApi {
 		return new File(filePath);
 	}
 
-	private File findBinaryStaticPath(Boolean showOnExplorer, Repository repository, String cetCode, String uuid, CustomFieldTemplate cft, Integer index) throws BusinessApiException {
+	private File findBinaryStaticPath(Repository repository, String cetCode, String uuid, CustomFieldTemplate cft, Integer index) throws BusinessApiException {
 		int i = index == null ? 0 : index;
 
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
@@ -110,7 +110,7 @@ public class FileSystemApi extends BaseApi {
 		params.setUuid(uuid);
 		params.setCftCode(cft.getCode());
 		params.setFilePath(cft.getFilePath());
-		params.setShowOnExplorer(showOnExplorer == null ? false : showOnExplorer);
+		params.setShowOnExplorer(cft.isSaveOnExplorer());
 
 		String fullPath = fileSystemService.getStoragePath(params);
 

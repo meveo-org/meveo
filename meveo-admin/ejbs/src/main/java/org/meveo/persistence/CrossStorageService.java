@@ -894,6 +894,7 @@ public class CrossStorageService implements CustomPersistenceService {
                 binaryStoragePathParam.setUuid(uuid);
                 binaryStoragePathParam.setCetCode(cetCode);
                 binaryStoragePathParam.setRepository(repository);
+                binaryStoragePathParam.setShowOnExplorer(field.isSaveOnExplorer());
 
                 if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
                     File tempFile = (File) values.get(field.getCode());
