@@ -933,20 +933,11 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.dataTableFirstAttribute = dataTableFirstAttribute;
     }
 
+    /**
+     * Change page
+     * @param event
+     */
     public void onPageChange(PageEvent event) {
-        DataTable dataTable = (DataTable) event.getSource();
-        int rows =dataTable.getRows();
-        String username = currentUser.getUserName();
-
-        String clazzName = clazz.getName();
-        Map<String, Integer> numberRow = cacheNumberRow.get(username);
-        if (numberRow != null && numberRow.get(clazzName) != null) {
-            numberRow.put(clazzName, rows);
-        } else {
-            numberRow = new HashMap<>();
-            numberRow.put(clazzName, rows);
-        }
-        cacheNumberRow.put(username, numberRow);
         this.setDataTableFirstAttribute(((DataTable) event.getSource()).getFirst());
     }
 
@@ -1230,6 +1221,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         return matchedEntityInfo;
     }
 
+    /**
+     * Get rows per page from meveo-rows-page-cache cache
+     *
+     */
     public int getCacheNumRows() {
         String username = currentUser.getUserName();
 
