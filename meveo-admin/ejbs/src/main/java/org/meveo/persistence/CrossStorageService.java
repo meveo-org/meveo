@@ -744,6 +744,10 @@ public class CrossStorageService implements CustomPersistenceService {
         return fields.stream()
                 .filter(entry -> {
                     CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry, cet.getAppliesTo());
+                    if(cft == null) {
+                    	return false;
+                    }
+                    
                     return cft.getStorages().contains(storageType);
                 }).collect(Collectors.toList());
     }
