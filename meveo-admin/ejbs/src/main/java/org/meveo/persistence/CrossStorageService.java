@@ -20,6 +20,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -77,9 +78,6 @@ public class CrossStorageService implements CustomPersistenceService {
 
     @Inject
     private FileSystemService fileSystemService;
-
-    @Inject
-    private RepositoryService repositoryService;
 
     /**
      * Retrieves one entity instance
@@ -375,7 +373,6 @@ public class CrossStorageService implements CustomPersistenceService {
                 // Update binaries stored in SQL
                 List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream()
                         .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
-                        .filter(f -> sqlValues.get(f.getCode()) != null)
                         .collect(Collectors.toList());
 
                 if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -462,6 +459,7 @@ public class CrossStorageService implements CustomPersistenceService {
                         neo4jService.updateBinary(
                                 uuid,
                                 repository.getNeo4jConfiguration().getCode(),
+                                cet,
                                 binary.getKey(),
                                 (String) binary.getValue()
                         );
@@ -470,9 +468,14 @@ public class CrossStorageService implements CustomPersistenceService {
                         neo4jService.addBinaries(
                                 uuid,
                                 repository.getNeo4jConfiguration().getCode(),
+                                cet,
                                 binary.getKey(),
                                 (Collection<String>) binary.getValue()
                         );
+
+                    // Binary(ies) were deleted
+                    } else if(binary.getValue() == null) {
+                    	neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, binary.getKey());
                     }
                 }
 
@@ -712,29 +715,33 @@ public class CrossStorageService implements CustomPersistenceService {
     }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
-        return values.entrySet()
-                .stream()
-                .filter(entry -> {
-                    // Always include UUID
-                    if (entry.getKey().equals("uuid")) {
-                        return true;
-                    }
+    	Map<String, Object> filteredValues = new HashMap<>();
 
-                    // For CEI storage, always include code
-                    if (cet instanceof CustomEntityTemplate && entry.getKey().equals("code")) {
-                        if (storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()) {
-                            return true;
-                        }
-                    }
+        values.entrySet()
+	        .stream()
+	        .filter(entry -> {
+	            // Always include UUID
+	            if (entry.getKey().equals("uuid")) {
+	                return true;
+	            }
 
-                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
+	            // For CEI storage, always include code
+	            if (cet instanceof CustomEntityTemplate && entry.getKey().equals("code")) {
+	                if (storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()) {
+	                    return true;
+	                }
+	            }
 
-                    if (cft == null) {
-                        return false;
-                    }
+	            CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
 
-                    return cft.getStorages().contains(storageType);
-                }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	            if (cft == null) {
+	                return false;
+	            }
+
+	            return cft.getStorages().contains(storageType);
+	        }).forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
+
+        return filteredValues;
     }
 
     private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
@@ -892,7 +899,8 @@ public class CrossStorageService implements CustomPersistenceService {
     private Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, String cetCode, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessException {
         Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
         for (CustomFieldTemplate field : fields) {
-            if (field.getFieldType().equals(CustomFieldTypeEnum.BINARY) && values.get(field.getCode()) != null) {
+
+            if (field.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
                 BinaryStoragePathParam binaryStoragePathParam = new BinaryStoragePathParam();
                 binaryStoragePathParam.setCft(field);
                 binaryStoragePathParam.setUuid(uuid);
@@ -900,7 +908,12 @@ public class CrossStorageService implements CustomPersistenceService {
                 binaryStoragePathParam.setRepository(repository);
                 binaryStoragePathParam.setShowOnExplorer(field.isSaveOnExplorer());
 
-                if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+            	// If key is present but is empty, remove the data and the files
+            	if(values.containsKey(field.getCode()) && StringUtils.isBlank(values.get(field.getCode()))) {
+                    fileSystemService.delete(binaryStoragePathParam);
+                    binariesSaved.put(field, null);	// Null value indicate we remove those binaries
+
+            	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
                     File tempFile = (File) values.get(field.getCode());
                     binaryStoragePathParam.setFile(tempFile);
                     binaryStoragePathParam.setFilename(tempFile.getName());
