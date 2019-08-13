@@ -1,6 +1,5 @@
 package org.meveo.service.storage;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +52,14 @@ public class FileSystemService {
 		}
 
 		return path.toString();
+	}
+	
+	public void delete(BinaryStoragePathParam params) {
+		String storage = getStoragePath(params);
+		File dir = new File(storage);
+		for(File file : dir.listFiles()) {
+			file.delete();
+		}
 	}
 
 	public String persists(BinaryStoragePathParam params) throws BusinessException, IOException {
