@@ -2,6 +2,7 @@ package org.meveo.api.rest.storage;
 
 import java.io.IOException;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.Response;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.exceptions.EntityDoesNotExistsException;
+import org.meveo.service.storage.BinaryStorageUtils;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -35,7 +37,7 @@ public interface FileSystemRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
-    Response findBinary(@QueryParam("index") Integer index,
+    Response findBinary(@QueryParam(BinaryStorageUtils.INDEX) Integer index,
 						@PathParam("repositoryCode") String repositoryCode,
 						@PathParam("cetCode") String cetCode,
 						@PathParam("uuid") String uuid,

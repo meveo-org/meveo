@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CustomPersistenceService;
@@ -54,7 +55,7 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException {
+    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException {
 
         /* Iterate over persistence schedule and persist the node */
 

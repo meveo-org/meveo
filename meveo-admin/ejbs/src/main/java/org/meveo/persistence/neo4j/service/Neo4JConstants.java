@@ -23,8 +23,13 @@ public class Neo4JConstants {
         binaryValueField.setFieldName("value");
         binaryValueField.setFieldType("String");
         
+        GraphQLField meveoUuid = new GraphQLField();
+        meveoUuid.setFieldName("meveo_uuid");
+        meveoUuid.setFieldType("String");
+        
         TreeSet<GraphQLField> fields = new TreeSet<>();
         fields.add(binaryValueField);
+        fields.add(meveoUuid);
         
         binaryEntity.setGraphQLFields(fields);
         
