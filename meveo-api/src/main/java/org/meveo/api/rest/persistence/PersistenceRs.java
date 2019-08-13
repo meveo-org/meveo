@@ -27,10 +27,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,6 +54,8 @@ import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
@@ -92,7 +101,13 @@ public class PersistenceRs {
         }
 
         Repository repository = repositoryService.findByCode(repositoryCode);
-        return crossStorageService.find(repository, customEntityTemplate, paginationConfiguration);
+        List<Map<String, Object>> data = crossStorageService.find(repository, customEntityTemplate, paginationConfiguration);
+
+        for(Map<String, Object> values : data) {
+        	replaceFilePathsByUrls(customEntityTemplate, values);
+        }
+
+		return data;
     }
 
     @DELETE
@@ -118,7 +133,11 @@ public class PersistenceRs {
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
-        return crossStorageService.find(repository, customEntityTemplate, uuid);
+        Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid);
+
+        replaceFilePathsByUrls(customEntityTemplate, values);
+
+		return values;
     }
 
     @PUT
@@ -258,4 +277,51 @@ public class PersistenceRs {
         }
 
     }
+
+	/**
+	 * Replace the hard drive file paths by URL that permit to download them
+	 *
+	 * @param customEntityTemplate Template of the values
+	 * @param values               Actual values containing the file paths
+	 */
+    private void replaceFilePathsByUrls(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) {
+    	cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo())
+    		.values()
+    		.stream()
+			.filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))	// Only get binary fields
+			.filter(f -> values.get(f.getCode()) != null)						// Filter on present values
+			.forEach(binaryField -> {
+				Object binaryFieldValue = values.get(binaryField.getCode());
+				if(binaryFieldValue instanceof String) {
+					String url = buildFileUrl(customEntityTemplate, values, binaryField);
+					values.put(binaryField.getCode(), url);
+
+				} else if(binaryFieldValue instanceof Collection) {
+					List<String> urls = new ArrayList<>();
+					for(int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
+						String url = buildFileUrl(customEntityTemplate, values, binaryField);
+						url += "?index=" + index;
+						urls.add(url);
+					}
+					values.put(binaryField.getCode(), urls);
+				}
+			});
+    }
+
+	/**
+	 * Build an URL allowing to download a given file for a given entity in the FileSysytem
+	 *
+	 * @param customEntityTemplate Template of the entity
+	 * @param values               Actual values of the entity
+	 * @param binaryField          Field holding the file reference
+	 */
+	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
+		return new StringBuilder("/api/rest/fileSystem/binaries/")
+				.append(repositoryCode).append("/")
+				.append(customEntityTemplate.getCode()).append("/")
+				.append(values.get("uuid")).append("/")
+				.append(binaryField.getCode())
+				.toString();
+	}
+
 }

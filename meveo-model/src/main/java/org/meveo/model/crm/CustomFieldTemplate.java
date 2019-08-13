@@ -356,7 +356,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     public List<DBStorageType> getStorages() {
-        return storages;
+        return storages == null ? new ArrayList<>() : storages;
     }
 
     public void setStorages(List<DBStorageType> storages) {

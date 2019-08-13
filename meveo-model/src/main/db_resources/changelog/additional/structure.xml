@@ -16,4 +16,8 @@
         </update>
     </changeSet>
 
+     <changeSet id="Binary Storage - Save on explorer - Set  default value on column" author="ClémentBareth">
+        <addDefaultValue tableName="crm_custom_field_tmpl" columnName="save_on_explorer" defaultValue="0"/>
+    </changeSet>
+
 </databaseChangeLog>
