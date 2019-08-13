@@ -48,6 +48,7 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.PersistenceDto;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.rest.RestUtils;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
@@ -144,7 +145,7 @@ public class PersistenceRs {
 
     @PUT
     @Path("/{cetCode}/{uuid}")
-    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException {
+    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException();
@@ -271,7 +272,7 @@ public class PersistenceRs {
             scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
             return Response.status(201).build();
 
-        } catch (BusinessException | ELException | IOException e) {
+        } catch (BusinessException | ELException | IOException | BusinessApiException e) {
 
             /* An error happened */
             return Response.serverError().entity(e).build();
@@ -317,10 +318,12 @@ public class PersistenceRs {
 	 * @param binaryField          Field holding the file reference
 	 */
 	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
+		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
+		
 		return new StringBuilder("/api/rest/fileSystem/binaries/")
 				.append(repositoryCode).append("/")
 				.append(customEntityTemplate.getCode()).append("/")
-				.append(values.get("uuid")).append("/")
+				.append(uuid).append("/")
 				.append(binaryField.getCode())
 				.toString();
 	}

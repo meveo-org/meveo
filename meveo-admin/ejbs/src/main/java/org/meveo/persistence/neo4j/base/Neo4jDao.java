@@ -903,5 +903,26 @@ public class Neo4jDao {
     			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
 		);
     }
+    
+    public List<Node> findNodesBySourceNodeIdAndRelationships(String neo4JConfiguration, String sourceNodeUuid, String sourceNodeLabel, String relationshipType, String targetNodeLabel) {
+    	String findQuery = new StringBuffer("MATCH (n:")
+    			.append(sourceNodeLabel)
+    			.append(")-[:")
+    			.append(relationshipType)
+    			.append("]->(t:")
+    			.append(targetNodeLabel)
+    			.append(") \n")
+    			.append("WHERE n.meveo_uuid = $uuid \n")
+    			.append("RETURN t")
+    			.toString();
+    	
+        return cypherHelper.execute(
+        		neo4JConfiguration,
+        		findQuery,
+    			ImmutableMap.of("uuid", sourceNodeUuid),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
+    			e -> LOGGER.error("Error retrieving target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+        );
+    }
 
 }

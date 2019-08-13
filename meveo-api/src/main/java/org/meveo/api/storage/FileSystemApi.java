@@ -9,6 +9,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.storage.BinaryStoragePathParam;
+import org.meveo.service.storage.BinaryStorageUtils;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 
@@ -54,81 +55,27 @@ public class FileSystemApi extends BaseApi {
 			throw new EntityDoesNotExistsException(CustomFieldTemplate.class, cftCode);
 		}
 
-		final String filePath = cft.getFilePath();
-
 		// The file path expression contains an EL, so we need to retrieve the entity to get the evaluated file path
-		if(filePath != null && (filePath.contains("#{") || filePath.contains("${")) && filePath.contains("}")){
-			return findBinaryDynamicPath(repository, cetCode, uuid, cftCode, index);
+		if(BinaryStorageUtils.filePathContainsEL(cft)){
+			// Retrieve CET
+			CustomEntityTemplate cet = cache.getCustomEntityTemplate(cetCode);
+			if (cet == null) {
+				throw new EntityDoesNotExistsException(CustomEntityTemplate.class, cetCode);
+			}
+
+			// Retrieve the entity
+			Map<String, Object> values = crossStorageService.find(repository, cet, uuid, Collections.singletonList(cftCode));
+			if(values == null){
+				throw new EntityDoesNotExistsException("EntityInstance", uuid);
+			}
+			
+			return fileSystemService.findBinaryDynamicPath(repository, cet, values, cftCode, index);
 
 		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
 		} else {
-			return findBinaryStaticPath(repository, cetCode, uuid, cft, index);
+			return fileSystemService.findBinaryStaticPath(repository, cetCode, uuid, cft, index);
 		}
 
-	}
-
-	private File findBinaryDynamicPath(Repository repository, String cetCode, String uuid, String cftCode, Integer index) throws EntityDoesNotExistsException {
-		// Retrieve CET
-		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cetCode);
-		if (cet == null) {
-			throw new EntityDoesNotExistsException(CustomEntityTemplate.class, cetCode);
-		}
-
-
-		// Retrieve the entity
-		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, Collections.singletonList(cftCode));
-		if(values == null){
-			throw new EntityDoesNotExistsException("EntityInstance", uuid);
-		}
-
-		String filePath;
-
-		Object filePathOrfilePaths = values.get(cftCode);
-		if(filePathOrfilePaths instanceof String){
-			filePath = (String) filePathOrfilePaths;
-		} else if(filePathOrfilePaths instanceof Collection){
-			if(index == null) {
-				filePath = ((Collection<String>) filePathOrfilePaths).iterator().next();
-			} else {
-				filePath = new ArrayList<>((Collection<String>) filePathOrfilePaths).get(index);
-			}
-		} else {
-			return null;
-		}
-
-		return new File(filePath);
-	}
-
-	private File findBinaryStaticPath(Repository repository, String cetCode, String uuid, CustomFieldTemplate cft, Integer index) throws BusinessApiException {
-		int i = index == null ? 0 : index;
-
-		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		if(repository.getBinaryStorageConfiguration() != null) {
-			params.setRootPath(repository.getBinaryStorageConfiguration().getRootPath());
-		}
-		params.setCetCode(cetCode);
-		params.setUuid(uuid);
-		params.setCftCode(cft.getCode());
-		params.setFilePath(cft.getFilePath());
-		params.setShowOnExplorer(cft.isSaveOnExplorer());
-
-		String fullPath = fileSystemService.getStoragePath(params);
-
-		File directory = new File(fullPath);
-		if (!directory.exists()) {
-			throw new BusinessApiException("Directory does not exists: " + directory.getPath());
-		}
-
-		if(!directory.isDirectory()){
-			throw new BusinessApiException(directory.getPath() + " is not a directory");
-		}
-
-		final File[] files = directory.listFiles();
-		if(files == null || files.length == 0){
-			return null;
-		}
-
-		return files[i];
 	}
 
 }
