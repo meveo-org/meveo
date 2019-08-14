@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,9 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
+import org.meveo.elresolver.MeveoDefaultFunctionMapper;
+import org.meveo.elresolver.ValueExpressionWrapper;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -54,7 +58,7 @@ public class FileSystemService {
 		return rootPath.toString();
 	}
 
-	public String getStoragePath(BinaryStoragePathParam params) {
+	public String getStoragePath(BinaryStoragePathParam params, Map<String, Object> values) {
 
 		StringBuilder path = new StringBuilder(getRootPath(params.isShowOnExplorer(), params.getRootPath()))
 				.append(File.separator).append(params.getCetCode())
@@ -62,21 +66,36 @@ public class FileSystemService {
 				.append(File.separator).append(params.getCftCode());
 
 		if (!StringUtils.isBlank(params.getFilePath())) {
-			path.append(File.separator).append(params.getFilePath());
+			
+			try {
+				Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
+				path.append(File.separator).append(evaluatedExpr);
+			} catch (ELException e) {
+				throw new RuntimeException(e);
+			}
+			
 		}
 
 		return path.toString();
 	}
 	
-	public void delete(BinaryStoragePathParam params) {
-		String storage = getStoragePath(params);
+	public void delete(BinaryStoragePathParam params, Map<String, Object> values) {
+		if(values == null) {
+			values = Collections.EMPTY_MAP;
+		}
+		
+		String storage = getStoragePath(params, values);
 		File dir = new File(storage);
 		for(File file : dir.listFiles()) {
 			file.delete();
 		}
 	}
-
+	
 	public String persists(BinaryStoragePathParam params) throws BusinessException, IOException {
+		return persists(params, Collections.EMPTY_MAP);
+	}
+
+	public String persists(BinaryStoragePathParam params, Map<String, Object> values) throws BusinessException, IOException {
 		// checks for extension and type
 		if (params.getFileExtensions() != null && !params.getFileExtensions().isEmpty() && !params.isValidFileExtension()) {
 			throw new BusinessException("Invalid file extension");
@@ -90,7 +109,7 @@ public class FileSystemService {
 			throw new BusinessException("Invalid file size");
 		}
 
-		String storage = getStoragePath(params);
+		String storage = getStoragePath(params, values);
 
 		File dir = new File(storage);
 		if (!dir.exists()) {
@@ -128,10 +147,11 @@ public class FileSystemService {
                 binaryStoragePathParam.setCetCode(cet.getCode());
                 binaryStoragePathParam.setRepository(repository);
                 binaryStoragePathParam.setShowOnExplorer(field.isSaveOnExplorer());
+                binaryStoragePathParam.setFilePath(field.getFilePath());
                 
             	// If key is present but is empty, remove the data and the files
             	if(values.containsKey(field.getCode()) && StringUtils.isBlank(values.get(field.getCode()))) {
-                    delete(binaryStoragePathParam);
+                    delete(binaryStoragePathParam, previousValues);
                     binariesSaved.put(field, null);	// Null value indicate we remove those binaries
                     
             	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) != null) {
@@ -139,7 +159,7 @@ public class FileSystemService {
                     binaryStoragePathParam.setFile(tempFile);
                     binaryStoragePathParam.setFilename(tempFile.getName());
 
-                    final String persistedPath = persists(binaryStoragePathParam);
+                    final String persistedPath = persists(binaryStoragePathParam, values);
                     values.put(field.getCode(), persistedPath);
                     binariesSaved.put(field, persistedPath);
 
@@ -253,7 +273,7 @@ public class FileSystemService {
 		params.setFilePath(cft.getFilePath());
 		params.setShowOnExplorer(cft.isSaveOnExplorer());
 
-		String fullPath = getStoragePath(params);
+		String fullPath = getStoragePath(params, Collections.EMPTY_MAP);
 
 		File directory = new File(fullPath);
 		if (!directory.exists()) {
