@@ -1107,6 +1107,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	public void setFileExtensions(List<String> fileExtensions) {
 		this.fileExtensions = fileExtensions;
 	}
+
 	public String getFilePath() {
 		return filePath;
 	}
