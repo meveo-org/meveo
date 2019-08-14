@@ -450,6 +450,12 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setStorages(dto.getStorages());
         cft.setSummary(dto.isSummary());
 
+        cft.setFileExtensions(dto.getFileExtensions());
+        cft.setContentTypes(dto.getContentTypes());
+        cft.setMaxFileSizeAllowedInKb(dto.getMaxFileSizeAllowedInKb());
+        cft.setFilePath(dto.getFilePath());
+        cft.setSaveOnExplorer(dto.isSaveOnExplorer());
+
         return cft;
     }
 
