@@ -1401,6 +1401,22 @@ public class Neo4jService implements CustomPersistenceService {
     			Neo4JConstants.FILE_LABEL
 		);
     }
+    
+    //TODO: Document
+    public void removeBinary(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate, String binaryPath) {
+    	if(customFieldTemplate.getRelationshipName() == null) {
+    		throw new IllegalArgumentException("Relationship name of field template " + cet.getCode() + "." + customFieldTemplate.getCode() + " is null");
+    	}
+    	
+    	neo4jDao.detachDeleteTargets(
+    			neo4jConfigurationCode, 
+    			uuid, 
+    			cet.getCode(),
+    			customFieldTemplate.getRelationshipName(),
+    			Neo4JConstants.FILE_LABEL,
+    			Collections.singletonMap("value", binaryPath)
+		);
+    }
 
 	/**
 	 * Remove all previous binaries and add the given one to the specified node

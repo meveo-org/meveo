@@ -103,7 +103,7 @@ public class FileSystemService {
 			FileUtils.copyFile(storage, is);
 		}
 
-		return storage;
+		return new File(storage).getPath();
 	}
 	
     /**
@@ -207,7 +207,7 @@ public class FileSystemService {
                     	}
                     	
                     	// Save the paths in the same order as input
-                    	persistedPaths = filesToReorder.stream().map(File::getAbsolutePath).collect(Collectors.toList());
+                    	persistedPaths = filesToReorder.stream().map(File::getPath).collect(Collectors.toList());
                     }
                     
                     persistedPaths = persistedPaths.stream().distinct().collect(Collectors.toList());
