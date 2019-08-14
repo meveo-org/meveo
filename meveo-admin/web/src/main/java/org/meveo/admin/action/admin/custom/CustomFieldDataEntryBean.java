@@ -303,6 +303,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @param entity Entity to load definitions and field values for
 	 */
 	private void initFields(ICustomFieldEntity entity) {
+		this.entity = entity;
 
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
 		log.trace("Found {} custom field templates for entity {}", customFieldTemplates.size(), entity.getClass());
@@ -1894,7 +1895,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setContentTypes(cft.getContentTypes());
 		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
 
-		rootPath = fileSystemService.persists(params);
+		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
 
 		log.debug("binary path={}", rootPath);
 
@@ -1939,8 +1940,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
 		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
-
-		rootPath = fileSystemService.persists(params);
+		
+		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
 
 		log.debug("binary path={}", rootPath);
 

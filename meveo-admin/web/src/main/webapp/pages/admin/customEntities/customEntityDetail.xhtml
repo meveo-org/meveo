@@ -25,7 +25,7 @@
 			<p:tab title="#{messages['customer.tab.information']}">
 				<p:outputPanel autoUpdate="false">
 					<hftl:formPanel ajaxSubmit="true" formId="informationForm"
-						submitPartialProcess=":tabView:informationForm"
+						submitPartialProcess=":tabView"
 						label="#{customEntityInstanceBean.customEntityTemplate.name}"
 						backingBean="#{customEntityInstanceBean}"
 						showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
