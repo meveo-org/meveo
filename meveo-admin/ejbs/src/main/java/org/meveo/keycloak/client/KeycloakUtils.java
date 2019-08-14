@@ -104,10 +104,22 @@ public class KeycloakUtils {
     }
 
     public static void addToComposite(Keycloak keycloak, KeycloakAdminClientConfig keycloakAdminClientConfig, String client, String role, String compositeRole){
-        final RolesResource rolesResource = keycloak.realm(keycloakAdminClientConfig.getRealm())
+        RolesResource rolesResource = keycloak.realm(keycloakAdminClientConfig.getRealm())
                 .clients()
                 .get(client != null ? client : keycloakAdminClientConfig.getClientId())
                 .roles();
+        if (client == null) {
+            final String clientUuid = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                    .clients()
+                    .findByClientId(keycloakAdminClientConfig.getClientId())
+                    .get(0)
+                    .getId();
+
+            rolesResource = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                    .clients()
+                    .get(clientUuid)
+                    .roles();
+        }
 
         final List<RoleRepresentation> existingRoles = rolesResource.list();
 
@@ -145,5 +157,23 @@ public class KeycloakUtils {
             final RoleRepresentation roleToAdd = rolesResource.get(role).toRepresentation();
             compositeRoleResource.addComposites(Collections.singletonList(roleToAdd));
         }
+    }
+
+    public static void removeRoleInCompositeRole(Keycloak keycloak, KeycloakAdminClientConfig keycloakAdminClientConfig, String role, String compositeRole){
+        final String clientUuid = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(keycloakAdminClientConfig.getClientId())
+                .get(0)
+                .getId();
+
+        final RolesResource rolesResource = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .get(clientUuid)
+                .roles();
+
+        final RoleResource compositeRoleResource = rolesResource.get(compositeRole);
+
+        final RoleRepresentation roleToDelete = rolesResource.get(role).toRepresentation();
+        compositeRoleResource.getRoleComposites().remove(roleToDelete);
     }
 }

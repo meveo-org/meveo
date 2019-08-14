@@ -15,6 +15,9 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RoleResource;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -99,10 +102,17 @@ public class EndpointService extends BusinessService<Endpoint> {
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
         keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endointPermission, EXECUTE_ALL_ENDPOINTS);
-        
+
         // Create endpointManagement role in default client if not exists
         KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
         keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
+
+        // Add endpoint role and selected composite roles
+        if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+            for (String compositeRole : entity.getRoles()) {
+                keycloakAdminClientService.addToComposite(null, endointPermission, compositeRole);
+            }
+        }
 
         // Add Execute_All_Endpoints to endpointManagement composite if not already in
         keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);
@@ -111,8 +121,14 @@ public class EndpointService extends BusinessService<Endpoint> {
     @Override
     public void remove(Endpoint entity) throws BusinessException {
         super.remove(entity);
-
-        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, getEndpointPermission(entity));
+        String role = getEndpointPermission(entity);
+        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
+        if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+            for (String compositeRole : entity.getRoles()) {
+                keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
+            }
+        }
+        keycloakAdminClientService.removeRole(role);
     }
 
     @Override
@@ -120,9 +136,9 @@ public class EndpointService extends BusinessService<Endpoint> {
         Endpoint endpoint = findById(entity.getId());
         endpoint.getPathParameters().clear();
         endpoint.getParametersMapping().clear();
-        
+
         flush();
-        
+
         endpoint.getPathParameters().addAll(entity.getPathParameters());
         endpoint.getParametersMapping().addAll(entity.getParametersMapping());
         endpoint.setJsonataTransformer(entity.getJsonataTransformer());
@@ -134,9 +150,9 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpoint.setReturnedVariableName(entity.getReturnedVariableName());
         endpoint.setSerializeResult(entity.isSerializeResult());
         endpoint.setContentType(entity.getContentType());
-        
+
         super.update(endpoint);
-        
+
         return entity;
     }
 }

@@ -680,4 +680,18 @@
             <column name="max_value" type="bigint"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="service_endpoint_roles" author="Hien Bach">
+        <createTable tableName="service_endpoint_roles">
+            <column name="endpoint_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName=""/>
+            </column>
+            <column name="role" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_service_endpoint_roles_id" baseTableName="service_endpoint_roles" baseColumnNames="endpoint_id"
+                                 referencedTableName="service_endpoint" referencedColumnNames="id"/>
+        <addPrimaryKey tableName="service_endpoint_roles" columnNames="endpoint_id, role" constraintName="service_endpoint_role_pkey"/>
+    </changeSet>
 </databaseChangeLog>
