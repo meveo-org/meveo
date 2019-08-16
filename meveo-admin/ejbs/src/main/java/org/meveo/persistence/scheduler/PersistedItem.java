@@ -16,6 +16,10 @@
 
 package org.meveo.persistence.scheduler;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Map;
+
 public class PersistedItem extends ItemToPersist {
 
     private String uuid;
@@ -27,5 +31,11 @@ public class PersistedItem extends ItemToPersist {
 
     public String getUuid() {
         return uuid;
+    }
+
+    @Override
+    @JsonProperty("properties")
+    public Map<String, Object> getValues() {
+        return super.getValues();
     }
 }
