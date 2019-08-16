@@ -86,7 +86,7 @@ public class PersistenceRs {
     public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
-            throw new NotFoundException();
+            throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
         }
 
         if(paginationConfiguration == null){

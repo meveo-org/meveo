@@ -265,15 +265,18 @@ public class CrossStorageService implements CustomPersistenceService {
                 final List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
                 values.forEach(map -> {
                     final HashMap<String, Object> resultMap = new HashMap<>(map);
-                    map.entrySet().forEach(entry -> {
-                        if (!entry.getKey().equals("uuid") && !entry.getKey().equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(entry)) {
-                            resultMap.remove(entry);
+                    map.forEach((key, mapValue) -> {
+                        if (!key.equals("uuid") && !key.equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(key)) {
+                            resultMap.remove(key);
                         }
 
-                        // Flatten primitive types and Binary values (singleton maps with only "value" attribute)
-                        if(entry.getValue() instanceof Map && ((Map) entry.getValue()).size() == 1 && ((Map) entry.getValue()).containsKey("value")){
-                            Object value = ((Map) entry.getValue()).get("value");
-                            map.put(entry.getKey(), value);
+                        // Flatten primitive types and Binary values (singleton maps with only "value" and optionally "meveo_uuid" attribute)
+                        if (mapValue instanceof Map && ((Map) mapValue).size() == 1 && ((Map) mapValue).containsKey("value")) {
+                            Object value = ((Map) mapValue).get("value");
+                            resultMap.put(key, value);
+                        } else if (mapValue instanceof Map && ((Map) mapValue).size() == 2 && ((Map) mapValue).containsKey("value") && ((Map) mapValue).containsKey("meveo_uuid")) {
+                            Object value = ((Map) mapValue).get("value");
+                            resultMap.put(key, value);
                         }
                     });
 
