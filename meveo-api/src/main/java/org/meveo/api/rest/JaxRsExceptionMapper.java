@@ -1,5 +1,6 @@
 package org.meveo.api.rest;
 
+import javax.ejb.EJBException;
 import javax.ejb.Singleton;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
@@ -38,10 +39,13 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
         } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
             return Response.status(Response.Status.NOT_FOUND).build();
 
-        } else if (e instanceof JsonParseException || e instanceof JsonMappingException) {
+        } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
 
+        } else if(e instanceof EJBException) {
+            return toResponse(((EJBException) e).getCausedByException());
         }
+
         return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
     }
 
