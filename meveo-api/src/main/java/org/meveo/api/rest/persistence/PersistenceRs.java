@@ -97,7 +97,7 @@ public class PersistenceRs {
     public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
-            throw new NotFoundException();
+            throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
         }
 
         if(paginationConfiguration == null){
@@ -106,11 +106,11 @@ public class PersistenceRs {
 
         Repository repository = repositoryService.findByCode(repositoryCode);
         List<Map<String, Object>> data = crossStorageService.find(repository, customEntityTemplate, paginationConfiguration);
-        
+
         for(Map<String, Object> values : data) {
         	replaceFilePathsByUrls(customEntityTemplate, values);
         }
-        
+
 		return data;
     }
 
@@ -137,9 +137,9 @@ public class PersistenceRs {
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
         Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid);
-        
+
         replaceFilePathsByUrls(customEntityTemplate, values);
-        
+
 		return values;
     }
 
@@ -279,10 +279,10 @@ public class PersistenceRs {
         }
 
     }
-    
+
 	/**
 	 * Replace the hard drive file paths by URL that permit to download them
-	 * 
+	 *
 	 * @param customEntityTemplate Template of the values
 	 * @param values               Actual values containing the file paths
 	 */
@@ -297,7 +297,7 @@ public class PersistenceRs {
 				if(binaryFieldValue instanceof String) {
 					String url = buildFileUrl(customEntityTemplate, values, binaryField);
 					values.put(binaryField.getCode(), url);
-					
+
 				} else if(binaryFieldValue instanceof Collection) {
 					List<String> urls = new ArrayList<>();
 					for(int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
@@ -312,14 +312,14 @@ public class PersistenceRs {
 
 	/**
 	 * Build an URL allowing to download a given file for a given entity in the FileSysytem
-	 * 
+	 *
 	 * @param customEntityTemplate Template of the entity
 	 * @param values               Actual values of the entity
 	 * @param binaryField          Field holding the file reference
 	 */
 	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
 		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
-		
+
 		return new StringBuilder("/api/rest/fileSystem/binaries/")
 				.append(repositoryCode).append("/")
 				.append(customEntityTemplate.getCode()).append("/")

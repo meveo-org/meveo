@@ -66,14 +66,14 @@ public class FileSystemService {
 				.append(File.separator).append(params.getCftCode());
 
 		if (!StringUtils.isBlank(params.getFilePath())) {
-			
+
 			try {
 				Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
 				path.append(File.separator).append(evaluatedExpr);
 			} catch (ELException e) {
 				throw new RuntimeException(e);
 			}
-			
+
 		}
 
 		return path.toString();
@@ -83,14 +83,19 @@ public class FileSystemService {
 		if(values == null) {
 			values = Collections.EMPTY_MAP;
 		}
-		
+
 		String storage = getStoragePath(params, values);
-		File dir = new File(storage);
-		for(File file : dir.listFiles()) {
-			file.delete();
+		File directory = new File(storage);
+		if(directory.exists() && directory.isDirectory()) {
+			final File[] files = directory.listFiles();
+			if(files != null) {
+				for (File file : files) {
+					file.delete();
+				}
+			}
 		}
 	}
-	
+
 	public String persists(BinaryStoragePathParam params) throws BusinessException, IOException {
 		return persists(params, Collections.EMPTY_MAP);
 	}
@@ -148,7 +153,7 @@ public class FileSystemService {
                 binaryStoragePathParam.setRepository(repository);
                 binaryStoragePathParam.setShowOnExplorer(field.isSaveOnExplorer());
                 binaryStoragePathParam.setFilePath(field.getFilePath());
-                
+
             	// If key is present but is empty, remove the data and the files
             	if(values.containsKey(field.getCode()) && StringUtils.isBlank(values.get(field.getCode()))) {
                     delete(binaryStoragePathParam, previousValues);
