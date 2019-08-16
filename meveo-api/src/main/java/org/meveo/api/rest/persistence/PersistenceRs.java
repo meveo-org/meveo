@@ -168,52 +168,53 @@ public class PersistenceRs {
     	java.nio.file.Path tempDir = Files.createTempDirectory("dataUpload");
     	
     	try {
-    	
-	    	Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
-	    	InputPart dtosPart = uploadForm.remove("data").get(0);
-	    	GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {};
-	    	Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
-	    	
-	    	for(Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
-	    		String[] splittedKey = formPart.getKey().split("\\.");
-	    		String entityName = splittedKey[0];
-	    		String propertyName = splittedKey[1];
-	    		
-	    		if(formPart.getValue().size() == 1) {
-	    			InputPart inputPart = formPart.getValue().get(0);
-					InputStream inputStream = inputPart.getBody(InputStream.class, null);
-	    			
-    				File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
-	    			FileUtils.copyInputStreamToFile(inputStream, file);
-	    			
-	    			dtos.stream()
-	    				.filter(dto -> dto.getName().equals(entityName))
-	    				.findFirst()
-	    				.ifPresent(dto -> dto.getProperties().put(propertyName, file));
-	    			
-	    		} else {
-	    			
-	    			for(InputPart inputPart : formPart.getValue()) {
-	    				InputStream inputStream = inputPart.getBody(InputStream.class, null);
-	    				
-	    				File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
-	        			FileUtils.copyInputStreamToFile(inputStream, file);
-	        			
-	        			dtos.stream()
-	        				.filter(dto -> dto.getName().equals(entityName))
-	        				.findFirst()
-	        				.ifPresent(dto -> { 
-	        					List<File> property = (List<File>) dto.getProperties().computeIfAbsent(propertyName, s -> new ArrayList<File>());
-	        					property.add(file);
-	        				});
-	        			
-	    			}
-	    			
-	    		}
-	    	}
-	    	
-	    	return persist(dtos);
-	    	
+
+            Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+            InputPart dtosPart = uploadForm.remove("data").get(0);
+            GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {
+            };
+            Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
+
+            for (Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
+                String[] splittedKey = formPart.getKey().split("\\.");
+                String entityName = splittedKey[0];
+                String propertyName = splittedKey[1];
+
+                if (formPart.getValue().size() == 1) {
+                    InputPart inputPart = formPart.getValue().get(0);
+                    InputStream inputStream = inputPart.getBody(InputStream.class, null);
+
+                    File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
+                    FileUtils.copyInputStreamToFile(inputStream, file);
+
+                    dtos.stream()
+                            .filter(dto -> dto.getName().equals(entityName))
+                            .findFirst()
+                            .ifPresent(dto -> dto.getProperties().put(propertyName, file));
+
+                } else {
+
+                    for (InputPart inputPart : formPart.getValue()) {
+                        InputStream inputStream = inputPart.getBody(InputStream.class, null);
+
+                        File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
+                        FileUtils.copyInputStreamToFile(inputStream, file);
+
+                        dtos.stream()
+                                .filter(dto -> dto.getName().equals(entityName))
+                                .findFirst()
+                                .ifPresent(dto -> {
+                                    List<File> property = (List<File>) dto.getProperties().computeIfAbsent(propertyName, s -> new ArrayList<File>());
+                                    property.add(file);
+                                });
+
+                    }
+
+                }
+            }
+
+            return persist(dtos);
+
     	} finally {
     		
     		Files.list(tempDir).forEach(path -> {

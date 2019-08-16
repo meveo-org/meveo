@@ -1,7 +1,7 @@
 package org.meveo.service.storage;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.meveo.admin.exception.BusinessException;
+import org.apache.commons.io.FilenameUtils;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -119,22 +119,22 @@ public class FileSystemService {
 		}
 	}
 
-	public String persists(BinaryStoragePathParam params) throws BusinessException, IOException {
+	public String persists(BinaryStoragePathParam params) throws IOException {
 		return persists(params, Collections.EMPTY_MAP);
 	}
 
-	public String persists(BinaryStoragePathParam params, Map<String, Object> values) throws BusinessException, IOException {
+	public String persists(BinaryStoragePathParam params, Map<String, Object> values) throws IOException {
 		// checks for extension and type
 		if (params.getFileExtensions() != null && !params.getFileExtensions().isEmpty() && !params.isValidFileExtension()) {
-			throw new BusinessException("Invalid file extension");
+			throw new IllegalArgumentException("Invalid file extension : " + FilenameUtils.getExtension(params.getFilename()));
 		}
 
 		if (params.getContentTypes() != null && !params.getContentTypes().isEmpty() && !params.isValidContentTypes()) {
-			throw new BusinessException("Invalid content type");
+			throw new IllegalArgumentException("Invalid content type : " + params.getContentType());
 		}
 
 		if (!params.isValidFilesize()) {
-			throw new BusinessException("Invalid file size");
+			throw new IllegalArgumentException("Invalid file size, should be lower than " + params.getMaxFileSizeAllowedInKb() + " kb");
 		}
 
 		String storage = getStoragePath(params, values);
@@ -164,7 +164,7 @@ public class FileSystemService {
      * @param repository Repository where to store binaries
      * @return the persisted binaries by custom field templates
      */
-    public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, CustomEntityTemplate cet, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessException, BusinessApiException {
+    public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, CustomEntityTemplate cet, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessApiException {
         Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
         for (CustomFieldTemplate field : fields) {
         	
@@ -186,12 +186,17 @@ public class FileSystemService {
                     File tempFile = (File) values.get(field.getCode());
                     binaryStoragePathParam.setFile(tempFile);
                     binaryStoragePathParam.setFilename(tempFile.getName());
+					binaryStoragePathParam.setFileSizeInBytes(tempFile.length());
 
-                    final String persistedPath = persists(binaryStoragePathParam, values);
-                    values.put(field.getCode(), persistedPath);
-                    binariesSaved.put(field, persistedPath);
+					try {
+						final String persistedPath = persists(binaryStoragePathParam, values);
+						values.put(field.getCode(), persistedPath);
+						binariesSaved.put(field, persistedPath);
+					} catch (IllegalArgumentException e) {
+						throw new IllegalArgumentException(e.getMessage() + " for field " + field.getCode());
+					}
 
-                    // Remove old file
+					// Remove old file
                     if (previousValues != null && previousValues.get(field.getCode()) != null) {
                         String oldFile = (String) previousValues.get(field.getCode());
                         new File(oldFile).delete();
