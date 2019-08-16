@@ -8,7 +8,6 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
-import org.meveo.service.storage.BinaryStoragePathParam;
 import org.meveo.service.storage.BinaryStorageUtils;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
@@ -17,8 +16,6 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -69,7 +66,7 @@ public class FileSystemApi extends BaseApi {
 				throw new EntityDoesNotExistsException("EntityInstance", uuid);
 			}
 			
-			return fileSystemService.findBinaryDynamicPath(repository, cet, values, cftCode, index);
+			return fileSystemService.findBinaryDynamicPath(values, cftCode, index);
 
 		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
 		} else {

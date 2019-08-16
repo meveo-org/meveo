@@ -1,19 +1,5 @@
 package org.meveo.service.storage;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
@@ -21,9 +7,7 @@ import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
-import org.meveo.elresolver.MeveoDefaultFunctionMapper;
 import org.meveo.elresolver.ValueExpressionWrapper;
-import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -32,8 +16,17 @@ import org.meveo.model.storage.Repository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Clément Bareth
  */
 @Stateless
 public class FileSystemService {
@@ -52,32 +45,62 @@ public class FileSystemService {
 	public String getRootPath(boolean showOnExplorer, String binaryStorageConfigurationRootPath) {
 
 		StringBuilder rootPath = new StringBuilder(
-				showOnExplorer ? getProviderPath() : paramBeanFactory.getInstance().getProperty("binary.storage.path", "/tmp/meveo/binary/storage"));
-		rootPath = rootPath.append(File.separator);
-		rootPath = rootPath.append(binaryStorageConfigurationRootPath);
-		return rootPath.toString();
+				showOnExplorer ? getProviderPath() : paramBeanFactory.getInstance().getProperty("binary.storage.path", "/tmp/meveo/binary/storage")
+        );
+
+        rootPath.append(File.separator);
+        rootPath.append(binaryStorageConfigurationRootPath);
+        return rootPath.toString();
 	}
 
 	public String getStoragePath(BinaryStoragePathParam params, Map<String, Object> values) {
 
 		StringBuilder path = new StringBuilder(getRootPath(params.isShowOnExplorer(), params.getRootPath()))
 				.append(File.separator).append(params.getCetCode())
-				.append(File.separator).append(params.getUuid())
-				.append(File.separator).append(params.getCftCode());
+				.append(File.separator).append(params.getUuid());
 
-		if (!StringUtils.isBlank(params.getFilePath())) {
+        if(!StringUtils.isBlank(params.getCftCode())) {
+            path.append(File.separator).append(params.getCftCode());
 
-			try {
-				Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
-				path.append(File.separator).append(evaluatedExpr);
-			} catch (ELException e) {
-				throw new RuntimeException(e);
-			}
+            if (!StringUtils.isBlank(params.getFilePath())) {
 
-		}
+                try {
+                    Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
+                    path.append(File.separator).append(evaluatedExpr);
+                } catch (ELException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }
 
 		return path.toString();
 	}
+
+    /**
+     * Remove every file related to a given entity
+     *
+     * @param repository Repository where the entity is stored
+     * @param cet        Template of the entity
+     * @param uuid       UUID of the entity
+     */
+    public void delete(Repository repository, CustomEntityTemplate cet, String uuid){
+	    // Delete all files that are on file explorer for the given uuid
+        BinaryStoragePathParam binaryStoragePathParamOnExplorer = new BinaryStoragePathParam();
+        binaryStoragePathParamOnExplorer.setUuid(uuid);
+        binaryStoragePathParamOnExplorer.setCetCode(cet.getCode());
+        binaryStoragePathParamOnExplorer.setRepository(repository);
+        binaryStoragePathParamOnExplorer.setShowOnExplorer(true);
+        delete(binaryStoragePathParamOnExplorer, null);
+
+        // Delet all files that are not on fle explorer for the given uuid
+        BinaryStoragePathParam binaryStoragePathParamNotOnExplorer = new BinaryStoragePathParam();
+        binaryStoragePathParamNotOnExplorer.setUuid(uuid);
+        binaryStoragePathParamNotOnExplorer.setCetCode(cet.getCode());
+        binaryStoragePathParamNotOnExplorer.setRepository(repository);
+        binaryStoragePathParamNotOnExplorer.setShowOnExplorer(false);
+        delete(binaryStoragePathParamNotOnExplorer, null);
+    }
 	
 	public void delete(BinaryStoragePathParam params, Map<String, Object> values) {
 		if(values == null) {
@@ -129,7 +152,7 @@ public class FileSystemService {
 
 		return new File(storage).getPath();
 	}
-	
+
     /**
      * Save the binaries values to the file system and replace them in the value map by the path where they are stored. <br>
      * In case of a single storage binary, remove the previous one from file system. <br>
@@ -169,7 +192,7 @@ public class FileSystemService {
                     binariesSaved.put(field, persistedPath);
 
                     // Remove old file
-                    if (previousValues.get(field.getCode()) != null) {
+                    if (previousValues != null && previousValues.get(field.getCode()) != null) {
                         String oldFile = (String) previousValues.get(field.getCode());
                         new File(oldFile).delete();
                     }
@@ -184,7 +207,10 @@ public class FileSystemService {
                     }
 
                     // Append new persisted files path to existing ones
-                    List<String> persistedPaths = previousValues.get(field.getCode()) != null ? (List<String>) previousValues.get(field.getCode()) : new ArrayList<>();
+                    List<String> persistedPaths = new ArrayList<>();
+                    if(previousValues != null && previousValues.get(field.getCode()) != null) {
+                        persistedPaths = (List<String>) previousValues.get(field.getCode());
+                    }
 
                     // If list of File, concatenate to existing ones
                     if(firstItem instanceof File) {
@@ -216,7 +242,7 @@ public class FileSystemService {
                     		
                         	// Retrieve file
                         	if(BinaryStorageUtils.filePathContainsEL(field)) {
-                        		file = findBinaryDynamicPath(repository, cet, values, field.getCode(), index);
+                        		file = findBinaryDynamicPath(values, field.getCode(), index);
                         	} else {
                         		file = findBinaryStaticPath(repository, cet.getCode(), uuid, field, index);
                         	}
@@ -246,7 +272,7 @@ public class FileSystemService {
         return binariesSaved;
     }
     
-	public File findBinaryDynamicPath(Repository repository, CustomEntityTemplate cet, Map<String, Object> values, String cftCode, Integer index) throws EntityDoesNotExistsException {
+	public File findBinaryDynamicPath(Map<String, Object> values, String cftCode, Integer index) {
 		String filePath;
 
 		Object filePathOrfilePaths = values.get(cftCode);

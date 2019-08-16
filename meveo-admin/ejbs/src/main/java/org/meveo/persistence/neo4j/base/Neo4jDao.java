@@ -149,8 +149,35 @@ public class Neo4jDao {
 		);
     }
 
+    public void removeNodeByUUID(String neo4jconfiguration, String label, String uuid){
+        StringBuilder queryBuilder = new StringBuilder()
+                .append("MATCH (n:").append(label).append(":) \n")
+                .append("WHERE n.meveo_uuid = $id \n")
+                .append("DETACH DELETE n \n")
+                .append("RETURN n");
+
+        cypherHelper.execute(
+                neo4jconfiguration,
+                queryBuilder.toString(),
+                Collections.singletonMap("id", uuid),
+                (transaction, result) -> {
+                    final Record single = result.single();
+                    final Node deletedNode = single.get(0).asNode();
+                    if(deletedNode != null){
+                        LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
+                        transaction.success();
+                    } else {
+                        LOGGER.error("Node with uuid {} not deleted", uuid);
+                        transaction.failure();
+                    }
+                    return null;
+                },
+                e -> LOGGER.error("Cannot remove node with uuid {}", uuid, e)
+        );
+    }
+
     /**
-     * Remove a node using its UUID
+     * Remove a node using its id
      *
      * @param neo4jconfiguration Repository code
      */

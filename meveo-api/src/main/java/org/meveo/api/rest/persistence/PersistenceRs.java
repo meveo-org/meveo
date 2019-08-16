@@ -108,10 +108,15 @@ public class PersistenceRs {
     public Response delete(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
-            throw new NotFoundException();
+            throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
         }
 
-        crossStorageService.remove(repositoryCode, customEntityTemplate, uuid);
+        final Repository repository = repositoryService.findByCode(repositoryCode);
+        if(repository == null){
+            throw new NotFoundException("Repository with code " + repositoryCode + " does not exists");
+        }
+
+        crossStorageService.remove(repository, customEntityTemplate, uuid);
 
         return Response.noContent().build();
     }
