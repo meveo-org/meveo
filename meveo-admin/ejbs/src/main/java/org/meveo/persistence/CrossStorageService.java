@@ -265,11 +265,18 @@ public class CrossStorageService implements CustomPersistenceService {
                 final List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
                 values.forEach(map -> {
                     final HashMap<String, Object> resultMap = new HashMap<>(map);
-                    map.keySet().forEach(key -> {
-                        if (!key.equals("uuid") && !key.equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(key)) {
-                            resultMap.remove(key);
+                    map.entrySet().forEach(entry -> {
+                        if (!entry.getKey().equals("uuid") && !entry.getKey().equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(entry)) {
+                            resultMap.remove(entry);
+                        }
+
+                        // Flatten primitive types and Binary values (singleton maps with only "value" attribute)
+                        if(entry.getValue() instanceof Map && ((Map) entry.getValue()).size() == 1 && ((Map) entry.getValue()).containsKey("value")){
+                            Object value = ((Map) entry.getValue()).get("value");
+                            map.put(entry.getKey(), value);
                         }
                     });
+
                     valuesList.add(resultMap);
                 });
             } else {
