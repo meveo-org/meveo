@@ -38,7 +38,7 @@
 
         <p:panel width="100">
             <h:form id="form">
-                <p:dataTable id="datatable" var="templateInfo" value="#{entityExportImportBean.exportTemplates}" paginator="true" rows="20"
+                <p:dataTable id="datatable" var="templateInfo" value="#{entityExportImportBean.exportTemplates}" multiViewState="true" paginator="true" rows="20"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="20,30,50"
                     lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex" resizableColumns="true">
                     <p:column headerText="#{messages['export.templateName']}" sortBy="#{templateInfo.key}">

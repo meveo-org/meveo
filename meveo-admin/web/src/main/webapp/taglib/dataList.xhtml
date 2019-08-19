@@ -39,7 +39,6 @@
         		</hftl:datalist>
          
 -->
-
 <ui:composition>
 
     <!--     <c:if test="${empty pdf}"> -->
@@ -134,20 +133,22 @@
     <p:panel id="#{resultsId}_panel" width="100">
 
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
-            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="10" editable="#{editable}" editMode="#{editMode}"
+            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" multiViewState="true" paginator="true" rows="#{backingBean.cacheNumRows}" editable="#{editable}" editMode="#{editMode}"
                 widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
                 paginatorTemplate="${prePaginatorControls} {RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
                 rowsPerPageTemplate="#{rowsPerPage}" lazy="true" resizableColumns="true" styleClass="custom-grid #{styleClass}" rowKey="#{entity.id}" first="#{backingBean.dataTableFirstAttribute}"
                 reflow="true" paginatorPosition="#{paginatorPosition}">
                 <p:ajax event="page" listener="#{backingBean.onPageChange}" />
                 <p:ajax event="toggleSelect" update="@this" process="@this" />
-                <p:ajax event="rowSelectCheckbox" />
+                <p:ajax event="rowSelectCheckbox"/>
                 <p:ajax event="rowUnselectCheckbox" />
-                <p:ajax event="rowSelect" />
+                <p:ajax event="rowSelect"/>
                 <p:ajax event="rowUnselect" />
                 <c:if test="#{editable}">
                     <p:ajax event="cellEdit" listener="#{backingBean.onCellEdit}" />
                 </c:if>
+
+                <h:outputText id="rows" value="#{backingBean.rows}" />
 
                 <c:if test="${showFullTextSearch}">
                     <f:facet name="header">
@@ -230,7 +231,6 @@
                 <h:graphicImage library="img" name="ajax-loader1.gif" style="margin-right: 12px; vertical-align: middle;" />
                 <h:outputText value="#{messages['message.loading.data']}" style="white-space: nowrap;" />
             </p:panelGrid>
-
         </h:form>
 
         <c:if test="#{exportToXml}">
@@ -239,5 +239,4 @@
     </p:panel>
 
 </ui:composition>
-
 </html>

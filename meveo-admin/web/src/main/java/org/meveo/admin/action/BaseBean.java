@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.infinispan.Cache;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
@@ -201,9 +203,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     // protected String providerFilePath = paramBean.getCet("providers.rootDir", "./meveodata/");
 
     private UploadedFile uploadedFile;
-    
+
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-rows-page-cache")
+    private Cache<String, Map<String, Integer>> cacheNumberRow;
+
     private BaseCrudApi<T,?> baseCrudApi;
-    
+
     private boolean override;
 
     /**
@@ -222,12 +227,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         super();
         this.clazz = clazz;
     }
-    
+
     @PostConstruct
     public void init() {
     	baseCrudApi = getBaseCrudApi();
     }
-    
+
     public boolean isOverride() {
 		return override;
 	}
@@ -260,7 +265,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             conversation.end();
         }
     }
-    
+
     public BaseCrudApi<T, ?> getBaseCrudApi() {
     	return null;
     }
@@ -805,7 +810,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                     // Omit empty or null values
                     Map<String, Object> cleanFilters = new HashMap<String, Object>();
 
-                    for (Map.Entry<String, Object> filterEntry : filters.entrySet()) {
+                    for (Entry<String, Object> filterEntry : filters.entrySet()) {
                         if (filterEntry.getValue() == null) {
                             continue;
                         }
@@ -960,6 +965,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.dataTableFirstAttribute = dataTableFirstAttribute;
     }
 
+    /**
+     * Change page
+     * @param event
+     */
     public void onPageChange(PageEvent event) {
         this.setDataTableFirstAttribute(((DataTable) event.getSource()).getFirst());
     }
@@ -1243,5 +1252,38 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         return matchedEntityInfo;
     }
-    
+
+    /**
+     * Get rows per page from meveo-rows-page-cache cache
+     *
+     */
+    public int getCacheNumRows() {
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+        if (numberRow != null && numberRow.get(clazzName) != null) {
+            return numberRow.get(clazzName);
+        } else {
+            return 10;
+        }
+    }
+
+    /**
+     * Set rows per page for given user and entity class
+     */
+    public void setCacheNumRows(int rows) {
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> rowsByClassForUser = cacheNumberRow.get(username);
+
+        if(rowsByClassForUser == null) {
+        	rowsByClassForUser = new HashMap<>();
+        }
+
+        rowsByClassForUser.put(clazzName, rows);
+
+        cacheNumberRow.put(username, rowsByClassForUser);
+    }
 }
