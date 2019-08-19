@@ -63,17 +63,17 @@
     <c:set var="cetIndex" value="0" />
     <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
         <c:if test="#{not empty menu.key}">
-            <p:submenu label="#{menu.key}">
-                <c:forEach items="#{menu.value}" var="cet">
-                    <c:if test="#{currentUser.hasRole(cet.readPermission) }">
-                        <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
-                        <p:menuitem id="cet_#{cetIndex}" outcome="#{storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
-                            <f:param name="cet" value="#{cet.code}" disable="#{storeAsTable}"/>
-                            <f:param name="objectId" value="#{cet.id}" disable="#{!storeAsTable}"/>
-                        </p:menuitem>
-                        <c:set var="cetIndex" value="#{cetIndex + 1}" />
-                    </c:if>
-                </c:forEach>
+            <p:submenu label="#{menu.key}" styleClass="menuScrollClass">
+                    <c:forEach items="#{menu.value}" var="cet">
+                        <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+                            <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
+                            <p:menuitem id="cet_#{cetIndex}" outcome="#{storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
+                                <f:param name="cet" value="#{cet.code}" disable="#{storeAsTable}"/>
+                                <f:param name="objectId" value="#{cet.id}" disable="#{!storeAsTable}"/>
+                            </p:menuitem>
+                            <c:set var="cetIndex" value="#{cetIndex + 1}" />
+                        </c:if>
+                    </c:forEach>
             </p:submenu>
         </c:if>
     </c:forEach>
@@ -137,6 +137,15 @@
         <p:menuitem id="userRoles" value="#{messages['menu.userRoles']}"
                     outcome="roles"
                     rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        <p:submenu id="storages" label="#{messages['menu.storages']}">
+        	<p:menuitem id="repositories" value="#{messages['repository.title']}"
+                    outcome="repositories"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
+            <p:menuitem id="binaryStorageConfigurations" value="#{messages['binaryStorageConfiguration.title']}"
+                    outcome="binaryStorageConfigurations"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
+        </p:submenu>
+        
     </p:submenu>
     <p:submenu id="ontology" label="#{messages['menu.ontology']}"
                rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">

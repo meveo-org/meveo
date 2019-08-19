@@ -16,20 +16,24 @@
 
 package org.meveo.admin.action.admin.custom;
 
-import org.apache.commons.collections4.functors.NullPredicate;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
+
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.CETUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.JacksonUtil;
 import org.primefaces.event.SelectEvent;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Named;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
 
 @Named
 @ViewScoped
@@ -46,17 +50,12 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     private String cetCode;
     
     public void initEntity(String cetCode, Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
-    	values = new CustomFieldValues();
     	this.cetCode = cetCode;
     	this.fields = fields;
     	
-    	valuesMap.forEach((k,v) -> {
-    		values.setValue(k, v);
-    	});
+    	values = CETUtils.initCustomFieldValues(valuesMap, fields);
     	
-    	fields.stream().filter(f -> CustomFieldStorageTypeEnum.LIST.equals(f.getStorageType()))
-    		.filter(f -> valuesMap.get(f.getDbFieldname()) == null)
-			.forEach(f -> values.setValue(f.getDbFieldname(), f.getNewListValue(), f.getFieldType().getDataClass()));
+
     }
     
 	public CustomFieldValues getValues() {
@@ -91,15 +90,40 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
 		String newId = (String) selectedEntityInPopup.get("uuid");
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
-		cfValue.setStringValue(newId);
-    }
+    	if (selectedCft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+    		List<String> listValue = cfValue.getListValue();
+    		if(listValue == null) {
+    			listValue = new ArrayList<String>();
+        		listValue.add(newId);
+    		} else {
+        		listValue.add(newId);
+        		listValue = listValue.stream().distinct().collect(Collectors.toList());
+    		}
+    		cfValue.setListValue(listValue);
+    	} else {
+    		cfValue.setStringValue(newId);
+    	}
+	}
 	
 	@Override
 	@ActionMethod
 	public void onChildEntityUpdated(CustomFieldValues cfValues) {
-		String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	CustomFieldValue cfValue = values.getCfValue(selectedCft.getDbFieldname());
-		cfValue.setStringValue(serializedValues);
+    	if(selectedCft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+    		List<Map<?,?>> listValue = cfValue.getListValue();
+    		if(listValue == null) {
+    			listValue = new ArrayList<>();
+        		listValue.add(cfValues.getValues());
+    		} else {
+        		listValue.add(cfValues.getValues());
+        		listValue = listValue.stream().distinct().collect(Collectors.toList());
+    		}
+    		
+    		cfValue.setListValue(listValue);
+    	} else {
+    		String serializedValues = JacksonUtil.toString(cfValues.getValues());
+        	cfValue.setStringValue(serializedValues);
+    	}
 	}
 	
 	@ActionMethod

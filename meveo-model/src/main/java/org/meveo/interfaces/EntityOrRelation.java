@@ -1,5 +1,6 @@
 package org.meveo.interfaces;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -28,6 +29,7 @@ public abstract class EntityOrRelation implements Serializable {
 	protected String name;
 	protected Map<String, Object> properties;
 	protected int index = 0;
+	private boolean drop;
 
 	public String getType() {
 		return this.type;
@@ -57,7 +59,17 @@ public abstract class EntityOrRelation implements Serializable {
         this.index = index;
     }
 
-    @JsonProperty("name")
+    @JsonIgnore
+    public void setDrop(boolean drop){
+		this.drop = drop;
+	}
+
+	@JsonIgnore
+	public boolean isDrop() {
+		return drop;
+	}
+
+	@JsonProperty("name")
 	public String getNameIndexed() {
 		if(this.index >= 1) {
 			return this.name + this.index;

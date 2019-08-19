@@ -1,7 +1,7 @@
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
@@ -16,7 +16,7 @@ import org.meveo.model.IEntity;
  * @param <E> Entity class
  * @param <T> Dto class
  */
-public interface ApiService<E extends IEntity, T extends BaseDto> {
+public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
 
     /**
      * Find entity identified by code.
@@ -28,8 +28,9 @@ public interface ApiService<E extends IEntity, T extends BaseDto> {
      * @throws InvalidParameterException Some search parameter is incorrect
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
-    T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException;
+    T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException;
 
     /**
      * Find entity identified by code. Return null if not found
@@ -40,8 +41,9 @@ public interface ApiService<E extends IEntity, T extends BaseDto> {
      * @throws InvalidParameterException Some search parameter is incorrect
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
+     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
-    T findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException;
+    T findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException;
 
     /**
      * Create or update an entity from DTO.

@@ -15,6 +15,55 @@
  */
 package org.meveo.service.base;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -25,14 +74,21 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
+import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.persistence.neo4j.graph.Neo4jEntity;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -82,6 +138,14 @@ public class NativePersistenceService extends BaseService {
     @MeveoParamBean
     protected ParamBean paramBean;
 
+    @Inject
+    @Updated
+    private Event<CustomTableRecord> customTableRecordUpdate;
+
+    @Inject
+    @Removed
+    private Event<CustomTableRecord> customTableRecordRemoved;
+
     /**
      * Find record by its identifier
      *
@@ -100,9 +164,11 @@ public class NativePersistenceService extends BaseService {
      * @param tableName    Table name
      * @param uuid         Identifier
      * @param selectFields Fields to return
+     * @deprecated Use {@link CustomTableService#findById(org.meveo.model.customEntities.CustomEntityTemplate, String, List)} instead
      * @return A map of values with field name as a map key and field value as a map value
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public Map<String, Object> findById(String tableName, String uuid, List<String> selectFields) {
 
         try {
@@ -111,7 +177,7 @@ public class NativePersistenceService extends BaseService {
 
             StringBuilder selectQuery = new StringBuilder("SELECT ");
 
-            if(selectFields == null || !selectFields.isEmpty()){
+            if(selectFields == null || selectFields.isEmpty()){
                 selectQuery.append("*");
             }else if(!selectFields.isEmpty()){
                 for(String field : selectFields){
@@ -258,7 +324,6 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     protected String create(String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
-
         if (tableName == null) {
             throw new BusinessException("Table name must not be null");
         }
@@ -307,10 +372,16 @@ public class NativePersistenceService extends BaseService {
 
             Query query = getEntityManager().createNativeQuery(sql.toString());
             for (String fieldName : values.keySet()) {
-                if (values.get(fieldName) == null) {
+                Object fieldValue = values.get(fieldName);
+				if (fieldValue == null) {
                     continue;
                 }
-                query.setParameter(fieldName, values.get(fieldName));
+
+				// Serialize list values
+                if(fieldValue instanceof Collection) {
+                	fieldValue = JacksonUtil.toString(fieldValue);
+                }
+                query.setParameter(fieldName, fieldValue);
             }
             query.executeUpdate();
 
@@ -325,10 +396,16 @@ public class NativePersistenceService extends BaseService {
                 		.setMaxResults(1);
                 
                 for (String fieldName : values.keySet()) {
-                    if (values.get(fieldName) == null) {
+                    Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
                         continue;
                     }
-                    query.setParameter(fieldName, values.get(fieldName));
+
+					// Serialize list values
+                    if(fieldValue instanceof Collection) {
+                    	fieldValue = JacksonUtil.toString(fieldValue);
+                    }
+                    query.setParameter(fieldName, fieldValue);
                 }
 
                 uuid = query.getSingleResult();
@@ -386,11 +463,22 @@ public class NativePersistenceService extends BaseService {
 
             Query query = getEntityManager().createNativeQuery(sql.toString());
             for (String fieldName : value.keySet()) {
-                if (value.get(fieldName) != null) {
-                    query.setParameter(fieldName, value.get(fieldName));
+                Object fieldValue = value.get(fieldName);
+				if (fieldValue != null) {
+    				// Serialize list values
+                    if(fieldValue instanceof Collection) {
+                    	fieldValue = JacksonUtil.toString(fieldValue);
+                    }
+                    query.setParameter(fieldName, fieldValue);
                 }
             }
             query.executeUpdate();
+
+            CustomTableRecord record = new CustomTableRecord();
+            record.setUuid((String) value.get(FIELD_ID));
+            record.setCetCode(tableName);
+
+            customTableRecordUpdate.fire(record);
 
         } catch (Exception e) {
             log.error("Failed to insert values into table {} {} sql {}", tableName, value, sql, e);
@@ -408,14 +496,31 @@ public class NativePersistenceService extends BaseService {
      * @throws BusinessException General exception
      */
     public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
+    	// Serialize collections
+    	if(value instanceof Collection) {
+    		value = JacksonUtil.toString(value);
+    	}
+
+    	if(value instanceof Collection) {
+    		value = JacksonUtil.toString(value);
+    	}
 
         try {
             if (value == null) {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=" + uuid).executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             } else {
-                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=" + uuid).setParameter(fieldName, value)
-                        .executeUpdate();
+                getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+	                .setParameter(fieldName, value)
+	            	.setParameter("uuid", uuid)
+	                .executeUpdate();
             }
+
+            CustomTableRecord record = new CustomTableRecord();
+            record.setUuid(uuid);
+            record.setCetCode(tableName);
+            customTableRecordUpdate.fire(record);
 
         } catch (Exception e) {
             log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
@@ -483,6 +588,11 @@ public class NativePersistenceService extends BaseService {
         getEntityManager().createNativeQuery("delete from " + tableName + " where uuid= :uuid")
                 .setParameter("uuid", uuid)
                 .executeUpdate();
+
+        CustomTableRecord record = new CustomTableRecord();
+        record.setCetCode(tableName);
+        record.setUuid(uuid);
+        customTableRecordRemoved.fire(record);
     }
 
     /**
@@ -495,6 +605,12 @@ public class NativePersistenceService extends BaseService {
     public void remove(String tableName, Set<String> ids) throws BusinessException {
         getEntityManager().createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
+        for(String id : ids){
+            CustomTableRecord record = new CustomTableRecord();
+            record.setCetCode(tableName);
+            record.setUuid(id);
+            customTableRecordRemoved.fire(record);
+        }
     }
 
     /**
@@ -855,7 +971,9 @@ public class NativePersistenceService extends BaseService {
     public String findIdByValues(String tableName, Map<String, Object> queryValues) {
         QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
-            queryBuilder.addCriterion(key, "=", value, false);
+        	if(!(value instanceof Collection) && !(value instanceof File)) {
+                queryBuilder.addCriterion(key, "=", value, false);
+        	}
         });
 
         NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);

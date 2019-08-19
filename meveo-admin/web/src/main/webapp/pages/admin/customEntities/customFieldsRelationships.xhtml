@@ -15,6 +15,9 @@
             type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
     <o:importConstants
             type="org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum" />
+            
+   <c:set target="#{customFieldTemplateBean}" property="cetStorageDM" value="#{customRelationshipTemplateBean.availableStoragesDM}"/>
+            
 
     <h:form id="fieldsForm">
         <p:panel width="100"

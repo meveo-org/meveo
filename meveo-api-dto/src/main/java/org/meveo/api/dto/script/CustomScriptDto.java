@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 
 /**
@@ -15,7 +15,7 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
  * @author Andrius Karpavicius
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class CustomScriptDto extends BaseDto {
+public abstract class CustomScriptDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -977313726064562882L;

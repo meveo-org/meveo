@@ -57,7 +57,7 @@
     <cc:attribute name="ajaxSubmit" required="true" />
     <cc:attribute name="submitPartialProcess" />
     <cc:attribute name="submitPartialSubmitFilter" default=":not([name*='omitFromSubmit'])"/> <!--  instead of partial submit filter, jquery expression could be used in process attribute, but issue is with calendars or other input components that are not of input type:  process="@this @( :input:not([name*='omitFromSubmit']))" -->
-    <cc:attribute name="submitUpdate" default="@all"/>
+    <cc:attribute name="submitUpdate" default="@form"/>
     <cc:attribute name="execute" default="false" />
     <cc:attribute name="formId" default="formId" />
     <cc:attribute name="submitActionListener" default="false" />
@@ -91,16 +91,6 @@
             action="#{cc.attrs.backingBean.enable}" update="@form">
             <p:confirm header="#{messages['commons.enable']}" message="#{messages['commons.confirmEnable']}" />
         </p:commandButton>
-        
-        <script type="text/javascript">
-			//<![CDATA[
-				function delayDisable(button){
-					setTimeout(function(){
-		            	button.disabled = true;
-		            }, 100);
-				}
-			//]]>
-		</script>
 
 		<p:commandButton id="saveButton"
 			rendered="#{cc.attrs.edit and cc.attrs.showEditButton and empty(cc.attrs.updateConfirmationMessage) and !cc.attrs.ajaxSubmit and cc.attrs.backingBean.canUserUpdateEntity()}"
@@ -149,13 +139,13 @@
 		<!-- Update with message -->
 		<p:remoteCommand id="remoteUpdateWithMessageButton" rendered="#{cc.attrs.submitPartialProcess==null}"
 			action="#{cc.attrs.backingBean.saveOrUpdateWithMessage(cc.attrs.killConversationOnSave)}"
-			name="#{cc.attrs.formId}updateWithMessage" oncomplete="handleUpdateWithMessageComplete(xhr,status,args)" />
+			name="#{cc.attrs.formId}updateWithMessage" oncomplete="handleUpdateWithMessageComplete('#{cc.attrs.formId}confirmCannotUpdateWithMessageDialog', xhr,status,args)" />
             
         <!-- Update with message with partial submit -->
         <p:remoteCommand id="remoteUpdateWithMessageButtonPartialSubmit" rendered="#{cc.attrs.submitPartialProcess!=null}"
             action="#{cc.attrs.backingBean.saveOrUpdateWithMessage(cc.attrs.killConversationOnSave)}"
             process="@this #{cc.attrs.submitPartialProcess}" partialSubmit="true" partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" 
-            update="#{cc.attrs.submitUpdate}" name="#{cc.attrs.formId}updateWithMessagePartialSubmit" oncomplete="handleUpdateWithMessageComplete(xhr,status,args)" />            
+            update="#{cc.attrs.submitUpdate}" name="#{cc.attrs.formId}updateWithMessagePartialSubmit" oncomplete="handleUpdateWithMessageComplete('#{cc.attrs.formId}confirmCannotUpdateWithMessageDialog', xhr,status,args)" />            
             
 		<p:commandButton id="saveButtonWithMessage"
 			rendered="#{cc.attrs.edit and cc.attrs.showEditButton and !empty(cc.attrs.backingBean.objectId) and !empty(cc.attrs.updateConfirmationMessage) and cc.attrs.backingBean.canUserUpdateEntity()}"
@@ -194,17 +184,6 @@
             </ui:repeat>
         </c:if>
 
-
-        <script type="text/javascript">
-			//<![CDATA[
-				function handleUpdateWithMessageComplete(xhr, status, args) {
-					var result = args.result;
-					if(typeof(result)!="undefined" && !result){
-						PF('#{cc.attrs.formId}confirmCannotUpdateWithMessageDialog').show();
-					}
-				}
-			//]]>
-		</script>	
 		<p:commandButton id="deletelink" icon="ui-icon-trash" value="#{messages['commons.delete']}" action="#{cc.attrs.backingBean.deleteWithBack}" immediate="true" update="@form"
 			rendered="#{cc.attrs.showDeleteButton and cc.attrs.backingBean.entity.id!=null and cc.attrs.backingBean.canUserUpdateEntity()}">
             <p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />

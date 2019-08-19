@@ -14,6 +14,9 @@
 	<o:importConstants type="org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum" />
 	<o:importConstants type="org.meveo.model.persistence.DBStorageType" />
 
+
+	<c:set target="#{customFieldTemplateBean}" property="cetStorageDM" value="#{customEntityTemplateBean.availableStoragesDM}"/>
+
 	<h:form id="fieldsForm">
 		<p:panel width="100"
 			header="#{messages['customizedEntities.fieldsAndActions']}"
@@ -551,7 +554,7 @@
 								field="fieldType" required="true" componentWidth="30"
 								actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
-								listenerUpdate="listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
+								listenerUpdate="binaryCFT listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
 								rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
 							<hftl:decorateFormField fieldId="fieldType" field="fieldType"
 								label="#{messages['customFieldTemplate.fieldType']}"
@@ -618,7 +621,7 @@
 							<hftl:formField
 								label="#{messages['customFieldTemplate.relationshipName']}"
 								field="relationshipName" required="true" componentWidth="30"
-								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J)}" />
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and (customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY)}" />
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField
@@ -782,6 +785,77 @@
 						rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.STRING}"
 						size="29" componentWidth="19" />
 				</p:fieldset>
+
+				<p:outputPanel id="binaryCFT">
+					<p:fieldset legend="#{messages['CustomFieldTypeEnum.BINARY']}"
+						styleClass="clearfix" rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY}">
+
+						<p:panel styleClass="Container50">
+							<p:outputPanel id="contentTypesListPanel">
+							    <p:dataTable value="#{customFieldTemplateBean.entity.contentTypes}" var="e">
+						            <p:column headerText="#{messages['customFieldTemplate.contentTypes']}">
+						                <h:outputText value="#{e}" />
+						            </p:column>
+						            <p:column headerText="#{messages['commons.actions']}">
+						            	<p:commandLink value="#{messages['action.remove']}" update=":#{p:component('contentTypesListPanel')}" process=":#{p:component('contentTypesListPanel')}">
+						                    <p:collector value="#{e}" removeFrom="#{customFieldTemplateBean.entity.contentTypes}" unique="true"/>
+						                </p:commandLink>
+						            </p:column>
+	            				</p:dataTable>
+							</p:outputPanel>
+
+							<p:panel id="contentTypeForm">
+								<hftl:decorateFormField fieldId="contentType" label="#{messages['customFieldTemplate.contentTypes']}">
+									<p:inputText id="contentType" value="#{customFieldTemplateBean.entity.contentType}"></p:inputText>
+								</hftl:decorateFormField>
+								<p:panel styleClass="form-panel-actions">
+									<p:commandButton value="#{messages['action.clear']}" actionListener="#{customFieldTemplateBean.clearContentType}" update="contentTypeForm" process="contentTypeForm" />
+						            <p:commandButton value="#{messages['action.add']}" action="#{customFieldTemplateBean.reinitContentType}" process="contentTypeForm" update="messages contentType contentTypesListPanel">
+						                <p:collector value="#{customFieldTemplateBean.entity.contentType}" addTo="#{customFieldTemplateBean.entity.contentTypes}" unique="true"/>
+						            </p:commandButton>
+					            </p:panel>
+							</p:panel>
+						</p:panel>
+
+						<p:panel styleClass="Container50">
+							<p:outputPanel id="fileExtensionPanel">
+							    <p:dataTable value="#{customFieldTemplateBean.entity.fileExtensions}" var="e">
+						            <p:column headerText="#{messages['customFieldTemplate.fileExtensions']}">
+						                <h:outputText value="#{e}" />
+						            </p:column>
+						            <p:column headerText="#{messages['commons.actions']}">
+						            	<p:commandLink value="#{messages['action.remove']}" update=":#{p:component('fileExtensionPanel')}" process=":#{p:component('fileExtensionPanel')}">
+						                    <p:collector value="#{e}" removeFrom="#{customFieldTemplateBean.entity.fileExtensions}" unique="true"/>
+						                </p:commandLink>
+						            </p:column>
+	            				</p:dataTable>
+							</p:outputPanel>
+
+							<p:panel id="fileExtensionForm">
+								<hftl:decorateFormField fieldId="fileExtension" label="#{messages['customFieldTemplate.fileExtensions']}">
+									<p:inputText id="fileExtension" value="#{customFieldTemplateBean.entity.fileExtension}"></p:inputText>
+								</hftl:decorateFormField>
+								<p:panel styleClass="form-panel-actions">
+									<p:commandButton value="#{messages['action.clear']}" actionListener="#{customFieldTemplateBean.clearFileExtension}" update="fileExtensionForm" process="fileExtensionForm" />
+						            <p:commandButton value="#{messages['action.add']}" action="#{customFieldTemplateBean.reinitFileExtension}" process="fileExtensionForm" update="messages fileExtension fileExtensionPanel">
+						                <p:collector value="#{customFieldTemplateBean.entity.fileExtension}" addTo="#{customFieldTemplateBean.entity.fileExtensions}" unique="true"/>
+						            </p:commandButton>
+					            </p:panel>
+							</p:panel>
+						</p:panel>
+
+						<hftl:formField newLine="true"
+							label="#{messages['customFieldTemplate.maximumSize']}"
+							field="maxFileSizeAllowedInKb" />
+
+						<hftl:formField
+							label="#{messages['customFieldTemplate.filePath']}"
+							field="filePath" />
+
+						<hftl:formField label="#{messages['binary.showOnExplorer']}" field="saveOnExplorer" />
+					</p:fieldset>
+				</p:outputPanel>
+
 				<h:panelGrid columns ="2" width="100%" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
 					<h:panelGrid columns = "1">
 						<p:fieldset
@@ -845,7 +919,7 @@
 					<h:panelGroup id="storages">
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customFieldTemplate.storages']}">
 							<p:pickList id="pickList" value="#{customFieldTemplateBean.storagesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
-								<p:ajax event="transfer" update="relationshipName"/>
+								<p:ajax event="transfer" listener="#{customFieldTemplateBean.onChangeAvailableStorages()}" update="relationshipName"/>
 								<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.storageTypesList}" />
 							</p:pickList>
 						</hftl:decorateFormField>

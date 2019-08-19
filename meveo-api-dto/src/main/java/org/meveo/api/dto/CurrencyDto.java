@@ -15,7 +15,7 @@ import org.meveo.model.admin.Currency;
  */
 @XmlRootElement(name = "Currency")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CurrencyDto extends BaseDto {
+public class CurrencyDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 9143645109603442839L;

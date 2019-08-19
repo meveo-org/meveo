@@ -89,7 +89,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
                 Set<String> parameterSources = new HashSet<>();
                 perksTarget = new ArrayList<>();
                 if (CollectionUtils.isNotEmpty(getEntity().getPathParameters())) {
-                    getEntity().getPathParameters().forEach(item->parameterSources.add(item.getEndpointParameter().getParameter()));
+                    getEntity().getPathParameters().stream().filter(item -> item != null && item.getEndpointParameter() != null).forEach(item->parameterSources.add(item.getEndpointParameter().getParameter()));
                 }
                 for (FunctionIO functionIO : functionIOList) {
                     if (!parameterSources.contains(functionIO.getName())) {

@@ -247,11 +247,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	 * @throws BusinessException
 	 */
 	public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
-		try {
-			new SimpleDateFormat(cft.getDisplayFormat());
-		}catch(IllegalArgumentException e) {
-			throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
-		}
+        if (cft.getDisplayFormat() != null) {
+            try {
+                new SimpleDateFormat(cft.getDisplayFormat());
+            }catch(IllegalArgumentException e){
+                throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
+            }
+        }
 	}
 
     @Override
@@ -280,7 +282,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom entity template {} was not found", entityCode);
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
-			} else if(!cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
+			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 

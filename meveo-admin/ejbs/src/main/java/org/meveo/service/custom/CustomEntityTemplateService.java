@@ -112,7 +112,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
 
             // Create neoj4 indexes
-            if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            if(cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             	neo4jService.addUUIDIndexes(cet);
             }
 
@@ -202,7 +202,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         // Synchronize neoj4 indexes
-        if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        if(cet.getAvailableStorages()!= null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
         	neo4jService.addUUIDIndexes(cet);
         }else {
         	neo4jService.removeUUIDIndexes(cet);

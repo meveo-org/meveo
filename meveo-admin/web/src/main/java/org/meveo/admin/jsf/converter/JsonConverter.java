@@ -10,7 +10,7 @@ import javax.faces.convert.FacesConverter;
 import org.meveo.model.persistence.JacksonUtil;
 
 @FacesConverter("jsonConverter")
-public class JsonConverter implements Converter<String>{
+public class JsonConverter implements Converter<Object>{
 
 	@Override
 	public String getAsObject(FacesContext context, UIComponent component, String value) {
@@ -19,8 +19,12 @@ public class JsonConverter implements Converter<String>{
 	}
 
 	@Override
-	public String getAsString(FacesContext context, UIComponent component, String value) {
-		return JacksonUtil.fromString(value, Map.class).toString();
+	public String getAsString(FacesContext context, UIComponent component, Object value) {
+		if(!(value instanceof String)) {
+			return value.toString();
+		}
+		
+		return JacksonUtil.fromString((String) value, Map.class).toString();
 	}
 	
 	

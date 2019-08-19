@@ -17,6 +17,21 @@ package org.meveo.api.technicalservice.endpoint;
 
 
 import org.apache.commons.collections.CollectionUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
@@ -24,21 +39,17 @@ import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
+import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.*;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointParameter;
+import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.EndpointVariables;
+import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
-
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 /**
  * API for managing technical services endpoints
@@ -126,9 +137,24 @@ public class EndpointApi {
         }
 
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+        final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 
+        if(executionEngine instanceof EndpointScript) {
+        	// Explicitly pass the request and response information to the script
+        	((EndpointScript) executionEngine).setEndpointRequest(execution.getRequest());
+        	if(endpoint.isSynchronous()) {
+        		((EndpointScript) executionEngine).setEndpointResponse(execution.getResponse());
+        	}
+        }else {
+        	// Implicitly pass the request and response information to the script
+            parameterMap.put("request", execution.getRequest());
+        	if(endpoint.isSynchronous()) {
+        		parameterMap.put("response", execution.getResponse());
+        	}
+        }
+
+        // Start endpoint script with timeout if one was set
         if(execution.getDelayValue() != null){
-            final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
             try {
                 final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
                     try {
@@ -141,12 +167,10 @@ public class EndpointApi {
             } catch (TimeoutException e) {
                 return executionEngine.cancel();
             }
+        } else {
+            return functionService.execute(executionEngine, parameterMap);
         }
 
-        // Implicitly pass the request information to the script
-        parameterMap.put("request", execution.getRequest());
-
-        return functionService.execute(service.getCode(), parameterMap);
     }
 
     /**

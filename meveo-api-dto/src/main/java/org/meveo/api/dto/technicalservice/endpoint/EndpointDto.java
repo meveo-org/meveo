@@ -18,7 +18,7 @@
 package org.meveo.api.dto.technicalservice.endpoint;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.technicalservice.InputPropertyDto;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
@@ -35,7 +35,7 @@ import java.util.List;
  * @since 01.02.2019
  */
 @NoIntersectionBetween(firstCollection = "parameterMappings.serviceParameter", secondCollection = "pathParameters")
-public class EndpointDto extends BusinessDto implements Serializable {
+public class EndpointDto extends BusinessEntityDto implements Serializable {
 
     /**
      * Code of the technical service to update or create

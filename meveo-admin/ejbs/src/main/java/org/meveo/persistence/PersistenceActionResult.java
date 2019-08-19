@@ -18,17 +18,22 @@ package org.meveo.persistence;
 
 import org.meveo.persistence.scheduler.EntityRef;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class PersistenceActionResult {
 
-    Set<EntityRef> persistedEntities;
-
-    String baseEntityUuid;
+    private Set<EntityRef> persistedEntities;
+    private String baseEntityUuid;
 
     public PersistenceActionResult(Set<EntityRef> persistedEntities, String baseEntityUuid) {
         this.persistedEntities = persistedEntities;
         this.baseEntityUuid = baseEntityUuid;
+    }
+
+    public PersistenceActionResult(String baseEntityUuid) {
+        this.baseEntityUuid = baseEntityUuid;
+        persistedEntities = Collections.EMPTY_SET;
     }
 
     public Set<EntityRef> getPersistedEntities() {

@@ -547,24 +547,31 @@ final class ClassLoaderImpl extends ClassLoader {
       return Collections.unmodifiableCollection(classes.values());
    }
 
-   @Override
-   protected Class<?> findClass(final String qualifiedClassName)
-         throws ClassNotFoundException {
-      JavaFileObject file = classes.get(qualifiedClassName);
-      if (file != null) {
-         byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
-         return defineClass(qualifiedClassName, bytes, 0, bytes.length);
-      }
-      // Workaround for "feature" in Java 6
-      // see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6434149
-      try {
-         Class<?> c = Class.forName(qualifiedClassName);
-         return c;
-      } catch (ClassNotFoundException nf) {
-         // Ignore and fall through
-      }
-      return super.findClass(qualifiedClassName);
-   }
+	@Override
+	protected Class<?> findClass(final String qualifiedClassName) throws ClassNotFoundException {
+		JavaFileObject file = classes.get(qualifiedClassName);
+		if (file != null) {
+			byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
+			return defineClass(qualifiedClassName, bytes, 0, bytes.length);
+		}
+		// Workaround for "feature" in Java 6
+		// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6434149
+		try {
+			Class<?> c = Class.forName(qualifiedClassName);
+			return c;
+		} catch (ClassNotFoundException nf) {
+
+		}
+
+		try {
+			Class<?> c = ClassLoader.getSystemClassLoader().loadClass(qualifiedClassName);
+			return c;
+		} catch (ClassNotFoundException ignored) {
+
+		}
+
+		return super.findClass(qualifiedClassName);
+	}
 
    /**
     * Add a class name/JavaFileObject mapping

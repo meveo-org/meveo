@@ -19,7 +19,7 @@ package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -38,19 +38,36 @@ import java.util.List;
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TechnicalServiceDto extends BusinessDto {
+public class TechnicalServiceDto extends BusinessEntityDto {
 
     private static final long serialVersionUID = 5579910176536059520L;
 
+    /**
+     * Description of the inputs and outputs of the technical service
+     */
     private List<InputOutputDescription> descriptions = new ArrayList<>();
 
+    /**
+     * Name of the technical service
+     */
     @NotNull(message = "The technical service name must be provided")
     private String name;
 
+    /**
+     * Version of the technical service
+     */
     @Min(value = 0, message = "Technical version cannot be lower than {value}")
     private Integer version;
 
+    /**
+     * Name of the service type defined by the administrator
+     */
     private String serviceType;
+
+    /**
+     * Whether the entity is disabled
+     */
+    protected boolean disabled;
 
     public TechnicalServiceDto() {
 
@@ -61,9 +78,6 @@ public class TechnicalServiceDto extends BusinessDto {
         return name + "." + version;
     }
 
-    /**
-     * Description of the inputs and outputs of the connector
-     */
     public List<InputOutputDescription> getDescriptions() {
         return descriptions;
     }
@@ -72,45 +86,36 @@ public class TechnicalServiceDto extends BusinessDto {
         this.descriptions = dto;
     }
 
-    /**
-     * Name of the connector
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * @param name Name of the connector
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @return Version of the technical service
-     */
     public Integer getVersion() {
         return version;
     }
 
-    /**
-     * @param version Version of the technical service
-     */
     public void setVersion(Integer version) {
         this.version = version;
     }
 
-    /**
-     * @return Name of the service type defined by the administrator
-     */
     public String getServiceType() {
         return serviceType;
     }
 
-    /**
-     * @param serviceType Name of the service type defined by the administrator
-     */
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
+    }
+
+    @Override
+    public Boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 }

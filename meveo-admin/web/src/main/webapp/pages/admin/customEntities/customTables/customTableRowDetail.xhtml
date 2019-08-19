@@ -17,7 +17,7 @@
 		<ui:param name="update" value=":rowDetailForm" />
 		<ui:param name="bean" value="#{customTableRowDetailBean}" />
 	</ui:include>
-
+	
 	<ui:include
 		src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
 		<ui:param name="prefix" value="detail" />
@@ -36,7 +36,7 @@
 							<c:choose>
 							
 								<!--  Child entity not null -->
-								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
+								<c:when test="#{cft.storageType ne CustomFieldStorageTypeEnum.LIST and cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
 									<c:set var="childCf" value="#{cft}" scope="view" />
 									<c:set var="valueCft" value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" scope="view" />
 
@@ -64,7 +64,7 @@
 									</h:panelGroup>
 								</c:when>
 								<!--  Child entity null -->
-								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue == null}">
+								<c:when test="#{cft.storageType ne CustomFieldStorageTypeEnum.LIST and cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue == null}">
 									<c:set var="childCf" value="#{cft}" scope="view" />
 									
 									<p:commandLink process="@this"
@@ -84,13 +84,14 @@
 								</c:when>
 								
 								<!--  Entity reference not null -->
-								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
+								<c:when test="#{cft.storageType ne CustomFieldStorageTypeEnum.LIST and cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).stringValue != null}">
 
 									<c:set var="fieldCf" value="#{cft}" scope="view" />
 									<c:set var="valueCft" value="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" scope="view" />
 
 									<h:panelGroup id="#{cft.code}_panel_entity_ref" style="display: flex;flex-direction: row;">
 
+									
 										<p:commandLink
 											action="#{customTablePopupBean.initEntity(cft.entityClazzCetCode)}"
 											update=":detail_customTableDialog" process="@this"
@@ -120,7 +121,7 @@
 									</h:panelGroup>
 								</c:when>
 								<!--  Entity reference null -->
-								<c:when test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue == null}">
+								<c:when test="#{cft.storageType ne CustomFieldStorageTypeEnum.LIST and cft.fieldType eq CustomFieldTypeEnum.ENTITY and customTableRowDetailBean.values.getCfValue(cft.dbFieldname).longValue == null}">
 
 									<c:set var="fieldCf" value="#{cft}" scope="view" />
 
@@ -143,7 +144,7 @@
 									</p:commandLink>
 								</c:when>
 								<c:when test="#{cft.storageType eq CustomFieldStorageTypeEnum.LIST}">
-									<hftl:listCustomFieldValue cft="#{cft}" field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" />
+									<hftl:listCustomFieldValue cft="#{cft}" field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" popup="detailReferences"/>
 								</c:when>
 								<c:otherwise>
 									<hftl:customFieldValueField

@@ -16,20 +16,19 @@
 
 package org.meveo.api.rest.technicalservice;
 
-import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+
 public class EndpointExecutionBuilder {
     private Map<String, Object> parameters = new HashMap<>();
     private HttpServletResponse resp;
-    private PrintWriter writer;
     private String[] pathInfo;
     private String firstUriPart;
     private boolean keep;
@@ -59,11 +58,6 @@ public class EndpointExecutionBuilder {
         return this;
     }
 
-    public EndpointExecutionBuilder setWriter(PrintWriter writer) {
-        this.writer = writer;
-        return this;
-    }
-
     public EndpointExecutionBuilder setPathInfo(String[] pathInfo) {
         this.pathInfo = pathInfo;
         return this;
@@ -90,7 +84,7 @@ public class EndpointExecutionBuilder {
     }
 
     public EndpointExecution createEndpointExecution() {
-        return new EndpointExecution(parameters, resp, writer, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue, request, endpoint);
+        return new EndpointExecution(parameters, resp, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue, request, endpoint);
     }
 
     public EndpointExecutionBuilder setResp(HttpServletResponse resp) {

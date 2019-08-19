@@ -62,6 +62,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     private DualListModel<DBStorageType> storagesDM;
 
+    private DualListModel<DBStorageType> cetStorageDM;
+
     /**
      * To what entity class CFT should be copied to - a appliesTo value
      */
@@ -74,9 +76,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     public CustomFieldTemplate newEntity(String appliesTo) {
+        storagesDM = new DualListModel<>();
         CustomFieldTemplate customFieldTemplate = super.newEntity();
         entity = customFieldTemplate;
-        storagesDM = null;
         this.appliesTo = appliesTo;
         return customFieldTemplate;
     }
@@ -103,7 +105,17 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         this.appliesTo = appliesTo;
     }
 
-    @Override
+
+
+    public DualListModel<DBStorageType> getCetStorageDM() {
+		return cetStorageDM;
+	}
+
+	public void setCetStorageDM(DualListModel<DBStorageType> cetStorageDM) {
+		this.cetStorageDM = cetStorageDM;
+	}
+
+	@Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
@@ -353,27 +365,32 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         this.fieldType = null;
     }
 
+    /**
+     * The possible storages of a CFT are the available storages of the CET / CRT <br>
+     * If CFT is being created, the storage list has by default all the storages of its CET or CRT <br>
+     * If the CFT is being edited, the target list is filled with persisted data, and the remaining available storages are put in the source list
+     *
+     * @return The dual list for storages of the CFT
+     */
     public DualListModel<DBStorageType> getStoragesDM() {
-        if (storagesDM == null) {
-            List<DBStorageType> perksSource = new ArrayList<>();
-            if (!StringUtils.isBlank(appliesTo)) {
-                String cetCode = appliesTo;
-                if (appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-                    cetCode = cetCode.substring(3);
-                }
-                CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
-                if (customEntityTemplate != null && CollectionUtils.isNotEmpty(customEntityTemplate.getAvailableStorages())) {
-                    perksSource.addAll(customEntityTemplate.getAvailableStorages());
-                }
-            }
-            List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
-            if (getEntity().getStorages() != null) {
-                perksTarget.addAll(getEntity().getStorages());
-            }
-            perksSource.removeAll(perksTarget);
-            storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+    	if(storagesDM == null) {
+    		List<DBStorageType> perksSource = new ArrayList<>();
+            List<DBStorageType> perksTarget = new ArrayList<>();
 
-        }
+            // If the CFT has no id, then it's being created, otherwise it's being edited
+        	if(getEntity().getId() == null) {
+        		perksTarget.addAll(cetStorageDM.getTarget());
+        	} else {
+        		perksSource.addAll(cetStorageDM.getTarget());
+	            if (getEntity().getStorages() != null) {
+	                perksTarget.addAll(getEntity().getStorages());		// Persistent data
+	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
+	            }
+        	}
+
+            storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+    	}
+
         return storagesDM;
     }
 
@@ -385,5 +402,46 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         ArrayList<DBStorageType> arrayList = new ArrayList<>(storagesDM.getSource());
         arrayList.addAll(storagesDM.getTarget());
         return arrayList;
+    }
+
+	public void addContentTypes() {
+		if (!StringUtils.isBlank(entity.getContentType())) {
+			entity.addContentType(entity.getContentType());
+		}
+	}
+
+	public void addFileExtensions() {
+		if (!StringUtils.isBlank(entity.getFileExtension())) {
+			entity.addFileExtension(entity.getFileExtension());
+		}
+	}
+
+	public void clearContentType() {
+		entity.setContentType(null);
+	}
+
+	public void clearFileExtension() {
+		entity.setFileExtension(null);
+	}
+
+	public String reinitContentType() {
+		entity.setContentType(null);
+
+        return null;
+    }
+
+	public String reinitFileExtension() {
+		entity.setFileExtension(null);
+
+        return null;
+    }
+
+    public void onChangeAvailableStorages() {
+        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
+            getEntity().getStorages().clear();
+            getEntity().getStorages().addAll(storagesDM.getTarget());
+        } else {
+            getEntity().setStorages(storagesDM.getTarget());
+        }
     }
 }

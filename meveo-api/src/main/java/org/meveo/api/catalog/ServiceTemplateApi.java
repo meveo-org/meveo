@@ -8,6 +8,7 @@ import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.model.crm.custom.CustomFieldInheritanceEnum;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.BusinessServiceModelService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.catalog.impl.ServiceTemplateService;
@@ -32,6 +33,10 @@ public class ServiceTemplateApi extends BaseCrudApi<ServiceTemplate, ServiceTemp
 
     @Inject
     private CalendarService calendarService;
+    
+    public ServiceTemplateApi() {
+    	super(ServiceTemplate.class, ServiceTemplateDto.class);
+    }
 
 
     public ServiceTemplate create(ServiceTemplateDto postData) throws MeveoApiException, BusinessException {
@@ -181,4 +186,32 @@ public class ServiceTemplateApi extends BaseCrudApi<ServiceTemplate, ServiceTemp
             return update(postData);
         }
     }
+
+
+	@Override
+	public ServiceTemplateDto toDto(ServiceTemplate entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public ServiceTemplate fromDto(ServiceTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public IPersistenceService<ServiceTemplate> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public boolean exists(ServiceTemplateDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

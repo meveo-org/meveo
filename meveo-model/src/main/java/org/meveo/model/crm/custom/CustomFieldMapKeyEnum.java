@@ -15,6 +15,11 @@ public enum CustomFieldMapKeyEnum {
     STRING(true, true),
 
     /**
+     * A long String value
+     */
+    TEXT_AREA(false, true),
+
+    /**
      * Long number
      */
     LONG(false, true),
@@ -34,7 +39,7 @@ public enum CustomFieldMapKeyEnum {
     private boolean valueUse;
 
     public static final CustomFieldMapKeyEnum[] enumValuesForKey = { STRING, RON };
-    public static final CustomFieldMapKeyEnum[] enumValuesForValue = { STRING, LONG, DOUBLE };
+    public static final CustomFieldMapKeyEnum[] enumValuesForValue = { STRING, TEXT_AREA, LONG, DOUBLE };
 
     private CustomFieldMapKeyEnum(boolean keyUse, boolean valueUse) {
         this.keyUse = keyUse;
