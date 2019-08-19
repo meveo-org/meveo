@@ -174,12 +174,12 @@ public class UserService extends PersistenceService<User> {
             FilteredQueryBuilder queryBuilder = (FilteredQueryBuilder) getQuery(config);
             queryBuilder.processOrderCondition(filter.getOrderCondition(), filter.getPrimarySelector().getAlias());
             String alias = filter.getPrimarySelector().getAlias();
-            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), null);
             return result.getResultList();
         } else {
             String alias = "a";
             QueryBuilder queryBuilder = getQuery(config);
-            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), null);
             return result.getResultList();
         }
     }
@@ -245,7 +245,10 @@ public class UserService extends PersistenceService<User> {
      * @return instance of Query.
      */
     public Query getQueryUsers(QueryBuilder queryBuilder,PaginationConfiguration config, String alias, EntityManager em, List<String> roleNames) {
-        queryBuilder.addSql("role.name IN (:roleNames)");
+        if(roleNames != null) {
+        	queryBuilder.addSql("role.name IN (:roleNames)");
+        }
+        
         applyPaginationUsers(queryBuilder, config, alias);
         StringBuffer q = queryBuilder.getSqlStringBuffer();
         String query = q.toString().replace("a.roles", "a.roles role");
@@ -254,7 +257,11 @@ public class UserService extends PersistenceService<User> {
         for (Map.Entry<String, Object> e :getQuery(config).getParams().entrySet()) {
             result.setParameter(e.getKey(), e.getValue());
         }
-        result.setParameter("roleNames", roleNames);
+        
+        if(roleNames != null) {
+        	result.setParameter("roleNames", roleNames);
+        }
+        
         return result;
     }
 }
