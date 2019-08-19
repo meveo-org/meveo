@@ -76,6 +76,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
     }
 
     @Override
+    public void delete(Long id) throws BusinessException {
+        super.delete(id);
+        messages.info(new BundleKey("messages", "delete.successful"));
+    }
+
+    @Override
     public CustomEntityInstance initEntity() {
 
         CustomEntityInstance initResult = super.initEntity();
