@@ -297,6 +297,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @ColumnDefault("0")
     private boolean saveOnExplorer;
 
+    @Column(name = "samples", columnDefinition = "text")
+    private String samples;
+
     /**
      * Database field name - derived from code
      */
@@ -1120,7 +1123,15 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return storages != null && storages.contains(DBStorageType.SQL);
     }
 
-	public List<?> getNewListValue() {
+    public String getSamples() {
+        return samples;
+    }
+
+    public void setSamples(String samples) {
+        this.samples = samples;
+    }
+
+    public List<?> getNewListValue() {
 		if (storageType != CustomFieldStorageTypeEnum.LIST) {
 			return null;
 		}

@@ -208,7 +208,10 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
     @XmlElement()
     private List<DBStorageType> storages;
-    
+
+    @XmlElement
+    private String samples;
+
     @XmlElement
     private boolean summary;
 
@@ -292,6 +295,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         contentTypes = cf.getContentTypes();
         maxFileSizeAllowedInKb = cf.getMaxFileSizeAllowedInKb();
         filePath = cf.getFilePath();
+        samples = cf.getSamples();
 
     }
 
@@ -542,7 +546,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     public String toString() {
         return "CustomFieldTemplateDto [code=" + code + ", description=" + description + ", fieldType=" + fieldType + ", accountLevel=" + accountLevel + ", appliesTo=" + appliesTo
                 + ", defaultValue=" + defaultValue + ", storageType=" + storageType + ", mapKeyType=" + mapKeyType + ", valueRequired=" + valueRequired + ", versionable="
-                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + ", displayFormat=" + displayFormat + "]";
+                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + ", displayFormat=" + displayFormat + ", samples=" + samples + "]";
     }
 
     /**
@@ -935,5 +939,13 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
     public void setSaveOnExplorer(boolean saveOnExplorer) {
         this.saveOnExplorer = saveOnExplorer;
+    }
+
+    public String getSamples() {
+        return samples;
+    }
+
+    public void setSamples(String samples) {
+        this.samples = samples;
     }
 }
