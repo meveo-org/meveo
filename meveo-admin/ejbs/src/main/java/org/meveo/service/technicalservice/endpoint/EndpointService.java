@@ -152,6 +152,7 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpoint.setReturnedVariableName(entity.getReturnedVariableName());
         endpoint.setSerializeResult(entity.isSerializeResult());
         endpoint.setContentType(entity.getContentType());
+        endpoint.setRoles(entity.getRoles());
 
         super.update(endpoint);
 
@@ -164,10 +165,11 @@ public class EndpointService extends BusinessService<Endpoint> {
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
         keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
-
-        // Update Execute_All_Endpoints to endpointManagement composite
-        keycloakAdminClientService.updateToCompositeCrossClient( ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS );
-
+        
+        //TODO: Retrieve the list of composite roles minus EXECUTE_ALL_ENDPOINTS and remove the endpointPermission from its composites
+        
+        //TODO: For each roles of the endpoint add the endpointPermission to its composites
+        
         return entity;
     }
 }
