@@ -4,7 +4,7 @@
     <groupId>org.meveo</groupId>
     <artifactId>meveo</artifactId>
     <packaging>pom</packaging>
-    <version>6.2.0</version>
+    <version>6.2.1</version>
     <name>Meveo Parent Project</name>
     <properties>
         <env>dev</env>
@@ -17,7 +17,7 @@
 
     <scm>
         <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-        <tag>6.2.0</tag>
+        <tag>6.2.1</tag>
     </scm>
 
     <modules>
