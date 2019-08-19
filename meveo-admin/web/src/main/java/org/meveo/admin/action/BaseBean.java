@@ -1227,7 +1227,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      */
     public int getCacheNumRows() {
         String username = currentUser.getUserName();
-
+        
         String clazzName = clazz.getName();
         Map<String, Integer> numberRow = cacheNumberRow.get(username);
         if (numberRow != null && numberRow.get(clazzName) != null) {
@@ -1235,5 +1235,23 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         } else {
             return 10;
         }
+    }
+
+    /**
+     * Set rows per page for given user and entity class
+     */
+    public void setCacheNumRows(int rows) {
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> rowsByClassForUser = cacheNumberRow.get(username);
+        
+        if(rowsByClassForUser == null) {
+        	rowsByClassForUser = new HashMap<>();
+        }
+        
+        rowsByClassForUser.put(clazzName, rows);
+        
+        cacheNumberRow.put(username, rowsByClassForUser);
     }
 }
