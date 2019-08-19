@@ -111,7 +111,7 @@ public class EndpointService extends BusinessService<Endpoint> {
         // Add endpoint role and selected composite roles
         if (CollectionUtils.isNotEmpty(entity.getRoles())) {
             for (String compositeRole : entity.getRoles()) {
-                keycloakAdminClientService.addToComposite(null, endointPermission, compositeRole);
+                keycloakAdminClientService.addToComposite(null, endpointPermission, compositeRole);
             }
         }
 
