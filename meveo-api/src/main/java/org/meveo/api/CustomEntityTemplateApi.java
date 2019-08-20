@@ -1,6 +1,10 @@
 package org.meveo.api;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -8,7 +12,12 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.*;
+import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.EntityCustomActionDto;
+import org.meveo.api.dto.EntityCustomizationDto;
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -24,18 +33,19 @@ import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -73,7 +83,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
-
+    
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -94,7 +106,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
         
-     // Validate field types for custom table
+        // Validate field types for custom table
         if (storeAsTable && dto.getFields() != null) {
             int pos = 0;
             for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -121,19 +133,31 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         CustomEntityTemplate cet = fromDTO(dto, null);
 
         setSuperTemplate(dto, cet);
+        
+        try {
+        	
+            customEntityTemplateService.create(cet);
 
-        customEntityTemplateService.create(cet);
-
-        if (dto.getFields() != null) {
-            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
-                customFieldTemplateApi.createOrUpdate(cftDto, cet.getAppliesTo());
-            }
-        }
-
-        if (dto.getActions() != null) {
-            for (EntityCustomActionDto actionDto : dto.getActions()) {
-                entityCustomActionApi.createOrUpdate(actionDto, cet.getAppliesTo());
-            }
+	        if (dto.getFields() != null) {
+	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+	                customFieldTemplateApi.createOrUpdate(cftDto, cet.getAppliesTo());
+	            }
+	        }
+	
+	        if (dto.getActions() != null) {
+	            for (EntityCustomActionDto actionDto : dto.getActions()) {
+	                entityCustomActionApi.createOrUpdate(actionDto, cet.getAppliesTo());
+	            }
+	        }
+        
+        } catch(Exception e) {
+        	// Delete created table if CET creation failed
+        	if(storeAsTable) {
+        		log.error("{} creation failed, removing table", cet);
+        		customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        	}
+        	
+        	throw e;
         }
 
         return cet;
