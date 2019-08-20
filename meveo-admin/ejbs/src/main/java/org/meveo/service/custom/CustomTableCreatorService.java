@@ -210,6 +210,10 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName DB table name
      */
     public void createTable(String dbTableName) {
+    	
+    	if(PostgresReserverdKeywords.isReserved(dbTableName)) {
+    		throw new IllegalArgumentException("Table name '" + dbTableName + "' is a PostgresQL reserved keyword");
+    	}
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
@@ -285,6 +289,10 @@ public class CustomTableCreatorService implements Serializable {
         if(!cft.getStorages().contains(DBStorageType.SQL)){
             return;
         }
+        
+    	if(PostgresReserverdKeywords.isReserved(cft.getDbFieldname())) {
+    		throw new IllegalArgumentException("Field name '" + cft.getDbFieldname() + "' is a PostgresQL reserved keyword");
+    	}
 
         String dbFieldname = cft.getDbFieldname();
 
