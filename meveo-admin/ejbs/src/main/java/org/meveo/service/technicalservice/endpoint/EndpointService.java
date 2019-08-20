@@ -32,6 +32,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -165,10 +166,18 @@ public class EndpointService extends BusinessService<Endpoint> {
 
         // Create endpoint permission and add it to Execute_All_Endpoints composite
         keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
-        
-        //TODO: Retrieve the list of composite roles minus EXECUTE_ALL_ENDPOINTS and remove the endpointPermission from its composites
-        
-        //TODO: For each roles of the endpoint add the endpointPermission to its composites
+
+        KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(), keycloakConfig.getRealm());
+        for (String compositeRole: roles) {
+            if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
+                keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
+            }
+        }
+
+        for (String compositeRole: entity.getRoles()) {
+            keycloakAdminClientService.addToComposite(null, endpointPermission, compositeRole);
+        }
         
         return entity;
     }
