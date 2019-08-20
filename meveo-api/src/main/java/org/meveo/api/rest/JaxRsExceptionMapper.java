@@ -31,7 +31,9 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception e) {
-        log.error("REST request failed : ", e);
+    	if(!(e instanceof EJBException)) {
+    		log.error("REST request failed : ", e);
+    	}
 
         if (e instanceof UnrecognizedPropertyException) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();

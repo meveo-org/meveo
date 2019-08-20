@@ -1,0 +1,113 @@
+package org.meveo.service.custom;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * This class list the reserved keyword for postgres 9.4
+ * @see <a href="https://www.postgresql.org/docs/9.4/sql-keywords-appendix.html">https://www.postgresql.org/docs/9.4/sql-keywords-appendix.html</a>
+ * @author clement.bareth
+ *
+ */
+public class PostgresReserverdKeywords {
+
+	private static List<String> RESERVED_KEYWORDS = Arrays.asList(
+			"ALL",
+			"ANALYSE",
+			"ANALYZE",
+			"AND",
+			"ANY",
+			"ARRAY",
+			"AS",
+			"ASC",
+			"ASYMMETRIC",
+			"AUTHORIZATION",
+			"BINARY",
+			"BOTH",
+			"CASE",
+			"CAST",
+			"CHECK",
+			"COLLATE",
+			"COLUMN",
+			"CONSTRAINT",
+			"CREATE",
+			"CURRENT_CATALOG",
+			"CURRENT_DATE",
+			"CURRENT_ROLE",
+			"CURRENT_SCHEMA",
+			"CURRENT_TIME",
+			"CURRENT_TIMESTAMP",
+			"CURRENT_USER",
+			"DEFAULT",
+			"DEFERRABLE",
+			"DESC",
+			"DISTINCT",
+			"DO",
+			"ELSE",
+			"END",
+			"EXCEPT",
+			"FALSE",
+			"FETCH",
+			"FOR",
+			"FOREIGN",
+			"FROM",
+			"FULL",
+			"GRANT",
+			"GROUP", 
+			"HAVING",
+			"ILIKE",
+			"IN",
+			"INITIALLY",
+			"INNER",
+			"INTERSECT",
+			"INTO",
+			"IS",
+			"ISNULL",
+			"LATERAL",
+			"LEADING",
+			"LEFT", 
+			"LIKE",
+			"LIMIT",
+			"LOCALTIME",
+			"LOCALTIMESTAMP",
+			"NATURAL",
+			"NOT",
+			"NOTNULL",
+			"NULL",
+			"OFFSET",
+			"ON",
+			"ONLY",
+			"OR",
+			"ORDER",
+			"OUTER",
+			"OVERLAPS",
+			"PLACING",
+			"REFERENCES",
+			"RETURNING",
+			"RIGHT",
+			"SELECT",
+			"SESSION_USER",
+			"SIMILAR",
+			"SOME",
+			"SYMMETRIC",
+			"TABLE",
+			"THEN",
+			"TO",
+			"TRAILING",
+			"TRUE",
+			"UNION",
+			"UNIQUE",
+			"USER",
+			"USING",
+			"VARIADIC",
+			"VERBOSE",
+			"WHEN",
+			"WHERE",
+			"WINDOW",
+			"WITH"
+	);
+	
+	public static boolean isReserved(String word) {
+		return RESERVED_KEYWORDS.contains(word.toUpperCase());
+	}
+}
