@@ -322,7 +322,7 @@ public class CustomTableCreatorService implements Serializable {
         }
 
         // Add a foreign key constraint pointing on referenced table if field is an entity reference
-        if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY){
+        if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)){
 
             // Only add foreign key constraint if referenced entity is stored as table
             final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());

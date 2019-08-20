@@ -911,7 +911,7 @@ public class CrossStorageService implements CustomPersistenceService {
             if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
                 final CustomEntityTemplate referencedCet = customFieldsCacheContainerProvider.getCustomEntityTemplate(customFieldTemplate.getEntityClazzCetCode());
 
-                List<Map<String, Object>> entitiesToCreate = new ArrayList<>();
+                List<Object> entitiesToCreate = new ArrayList<>();
                 final Object fieldValue = entityValues.get(customFieldTemplate.getCode());
 
                 if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
@@ -929,9 +929,17 @@ public class CrossStorageService implements CustomPersistenceService {
 
                 final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
-                for (Map<String, Object> e : entitiesToCreate) {
-                    final Set<EntityRef> createdEntities = createOrUpdate(repository, customFieldTemplate.getEntityClazzCetCode(), e).getPersistedEntities();
-                    createdEntityReferences.addAll(createdEntities);
+                for (Object e : entitiesToCreate) {
+                	if(e instanceof Map) {
+	                    final Set<EntityRef> createdEntities = createOrUpdate(repository, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e).getPersistedEntities();
+	                    createdEntityReferences.addAll(createdEntities);
+	                    
+                	} else if(e instanceof String) {
+                		// If entity reference is a string, then it means it refers to an existing UUID
+                		EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
+                		entityRef.setTrustScore(100);
+                		createdEntityReferences.add(entityRef);
+                	}
                 }
 
                 List<String> uuids = getTrustedUuids(createdEntityReferences);
