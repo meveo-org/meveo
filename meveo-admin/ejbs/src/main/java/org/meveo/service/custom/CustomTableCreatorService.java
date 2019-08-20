@@ -305,10 +305,16 @@ public class CustomTableCreatorService implements Serializable {
             setDefaultValue(cft, column);
             column.setType(columnType);
 
+            ConstraintsConfig constraints = new ConstraintsConfig();
+            column.setConstraints(constraints);
+            
             if (cft.isValueRequired()) {
-                ConstraintsConfig constraints = new ConstraintsConfig();
                 constraints.setNullable(false);
-                column.setConstraints(constraints);
+            }
+            
+            if(cft.isUnique()) {
+            	constraints.setUnique(true);
+            	constraints.setUniqueConstraintName(getUniqueConstraintName(dbTableName, dbFieldname));
             }
 
             addColumnChange.setColumns(Collections.singletonList(column));
@@ -334,8 +340,6 @@ public class CustomTableCreatorService implements Serializable {
 
         if(!changeSet.getChanges().isEmpty()){
         	
-            createOrUpdateUniqueField(dbTableName, cft, changeSet);
-
             dbLog.addChangeSet(changeSet);
 
             EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
@@ -526,7 +530,7 @@ public class CustomTableCreatorService implements Serializable {
 			if (cft.isUnique()) {
 				AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
 				uniqueConstraint.setColumnNames(dbFieldname);
-				uniqueConstraint.setConstraintName("uk_" + dbFieldname);
+				uniqueConstraint.setConstraintName(getUniqueConstraintName(dbTableName, dbFieldname));
 				uniqueConstraint.setDeferrable(false);
 				uniqueConstraint.setDisabled(false);
 				uniqueConstraint.setInitiallyDeferred(false);
@@ -534,10 +538,19 @@ public class CustomTableCreatorService implements Serializable {
 				changeSet.addChange(uniqueConstraint);
 			} else {
 				RawSQLChange sqlChange = new RawSQLChange();
-				sqlChange.setSql("ALTER TABLE " + dbTableName + " DROP CONSTRAINT IF EXISTS uk_" + dbFieldname);
+				sqlChange.setSql("ALTER TABLE " + dbTableName + " DROP CONSTRAINT IF EXISTS " + getUniqueConstraintName(dbTableName, dbFieldname));
 				changeSet.addChange(sqlChange);
 			}
 		}
+	}
+
+	/**
+	 * @param dbTableName Table name
+	 * @param dbFieldname Column name
+	 * @return Concatenated unique constraint name
+	 */
+	public String getUniqueConstraintName(String dbTableName, String dbFieldname) {
+		return "uk_" + dbTableName + "_" + dbFieldname;
 	}
 
     /**
