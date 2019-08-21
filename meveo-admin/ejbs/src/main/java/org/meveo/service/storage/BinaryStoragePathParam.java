@@ -178,6 +178,7 @@ public class BinaryStoragePathParam {
 		this.filePath = customFieldTemplate.getFilePath();
 		this.contentTypes = customFieldTemplate.getContentTypes();
 		this.fileExtensions = customFieldTemplate.getFileExtensions();
+		this.showOnExplorer = customFieldTemplate.isSaveOnExplorer();
 	}
 
 	public void setRepository(Repository repository){
