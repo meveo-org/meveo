@@ -16,6 +16,8 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.meveo.model.storage.Repository;
+
 import com.google.common.base.Objects;
 
 public class EntityRef {
@@ -23,6 +25,7 @@ public class EntityRef {
     private Integer trustScore;
     private String constraintCode;
     private String label;
+    private Repository repository;
 
     public EntityRef() {
     }
@@ -70,8 +73,20 @@ public class EntityRef {
     public void setConstraintCode(String constraintCode) {
         this.constraintCode = constraintCode;
     }
+    
+    public Repository getRepository() {
+		return repository;
+	}
 
-    @Override
+	public void setRepository(Repository repository) {
+		this.repository = repository;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	@Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
