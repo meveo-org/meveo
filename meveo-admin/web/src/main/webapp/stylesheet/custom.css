@@ -8,6 +8,11 @@
   clear: both;
 }
 
+#cftDialog {
+	max-height: 90%;
+	overflow-y: auto;
+}
+
 .border-left {
   border-left: 1px solid #ddd !important;
 }

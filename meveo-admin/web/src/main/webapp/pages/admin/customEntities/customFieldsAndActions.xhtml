@@ -518,8 +518,14 @@
 	</p:dialog>
 
 
-	<p:dialog id="cftDialog" modal="true" closeOnEscape="true"
-		widgetVar="cftDialog" width="95%" appendTo="@(body)">
+	<p:dialog id="cftDialog" 
+		modal="true" 
+		closeOnEscape="true" 
+		widgetVar="cftDialog" 
+		width="95%"
+		responsive="true"
+		appendTo="@(body)" 
+		maximizable = "true">
 
 		<p:scrollPanel mode="native">
 			<hftl:formPanel formId="cftForm"
@@ -555,7 +561,9 @@
 								actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
 								listenerUpdate="binaryCFT listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
+								onEventComplete="PF('cftDialog').initPosition()"
 								rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
+								
 							<hftl:decorateFormField fieldId="fieldType" field="fieldType"
 								label="#{messages['customFieldTemplate.fieldType']}"
 								required="true" displayOneLine="false"

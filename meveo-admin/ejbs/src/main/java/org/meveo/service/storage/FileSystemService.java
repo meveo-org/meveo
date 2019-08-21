@@ -50,6 +50,42 @@ public class FileSystemService {
 	private RepositoryService repositoryService;
 	
 	/**
+	 * Remove the folders corresponding to a given field
+	 * 
+	 * @param cetCode Name of root folder inside the storage
+	 * @param cft Field to remove binaries
+	 * @throws IOException if binaries removal failed
+	 */
+	public void removeBinaries(String cetCode, CustomFieldTemplate cft) throws IOException {
+		for (Repository repository : repositoryService.list()) {
+			BinaryStoragePathParam cetFolderPath = new BinaryStoragePathParam();
+			cetFolderPath.setCetCode(cetCode);
+			cetFolderPath.setCft(cft);
+			cetFolderPath.setRepository(repository);
+			
+			File cetFolder = new File(getStoragePath(cetFolderPath, null));
+			if (cetFolder.listFiles() != null) {
+				for (File instanceFolder : cetFolder.listFiles()) {
+					File cftFolder = new File(instanceFolder, cft.getCode());
+					if(cftFolder.exists() && cftFolder.isDirectory()) {
+						org.apache.commons.io.FileUtils.deleteDirectory(cftFolder);
+					}
+					
+					// Delete instance folder if empty
+					if (instanceFolder.list() == null || instanceFolder.list().length == 0) {
+						instanceFolder.delete();
+					}
+				}
+			}
+			
+			// Delete cet folder if empty
+			if (cetFolder.list() == null || cetFolder.list().length == 0) {
+				cetFolder.delete();
+			}
+		}
+	}
+	
+	/**
 	 * Move files from / to the file explorer for every storage configurations
 	 * 
 	 * @param cetCode        Base folder of the binaries
@@ -187,7 +223,7 @@ public class FileSystemService {
         binaryStoragePathParamOnExplorer.setShowOnExplorer(true);
         delete(binaryStoragePathParamOnExplorer, null);
 
-        // Delet all files that are not on fle explorer for the given uuid
+        // Delete all files that are not on file explorer for the given uuid
         BinaryStoragePathParam binaryStoragePathParamNotOnExplorer = new BinaryStoragePathParam();
         binaryStoragePathParamNotOnExplorer.setUuid(uuid);
         binaryStoragePathParamNotOnExplorer.setCetCode(cet.getCode());

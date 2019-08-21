@@ -343,8 +343,16 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
-			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			}
+			
+			if(cft.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
+				try {
+					fileSystemService.removeBinaries(cet.getCode(), cft);
+				} catch (IOException e) {
+					throw new BusinessException("Can't remove binaries associated to " + cft, e); 
+				}
 			}
 
 		// CF Applies to a CRT
@@ -356,7 +364,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
-
+		
     }
 
     @Override
