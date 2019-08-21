@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -489,7 +490,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	/**
 	 * TODO: Document
 	 */
-	public void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessException, BusinessApiException {
+    private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessException, BusinessApiException {
         List<CustomFieldTemplate> binariesInNeo4J = customFieldTemplates.values().stream()
 	            .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
 	            .filter(f -> f.getStorages().contains(DBStorageType.NEO4J))
@@ -845,6 +846,42 @@ public class CrossStorageService implements CustomPersistenceService {
             neo4jDao.removeRelation(repositoryCode, crt.getCode(), uuid);
         }
     }
+
+	/**
+	 * Replace the files references by the one in input
+	 *
+	 * @param repository Repository where data is stored
+	 * @param cet        Template of the data
+	 * @param cft        Concerned field
+	 * @param uuid       UUID of the entity
+	 * @param binaries   New binaries
+	 * @throws BusinessException if update fails
+	 */
+	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
+		List<String> paths = binaries.stream().map(File::getPath).collect(Collectors.toList());
+
+		if (cft.getStorages() != null && cft.getStorages().contains(DBStorageType.NEO4J)) {
+			neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft);
+			neo4jService.addBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft, paths);
+		}
+
+		if (cft.getStorages() != null && cft.getStorages().contains(DBStorageType.SQL) && cet.getSqlStorageConfiguration() != null) {
+			Object valueToSave = binaries;
+			if (cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+				valueToSave = paths.isEmpty() ? null : paths.get(0);
+			}
+
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				customTableService.updateValue(SQLStorageConfiguration.getDbTablename(cet), uuid, cft.getDbFieldname(), valueToSave);
+			} else {
+				CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+				CustomFieldValues cfValues = cei.getCfValues();
+				cfValues.setValue(cft.getCode(), valueToSave);
+				customEntityInstanceService.update(cei);
+			}
+		}
+
+	}
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
         Map<String, Object> filteredValues = new HashMap<>();

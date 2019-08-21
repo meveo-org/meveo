@@ -1,5 +1,7 @@
 package org.meveo.service.crm.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,11 +33,15 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
 
@@ -61,6 +67,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+    @Inject
+    private FileSystemService fileSystemService;
+    
+    @Inject
+    private CrossStorageService crossStorageService;
 
     static boolean useCFTCache = true;
 
@@ -284,6 +296,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+			}
+			
+			// Move files from / to file explorer if isSaveOnExplorer attribute has changed
+			if(cft.isSaveOnExplorer() != cachedCft.isSaveOnExplorer()) {
+				try {
+					Map<EntityRef, List<File>> summary = fileSystemService.moveBinaries(cet.getCode(), cft.getCode(), cft.isSaveOnExplorer());
+					for(Map.Entry<EntityRef, List<File>> summaryEntry : summary.entrySet()) {
+						Repository repository = summaryEntry.getKey().getRepository();
+						String uuid = summaryEntry.getKey().getUuid();
+						crossStorageService.setBinaries(repository, cet, cftUpdated, uuid, summaryEntry.getValue());
+					}
+					
+				} catch (IOException e) {
+					throw new BusinessException("Error while moving files from / to file explorer", e);
+				}
 			}
 
 		// CF Applies to a CRT

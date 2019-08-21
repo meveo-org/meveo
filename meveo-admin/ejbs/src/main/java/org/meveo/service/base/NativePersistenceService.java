@@ -501,10 +501,6 @@ public class NativePersistenceService extends BaseService {
     		value = JacksonUtil.toString(value);
     	}
 
-    	if(value instanceof Collection) {
-    		value = JacksonUtil.toString(value);
-    	}
-
         try {
             if (value == null) {
                 getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")

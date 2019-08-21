@@ -1,5 +1,20 @@
 package org.meveo.service.storage;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.meveo.api.exception.BusinessApiException;
@@ -13,16 +28,9 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -37,11 +45,94 @@ public class FileSystemService {
 	@Inject
 	@CurrentUser
 	protected MeveoUser currentUser;
+	
+	@Inject
+	private RepositoryService repositoryService;
+	
+	/**
+	 * Move files from / to the file explorer for every storage configurations
+	 * 
+	 * @param cetCode        Base folder of the binaries
+	 * @param cftCode        Specific folder to move
+	 * @param toFileExplorer Whether to move from / to file explorer
+	 * @return a summary explaining where the binaries where move from / to for each entity instance
+	 * @throws IOException if the move failed
+	 */
+	public Map<EntityRef, List<File>> moveBinaries(String cetCode, String cftCode, boolean toFileExplorer) throws IOException {
+		Map<EntityRef, List<File>> movedFilesByUUID = new HashMap<>();
+		
+		for (Repository repository : repositoryService.list()) {
+			BinaryStoragePathParam previousPathParams = new BinaryStoragePathParam();
+			previousPathParams.setCetCode(cetCode);
+			previousPathParams.setShowOnExplorer(!toFileExplorer);
+			previousPathParams.setRepository(repository);
+
+			String previousPath = getStoragePath(previousPathParams, null);
+
+			BinaryStoragePathParam nextPathParams = new BinaryStoragePathParam();
+			nextPathParams.setCetCode(cetCode);
+			nextPathParams.setShowOnExplorer(toFileExplorer);
+			nextPathParams.setRepository(repository);
+
+			String nextPath = getStoragePath(nextPathParams, null);
+			File destCetFolder = new File(nextPath);
+			if (!destCetFolder.exists()) {
+				destCetFolder.mkdirs();
+			}
+
+			// Go through each existing folder
+			File cetFolder = new File(previousPath);
+			if (cetFolder.listFiles() != null) {
+				for (File instanceFolder : cetFolder.listFiles()) {
+					File cftFolder = new File(instanceFolder, cftCode);
+					if (!cftFolder.isDirectory() || !cftFolder.exists() || cftFolder.listFiles() == null || cftFolder.listFiles().length == 0 ) {
+						continue;
+					}
+					
+					// Create instance and cft folder
+					File newInstanceFolder = new File(destCetFolder, instanceFolder.getName());
+					if (!newInstanceFolder.exists()) {
+						newInstanceFolder.mkdirs();
+					}
+
+					File newCftFolder = new File(newInstanceFolder, cftCode);
+
+					// Move old directory to new location
+					Files.move(cftFolder.toPath(), newCftFolder.toPath());
+					
+					// Build diff list
+					List<File> locationDiffs = new ArrayList<>();
+					for(File f : newCftFolder.listFiles()) {
+						locationDiffs.add(f);
+					}
+					
+					EntityRef entityRef = new EntityRef(instanceFolder.getName(), cetCode);
+					entityRef.setRepository(repository);
+					
+					movedFilesByUUID.put(entityRef, locationDiffs);
+
+					// Delete instance folder if empty
+					if (instanceFolder.list() == null || instanceFolder.list().length == 0) {
+						instanceFolder.delete();
+					}
+				}
+			}
+
+			// Delete cet folder if empty
+			if (cetFolder.list() == null || cetFolder.list().length == 0) {
+				cetFolder.delete();
+			}
+
+		}
+		
+		return movedFilesByUUID;
+
+	}
 
 	public String getProviderPath() {
 		return paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
 	}
-
+	
 	public String getRootPath(boolean showOnExplorer, String binaryStorageConfigurationRootPath) {
 
 		StringBuilder rootPath = new StringBuilder(
@@ -56,23 +147,26 @@ public class FileSystemService {
 	public String getStoragePath(BinaryStoragePathParam params, Map<String, Object> values) {
 
 		StringBuilder path = new StringBuilder(getRootPath(params.isShowOnExplorer(), params.getRootPath()))
-				.append(File.separator).append(params.getCetCode())
-				.append(File.separator).append(params.getUuid());
+				.append(File.separator).append(params.getCetCode());
+				
+		if(!StringUtils.isBlank(params.getUuid())) {
+			path.append(File.separator).append(params.getUuid());
+			
+			if(!StringUtils.isBlank(params.getCftCode())) {
+	            path.append(File.separator).append(params.getCftCode());
 
-        if(!StringUtils.isBlank(params.getCftCode())) {
-            path.append(File.separator).append(params.getCftCode());
+	            if (!StringUtils.isBlank(params.getFilePath())) {
 
-            if (!StringUtils.isBlank(params.getFilePath())) {
+	                try {
+	                    Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
+	                    path.append(File.separator).append(evaluatedExpr);
+	                } catch (ELException e) {
+	                    throw new RuntimeException(e);
+	                }
 
-                try {
-                    Object evaluatedExpr = ValueExpressionWrapper.evaluateExpression(params.getFilePath(), new HashMap<>(values), String.class);
-                    path.append(File.separator).append(evaluatedExpr);
-                } catch (ELException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        }
+	            }
+	        }
+		}
 
 		return path.toString();
 	}
