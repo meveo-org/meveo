@@ -363,7 +363,7 @@ public class CustomTableCreatorService implements Serializable {
                     liquibase.update(new Contexts(), new LabelExpression());
 
                 } catch (Exception e) {
-                    log.error("Failed to add a field {} to a custom table {}", dbTableName, dbFieldname, e);
+                    log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
                     throw new SQLException(e);
                 }
             });

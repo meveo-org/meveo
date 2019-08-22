@@ -313,6 +313,12 @@ public class FileSystemService {
                     binariesSaved.put(field, null);	// Null value indicate we remove those binaries
                     
             	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) != null) {
+					// Remove old file
+                    if (previousValues != null && previousValues.get(field.getCode()) != null) {
+                        String oldFile = (String) previousValues.get(field.getCode());
+                        new File(oldFile).delete();
+                    }
+                    
                     File tempFile = (File) values.get(field.getCode());
                     binaryStoragePathParam.setFile(tempFile);
                     binaryStoragePathParam.setFilename(tempFile.getName());
@@ -326,11 +332,7 @@ public class FileSystemService {
 						throw new IllegalArgumentException(e.getMessage() + " for field " + field.getCode());
 					}
 
-					// Remove old file
-                    if (previousValues != null && previousValues.get(field.getCode()) != null) {
-                        String oldFile = (String) previousValues.get(field.getCode());
-                        new File(oldFile).delete();
-                    }
+
 
                 } else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && values.get(field.getCode()) != null) {
                 	List<?> value = (List<?>) values.get(field.getCode());

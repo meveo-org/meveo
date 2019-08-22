@@ -299,7 +299,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			}
 			
 			// Move files from / to file explorer if isSaveOnExplorer attribute has changed
-			if(cft.isSaveOnExplorer() != cachedCft.isSaveOnExplorer()) {
+			if(cachedCft != null && cft.isSaveOnExplorer() != cachedCft.isSaveOnExplorer()) {
 				try {
 					Map<EntityRef, List<File>> summary = fileSystemService.moveBinaries(cet.getCode(), cft.getCode(), cft.isSaveOnExplorer());
 					for(Map.Entry<EntityRef, List<File>> summaryEntry : summary.entrySet()) {
