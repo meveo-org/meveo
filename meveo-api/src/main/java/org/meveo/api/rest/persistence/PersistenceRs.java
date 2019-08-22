@@ -16,33 +16,9 @@
 
 package org.meveo.api.rest.persistence;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
+import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
@@ -67,6 +43,19 @@ import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Path("/{repository}/persistence")
 public class PersistenceRs {
@@ -171,40 +160,78 @@ public class PersistenceRs {
 
             Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
             InputPart dtosPart = uploadForm.remove("data").get(0);
-            GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {
-            };
+            GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {};
+
             Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
 
-            for (Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
-                String[] splittedKey = formPart.getKey().split("\\.");
-                String entityName = splittedKey[0];
-                String propertyName = splittedKey[1];
+            Map<EntityProperty, List<DataPart>> dataParts = new HashMap<>();
 
-                if (formPart.getValue().size() == 1) {
-                    InputPart inputPart = formPart.getValue().get(0);
+            // Build data part list
+            for (Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
+                for (InputPart inputPart : formPart.getValue()) {
+                    String[] splittedKey = formPart.getKey().split("\\.", 2);
+                    String entityName = splittedKey[0];
+
+                    String restingPart = splittedKey[1];
+                    String propertyName = restingPart.split("\\[")[0];
+
+                    EntityProperty entityProperty = new EntityProperty(entityName, propertyName);
+
+                    String fileName;
+                    String parameters = StringUtils.substringBetween(restingPart, "[", "]");
+
+                    boolean base64Encoded = false;
+
+                    if(StringUtils.isNotBlank(parameters)){
+                        fileName = parameters.replaceFirst(".*filename=([^;]*).*", "$1");
+                        if(StringUtils.isBlank(fileName)){
+                            throw new IllegalArgumentException("You must provide a file name for the part " + formPart.getKey()+". " +
+                                    "For exemple, the data-part name should be " + formPart.getKey() + "[filename=myFile.txt]");
+                        }
+
+                        base64Encoded = Pattern.compile(".*encoding=base64.*", Pattern.CASE_INSENSITIVE).matcher(parameters).matches();
+                    } else {
+                        fileName = RestUtils.getFileName(inputPart);
+                    }
+
+
                     InputStream inputStream = inputPart.getBody(InputStream.class, null);
 
-                    File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
-                    FileUtils.copyInputStreamToFile(inputStream, file);
+                    if(base64Encoded) {
+                    	inputStream = new Base64InputStream(inputStream);
+                    }
+
+                    dataParts.computeIfAbsent(entityProperty, k -> new ArrayList<>()).add(new DataPart(inputStream, fileName));
+                }
+            }
+
+            // Add the files to the DTOs
+            for(Map.Entry<EntityProperty, List<DataPart>> dataPartEntry : dataParts.entrySet()){
+
+
+                if (dataPartEntry.getValue().size() == 1) {
+
+                    File file = new File(tempDir.toString(), dataPartEntry.getValue().get(0).getFileName());
+                    FileUtils.copyInputStreamToFile(dataPartEntry.getValue().get(0).getInputStream(), file);
 
                     dtos.stream()
-                            .filter(dto -> dto.getName().equals(entityName))
+                            .filter(dto -> dto.getName().equals(dataPartEntry.getKey().getEntityName()))
                             .findFirst()
-                            .ifPresent(dto -> dto.getProperties().put(propertyName, file));
+                            .ifPresent(dto -> dto.getProperties().put(dataPartEntry.getKey().getEntityProperty(), file));
 
                 } else {
 
-                    for (InputPart inputPart : formPart.getValue()) {
-                        InputStream inputStream = inputPart.getBody(InputStream.class, null);
+                    for (DataPart dataPart : dataPartEntry.getValue()) {
+                        InputStream inputStream = dataPart.getInputStream();
 
-                        File file = new File(tempDir.toString(), RestUtils.getFileName(inputPart));
+                        File file = new File(tempDir.toString(), dataPart.getFileName());
                         FileUtils.copyInputStreamToFile(inputStream, file);
 
                         dtos.stream()
-                                .filter(dto -> dto.getName().equals(entityName))
+                                .filter(dto -> dto.getName().equals(dataPartEntry.getKey().getEntityName()))
                                 .findFirst()
                                 .ifPresent(dto -> {
-                                    List<File> property = (List<File>) dto.getProperties().computeIfAbsent(propertyName, s -> new ArrayList<File>());
+                                    List<File> property = (List<File>) dto.getProperties().computeIfAbsent(dataPartEntry.getKey().getEntityProperty(), s -> new ArrayList<File>());
                                     property.add(file);
                                 });
 
