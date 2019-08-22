@@ -205,6 +205,7 @@
             </p:dialog>
             <p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
                 <h:form id="addModuleForm">
+                    <p:messages autoUpdate="true" />
                     <h:panelGroup layout="block" styleClass="search-panel">
                         <p:outputPanel styleClass="search-panel-fields">
                             <p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
@@ -219,9 +220,8 @@
                         </h:panelGroup>
                     </h:panelGroup>
 
-                    <p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.meveoModule}"
-                                 rowKey="#{e.id}" lazy="#{lazy}">
-                        <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                    <p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{meveoModuleBean.meveoModule}"
+                                 rowKey="#{e.id}" lazy="#{lazy}" selectionMode="single">
                         <p:column>
                             <f:facet name="header">
                                 <h:outputText value="#{messages['BusinessEntity.code']}" />

@@ -451,8 +451,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             }
             try {
                 meveoModuleService.update(module);
+                messages.info("Items " + businessEntity.getCode() + " have upload module " + meveoModule.getCode());
             } catch (BusinessException e) {
-
+                messages.error("Upload error, please try !");
             }
         }
     }
