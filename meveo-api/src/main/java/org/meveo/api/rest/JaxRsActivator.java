@@ -9,6 +9,7 @@ import javax.ws.rs.core.Application;
 import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
 import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
 import org.meveo.api.rest.custom.impl.Neo4JPersistenceRs;
+import org.meveo.api.rest.filter.PragmaRemover;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
 import org.meveo.api.rest.filter.RESTCorsResponseFilter;
 import org.meveo.api.rest.impl.BaseRs;
@@ -35,6 +36,7 @@ public class JaxRsActivator extends Application {
         Set<Class<?>> resources = new HashSet(allClasses);
         resources.add(RESTCorsRequestFilter.class);
         resources.add(RESTCorsResponseFilter.class);
+        resources.add(PragmaRemover.class);
         resources.add(JaxRsExceptionMapper.class);
         resources.add(JacksonJsonProvider.class);
         resources.add(Neo4JPersistenceRs.class);
