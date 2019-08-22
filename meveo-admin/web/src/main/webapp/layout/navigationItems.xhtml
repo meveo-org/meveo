@@ -68,8 +68,7 @@
                         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
                             <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
                             <p:menuitem id="cet_#{cetIndex}" outcome="#{storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
-                                <f:param name="cet" value="#{cet.code}" disable="#{storeAsTable}"/>
-                                <f:param name="objectId" value="#{cet.id}" disable="#{!storeAsTable}"/>
+                                <f:param name="cet" value="#{cet.code}"/>
                             </p:menuitem>
                             <c:set var="cetIndex" value="#{cetIndex + 1}" />
                         </c:if>
