@@ -1,5 +1,6 @@
 package org.meveo.api.rest;
 
+import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 
@@ -17,16 +18,8 @@ public class OntologyRs extends BaseRs {
     private JSONSchemaGenerator jsonSchemaGenerator;
 
     @GET
-    public Response getSchema(@DefaultValue("true") @QueryParam("onlyActivated") boolean onlyActivated, @QueryParam("category") String categoryCode){
-        final String ontology = jsonSchemaGenerator.generateSchema("ontology", onlyActivated, categoryCode);
-
-        CacheControl cacheControl = new CacheControl();
-        cacheControl.setMaxAge(86400);
-        cacheControl.setPrivate(true);
-
-        Response.ResponseBuilder builder = Response.ok(ontology);
-        builder.cacheControl(cacheControl);
-
-        return builder.build();
+    @Cache(maxAge = 86400)
+    public String getSchema(@DefaultValue("true") @QueryParam("onlyActivated") boolean onlyActivated, @QueryParam("category") String categoryCode){
+        return jsonSchemaGenerator.generateSchema("ontology", onlyActivated, categoryCode);
     }
 }
