@@ -151,7 +151,7 @@ public class Neo4jDao {
 
     public void removeNodeByUUID(String neo4jconfiguration, String label, String uuid){
         StringBuilder queryBuilder = new StringBuilder()
-                .append("MATCH (n:").append(label).append(":) \n")
+                .append("MATCH (n:").append(label).append(") \n")
                 .append("WHERE n.meveo_uuid = $id \n")
                 .append("DETACH DELETE n \n")
                 .append("RETURN n");
