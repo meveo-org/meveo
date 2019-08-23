@@ -492,7 +492,7 @@ public class Neo4jService implements CustomPersistenceService {
 	                            persistedEntities.add(new EntityRef(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode(), cet.getCode()));
                             }
                         } else {
-                            Map<String, Object> updatableFields = new HashMap<>(fields);
+                            Map<String, Object> updatableFields = new HashMap<>(getEditableFields(cetFields, fields));
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
                             neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, cet.getCode(), updatableFields, labels);
