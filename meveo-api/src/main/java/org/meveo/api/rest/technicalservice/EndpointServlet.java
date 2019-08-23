@@ -211,6 +211,11 @@ public class EndpointServlet extends HttpServlet {
             return returnValue.toString();
         }
 
+        if(returnValue instanceof Map){
+        	((Map<?, ?>) returnValue).remove("response");
+        	((Map<?, ?>) returnValue).remove("request");
+        }
+        
         final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return serializedResult;

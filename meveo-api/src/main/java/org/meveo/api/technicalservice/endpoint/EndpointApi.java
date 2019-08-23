@@ -271,6 +271,7 @@ public class EndpointApi {
         updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
         updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
         updatedEndpoint.setContentType(endpointDto.getContentType());
+        updatedEndpoint.setRoles(endpointDto.getRoles());
 
         endpointService.update(updatedEndpoint);
     }
@@ -299,6 +300,7 @@ public class EndpointApi {
         }
         endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
         endpointDto.setContentType(endpoint.getContentType());
+        endpointDto.setRoles(endpoint.getRoles());
         return endpointDto;
     }
 
@@ -337,6 +339,8 @@ public class EndpointApi {
         endpoint.setSerializeResult(endpointDto.isSerializeResult());
         
         endpoint.setContentType(endpointDto.getContentType());
+        
+        endpoint.setRoles(endpointDto.getRoles());
         
         return endpoint;
     }
@@ -378,7 +382,7 @@ public class EndpointApi {
         if (CollectionUtils.isNotEmpty(roles)) {
             for (String selectedRole : endpointDto.getRoles()) {
                 if (!roles.contains(selectedRole)) {
-                    throw new IllegalArgumentException("The roles does not exists");
+                    throw new IllegalArgumentException("The role does not exists");
                 }
             }
         }

@@ -54,7 +54,7 @@ public class KeycloakAdminClientService {
 
     @Resource
     private SessionContext ctx;
-
+    
     public Set<String> getCurrentUserRoles(String client){
         final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
         final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
@@ -65,9 +65,8 @@ public class KeycloakAdminClientService {
         if(resourceAccess == null){
             return Collections.emptySet();
         }
-
-        return resourceAccess
-                .getRoles();
+        
+        return resourceAccess.getRoles();
     }
 
     public void removeRole(String client, String role){

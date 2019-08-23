@@ -62,8 +62,22 @@ public class EndpointService extends BusinessService<Endpoint> {
 
     public boolean isUserAuthorized(Endpoint endpoint){
         try {
-            final Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(ENDPOINTS_CLIENT);
-            return currentUserRoles.contains(getEndpointPermission(endpoint));
+            Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(ENDPOINTS_CLIENT);
+            if(!currentUserRoles.contains(getEndpointPermission(endpoint))) {
+                // If does not directly contained, for each role of meveo-web, check the role mappings for endpoints
+                KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+                currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
+                for (String userRole : currentUserRoles) {
+					if(endpoint.getRoles().contains(userRole)) {
+						return true;
+					}
+				}
+                
+                return false;
+            }
+            
+            return true;
+
         }catch (Exception e){
             log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
             return false;
