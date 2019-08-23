@@ -119,7 +119,7 @@ public class Neo4jService implements CustomPersistenceService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     private static final String MEVEO_UUID = "meveo_uuid";
-    
+
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
@@ -193,7 +193,7 @@ public class Neo4jService implements CustomPersistenceService {
         labels.add(customEntityTemplate.getCode());
 
         for(CustomEntityTemplate cet : customEntityTemplate.ascendance()){
-        	// If super-templates are stored in Neo4J we don't remove indexes
+            // If super-templates are stored in Neo4J we don't remove indexes
             if(!cet.getAvailableStorages().contains(DBStorageType.NEO4J)){
                 labels.add(cet.getCode());
                 labels.addAll(cet.getNeo4JStorageConfiguration().getLabels());
@@ -215,8 +215,8 @@ public class Neo4jService implements CustomPersistenceService {
     public List<String> getRepositoriesCode(){
 
         return emWrapper.getEntityManager()
-                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
-                .getResultList();
+            .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+            .getResultList();
     }
 
 
@@ -230,10 +230,10 @@ public class Neo4jService implements CustomPersistenceService {
      */
     public String findIdOfSourceEntityByRelationId(String neo4JConfiguration, CustomRelationshipTemplate crt, String relationUuid){
         return neo4jDao.findSourceNodeId(
-                neo4JConfiguration,
-                crt.getStartNode().getCode(),
-                crt.getName(),
-                relationUuid
+            neo4JConfiguration,
+            crt.getStartNode().getCode(),
+            crt.getName(),
+            relationUuid
         );
 
     }
@@ -252,10 +252,10 @@ public class Neo4jService implements CustomPersistenceService {
         }
 
         final List<String> relationsIds = neo4jDao.findRelationIdByTargetId(
-                neo4JConfiguration,
-                crt.getEndNode().getCode(),
-                crt.getName(),
-                targetUuid
+            neo4JConfiguration,
+            crt.getEndNode().getCode(),
+            crt.getName(),
+            targetUuid
         );
 
         if(relationsIds.isEmpty()){
@@ -271,10 +271,10 @@ public class Neo4jService implements CustomPersistenceService {
 
     public String findNodeId(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fields) throws ELException, BusinessException {
         final Set<CustomEntityTemplateUniqueConstraint> trustedQueries = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
-                .stream()
-                .filter(customEntityTemplateUniqueConstraint -> customEntityTemplateUniqueConstraint.getTrustScore().equals(100))
-                .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
-                .collect(Collectors.toSet());
+            .stream()
+            .filter(customEntityTemplateUniqueConstraint -> customEntityTemplateUniqueConstraint.getTrustScore().equals(100))
+            .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
+            .collect(Collectors.toSet());
 
         for (CustomEntityTemplateUniqueConstraint trustedQuery : trustedQueries) {
             final Set<String> strings = neo4jDao.executeUniqueConstraint(neo4JConfiguration, trustedQuery, fields, cet.getCode());
@@ -284,10 +284,10 @@ public class Neo4jService implements CustomPersistenceService {
         }
 
         final Map<String, CustomFieldTemplate> cfts = fields.keySet().stream()
-                .map(code -> customFieldsCache.getCustomFieldTemplate(code, cet.getAppliesTo()))
-                .collect(
-                        Collectors.toMap(BusinessEntity::getCode, Function.identity())
-                );
+            .map(code -> customFieldsCache.getCustomFieldTemplate(code, cet.getAppliesTo()))
+            .collect(
+                Collectors.toMap(BusinessEntity::getCode, Function.identity())
+            );
 
         Map<String, Object> uniqueFields = new HashMap<>();
         validateAndConvertCustomFields(cfts, fields, uniqueFields, true);
@@ -331,9 +331,9 @@ public class Neo4jService implements CustomPersistenceService {
 
             /* Collect entity references */
             final List<CustomFieldTemplate> entityReferences = cetFields.values().stream()
-                    .filter(customFieldTemplate -> customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY))   // Entity references
-                    .filter(customFieldTemplate -> fieldValues.get(customFieldTemplate.getCode()) != null)                  // Value is provided
-                    .collect(Collectors.toList());
+                .filter(customFieldTemplate -> customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY))   // Entity references
+                .filter(customFieldTemplate -> fieldValues.get(customFieldTemplate.getCode()) != null)                  // Value is provided
+                .collect(Collectors.toList());
 
             /* Create referenced nodes and collect relationships to create */
             Map<EntityRef, String> relationshipsToCreate = new HashMap<>();  // Map where the id of the target node is the key and the label of relationship is the value
@@ -370,9 +370,9 @@ public class Neo4jService implements CustomPersistenceService {
                             }
                             String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels);
                             if(createdNodeId != null) {
-                            	relatedPersistedEntities = Collections.singleton(new EntityRef(createdNodeId, referencedCet.getCode()));
+                                relatedPersistedEntities = Collections.singleton(new EntityRef(createdNodeId, referencedCet.getCode()));
                             }else {
-                            	relatedPersistedEntities = new HashSet<>();
+                                relatedPersistedEntities = new HashSet<>();
                             }
                         } else {
                             relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCetCode, valueMap);
@@ -384,7 +384,7 @@ public class Neo4jService implements CustomPersistenceService {
                             fields.put(entityReference.getCode(), valueMap.get("value"));
                         }
 
-                    // Referenced CET is not primitive
+                        // Referenced CET is not primitive
                     } else {
                         if (value instanceof Map && referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
                             @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
@@ -403,12 +403,12 @@ public class Neo4jService implements CustomPersistenceService {
                             // Create a node reprensenting the value if the target is not stored in Neo4J
                             if(!referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)){
                                 neo4jDao.mergeNode(
-                                        neo4JConfiguration,
-                                        referencedCet.getCode(),
-                                        Collections.singletonMap("meveo_uuid", value),
-                                        Collections.singletonMap("meveo_uuid", value),
-                                        Collections.emptyMap(),
-                                        Collections.emptyList()
+                                    neo4JConfiguration,
+                                    referencedCet.getCode(),
+                                    Collections.singletonMap("meveo_uuid", value),
+                                    Collections.singletonMap("meveo_uuid", value),
+                                    Collections.emptyMap(),
+                                    Collections.emptyList()
                                 );
                             }
 
@@ -419,7 +419,7 @@ public class Neo4jService implements CustomPersistenceService {
 
                     if (relatedPersistedEntities != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
-                                .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+                            .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
                         for (EntityRef entityRef : relatedPersistedEntities) {
                             relationshipsToCreate.put(entityRef, relationshipName);
                         }
@@ -429,31 +429,31 @@ public class Neo4jService implements CustomPersistenceService {
 
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
-                    .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
-                    .reversed()
-                    .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
+                .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
+                .reversed()
+                .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
             List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
-                    .stream()
-                    .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
-                    .sorted(comparator)
-                    .collect(Collectors.toList());
+                .stream()
+                .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
+                .sorted(comparator)
+                .collect(Collectors.toList());
 
             final List<String> labels = getAdditionalLabels(cet);
             if (applicableConstraints.isEmpty()) {
                 if (uniqueFields.isEmpty()) {
                     String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
-                    
+
                     if(nodeId != null) {
-                    	persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
+                        persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
                     }
-                    
+
                 } else {
                     Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
                     String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels);
-                    
+
                     if(nodeId != null) {
-                    	persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
+                        persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
                     }
                 }
             } else {
@@ -480,19 +480,19 @@ public class Neo4jService implements CustomPersistenceService {
                             String createdNodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
                             if(createdNodeId != null) {
                                 neo4jDao.createRelationBetweenNodes(
-                                        neo4JConfiguration,
-                                        createdNodeId, cet.getCode(),
-                                        "SIMILAR_TO",
-                                        id, cet.getCode(),
-                                        ImmutableMap.of(
-                                                "trustScore", uniqueConstraint.getTrustScore(),
-                                                "constraintCode", uniqueConstraint.getCode()
-                                        ));
-	                            persistedEntities.add(new EntityRef(createdNodeId, cet.getCode()));
-	                            persistedEntities.add(new EntityRef(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode(), cet.getCode()));
+                                    neo4JConfiguration,
+                                    createdNodeId, cet.getCode(),
+                                    "SIMILAR_TO",
+                                    id, cet.getCode(),
+                                    ImmutableMap.of(
+                                        "trustScore", uniqueConstraint.getTrustScore(),
+                                        "constraintCode", uniqueConstraint.getCode()
+                                    ));
+                                persistedEntities.add(new EntityRef(createdNodeId, cet.getCode()));
+                                persistedEntities.add(new EntityRef(id, uniqueConstraint.getTrustScore(), uniqueConstraint.getCode(), cet.getCode()));
                             }
                         } else {
-                            Map<String, Object> updatableFields = new HashMap<>(fields);
+                            Map<String, Object> updatableFields = new HashMap<>(getEditableFields(cetFields, fields));
                             uniqueFields.keySet().forEach(updatableFields::remove);
 
                             neo4jDao.updateNodeByNodeId(neo4JConfiguration, id, cet.getCode(), updatableFields, labels);
@@ -509,14 +509,14 @@ public class Neo4jService implements CustomPersistenceService {
                     if (uniqueFields.isEmpty()) {
                         String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels);
                         if(nodeId != null) {
-                        	persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
+                            persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
                         }
                     } else {
                         Map<String, Object> editableFields = getEditableFields(cetFields, fields);
 
                         String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels);
                         if(nodeId != null) {
-                        	persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
+                            persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
                         }
                     }
                 }
@@ -537,11 +537,11 @@ public class Neo4jService implements CustomPersistenceService {
                     String relationshipType = relationshipsEntry.getValue();
                     final Map<String, Object> values = Collections.emptyMap();
                     neo4jDao.createRelationBetweenNodes(
-                            neo4JConfiguration,
-                            entityRef.getUuid(), entityRef.getLabel(),
-                            relationshipType, relatedEntityRef.getUuid(),
-                            relatedEntityRef.getLabel(),
-                            values);
+                        neo4JConfiguration,
+                        entityRef.getUuid(), entityRef.getLabel(),
+                        relationshipType, relatedEntityRef.getUuid(),
+                        relatedEntityRef.getLabel(),
+                        values);
                 }
             }
         } catch (BusinessException e) {
@@ -567,12 +567,12 @@ public class Neo4jService implements CustomPersistenceService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addCRTByNodeValues(
-            String neo4JConfiguration,
-            String crtCode,
-            Map<String, Object> crtValues,
-            Map<String, Object> startFieldValues,
-            Map<String, Object> endFieldValues)
-            throws BusinessException, ELException {
+        String neo4JConfiguration,
+        String crtCode,
+        Map<String, Object> crtValues,
+        Map<String, Object> startFieldValues,
+        Map<String, Object> endFieldValues)
+        throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
 
@@ -613,11 +613,11 @@ public class Neo4jService implements CustomPersistenceService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addCRTByNodeIds(
-            String neo4JConfiguration,
-            String crtCode,
-            Map<String, Object> crtValues,
-            String startNodeId,
-            String endNodeId
+        String neo4JConfiguration,
+        String crtCode,
+        Map<String, Object> crtValues,
+        String startNodeId,
+        String endNodeId
     ) throws BusinessException, ELException {
 
         log.info("Persisting link with crtCode = {}", crtCode);
@@ -648,8 +648,8 @@ public class Neo4jService implements CustomPersistenceService {
      * @param crtFields                  Fields values of the relationship
      */
     public void saveCRT2Neo4j(String neo4JConfiguration,
-                              CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
-                              Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
+        CustomRelationshipTemplate customRelationshipTemplate, Map<String, Object> startNodeKeysMap,
+        Map<String, Object> endNodeKeysMap, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
 
@@ -711,7 +711,7 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     public void saveCRT2Neo4jByNodeIds(String neo4JConfiguration, CustomRelationshipTemplate customRelationshipTemplate, String startNodeId,
-                                       String endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
+        String endNodeId, Map<String, Object> crtFields, boolean isTemporaryCET) {
 
         final String relationshipAlias = "relationship";    // Alias to use in query
 
@@ -793,9 +793,9 @@ public class Neo4jService implements CustomPersistenceService {
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void addSourceNodeUniqueCrt(String neo4JConfiguration,
-                                       String crtCode,
-                                       Map<String, Object> startNodeValues,
-                                       Map<String, Object> endNodeValues) throws BusinessException, ELException {
+        String crtCode,
+        Map<String, Object> startNodeValues,
+        Map<String, Object> endNodeValues) throws BusinessException, ELException {
 
         // Get relationship template
         final CustomRelationshipTemplate customRelationshipTemplate = customFieldsCache.getCustomRelationshipTemplate(crtCode);
@@ -821,7 +821,7 @@ public class Neo4jService implements CustomPersistenceService {
         // No unique fields has been found
         if (endNodeUniqueFields.isEmpty()) {
             log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
-                    "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
+                "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
             throw new BusinessException("Unique field must be provided");
         }
 
@@ -863,8 +863,8 @@ public class Neo4jService implements CustomPersistenceService {
                 List<String> additionalLabels = getAdditionalLabels(startCet);
 
                 final Map<String, Object> updatableValues = valuesMap.entrySet().stream()
-                        .filter(s -> startNodeCfts.get(s.getKey()).isAllowEdit())
-                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+                    .filter(s -> startNodeCfts.get(s.getKey()).isAllowEdit())
+                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
                 StringBuffer statement = neo4jDao.appendAdditionalLabels(Neo4JRequests.updateNodeWithId, additionalLabels, startNodeAlias, updatableValues);
                 statement = neo4jDao.appendReturnStatement(statement, startNodeAlias, valuesMap);
@@ -1046,9 +1046,9 @@ public class Neo4jService implements CustomPersistenceService {
                 // Validate that value is valid (min/max, regexp). When
                 // value is a list or a map, check separately each value
                 if (fieldValue != null
-                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
-                        cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
-                        cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION)) {
+                    && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
+                    cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
+                    cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION)) {
                     List valuesToCheck = new ArrayList<>();
                     if (fieldValue instanceof Map) {
                         // Skip Key item if Storage type is Matrix
@@ -1098,7 +1098,7 @@ public class Neo4jService implements CustomPersistenceService {
                                     Matcher matcher = pattern.matcher(stringValue);
                                     if (!matcher.matches()) {
                                         throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + stringValue + " does not match regular expression "
-                                                + cft.getRegExp());
+                                            + cft.getRegExp());
                                     }
                                 } catch (PatternSyntaxException pse) {
                                     throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " definition specifies an invalid regular expression " + cft.getRegExp());
@@ -1120,13 +1120,13 @@ public class Neo4jService implements CustomPersistenceService {
 
                             if (cft.getMaxValue() != null && longValue.compareTo(cft.getMaxValue()) > 0) {
                                 throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is bigger then " + cft.getMaxValue()
-                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
 
                             } else if (cft.getMinValue() != null && longValue.compareTo(cft.getMinValue()) < 0) {
                                 throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + longValue + " is smaller then " + cft.getMinValue()
-                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
                         } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                             Double doubleValue;
@@ -1140,12 +1140,12 @@ public class Neo4jService implements CustomPersistenceService {
                             }
                             if (cft.getMaxValue() != null && doubleValue.compareTo(cft.getMaxValue().doubleValue()) > 0) {
                                 throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is bigger then " + cft.getMaxValue()
-                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             } else if (cft.getMinValue() != null && doubleValue.compareTo(cft.getMinValue().doubleValue()) < 0) {
                                 throw new InvalidCustomFieldException("Custom field " + cft.getCode() + " value " + doubleValue + " is smaller then " + cft.getMinValue()
-                                        + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
-                                        + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
+                                    + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
+                                    + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
                         }
                         if (cft.isUnique() && uniqueFields != null) {
@@ -1164,11 +1164,11 @@ public class Neo4jService implements CustomPersistenceService {
             } catch (NumberFormatException e) {
                 if (fieldValue != null) {
                     LOGGER.error(
-                            "Wrong data type format for {}#{}. Expected type : {}, value is : {}. Skipping field value",
-                            cft.getAppliesTo(),
-                            cft.getCode(),
-                            cft.getFieldType(),
-                            fieldValue
+                        "Wrong data type format for {}#{}. Expected type : {}, value is : {}. Skipping field value",
+                        cft.getAppliesTo(),
+                        cft.getCode(),
+                        cft.getFieldType(),
+                        fieldValue
                     );
                 }
             }
@@ -1178,7 +1178,7 @@ public class Neo4jService implements CustomPersistenceService {
 
     }
 
-    
+
 
     public String executeQuery(String query, Map<String, Object> valuesMap) {
         if (query != null) {
@@ -1337,8 +1337,8 @@ public class Neo4jService implements CustomPersistenceService {
                 final String type = relationship.type();
 
                 final List<CustomRelationshipTemplate> correspondingCrt = availableCrts.stream()
-                        .filter(crt -> crt.getName().equals(type))
-                        .collect(Collectors.toList());
+                    .filter(crt -> crt.getName().equals(type))
+                    .collect(Collectors.toList());
 
                 try {
                     // Determine unique fields
@@ -1358,18 +1358,18 @@ public class Neo4jService implements CustomPersistenceService {
                 }
 
                 Long creationOrUpdateDate = (Long) (relationProperties.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE) ?
-                        relationProperties.get(Neo4JRequests.INTERNAL_UPDATE_DATE) :
-                        relationProperties.get(Neo4JRequests.CREATION_DATE));
+                    relationProperties.get(Neo4JRequests.INTERNAL_UPDATE_DATE) :
+                    relationProperties.get(Neo4JRequests.CREATION_DATE));
 
                 neo4jDao.mergeRelationshipById(
-                        configurationCode,
-                        persistentNode.id(),
-                        relationship.endNodeId(),
-                        relationship.get(MEVEO_UUID).asString(),
-                        type,
-                        uniqueFields,
-                        relationProperties,
-                        creationOrUpdateDate
+                    configurationCode,
+                    persistentNode.id(),
+                    relationship.endNodeId(),
+                    relationship.get(MEVEO_UUID).asString(),
+                    type,
+                    uniqueFields,
+                    relationProperties,
+                    creationOrUpdateDate
                 );
 
             }
@@ -1379,108 +1379,108 @@ public class Neo4jService implements CustomPersistenceService {
         }
         return persistentNode.get(MEVEO_UUID).asString();
     }
-    
-	/**
-	 * Remove the binaries attached to the source node
-	 * 
-	 * @param neo4jConfigurationCode Code of the configuration to update
-	 * @param sourceNodeUuid         Source node id
-	 * @param cet                    Template of the source node
-	 * @param customFieldTemplate    Field holding the binary
-	 */
+
+    /**
+     * Remove the binaries attached to the source node
+     *
+     * @param neo4jConfigurationCode Code of the configuration to update
+     * @param sourceNodeUuid         Source node id
+     * @param cet                    Template of the source node
+     * @param customFieldTemplate    Field holding the binary
+     */
     public void removeBinaries(String sourceNodeUuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
-    	if(customFieldTemplate.getRelationshipName() == null) {
-    		throw new IllegalArgumentException("Relationship name of field template " + cet.getCode() + "." + customFieldTemplate.getCode() + " is null");
-    	}
-    	
-    	neo4jDao.detachDeleteTargets(
-    			neo4jConfigurationCode, 
-    			sourceNodeUuid, 
-    			cet.getCode(),
-    			customFieldTemplate.getRelationshipName(),
-    			Neo4JConstants.FILE_LABEL
-		);
+        if(customFieldTemplate.getRelationshipName() == null) {
+            throw new IllegalArgumentException("Relationship name of field template " + cet.getCode() + "." + customFieldTemplate.getCode() + " is null");
+        }
+
+        neo4jDao.detachDeleteTargets(
+            neo4jConfigurationCode,
+            sourceNodeUuid,
+            cet.getCode(),
+            customFieldTemplate.getRelationshipName(),
+            Neo4JConstants.FILE_LABEL
+        );
     }
-    
+
     //TODO: Document
     public void removeBinary(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate, String binaryPath) {
-    	if(customFieldTemplate.getRelationshipName() == null) {
-    		throw new IllegalArgumentException("Relationship name of field template " + cet.getCode() + "." + customFieldTemplate.getCode() + " is null");
-    	}
-    	
-    	neo4jDao.detachDeleteTargets(
-    			neo4jConfigurationCode, 
-    			uuid, 
-    			cet.getCode(),
-    			customFieldTemplate.getRelationshipName(),
-    			Neo4JConstants.FILE_LABEL,
-    			Collections.singletonMap("value", binaryPath)
-		);
+        if(customFieldTemplate.getRelationshipName() == null) {
+            throw new IllegalArgumentException("Relationship name of field template " + cet.getCode() + "." + customFieldTemplate.getCode() + " is null");
+        }
+
+        neo4jDao.detachDeleteTargets(
+            neo4jConfigurationCode,
+            uuid,
+            cet.getCode(),
+            customFieldTemplate.getRelationshipName(),
+            Neo4JConstants.FILE_LABEL,
+            Collections.singletonMap("value", binaryPath)
+        );
     }
 
-	/**
-	 * Remove all previous binaries and add the given one to the specified node
-	 * 
-	 * @param uuid                   Id of the node to attach the binary
-	 * @param neo4jConfigurationCode Neo4J instance to use
-	 * @param cet                    Template of the entity to attach the binary
-	 * @param customFieldTemplate    Field holding the binary
-	 * @param binaryPath             Path of the binary on the file system
-	 */
-	public void updateBinary(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate, String binaryPath) {
-		removeBinaries(uuid, neo4jConfigurationCode, cet, customFieldTemplate);
-		addBinaries(uuid, neo4jConfigurationCode, cet, customFieldTemplate, Collections.singletonList(binaryPath));
-	}
-	
-	/**
-	 * TODO: Document
-	 * @param uuid
-	 * @param neo4jConfigurationCode
-	 * @param cet
-	 * @param customFieldTemplate
-	 */
-	public List<String> findBinaries(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
-		List<Node> binaryNodes = neo4jDao.findNodesBySourceNodeIdAndRelationships(neo4jConfigurationCode, uuid, cet.getCode(), customFieldTemplate.getRelationshipName(), Neo4JConstants.FILE_LABEL);
-		return binaryNodes.stream().map(n -> n.get("value").asString()).collect(Collectors.toList());
-		
-	}
+    /**
+     * Remove all previous binaries and add the given one to the specified node
+     *
+     * @param uuid                   Id of the node to attach the binary
+     * @param neo4jConfigurationCode Neo4J instance to use
+     * @param cet                    Template of the entity to attach the binary
+     * @param customFieldTemplate    Field holding the binary
+     * @param binaryPath             Path of the binary on the file system
+     */
+    public void updateBinary(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate, String binaryPath) {
+        removeBinaries(uuid, neo4jConfigurationCode, cet, customFieldTemplate);
+        addBinaries(uuid, neo4jConfigurationCode, cet, customFieldTemplate, Collections.singletonList(binaryPath));
+    }
 
-	/**
-	 * Remove all previous binaries and add the given one to the specified node
-	 * 
-	 * @param uuid                   Id of the node to attach the binary
-	 * @param neo4jConfigurationCode Neo4J instance to use
-	 * @param cet                    Template of the entity to attach the binary
-	 * @param customFieldTemplate    Field holding the binary
-	 * @param binariesPath           Paths of the binaries on the file system
-	 */
+    /**
+     * TODO: Document
+     * @param uuid
+     * @param neo4jConfigurationCode
+     * @param cet
+     * @param customFieldTemplate
+     */
+    public List<String> findBinaries(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
+        List<Node> binaryNodes = neo4jDao.findNodesBySourceNodeIdAndRelationships(neo4jConfigurationCode, uuid, cet.getCode(), customFieldTemplate.getRelationshipName(), Neo4JConstants.FILE_LABEL);
+        return binaryNodes.stream().map(n -> n.get("value").asString()).collect(Collectors.toList());
+
+    }
+
+    /**
+     * Remove all previous binaries and add the given one to the specified node
+     *
+     * @param uuid                   Id of the node to attach the binary
+     * @param neo4jConfigurationCode Neo4J instance to use
+     * @param cet                    Template of the entity to attach the binary
+     * @param customFieldTemplate    Field holding the binary
+     * @param binariesPath           Paths of the binaries on the file system
+     */
     public void addBinaries(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate, Collection<String> binariesPath) {
         for(String binaryPath : binariesPath) {
             final String fileUuid = neo4jDao.mergeNode(
-                    neo4jConfigurationCode,
-                    Neo4JConstants.FILE_LABEL,
-                    Collections.singletonMap("value", binaryPath),
-                    Collections.singletonMap("value", binaryPath),
-                    Collections.singletonMap("value", binaryPath),
-                    null
+                neo4jConfigurationCode,
+                Neo4JConstants.FILE_LABEL,
+                Collections.singletonMap("value", binaryPath),
+                Collections.singletonMap("value", binaryPath),
+                Collections.singletonMap("value", binaryPath),
+                null
             );
 
             neo4jDao.createRelationBetweenNodes(
-                    neo4jConfigurationCode,
-                    uuid,
-                    cet.getCode(),
-                    customFieldTemplate.getRelationshipName(),
-                    fileUuid,
-                    Neo4JConstants.FILE_LABEL,
-                    Collections.emptyMap()
+                neo4jConfigurationCode,
+                uuid,
+                cet.getCode(),
+                customFieldTemplate.getRelationshipName(),
+                fileUuid,
+                Neo4JConstants.FILE_LABEL,
+                Collections.emptyMap()
             );
         }
     }
-    
+
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
 
         Object evaluatedExpression = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), fieldValues.entrySet().stream()
-                   .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()!=null?e.getValue():"")), String.class);
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue()!=null?e.getValue():"")), String.class);
 
         if (evaluatedExpression != null) {
 
@@ -1511,7 +1511,7 @@ public class Neo4jService implements CustomPersistenceService {
             return null;
         }
     }
-    
+
     private Map<String, Object> getEditableFields(Map<String, CustomFieldTemplate> cetFields, Map<String, Object> convertedFields) {
         Map<String, Object> editableFields = new HashMap<>(convertedFields);
         cetFields.values()
@@ -1521,7 +1521,7 @@ public class Neo4jService implements CustomPersistenceService {
             .forEach(editableFields::remove);
         return editableFields;
     }
-    
+
     private boolean isApplicableConstraint(Map<String, Object> fields, CustomEntityTemplateUniqueConstraint uniqueConstraint) {
 
         Map<Object, Object> userMap = new HashMap<>();
@@ -1546,7 +1546,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         return false;
     }
-    
+
     private Map<String, Object> getNodeKeys(String appliesTo, Map<String, Object> convertedFieldValues) {
         Map<String, Object> nodeKeysMap = new HashMap<>();
         List<CustomFieldTemplate> retrievedCft = customFieldTemplateService.findCftUniqueFieldsByApplies(appliesTo);
@@ -1557,13 +1557,13 @@ public class Neo4jService implements CustomPersistenceService {
         }
         return nodeKeysMap;
     }
-    
+
     private List<String> getAdditionalLabels(CustomEntityTemplate cet) {
         List<String> additionalLabels = new ArrayList<>(cet.getNeo4JStorageConfiguration().getLabels());
         additionalLabels.addAll(getAllSuperTemplateLabels(cet));
         return additionalLabels;
     }
-    
+
     private List<String> getAllSuperTemplateLabels(CustomEntityTemplate customEntityTemplate) {
         List<String> labels = new ArrayList<>();
         CustomEntityTemplate parent = customEntityTemplate.getSuperTemplate();
@@ -1573,7 +1573,7 @@ public class Neo4jService implements CustomPersistenceService {
         }
         return labels;
     }
-    
+
     private String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
         return sub.replace(findStartNodeId).replace('"', '\'');
     }
