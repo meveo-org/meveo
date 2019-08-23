@@ -196,6 +196,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
             rolesDM = new DualListModel<>(perksSource, perksTarget);
 
         }
+        rolesDM.getSource().remove(EndpointService.ENDPOINT_MANAGEMENT);
         return rolesDM;
     }
 

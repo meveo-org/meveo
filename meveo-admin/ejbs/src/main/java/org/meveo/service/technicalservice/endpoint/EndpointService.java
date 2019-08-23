@@ -95,7 +95,6 @@ public class EndpointService extends BusinessService<Endpoint> {
 
     @Override
     public void create(Endpoint entity) throws BusinessException {
-        super.create(entity);
 
         // Create client if not exitsts
         keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
@@ -112,12 +111,14 @@ public class EndpointService extends BusinessService<Endpoint> {
         // Add endpoint role and selected composite roles
         if (CollectionUtils.isNotEmpty(entity.getRoles())) {
             for (String compositeRole : entity.getRoles()) {
-                keycloakAdminClientService.addToComposite(null, endpointPermission, compositeRole);
+                keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
             }
         }
 
         // Add Execute_All_Endpoints to endpointManagement composite if not already in
-        keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, ENDPOINT_MANAGEMENT, EXECUTE_ALL_ENDPOINTS);
+        keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
+        
+        super.create(entity);
     }
 
     @Override
@@ -176,7 +177,7 @@ public class EndpointService extends BusinessService<Endpoint> {
         }
 
         for (String compositeRole: entity.getRoles()) {
-            keycloakAdminClientService.addToComposite(null, endpointPermission, compositeRole);
+            keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
         }
         
         return entity;

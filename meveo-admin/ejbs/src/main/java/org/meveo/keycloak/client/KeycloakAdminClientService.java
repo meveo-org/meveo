@@ -76,11 +76,17 @@ public class KeycloakAdminClientService {
         KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
 
         Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+        
+        final String clientId = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(client)
+                .get(0)
+                .getId();
 
         try {
             keycloak.realm(keycloakAdminClientConfig.getRealm())
                     .clients()
-                    .get(client)
+                    .get(clientId)
                     .roles()
                     .get(role)
                     .remove();
@@ -144,6 +150,64 @@ public class KeycloakAdminClientService {
 
             rolesResource.create(roleRepresentation);
         }
+    }
+    
+    /**
+     * Add a role from source client to an exisiting composite role in target client
+     * Both roles should already exists.
+     *
+	 */
+    public void addToCompositeCrossClient(String clientSource, String clientTarget, String roleSourceName, String roleTargetName) throws BusinessException {
+        String sourceClientId = null;
+        String targetClientId = null;
+        RoleRepresentation sourceRole = null;
+        ClientResource targetClient = null;
+        RoleResource targetRoleResource = null;
+        	
+    	KeycloakAdminClientConfig keycloakAdminClientConfig = loadConfig();
+    	clientSource = clientSource != null ? clientSource : keycloakAdminClientConfig.getClientId();
+    	clientTarget = clientTarget != null ? clientTarget : keycloakAdminClientConfig.getClientId();
+    	
+        final KeycloakPrincipal<?> callerPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
+        final KeycloakSecurityContext keycloakSecurityContext = callerPrincipal.getKeycloakSecurityContext();
+
+        Keycloak keycloak = getKeycloakClient(keycloakSecurityContext, keycloakAdminClientConfig);
+
+        sourceClientId = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(clientSource)
+                .get(0)
+                .getId();
+        
+        targetClientId = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                .clients()
+                .findByClientId(clientTarget)
+                .get(0)
+                .getId();
+        
+        try {
+	        sourceRole = keycloak.realm(keycloakAdminClientConfig.getRealm())
+	                .clients()
+	                .get(sourceClientId)
+	                .roles()
+	                .get(roleSourceName)
+	                .toRepresentation();
+	        
+        } catch(NotFoundException e) {
+        	throw new BusinessException(sourceRole + " does not exists in " + sourceClientId + " client");
+        }
+        
+        targetClient = keycloak.realm(keycloakAdminClientConfig.getRealm()).clients().get(targetClientId);
+    	
+        try {
+        	targetRoleResource = targetClient.roles().get(roleTargetName);
+        	targetRoleResource.toRepresentation();
+        } catch(NotFoundException e) {
+        	throw new BusinessException(roleTargetName + " does not exists in " + targetClientId + " client");
+        }
+
+    	targetRoleResource.addComposites(Collections.singletonList(sourceRole));
+
     }
 
     /**
