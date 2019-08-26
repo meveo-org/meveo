@@ -1064,7 +1064,7 @@ public class Neo4jService implements CustomPersistenceService {
                     // If entity is not a custom relation or is a cusotm entity but is not a primitive entity, throw exception
                     if(customEntityTemplate == null || !customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()){
                         final String message = "CFT with code " + cft.getCode() + " is not provided";
-                        throw new InvalidCustomFieldException(message);
+                        throw new IllegalArgumentException(message);
                     }
 
                 }

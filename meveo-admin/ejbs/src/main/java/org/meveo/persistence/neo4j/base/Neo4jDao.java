@@ -28,6 +28,7 @@ import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
@@ -404,6 +405,8 @@ public class Neo4jDao {
                     .map(Value::asMap)
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
+        } catch (ClientException e) {
+           throw e;
         } catch (Exception e) {
             transaction.failure();
             LOGGER.error("Error while executing a GraphQL query", e);
