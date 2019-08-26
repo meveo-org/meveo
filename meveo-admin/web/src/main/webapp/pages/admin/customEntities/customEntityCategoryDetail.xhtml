@@ -32,7 +32,7 @@
 
 			<hftl:formPanel formId="cecForm"
 				backingBean="#{customEntityCategoryBean}"
-				showEnableDisableButton="true">
+				showEnableDisableButton="true" showAddModuleButton="true">
 
 				<h:panelGrid columns = "3" width="60%">
 					<hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customEntityCategoryBean.entity.code == null)}">

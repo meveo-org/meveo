@@ -32,7 +32,7 @@
                           selectionListenerMethod="onFunctionChange"
                           updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrl :endpointForm:endpoint-technical-configuration">
         </hftl:entityPopup>
-        <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
+        <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" showAddModuleButton="true" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
                 <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true" validateUnique="true" listenerUpdate=":endpointForm:endpointUrl"/>
                 <hftl:formField id="serviceId" label="#{messages['endpoint.code']}" 

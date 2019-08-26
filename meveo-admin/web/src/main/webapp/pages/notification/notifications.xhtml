@@ -27,14 +27,14 @@
         <!-- ===================================== SEARCH USERS RESULTS ================================= -->
 
         <hftl:dataList resultsId="notifications" backingBean="#{notificationListBean}" exportButton="false" exportToCsv="true" fileName="Notifications" importCsv="true"
-            importStrategy="true" sortBy="code">
+            importStrategy="true" addToModule="true" sortBy="code">
             <hftl:column label="#{messages['entity.code']}" field="code" />
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
             <hftl:column label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" />
             <hftl:column label="#{messages['entity.notification.scriptInstance']}" field="function.code" />
             <hftl:column label="#{messages['notification.priority']}" field="priority" />
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
-            <hftl:actionsColumn permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" />
+            <hftl:actionsColumn permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderAddModule="true"/>
         </hftl:dataList>
     </ui:define>
 </ui:composition>

@@ -72,6 +72,9 @@
     <c:if test="${empty(showEnableDisableButton)}">
         <c:set var="showEnableDisableButton" value="false" />
     </c:if>
+    <c:if test="${empty(showAddModuleButton)}">
+        <c:set var="showAddModuleButton" value="false" />
+    </c:if>
     <c:if test="${empty(showDeleteButton)}">
         <c:set var="showDeleteButton" value="${showEditButton}" />
     </c:if>
@@ -100,7 +103,7 @@
                     <hf:formButtons backingBean="#{backingBean}" edit="#{formLevelEdit}" ajaxSubmit="#{ajaxSubmit}" submitPartialProcess="#{submitPartialProcess}"
                         submitPartialSubmitFilter="#{submitPartialSubmitFilter}" submitUpdate="#{submitUpdate}" killConversationOnSave="#{killConversationOnSave}"
                         killConversationOnBack="#{killConversationOnBack}" useCustomIdParam="#{useCustomIdParam}" objectIdParamName="#{objectIdParamName}" showBackButton="#{showBackButton}"
-                        showEditButton="#{showEditButton}" showEnableDisableButton="#{showEnableDisableButton}" showDeleteButton="#{showDeleteButton}"
+                        showEditButton="#{showEditButton}" showEnableDisableButton="#{showEnableDisableButton}" showAddModuleButton="#{showAddModuleButton}" showDeleteButton="#{showDeleteButton}"
                         updateConfirmationMessage="#{updateConfirmationMessage}" formId="#{formId}" submitActionListener="#{submitActionListener}" />
                 </c:if>
                 <c:if test="#{buttons}">
@@ -126,7 +129,7 @@
                         <hf:formButtons id="formButtonsCC" backingBean="#{backingBean}" edit="#{formLevelEdit}" ajaxSubmit="#{ajaxSubmit}" submitPartialProcess="#{submitPartialProcess}"
                             submitPartialSubmitFilter="#{submitPartialSubmitFilter}" submitUpdate="#{submitUpdate}" killConversationOnSave="#{killConversationOnSave}"
                             killConversationOnBack="#{killConversationOnBack}" useCustomIdParam="#{useCustomIdParam}" objectIdParamName="#{objectIdParamName}" showBackButton="#{showBackButton}"
-                            showEditButton="#{showEditButton}" showEnableDisableButton="#{showEnableDisableButton}" showDeleteButton="#{showDeleteButton}"
+                            showEditButton="#{showEditButton}" showEnableDisableButton="#{showEnableDisableButton}" showAddModuleButton="#{showAddModuleButton}" showDeleteButton="#{showDeleteButton}"
                             updateConfirmationMessage="#{updateConfirmationMessage}" formId="#{formId}" submitActionListener="#{submitActionListener}" />
                     </c:if>
                     <c:if test="#{buttons}">

@@ -26,10 +26,10 @@
 
         <!-- ===================================== SEARCH USERS RESULTS ================================= -->
 
-        <hftl:dataList backingBean="#{emailNotificationListBean}" exportButton="false" exportToCsv="true" fileName="EmailNotifications" importCsv="true" importStrategy="true"
+        <hftl:dataList backingBean="#{emailNotificationListBean}" exportButton="false" exportToCsv="true" fileName="EmailNotifications" importCsv="true" importStrategy="true" addToModule="true"
             sortBy="code">
             <hftl:actionsColumn editView="/pages/notification/emailNotificationDetail.xhtml"
-                permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" />
+                permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" renderAddModule="true"/>
             <hftl:column label="#{messages['entity.code']}" field="code" />
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
             <hftl:column label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" />

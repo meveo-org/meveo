@@ -26,7 +26,7 @@
             updateField=":webHookFormId:scriptInstanceSelectId :webHookFormId:scriptInstanceSelectId_text">
         </hftl:entityPopup>
 
-        <hftl:formPanel formId="webHookFormId" label="#{messages['menu.webHook']}" backingBean="#{webHookBean}" columns="4" showEnableDisableButton="true">
+        <hftl:formPanel formId="webHookFormId" label="#{messages['menu.webHook']}" backingBean="#{webHookBean}" columns="4" showEnableDisableButton="true" showAddModuleButton="true">
 
             <hftl:formField label="#{messages['entity.code']}" field="code" required="true" />
             <hftl:formField label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" required="true" size="60" maxlength="255"

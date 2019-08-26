@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -32,10 +32,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.Conversation;
+import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
@@ -51,6 +53,7 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
+import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
@@ -67,6 +70,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.filter.Filter;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -82,8 +87,10 @@ import org.omnifaces.cdi.Param;
 import org.primefaces.PrimeFaces;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.event.data.PageEvent;
 import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.StreamedContent;
@@ -97,10 +104,10 @@ import com.lapis.jsfexporter.csv.CSVExportOptions;
 
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
- * 
+ *
  * @author Wassim Drira
  * @lastModifiedVersion 5.0
- * 
+ *
  */
 @Named
 @ViewScoped
@@ -110,6 +117,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /** Logger. */
     protected Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Inject
+    private ResourceBundle resourceMessages;
 
     @Inject
     protected Messages messages;
@@ -170,6 +180,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private String backViewSave;
 
+    private MeveoModule meveoModule;
+
+    private List<MeveoModule> selectedMeveoModules;
+
     /**
      * Object identifier to load
      */
@@ -220,7 +234,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Constructor.
-     * 
+     *
      * @param clazz Class.
      */
     public BaseBean(Class<T> clazz) {
@@ -243,7 +257,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
 	/**
      * Returns entity class
-     * 
+     *
      * @return Class
      */
     public Class<T> getClazz() {
@@ -276,7 +290,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Initiates entity from request parameter id.
-     * 
+     *
      * @return Entity from database.
      */
     public T initEntity() {
@@ -320,7 +334,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Clear object parameters and instantiate a new entity
-     * 
+     *
      * @return Entity instantiated
      */
     public T newEntity() {
@@ -356,7 +370,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * When opened to view or edit entity - this getter method returns it. In case entity is not loaded it will initialize it.
-     * 
+     *
      * @return Entity in current view state.
      */
     public T getEntity() {
@@ -408,7 +422,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Save method when used in popup - no return value. Sets validation to failed if saveOrUpdate method called does not return a value.
-     * 
+     *
      * @throws BusinessException business exception
      */
     @ActionMethod
@@ -422,7 +436,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Save or update entity depending on if entity is transient.
-     * 
+     *
      * @param entity Entity to save.
      * @throws BusinessException
      */
@@ -460,7 +474,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Method to get Back link. If default view name is different than override the method. Default name: entity's name + s;
-     * 
+     *
      * @return string for navigation
      */
     public String back() {
@@ -473,11 +487,63 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         return backViewSave;
     }
 
+    public void addToModule()  {
+        for (MeveoModule eachModule: selectedMeveoModules ) {
+            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
+            if (entity != null && !eachModule.equals(entity)) {
+                BusinessEntity businessEntity = (BusinessEntity) entity;
+                MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+                if (!module.getModuleItems().contains(item)) {
+                    module.addModuleItem(item);
+                }
+                try {
+                    meveoModuleService.update(module);
+                    messages.info(businessEntity.getCode() + " added to module " + module.getCode());
+                } catch (BusinessException e) {
+                    messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
+                }
+            }
+        }
+    }
+
+    public void addManyToModule()  {
+        if (selectedEntities == null || selectedEntities.isEmpty()) {
+            return;
+        }
+
+        String codes = selectedEntities.stream().filter(e -> e instanceof BusinessEntity)
+        		.map(BusinessEntity.class::cast)
+        		.map(BusinessEntity::getCode)
+        		.collect(Collectors.joining(", ", "[", "]"));
+
+        for (MeveoModule eachModule : selectedMeveoModules) {
+
+            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
+            try {
+
+	            for (IEntity entity : selectedEntities) {
+	                if (entity != null && !eachModule.equals(entity)) {
+	                    BusinessEntity businessEntity = (BusinessEntity) entity;
+	                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+	                    if (!module.getModuleItems().contains(item)) {
+	                        module.addModuleItem(item);
+	                    }
+	                }
+	            }
+
+                meveoModuleService.update(module);
+                messages.info(codes + " added to module " + module.getCode());
+            } catch (BusinessException e) {
+                messages.error(codes + " not added to module " + module.getCode(), e);
+            }
+        }
+    }
+
     /**
      * Go back and end conversation. BeforeRedirect flag is set to true, so conversation is first ended and then redirect is proceeded, that means that after redirect new
      * conversation will have to be created (temp or long running) so that view will have all most up to date info because it will load everything from db when starting new
      * conversation.
-     * 
+     *
      * @return string for navigation
      */
     public String backAndEndConversation() {
@@ -502,7 +568,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Convert entity class to a detail view name
-     * 
+     *
      * @param clazz Entity class
      * @return Navigation view link name
      */
@@ -542,7 +608,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Delete Entity using it's ID. Add error message to status message if unsuccessful.
-     * 
+     *
      * @param id Entity id to delete
      * @throws BusinessException business exception
      */
@@ -554,7 +620,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Delete Entity using it's ID. Add error message to status messages if unsuccessful.
-     * 
+     *
      * @param id Entity id to delete
      * @param code Entity's code - just for display in error messages
      * @param setOkMessages Shall success messages be set for display
@@ -602,7 +668,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Delete checked entities. Add error message to status messages if unsuccessful.
-     * 
+     *
      * @throws Exception general exception
      */
     @ActionMethod
@@ -625,7 +691,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Delete current entity from detail page and redirect to a previous page. Used mostly for deletion in detail pages.
-     * 
+     *
      * @return back() page if deleted success, if not, return a callback result to UI for validate
      * @throws BusinessException
      */
@@ -640,7 +706,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Gets search filters map.
-     * 
+     *
      * @return Filters map.
      */
     public Map<String, Object> getFilters() {
@@ -669,9 +735,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Get new instance for backing bean class.
-     * 
+     *
      * @return New instance.
-     * 
+     *
      * @throws IllegalAccessException
      * @throws InstantiationException
      */
@@ -684,7 +750,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Method that returns concrete PersistenceService. That service is then used for operations on concrete entities (eg. save, delete etc).
-     * 
+     *
      * @return Persistence service
      */
     protected abstract IPersistenceService<T> getPersistenceService();
@@ -712,7 +778,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Disable current entity. Add error message to status messages if unsuccessful.
-     * 
+     *
      */
     @ActionMethod
     public void disable() {
@@ -729,7 +795,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Disable Entity using it's ID. Add error message to status messages if unsuccessful.
-     * 
+     *
      * @param id Entity id to disable
      */
     @ActionMethod
@@ -747,7 +813,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Enable current entity. Add error message to status messages if unsuccessful.
-     * 
+     *
      */
     @ActionMethod
     public void enable() {
@@ -764,7 +830,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Enable Entity using it's ID. Add error message to status messages if unsuccessful.
-     * 
+     *
      * @param id Entity id to enable
      */
     @ActionMethod
@@ -782,7 +848,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * DataModel for primefaces lazy loading datatable component.
-     * 
+     *
      * @return LazyDataModel implementation.
      */
     public LazyDataModel<T> getLazyDataModel() {
@@ -865,7 +931,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * Allows to overwrite, or add additional search criteria for filtering a list. Search criteria is a map with filter criteria name as a key and value as a value. Criteria name
      * consist of [&lt;condition&gt;]&lt;field name&gt; (e.g. "like firstName") where &lt;condition&gt; is a condition to apply to field value comparison and &lt;name&gt; is an
      * entity attribute name.
-     * 
+     *
      * @param searchCriteria Search criteria - should be same as filters attribute
      * @return HashMap with filter criteria name as a key and value as a value
      */
@@ -895,7 +961,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * true in edit mode
-     * 
+     *
      * @return
      */
     public boolean isEdit() {
@@ -975,7 +1041,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Get currently active locale
-     * 
+     *
      * @return Currently active locale
      */
     public Locale getCurrentLocale() {
@@ -1051,7 +1117,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Get custom actions applicable to the entity - right now implemented in customFieldEntityBean only. Here provided for GUI compatibility issue only
-     * 
+     *
      * @return A list of entity action scripts
      */
     public List<EntityCustomAction> getCustomActions() {
@@ -1060,7 +1126,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Delete item from a collection of values
-     * 
+     *
      * @param values Collection of values
      * @param itemIndex An index of an item to remove
      */
@@ -1081,7 +1147,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Change value in a collection. Collection to update an item index are passed as attributes
-     * 
+     *
      * @param event Value change event
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -1107,7 +1173,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * Add a new blank item to collection. Instantiate a new item based on parametized collection type.
-     * 
+     *
      * @param values A collection of values
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -1130,8 +1196,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /**
      * crm/customers
-     * 
-     * 
+     *
+     *
      */
     public boolean canUserUpdateEntity() {
         if (this.writeAccessMap == null) {
@@ -1198,9 +1264,25 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.uploadedFile = uploadedFile;
     }
 
+    public MeveoModule getMeveoModule() {
+        return meveoModule;
+    }
+
+    public void setMeveoModule(MeveoModule meveoModule) {
+        this.meveoModule = meveoModule;
+    }
+
+    public List<MeveoModule> getSelectedMeveoModules() {
+        return selectedMeveoModules;
+    }
+
+    public void setSelectedMeveoModules(List<MeveoModule> selectedMeveoModules) {
+        this.selectedMeveoModules = selectedMeveoModules;
+    }
+
     /**
      * Find entities that reference a given class and ID
-     * 
+     *
      * @param id Record identifier
      * @return A concatinated list of entities (humanized classnames and their codes) E.g. Customer Account: first ca, second ca, third ca; Customer: first customer, second
      *         customer

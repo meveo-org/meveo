@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -14,6 +15,7 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
@@ -21,8 +23,11 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -75,6 +80,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private GraphQLQueryField graphqlQueryField = new GraphQLQueryField();
 
 	private DualListModel<DBStorageType> availableStoragesDM;
+
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
@@ -845,11 +853,41 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		this.availableStoragesDM = availableStoragesDM;
 	}
 
-	public List<DBStorageType> getStorageTypesList(){
+	public List<DBStorageType> getStorageTypesList() {
 		ArrayList<DBStorageType> arrayList = new ArrayList<>(availableStoragesDM.getSource());
 		arrayList.addAll(availableStoragesDM.getTarget());
 		return arrayList;
 	}
+
+	/**
+	 *  Add CET and its CFTs to selected module
+	 */
+	public void addToModuleForCET() {
+		if (entity != null && !getMeveoModule().equals(entity)) {
+			Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
+			BusinessEntity businessEntity = (BusinessEntity) entity;
+			MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+			if (!module.getModuleItems().contains(item)) {
+				module.addModuleItem(item);
+			}
+
+			for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
+				CustomFieldTemplate cft = entry.getValue();
+				MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
+				if (!module.getModuleItems().contains(moduleItem)) {
+					module.addModuleItem(moduleItem);
+				}
+			}
+			try {
+				meveoModuleService.update(module);
+			} catch (BusinessException e) {
+
+			}
+		}
+	}
 }
+
+
 
 

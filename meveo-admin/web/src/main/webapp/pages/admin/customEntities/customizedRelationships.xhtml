@@ -21,8 +21,8 @@
             <hftl:searchField label="#{messages['customizedRelationships.description']}" field="description" />
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{customRelationshipTemplateListBean}">
-            <p:column headerText="#{messages['BusinessEntity.code']}" sortBy="#{entity.code}">
+        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{customRelationshipTemplateListBean}" addToModule="true" sortBy="#{entity.code}">
+            <p:column headerText="#{messages['BusinessEntity.code']}">
                 <h:link outcome="customizedRelationship">
                     <h:outputText value="#{entity.code}" />
                     <f:param name="crtId" value="#{entity.id}" />
