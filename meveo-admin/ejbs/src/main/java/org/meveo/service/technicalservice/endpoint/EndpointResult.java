@@ -16,29 +16,24 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
-import org.infinispan.Cache;
+import java.io.Serializable;
 
-import javax.annotation.Resource;
-import javax.ejb.Startup;
-import javax.ejb.Singleton;
-import java.util.concurrent.Future;
+public class EndpointResult implements Serializable {
 
-@Singleton
-@Startup
-public class EndpointResultsCacheContainer {
+    String result;
+    String contentType;
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, Future<EndpointResult>> pendingExecutions;
-
-    public Future<EndpointResult> getPendingExecution(String key) {
-        return pendingExecutions.get(key);
+    public EndpointResult(String result, String contentType) {
+        this.result = result;
+        this.contentType = contentType;
     }
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
+    public String getResult() {
+        return result;
     }
 
-    public void put(String key, Future<EndpointResult> value){
-        pendingExecutions.put(key, value);
+    public String getContentType() {
+        return contentType;
     }
+
 }

@@ -35,6 +35,7 @@ import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointResultsCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.slf4j.Logger;
@@ -159,12 +160,12 @@ public class EndpointServlet extends HttpServlet {
         }
 
         try {
-            final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
+            final Future<EndpointResult> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setStatus(200);
-                    endpointExecution.getResp().setContentType(endpoint.getContentType());
-                    endpointExecution.getResp().getWriter().print(execResult.get());
+                    endpointExecution.getResp().setContentType(execResult.get().getContentType());
+                    endpointExecution.getResp().getWriter().print(execResult.get().getResult());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         endpointResultsCacheContainer.remove(endpointExecution.getFirstUriPart());
@@ -256,10 +257,11 @@ public class EndpointServlet extends HttpServlet {
         // Execute the endpoint asynchronously
         final UUID id = UUID.randomUUID();
         log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-        final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
+        final CompletableFuture<EndpointResult> execution = CompletableFuture.supplyAsync(() -> {
             try {
                 final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
-                return transformData(endpoint, result);
+                String data = transformData(endpoint, result);
+                return new EndpointResult(data, endpoint.getContentType());
             } catch (BusinessException | ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -276,17 +278,18 @@ public class EndpointServlet extends HttpServlet {
             return;
         }
 
-		final String execResult = execution.get(); 	// Wait until execution is over
+		final EndpointResult execResult = execution.get(); 	// Wait until execution is over
 		endpointExecution.getResp().setStatus(200); // OK
         if(endpointExecution.isKeep()){
         	// If user wants to keep the result in cache, return the data along with its id
             Map<String, Object> returnedValue = new HashMap<>();
             returnedValue.put("id", id.toString());
-            returnedValue.put("data", execResult);
+            returnedValue.put("data", execResult.getResult());
             endpointExecution.getResp().getWriter().println(JacksonUtil.toString(returnedValue));
         }else{
         	// If user doesn't want to keep the result in cache, only return the data
-            endpointExecution.getResp().getWriter().println(JacksonUtil.toString(execResult));
+            endpointExecution.getResp().setContentType(execResult.getContentType());
+            endpointExecution.getResp().getWriter().println(execResult.getResult());
             endpointResultsCacheContainer.remove(id.toString());
         }
 
