@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.Conversation;
 import javax.faces.application.FacesMessage;
@@ -460,7 +461,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                 }
                 try {
                     meveoModuleService.update(module);
+                    messages.info(businessEntity.getCode() + " added to module " + module.getCode());
                 } catch (BusinessException e) {
+                    messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
                 }
             }
         }
@@ -470,21 +473,31 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         if (selectedEntities == null || selectedEntities.isEmpty()) {
             return;
         }
+        
+        String codes = selectedEntities.stream().filter(e -> e instanceof BusinessEntity)
+        		.map(BusinessEntity.class::cast)
+        		.map(BusinessEntity::getCode)
+        		.collect(Collectors.joining(", ", "[", "]"));
 
         for (MeveoModule eachModule : selectedMeveoModules) {
+
             MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
-            for (IEntity entity : selectedEntities) {
-                if (entity != null && !eachModule.equals(entity)) {
-                    BusinessEntity businessEntity = (BusinessEntity) entity;
-                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-                    if (!module.getModuleItems().contains(item)) {
-                        module.addModuleItem(item);
-                    }
-                }
-            }
             try {
+
+	            for (IEntity entity : selectedEntities) {
+	                if (entity != null && !eachModule.equals(entity)) {
+	                    BusinessEntity businessEntity = (BusinessEntity) entity;
+	                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+	                    if (!module.getModuleItems().contains(item)) {
+	                        module.addModuleItem(item);
+	                    }
+	                }
+	            }
+            
                 meveoModuleService.update(module);
+                messages.info(codes + " added to module " + module.getCode());
             } catch (BusinessException e) {
+                messages.error(codes + " not added to module " + module.getCode(), e);
             }
         }
     }

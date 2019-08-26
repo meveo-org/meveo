@@ -205,6 +205,9 @@
             </p:dialog>
             <p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
                 <h:form id="addModuleForm">
+                
+            		<p:growl id="moduleGrowl"/>
+                
                     <h:panelGroup layout="block" styleClass="search-panel">
                         <p:outputPanel styleClass="search-panel-fields">
                             <p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
@@ -238,7 +241,7 @@
                         </p:column>
                         <f:facet name="footer">
                             <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this :addModuleForm" partialSubmit="true"
-                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form @form:moduleGrowl"
                                              oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
                                              action="#{backingBean.addManyToModule}">
                                 <p:resetInput target="@form" />

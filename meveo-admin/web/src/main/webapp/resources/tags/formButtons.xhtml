@@ -66,9 +66,11 @@
 </cc:interface>
 
 <cc:implementation>
+
 	<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
 	<h:panelGroup layout="block" styleClass="form-panel-actions" id="formPanelActions">
+	
 		<p:button value="#{messages['commons.edit']}" includeViewParams="true"
 				  rendered="#{!cc.attrs.edit and cc.attrs.showEditButton}">
 			<f:param name="edit" value="true" />
@@ -206,6 +208,9 @@
 
 		<p:dialog widgetVar="addToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
 			<h:form id="addToModuleForm">
+			
+				<p:growl id="moduleGrowl"/>
+			
 				<h:panelGroup layout="block" styleClass="search-panel">
 					<p:outputPanel styleClass="search-panel-fields">
 						<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
@@ -239,7 +244,7 @@
 					</p:column>
 					<f:facet name="footer">
 						<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
-										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form @form:moduleGrowl"
 										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addToModuleDlg').hide()"
 										 action="#{backingBean.addToModule}">
 							<p:resetInput target="@form" />
