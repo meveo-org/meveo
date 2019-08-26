@@ -39,7 +39,7 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
 
         } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
         } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();

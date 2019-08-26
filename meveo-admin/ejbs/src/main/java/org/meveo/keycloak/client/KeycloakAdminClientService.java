@@ -231,12 +231,25 @@ public class KeycloakAdminClientService {
                 .get(0)
                 .getId();
 
-        final RoleRepresentation roleToAdd = keycloak.realm(keycloakAdminClientConfig.getRealm())
+        final String targetClient = keycloak.realm(keycloakAdminClientConfig.getRealm())
                 .clients()
-                .get(clientTarget)
-                .roles()
-                .get(roleTargetToAdd)
-                .toRepresentation();
+                .findByClientId(clientTarget)
+                .get(0)
+                .getId();
+
+        final RoleRepresentation roleToAdd;
+
+        try {
+            roleToAdd = keycloak.realm(keycloakAdminClientConfig.getRealm())
+                    .clients()
+                    .get(targetClient)
+                    .roles()
+                    .get(roleTargetToAdd)
+                    .toRepresentation();
+
+        } catch (NotFoundException e) {
+            throw new BusinessException("Role " + roleTargetToAdd + " does not exists in client " + clientTarget);
+        }
 
         ClientResource defaultClient = keycloak.realm(keycloakAdminClientConfig.getRealm()).clients().get(defaultSourceClient);
         RoleResource roleResource = defaultClient.roles().get(roleCompositeSource);
