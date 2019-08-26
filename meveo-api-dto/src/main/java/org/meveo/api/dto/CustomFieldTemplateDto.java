@@ -210,7 +210,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     private List<DBStorageType> storages;
 
     @XmlElement
-    private String samples;
+    private List<String> samples;
 
     @XmlElement
     private boolean summary;
@@ -941,11 +941,11 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         this.saveOnExplorer = saveOnExplorer;
     }
 
-    public String getSamples() {
+    public List<String> getSamples() {
         return samples;
     }
 
-    public void setSamples(String samples) {
+    public void setSamples(List<String> samples) {
         this.samples = samples;
     }
 }
