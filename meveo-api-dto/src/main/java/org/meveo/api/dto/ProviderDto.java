@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.*;
  */
 @XmlRootElement(name = "Provider")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ProviderDto extends BaseDto {
+public class ProviderDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 5599223889050605880L;

@@ -4,7 +4,7 @@
     <groupId>org.meveo</groupId>
     <artifactId>meveo</artifactId>
     <packaging>pom</packaging>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
     <name>Meveo Parent Project</name>
     <properties>
         <env>dev</env>
@@ -12,6 +12,7 @@
         <version.keycloak>4.8.3.Final</version.keycloak>
         <dbtype>generic</dbtype>
         <releaseOption />
+        <jackson.version>2.9.5</jackson.version>
     </properties>
 
     <scm>
@@ -323,7 +324,7 @@
             <dependency>
                 <groupId>org.omnifaces</groupId>
                 <artifactId>omnifaces</artifactId>
-                <version>2.6</version>
+                <version>3.3</version>
             </dependency>
             <dependency>
                 <groupId>com.lapis.jsfexporter</groupId>
@@ -348,13 +349,18 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-csv</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -364,13 +370,13 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.7.4</version>
+                <version>${jackson.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -551,12 +557,8 @@
                 </property>
             </activation>
             <properties>
-                <!-- Properties for liquibase plugin. Can be passed from a command line: mvn -Ddb.schema=ten2 -->
                 <db.driver>org.postgresql.Driver </db.driver>
-                <db.url>jdbc:postgresql://51.75.197.172/meveo</db.url>
                 <db.schema>public</db.schema>
-                <db.username>postgres</db.username>
-                <db.password>5SNjbYYSqm9ow6WV</db.password>
             </properties>
             <dependencies>
                 <!-- Dependency for liquibase plugin -->

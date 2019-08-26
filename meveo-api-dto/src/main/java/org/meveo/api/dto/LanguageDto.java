@@ -15,7 +15,7 @@ import org.meveo.model.billing.Language;
  */
 @XmlRootElement(name = "Language")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LanguageDto extends BaseDto {
+public class LanguageDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 725968016559888810L;

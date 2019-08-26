@@ -41,6 +41,21 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -196,6 +211,11 @@ public class EndpointServlet extends HttpServlet {
             return returnValue.toString();
         }
 
+        if(returnValue instanceof Map){
+        	((Map<?, ?>) returnValue).remove("response");
+        	((Map<?, ?>) returnValue).remove("request");
+        }
+        
         final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return serializedResult;
@@ -217,14 +237,14 @@ public class EndpointServlet extends HttpServlet {
             }
             return;
         }
-    	
+
     	// Endpoint is called with wrong method
     	if (endpoint.getMethod() != endpointExecution.getMethod()) {
     		endpointExecution.getResp().setStatus(400);
             endpointExecution.getResp().getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
             return;
     	}
-    	
+
 		// If endpoint is synchronous, execute the script straight and return the response
         if (endpoint.isSynchronous()) {
             final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
@@ -232,7 +252,7 @@ public class EndpointServlet extends HttpServlet {
             setReponse(transformedResult, endpointExecution);
             return;
         }
-            
+
         // Execute the endpoint asynchronously
         final UUID id = UUID.randomUUID();
         log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
@@ -244,10 +264,10 @@ public class EndpointServlet extends HttpServlet {
                 throw new RuntimeException(e);
             }
         });
-        
+
         // Store the pending result
         endpointResultsCacheContainer.put(id.toString(), execution);
-        
+
         // Don't wait execution to finish
         if(!endpointExecution.isWait()) {
         	// Return the id of the execution so the user can retrieve it later
@@ -271,7 +291,7 @@ public class EndpointServlet extends HttpServlet {
         }
 
     }
-    
+
     private void setReponse(String transformedResult, EndpointExecution endpointExecution) throws IOException {
     	// HTTP Status
     	if(endpointExecution.getResponse().getStatus() != null) {
@@ -279,14 +299,14 @@ public class EndpointServlet extends HttpServlet {
     	} else {
     		endpointExecution.getResp().setStatus(200);	// OK
     	}
-    	
+
     	// Content type
     	if(!StringUtils.isBlank(endpointExecution.getResponse().getContentType())) {
     		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
     	} else {
     		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
     	}
-    	
+
     	// Body of the response
     	if(!StringUtils.isBlank(endpointExecution.getResponse().getErrorMessage())) {	// Priority to error message
     		endpointExecution.getResp().getWriter().print(endpointExecution.getResponse().getErrorMessage());

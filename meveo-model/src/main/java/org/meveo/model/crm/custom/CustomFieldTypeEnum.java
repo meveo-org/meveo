@@ -63,8 +63,9 @@ public enum CustomFieldTypeEnum {
      * EMBEDDED_ENTITY value
      */
     
-	EMBEDDED_ENTITY(true, true, EntityReferenceWrapper.class);
-
+	EMBEDDED_ENTITY(true, true, EntityReferenceWrapper.class),
+	
+	BINARY(true, true, String.class);
 
     /**
      * Is value stored in a serialized form in DB

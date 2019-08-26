@@ -18,20 +18,27 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UsernameAlreadyExistsException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.commons.utils.FilteredQueryBuilder;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.admin.User;
+import org.meveo.model.filter.Filter;
 import org.meveo.model.security.Role;
 import org.meveo.service.base.PersistenceService;
 
@@ -159,6 +166,24 @@ public class UserService extends PersistenceService<User> {
         }
     }
 
+    @Override
+    public List<User> list(PaginationConfiguration config) {
+        Map<String, Object> filters = config.getFilters();
+        if (filters != null && filters.containsKey("$FILTER")) {
+            Filter filter = (Filter) filters.get("$FILTER");
+            FilteredQueryBuilder queryBuilder = (FilteredQueryBuilder) getQuery(config);
+            queryBuilder.processOrderCondition(filter.getOrderCondition(), filter.getPrimarySelector().getAlias());
+            String alias = filter.getPrimarySelector().getAlias();
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), null);
+            return result.getResultList();
+        } else {
+            String alias = "a";
+            QueryBuilder queryBuilder = getQuery(config);
+            Query result = getQueryUsers(queryBuilder, config, alias, getEntityManager(), null);
+            return result.getResultList();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public List<User> listUsersInMM(List<String> roleNames) {
         List<User> users = null;
@@ -172,4 +197,71 @@ public class UserService extends PersistenceService<User> {
         return users;
     }
 
+    /**
+     * @param alias alias of column?
+     */
+    private void applyPaginationUsers(QueryBuilder queryBuilder, PaginationConfiguration config, String alias) {
+        if (config == null) {
+            return;
+        } else {
+            StringBuffer q = queryBuilder.getSqlStringBuffer();
+            if (config.isSorted() && q.indexOf("ORDER BY") == -1) {
+                if ("name.fullName".equals(config.getSortField())) {
+                    queryBuilder.addOrderDoubleCriterion(((alias != null) ? (alias + ".") : "") + "name.firstName", config.isAscendingSorting(), ((alias != null) ? (alias + ".") : "") + "name.lastName", config.isAscendingSorting());
+                } else {
+                    queryBuilder.addOrderCriterion(((alias != null) ? (alias + ".") : "") + config.getSortField(), config.isAscendingSorting());
+                }
+            }
+        }
+    }
+
+    /**
+     * @param query query using for pagination.
+     */
+    private void applyPagination(PaginationConfiguration paginationConfiguration, Query query) {
+        if (paginationConfiguration == null) {
+            return;
+        }
+
+        applyPagination(query, paginationConfiguration.getFirstRow(), paginationConfiguration.getNumberOfRows());
+    }
+
+    /**
+     * @param query query instance
+     * @param firstRow the index of first row
+     * @param numberOfRows number of rows shoud return.
+     */
+    public void applyPagination(Query query, Integer firstRow, Integer numberOfRows) {
+        if (firstRow != null) {
+            query.setFirstResult(firstRow);
+        }
+        if (numberOfRows != null) {
+            query.setMaxResults(numberOfRows);
+        }
+    }
+
+    /**
+     * @param em entity manager
+     * @return instance of Query.
+     */
+    public Query getQueryUsers(QueryBuilder queryBuilder,PaginationConfiguration config, String alias, EntityManager em, List<String> roleNames) {
+        if(roleNames != null) {
+        	queryBuilder.addSql("role.name IN (:roleNames)");
+        }
+        
+        applyPaginationUsers(queryBuilder, config, alias);
+        StringBuffer q = queryBuilder.getSqlStringBuffer();
+        String query = q.toString().replace("a.roles", "a.roles role");
+        Query result = em.createQuery(query);
+        applyPagination(config, result);
+        for (Map.Entry<String, Object> e :getQuery(config).getParams().entrySet()) {
+            result.setParameter(e.getKey(), e.getValue());
+        }
+        
+        if(roleNames != null) {
+        	result.setParameter("roleNames", roleNames);
+        }
+        
+        return result;
+    }
 }

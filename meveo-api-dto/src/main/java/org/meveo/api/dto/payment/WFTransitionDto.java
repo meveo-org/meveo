@@ -18,7 +18,7 @@
  */
 package org.meveo.api.dto.payment;
 
-import org.meveo.api.dto.BaseDto;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.model.wf.WFTransition;
@@ -36,7 +36,7 @@ import java.util.List;
  * @author anasseh
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class WFTransitionDto extends BaseDto {
+public class WFTransitionDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 8309866046667741458L;

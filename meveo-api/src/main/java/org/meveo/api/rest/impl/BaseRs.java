@@ -130,7 +130,7 @@ public abstract class BaseRs implements IBaseRs {
             status.setMessage(e.getMessage());
 
         } else {
-            log.warn("Failed to execute API", e);
+            log.warn("Failed to execute API: {}", (StringUtils.isBlank(e.getMessage()) ? e : e.getMessage()));
 
             String message = e.getMessage();
             MeveoApiErrorCodeEnum errorCode = e instanceof BusinessException ? MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION : MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION;

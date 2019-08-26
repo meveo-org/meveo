@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.meveo.model.converter.StringListConverter;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -28,7 +29,7 @@ import org.meveo.model.persistence.DBStorageType;
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomFieldTemplateDto extends BaseDto {
+public class CustomFieldTemplateDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
@@ -132,6 +133,20 @@ public class CustomFieldTemplateDto extends BaseDto {
     @XmlElement
     @Deprecated
     protected Boolean cacheValue;
+
+    @XmlElement
+    protected List<String> contentTypes = new ArrayList<String>();
+
+    @XmlElement
+    protected List<String> fileExtensions = new ArrayList<String>();
+
+    @XmlElement
+    protected Long maxFileSizeAllowedInKb;
+
+    @XmlElement
+    protected String filePath;
+
+    protected boolean saveOnExplorer;
 
     /**
      * Where field should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;fieldGroup:&lt;fieldgroup name&gt;:&lt;fieldgroup relative
@@ -271,6 +286,12 @@ public class CustomFieldTemplateDto extends BaseDto {
         identifier = cf.isIdentifier();
         storages = cf.getStorages();
         summary=cf.isSummary();
+
+        saveOnExplorer = cf.isSaveOnExplorer();
+        fileExtensions = cf.getFileExtensions();
+        contentTypes = cf.getContentTypes();
+        maxFileSizeAllowedInKb = cf.getMaxFileSizeAllowedInKb();
+        filePath = cf.getFilePath();
 
     }
 
@@ -875,5 +896,44 @@ public class CustomFieldTemplateDto extends BaseDto {
 	public void setSummary(boolean summary) {
 		this.summary = summary;
 	}
-    
+
+    public List<String> getContentTypes() {
+        return contentTypes;
+    }
+
+    public void setContentTypes(List<String> contentTypes) {
+        this.contentTypes = contentTypes;
+    }
+
+    public List<String> getFileExtensions() {
+        return fileExtensions;
+    }
+
+    public void setFileExtensions(List<String> fileExtensions) {
+        this.fileExtensions = fileExtensions;
+    }
+
+    public Long getMaxFileSizeAllowedInKb() {
+        return maxFileSizeAllowedInKb;
+    }
+
+    public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
+        this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public boolean isSaveOnExplorer() {
+        return saveOnExplorer;
+    }
+
+    public void setSaveOnExplorer(boolean saveOnExplorer) {
+        this.saveOnExplorer = saveOnExplorer;
+    }
 }

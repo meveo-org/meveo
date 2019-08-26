@@ -16,6 +16,7 @@
 package org.meveo.api.technicalservice.endpoint;
 
 
+import org.apache.commons.collections.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +36,9 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -61,6 +65,9 @@ public class EndpointApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
 
     public EndpointApi(){
 
@@ -131,7 +138,7 @@ public class EndpointApi {
 
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
         final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
-        
+
         if(executionEngine instanceof EndpointScript) {
         	// Explicitly pass the request and response information to the script
         	((EndpointScript) executionEngine).setEndpointRequest(execution.getRequest());
@@ -173,6 +180,7 @@ public class EndpointApi {
      * @return the created Endpoint
      */
     public Endpoint create(EndpointDto endpointDto) throws BusinessException {
+        validateCompositeRoles(endpointDto);
         Endpoint endpoint = fromDto(endpointDto);
         endpointService.create(endpoint);
         return endpoint;
@@ -245,7 +253,7 @@ public class EndpointApi {
     }
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-
+        validateCompositeRoles(endpointDto);
     	Endpoint updatedEndpoint = new Endpoint();
     	updatedEndpoint.setId(endpoint.getId());
     	updatedEndpoint.setCode(endpointDto.getCode());
@@ -263,6 +271,7 @@ public class EndpointApi {
         updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
         updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
         updatedEndpoint.setContentType(endpointDto.getContentType());
+        updatedEndpoint.setRoles(endpointDto.getRoles());
 
         endpointService.update(updatedEndpoint);
     }
@@ -291,6 +300,7 @@ public class EndpointApi {
         }
         endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
         endpointDto.setContentType(endpoint.getContentType());
+        endpointDto.setRoles(endpoint.getRoles());
         return endpointDto;
     }
 
@@ -330,6 +340,8 @@ public class EndpointApi {
         
         endpoint.setContentType(endpointDto.getContentType());
         
+        endpoint.setRoles(endpointDto.getRoles());
+        
         return endpoint;
     }
 
@@ -364,4 +376,16 @@ public class EndpointApi {
         return endpointParameter;
     }
 
+    public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
+        if (CollectionUtils.isNotEmpty(roles)) {
+            for (String selectedRole : endpointDto.getRoles()) {
+                if (!roles.contains(selectedRole)) {
+                    throw new IllegalArgumentException("The role does not exists");
+                }
+            }
+        }
+        return roles;
+    }
 }

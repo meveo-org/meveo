@@ -16,17 +16,30 @@
 
 package org.meveo.persistence.scheduler;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.elresolver.ELException;
-import org.meveo.persistence.CustomPersistenceService;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import java.util.Iterator;
-import java.util.Set;
+import javax.inject.Inject;
+
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.elresolver.ELException;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CustomPersistenceService;
+import org.meveo.persistence.PersistenceActionResult;
+import org.meveo.service.storage.RepositoryService;
 
 public abstract class ScheduledPersistenceService<T extends CustomPersistenceService> {
 
+    @Inject 
+    private RepositoryService repositoryService;
+    
     private T storageService;
+
 
     @PostConstruct
     private void init(){
@@ -38,26 +51,31 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
     /**
      * Iterate over the persistence schedule and persist the provided entities
      *
-     * @param configurationCode Repository coordinates
+     * @param repositoryCode Repository coordinates
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public void persist(String configurationCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException {
+    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException {
 
         /* Iterate over persistence schedule and persist the node */
 
         SchedulerPersistenceContext context = new SchedulerPersistenceContext();
         final Iterator<Set<ItemToPersist>> iterator = atomicPersistencePlan.iterator();
+        List<PersistedItem> persistedItems = new ArrayList<>();
+
+        Repository repository = repositoryService.findByCode(repositoryCode);
 
         while (iterator.hasNext()) {
 
             for (ItemToPersist itemToPersist : iterator.next()) {
+                PersistenceActionResult result;
+
                 if (itemToPersist instanceof SourceEntityToPersist) {
 
                     /* Node is a source node */
                     final SourceEntityToPersist sourceNode = (SourceEntityToPersist) itemToPersist;
-                    storageService.addSourceEntityUniqueCrt(
-                          configurationCode,
+                    result = storageService.addSourceEntityUniqueCrt(
+                    	  repository,
                           sourceNode.getRelationToPersist().getCode(),
                           sourceNode.getValues(),
                           sourceNode.getRelationToPersist().getEndEntityToPersist().getValues()
@@ -67,15 +85,16 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
 
                     /* Node is target or leaf node */
                     final EntityToPersist entityToPersist = (EntityToPersist) itemToPersist;
-                    Set<EntityRef> persistedEntities = storageService.createOrUpdate(configurationCode, entityToPersist.getCode(), entityToPersist.getValues()).getPersistedEntities();
+                    result = storageService.createOrUpdate(repository, entityToPersist.getCode(), entityToPersist.getValues());
+                    Set<EntityRef> persistedEntities = result.getPersistedEntities();
                     context.putNodeReferences(entityToPersist.getName(), persistedEntities);
 
                 } else {
 
                     /* Item is a relation */
                     final RelationToPersist relationToPersist = (RelationToPersist) itemToPersist;
-                    storageService.addCRTByValues(
-                            configurationCode,
+                    result = storageService.addCRTByValues(
+                    		repository,
                             relationToPersist.getCode(),
                             relationToPersist.getValues(),
                             relationToPersist.getStartEntityToPersist().getValues(),
@@ -86,8 +105,8 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
                     Set<EntityRef> endPersistedEntities = context.getNodeReferences(relationToPersist.getEndEntityToPersist().getName());
                     if (startPersistedEntities.isEmpty() || endPersistedEntities.isEmpty()) {
                         // TODO: Make possible to have one node found by its id
-                        storageService.addCRTByValues(
-                              configurationCode,
+                        result = storageService.addCRTByValues(
+                              repository,
                               relationToPersist.getCode(),
                               relationToPersist.getValues(),
                               relationToPersist.getStartEntityToPersist().getValues(),
@@ -104,8 +123,8 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
                                     continue;
                                 }
 
-                                storageService.addCRTByUuids(
-                                      configurationCode,
+                                result = storageService.addCRTByUuids(
+                                	  repository,
                                       relationToPersist.getCode(),
                                       relationToPersist.getValues(),
                                       startEntityRef.getUuid(),
@@ -115,8 +134,11 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
                         }
                     }
                 }
+                persistedItems.add(new PersistedItem(itemToPersist, result.getBaseEntityUuid()));
             }
 
         }
+
+        return persistedItems;
     }
 }

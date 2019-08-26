@@ -210,6 +210,10 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName DB table name
      */
     public void createTable(String dbTableName) {
+    	
+    	if(PostgresReserverdKeywords.isReserved(dbTableName)) {
+    		throw new IllegalArgumentException("Table name '" + dbTableName + "' is a PostgresQL reserved keyword");
+    	}
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
@@ -285,6 +289,10 @@ public class CustomTableCreatorService implements Serializable {
         if(!cft.getStorages().contains(DBStorageType.SQL)){
             return;
         }
+        
+    	if(PostgresReserverdKeywords.isReserved(cft.getDbFieldname())) {
+    		throw new IllegalArgumentException("Field name '" + cft.getDbFieldname() + "' is a PostgresQL reserved keyword");
+    	}
 
         String dbFieldname = cft.getDbFieldname();
 
@@ -305,10 +313,16 @@ public class CustomTableCreatorService implements Serializable {
             setDefaultValue(cft, column);
             column.setType(columnType);
 
+            ConstraintsConfig constraints = new ConstraintsConfig();
+            column.setConstraints(constraints);
+            
             if (cft.isValueRequired()) {
-                ConstraintsConfig constraints = new ConstraintsConfig();
                 constraints.setNullable(false);
-                column.setConstraints(constraints);
+            }
+            
+            if(cft.isUnique()) {
+            	constraints.setUnique(true);
+            	constraints.setUniqueConstraintName(getUniqueConstraintName(dbTableName, dbFieldname));
             }
 
             addColumnChange.setColumns(Collections.singletonList(column));
@@ -316,7 +330,7 @@ public class CustomTableCreatorService implements Serializable {
         }
 
         // Add a foreign key constraint pointing on referenced table if field is an entity reference
-        if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY){
+        if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)){
 
             // Only add foreign key constraint if referenced entity is stored as table
             final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
@@ -334,8 +348,6 @@ public class CustomTableCreatorService implements Serializable {
 
         if(!changeSet.getChanges().isEmpty()){
         	
-            createOrUpdateUniqueField(dbTableName, cft, changeSet);
-
             dbLog.addChangeSet(changeSet);
 
             EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
@@ -351,7 +363,7 @@ public class CustomTableCreatorService implements Serializable {
                     liquibase.update(new Contexts(), new LabelExpression());
 
                 } catch (Exception e) {
-                    log.error("Failed to add a field {} to a custom table {}", dbTableName, dbFieldname, e);
+                    log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
                     throw new SQLException(e);
                 }
             });
@@ -526,7 +538,7 @@ public class CustomTableCreatorService implements Serializable {
 			if (cft.isUnique()) {
 				AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
 				uniqueConstraint.setColumnNames(dbFieldname);
-				uniqueConstraint.setConstraintName("uk_" + dbFieldname);
+				uniqueConstraint.setConstraintName(getUniqueConstraintName(dbTableName, dbFieldname));
 				uniqueConstraint.setDeferrable(false);
 				uniqueConstraint.setDisabled(false);
 				uniqueConstraint.setInitiallyDeferred(false);
@@ -534,10 +546,19 @@ public class CustomTableCreatorService implements Serializable {
 				changeSet.addChange(uniqueConstraint);
 			} else {
 				RawSQLChange sqlChange = new RawSQLChange();
-				sqlChange.setSql("ALTER TABLE " + dbTableName + " DROP CONSTRAINT IF EXISTS uk_" + dbFieldname);
+				sqlChange.setSql("ALTER TABLE " + dbTableName + " DROP CONSTRAINT IF EXISTS " + getUniqueConstraintName(dbTableName, dbFieldname));
 				changeSet.addChange(sqlChange);
 			}
 		}
+	}
+
+	/**
+	 * @param dbTableName Table name
+	 * @param dbFieldname Column name
+	 * @return Concatenated unique constraint name
+	 */
+	public String getUniqueConstraintName(String dbTableName, String dbFieldname) {
+		return "uk_" + dbTableName + "_" + dbFieldname;
 	}
 
     /**
@@ -695,6 +716,9 @@ public class CustomTableCreatorService implements Serializable {
                 return "numeric(23, 12)";
             case LONG:
                 return "bigint";
+    		case BINARY:
+    		case EXPRESSION:
+    		case MULTI_VALUE:
             case STRING:
             case TEXT_AREA:
             case ENTITY:
@@ -706,6 +730,9 @@ public class CustomTableCreatorService implements Serializable {
                 return "text";
             case BOOLEAN:
                 return "int";
+
+			default:
+				break;
         }
 
         return null;

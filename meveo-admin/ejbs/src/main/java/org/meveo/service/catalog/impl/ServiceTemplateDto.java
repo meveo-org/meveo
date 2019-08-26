@@ -1,7 +1,7 @@
 package org.meveo.service.catalog.impl;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomFieldsDto;
 import org.meveo.model.catalog.*;
 
@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "ServiceTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ServiceTemplateDto extends BusinessDto {
+public class ServiceTemplateDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6794700715161690227L;

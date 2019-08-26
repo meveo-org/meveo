@@ -18,6 +18,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.EmailNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -28,7 +29,11 @@ import org.meveo.service.script.ScriptInstanceService;
 @Stateless
 public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNotificationDto> {
 
-    @Inject
+    public EmailNotificationApi() {
+		super(EmailNotification.class, EmailNotificationDto.class);
+	}
+
+	@Inject
     private EmailNotificationService emailNotificationService;
 
     @Inject
@@ -225,4 +230,28 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
             return update(postData);
         }
     }
+
+	@Override
+	public EmailNotificationDto toDto(EmailNotification entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public EmailNotification fromDto(EmailNotificationDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<EmailNotification> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(EmailNotificationDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

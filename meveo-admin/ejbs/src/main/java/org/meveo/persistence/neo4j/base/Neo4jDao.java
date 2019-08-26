@@ -22,6 +22,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
@@ -148,8 +149,35 @@ public class Neo4jDao {
 		);
     }
 
+    public void removeNodeByUUID(String neo4jconfiguration, String label, String uuid){
+        StringBuilder queryBuilder = new StringBuilder()
+                .append("MATCH (n:").append(label).append(") \n")
+                .append("WHERE n.meveo_uuid = $id \n")
+                .append("DETACH DELETE n \n")
+                .append("RETURN n");
+
+        cypherHelper.execute(
+                neo4jconfiguration,
+                queryBuilder.toString(),
+                Collections.singletonMap("id", uuid),
+                (transaction, result) -> {
+                    final Record single = result.single();
+                    final Node deletedNode = single.get(0).asNode();
+                    if(deletedNode != null){
+                        LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
+                        transaction.success();
+                    } else {
+                        LOGGER.error("Node with uuid {} not deleted", uuid);
+                        transaction.failure();
+                    }
+                    return null;
+                },
+                e -> LOGGER.error("Cannot remove node with uuid {}", uuid, e)
+        );
+    }
+
     /**
-     * Remove a node using its UUID
+     * Remove a node using its id
      *
      * @param neo4jconfiguration Repository code
      */
@@ -777,6 +805,29 @@ public class Neo4jDao {
     }
 
     /**
+     * Find all the relationships of a given type related to a node
+     *
+     * @param neo4JConfiguration Configuration code of the neo4j instance
+     * @param nodeId             Node id
+     * @param type               Type of the relationships to retrieve
+     */
+    public List<Relationship> findRelationships(String neo4JConfiguration, String nodeId, String type){
+        // First, retrieves relationships of second node
+        String findAllRelationshipQuery = "MATCH (n)-[r:" + type + "]-() \n" +
+                "WHERE n.meveo_uuid = $nodeId \n" +
+                "RETURN r";
+
+        return cypherHelper.execute(
+                neo4JConfiguration,
+                findAllRelationshipQuery,
+                ImmutableMap.of("nodeId", nodeId),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asRelationship).collect(Collectors.toList()),
+                e -> LOGGER.error("Error retriving relationships of type {} of node {}", type, nodeId, e)
+        );
+
+    }
+
+    /**
      * Create or update a given relationship
      *
      * @param neo4JConfiguration Configuration code of the neo4j instance
@@ -847,6 +898,92 @@ public class Neo4jDao {
                 ImmutableMap.of("uuids", uuids),
                 (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
                 e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property)
+        );
+    }
+    
+
+	/**
+	 * Remove nodes that are targeted by given outgoing relationships from source node
+	 * 
+	 * @param neo4JConfiguration Code of the configuration to update
+	 * @param sourceNodeUuid     Source node id
+	 * @param sourceNodeLabel    Source node label
+	 * @param relationshipType   Outgoing relationship type
+	 * @param targetNodeLabel    Label of the nodes to delete
+	 */
+    public void detachDeleteTargets(String neo4JConfiguration, String sourceNodeUuid, String sourceNodeLabel, String relationshipType, String targetNodeLabel) {
+    	String detachDeleteQuery = new StringBuffer("MATCH (n:")
+    			.append(sourceNodeLabel)
+    			.append(")-[:")
+    			.append(relationshipType)
+    			.append("]->(t:")
+    			.append(targetNodeLabel)
+    			.append(") \n")
+    			.append("WHERE n.meveo_uuid = $uuid \n")
+    			.append("DETACH DELETE t")
+    			.toString();
+    	
+    	cypherHelper.update(
+    			neo4JConfiguration, 
+    			detachDeleteQuery, 
+    			ImmutableMap.of("uuid", sourceNodeUuid), 
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+		);
+    }
+    
+	/**
+	 * Remove nodes that are targeted by given outgoing relationships from source node
+	 *
+	 * @param neo4JConfiguration Code of the configuration to update
+	 * @param sourceNodeUuid     Source node id
+	 * @param sourceNodeLabel    Source node label
+	 * @param relationshipType   Outgoing relationship type
+	 * @param targetNodeLabel    Label of the nodes to delete
+	 */
+    public void detachDeleteTargets(String neo4JConfiguration, String sourceNodeUuid, String sourceNodeLabel, String relationshipType, String targetNodeLabel, Map<String, Object> filters) {
+    	String detachDeleteQuery = new StringBuffer("MATCH (n:")
+    			.append(sourceNodeLabel)
+    			.append(")-[:")
+    			.append(relationshipType)
+    			.append("]->(t:")
+    			.append(targetNodeLabel)
+    			.append(" ")
+    			.append(getFieldsString(filters.keySet()))
+    			.append(" ) \n")
+    			.append("WHERE n.meveo_uuid = $uuid \n")
+    			.append("DETACH DELETE t")
+    			.toString();
+
+    	Map<String, Object> arguments = new HashMap<>();
+    	arguments.put("uuid", sourceNodeUuid);
+    	arguments.putAll(filters);
+
+    	cypherHelper.update(
+    			neo4JConfiguration,
+    			detachDeleteQuery,
+    			arguments,
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+		);
+    }
+
+    public List<Node> findNodesBySourceNodeIdAndRelationships(String neo4JConfiguration, String sourceNodeUuid, String sourceNodeLabel, String relationshipType, String targetNodeLabel) {
+    	String findQuery = new StringBuffer("MATCH (n:")
+    			.append(sourceNodeLabel)
+    			.append(")-[:")
+    			.append(relationshipType)
+    			.append("]->(t:")
+    			.append(targetNodeLabel)
+    			.append(") \n")
+    			.append("WHERE n.meveo_uuid = $uuid \n")
+    			.append("RETURN t")
+    			.toString();
+    	
+        return cypherHelper.execute(
+        		neo4JConfiguration,
+        		findQuery,
+    			ImmutableMap.of("uuid", sourceNodeUuid),
+                (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
+    			e -> LOGGER.error("Error retrieving target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
         );
     }
 

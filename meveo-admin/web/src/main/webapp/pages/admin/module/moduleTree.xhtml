@@ -29,9 +29,6 @@
                     <f:convertDateTime pattern="#{paramBean.dateFormat}" />
                 </h:outputText>
             </p:column>
-            <p:column headerText="#{messages['meveoModuleItem.appliesTo']}">
-                <h:outputText value="#{item.appliesTo}" converter="customFieldAppliesToConverter" rendered="#{node.type eq 'item'}" />
-            </p:column>
             <p:column headerText="#{messages['commons.actions']}">
                 <p:commandButton icon="ui-icon-minus" partialSubmit="true" process="@this" update="moduleItems" action="#{backingBean.removeTreeNode(node)}" rendered="#{node.type eq 'item'}" />
             </p:column>

@@ -11,6 +11,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.filter.Filter;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.filter.FilterService;
 
 /**
@@ -20,7 +21,11 @@ import org.meveo.service.filter.FilterService;
 @Stateless
 public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 
-    @Inject
+    public FilterApi() {
+		super(Filter.class, FilterDto.class);
+	}
+
+	@Inject
     private FilterService filterService;
 
     private Filter create(FilterDto postData) throws MeveoApiException, BusinessException {
@@ -110,4 +115,28 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 
         return FilterDto.toDto(filter);
     }
+
+	@Override
+	public FilterDto toDto(Filter entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Filter fromDto(FilterDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<Filter> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(FilterDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

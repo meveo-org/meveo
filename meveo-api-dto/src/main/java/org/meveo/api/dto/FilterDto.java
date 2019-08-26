@@ -13,7 +13,7 @@ import org.meveo.model.filter.Filter;
  */
 @XmlRootElement(name = "Filter")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class FilterDto extends BusinessDto {
+public class FilterDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;

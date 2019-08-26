@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -34,6 +36,8 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
@@ -72,7 +76,13 @@ public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 
-	/**
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(value = FetchMode.SUBSELECT)
+    @CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
+    @Column(name = "role")
+    private List<String> roles = new ArrayList<>();
+
+    /**
      * Technical service associated to the endpoint
      */
     @ManyToOne(fetch = FetchType.EAGER)
@@ -203,6 +213,12 @@ public class Endpoint extends BusinessEntity {
 
     public void setParametersMapping(List<TSParameterMapping> parametersMapping) {
         this.parametersMapping = parametersMapping;
+    }
+
+    public List<String> getRoles() { return roles; }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 
     @Transient

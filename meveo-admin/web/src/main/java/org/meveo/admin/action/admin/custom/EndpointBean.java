@@ -4,6 +4,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
@@ -13,6 +16,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.primefaces.model.DualListModel;
 
+import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,6 +34,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
     @Inject
     private EndpointService endpointService;
 
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
+
     private DualListModel<String> pathParametersDL;
 
     private List<TSParameterMapping> parameterMappings = new ArrayList<>();
@@ -40,9 +47,11 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
     private String serviceCode;
 
+    private DualListModel<String> rolesDM;
+
     /**
      * Constructor. Invokes super constructor and provides class type of this
-     * bean for {@link org.meveo.admin.action.BaseBean}.
+     * bean for {@link BaseBean}.
      */
     public EndpointBean() {
         super(Endpoint.class);
@@ -138,7 +147,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
     public void setParameterMappings(List<TSParameterMapping> parameterMappings) {
         this.parameterMappings = parameterMappings;
     }
-    
+
     /**
      * When function changes, reset returned variable name list, returned variable name and serialize result fields.
      */
@@ -175,6 +184,26 @@ public class EndpointBean extends BaseBean<Endpoint> {
         this.returnedVariableNames = returnedVariableNames;
     }
 
+    public DualListModel<String> getRolesDM() {
+        if (rolesDM == null) {
+            KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+            List<String> perksSource = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
+            List<String> perksTarget = new ArrayList<>();
+            if (getEntity().getRoles() != null) {
+                perksTarget.addAll(getEntity().getRoles());
+            }
+            perksSource.removeAll(perksTarget);
+            rolesDM = new DualListModel<>(perksSource, perksTarget);
+
+        }
+        rolesDM.getSource().remove(EndpointService.ENDPOINT_MANAGEMENT);
+        return rolesDM;
+    }
+
+    public void setRolesDM(DualListModel<String> rolesDM) {
+        this.rolesDM = rolesDM;
+    }
+
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if (CollectionUtils.isNotEmpty(parameterMappings)) {
@@ -199,6 +228,12 @@ public class EndpointBean extends BaseBean<Endpoint> {
             getEntity().getPathParameters().addAll(endpointPathParameters);
         } else {
             getEntity().getPathParameters().clear();
+        }
+        if (CollectionUtils.isNotEmpty(getEntity().getRoles())) {
+            getEntity().getRoles().clear();
+            getEntity().getRoles().addAll(rolesDM.getTarget());
+        } else {
+            getEntity().setRoles(rolesDM.getTarget());
         }
         return super.saveOrUpdate(killConversation);
     }

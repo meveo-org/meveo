@@ -18,6 +18,10 @@
  */
 package org.meveo.admin.action;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -30,6 +34,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.enterprise.context.Conversation;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
@@ -42,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.infinispan.Cache;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
@@ -49,6 +56,8 @@ import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -80,13 +89,17 @@ import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.data.PageEvent;
+import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.lapis.jsfexporter.csv.CSVExportOptions;
 
 /**
@@ -205,6 +218,13 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private UploadedFile uploadedFile;
 
+    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-rows-page-cache")
+    private Cache<String, Map<String, Integer>> cacheNumberRow;
+
+    private BaseCrudApi<T,?> baseCrudApi;
+
+    private boolean override;
+
     /**
      * Constructor
      */
@@ -222,7 +242,20 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.clazz = clazz;
     }
 
-    /**
+    @PostConstruct
+    public void init() {
+    	baseCrudApi = getBaseCrudApi();
+    }
+
+    public boolean isOverride() {
+		return override;
+	}
+
+	public void setOverride(boolean override) {
+		this.override = override;
+	}
+
+	/**
      * Returns entity class
      *
      * @return Class
@@ -245,6 +278,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         if (!conversation.isTransient()) {
             conversation.end();
         }
+    }
+
+    public BaseCrudApi<T, ?> getBaseCrudApi() {
+    	return null;
     }
 
     public void preRenderView() {
@@ -473,7 +510,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         if (selectedEntities == null || selectedEntities.isEmpty()) {
             return;
         }
-        
+
         String codes = selectedEntities.stream().filter(e -> e instanceof BusinessEntity)
         		.map(BusinessEntity.class::cast)
         		.map(BusinessEntity::getCode)
@@ -493,7 +530,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 	                    }
 	                }
 	            }
-            
+
                 meveoModuleService.update(module);
                 messages.info(codes + " added to module " + module.getCode());
             } catch (BusinessException e) {
@@ -994,6 +1031,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.dataTableFirstAttribute = dataTableFirstAttribute;
     }
 
+    /**
+     * Change page
+     * @param event
+     */
     public void onPageChange(PageEvent event) {
         this.setDataTableFirstAttribute(((DataTable) event.getSource()).getFirst());
     }
@@ -1292,5 +1333,39 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         }
 
         return matchedEntityInfo;
+    }
+
+    /**
+     * Get rows per page from meveo-rows-page-cache cache
+     *
+     */
+    public int getCacheNumRows() {
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+        if (numberRow != null && numberRow.get(clazzName) != null) {
+            return numberRow.get(clazzName);
+        } else {
+            return 10;
+        }
+    }
+
+    /**
+     * Set rows per page for given user and entity class
+     */
+    public void setCacheNumRows(int rows) {
+        String username = currentUser.getUserName();
+
+        String clazzName = clazz.getName();
+        Map<String, Integer> rowsByClassForUser = cacheNumberRow.get(username);
+
+        if(rowsByClassForUser == null) {
+        	rowsByClassForUser = new HashMap<>();
+        }
+
+        rowsByClassForUser.put(clazzName, rows);
+
+        cacheNumberRow.put(username, rowsByClassForUser);
     }
 }

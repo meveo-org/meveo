@@ -1,5 +1,6 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -75,6 +76,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
     }
 
     @Override
+    public void delete(Long id) throws BusinessException {
+        super.delete(id);
+        messages.info(new BundleKey("messages", "delete.successful"));
+    }
+
+    @Override
     public CustomEntityInstance initEntity() {
 
         CustomEntityInstance initResult = super.initEntity();
@@ -123,7 +130,14 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
         if (!fieldValues.isEmpty()) {
             log.info("fieldValues : {}", fieldValues);
         }
-
+        
+        // Delete old binaries
+        for(String fileToDelete : customFieldDataEntryBean.getFilesToDeleteOnExit()) {
+        	File file = new File(fileToDelete);
+        	if(file.exists()) {
+        		file.delete();
+        	}
+        }
 
         return listViewName;
     }

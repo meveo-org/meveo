@@ -24,6 +24,7 @@ import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationHistory;
 import org.meveo.model.notification.ScriptNotification;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.InboundRequestService;
 import org.meveo.service.notification.NotificationHistoryService;
@@ -52,6 +53,10 @@ public class NotificationApi extends BaseCrudApi<Notification, NotificationDto> 
 
     @Inject
     private InboundRequestService inboundRequestService;
+    
+    public NotificationApi() {
+    	super(Notification.class, NotificationDto.class);
+    }
 
     /**
      * Create notification
@@ -271,4 +276,28 @@ public class NotificationApi extends BaseCrudApi<Notification, NotificationDto> 
             return update(postData);
         }
     }
+
+	@Override
+	public NotificationDto toDto(Notification entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Notification fromDto(NotificationDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistenceService<Notification> getPersistenceService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean exists(NotificationDto dto) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

@@ -4,7 +4,7 @@
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.2.0-SNAPSHOT</version>
+		<version>6.3.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>meveo-admin-web</artifactId>
 	<name>Meveo Admin Web Application - Web Module</name>
@@ -161,7 +161,11 @@
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api</artifactId>
 		</dependency>
-			<dependency>
+		<dependency>
+			<groupId>org.meveo</groupId>
+			<artifactId>meveo-api-dto</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
 		</dependency>

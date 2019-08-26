@@ -17,22 +17,28 @@
  */
 package org.meveo.model.neo4j;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.meveo.model.BusinessEntity;
 
 /**
  * Configuration used to access a Neo4j repository
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  */
 @Entity
-@Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
-public class Neo4JConfiguration {
+@Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@Parameter(name = "sequence_name", value = "neo4j_configuration_seq"), })
+public class Neo4JConfiguration extends BusinessEntity {
 
-    /**
-     * Code of the configuration
-     */
-    @Id
-    private String code;
+	private static final long serialVersionUID = 5788790630004555788L;
 
     /**
      * Url of the Neo4j repository
@@ -51,14 +57,6 @@ public class Neo4JConfiguration {
      */
     @Column(name="neo4j_password")
     private String neo4jPassword;
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 
     public String getNeo4jUrl() {
         return neo4jUrl;

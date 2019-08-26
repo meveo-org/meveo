@@ -55,12 +55,12 @@
         <tag-name>customFieldValueField</tag-name>
         <source>customFieldValueField.xhtml</source>
     </tag>
-    
+
      <tag>
         <tag-name>listCustomFieldValue</tag-name>
         <source>listCustomFieldValue.xhtml</source>
     </tag>
-    
+
     <tag>
         <tag-name>customFieldValueMuteField</tag-name>
         <source>customFieldValueMuteField.xhtml</source>
@@ -189,7 +189,15 @@
         <tag-name>getFieldInformation</tag-name>
         <handler-class>org.meveo.util.view.GetFieldInformationHandler</handler-class>
     </tag>
-    
+    <tag>
+        <tag-name>customFieldBinary</tag-name>
+        <source>customFieldBinary.xhtml</source>
+    </tag>
+    <tag>
+        <tag-name>customFieldBinaryList</tag-name>
+        <source>customFieldBinaryList.xhtml</source>
+    </tag>
+
     <tag>
         <description><![CDATA[Menu is a navigation component for Meveo Layout.]]></description>
 		<tag-name>menu</tag-name>

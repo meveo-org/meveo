@@ -4,6 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
@@ -19,6 +20,7 @@ import org.meveo.api.dto.response.CustomEntityTemplatesResponseDto;
 import org.meveo.api.dto.response.EntityCustomActionResponseDto;
 import org.meveo.api.dto.response.EntityCustomizationResponseDto;
 import org.meveo.api.dto.response.GetCustomFieldTemplateReponseDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.EntityCustomizationRs;
 import org.meveo.api.rest.impl.BaseRs;
@@ -46,7 +48,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
         try {
             customEntityTemplateApi.create(dto);
 
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 
@@ -59,7 +61,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 
         try {
             customEntityTemplateApi.updateEntityTemplate(dto);
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 
@@ -98,7 +100,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 
         try {
             customEntityTemplateApi.createOrUpdate(dto);
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 

@@ -19,7 +19,7 @@ package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.meveo.api.dto.BusinessDto;
+import org.meveo.api.dto.BusinessEntityDto;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -38,7 +38,7 @@ import java.util.List;
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TechnicalServiceDto extends BusinessDto {
+public class TechnicalServiceDto extends BusinessEntityDto {
 
     private static final long serialVersionUID = 5579910176536059520L;
 
@@ -110,7 +110,8 @@ public class TechnicalServiceDto extends BusinessDto {
         this.serviceType = serviceType;
     }
 
-    public boolean isDisabled() {
+    @Override
+    public Boolean isDisabled() {
         return disabled;
     }
 

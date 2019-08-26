@@ -4,11 +4,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.response.GetCustomFieldTemplateReponseDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.CustomFieldTemplateRs;
 import org.meveo.api.rest.impl.BaseRs;
@@ -29,7 +31,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.create(postData, null);
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 
@@ -42,7 +44,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.update(postData, null);
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 
@@ -81,7 +83,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.createOrUpdate(postData, null);
-        } catch (Exception e) {
+        } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
 
