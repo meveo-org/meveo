@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.enterprise.context.Conversation;
+import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
@@ -44,6 +45,7 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
+import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ParamBean;
@@ -75,6 +77,7 @@ import org.omnifaces.cdi.Param;
 import org.primefaces.PrimeFaces;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.event.data.PageEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.LazyDataModel;
@@ -100,6 +103,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     /** Logger. */
     protected Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Inject
+    private ResourceBundle resourceMessages;
 
     @Inject
     protected Messages messages;
@@ -161,6 +167,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private String backViewSave;
 
     private MeveoModule meveoModule;
+
+    private List<MeveoModule> selectedMeveoModules;
 
     /**
      * Object identifier to load
@@ -442,18 +450,18 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     }
 
     public void addToModule()  {
-        if (entity != null && !meveoModule.equals(entity)) {
-            BusinessEntity businessEntity = (BusinessEntity)entity;
-            MeveoModule module = meveoModuleService.findByCode(meveoModule.getCode());
-            MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-            if (!module.getModuleItems().contains(item)) {
-                module.addModuleItem(item);
-            }
-            try {
-                meveoModuleService.update(module);
-                messages.info("Items " + businessEntity.getCode() + " have upload module " + meveoModule.getCode());
-            } catch (BusinessException e) {
-                messages.error("Upload error, please try !");
+        for (MeveoModule eachModule: selectedMeveoModules ) {
+            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
+            if (entity != null && !eachModule.equals(entity)) {
+                BusinessEntity businessEntity = (BusinessEntity) entity;
+                MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+                if (!module.getModuleItems().contains(item)) {
+                    module.addModuleItem(item);
+                }
+                try {
+                    meveoModuleService.update(module);
+                } catch (BusinessException e) {
+                }
             }
         }
     }
@@ -463,19 +471,22 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             return;
         }
 
-        MeveoModule module = meveoModuleService.findByCode(meveoModule.getCode());
-        for (IEntity entity : selectedEntities) {
-            if (entity != null && !meveoModule.equals(entity)) {
-                BusinessEntity businessEntity = (BusinessEntity) entity;
-                MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-                if (!module.getModuleItems().contains(item)) {
-                    module.addModuleItem(item);
+        for (MeveoModule eachModule : selectedMeveoModules) {
+            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
+            for (IEntity entity : selectedEntities) {
+                if (entity != null && !eachModule.equals(entity)) {
+                    BusinessEntity businessEntity = (BusinessEntity) entity;
+                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+                    if (!module.getModuleItems().contains(item)) {
+                        module.addModuleItem(item);
+                    }
                 }
             }
+            try {
+                meveoModuleService.update(module);
+            } catch (BusinessException e) {
+            }
         }
-        try {
-            meveoModuleService.update(module);
-        } catch (BusinessException e) { }
     }
 
     /**
@@ -1205,6 +1216,14 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     public void setMeveoModule(MeveoModule meveoModule) {
         this.meveoModule = meveoModule;
+    }
+
+    public List<MeveoModule> getSelectedMeveoModules() {
+        return selectedMeveoModules;
+    }
+
+    public void setSelectedMeveoModules(List<MeveoModule> selectedMeveoModules) {
+        this.selectedMeveoModules = selectedMeveoModules;
     }
 
     /**

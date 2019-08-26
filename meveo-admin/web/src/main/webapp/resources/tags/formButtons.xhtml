@@ -220,9 +220,11 @@
 					</h:panelGroup>
 				</h:panelGroup>
 
-				<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.meveoModule}"
+				<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.selectedMeveoModules}"
 							 rowKey="#{e.id}" lazy="#{lazy}">
-					<p:column selectionMode="single" style="width:16px;text-align:center"/>
+					<p:column id="multiSelectModule" selectionMode="multiple" width="4%" exportable="false" toggleable="false" />
+					<p:ajax event="rowSelectCheckbox" />
+					<p:ajax event="rowUnselectCheckbox" />
 					<p:column>
 						<f:facet name="header">
 							<h:outputText value="#{messages['BusinessEntity.code']}" />
