@@ -17,12 +17,8 @@ package org.meveo.api.technicalservice.endpoint;
 
 
 import org.apache.commons.collections.CollectionUtils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -51,6 +47,7 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.slf4j.Logger;
 
 /**
  * API for managing technical services endpoints
@@ -66,6 +63,9 @@ public class EndpointApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+
+    @Inject
+    private Logger logger;
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
@@ -391,5 +391,29 @@ public class EndpointApi {
             }
         }
         return roles;
+    }
+
+    public boolean isUserAuthorized(Endpoint endpoint){
+        try {
+            Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
+            if(!currentUserRoles.contains(endpointService.getEndpointPermission(endpoint))) {
+                // If does not directly contained, for each role of meveo-web, check the role mappings for endpoints
+                KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+                currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
+                for (String userRole : currentUserRoles) {
+                    if(endpoint.getRoles().contains(userRole)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return true;
+
+        }catch (Exception e){
+            logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+            return false;
+        }
     }
 }
