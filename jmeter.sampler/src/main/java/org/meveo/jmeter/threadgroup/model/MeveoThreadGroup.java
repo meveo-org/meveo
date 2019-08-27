@@ -22,13 +22,11 @@ import org.apache.jmeter.testelement.property.IntegerProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.threads.ThreadGroup;
 
-import java.util.concurrent.TimeUnit;
-
 @GUIMenuSortOrder(Integer.MIN_VALUE)
 public class MeveoThreadGroup extends ThreadGroup {
 
     private static final String FUNCTION_CODE = "functionCode";
-    private static final String PERIODICITY = "periodicity";
+    private static final String TIMER_CODE = "periodicity";
 
     public MeveoThreadGroup(){
         setNumThreads(1);
@@ -45,12 +43,12 @@ public class MeveoThreadGroup extends ThreadGroup {
         setProperty(new StringProperty(FUNCTION_CODE, functionCode));
     }
 
-    public Integer getPeriodicity() {
-        return getPropertyAsInt(PERIODICITY);
+    public String getPeriodicity() {
+        return getPropertyAsString(TIMER_CODE);
     }
 
-    public void setPeriodicity(Integer periodicity) {
-        setProperty(new IntegerProperty(PERIODICITY, periodicity));
+    public void setPeriodicity(String periodicity) {
+        setProperty(new StringProperty(TIMER_CODE, periodicity));
     }
 
 }

@@ -27,6 +27,7 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
 import org.meveo.service.script.ConcreteFunctionService;
+import org.meveo.service.script.FunctionService;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
@@ -36,6 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -79,31 +82,40 @@ public class FunctionApi {
     /**
      * Update test suite and schedule or re-schedule execution
      *
-     * @param code Code of the function to update
+     * @param functionCode Code of the function to update
      * @param file Test Suite content
      * @throws IOException if the file cannot be read
      */
-    public void updateTest(String code, File file) throws BusinessException, IOException {
+    public void updateTest(String functionCode, File file) throws BusinessException, IOException {
         final String testSuite = FileUtils.readFileToString(file, "UTF-8");
-        final Function function = concreteFunctionService.findByCode(code);
+        final Function function = concreteFunctionService.findByCode(functionCode);
         function.setTestSuite(testSuite);
         concreteFunctionService.update(function);
 
-        final String testJobCode = getTestJobCode(code);
+        final String testJobCode = getTestJobCode(functionCode);
         JobInstance jobInstance = jobService.findByCode(testJobCode);
+        TimerEntity timerEntity;
+
+        final Matcher matcher = Pattern.compile("<stringProp name=\"periodicity\">(.*)</stringProp>").matcher(testSuite);
+        if(matcher.find()){
+            timerEntity = timerEntityService.findByCode(matcher.group(1));
+        } else {
+            timerEntity = timerEntityService.findByCode("Daily-midnight");
+        }
 
         // If job does not exists, create it, otherwise re-schedule it
         if (jobInstance == null) {
             jobInstance = new JobInstance();
             jobInstance.setJobCategoryEnum(JobCategoryEnum.TEST);
-            jobInstance.setJobTemplate("FunctionTestJob");
+            jobInstance.setJobTemplate(FunctionService.FUNCTION_TEST_JOB);
             jobInstance.setCode(testJobCode);
-            jobInstance.setParametres(code);
+            jobInstance.setParametres(functionCode);
 
-            TimerEntity timerEntity = timerEntityService.findByCode("Daily-midnight");
             jobInstance.setTimerEntity(timerEntity);
             jobService.create(jobInstance);
         }else{
+            jobInstance.setTimerEntity(timerEntity);
+            jobService.update(jobInstance);
             jobService.scheduleUnscheduleJob(jobInstance.getId());
         }
 

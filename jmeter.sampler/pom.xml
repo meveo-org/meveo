@@ -64,12 +64,14 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.1</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <finalName>meveo-plugin</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
+                    <attach>false</attach>
                 </configuration>
                 <executions>
                     <execution>
@@ -88,9 +90,9 @@
                         <id>install-plugin</id>
                         <phase>install</phase>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <copy file="./target/meveo-plugin.jar" todir="${apache.jmeter.home}" />
-                            </tasks>
+                            </target>
                         </configuration>
                         <goals>
                             <goal>run</goal>

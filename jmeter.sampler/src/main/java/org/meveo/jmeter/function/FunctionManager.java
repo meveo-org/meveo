@@ -16,6 +16,7 @@
 
 package org.meveo.jmeter.function;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -35,13 +36,13 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.util.JMeterUtils;
 import org.meveo.api.dto.function.FunctionDto;
+import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.jmeter.login.model.Host;
 import org.meveo.jmeter.login.model.HostConnection;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.nio.ch.IOUtil;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -63,6 +64,8 @@ public class FunctionManager {
     private static final String GRANT_TYPE = "password";
 
     public static final String ENDPOINT_URL = JMeterUtils.getProperty("meveo.function.endpoint");
+    public static final String TIMER_ENDPOINT = JMeterUtils.getProperty("meveo.timer.endpoint");
+
     public static final String UPLOAD_URL = JMeterUtils.getProperty("meveo.function.upload");
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -72,6 +75,8 @@ public class FunctionManager {
     private static String token = System.getProperty("token");
     private static String refresh_token;
     private static CompletableFuture<List<FunctionDto>> functions;
+    private static CompletableFuture<List<TimerEntityDto>> timers;
+
     private static long loginTimeout;
     private static ScheduledFuture<?> refreshTask;
     private static Host currentHost;
@@ -152,6 +157,7 @@ public class FunctionManager {
             loginTimeout = Long.parseLong(responseBody.get("expires_in"));
 
             functions = CompletableFuture.supplyAsync(FunctionManager::download);
+            timers = CompletableFuture.supplyAsync(FunctionManager::downloadTimers);
 
             return true;
         }, "Cannot log in", false);
@@ -169,6 +175,21 @@ public class FunctionManager {
                 refreshTokenThread();
             }
             return OBJECT_MAPPER.readValue(result, FunctionDto.DTO_LIST_TYPE_REF);
+        }, "Error while retrieving functions from meveo");
+
+    }
+
+    private static List<TimerEntityDto> downloadTimers() {
+        return doRequest(() -> {
+            HttpGet httpGet = new HttpGet(getHostUri() + TIMER_ENDPOINT);
+            setBearer(httpGet);
+            return httpGet;
+        }, responseData -> {
+            String result = IOUtils.toString(responseData.getContent(), StandardCharsets.UTF_8);
+            if (token != null) {
+                refreshTokenThread();
+            }
+            return OBJECT_MAPPER.readValue(result, new TypeReference<List<TimerEntityDto>>(){});
         }, "Error while retrieving functions from meveo");
 
     }
@@ -198,7 +219,23 @@ public class FunctionManager {
 
     public static List<FunctionDto> getFunctions() {
         try {
+            if(functions == null) {
+                return  new ArrayList<>();
+            }
+
             return functions.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<TimerEntityDto> getTimers(){
+        try {
+            if(timers == null){
+                return new ArrayList<>();
+            }
+
+            return timers.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

@@ -20,22 +20,21 @@ import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.gui.AbstractThreadGroupGui;
+import org.meveo.api.dto.job.TimerEntityDto;
+import org.meveo.jmeter.function.FunctionManager;
 import org.meveo.jmeter.threadgroup.model.MeveoThreadGroup;
-import org.meveo.jmeter.utils.SwingUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.concurrent.TimeUnit;
 
 public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemListener {
 
     private static final int LABEL_WIDTH = 100;
     private static final int PANEL_HEIGHT = 25;
 
-    private final JTextField peridicity;
-    private final JComboBox<TimeUnit> timeUnit;
+    private final JComboBox<String> periodicity;
 
     public MeveoThreadGroupGui() {
 
@@ -55,22 +54,19 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
         JPanel bottomPanel = new HorizontalPanel();
         bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, PANEL_HEIGHT));
 
-        JLabel peridicityLabel = new JLabel("Periodicity : ");
+        JLabel peridicityLabel = new JLabel("Timer : ");
         peridicityLabel.setPreferredSize(new Dimension(LABEL_WIDTH, PANEL_HEIGHT));
         bottomPanel.add(peridicityLabel);
 
-        peridicity = new JTextField();
-        peridicity.setName("Periodicity");
-        peridicity.setText("1");
-        peridicity.setEnabled(false);
-        peridicityLabel.setLabelFor(peridicity);
-        bottomPanel.add(peridicity);
+        final String[] timerCodes = FunctionManager.getTimers()
+                .stream()
+                .map(TimerEntityDto::getCode)
+                .toArray(String[]::new);
 
-        TimeUnit[] availableTimeUnits = {TimeUnit.DAYS};
-        timeUnit = new JComboBox<>(availableTimeUnits);
-        timeUnit.setSelectedItem(TimeUnit.DAYS);
-        bottomPanel.add(timeUnit);
-        SwingUtils.setEnable(timeUnit, false);
+        periodicity = new JComboBox<>(timerCodes);
+        periodicity.setName("Timer");
+        peridicityLabel.setLabelFor(periodicity);
+        bottomPanel.add(periodicity);
 
         /* Test properties */
         VerticalPanel panel = new VerticalPanel();
@@ -100,7 +96,9 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
 
     @Override
     public void modifyTestElement(TestElement element) {
-
+        MeveoThreadGroup tg = (MeveoThreadGroup) element;
+        final String selectedItem = (String) periodicity.getSelectedItem();
+        tg.setPeriodicity(selectedItem);
     }
 
     @Override
@@ -113,4 +111,11 @@ public class MeveoThreadGroupGui extends AbstractThreadGroupGui implements ItemL
         super.clearGui();
     }
 
+    @Override
+    public void configure(TestElement tg) {
+        super.configure(tg);
+        MeveoThreadGroup element = (MeveoThreadGroup) tg;
+        final String periodicity = element.getPeriodicity();
+        this.periodicity.setSelectedItem(periodicity);
+    }
 }

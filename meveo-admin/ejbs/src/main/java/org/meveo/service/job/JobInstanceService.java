@@ -37,6 +37,7 @@ import org.meveo.cache.CacheKeyLong;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
@@ -70,6 +71,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
     private static Map<CacheKeyLong, Timer> jobTimers = new HashMap<>();
 
     private static ParamBean paramBean = ParamBean.getInstance();
+
 
     /**
      * Register job classes and schedule active job instances
@@ -152,6 +154,23 @@ public class JobInstanceService extends BusinessService<JobInstance> {
             log.error("Failed to get job by name {}", jobName, e);
         }
         return result;
+    }
+
+    /**
+     * Retrieve jobs filtered by type, parametres and category
+     *
+     * @param type         Template of the job
+     * @param parameters   Parametres of the job
+     * @param categoryEnum Cateogry of the job
+     * @return the list of matching jobs
+     */
+    public List<JobInstance> findJobsByTypeAndParameters(String type, String parameters, JobCategoryEnum categoryEnum) {
+        return new QueryBuilder(JobInstance.class, "job")
+                .addCriterionEnum("jobCategoryEnum", categoryEnum)
+                .addCriterion("parametres", "=", parameters, true)
+                .addCriterion("jobTemplate", "=", type, true)
+                .getTypedQuery(this.getEntityManager(), JobInstance.class)
+                .getResultList();
     }
 
     public List<Job> getJobs() {
