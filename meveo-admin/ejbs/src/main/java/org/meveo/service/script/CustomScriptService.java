@@ -27,6 +27,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
@@ -339,7 +340,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
 
         if (hasEndpoint) {
-            throw new BusinessException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
+            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
         }
     }
 

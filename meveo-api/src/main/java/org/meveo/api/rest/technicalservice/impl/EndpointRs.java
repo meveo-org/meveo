@@ -18,6 +18,7 @@ package org.meveo.api.rest.technicalservice.impl;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -79,7 +80,7 @@ public class EndpointRs extends BaseRs {
     }
 
     @DELETE @Path("/{code}")
-    public Response delete(@PathParam("code") @NotNull String code) throws BusinessException {
+    public Response delete(@PathParam("code") @NotNull String code) throws BusinessException, EntityDoesNotExistsException {
         endpointApi.delete(code);
         return Response.noContent().build();
     }

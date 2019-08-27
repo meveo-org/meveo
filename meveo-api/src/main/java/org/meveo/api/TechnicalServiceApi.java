@@ -18,6 +18,7 @@
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.api.dto.TechnicalServicesDto;
 import org.meveo.api.dto.technicalservice.InputOutputDescription;
 import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
@@ -167,7 +168,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(service.getCode(), o).isEmpty());
 
         if(hasEndpoint){
-            throw new BusinessException("An Endpoint is associated to one of those properties : " + deletedProperties + " and therfore can't be deleted");
+            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those properties : " + deletedProperties + " and therfore can't be deleted");
         }
     }
 

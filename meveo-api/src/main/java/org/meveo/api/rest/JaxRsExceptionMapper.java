@@ -12,6 +12,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.api.validation.Validation;
+import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -42,10 +43,14 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
         } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 
         } else if(e instanceof EJBException) {
             return toResponse(((EJBException) e).getCausedByException());
+
+        } else if(e instanceof ExistsRelatedEntityException) {
+            return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
+
         }
 
         return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);

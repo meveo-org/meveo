@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -208,10 +209,13 @@ public class EndpointApi {
      * @param code Code of the endpoint to remove
      * @throws BusinessException if endpoint does not exists
      */
-    public void delete(String code) throws BusinessException {
+    public void delete(String code) throws BusinessException, EntityDoesNotExistsException {
 
         // Retrieve existing entity
         Endpoint endpoint = endpointService.findByCode(code);
+        if(endpoint == null){
+            throw new EntityDoesNotExistsException("Endpoint with code " + code + " does not exists");
+        }
 
         endpointService.remove(endpoint);
 
