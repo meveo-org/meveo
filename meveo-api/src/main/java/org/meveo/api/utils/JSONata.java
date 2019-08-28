@@ -16,33 +16,33 @@
 
 package org.meveo.api.utils;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Object;
 import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class JSONata {
 
     public static String transform(String expression, String data) {
-        V8 runtime = V8.createV8Runtime();
         try {
             final InputStream jsonataFile = JSONata.class.getResourceAsStream("/jsonata/jsonata.js");
-            final String jsonata = IOUtils.toString(jsonataFile, "UTF-8");
-            runtime.executeScript(jsonata); // Load jsonata
-
+            final String jsonata = IOUtils.toString(jsonataFile, StandardCharsets.UTF_8);
             final InputStream jsonataRunnerFile = JSONata.class.getResourceAsStream("/jsonata/jsonata.execute.js");
-            final String jsonataRunner = IOUtils.toString(jsonataRunnerFile, "UTF-8");
-            runtime.executeScript(jsonataRunner); // Load runner
+            final String jsonataRunner = IOUtils.toString(jsonataRunnerFile, StandardCharsets.UTF_8);
 
-            Object runJsonata = runtime.executeJSFunction("runJsonata", data, expression);
-            String transformedJson = runJsonata.toString();
+            ScriptEngineManager factory = new ScriptEngineManager();
+            ScriptEngine engine = factory.getEngineByName("JavaScript");
+            Invocable inv = (Invocable) engine;
 
-            runtime.release();
+            engine.eval(jsonata);
+            engine.eval(jsonataRunner);
 
-            return transformedJson;
-        } catch (IOException e) {
+            final Object runJsonata = inv.invokeFunction("runJsonata", data, expression);
+            return runJsonata.toString();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
