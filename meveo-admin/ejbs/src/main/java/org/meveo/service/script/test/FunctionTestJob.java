@@ -50,7 +50,7 @@ public class FunctionTestJob extends Job {
         if (sampleResult.isSuccess()) {
             result.registerSucces();
         } else {
-            result.registerError(sampleResult.getFailureMessage());
+            result.registerError(sampleResult.getName() + " : " + sampleResult.getFailureMessage());
         }
     }
 

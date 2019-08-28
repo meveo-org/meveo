@@ -25,21 +25,18 @@ public class SampleResult {
     public SampleResult(boolean success, String name, String failureMessage) {
         this.success = success;
         this.failureMessage = failureMessage;
+        this.name = name;
     }
 
     public boolean isSuccess() {
         return success;
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
     public String getFailureMessage() {
         return failureMessage;
     }
 
-    public void setFailureMessage(String failureMessage) {
-        this.failureMessage = failureMessage;
+    public String getName(){
+        return name;
     }
 }
