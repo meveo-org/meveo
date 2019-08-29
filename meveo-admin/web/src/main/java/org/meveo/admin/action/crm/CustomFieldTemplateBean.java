@@ -27,6 +27,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.SampleValueHelper;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
@@ -130,6 +131,39 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             return null;
         }
 
+        if (getEntity().getFieldType()==CustomFieldTypeEnum.STRING) {
+            Boolean validateSamples = SampleValueHelper.validateStringType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples) {
+                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
+                return null;
+            }
+        }
+
+        if (getEntity().getFieldType()==CustomFieldTypeEnum.LONG) {
+            Boolean validateSamples = SampleValueHelper.validateLongType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples) {
+                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
+                return null;
+            }
+        }
+
+        if (getEntity().getFieldType()==CustomFieldTypeEnum.DOUBLE) {
+            Boolean validateSamples = SampleValueHelper.validateDoubleType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples) {
+                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
+                return null;
+            }
+        }
+
+        if (getEntity().getFieldType()==CustomFieldTypeEnum.CHILD_ENTITY) {
+            Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(getEntity().getAppliesTo());
+            Boolean validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples) {
+                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
+                return null;
+            }
+        }
+
         // Update childEntityColumns
         if (getEntity().getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
             List<String> cheColumns = new ArrayList<>();
@@ -151,6 +185,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }
+
         return super.saveOrUpdate(killConversation);
     }
 
