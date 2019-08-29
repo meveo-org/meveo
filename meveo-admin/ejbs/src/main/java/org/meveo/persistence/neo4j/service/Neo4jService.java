@@ -160,6 +160,17 @@ public class Neo4jService implements CustomPersistenceService {
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
     /**
+     * Remove all data concerned with the CET
+     *
+     * @param cet Template of the data to remove
+     */
+    public void removeCet(CustomEntityTemplate cet) {
+        for (String repositoryCode : getRepositoriesCode()) {
+            neo4jDao.removeByLabel(repositoryCode, cet.getCode());
+        }
+    }
+
+    /**
      * Add an index and unique constraint on the CET for the meveo_uuid property
      *
      * @param customEntityTemplate  {@link CustomEntityTemplate}
@@ -300,7 +311,6 @@ public class Neo4jService implements CustomPersistenceService {
         return addCetNode(neo4JConfiguration, cet, fieldValues);
     }
 
-    @SuppressWarnings("unchecked")
     public Set<EntityRef> addCetNode(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues) {
 
         Set<EntityRef> persistedEntities = new HashSet<>();
@@ -387,7 +397,7 @@ public class Neo4jService implements CustomPersistenceService {
                     // Referenced CET is not primitive
                     } else {
                         if (value instanceof Map && referencedCet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-                            @SuppressWarnings("unchecked") Map<String, Object> valueMap = (Map<String, Object>) value;
+                            Map<String, Object> valueMap = (Map<String, Object>) value;
                             relatedPersistedEntities = addCetNode(neo4JConfiguration, referencedCet, valueMap);
 
                             // If entity reference's value is a string and the entity reference is not primitive, then the value is likely the UUID of the referenced node
@@ -924,9 +934,10 @@ public class Neo4jService implements CustomPersistenceService {
 
         if (startNode != null) {
             nodeUpdatedEvent.fire(startNode);
+            return new PersistenceActionResult(startNode.get("meveo_uuid").asString());
+        } else {
+            return null;
         }
-
-        return new PersistenceActionResult(startNode.get("meveo_uuid").asString());
     }
 
     public void deleteEntity(String neo4jConfiguration, String cetCode, Map<String, Object> values) throws BusinessException {
@@ -1025,7 +1036,7 @@ public class Neo4jService implements CustomPersistenceService {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     public Map<String, Object> validateAndConvertCustomFields(Map<String, CustomFieldTemplate> customFieldTemplates, Map<String, Object> fieldValues, Map<String, Object> uniqueFields, boolean checkCustomFields) throws BusinessException, ELException {
         Map<String, Object> convertedFields = new HashMap<>();
         for (Entry<String, CustomFieldTemplate> cftEntry : customFieldTemplates.entrySet()) {
@@ -1341,9 +1352,8 @@ public class Neo4jService implements CustomPersistenceService {
      * @param customEntityTemplate Template of the entities to merge
      * @param uuids                UUIDs of the nodes to merge
      * @return UUID of the merged node
-     * @throws ELException if we cannot determine if a custom field can apply
      */
-    public String mergeNodes(String configurationCode, CustomEntityTemplate customEntityTemplate, Collection<String> uuids) throws ELException, BusinessException {
+    public String mergeNodes(String configurationCode, CustomEntityTemplate customEntityTemplate, Collection<String> uuids) {
         List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode);
 
         Node persistentNode = nodesToTreat.remove(0);
@@ -1457,18 +1467,18 @@ public class Neo4jService implements CustomPersistenceService {
 		addBinaries(uuid, neo4jConfigurationCode, cet, customFieldTemplate, Collections.singletonList(binaryPath));
 	}
 
-	/**
-	 * TODO: Document
-	 * @param uuid
-	 * @param neo4jConfigurationCode
-	 * @param cet
-	 * @param customFieldTemplate
-	 */
-	public List<String> findBinaries(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
-		List<Node> binaryNodes = neo4jDao.findNodesBySourceNodeIdAndRelationships(neo4jConfigurationCode, uuid, cet.getCode(), customFieldTemplate.getRelationshipName(), Neo4JConstants.FILE_LABEL);
-		return binaryNodes.stream().map(n -> n.get("value").asString()).collect(Collectors.toList());
-
-	}
+    /**
+     * Retrieve all binaries references associated to a given entity for a given property
+     *
+     * @param uuid                   UUID of the entity
+     * @param neo4jConfigurationCode Code of the Neo4J Instance
+     * @param cet                    Template of the entity
+     * @param customFieldTemplate    Template of the entity's field where the binary is referenced
+     */
+    public List<String> findBinaries(String uuid, String neo4jConfigurationCode, CustomEntityTemplate cet, CustomFieldTemplate customFieldTemplate) {
+        List<Node> binaryNodes = neo4jDao.findNodesBySourceNodeIdAndRelationships(neo4jConfigurationCode, uuid, cet.getCode(), customFieldTemplate.getRelationshipName(), Neo4JConstants.FILE_LABEL);
+        return binaryNodes.stream().map(n -> n.get("value").asString()).collect(Collectors.toList());
+    }
 
 	/**
 	 * Remove all previous binaries and add the given one to the specified node

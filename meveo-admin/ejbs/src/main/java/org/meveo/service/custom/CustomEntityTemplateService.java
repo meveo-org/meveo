@@ -18,20 +18,6 @@
  */
 package org.meveo.service.custom;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Any;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -51,6 +37,18 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Wassim Drira
@@ -142,7 +140,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 createPrimitiveCft(cet);
             } else {
                 boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
-                boolean maxValueChanged = valueCft.getMaxValue() != cet.getNeo4JStorageConfiguration().getMaxValue();
+                boolean maxValueChanged = !valueCft.getMaxValue().equals(cet.getNeo4JStorageConfiguration().getMaxValue());
                 boolean shouldUpdate = typeChanged || maxValueChanged;
                 if (shouldUpdate) {
                     flush();
@@ -161,8 +159,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 }
             }
         } else {
-        	cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
-        	cet.getNeo4JStorageConfiguration().setMaxValue(null);
+            if(cet.getNeo4JStorageConfiguration() != null) {
+                cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
+                cet.getNeo4JStorageConfiguration().setMaxValue(null);
+            }
         }
     }
 
@@ -227,7 +227,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         }
 
-        neo4jService.removeUUIDIndexes(cet);
+        if(cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.removeCet(cet);
+            neo4jService.removeUUIDIndexes(cet);
+        }
+
 
         customFieldsCache.removeCustomEntityTemplate(cet);
     }
@@ -243,8 +247,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (active == null || active)) {
 
-            List<CustomEntityTemplate> cets = new ArrayList<>();
-            cets.addAll(customFieldsCache.getCustomEntityTemplates());
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
             if (cets.isEmpty()) {
@@ -270,8 +273,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
                 || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
-            List<CustomEntityTemplate> cets = new ArrayList<>();
-            cets.addAll(customFieldsCache.getCustomEntityTemplates());
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
             if (cets.isEmpty()) {
@@ -314,7 +316,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param entityCode  - code of entity
      * @return customer field entity
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"rawtypes"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
         ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
@@ -357,7 +359,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      *
      * @return A list of custom entity templates
      */
-    @SuppressWarnings("unchecked")
     public List<CustomEntityTemplate> listCustomTableTemplates() {
 
         if (useCETCache) {
