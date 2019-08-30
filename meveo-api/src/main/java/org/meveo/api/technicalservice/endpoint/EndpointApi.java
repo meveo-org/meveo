@@ -16,9 +16,13 @@
 package org.meveo.api.technicalservice.endpoint;
 
 
-import org.apache.commons.collections.CollectionUtils;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -28,21 +32,27 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
+import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
-import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
@@ -56,7 +66,7 @@ import org.slf4j.Logger;
  * @since 01.02.2019
  */
 @Stateless
-public class EndpointApi {
+public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto>{
 
     @EJB
     private EndpointService endpointService;
@@ -71,10 +81,11 @@ public class EndpointApi {
     private KeycloakAdminClientService keycloakAdminClientService;
 
     public EndpointApi(){
-
+		super(Endpoint.class, EndpointDto.class);
     }
 
     public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
+		super(Endpoint.class, EndpointDto.class);
         this.endpointService = endpointService;
         this.concreteFunctionService = concreteFunctionService;
     }
@@ -280,7 +291,8 @@ public class EndpointApi {
         endpointService.update(updatedEndpoint);
     }
 
-    private EndpointDto toDto(Endpoint endpoint) {
+    @Override
+    public EndpointDto toDto(Endpoint endpoint) {
         EndpointDto endpointDto = new EndpointDto();
         endpointDto.setCode(endpoint.getCode());
         endpointDto.setMethod(endpoint.getMethod());
@@ -308,7 +320,8 @@ public class EndpointApi {
         return endpointDto;
     }
 
-    private Endpoint fromDto(EndpointDto endpointDto){
+    @Override
+    public Endpoint fromDto(EndpointDto endpointDto){
 
         Endpoint endpoint = new Endpoint();
         
@@ -416,4 +429,24 @@ public class EndpointApi {
             return false;
         }
     }
+
+	@Override
+	public EndpointDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		return findByCode(code);
+	}
+
+	@Override
+	public Endpoint createOrUpdate(EndpointDto dtoData) throws MeveoApiException, BusinessException {
+		return createOrReplace(dtoData);
+	}
+
+	@Override
+	public IPersistenceService<Endpoint> getPersistenceService() {
+		return endpointService;
+	}
+
+	@Override
+	public boolean exists(EndpointDto dto) {
+		return findByCode(dto.getCode()) != null;
+	}
 }

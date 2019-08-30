@@ -20,9 +20,13 @@ package org.meveo.admin.action.admin.module;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.action.BaseBean;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
@@ -42,15 +46,22 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
     private static final long serialVersionUID = 1L;
 
+    @Inject
+    private MeveoModuleApi meveoModuleApi;
+
     private String moduleCode;
     private List<MeveoModule> meveoModules;
-
 
     /**
      * Constructor. Invokes super constructor and provides class type of this bean for {@link BaseBean}.
      */
     public MeveoModuleBean() {
         super(MeveoModule.class);
+    }
+
+    @Override
+    public BaseCrudApi<MeveoModule, MeveoModuleDto> getBaseCrudApi() {
+        return meveoModuleApi;
     }
 
     /**

@@ -19,6 +19,8 @@
 package org.meveo.service.admin.impl;
 
 import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -45,6 +47,7 @@ import org.meveo.service.script.module.ModuleScriptService;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.net.ssl.SSLContext;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.ws.rs.core.Response;
@@ -81,7 +84,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
             String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
             String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
-            ResteasyClient client = new ResteasyClientBuilder().build();
+            ResteasyClient client = meveoInstanceService.getRestEasyClient();
             ResteasyWebTarget target = client.target(baseurl + url);
             BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
             target.register(basicAuthentication);

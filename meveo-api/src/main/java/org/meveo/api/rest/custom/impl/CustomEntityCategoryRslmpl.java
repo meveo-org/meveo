@@ -24,7 +24,7 @@ public class CustomEntityCategoryRslmpl extends BaseRs implements CustomEntityCa
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityCategoryApi.createOrUpdateEntityCategory(dto);
+            customEntityCategoryApi.createOrUpdate(dto);
         } catch (Exception e) {
             processException(e, result);
         }

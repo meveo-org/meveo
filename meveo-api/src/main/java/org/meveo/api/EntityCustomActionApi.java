@@ -268,7 +268,7 @@ public class EntityCustomActionApi extends BaseApi {
             throw new EntityDoesNotExistsException(EntityCustomAction.class, actionCode + "/" + appliesTo);
         }
 
-        Set<Class<?>> cfClasses = ReflectionUtils.getClassesAnnotatedWith(CustomFieldEntity.class);
+        Set<Class<?>> cfClasses = ReflectionUtils.getClassesAnnotatedWith(CustomFieldEntity.class, "org.meveo.model");
         Class entityClass = null;
         for (Class<?> clazz : cfClasses) {
             if (appliesTo.equals(clazz.getAnnotation(CustomFieldEntity.class).cftCodePrefix())) {

@@ -1,13 +1,11 @@
 package org.meveo.service.admin.impl;
 
-import java.io.StringReader;
-
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.persistence.JacksonUtil;
 
 public class MeveoModuleUtils {
 
@@ -16,8 +14,7 @@ public class MeveoModuleUtils {
 	    Class<? extends MeveoModuleDto> dtoClass = (Class<? extends MeveoModuleDto>) ReflectionUtils.getClassBySimpleNameAndParentClass(module.getClass().getSimpleName() + "Dto",
 	        MeveoModuleDto.class);
 	
-	    MeveoModuleDto moduleDto = (MeveoModuleDto) JAXBContext.newInstance(dtoClass).createUnmarshaller().unmarshal(new StringReader(module.getModuleSource()));
-	
+	    MeveoModuleDto moduleDto = (MeveoModuleDto) JacksonUtil.fromString(module.getModuleSource(), dtoClass);
 	    return moduleDto;
 	}
 

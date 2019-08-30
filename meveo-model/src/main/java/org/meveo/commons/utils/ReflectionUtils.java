@@ -212,7 +212,7 @@ public class ReflectionUtils {
     public static Class<?> getClassBySimpleNameAndAnnotation(String className, Class<? extends Annotation> annotationClass) {
         Class<?> entityClass = null;
         if (!StringUtils.isBlank(className)) {
-            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass);
+            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass, "org.meveo.model");
             for (Class<?> clazz : classesWithAnnottation) {
                 if (className.equals(clazz.getSimpleName())) {
                     entityClass = clazz;
@@ -224,22 +224,17 @@ public class ReflectionUtils {
     }
 
     /**
-     * @param annotationClass annotation class
-     * @return set of class
-     */
-    public static Set<Class<?>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass) {
-        return getClassesAnnotatedWith(annotationClass, "org.meveo.model");
-    }
-
-    /**
-     * @param annotationClass annotation class
      * @param prefix prefix
      * @return set of class.
      */
+    public static <T> Set<Class<? extends T>> getClassesThatExtends(Class<T> superClass, String prefix) {
+        Reflections reflections = new Reflections(prefix);
+        return reflections.getSubTypesOf(superClass);
+    }
+
     public static Set<Class<?>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass, String prefix) {
         Reflections reflections = new Reflections(prefix);
-        Set<Class<?>> classes = reflections.getTypesAnnotatedWith(annotationClass);
-        return classes;
+        return reflections.getTypesAnnotatedWith(annotationClass);
     }
 
     /**

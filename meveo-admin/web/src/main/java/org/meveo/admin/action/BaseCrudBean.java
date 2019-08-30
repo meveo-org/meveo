@@ -157,6 +157,10 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 	}
 	
 	public StreamedContent exportJSON() throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
+		if(baseCrudApi == null) {
+			baseCrudApi = getBaseCrudApi();
+		}
+		
         if(baseCrudApi == null) {
         	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
         }
@@ -189,6 +193,10 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 	}
 	
 	public void importData(FileUploadEvent event) throws IOException, BusinessException, MeveoApiException {
+		if(baseCrudApi == null) {
+			baseCrudApi = getBaseCrudApi();
+		}
+		
 		String contentType = event.getFile().getContentType();
 		InputStream inputStream = event.getFile().getInputstream();
 		

@@ -100,9 +100,18 @@ public class MeveoModuleItem extends BaseEntity {
     }
 
     public String getItemClassSimpleName() {
-        if (itemClass != null) {
-            return itemClass.substring(itemClass.lastIndexOf('.') + 1);
+        try {
+            final Entity annotation = Class.forName(itemClass).getAnnotation(Entity.class);
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(annotation.name())) {
+                return annotation.name();
+
+            } else if (itemClass != null) {
+                return itemClass.substring(itemClass.lastIndexOf('.') + 1);
+            }
+        } catch (ClassNotFoundException e) {
+            //NOOP
         }
+
         return null;
     }
 

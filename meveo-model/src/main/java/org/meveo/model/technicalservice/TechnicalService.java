@@ -23,6 +23,10 @@ import java.util.Map;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
 
@@ -124,4 +128,5 @@ public class TechnicalService extends Function {
     public String getFunctionType() {
         return "TechinalService";
     }
+
 }

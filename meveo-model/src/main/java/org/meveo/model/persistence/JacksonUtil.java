@@ -76,6 +76,10 @@ public class JacksonUtil {
             throw new IllegalArgumentException(e);
         }
     }
+    
+    public static <T> T convert(Object value, Class<T> clazz) {
+        return OBJECT_MAPPER.convertValue(value, clazz);
+    }
 
     @SuppressWarnings("unchecked")
     public static <T> T clone(T value) {

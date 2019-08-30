@@ -31,10 +31,6 @@ public class Function extends BusinessEntity {
     @Type(type = "json")
     private String testSuite;
     
-    /**
-     * @deprecated Use child implementations
-     */
-    @Deprecated
     public Function() {
     	
     }

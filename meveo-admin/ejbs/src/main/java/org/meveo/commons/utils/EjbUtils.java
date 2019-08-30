@@ -18,14 +18,22 @@
  */
 package org.meveo.commons.utils;
 
-import java.util.Properties;
+import org.apache.mina.util.ConcurrentHashSet;
+import org.meveo.api.ApiService;
+import org.meveo.model.IEntity;
+import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.enterprise.inject.spi.CDI;
+import javax.enterprise.util.TypeLiteral;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Util class for remote ejb lookups.
@@ -38,11 +46,25 @@ public class EjbUtils {
     private static final Logger logger = LoggerFactory.getLogger(EjbUtils.class);
 
     private static final String LOCALHOST = "127.0.0.1";
+    private static final Set<PersistenceService<?>> persistenceServices;
+    private static final Set<ApiService<?,?>> apiServices;
+
+
+    static {
+        persistenceServices = new ConcurrentHashSet<>();
+        TypeLiteral<PersistenceService<?>> type = new TypeLiteral<PersistenceService<?>>() {};
+        persistenceServices.addAll(CDI.current().select(type).stream().collect(Collectors.toList()));
+
+        apiServices = new ConcurrentHashSet<>();
+        TypeLiteral<ApiService<?,?>> apiType = new TypeLiteral<ApiService<?,?>>() {};
+        apiServices.addAll(CDI.current().select(apiType).stream().collect(Collectors.toList()));
+    }
 
     /**
      * Non instantiable class.
      */
     private EjbUtils() {
+
     }
 
     /**
@@ -126,5 +148,18 @@ public class EjbUtils {
     public static boolean isRunningInClusterMode() {
         String nodeName = System.getProperty("jboss.node.name");
         return  nodeName!= null && nodeName.startsWith("meveo");
+    }
+
+    public static Optional<PersistenceService<?>> getPersistenceService(IEntity entityToSave) {
+        // Try to find the associated persistence service
+        return getPersistenceService(entityToSave.getClass());
+    }
+
+    public static Optional<PersistenceService<?>> getPersistenceService(Class clazz) {
+        // Try to find the associated persistence service
+        return persistenceServices
+                .stream()
+                .filter(service -> service.getEntityClass().equals(clazz))
+                .findFirst();
     }
 }

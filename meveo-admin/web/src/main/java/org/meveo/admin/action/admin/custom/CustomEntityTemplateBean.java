@@ -13,6 +13,7 @@ import javax.inject.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -43,6 +44,9 @@ import org.slf4j.LoggerFactory;
 public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 1187554162639618526L;
+
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
 
 	/**
 	 * Object being customized in case customization corresponds to a non
@@ -83,12 +87,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Inject
 	private MeveoModuleService meveoModuleService;
+	private Map<String, List<CustomEntityTemplate>> listMap;
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
 	}
 
+	@Override
 	@PostConstruct
 	public void init() {
 		customEntityTemplates = customEntityTemplateService.list();
@@ -131,9 +137,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
-		Map<String, List<CustomEntityTemplate>> listMap = new HashMap<>();
-		List<CustomEntityTemplate> list = customEntityTemplateService.list();
-		for (CustomEntityTemplate customEntityTemplate : list) {
+		if(listMap != null){
+			return listMap;
+		}
+
+		listMap = new HashMap<>();
+		for (CustomEntityTemplate customEntityTemplate : cache.getCustomEntityTemplates()) {
 			if (customEntityTemplate.getCustomEntityCategory() != null) {
 				String name = customEntityTemplate.getCustomEntityCategory().getName();
 				if (listMap.containsKey(name)) {

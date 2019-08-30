@@ -34,16 +34,16 @@ import javax.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.action.catalog.ScriptInstanceBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.dto.BaseDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
@@ -54,12 +54,11 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.event.FileUploadEvent;
@@ -76,7 +75,7 @@ import org.primefaces.model.TreeNode;
  * 
  */
 
-public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<T> {
+public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudBean<T, MeveoModuleDto> {
 
     private static final long serialVersionUID = 8332852624069548417L;
 
@@ -126,7 +125,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
         this.meveoInstance = meveoInstance;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public T initEntity() {
         T module = super.initEntity();
 
@@ -141,20 +141,36 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
             for (MeveoModuleItem item : module.getModuleItems()) {
 
                 // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
-                meveoModuleService.loadModuleItem(item);
+                try {
+					 meveoModuleService.loadModuleItem(item);
+					 
+	                if (item.getItemEntity() == null) {
+	                    itemsToRemove.add(item);
+	                    continue;
+	                }
+	                
+	                if (item.getItemEntity() instanceof CustomFieldTemplate) {
+	                    TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
+	                    new DefaultTreeNode("item", item, classNode);
+	                    
+	                } else {
+	                    TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
+	                    new DefaultTreeNode("item", item, classNode);
+	                }
+	                
+				} catch (BusinessException e) {
+	                log.error("Failed to load module source {}", module.getCode(), e);
+				}
 
-                if (item.getItemEntity() == null) {
-                    itemsToRemove.add(item);
-                    continue;
-                }
-                if (item.getItemEntity() instanceof CustomFieldTemplate) {
-                    TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
-                    new DefaultTreeNode("item", item, classNode);
-                } else {
-                    TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
-                    new DefaultTreeNode("item", item, classNode);
-                }
-
+            }
+            
+            if(!itemsToRemove.isEmpty()) {
+            	itemsToRemove.forEach(module::removeItem);
+            	try {
+					meveoModuleService.update(module);
+				} catch (BusinessException e) {
+					log.error("Can't remove items {} from module {}", itemsToRemove, module, e);
+				}
             }
             // If module was downloaded, show module items from meveoModule.moduleSource
         } else {
@@ -165,11 +181,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
                     return module;
                 }
 
-                for (BaseEntityDto itemDto : dto.getModuleItems()) {
+                for (MeveoModuleItemDto moduleItemDto: dto.getModuleItems()) {
+                	Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+                	BaseEntityDto itemDto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+                	
                     if (itemDto instanceof CustomFieldTemplateDto) {
                         CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;
                         TreeNode classNode = getOrCreateNodeByAppliesTo(customFieldTemplateDto.getAppliesTo(), itemDto.getClass().getName());
                         new DefaultTreeNode("item", itemDto, classNode);
+                        
                     } else {
                         TreeNode classNode = getOrCreateNodeByClass(itemDto.getClass().getName());
                         new DefaultTreeNode("item", itemDto, classNode);
@@ -178,7 +198,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseBean<
 
             } catch (Exception e) {
                 log.error("Failed to load module source {}", module.getCode(), e);
-                // throw new BusinessException("Failed to load module source", e);
             }
 
         }

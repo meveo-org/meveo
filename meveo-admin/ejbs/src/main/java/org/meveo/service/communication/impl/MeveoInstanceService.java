@@ -21,12 +21,15 @@ package org.meveo.service.communication.impl;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.net.ssl.SSLContext;
 import javax.persistence.NoResultException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -41,6 +44,10 @@ import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.service.base.BusinessService;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * MeveoInstance service implementation.
  */
@@ -49,6 +56,20 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 
 	@Inject
 	private Event<InboundCommunicationEvent> event;
+
+	public ResteasyClient getRestEasyClient() {
+        try {
+            SSLContext sslContext = SSLContextBuilder
+                    .create()
+                    .loadTrustMaterial(new TrustSelfSignedStrategy())
+                    .build();
+
+            return new ResteasyClientBuilder().sslContext(sslContext).build();
+
+        } catch (Exception e){
+            return null;
+        }
+    }
 
 	public MeveoInstance findByCode(String meveoInstanceCode) {
 		QueryBuilder qb = new QueryBuilder(MeveoInstance.class, "c");
