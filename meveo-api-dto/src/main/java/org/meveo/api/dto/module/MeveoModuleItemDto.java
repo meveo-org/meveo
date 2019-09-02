@@ -1,6 +1,8 @@
 package org.meveo.api.dto.module;
 
-public class MeveoModuleItemDto {
+import org.meveo.api.dto.BaseEntityDto;
+
+public class MeveoModuleItemDto extends BaseEntityDto {
 	
 	private String dtoClassName;
 	private Object dtoData;
