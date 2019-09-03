@@ -39,8 +39,6 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -409,7 +407,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	                    } else {
 	
 	                        String entityClassName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
-	                        Class<?> entityClass = ReflectionUtils.getClassBySimpleNameAndAnnotation(entityClassName, ModuleItem.class);
+	                        Class<?> entityClass = ReflectionUtils.getClassBySimpleNameAndAnnotation(entityClassName, ModuleItem.class, "");
 	                        if (entityClass == null) {
 	                            throw new RuntimeException("No entity class or @ModuleItem annotation found for " + entityClassName);
 	                        }

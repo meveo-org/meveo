@@ -28,9 +28,11 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.util.pagination.EntityListDataModelPF;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -69,10 +71,15 @@ public class MeveoModuleListBean extends MeveoModuleBean {
         }
 
         if (selectedModuleDto.getModuleItems() != null) {
-            for (BaseEntityDto item : selectedModuleDto.getModuleItems()) {
-
-                TreeNode classNode = getOrCreateNodeByClass(item.getClass().getSimpleName());
-                new DefaultTreeNode("item", item, classNode);
+            for (MeveoModuleItemDto moduleItemDto : selectedModuleDto.getModuleItems()) {
+                try {
+                    Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+                    BaseEntityDto item = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+                    TreeNode classNode = getOrCreateNodeByClass(item.getClass().getSimpleName());
+                    new DefaultTreeNode("item", item, classNode);
+                } catch (ClassNotFoundException e) {
+                    log.error("Cannot find dto class", e);
+                }
             }
         }
     }

@@ -207,12 +207,13 @@ public class ReflectionUtils {
     /**
      * @param className class name
      * @param annotationClass annotation class
+     * @param prefix
      * @return instance of Class.
      */
-    public static Class<?> getClassBySimpleNameAndAnnotation(String className, Class<? extends Annotation> annotationClass) {
+    public static Class<?> getClassBySimpleNameAndAnnotation(String className, Class<? extends Annotation> annotationClass, String prefix) {
         Class<?> entityClass = null;
         if (!StringUtils.isBlank(className)) {
-            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass, "org.meveo.model");
+            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass, prefix);
             for (Class<?> clazz : classesWithAnnottation) {
                 if (className.equals(clazz.getSimpleName())) {
                     entityClass = clazz;
