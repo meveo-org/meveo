@@ -1,0 +1,146 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
+    template="/layout/template.xhtml" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{scriptInstanceBean.objectId}" />
+            <f:event type="preRenderView" listener="#{scriptInstanceBean.initCompilationErrors}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+    	<p:growl id="growl" showDetail="false" sticky="false" autoUpdate="false" />
+        <p:panel>
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                    <p:menuitem outcome="scriptInstances" value="#{messages['menu.scriptInstances']}" />
+				<p:menuitem value="#{messages['commons.new']} #{messages['scriptInstance.panel']}"
+					disabled="true" rendered="#{scriptInstanceBean.entity.transient}" />
+				<p:menuitem
+					value="#{messages['scriptInstance.panel']} - #{scriptInstanceBean.entity.code}"
+					disabled="true" rendered="#{!scriptInstanceBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
+            <a href='https://www.assembla.com/spaces/meveo-enterprise/wiki/Scripts' target='_blank'>Help ?</a>
+        </p:panel>
+        <hftl:formPanel label="#{messages['scriptInstance.panel']}" formId="scriptInstanceForm" backingBean="#{scriptInstanceBean}" showFormButtons="false">
+            <h:panelGroup rendered="#{scriptInstanceBean.entity.isError()}">
+                <div class="ui-messages ui-widget">
+                    <div class="ui-messages-error ui-corner-all">
+                        <span class="ui-messages-error-icon"></span>
+                        <ul>
+                            <li><h:outputText value="#{messages['scriptInstance.compilationFailed']}" styleClass="ui-messages-error-summary" /></li>
+                        </ul>
+                    </div>
+                </div>
+            </h:panelGroup>
+            <h:panelGroup id="scriptCode">
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" componentWidth="35" size="60"
+                                doNotShowOnNew="#{(scriptInstanceBean.entity.sourceTypeEnum == 'JAVA' or scriptInstanceBean.entity.id != null) ? 'true' : 'false'}"
+                                disabled="#{(scriptInstanceBean.entity.sourceTypeEnum == 'JAVA' or scriptInstanceBean.entity.id != null) ? 'true' : 'false'}"/>
+            </h:panelGroup>
+            <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:formField label="#{messages['scriptInstance.sourceTypeEnum']}" field="sourceTypeEnum" componentWidth="15" required="true"
+                            listenerUpdate="@this scriptCode scriptSource scriptJava"/>
+            <h:panelGroup id="scriptSource">
+ 				<c:if test="#{scriptInstanceBean.entity.sourceTypeEnum == 'JAVA'}">
+	                <hftl:decorateFormField label="#{messages['scriptInstance.script']}" fieldId="codeMirror" componentWidth="100">
+	                    <pe:codeMirror id="codeMirror" theme="eclipse" 
+	                    			   mode="text/x-java"
+	                    			   value="#{scriptInstanceBean.entity.script}"
+	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javaHint);}}"
+	                    			   smartIndent="true"
+	                                   lineNumbers="true" required="true"/>
+	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
+	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
+	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors :growl"/>
+	                    </h:panelGroup>
+	                </hftl:decorateFormField>
+ 				</c:if>
+ 				
+				<c:if test="#{scriptInstanceBean.entity.sourceTypeEnum == 'ES5'}">
+	                <hftl:decorateFormField label="#{messages['scriptInstance.script']}" fieldId="codeMirror" componentWidth="100">
+	                    <pe:codeMirror id="codeMirror" theme="eclipse" 
+	                    			   mode="javascript"
+	                    			   smartIndent="true"
+	                    			   value="#{scriptInstanceBean.entity.script}"
+	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javascriptHint);}}"
+	                                   lineNumbers="true" required="true"/>
+                	</hftl:decorateFormField>
+ 				</c:if>
+
+            </h:panelGroup>
+            <h:panelGroup id="scriptErrors">
+                <hftl:decorateFormField label="#{messages['scriptInstance.compilationErrors']}" componentWidth="100" newLine="true"
+                    rendered="#{scriptInstanceBean.entity.isError()}">
+                    <p:dataTable id="entityActions" var="entity" value="#{scriptInstanceBean.entity.scriptErrors}" paginator="true" rows="10" sortBy="#{entity.lineNumber}"
+                        sortField="lineNumber" paginatorAlwaysVisible="false"
+                        paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="10"
+                        lazy="false" styleClass="custom-grid" reflow="true">
+                        <hftl:column label="#{messages['scriptInstance.compilation.lineNumber']}" field="lineNumber" width="10%"/>
+                        <hftl:column label="#{messages['scriptInstance.compilation.columnNumber']}" field="columnNumber" width="15%" />
+                        <hftl:column label="#{messages['scriptInstance.compilation.message']}" field="message" />
+                    </p:dataTable>
+                </hftl:decorateFormField>
+            </h:panelGroup>
+
+            <h:panelGroup id="scriptJava" rendered="#{scriptInstanceBean.entity.id != null}">
+                <h:panelGrid columns="2" styleClass="top-aligned-panelGrid">
+	                <hftl:decorateFormField componentWidth="50%" label="#{messages['entity.scriptInstance.scriptInputs']}">
+	                    <p:dataTable id="scriptInputsId" var="item" value="#{scriptInstanceBean.inputs}" resizableColumns="true">
+	                        <p:column headerText="#{messages['entity.scriptInstance.name']}">
+	                            <h:outputText value="#{item.name}" size="50" rendered="#{!item.editable}"/>
+	                            <h:inputText value="#{item.name}" size="50" rendered="#{item.editable}"/>
+	                        </p:column>
+	                        <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
+	                            <p:commandButton rendered="#{item.editable}" action="#{scriptInstanceBean.removeScriptInput(item)}" icon="ui-icon-trash" update="scriptInputsId" />
+	                        </p:column>
+	                        <f:facet name="footer">
+	                            <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this scriptInputsId" update="scriptInputsId"
+	                                             actionListener="#{scriptInstanceBean.addNewInput()}"/>
+	                        </f:facet>
+	                    </p:dataTable>
+	                </hftl:decorateFormField>
+	                <hftl:decorateFormField componentWidth="50%" label="#{messages['entity.scriptInstance.scriptOutputs']}">
+	                    <p:dataTable id="scriptOutputsId" resizableColumns="true" var="item" value="#{scriptInstanceBean.outputs}">
+	                        <p:column headerText="#{messages['entity.scriptInstance.name']}">
+	                            <h:outputText value="#{item.name}" size="50" rendered="#{!item.editable}"/>
+	                            <h:inputText value="#{item.name}" size="50" rendered="#{item.editable}"/>
+	                        </p:column>
+	                        <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  width="40">
+	                            <p:commandButton rendered="#{item.editable}" action="#{scriptInstanceBean.removeScriptOutput(item)}" icon="ui-icon-trash" update="scriptOutputsId" />
+	                        </p:column>
+	                        <f:facet name="footer">
+	                            <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this scriptOutputsId" update="scriptOutputsId"
+	                                             actionListener="#{scriptInstanceBean.addNewOutput()}"/>
+	                        </f:facet>
+	                    </p:dataTable>
+	                </hftl:decorateFormField>
+                </h:panelGrid>
+            </h:panelGroup>
+            <h:panelGrid columns="2">
+            <hftl:formField label="#{messages['scriptInstance.executionRoles']}" field="executionRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.execRolesDM}"
+                valueLabelField="name" componentWidth="50" />
+            <hftl:formField label="#{messages['scriptInstance.sourcingRoles']}" field="sourcingRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.sourcRolesDM}"
+                valueLabelField="name" componentWidth="50" />
+            </h:panelGrid>
+            <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!scriptInstanceBean.entity.transient and scriptInstanceBean.getPartOfModules() != null and scriptInstanceBean.getPartOfModules() != ''}">
+                <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />
+            </hftl:decorateFormField>
+            
+            <hf:formButtons backingBean="#{scriptInstanceBean}" 
+           					edit="#{scriptInstanceBean.edit}" 
+           					ajaxSubmit="true"
+           					submitUpdate="@form:scriptErrors"
+                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}" 
+                			executeLabel="#{messages['action.execute']}" />
+        </hftl:formPanel>
+        <p:dataTable var="log" value="#{scriptInstanceBean.getLogs()}" rendered="#{!empty(scriptInstanceBean.getLogs())}">
+            <p:column headerText="Logs">
+                <h:outputText value="#{log}" />
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+</ui:composition>

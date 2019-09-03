@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet id="#2428_20180105" author="EdwardPLegaspi">
+        <addColumn tableName="adm_notif_webhooks">
+            <column name="http_protocol" type="varchar(10)" />
+        </addColumn>
+        <sql>UPDATE ${db.schema.adapted}adm_notif_webhooks SET http_protocol='HTTP'</sql>
+        <addNotNullConstraint tableName="adm_notif_webhooks" columnName="http_protocol" columnDataType="varchar(10)" />
+    </changeSet>
+    <changeSet id="#2792_20180110" author="AndriusKarpavicius">
+        <sql>CREATE INDEX medina_access_user_id_index ON ${db.schema.adapted}medina_access(acces_user_id)</sql>
+    </changeSet>
+    <changeSet id="#2792_20180119" author="AndriusKarpavicius">
+        <sql>CREATE INDEX counter_period_ci_id ON ${db.schema.adapted}billing_counter_period(counter_instance_id)</sql>
+    </changeSet>
+    <changeSet author="anasseh" id="#3136_07022018">
+        <sql>update ${db.schema.adapted}meveo_job_instance set cf_values = replace (cf_values, 'PaymentCardJob_','PaymentJob_'), job_template = replace(job_template,'PaymentCardJob','PaymentJob') </sql>
+        <sql>update ${db.schema.adapted}crm_custom_field_tmpl set code = replace (code, 'PaymentCardJob_','PaymentJob_'), applies_to = replace (applies_to, 'JOB_PaymentCardJob','JOB_PaymentJob') </sql>
+    </changeSet>
+    <changeSet author="anasseh" id="#2830_15022018">
+        <!-- com_sender_config -->
+        <addColumn tableName="com_sender_config">
+            <column name="address_country_id" type="bigint" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="address_country_id" baseTableName="com_sender_config" constraintName="fk_country_id_sender" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="adm_country" />
+        <sql>update ${db.schema.adapted}com_sender_config ae set address_country_id = (select ac.id from ${db.schema.adapted}adm_country ac where upper(ac.description) like '%'|| upper(ae.address_country) ||'%' or
+            upper(ac.description_i18n )like '%'|| upper(ae.address_country) ||'%' limit 1) </sql>
+        <dropColumn tableName="com_sender_config" columnName="address_country" />
+
+        <!-- crm_provider_contact -->
+        <addColumn tableName="crm_provider_contact">
+            <column name="address_country_id" type="bigint" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="address_country_id" baseTableName="crm_provider_contact" constraintName="fk_country_id_prov_contact" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="adm_country" />
+        <sql>update ${db.schema.adapted}crm_provider_contact ae set address_country_id = (select ac.id from ${db.schema.adapted}adm_country ac where upper(ac.description) like '%'|| upper(ae.address_country) ||'%' or
+            upper(ac.description_i18n )like '%'|| upper(ae.address_country) ||'%' limit 1) </sql>
+        <dropColumn tableName="crm_provider_contact" columnName="address_country" />
+
+        <!-- crm_provider -->
+        <addColumn tableName="crm_provider">
+            <column name="address_country_id" type="bigint" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="address_country_id" baseTableName="crm_provider" constraintName="fk_country_id_prov" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="adm_country" />
+        <sql>update ${db.schema.adapted}crm_provider ae set address_country_id = (select ac.id from ${db.schema.adapted}adm_country ac where upper(ac.description) like '%'|| upper(ae.address_country) ||'%' or upper(ac.description_i18n
+            )like '%'|| upper(ae.address_country) ||'%' limit 1) </sql>
+        <dropColumn tableName="crm_provider" columnName="address_country" />
+
+        <!-- ord_order_item -->
+        <addColumn tableName="ord_order_item">
+            <column name="address_country_id" type="bigint" />
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="address_country_id" baseTableName="ord_order_item" constraintName="fk_country_id_order" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+            onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="adm_country" />
+        <sql>update ${db.schema.adapted}ord_order_item ae set address_country_id = (select ac.id from ${db.schema.adapted}adm_country ac where upper(ac.description) like '%'|| upper(ae.address_country) ||'%' or
+            upper(ac.description_i18n )like '%'|| upper(ae.address_country) ||'%' limit 1) </sql>
+        <dropColumn tableName="ord_order_item" columnName="address_country" />
+    </changeSet>
+    <changeSet id="#2870_20180129" author="EdwardLegaspi">
+        <createTable tableName="dwh_report_extract">
+            <column name="id" type="bigint" autoIncrement="${id.auto}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="dwh_report_extract_pkey" />
+            </column>
+            <column name="version" type="int4" />
+            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="code" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(255)" />
+            <column name="category" type="varchar(50)" />
+            <column name="script_type" type="varchar(10)">
+            	<constraints nullable="false"/>
+           	</column>
+            <column name="filename_format" type="varchar(100)">
+            	<constraints nullable="false"/>
+            </column>
+            <column name="sql_query" type="varchar(2000)" />
+            <column name="script_instance_id" type="bigint" />
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="script_instance_id" baseTableName="dwh_report_extract" constraintName="fk_report_extract_script_instance" deferrable="false" initiallyDeferred="false"
+            onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="meveo_script_instance" />
+		<createSequence sequenceName="dwh_report_extract_seq" />
+		<createTable tableName="dwh_report_extract_params">
+            <column name="reportextract_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="params" type="varchar(255)" />
+            <column name="params_key" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="reportextract_id, params_key" constraintName="pk_report_extract_params" tableName="dwh_report_extract_params" />
+    </changeSet>
+    
+     <changeSet id="#2870_20180129 Mysql" author="EdwardLegaspi" dbms="mysql">
+        <createTable tableName="dwh_report_extract_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="dwh_report_extract_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}dwh_report_extract_seq values(1)</sql>
+     </changeSet>
+	<changeSet id="#3351_20180407" author="EdwardPLegaspi">
+		<modifyDataType tableName="dwh_report_extract" columnName="sql_query" newDataType="text" />
+	</changeSet> 
+	<changeSet id="#1706_20180408" author="EdwardPLegaspi">
+		<createTable tableName="billing_finance_segment">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_billing_finance_segment" />
+            </column>
+            <column name="code" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(255)" />
+            <column name="version" type="int4" />
+            <column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="updated" type="datetime" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+            <column name="object_class" type="varchar(100)">
+            	<constraints nullable="false"/>
+            </column>
+            <column name="field" type="varchar(100)">
+            	<constraints nullable="false"/>
+            </column>
+		</createTable>
+		<addUniqueConstraint columnNames="code" tableName="billing_finance_segment"/>
+		<createSequence sequenceName="billing_finance_segment_seq" />
+	</changeSet>
+	<changeSet id="#1706_20180408-M" author="EdwardPLegaspi" dbms="mysql">
+        <createTable tableName="billing_finance_segment_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_billing_finance_segment_seq" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}billing_finance_segment_seq values(1)</sql>
+    </changeSet>
+	<changeSet id="#3019_20180312" author="AbdelmounaimAkadid">
+        <addColumn tableName="billing_service_instance">
+            <column name="minimum_amount_el" type="varchar(2000)"  />           
+            <column name="minimum_label_el" type="varchar(2000)"  />           
+        </addColumn>
+        <addColumn tableName="cat_service_template">
+            <column name="minimum_amount_el" type="varchar(2000)"  />           
+            <column name="minimum_label_el" type="varchar(2000)"  />           
+        </addColumn>
+	</changeSet>
+	<changeSet id="perf_cgi_20180426" author="Wassim" dbms="postgresql">
+        <sql>DROP INDEX IF EXISTS ${db.schema.adapted}medina_access_subscription_id</sql>
+        <sql>CREATE INDEX medina_access_subscription_id ON  ${db.schema.adapted}medina_access(subscription_id)</sql>
+	</changeSet>
+	<changeSet id="perf_cgi_20180426" author="Wassim" dbms="mysql">
+        <sql>DROP INDEX IF EXISTS medina_access_subscription_id ON ${db.schema.adapted}medina_access</sql>
+        <sql>CREATE INDEX medina_access_subscription_id ON ${db.schema.adapted}medina_access(subscription_id)</sql>
+	</changeSet>   
+	<changeSet id="#3436_20180508" author="EdwardPLegaspi">
+		<modifyDataType tableName="dwh_measurable_quant" columnName="sql_query" newDataType="text" />
+	</changeSet>
+</databaseChangeLog>

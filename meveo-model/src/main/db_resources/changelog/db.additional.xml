@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+  ~ even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+  ~ not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+  ~ General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="type.blob" value="blob" dbms="postgresql" />
+    <property name="type.blob" value="longblob" dbms="mysql" />
+    <property name="type.boolean" value="INT4" dbms="postgresql" />
+    <property name="type.boolean" value="integer" dbms="mysql" />
+    <property name="type.byte" value="smallint" dbms="postgresql" />
+    <property name="type.byte" value="tinyint(1)" dbms="mysql" />
+    <property name="type.longText" value="text" dbms="postgresql" />
+    <property name="type.longText" value="longtext" dbms="mysql" />
+    <property name="type.json" value="text" dbms="postgresql" /> <!-- could also be json, but mysql allows text only and as columnDefinition has to be the same, need to use text instead see #2751 -->
+    <property name="type.json" value="text" dbms="mysql" />
+    <property name="cast.long" value="bigint" dbms="postgresql" />
+    <property name="cast.long" value="UNSIGNED " dbms="mysql" />
+    <property name="id.auto" value="false" dbms="postgresql" />
+    <property name="id.auto" value="true" dbms="mysql" />
+    <property name="migration" value="true" />
+
+    <property name="db.schema.adapted" value="${db.schema}." dbms="postgresql"/>
+    <property name="db.schema.adapted" value="" dbms="mysql"/>
+
+    <include file="additional/structure.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

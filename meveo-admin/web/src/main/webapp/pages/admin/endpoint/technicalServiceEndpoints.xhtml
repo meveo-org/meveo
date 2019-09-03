@@ -1,0 +1,34 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:hftl="http://hftl.org"
+                xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+                template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:event type="preRenderView"
+                     listener="#{endpointListBean.preRenderView}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <hftl:searchPanel label="#{messages['enpoint.search']}" columns="3" backingBean="#{endpointListBean}">
+            <hftl:searchField label="#{messages['endpoint.service']}"
+                              field="code" />
+        </hftl:searchPanel>
+
+        <hftl:dataList label="#{messages['endpoint.title']}" backingBean="#{endpointListBean}">
+            <hftl:column label="#{messages['endpoint.service']}" field="code" width="10%" entityView="technicalServiceEndpointDetail"/>
+            <hftl:column label="#{messages['enpoint.synchronous']}"	field="synchronous" />
+            <hftl:column label="#{messages['endpoint.method']}" field="method" />
+            <hftl:column label="#{messages['endpoint.contentType']}" field="contentType" />
+            <hftl:column label="#{messages['endpoint.jsonataTransformer']}" field="jsonataTransformer" />
+            <hftl:actionsColumn	permission="#{currentUser.hasRole('superAdminManagement')}" />/>
+        </hftl:dataList>
+
+    </ui:define>
+
+</ui:composition>

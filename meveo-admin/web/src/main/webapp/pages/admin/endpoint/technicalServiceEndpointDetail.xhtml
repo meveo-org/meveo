@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+                xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
+
+    <o:importConstants type="org.meveo.model.technicalservice.endpoint.EndpointHttpMethod" />
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{endpointBean.objectId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem outcome="endpoint" value="#{messages['enpoint.endpoint']}" />
+                <p:menuitem value="#{endpointBean.entity.code}" />
+            </p:breadCrumb>
+        </h:form>
+        <hftl:entityPopup id="searchFuncionPopup"
+                          header="#{messages['endpoint.search.endpoint.service']}"
+                          backingBean="#{functionBean}"
+                          searchField1Label="#{messages['BusinessEntity.code']}"
+                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                          column1="code" selection="#{endpointBean.entity.service}"
+                          column2Label="#{messages['BusinessEntity.description']}"
+                          column2="description"
+                          column3="class"
+                          column3Child = "simpleName"
+                          column3Label="Type"
+                          selectionListenerBean="#{endpointBean}"
+                          selectionListenerMethod="onFunctionChange"
+                          updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrl :endpointForm:endpoint-technical-configuration">
+        </hftl:entityPopup>
+        <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" backingBean="#{endpointBean}">
+            <h:panelGrid columns="5">
+                <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true" validateUnique="true" listenerUpdate=":endpointForm:endpointUrl"/>
+                <hftl:formField id="serviceId" label="#{messages['endpoint.code']}" 
+                				field="service" 
+                				valueLabelField="code" 
+                				required="true" popup="true" popupId="searchFuncionPopup" 
+                                allowEdit="true" displayOneLine="false" componentWidth="100" 
+                                actionListenerBean="#{endpointBean}" actionListenerMethod="onFunctionChange"/>
+                <hftl:formField label="#{messages['endpoint.description']}" field="description" />
+                <hftl:decorateFormField field = "method" fieldId="method" componentWidth="100" label="#{messages['endpoint.method']}">
+                    <p:selectOneMenu id="method" value="#{endpointBean.entity.method}" style="width:150px;">
+                        <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItem itemLabel="#{messages['endpoint.GET']}" itemValue="GET" />
+                        <f:selectItem itemLabel="#{messages['endpoint.POST']}" itemValue="POST" />
+                    </p:selectOneMenu>
+                </hftl:decorateFormField>
+                <hftl:formField label="#{messages['enpoint.synchronous']}" field="synchronous" />
+            </h:panelGrid>
+            <h:panelGroup id="functionInputs">
+                <hftl:decorateFormField componentWidth="100%" rendered="#{notificationBean.entity.function.hasInputs()}" label="#{messages['endpoint.technicalServiceParameters']}">
+                    <p:dataTable id="technicalServiceParametersId" resizableColumns="true" var="item" paginator="false"
+                                 reflow="true" value="#{endpointBean.entity.service.inputs}">
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.name']}">
+                            <h:outputText value="#{item.name}" />
+                        </p:column>
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.type']}">
+                            <h:outputText value="#{item.type}" />
+                        </p:column>
+                        <p:column headerText="#{messages['endpoint.technicalServiceParameters.description']}">
+                            <h:outputText value="#{item.description != null ? item.description : ''}" />
+                        </p:column>
+                    </p:dataTable>
+                </hftl:decorateFormField>
+            </h:panelGroup>
+            <h:panelGrid columns="2" columnClasses="Wid40 Responsive100 VAlignTop, Wid60 Responsive100 VAlignTop">
+                <h:panelGroup id="pathParameters">
+                    <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.pathParameter']}">
+                        <p:pickList id="pickList" value="#{endpointBean.dualListModel}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                            <p:ajax event="transfer" update=":endpointForm:parametersMapping :endpointForm:endpointUrl" />
+                        </p:pickList>
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+                <h:panelGroup id="parametersMapping">
+                    <hftl:decorateFormField componentWidth="100%" label="#{messages['endpoint.parameters.mapping']}">
+                        <p:dataTable id="parametersMappingId" resizableColumns="true" var="item" value="#{endpointBean.parameterMappings}" paginator="false" reflow="true">
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.service']}">
+                                <h:outputText value="#{item.endpointParameter.parameter}" />
+                            </p:column>
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.expose']}">
+                                <h:inputText value="#{item.parameterName}" size="40"/>
+                            </p:column>
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.default']}">
+                                <h:inputText value="#{item.defaultValue}" size="40"/>
+                            </p:column>
+                        </p:dataTable>
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+            </h:panelGrid>
+                <h:panelGroup id="endpoint-technical-configuration" layout="block" style="display:flex">
+	                <hftl:decorateFormField style="width: auto" field="contentType" fieldId="contentType" label="#{messages['endpoint.contentType']}">
+	                    <p:inputText id="contentType" value="#{endpointBean.entity.contentType}" size="40"/>
+	                </hftl:decorateFormField>
+	                
+	                <h:panelGroup layout="block" id="returnedValueNameId">
+	                    <hftl:decorateFormField field ="returnedValueName" fieldId="returnedValueName" label="#{messages['endpoint.returnedValueName']}">
+	                        <p:selectOneMenu id="returnedValueName" value="#{endpointBean.entity.returnedVariableName}" style="width:150px;" >
+	                            <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
+	                            <f:selectItems value="#{endpointBean.returnedVariableNames}" var="returnedVariableName" itemValue="#{returnedVariableName}" itemLabel="#{returnedVariableName}" />
+	                            <p:ajax update="serializeResult jsonataTransformerId" event="change" />
+<!-- 	                            <p:ajax update="jsonataTransformerId" event="change" /> -->
+	                        </p:selectOneMenu>
+	                    </hftl:decorateFormField>
+	                </h:panelGroup>
+	                
+	                <h:panelGroup layout="block" id="serializeResult" width="20">
+	                    <hftl:formField style="width:110%" 
+	                    				label="#{messages['enpoint.serializeResult']}" 
+	                    				field="serializeResult" 
+	                    				newLine="false" 
+	                    				rendered="#{endpointBean.entity.returnedVariableName != null}"
+	                    				></hftl:formField>
+	                </h:panelGroup>
+	                
+	                <h:panelGroup id="jsonataTransformerId" >
+	   	                <hftl:decorateFormField field ="jsonataTransformer" fieldId="jsonataTransformerId" label="#{messages['endpoint.jsonataTransformer']}">
+	                    	<p:inputText value="#{endpointBean.entity.jsonataTransformer}" size="100"/>
+	                	</hftl:decorateFormField> 
+	                </h:panelGroup>
+                </h:panelGroup>
+
+
+
+                <h:panelGroup id="endpointUrl">
+                    <hftl:decorateFormField field ="endpointUrl" fieldId="endpointUrlId" label="#{messages['endpoint.accessUrl']}">
+                        <p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}" size="100" readonly="true" />
+                    </hftl:decorateFormField>
+                </h:panelGroup>
+        </hftl:formPanel>
+    </ui:define>
+
+</ui:composition>

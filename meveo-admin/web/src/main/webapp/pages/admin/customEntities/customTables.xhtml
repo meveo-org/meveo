@@ -1,0 +1,274 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:s="http://jboss.org/seam/faces"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui" template="/layout/template.xhtml">
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId" value="#{customTableBean.objectId}" />
+			<f:viewParam name="cet" value="#{customTableBean.cet}" />
+			<f:event type="preRenderView"
+				listener="#{customTableBean.preRenderView}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId" value="#{titleBean.objectId}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+
+		<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
+		
+  	    <ui:include src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
+  	    	<ui:param name="prefix" value="listing"/>
+  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
+  	    	<ui:param name="bean" value="#{customTableBean}"/>
+    	</ui:include>
+    	
+	    <ui:include src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
+ 		    <ui:param name="prefix" value="listing"/>
+  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
+  	    	<ui:param name="bean" value="#{customTableBean}"/>
+	    </ui:include>
+	    
+  	    <ui:include src="/pages/admin/customEntities/customTables/customTableRowDetail.xhtml"/>
+		
+		<o:importConstants
+			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.catalog']}" disabled="true" />
+				<p:menuitem outcome="customTables"
+					value="#{customTableBean.entity.description}" />
+			</p:breadCrumb>
+		</h:form>
+
+		<h:panelGroup id="exportSummary">
+			<h:form id="formExportSummary">
+				<h:panelGroup rendered="#{customTableBean.exportFuture!=null}">
+
+					<p:poll interval="5" update="exportSummary"
+						stop="#{customTableBean.exportFuture!=null and customTableBean.exportFuture.isDone()}"
+						widgetVar="exportStatusPoll"
+						onerror="PF('exportStatusPoll').stop()" />
+
+					<h:panelGroup rendered="#{customTableBean.exportFuture!=null}">
+						<h:panelGroup rendered="#{!customTableBean.exportFuture.isDone()}">
+							<div class="ui-messages ui-widget">
+								<div class="ui-messages-info ui-corner-all">
+									<span class="ui-messages-info-icon" />
+									<ul>
+										<li><h:outputText
+												value="#{messages['customTable.exportFile.inProgress']}"
+												styleClass="ui-messages-info-summary" /></li>
+									</ul>
+								</div>
+							</div>
+
+						</h:panelGroup>
+						<h:panelGroup rendered="#{customTableBean.exportFuture.isDone()}">
+							<div class="ui-messages ui-widget">
+								<h:panelGroup
+									rendered="#{customTableBean.exportFuture.get().exception!=null}">
+									<div class="ui-messages-error ui-corner-all">
+										<span class="ui-messages-error-icon" />
+										<ul>
+											<li><h:outputText
+													value="#{messages['customTable.exportFile.failed']}"
+													styleClass="ui-messages-error-summary" escape="false" /></li>
+											<li><h:outputText
+													value="#{customTableBean.exportFuture.get().exceptionMessage}" /></li>
+										</ul>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup
+									rendered="#{customTableBean.exportFuture.get().exception==null}">
+									<div class="ui-messages-info ui-corner-all">
+										<span class="ui-messages-info-icon" />
+										<ul>
+											<li><h:outputText
+													value="#{messages['customTable.exportFile.finished'].concat(customTableBean.exportFuture.get().resultMessage)}"
+													styleClass="ui-messages-info-summary" escape="false" /></li>
+										</ul>
+									</div>
+								</h:panelGroup>
+							</div>
+						</h:panelGroup>
+					</h:panelGroup>
+				</h:panelGroup>
+			</h:form>
+		</h:panelGroup>
+
+		<h:panelGroup id="importSummary">
+			<h:form id="formImportSummary">
+				<h:panelGroup rendered="#{customTableBean.importFuture!=null}">
+
+					<p:remoteCommand name="updateData" update=":ctForm:ctSearchResults" />
+
+					<p:poll interval="5" update="importSummary"
+						stop="#{customTableBean.importFuture!=null and customTableBean.importFuture.isDone()}"
+						widgetVar="importStatusPoll"
+						onerror="PF('importStatusPoll').stop()" onsuccess="updateData()" />
+
+					<h:panelGroup rendered="#{customTableBean.importFuture!=null}">
+						<h:panelGroup rendered="#{!customTableBean.importFuture.isDone()}">
+							<div class="ui-messages ui-widget">
+								<div class="ui-messages-info ui-corner-all">
+									<span class="ui-messages-info-icon" />
+									<ul>
+										<li><h:outputText
+												value="#{messages['customTable.importFile.inProgress']}"
+												styleClass="ui-messages-info-summary" /></li>
+									</ul>
+								</div>
+							</div>
+
+						</h:panelGroup>
+						<h:panelGroup rendered="#{customTableBean.importFuture.isDone()}">
+							<div class="ui-messages ui-widget">
+								<h:panelGroup
+									rendered="#{customTableBean.importFuture.get().exception!=null}">
+									<div class="ui-messages-error ui-corner-all">
+										<span class="ui-messages-error-icon" />
+										<ul>
+											<li><h:outputText
+													value="#{messages['customTable.importFile.failed']}"
+													styleClass="ui-messages-error-summary" escape="false" /></li>
+											<li><h:outputText
+													value="#{customTableBean.importFuture.get().exceptionMessage}" /></li>
+										</ul>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup
+									rendered="#{customTableBean.importFuture.get().exception==null}">
+									<div class="ui-messages-info ui-corner-all">
+										<span class="ui-messages-info-icon" />
+										<ul>
+											<li><h:outputText
+													value="#{messages['customTable.importFile.finished'].concat(customTableBean.importFuture.get().itemsProcessed)}"
+													styleClass="ui-messages-info-summary" escape="false" /></li>
+										</ul>
+									</div>
+								</h:panelGroup>
+							</div>
+						</h:panelGroup>
+					</h:panelGroup>
+				</h:panelGroup>
+			</h:form>
+		</h:panelGroup>
+
+		<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+
+		<hftl:searchPanel backingBean="#{customTableBean}"
+			renderNewButton="false" ajaxUpdateIds=":ctForm:ctSearchResults">
+
+			<c:forEach items="#{customTableBean.filterFields}" var="field">
+
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
+					<hftl:searchTextField id="#{field.dbFieldname}"
+						backingBean="#{customTableBean}" field="#{field.dbFieldname}"
+						label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+						maxlength="#{field.maxValue}" />
+				</c:if>
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DATE}">
+					<hftl:searchDateField id="#{field.dbFieldname}"
+						backingBean="#{customTableBean}" field="#{field.dbFieldname}"
+						label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+						datePattern="#{paramBean.dateFormat}" rangeSearch="true"
+						componentWidth="25" />
+				</c:if>
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE}">
+					<hftl:searchNumberField id="#{field.dbFieldname}"
+						converterId="javax.faces.Double" backingBean="#{customTableBean}"
+						field="${field.dbFieldname}"
+						label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+						componentWidth="25" rangeSearch="true" />
+				</c:if>
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LONG}">
+					<hftl:searchNumberField id="#{field.dbFieldname}"
+						converterId="javax.faces.Long" backingBean="#{customTableBean}"
+						field="${field.dbFieldname}"
+						label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+						componentWidth="25" rangeSearch="true" />
+				</c:if>
+
+				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LIST}">
+					<hftl:decorateFormField fieldId="#{field.dbFieldname}"
+						label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+						componentWidth="25">
+						<p:selectOneMenu id="#{field.dbFieldname}"
+							value="#{customTableBean.filters[field.dbFieldname]}"
+							placeholder="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}"
+							label="#{field.getDescription(customTableBean.currentLocale.ISO3Language)}">
+							<f:selectItem itemValue="#{null}" itemLabel="" />
+							<f:selectItems value="#{field.listValues.entrySet()}"
+								var="listVal" itemValue="#{listVal.key}"
+								itemLabel="#{listVal.value} (#{listVal.key})" />
+						</p:selectOneMenu>
+					</hftl:decorateFormField>
+				</c:if>
+			</c:forEach>
+		</hftl:searchPanel>
+
+		<p:panel width="100">
+			<!--  Datatable -->
+
+			<ui:include
+				src="/pages/admin/customEntities/customTables/customTableDatatable.xhtml">
+				<ui:param name="popupMode" value="false" />
+				<ui:param name="bean" value="#{customTableBean}" />
+			</ui:include>
+
+			<p:dialog modal="true" closeOnEscape="true" widgetVar="importDialog"
+				header="#{messages['customTable.importFile.header']}"
+				draggable="false" closable="true" resizable="false" width="1000px">
+
+				<hftl:decorateFormPanel formId="importForm">
+					<ui:define name="fields">
+						<hftl:decorateFormField fieldId="appendImportedData"
+							label="#{messages['customTable.appendImportedData']}"
+							componentWidth="50" displayOneLine="true" labelWidth="60">
+							<p:selectBooleanCheckbox id="appendImportedData"
+								value="#{customTableBean.appendImportedData}">
+								<p:ajax event="change" process="@this" />
+							</p:selectBooleanCheckbox>
+						</hftl:decorateFormField>
+
+						<hftl:decorateFormField fieldId="csvFileFormat"
+							label="#{messages['customTable.csvFileFormat']}"
+							componentWidth="100" newLine="true">
+							<h:outputText id="csvFileFormat"
+								value="#{customTableBean.csvFileFormat }"
+								styleClass="field-value" />
+						</hftl:decorateFormField>
+
+						<hftl:decorateFormField label="" componentWidth="100"
+							newLine="true">
+							<p:fileUpload id="import_file" widgetVar="fileUploadWidget"
+								fileUploadListener="#{customTableBean.handleFileUpload}"
+								allowTypes="/(\.|\/)(csv)$/" auto="false"
+								label="#{messages['customTable.importFile.selectFile']}"
+								uploadLabel="#{messages['export.importFile.upload']}"
+								fileLimitMessage="#{messages['customFieldTemplate.importFile.fileLimitMessage']}"
+								multiple="false" update=":growl :importSummary @this"
+								onstart="PF('importDialog').hide()"
+								oncomplete="PF('fileUploadWidget').reset(); PF('fileUploadWidget').reset();"
+								rendered="#{customTableBean.importFuture ==null or customTableBean.importFuture.isDone()}" />
+
+						</hftl:decorateFormField>
+					</ui:define>
+				</hftl:decorateFormPanel>
+			</p:dialog>
+		</p:panel>
+	</ui:define>
+
+</ui:composition>
