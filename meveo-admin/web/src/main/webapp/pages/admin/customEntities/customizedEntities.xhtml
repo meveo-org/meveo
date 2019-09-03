@@ -48,9 +48,10 @@
         <h:form prependId="false">
             <p:panel width="100">
                 <p:dataTable id="searchResults" value="#{customEntityTemplateListBean.customizedEntities}" var="entity" sortOrder="ascending" sortBy="#{entity.customEntityCategory.code}"
-                    paginator="true" rows="30" resizableColumns="true" multiViewState="true"
+                    paginator="true" rows="30" resizableColumns="true" multiViewState="true" rowKey="#{entity.customEntityId}"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
-                    lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                    lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex" >
+                    <p:column id="multiSelect" selectionMode="multiple" width="4%" exportable="false" toggleable="false" />
                     <hftl:column label="#{messages['customizedEntities.category']}" field="customEntityCategory.code" />
                     <p:column headerText="#{messages['customizedEntities.entityName']}" sortBy="#{entity.classnameToDisplayHuman}">
                         <c:if test="#{!currentUser.hasRole('administrationManagement')}">
@@ -74,7 +75,16 @@
                     </p:column>
                     <hftl:column label="#{messages['customizedEntities.description']}" field="description" />
                     <hftl:column label="#{messages['customizedEntities.customEntity']}" field="customEntity" isMessage="true" sort="false" />
+                    <p:column headerText="#{messages['commons.actions']}">
+                        <p:tooltip for="deletelink" value="#{messages['commons.delete']}" showEffect="slide" hideEffect="slide" />
+                        <p:commandButton id="deletelink" immediate="true" icon="ui-icon-trash" action="#{customEntityTemplateBean.delete(entity.customEntityId)}" update="@form" oncomplete="fieldsDoDelete()">
+                        </p:commandButton>
+                    </p:column>
                 </p:dataTable>
+                <p:column>
+                    <p:commandButton id="deleteEntitieslink" value="#{messages['commons.deleteMultiple']}" action="#{customEntityTemplateBean.deleteMany()}" icon="ui-icon-trash"
+                                     onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}" update="@form" />
+                </p:column>
             </p:panel>
         </h:form>
     </ui:define>
