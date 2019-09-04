@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -54,16 +55,15 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.util.*;
-import org.meveo.service.notification.DefaultObserver;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods declared in the {@link IPersistenceService} interface.
- * 
+ *
+ * @author Clément Bareth
  * @author Edward P. Legaspi
  * @author Andrius Karpavicius
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @lastModifiedVersion 6.3.0
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
     protected Class<E> entityClass;
@@ -337,7 +337,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @see org.meveo.service.base.local.IPersistenceService#remove(java.lang.Long)
      */
     @Override
-    public void remove(Long id) throws BusinessException {
+    public final void remove(Long id) throws BusinessException {
         E e = findById(id);
         if (e != null) {
             remove(e);
@@ -397,7 +397,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      */
     @Override
     public void create(E entity) throws BusinessException {
-        log.debug("start of create {} entity={}", entity.getClass().getSimpleName());
+        log.debug("Start creation of entity {}", entity.getClass().getSimpleName());
 
         beforeUpdateOrCreate(entity);
 
@@ -1083,7 +1083,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @param params Parameters to pass
      * @return A map of values retrieved
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public List<Map<String, Object>> executeNativeSelectQuery(String query, Map<String, Object> params) {
         Session session = getEntityManager().unwrap(Session.class);
         SQLQuery q = session.createSQLQuery(query);

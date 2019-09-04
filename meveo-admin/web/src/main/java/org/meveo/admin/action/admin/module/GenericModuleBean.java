@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -70,9 +71,10 @@ import org.primefaces.model.TreeNode;
 
 /**
  * Meveo module bean
- * 
+ *
+ * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
- * 
+ * @lastModifiedVersion 6.3.0
  */
 
 public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudBean<T, MeveoModuleDto> {
@@ -96,15 +98,14 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     protected CustomFieldTemplateService customFieldTemplateService;
 
     private BusinessEntity moduleItemEntity;
-
     private TreeNode root;
-
     protected MeveoInstance meveoInstance;
-
     private CroppedImage croppedImage;
     private String tmpPicture;
+    private boolean remove = false;
 
     public GenericModuleBean() {
+
     }
 
     public GenericModuleBean(Class<T> clazz) {
@@ -136,7 +137,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return module;
             }
 
-            List<MeveoModuleItem> itemsToRemove = new ArrayList<MeveoModuleItem>();
+            List<MeveoModuleItem> itemsToRemove = new ArrayList<>();
 
             for (MeveoModuleItem item : module.getModuleItems()) {
 
@@ -245,6 +246,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                     }
                 }
             }
+
+            moduleItemEntity = itemEntity;
         }
     }
 
@@ -256,23 +259,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         this.root = root;
     }
 
-    // public LazyDataModel<T> getSubModules() {
-    //
-    // LazyDataModel<T> result = null;
-    // HashMap<String, Object> filters = new HashMap<String, Object>();
-    //
-    // if (getEntity().isTransient()) {
-    // result = getLazyDataModel(filters, true);
-    // } else {
-    // filters.put("ne id", entity.getId());
-    // result = getLazyDataModel(filters, true);
-    // }
-    //
-    // return result;
-    // }
-
     public LazyDataModel<MeveoModule> getSubModules() {
-        HashMap<String, Object> filters = new HashMap<String, Object>();
+        HashMap<String, Object> filters = new HashMap<>();
 
         if (!getEntity().isTransient()) {
             filters.put("ne id", entity.getId());
@@ -280,9 +268,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
         final Map<String, Object> finalFilters = filters;
 
-        LazyDataModel<MeveoModule> meveoModuleDataModel = new ServiceBasedLazyDataModel<MeveoModule>() {
-
-            private static final long serialVersionUID = -8167681362884293170L;
+        return new ServiceBasedLazyDataModel<MeveoModule>() {
 
             @Override
             protected IPersistenceService<MeveoModule> getPersistenceServiceImpl() {
@@ -293,7 +279,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             protected Map<String, Object> getSearchCriteria() {
 
                 // Omit empty or null values
-                Map<String, Object> cleanFilters = new HashMap<String, Object>();
+                Map<String, Object> cleanFilters = new HashMap<>();
 
                 for (Map.Entry<String, Object> filterEntry : finalFilters.entrySet()) {
                     if (filterEntry.getValue() == null) {
@@ -330,8 +316,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return elasticClient;
             }
         };
-
-        return meveoModuleDataModel;
     }
 
     public void removeTreeNode(TreeNode node) {
@@ -415,6 +399,14 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         this.croppedImage = croppedImage;
     }
 
+    public boolean isRemove() {
+        return remove;
+    }
+
+    public void setRemove(boolean remove) {
+        this.remove = remove;
+    }
+
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
@@ -449,8 +441,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     /**
      * clean uploaded picture
-     * 
-     * @throws BusinessException
      */
     @ActionMethod
     @Override
@@ -465,21 +455,22 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     /**
      * clean uploaded pictures for multi delete
-     * 
-     * @throws Exception
      */
     @ActionMethod
     @Override
     public void deleteMany() throws Exception {
-        List<String> files = new ArrayList<String>();
-        String source = null;
+        List<String> files = new ArrayList<>();
+        String source;
+
         for (MeveoModule entity : getSelectedEntities()) {
             source = entity.getLogoPicture();
             if (source != null) {
                 files.add(source);
             }
         }
+
         super.deleteMany();
+
         for (String file : files) {
             removeModulePicture(file);
         }
@@ -515,9 +506,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     private TreeNode getOrCreateNodeByAppliesTo(String appliesTo, String classname) {
         TreeNode appliesToNode = getOrCreateNodeByClass(classname);
         String code = appliesTo.split("_", 2)[1];
-        String prefix = appliesTo.split("_", 2)[0];
         for (TreeNode node : appliesToNode.getChildren()) {
-            if (code.equals((String)node.getData())) {
+            if (code.equals(node.getData())) {
                 return node;
             }
         }
@@ -592,7 +582,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return;
             }
 
-            entity = (T) meveoModuleService.uninstall(entity);
+            entity = (T) meveoModuleService.uninstall(entity, remove);
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {

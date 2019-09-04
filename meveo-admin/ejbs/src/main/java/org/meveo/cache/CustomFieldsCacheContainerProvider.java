@@ -1,22 +1,21 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.cache;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.hibernate.Hibernate;
@@ -24,7 +23,6 @@ import org.infinispan.Cache;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarInterval;
@@ -36,7 +34,6 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.CustomFieldException;
-import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -44,16 +41,27 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
+import javax.annotation.Resource;
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 /**
  * Provides cache related services (loading, update) for custom field value related operations
- * 
+ *
+ * @author Clément Bareth
  * @author Andrius Karpavicius
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
+ * @lastModifiedVersion 6.3.0
  * 
  */
 @Stateless
-public class CustomFieldsCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
+public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
 
@@ -133,12 +141,12 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
             CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
             if (lastAppliesTo == null) {
-                cftsSameAppliesTo = new TreeMap<String, CustomFieldTemplate>();
+                cftsSameAppliesTo = new TreeMap<>();
                 lastAppliesTo = cacheKeyByAppliesTo;
 
             } else if (!lastAppliesTo.equals(cacheKeyByAppliesTo)) {
                 cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(lastAppliesTo, cftsSameAppliesTo);
-                cftsSameAppliesTo = new TreeMap<String, CustomFieldTemplate>();
+                cftsSameAppliesTo = new TreeMap<>();
                 lastAppliesTo = cacheKeyByAppliesTo;
             }
 
@@ -219,7 +227,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     // @Override
     @SuppressWarnings("rawtypes")
     public Map<String, Cache> getCaches() {
-        Map<String, Cache> summaryOfCaches = new HashMap<String, Cache>();
+        Map<String, Cache> summaryOfCaches = new HashMap<>();
         summaryOfCaches.put(cftsByAppliesTo.getName(), cftsByAppliesTo);
         summaryOfCaches.put(cetsByCode.getName(), cetsByCode);
         summaryOfCaches.put(crtsByCode.getName(), crtsByCode);
@@ -258,7 +266,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
      * 
      * @param cacheName Name of cache to populate or null to populate all caches
      */
-    // @Override
     @Asynchronous
     public void populateCache(String cacheName) {
 
@@ -267,6 +274,11 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
         }
 
         if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
+            populateCETCache();
+        }
+        
+        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
+            crtsByCodeClear();
             populateCETCache();
         }
     }
@@ -287,7 +299,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
         log.trace("Adding/updating custom field template {} for {} to CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentUser.getProviderCode());
 
         Map<String, CustomFieldTemplate> cftsOld = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKeyByAppliesTo);
-        Map<String, CustomFieldTemplate> cfts = new TreeMap<String, CustomFieldTemplate>();
+        Map<String, CustomFieldTemplate> cfts = new TreeMap<>();
         if (cftsOld != null) {
             cfts.putAll(cftsOld);
         }
@@ -297,13 +309,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
             cft.setCalendar(PersistenceUtils.initializeAndUnproxy(cft.getCalendar()));
             if (cft.getCalendar() instanceof CalendarDaily) {
                 ((CalendarDaily) cft.getCalendar()).setHours(PersistenceUtils.initializeAndUnproxy(((CalendarDaily) cft.getCalendar()).getHours()));
-                ((CalendarDaily) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             } else if (cft.getCalendar() instanceof CalendarYearly) {
                 ((CalendarYearly) cft.getCalendar()).setDays(PersistenceUtils.initializeAndUnproxy(((CalendarYearly) cft.getCalendar()).getDays()));
-                ((CalendarYearly) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             } else if (cft.getCalendar() instanceof CalendarInterval) {
                 ((CalendarInterval) cft.getCalendar()).setIntervals(PersistenceUtils.initializeAndUnproxy(((CalendarInterval) cft.getCalendar()).getIntervals()));
-                ((CalendarInterval) cft.getCalendar()).nextCalendarDate(new Date());
+                cft.getCalendar().nextCalendarDate(new Date());
             }
         }
         if (cft.getListValues() != null) {
@@ -336,7 +348,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
 
         if (cftsOld != null && cftsOld.containsKey(cft.getCode())) {
 
-            Map<String, CustomFieldTemplate> cfts = new TreeMap<String, CustomFieldTemplate>(cftsOld);
+            Map<String, CustomFieldTemplate> cfts = new TreeMap<>(cftsOld);
             cfts.remove(cft.getCode());
 
             // If no value are left in the map - LEAVE, as cache can be populated at runtime
@@ -357,7 +369,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
 
         CacheKeyStr cacheKeyByAppliesTo = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
         if (!cftsByAppliesTo.getAdvancedCache().containsKey(cacheKeyByAppliesTo)) {
-            cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, new HashMap<String, CustomFieldTemplate>());
+            cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, new HashMap<>());
         }
     }
 
@@ -414,8 +426,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
     }
 
     private CacheKeyStr getCFTCacheKeyByAppliesTo(CustomFieldTemplate cft) {
-        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), cft.getAppliesTo());
-        return key;
+        return new CacheKeyStr(currentUser.getProviderCode(), cft.getAppliesTo());
     }
 
     /**
@@ -426,8 +437,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable { // Cac
      */
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
-        Map<String, CustomFieldTemplate> cfts = cftsByAppliesTo.get(key);
-        return cfts;
+        return cftsByAppliesTo.get(key);
     }
 
     /**

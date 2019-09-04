@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.api.module;
 
 import org.apache.commons.lang.reflect.FieldUtils;
@@ -37,8 +54,6 @@ import org.meveo.service.script.module.ModuleScriptService;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -47,8 +62,7 @@ import java.util.*;
  * @author Tyshan Shi(tyshan@manaty.net)
  * @author Wassim Drira
  * @lastModifiedVersion 6.3.0
- * 
- **/
+ */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
@@ -73,16 +87,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     @Inject
     private ModuleScriptService moduleScriptService;
 
-    private static JAXBContext jaxbCxt;
-    
-    static {
-        try {
-            jaxbCxt = JAXBContext.newInstance(MeveoModuleDto.class);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-    }
-    
     public MeveoModuleApi() {
     	super(MeveoModule.class, MeveoModuleDto.class);
     }
@@ -272,12 +276,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
                 installed = true;
 
             } else {
-                try {
-                    moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
-                } catch (JAXBException e) {
-                    log.error("Failed to parse module {} source", meveoModule.getCode(), e);
-                    throw new BusinessException("Failed to parse module source", e);
-                }
+                moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
             }
         }
 
@@ -300,7 +299,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         return meveoModule;
     }
 
-    public void uninstall(String code, Class<? extends MeveoModule> moduleClass) throws MeveoApiException, BusinessException {
+    public void uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code");
@@ -319,7 +318,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         if (!meveoModule.isInstalled()) {
             throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
         }
-        meveoModuleService.uninstall(meveoModule);
+        meveoModuleService.uninstall(meveoModule, remove);
     }
 
 
@@ -371,7 +370,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         meveoModule.setModuleSource(JacksonUtil.toString(moduleDto));
     }
 
-    @SuppressWarnings({ "rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 
         if (moduleDto.getModuleItems() != null) {
