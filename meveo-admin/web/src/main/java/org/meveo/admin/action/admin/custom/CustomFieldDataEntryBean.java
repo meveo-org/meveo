@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -37,7 +36,6 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.CETUtils;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
-import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -75,9 +73,8 @@ import org.meveo.service.storage.BinaryStoragePathParam;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
-import org.primefaces.event.CellEditEvent;
-import org.primefaces.event.SelectEvent;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
@@ -1904,7 +1901,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 		initAfterUpload();
 	}
 
-	@SuppressWarnings("unchecked")
 	public void handleFileUpload(FileUploadEvent event) throws BusinessException, IOException {
 
 		log.debug("handleFileUpload {}", event.getFile().getFileName());
