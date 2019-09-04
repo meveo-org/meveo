@@ -16,6 +16,8 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
@@ -32,12 +34,12 @@ import org.meveo.model.ObservableEntity;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**
- * meveo module has CETs, CFTs, filters, scripts, jobs, notifications
- * 
+ * Meveo module has CETs, CFTs, CEIs, filters, scripts, jobs, notifications, endpoints
+ *
+ * @author Clément Bareth
  * @author Tyshan Shi(tyshanchn@manaty.net)
- * 
+ * @lastModifiedVersion 6.3.0
  */
-
 @Entity
 @ObservableEntity
 @Cacheable
@@ -51,14 +53,14 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<MeveoModuleItem> moduleItems = new ArrayList<MeveoModuleItem>();
+    private List<MeveoModuleItem> moduleItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "module_license", nullable = false)
     @NotNull
     private ModuleLicenseEnum license = ModuleLicenseEnum.GPL;
 
-    @Column(name = "logo_picture", length = 255)
+    @Column(name = "logo_picture")
     @Size(max = 255)
     private String logoPicture;
 
@@ -72,6 +74,17 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
+    
+    @PrePersist()
+    @PreUpdate()
+    public void processDisabled() {
+    	// If module is downloaded but not installed, consider it as disabled
+    	if(isDownloaded() && !installed) {
+    		setDisabled(true);
+    	} else if(isDownloaded() && installed) {
+    		setDisabled(false);
+    	}
+    }
 
     public List<MeveoModuleItem> getModuleItems() {
         return moduleItems;
