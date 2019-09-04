@@ -21,37 +21,23 @@ package org.meveo.util.view;
 import org.meveo.service.custom.CustomizedEntity;
 import org.primefaces.model.LazyDataModel;
 
+import java.util.List;
+
 public abstract class CustomizedEntityLazyDataModel<T extends CustomizedEntity> extends LazyDataModel<CustomizedEntity> {
 
     private static final long serialVersionUID = -5796910936316457321L;
 
     @Override
-    public Long getRowKey(CustomizedEntity object) {
-        return object.getCustomEntityId();
-    }
-
-    @Override
-    public int getRowCount() {
-        return super.getRowCount();
-    }
-
-    @Override
-    public CustomizedEntity getRowData() {
-        return super.getRowData();
-    }
-
-    @Override
-    public int getRowIndex() {
-        return super.getRowIndex();
-    }
-
-    @Override
-    public void setRowIndex(int rowIndex) {
-        super.setRowIndex(rowIndex);
-    }
-
-    @Override
     public CustomizedEntity getRowData(String rowKey) {
-        return super.getRowData(rowKey);
+        List<CustomizedEntity> entities = (List<CustomizedEntity>) getWrappedData();
+        Long value = Long.parseLong(rowKey);
+
+        for (CustomizedEntity customizedEntity : entities) {
+            if (customizedEntity.getCustomEntityId() != null && customizedEntity.getCustomEntityId().equals(value)) {
+                return customizedEntity;
+            }
+        }
+
+        return null;
     }
 }

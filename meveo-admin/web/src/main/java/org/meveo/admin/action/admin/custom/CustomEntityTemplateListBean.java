@@ -7,8 +7,8 @@ import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.bi.Job;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.view.CustomizedEntityLazyDataModel;
@@ -26,6 +26,8 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
     
     private LazyDataModel<CustomizedEntity> customizedEntityDM = null;
 
+    private List<CustomizedEntity> selectedCustomizedEntities;
+
     public LazyDataModel<CustomizedEntity> getCustomizedEntities() {
 
         if (customizedEntityDM != null) {
@@ -37,7 +39,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 
             @Override
             public Long getRowKey(CustomizedEntity object) {
-                return super.getRowKey(object);
+                return object.getCustomEntityId();
             }
 
             @Override
