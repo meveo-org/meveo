@@ -16,6 +16,20 @@
 
 package org.meveo.admin.action.admin.custom;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
@@ -41,14 +55,11 @@ import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.UploadedFile;
 
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.*;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+/**
+ * @author Clement Bareth
+ * @author Edward P. Legaspi
+ * @lastModifiedVersion 6.3.0
+ */
 @Named
 @ViewScoped
 public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
@@ -470,8 +481,6 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 	public String getCet() {
 		return cet;
 	}
-	
-	
 
 	public int getListSize() {
 		return listSize;

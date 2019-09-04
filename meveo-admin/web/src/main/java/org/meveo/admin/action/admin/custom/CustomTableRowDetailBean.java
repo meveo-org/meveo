@@ -16,6 +16,7 @@
 
 package org.meveo.admin.action.admin.custom;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -33,13 +35,30 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.storage.Repository;
+import org.meveo.service.storage.BinaryStoragePathParam;
+import org.meveo.service.storage.FileSystemService;
+import org.meveo.service.storage.RepositoryService;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
+import org.primefaces.model.UploadedFile;
 
+/**
+ * @author Clement Bareth
+ * @author Edward P. Legaspi
+ * @lastModifiedVersion 6.3.0
+ */
 @Named
 @ViewScoped
 public class CustomTableRowDetailBean extends CustomTableBean implements Serializable{
 
     private static final long serialVersionUID = -2748591950645172132L;
+    
+    @Inject
+    private FileSystemService fileSystemService;
+    
+    @Inject
+    private RepositoryService repositoryService;
     
     private CustomFieldValues values;
     
@@ -49,39 +68,14 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     
     private String cetCode;
     
+    private Repository repository;
+    
     public void initEntity(String cetCode, Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
     	this.cetCode = cetCode;
     	this.fields = fields;
     	
     	values = CETUtils.initCustomFieldValues(valuesMap, fields);
-    	
-
     }
-    
-	public CustomFieldValues getValues() {
-		return values;
-	}
-	
-	public Map<String, Object> getValuesMap(){
-		return values.getValues();
-	}
-
-	public void setValues(CustomFieldValues values) {
-		this.values = values;
-	}
-
-	@Override
-    public Collection<CustomFieldTemplate> getFields() {
-		return fields;
-	}
-
-	public void setFields(Collection<CustomFieldTemplate> fields) {
-		this.fields = fields;
-	}
-
-	public String getCetCode() {
-		return cetCode;
-	}
 	
 	@SuppressWarnings("unchecked")
     @ActionMethod
@@ -126,9 +120,80 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     	}
 	}
 	
+    public void handleBinaryFileUpload(FileUploadEvent event) throws IOException {
+    	UploadedFile uploadedBinaryFile = event.getFile();
+    	
+		Map<String, Object> attrs = event.getComponent().getAttributes();
+		String uuid = (String) attrs.get("uuid");
+		String cetCode = (String) attrs.get("cetCode");
+		CustomFieldTemplate cft = (CustomFieldTemplate) attrs.get("cft");
+		CustomFieldValue cfv = (CustomFieldValue) attrs.get("cfv");
+//		String strIsSingle = (String) attrs.get("isSingle");
+//		boolean isSingle = Boolean.parseBoolean(strIsSingle);
+		Repository repository = (Repository) attrs.get("repository");
+		CustomFieldValues fieldValues = (CustomFieldValues) attrs.get("values");
+		
+		log.info("" + repository);
+
+		if (repository != null) {
+			repository = repositoryService.retrieveIfNotManaged(repository);
+		}
+
+		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
+
+		
+		BinaryStoragePathParam params = new BinaryStoragePathParam();
+		params.setShowOnExplorer(cft.isSaveOnExplorer());
+		params.setRootPath(rootPath);
+		params.setCetCode(cetCode);
+		params.setUuid(uuid);
+		params.setCftCode(cft.getCode());
+		params.setFilePath(cft.getFilePath());
+		params.setContentType(uploadedBinaryFile.getContentType());
+		params.setFilename(uploadedBinaryFile.getFileName());
+		params.setInputStream(uploadedBinaryFile.getInputstream());
+		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
+		params.setFileExtensions(cft.getFileExtensions());
+		params.setContentTypes(cft.getContentTypes());
+		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
+		
+		rootPath = fileSystemService.persists(params, fieldValues.getValues());
+		
+		log.debug("binary path={}", rootPath);
+		
+		cfv.setStringValue(rootPath);
+		
+		repository = null;
+    }
+	
 	@ActionMethod
 	public void onListElementUpdated() {
 		
+	}
+    
+	public CustomFieldValues getValues() {
+		return values;
+	}
+	
+	public Map<String, Object> getValuesMap(){
+		return values.getValues();
+	}
+
+	public void setValues(CustomFieldValues values) {
+		this.values = values;
+	}
+
+	@Override
+    public Collection<CustomFieldTemplate> getFields() {
+		return fields;
+	}
+
+	public void setFields(Collection<CustomFieldTemplate> fields) {
+		this.fields = fields;
+	}
+
+	public String getCetCode() {
+		return cetCode;
 	}
 
 	public CustomFieldTemplate getSelectedCft() {
@@ -142,6 +207,13 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 	public void setCetCode(String cetCode) {
 		this.cetCode = cetCode;
 	}
-	
+
+	public Repository getRepository() {
+		return repository;
+	}
+
+	public void setRepository(Repository repository) {
+		this.repository = repository;
+	}
 	
 }
