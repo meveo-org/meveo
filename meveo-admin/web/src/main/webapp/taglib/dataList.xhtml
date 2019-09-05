@@ -1,11 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org"
-      xmlns:l="http://www.lapis.com/jsf/exporter">
-
-<!-- 
+<!--
 
     Makes part of "happy faces" component group.
     A custom tag to enhance p:datatable component.
@@ -20,6 +13,7 @@
         checkMany - show multiple item checkboxes
         deleteManyButton - show delete multiple items button
         exportButton - show "export to xls" button
+        exportSelection - show "Export selected elements" button
         exportXlsxButton - show "export to xlsx" button
         exportToXml - show "export to xml" button. Defaults to True if any of the export buttons are enabled
         exportToCsv - show "export to Csv" button
@@ -39,11 +33,10 @@
         		</hftl:datalist>
          
 -->
-<ui:composition>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org"
+                xmlns:l="http://www.lapis.com/jsf/exporter">
 
-    <!--     <c:if test="${empty pdf}"> -->
-    <!--         <c:set var="pdf" value="false" /> -->
-    <!--     </c:if> -->
     <c:if test="${empty editable}">
         <c:set var="editable" value="false" />
     </c:if>
@@ -178,6 +171,7 @@
                 </p:commandButton>
                 <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
                 <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
+                <p:commandButton value="#{messages['commons.exportSelection']}" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('exportSelectionDialog').show()"/>
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
                 	<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
                 </p:commandButton>
@@ -261,6 +255,22 @@
                     </p:dataTable>
                 </h:form>
             </p:dialog>
+            
+            <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="#{formId}_exportSelectionDialog" styleClass="form-dialog" widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true">
+              	<hftl:decorateFormField fieldId="exportFormat" label="Format" layout = "block">
+                   <p:selectOneMenu id="exportFormat" name="exporFormat" value="#{backingBean.exportFormat}">
+                       <f:selectItems value="#{backingBean.exportFormats}"/>
+                       <p:ajax event="valueChange" update="exportFormat"/>
+                   </p:selectOneMenu>
+                 </hftl:decorateFormField>
+                 <div class="clearLeft">
+	                 <p:commandButton id="buttonSelectionExport" value="#{messages['commons.export']}" ajax="false" onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+	                      <p:fileDownload id="exportFileDownload" value="#{backingBean.export()}" />
+	                  </p:commandButton>
+                  </div>
+            </p:dialog>
+            
+            <p:remoteCommand name="closeExportDialog" oncomplete="PF('exportSelectionDialog').hide()" />
 
             <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
 			     <hftl:decorateFormField fieldId="#{formId}_override" componentWidth = "100" >
@@ -296,4 +306,3 @@
     </p:panel>
 
 </ui:composition>
-</html>
