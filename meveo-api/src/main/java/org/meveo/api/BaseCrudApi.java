@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.api;
 
 import java.io.File;
@@ -5,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
@@ -13,15 +32,12 @@ import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.model.SortOrder;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -85,7 +101,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
      * @see org.meveo.api.ApiService#findIgnoreNotFound(java.lang.String)
      */
     @Override
-    public T findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+    public T findIgnoreNotFound(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
         try {
             return find(code);
         } catch (EntityDoesNotExistsException e) {
@@ -98,8 +114,8 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
      * @param conf Filters 
      * @return the export file
      */
-	public File exportXML(PaginationConfiguration conf) throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-		return exportEntities(new XmlMapper(), conf, "xml");
+	public File exportXML(PaginationConfiguration conf) throws IOException {
+		return exportEntities(conf, ExportFormat.XML);
 	}
 	
     /**
@@ -107,8 +123,8 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
      * @param config Filters 
      * @return the export file
      */
-	public File exportJSON(PaginationConfiguration config) throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-		return exportEntities(new ObjectMapper(), config, "json");
+	public File exportJSON(PaginationConfiguration config) throws IOException {
+		return exportEntities(config, ExportFormat.JSON);
 	}
 	
     /**
@@ -116,47 +132,75 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
      * @param config Filters 
      * @return the export file
      */
-	public File exportCSV(PaginationConfiguration config) throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
-		return exportEntities(new CsvMapper(), config, "csv");
+	public File exportCSV(PaginationConfiguration config) throws IOException {
+		return exportEntities(config, ExportFormat.CSV);
 	}
 	
 	/**
 	 * Export entities matching filters to a give format
 	 * 
-	 * @param mapper Mapper used to serialize data
 	 * @param conf   Filters
 	 * @param format Format of generated file
 	 * @return the export file
 	 */
-	public File exportEntities(ObjectMapper mapper, PaginationConfiguration conf, String format) throws JsonGenerationException, JsonMappingException, IOException, BusinessException {
+	public File exportEntities(PaginationConfiguration conf, ExportFormat format) throws IOException {
 		List<E> entities = getPersistenceService().list(conf);
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
-		
+
 		List<T> dtos = new ArrayList<>();
 		for(E entity : entities) {
 			dtos.add(toDto(entity));
 		}
-		
-		Class<? extends IEntity> entityClass = entities.get(0).getClass();
-		Class<? extends BaseEntityDto> dtoClass = dtos.get(0).getClass();
 
-		File exportFile = new File("export_" + entityClass.getSimpleName() + System.currentTimeMillis() + "." + format);
+		return exportDtos(format, dtos);
+	}
+
+	public File exportEntities(ExportFormat format, List<E> entities) throws IOException {
+		List<T> dtos;
 		
-		if(mapper instanceof CsvMapper) {
-			CsvMapper csvMapper = (CsvMapper) mapper;
-			CsvSchema schema = csvMapper.schemaFor(dtoClass)
-					.withColumnSeparator(';');
-			
-	        ObjectWriter myObjectWriter = mapper.writer(schema);
-	        myObjectWriter.writeValue(exportFile, dtos);
-		}else {
-			mapper.writeValue(exportFile, dtos);
+		if(CollectionUtils.isEmpty(entities)){
+			dtos = new ArrayList<>();
+		} else {
+			dtos = entities.stream().map(this::toDto).collect(Collectors.toList());
+		}
+
+		return exportDtos(format, dtos);
+	}
+
+	private File exportDtos(ExportFormat format, List<T> dtos) throws IOException {
+		if(format == null) {
+			throw new IllegalArgumentException("Format must be provided");
 		}
 		
+		File exportFile = new File("export_" + jpaClass.getSimpleName() + System.currentTimeMillis() + "." + format.getFormat());
+
+		switch (format) {
+
+			case JSON:
+				new ObjectMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+						.enable(SerializationFeature.INDENT_OUTPUT)
+						.writeValue(exportFile, dtos);
+				break;
+
+			case XML:
+				new XmlMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+						.enable(SerializationFeature.INDENT_OUTPUT)
+						.writeValue(exportFile, dtos);
+				break;
+
+			case CSV:
+				CsvMapper csvMapper = (CsvMapper) new CsvMapper()
+						.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+						.enable(SerializationFeature.INDENT_OUTPUT);
+
+				CsvSchema schema = csvMapper.schemaFor(dtoClass).withColumnSeparator(';');
+				ObjectWriter myObjectWriter = csvMapper.writer(schema);
+				myObjectWriter.writeValue(exportFile, dtos);
+				break;
+		}
+
 		return exportFile;
 	}
-	
+
 	/**
 	 * Import a list of entities into the database
 	 * 
@@ -179,7 +223,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param xml       File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importXML(InputStream xml, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException, MeveoApiException {
+	public void importXML(InputStream xml, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
 		XmlMapper xmlMapper = new XmlMapper();
 		List<?> entities = xmlMapper.readValue(xml, List.class);
 
@@ -194,10 +238,10 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * Import data from a JSON file
 	 * 
-	 * @param xml       File to import
+	 * @param json      File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, JsonParseException, JsonMappingException, IOException, MeveoApiException {
+	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		List<?> entities = jsonMapper.readValue(json, List.class);
 		
@@ -212,10 +256,10 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * Import data from a CSV file
 	 * 
-	 * @param xml       File to import
+	 * @param csv       File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importCSV(InputStream csv, boolean overwrite) throws JsonParseException, JsonMappingException, IOException, BusinessException, MeveoApiException {
+	public void importCSV(InputStream csv, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
 		CsvMapper csvMapper = new CsvMapper();
 		
 		CsvSchema schema = csvMapper.schemaFor(dtoClass)
@@ -231,7 +275,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * @see BaseCrudApi#exportCSV(PaginationConfiguration)
 	 */
-	public File exportCSV(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+	public File exportCSV(PagingAndFiltering config) throws InvalidParameterException, IOException {
 		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
 		return exportCSV(pagination);
 	}
@@ -239,7 +283,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * @see BaseCrudApi#exportXML(PaginationConfiguration)
 	 */
-	public File exportXML(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+	public File exportXML(PagingAndFiltering config) throws InvalidParameterException, IOException {
 		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
 		return exportXML(pagination);
 	}
@@ -247,7 +291,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * @see BaseCrudApi#exportJSON(PaginationConfiguration)
 	 */
-	public File exportJSON(PagingAndFiltering config) throws InvalidParameterException, JsonGenerationException, JsonMappingException, IOException, BusinessException {
+	public File exportJSON(PagingAndFiltering config) throws InvalidParameterException, IOException {
 		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
 		return exportJSON(pagination);
 	}
