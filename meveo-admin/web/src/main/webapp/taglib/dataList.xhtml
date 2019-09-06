@@ -162,9 +162,9 @@
             <h:panelGroup rendered="#{dataModel !=null and dataModel.size()>0}">
                 <p:commandButton id="#{formId}deleteEntitieslink" rendered="#{deleteManyButton}" value="#{messages['commons.deleteMultiple']}" action="#{backingBean.deleteMany()}" icon="ui-icon-trash"
                                  update="@form" >
-                 
+
                  	<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
-                                 
+
                  </p:commandButton>
 
                 <p:commandButton id="#{formId}buttonExport" icon="ui-icon-xls" value="#{messages['commons.exportExcel']}" ajax="false" rendered="#{exportButton}">
@@ -260,7 +260,7 @@
                 </h:form>
             </p:dialog>
             
-            <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="#{formId}_exportSelectionDialog" styleClass="form-dialog" widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true">
+            <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="#{formId}_exportSelectionDialog" styleClass="form-dialog" widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true" rendered="#{backingBean.getBaseCrudApi() != null}">
               	<hftl:decorateFormField fieldId="exportFormat" label="Format" layout = "block">
                    <p:selectOneMenu id="exportFormat" name="exporFormat" value="#{backingBean.exportFormat}">
                        <f:selectItems value="#{backingBean.exportFormats}"/>
