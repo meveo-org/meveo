@@ -143,7 +143,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
 				return true;
 			}
 		}
-        
+
         if (code == null) {
             if (other.getCode() != null) {
                 return false;

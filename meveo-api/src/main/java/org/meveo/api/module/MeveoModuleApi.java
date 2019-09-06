@@ -17,6 +17,9 @@
  */
 package org.meveo.api.module;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,8 +30,11 @@ import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -76,10 +82,6 @@ import org.meveo.service.script.module.ModuleScriptService;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -409,7 +411,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             	Class<? extends BaseEntityDto> dtoClass;
 				try {
 					dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-					BaseEntityDto dto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+					BaseEntityDto dto = JacksonUtil.read(moduleItemDto.getDtoData().toString(), dtoClass);
             	
 	                try {
 	
@@ -468,7 +470,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	                    throw e;
 	                }
 	                
-				} catch (ClassNotFoundException e1) {
+				} catch (ClassNotFoundException | IOException e1) {
 					throw new BusinessException(e1);
 				}
             }
@@ -550,7 +552,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @return MeveoModuleDto object
      * @throws MeveoApiException meveo api exception.
      */
-    @SuppressWarnings({ "rawtypes"})
+    @SuppressWarnings({ "rawtypes", "unchecked"})
     public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (module.isDownloaded() && !module.isInstalled()) {
