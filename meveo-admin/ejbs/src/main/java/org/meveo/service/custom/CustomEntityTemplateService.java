@@ -78,6 +78,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomTableCreatorService customTableCreatorService;
 
     @Inject
+    private CustomEntityInstanceService customEntityInstanceService;
+
+    @Inject
     private Neo4jService neo4jService;
 
     private static boolean useCETCache = true;
@@ -224,6 +227,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        } else if(cet.getSqlStorageConfiguration() != null) {
+            customEntityInstanceService.removeByCet(cet.getCode());
         }
 
         if(cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
