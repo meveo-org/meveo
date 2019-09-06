@@ -26,6 +26,10 @@ import javax.validation.constraints.Size;
 
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
 @MappedSuperclass
 public class BusinessEntity extends EnableEntity implements ISearchable {
 
@@ -134,9 +138,12 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
 
         BusinessEntity other = (BusinessEntity) obj;
 
-        if (id != null && other.getId() != null && id.equals(other.getId())) {
-            return true;
-        }
+		if (code == null && other.getCode() == null) {
+			if (id != null && other.getId() != null && id.equals(other.getId())) {
+				return true;
+			}
+		}
+        
         if (code == null) {
             if (other.getCode() != null) {
                 return false;
