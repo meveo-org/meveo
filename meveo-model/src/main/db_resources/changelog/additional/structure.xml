@@ -36,7 +36,7 @@
     
     <changeSet id="#3821" author="Hien Bach">
         <addColumn tableName="crm_custom_field_tmpl">
-            <column name="samples" type="text"/>
+            <column name="samples" type="text" defaultValue="[]"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
