@@ -1125,11 +1125,21 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     public List<String> getSamples() {
+    	if(samples == null) {
+    		this.samples = new ArrayList<>();
+    	}
+    	
         return samples;
     }
 
     public void setSamples(List<String> samples) {
-        this.samples = samples;
+    	if(samples == null && this.samples == null) {
+    		samples = new ArrayList<>();
+    	} else if (samples == null && this.samples != null) { 
+    		this.samples.clear();
+    	} else {
+	        this.samples = samples;
+    	}
     }
 
     public List<?> getNewListValue() {
