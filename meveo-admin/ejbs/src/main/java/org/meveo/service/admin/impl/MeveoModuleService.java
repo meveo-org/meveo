@@ -19,6 +19,18 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -33,8 +45,10 @@ import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
@@ -43,18 +57,10 @@ import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 /**
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @lastModifiedVersion 6.3.0
  */
 @Stateless
@@ -65,6 +71,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
+    
+    @Inject
+    private MeveoModuleItemService meveoModuleItemService;
     
     /**
      * import module from remote meveo instance.
@@ -302,4 +311,33 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             return null;
         }
     }
+    
+	/**
+	 * Observer when an entity that extends a BusinessEntity is deleted which is
+	 * annotated by MeveoModuleItem.
+	 * 
+	 * @param be BusinessEntity
+	 * @throws BusinessException
+	 */
+	public void onMeveoModuleItemDelete(@Observes @Removed BusinessEntity be) throws BusinessException {
+		if (be.getClass().isAnnotationPresent(ModuleItem.class)) {
+			QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "i");
+			qb = qb.addCriterion("itemCode", "=", be.getCode(), true);
+			qb = qb.addCriterion("itemClass", "=", be.getClass().getName(), true);
+
+			try {
+				Long count = qb.count(getEntityManager());
+
+				// need to do the check when uninstalling
+				if (count > 0) {
+					Query query = getEntityManager().createNamedQuery("MeveoModuleItem.delete");
+					query = query.setParameter("itemCode", be.getCode());
+					query = query.setParameter("itemClass", be.getClass().getName());
+					query.executeUpdate();
+				}
+			} catch (NoResultException e) {
+
+			}
+		}
+	}
 }
