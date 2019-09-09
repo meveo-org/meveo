@@ -32,6 +32,7 @@ import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.*;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -43,6 +44,7 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
@@ -56,6 +58,8 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author Clément Bareth
@@ -65,6 +69,16 @@ import java.util.*;
  */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
+
+    private static final ConcurrentHashMap<String, Class<? extends BusinessEntity>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
+
+    static {
+        final Set<Class<? extends BusinessEntity>> moduleItemClasses = ReflectionUtils.getClassesAnnotatedWith(ModuleItem.class, BusinessEntity.class);
+        for(Class<? extends BusinessEntity> aClass : moduleItemClasses){
+            String type = aClass.getAnnotation(ModuleItem.class).value();
+            MODULE_ITEM_TYPES.put(type, aClass);
+        }
+    }
 
     @Inject
     private MeveoModuleService meveoModuleService;
@@ -91,7 +105,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     	super(MeveoModule.class, MeveoModuleDto.class);
     }
 
-    public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+    public MeveoModule create(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(moduleDto.getCode())) {
             missingParameters.add("code");
@@ -125,6 +139,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
         MeveoModule meveoModule = new MeveoModule();
         parseModuleInfoOnlyFromDto(meveoModule, moduleDto);
+
+        if(development){
+            meveoModule.setModuleSource(null);
+        }
+
         meveoModuleService.create(meveoModule);
         return meveoModule;
     }
@@ -220,6 +239,25 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         return result;
     }
 
+    public List<MeveoModuleDto> list(MeveoModuleFilters filters) {
+        if(filters.getItemType() != null){
+            filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        }
+
+        return meveoModuleService.list(filters)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> listCodesOnly(MeveoModuleFilters filters) {
+        if(filters.getItemType() != null){
+            filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        }
+
+        return meveoModuleService.listCodesOnly(filters);
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -245,7 +283,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         MeveoModule meveoModule = meveoModuleService.findByCode(postData.getCode());
         if (meveoModule == null) {
             // create
-            return create(postData);
+            return create(postData, false);
         } else {
             // update
             return update(postData);
@@ -263,7 +301,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
         boolean installed = false;
         if (meveoModule == null) {
-            create(moduleDto);
+            create(moduleDto, false);
             meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
 
         } else {
@@ -657,4 +695,47 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             return false;
         }
 	}
+
+	public MeveoModuleDto addToModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if(module == null){
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+
+        MeveoModuleItem moduleItem = new MeveoModuleItem();
+        moduleItem.setMeveoModule(module);
+        moduleItem.setItemCode(itemCode);
+        moduleItem.setItemClass(itemClassName);
+
+        module.addModuleItem(moduleItem);
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if(module == null){
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+
+        MeveoModuleItem moduleItem = new MeveoModuleItem();
+        moduleItem.setMeveoModule(module);
+        moduleItem.setItemCode(itemCode);
+        moduleItem.setItemClass(itemClassName);
+
+        module.removeItem(moduleItem);
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public boolean isChildOfOtherActiveModule(String moduleItemCode, String itemType) {
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+        return meveoModuleService.isChildOfOtherActiveModule(moduleItemCode, itemClassName);
+    }
 }

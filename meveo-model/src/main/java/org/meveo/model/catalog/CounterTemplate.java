@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -31,8 +32,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
+/**
+ * @author Clément Bareth
+ * @lastModifiedVersion 6.3.0
+ */
 @Entity
-@ModuleItem
+@ModuleItem("CounterTemplate")
 @Cacheable
 @ObservableEntity
 @ExportIdentifier({ "code"})

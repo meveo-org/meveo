@@ -22,17 +22,22 @@ import java.util.List;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.module.ModuleRs;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 /**
  * @author Clément Bareth
@@ -47,10 +52,10 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     private MeveoModuleApi moduleApi;
 
     @Override
-    public ActionStatus create(MeveoModuleDto moduleData) {
+    public ActionStatus create(MeveoModuleDto moduleData, boolean development) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {
-            moduleApi.create(moduleData);
+            moduleApi.create(moduleData, development);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -83,24 +88,31 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public MeveoModuleDtosResponse list() {
-        MeveoModuleDtosResponse result = new MeveoModuleDtosResponse();
-        result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
-        result.getActionStatus().setMessage("");
-        try {
-            List<MeveoModuleDto> dtos = moduleApi.list(null);
-            result.setModules(dtos);
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
+    public Response list(boolean codesOnly, MeveoModuleFilters filters) {
+
+        if(!codesOnly) {
+            MeveoModuleDtosResponse result = new MeveoModuleDtosResponse();
+            result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
+            result.getActionStatus().setMessage("");
+            try {
+                List<MeveoModuleDto> dtos = moduleApi.list(filters);
+                result.setModules(dtos);
+            } catch (Exception e) {
+                processException(e, result.getActionStatus());
+            }
+
+            return Response.ok(result).build();
+        } else {
+            return Response.ok(moduleApi.listCodesOnly(filters)).build();
         }
 
-        return result;
     }
 
     @Override
     public MeveoModuleDtoResponse get(String code) {
         MeveoModuleDtoResponse result = new MeveoModuleDtoResponse();
         result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
+
         try {
             result.setModule(moduleApi.find(code));
         } catch (Exception e) {
@@ -177,5 +189,15 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         }
 
         return result;
+    }
+
+    @Override
+    public MeveoModuleDto addToModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.addToModule(moduleCode, itemCode, itemType);
+    }
+
+    @Override
+    public MeveoModuleDto removeFromModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.removeFromModule(moduleCode, itemCode, itemType);
     }
 }

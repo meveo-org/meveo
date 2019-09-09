@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -53,6 +53,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
  *
  * @author clement.bareth
  * @since 01.02.2019
+ * @lastModifiedVersion 6.3.0
  */
 @Entity
 @Table(name = "service_endpoint")
@@ -72,7 +73,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 )
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
-@ModuleItem
+@ModuleItem("Endpoint")
 @ObservableEntity
 public class Endpoint extends BusinessEntity {
 

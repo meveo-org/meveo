@@ -71,7 +71,8 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
         }
     }
 
-	public MeveoInstance findByCode(String meveoInstanceCode) {
+	@Override
+    public MeveoInstance findByCode(String meveoInstanceCode) {
 		QueryBuilder qb = new QueryBuilder(MeveoInstance.class, "c");
 		qb.addCriterion("code", "=", meveoInstanceCode, true);
 		

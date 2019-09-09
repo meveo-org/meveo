@@ -37,7 +37,7 @@ import org.meveo.model.scripts.Function;
 import org.meveo.validation.constraint.classname.ClassName;
 
 @Entity
-@ModuleItem
+@ModuleItem("Notification")
 @ExportIdentifier({ "code" })
 @Table(name = "adm_notification", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {

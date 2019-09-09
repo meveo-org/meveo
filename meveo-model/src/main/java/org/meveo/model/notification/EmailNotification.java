@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.model.notification;
 
 import java.util.Collection;
@@ -18,7 +35,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.admin.User;
 
 @Entity
-@ModuleItem
+@ModuleItem("EmailNotification")
 @Table(name="adm_notif_email")
 public class EmailNotification extends Notification {
 	
@@ -34,7 +51,7 @@ public class EmailNotification extends Notification {
 	
 	@ElementCollection(fetch=FetchType.EAGER)
 	@CollectionTable(name="adm_notif_email_list")
-	private Set<String> emails = new HashSet<String>();
+	private Set<String> emails = new HashSet<>();
 	
 	@ElementCollection(fetch=FetchType.EAGER)
 	@CollectionTable(name="adm_notif_email_user")
@@ -53,7 +70,7 @@ public class EmailNotification extends Notification {
 
 	@ElementCollection(fetch=FetchType.EAGER)
 	@CollectionTable(name="adm_notif_email_attach")
-    private Set<String> attachmentExpressions = new HashSet<String>();
+    private Set<String> attachmentExpressions = new HashSet<>();
 
 
 	public String getEmailFrom() {
@@ -122,16 +139,15 @@ public class EmailNotification extends Notification {
 
     @Override
     public String toString() {
-        final int maxLen = 10;
         return String.format("EmailNotification [emailFrom=%s, emailToEl=%s, emails=%s,  subject=%s, attachmentExpressions=%s, notification=%s]", emailFrom, emailToEl,
-            emails != null ? toString(emails, maxLen) : null, subject, attachmentExpressions != null ? toString(attachmentExpressions, maxLen) : null, super.toString());
+            emails != null ? toString(emails) : null, subject, attachmentExpressions != null ? toString(attachmentExpressions) : null, super.toString());
     }
 
-    private String toString(Collection<?> collection, int maxLen) {
+    private String toString(Collection<?> collection) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         int i = 0;
-        for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
+        for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < 10; i++) {
             if (i > 0)
                 builder.append(", ");
             builder.append(iterator.next());

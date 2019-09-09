@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import org.meveo.model.ModuleItem;
 
 @Entity
-@ModuleItem
+@ModuleItem("ScriptNotification")
 @Table(name = "adm_script_notification")
 public class ScriptNotification extends Notification {
 
