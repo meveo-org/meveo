@@ -185,7 +185,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
                 for (MeveoModuleItemDto moduleItemDto: dto.getModuleItems()) {
                 	Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-                	BaseEntityDto itemDto = JacksonUtil.read(moduleItemDto.getDtoData().toString(), dtoClass);
+                	BaseEntityDto itemDto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
                 	
                     if (itemDto instanceof CustomFieldTemplateDto) {
                         CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;

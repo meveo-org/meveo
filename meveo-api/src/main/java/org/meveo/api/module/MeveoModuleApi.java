@@ -411,7 +411,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             	Class<? extends BaseEntityDto> dtoClass;
 				try {
 					dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-					BaseEntityDto dto = JacksonUtil.read(moduleItemDto.getDtoData().toString(), dtoClass);
+					BaseEntityDto dto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
             	
 	                try {
 	
@@ -470,7 +470,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	                    throw e;
 	                }
 	                
-				} catch (ClassNotFoundException | IOException e1) {
+				} catch (ClassNotFoundException e1) {
 					throw new BusinessException(e1);
 				}
             }
