@@ -1,80 +1,42 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.model.crm;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Cacheable;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OrderBy;
-import javax.persistence.QueryHint;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.BaseEntity;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.DatePeriod;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ModuleItem;
-import org.meveo.model.ObservableEntity;
+import org.meveo.model.*;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
-import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
-import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.converter.StringListConverter;
-import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
-import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
+import org.meveo.model.crm.custom.*;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldValue;
-import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.shared.DateUtils;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author clement.bareth
@@ -82,7 +44,7 @@ import org.meveo.model.shared.DateUtils;
  * @lastModifiedVersion 6.0.15
  **/
 @Entity
-@ModuleItem
+@ModuleItem("CustomFieldTemplate")
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })
 @ObservableEntity
@@ -111,7 +73,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
         public String positionTag;
 
-        private GroupedCustomFieldTreeItemType(String tag) {
+        GroupedCustomFieldTreeItemType(String tag) {
             this.positionTag = tag;
         }
     }
@@ -141,7 +103,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             @AttributeOverride(name = "label", column = @Column(name = "label", nullable = false, length = 50)),
             @AttributeOverride(name = "keyType", column = @Column(name = "key_type", nullable = false, length = 10)),
             @AttributeOverride(name = "columnUse", column = @Column(name = "column_use", nullable = false)) })
-    private List<CustomFieldMatrixColumn> matrixColumns = new ArrayList<CustomFieldMatrixColumn>();
+    private List<CustomFieldMatrixColumn> matrixColumns = new ArrayList<>();
 
     @Transient
     private List<CustomFieldMatrixColumn> matrixKeyColumns;
@@ -171,7 +133,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     /**
      * Reference to an entity. A classname. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;"
      */
-    @Column(name = "entity_clazz", length = 255)
+    @Column(name = "entity_clazz")
     @Size(max = 255)
     private String entityClazz;
 
@@ -228,7 +190,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Size(max = 2000)
     private String applicableOnEl;
     
-    @Column(name = "relationship_name", nullable = true, updatable = false)
+    @Column(name = "relationship_name", updatable = false)
     private String relationshipName;
 
     /**
@@ -306,14 +268,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 */
 	@Column(name = "content_types", length = 2000)
 	@Convert(converter = StringListConverter.class)
-	private List<String> contentTypes = new ArrayList<String>();
+	private List<String> contentTypes = new ArrayList<>();
 
 	/**
 	 * List of file extensions
 	 */
 	@Column(name = "file_extensions", length = 2000)
 	@Convert(converter = StringListConverter.class)
-	private List<String> fileExtensions = new ArrayList<String>();
+	private List<String> fileExtensions = new ArrayList<>();
 
 	/**
 	 * Maximum size in kb.
@@ -324,7 +286,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	/**
 	 * Supports EL variables.
 	 */
-	@Column(name = "file_path", length = 255)
+	@Column(name = "file_path")
 	private String filePath;
 
     /**
@@ -397,7 +359,8 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             if (position != null) {
                 try {
                     return Integer.parseInt(position);
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
+
                 }
             }
         }
@@ -458,14 +421,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     public Map<String, String> getListValuesSorted() {
         if (listValues != null && !listValues.isEmpty()) {
-            Comparator<String> dropdownListComparator = new Comparator<String>() {
-                @Override
-                public int compare(String s1, String s2) {
-                    try {
-                        return Integer.valueOf(s1).compareTo(Integer.valueOf(s2));
-                    } catch (NumberFormatException e) {
-                        return s1.compareTo(s2);
-                    }
+            Comparator<String> dropdownListComparator = (s1, s2) -> {
+                try {
+                    return Integer.valueOf(s1).compareTo(Integer.valueOf(s2));
+                } catch (NumberFormatException e) {
+                    return s1.compareTo(s2);
                 }
             };
 
@@ -620,8 +580,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             return null;
         }
         if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
-            String cetCode = entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
-            return cetCode;
+            return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
         }
         return entityClazz;
     }
@@ -694,7 +653,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             return null;
         }
 
-        Map<String, String> parsedInfo = new HashMap<String, String>();
+        Map<String, String> parsedInfo = new HashMap<>();
 
         String[] positions = guiPosition.split(";");
 
@@ -705,7 +664,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
                 if (positionDetails.length == 3) {
                     parsedInfo.put(positionDetails[0] + "_pos", positionDetails[2]);
                 }
-            } else if (positionDetails[0].equals(GroupedCustomFieldTreeItemType.field.positionTag) && positionDetails.length == 2) {
+            } else if (positionDetails.length == 2) {
                 parsedInfo.put(positionDetails[0] + "_pos", positionDetails[1]);
             }
         }
@@ -792,10 +751,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             return false;
         } else if (appliesTo == null && other.getAppliesTo() != null) {
             return false;
-        } else if (!appliesTo.equals(other.getAppliesTo())) {
-            return false;
-        }
-        return true;
+        } else return appliesTo.equals(other.getAppliesTo());
     }
 
     public String getChildEntityFields() {
@@ -955,7 +911,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         if (matrixKeyColumns != null) {
             return matrixKeyColumns;
         }
-        matrixKeyColumns = matrixColumns.stream().filter(elem -> elem.isColumnForKey()).collect(Collectors.toList());
+        matrixKeyColumns = matrixColumns.stream().filter(CustomFieldMatrixColumn::isColumnForKey).collect(Collectors.toList());
         return matrixKeyColumns;
     }
 
@@ -1134,7 +1090,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
 	public void addContentType(String ct) {
 		if (getContentTypes() == null) {
-			contentTypes = new ArrayList<String>();
+			contentTypes = new ArrayList<>();
 		}
 
 		contentTypes.add(ct);
@@ -1142,7 +1098,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
 	public void addFileExtension(String fe) {
 		if (getFileExtensions() == null) {
-			fileExtensions = new ArrayList<String>();
+			fileExtensions = new ArrayList<>();
 		}
 
 		fileExtensions.add(fe);
@@ -1161,10 +1117,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	}
 
     public boolean isSqlStorage() {
-    	if(storages!=null&&storages.contains(DBStorageType.SQL)) {
-    		return true;
-    	}
-    	return false;
+        return storages != null && storages.contains(DBStorageType.SQL);
     }
 
 	public List<?> getNewListValue() {
@@ -1187,7 +1140,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		case LONG:
 			return new ArrayList<Long>();
 		default:
-			return new ArrayList<Object>();
+			return new ArrayList<>();
 		}
 	}
 }

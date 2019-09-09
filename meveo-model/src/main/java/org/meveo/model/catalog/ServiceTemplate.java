@@ -27,7 +27,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Size;
 
 @Entity
-@ModuleItem
+@ModuleItem("ServiceTemplate")
 @ObservableEntity
 @Cacheable
 @CustomFieldEntity(cftCodePrefix = "SERVICE")

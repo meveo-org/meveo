@@ -41,7 +41,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 
 @Entity
-@ModuleItem
+@ModuleItem("Workflow")
 @Cacheable
 @ExportIdentifier({ "code"})
 @Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))
