@@ -4,12 +4,14 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.service.custom.CustomEntityCategoryService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.primefaces.model.TreeNode;
 
 @Named
@@ -17,6 +19,9 @@ import org.primefaces.model.TreeNode;
 public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCategory> {
 
 	private static final long serialVersionUID = -8940088434700385379L;
+
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
 	private List<CustomEntityCategory> customEntityCategories;
 
@@ -69,5 +74,14 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	public List<CustomEntityCategory> getCustomEntityCategories() {
 		return customEntityCategories;
 	}
-	
+
+	public void deleteRelatedCETsByCategory(Long id) throws BusinessException {
+		customEntityTemplateService.removeCETsByCategoryId(id);
+		super.delete(id);
+	}
+
+	public void resetRelatedCETsByCategory(Long id) throws BusinessException {
+		customEntityTemplateService.resetCategoryCETsByCategoryId(id);
+		super.delete(id);
+	}
 }

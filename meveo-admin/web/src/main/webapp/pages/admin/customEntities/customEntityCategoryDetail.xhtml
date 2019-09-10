@@ -1,11 +1,11 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-	xmlns:f="http://xmlns.jcp.org/jsf/core"
-	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
-	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
-	xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui"
-	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
-	xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
+				xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+				xmlns:f="http://xmlns.jcp.org/jsf/core"
+				xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+				xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+				xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui"
+				xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+				xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
 
 	<ui:define name="metadata">
 		<f:metadata>
@@ -18,21 +18,21 @@
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
 				<p:menuitem outcome="customEntityCategorys"
-					value="#{messages['menu.customEntityCategories']}" />
+							value="#{messages['menu.customEntityCategories']}" />
 				<p:menuitem value="#{messages['customEntityCategory.new']}"
-					disabled="true"
-					rendered="#{customEntityCategoryBean.entity.transient}" />
+							disabled="true"
+							rendered="#{customEntityCategoryBean.entity.transient}" />
 				<p:menuitem
-					value="#{messages['customEntityCategory.editView']} - #{customEntityCategory.entity.descriptionOrCode}"
-					disabled="true"
-					rendered="#{!customEntityCategoryBean.entity.transient}" />
+						value="#{messages['customEntityCategory.editView']} - #{customEntityCategory.entity.descriptionOrCode}"
+						disabled="true"
+						rendered="#{!customEntityCategoryBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
 		<h:panelGroup>
 
 			<hftl:formPanel formId="cecForm"
-				backingBean="#{customEntityCategoryBean}"
-				showEnableDisableButton="true" showAddModuleButton="true">
+							backingBean="#{customEntityCategoryBean}"
+							showEnableDisableButton="true" showAddModuleButton="true" showDeleteButton="false">
 
 				<h:panelGrid columns = "3" width="60%">
 					<hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customEntityCategoryBean.entity.code == null)}">
@@ -42,12 +42,23 @@
 					</hftl:decorateFormField>
 
 					<hftl:formField label="#{messages['customizedEntities.name']}"
-						field="name" required="true" validateUnique="true"/>
+									field="name" required="true" validateUnique="true"/>
 
 					<hftl:formField label="#{messages['BusinessEntity.description']}"
-						field="description" />
+									field="description" />
 				</h:panelGrid>
-
+				<h:panelGroup>
+					<p:commandButton id="deleteCec" icon="ui-icon-trash" value="#{messages['commons.delete']}" rendered="#{(customEntityCategoryBean.entity.code != null)}" oncomplete="PF('deleteDialog').show()" immediate="true" update="@form">
+						<!--<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />-->
+					</p:commandButton>
+					<p:confirmDialog id="deleteDialog" widgetVar="deleteDialog" message="#{messages['commons.confirmDeleteCec']}" header="#{messages['commons.confirmationHeader']}" icon="ui-icon-alert">
+						<h:form id="deleteForm">
+							<p:commandButton immediate="true" value="#{messages['commons.yes']}" action="#{customEntityCategoryBean.deleteRelatedCETsByCategory}" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+							<p:commandButton immediate="true" value="#{messages['commons.no']}" action="#{customEntityCategoryBean.resetRelatedCETsByCategory}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+							<p:commandButton onclick="PF('deleteDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog" icon="ui-icon-cancel" />
+						</h:form>
+					</p:confirmDialog>
+				</h:panelGroup>
 			</hftl:formPanel>
 		</h:panelGroup>
 	</ui:define>

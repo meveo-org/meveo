@@ -1,7 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:s="http://jboss.org/seam/faces" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" 
-    template="/layout/template.xhtml"
-    xmlns:p="http://primefaces.org/ui">
+                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+                template="/layout/template.xhtml"
+                xmlns:p="http://primefaces.org/ui">
 
     <ui:define name="metadata">
         <f:metadata>
@@ -10,12 +10,12 @@
     </ui:define>
 
     <ui:define name="body">
-		<h:form id="crumbmenuForm">
-			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-				<p:menuitem outcome="customEntityCategorys" value="#{messages['menu.customEntityCategories']}" />
-			</p:breadCrumb>
-		</h:form>   
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem outcome="customEntityCategorys" value="#{messages['menu.customEntityCategories']}" />
+            </p:breadCrumb>
+        </h:form>
         <hftl:searchPanel columns="3" label="#{messages['customEntityCategory.search']}" backingBean="#{customEntityCategoryListBean}">
 
             <hftl:searchField label="#{messages['customEntityCategory.code']}" field="code" />
@@ -27,7 +27,24 @@
             <hftl:column label="#{messages['customEntityCategory.code']}" field="code" />
             <hftl:column label="#{messages['customEntityCategory.description']}" field="description" />
 
-            <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderAddModule="true" />
+            <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderAddModule="true" renderDeleteLink="false">
+                <h:panelGroup>
+                    <p:commandButton id="deleteCec" immediate="true" icon="ui-icon-trash" oncomplete="PF('deleteDialog').show()"
+                                     rendered="#{customEntityCategoryListBean.canUserUpdateEntity()}" update="@form">
+                        <f:setPropertyActionListener target="#{customEntityCategoryListBean.entity}" value="#{entity}" />
+                        <!--<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />-->
+                    </p:commandButton>
+                    <p:confirmDialog id="deleteDialog" widgetVar="deleteDialog" message="#{messages['commons.confirmDeleteCec']}" header="#{messages['commons.confirmationHeader']}" icon="ui-icon-alert">
+                        <h:form id="deleteForm">
+                            <p:remoteCommand id="remoteDeleteButton" action="#{customEntityCategoryListBean.deleteRelatedCETsByCategory}" name="fieldsDoDeleted" update="@form" />
+                            <p:commandButton  immediate="true" value="#{messages['commons.yes']}" oncomplete="fieldsDoDeleted()" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                            <p:remoteCommand id="remoteResetButton" action="#{customEntityCategoryListBean.resetRelatedCETsByCategory}" name="fieldsDoReset" update="@form" />
+                            <p:commandButton  immediate="true" value="#{messages['commons.no']}" oncomplete="fieldsReset()"  type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                            <p:commandButton onclick="PF('deleteDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog" icon="ui-icon-cancel" />
+                        </h:form>
+                    </p:confirmDialog>
+                </h:panelGroup>
+            </hftl:actionsColumn>
         </hftl:dataList>
 
     </ui:define>

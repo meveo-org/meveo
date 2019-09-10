@@ -33,7 +33,7 @@ public class CustomEntityCategoryRslmpl extends BaseRs implements CustomEntityCa
     }
 
     @Override
-    public ActionStatus removeEntityCategory(String customEntityCategoryCode) {
+    public ActionStatus removeEntityCategory(String customEntityCategoryCode, Boolean deleteRelatedTemplates) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
