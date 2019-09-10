@@ -32,6 +32,7 @@ import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.ws.ModuleWs;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 /**
  * @author Clément Bareth
@@ -50,7 +51,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.create(moduleDto);
+            moduleApi.create(moduleDto, false);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -89,7 +90,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
         result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
         result.getActionStatus().setMessage("");
         try {
-            List<MeveoModuleDto> dtos = moduleApi.list(null);
+            List<MeveoModuleDto> dtos = moduleApi.list((MeveoModuleFilters) null);
             result.setModules(dtos);
         } catch (Exception e) {
             processException(e, result.getActionStatus());
