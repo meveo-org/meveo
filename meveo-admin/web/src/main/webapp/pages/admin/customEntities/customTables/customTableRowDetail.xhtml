@@ -150,7 +150,7 @@
 									</p:commandLink>
 								</c:when>
 								<c:when test="#{cft.storageType eq CustomFieldStorageTypeEnum.SINGLE and cft.fieldType eq CustomFieldTypeEnum.BINARY}">
-									<p:panel id="#{fieldPrefix}repositoryPanel" styleClass="FLeft">
+									<p:panel id="#{fieldPrefix}BinarySingleUploadPanel" style="display: flex;flex-direction: row;">
 										<h:panelGrid columns="1">
 											<hftl:decorateFormField for="#{fieldPrefix}repository"
 												fieldId="#{fieldPrefix}repository"
@@ -174,7 +174,7 @@
 												label=""
 												fileUploadListener="#{customTableRowDetailBean.handleBinaryFileUpload}"
 												mode="advanced" multiple="false"
-												update=":#{p:component(of:concat(fieldPrefix, 'repositoryPanel'))}">
+												update=":#{p:component(of:concat(fieldPrefix, 'BinarySingleUploadPanel'))}">
 	
 												<f:attribute name="uuid"
 													value="#{customTableRowDetailBean.values.getValue('uuid')}" />
@@ -182,13 +182,13 @@
 													value="#{customTableRowDetailBean.cetCode}" />
 												<f:attribute name="cft" value="#{cft}" />
 												<f:attribute name="cfv" value="#{cfv}" />
-												<f:attribute name="isSingle" value="false" />
+												<f:attribute name="isSingle" value="true" />
 												<f:attribute name="repository"
 													value="#{customTableRowDetailBean.repository}" />
 												<f:attribute name="values"
 													value="#{customTableRowDetailBean.values}" />
 											</p:fileUpload>
-											<h:panelGroup>
+											<h:panelGroup rendered="#{cfv.stringValue != null}">
 												<h:outputText title="#{cfv.stringValue}"
 													value="#{of:abbreviate(cfv.stringValue, 25)}"></h:outputText>
 												<p:commandButton ajax="false"
@@ -199,6 +199,80 @@
 													</p:fileDownload>
 												</p:commandButton>
 											</h:panelGroup>
+										</h:panelGrid>
+									</p:panel>
+								</c:when>
+								<c:when test="#{cft.storageType eq CustomFieldStorageTypeEnum.LIST and cft.fieldType eq CustomFieldTypeEnum.BINARY}">
+									<p:panel id="#{fieldPrefix}BinaryListUploadPanel" style="display: flex;flex-direction: row;">
+										<h:panelGrid columns="1">
+											<hftl:decorateFormField for="#{fieldPrefix}repository"
+												fieldId="#{fieldPrefix}repository"
+												label="#{messages['binary.repository']}">
+	
+												<p:selectOneMenu id="#{fieldPrefix}repository"
+													value="#{customTableRowDetailBean.repository}"
+													immediate="true">
+	
+													<hftl:objectConverter />
+													<f:selectItem itemValue="#{null}" itemLabel="" />
+													<f:selectItems value="#{repositoryListBean.listActive()}"
+														var="e" itemValue="#{e}" itemLabel="#{e.code}" />
+													<p:ajax event="valueChange"
+														update="#{fieldPrefix}fileUpload" process="@this" />
+	
+												</p:selectOneMenu>
+											</hftl:decorateFormField>
+											<p:scrollPanel mode="native">
+												<p:fileUpload id="#{fieldPrefix}fileUpload"
+													required="#{cft.valueRequired and !hasInheritedValue}"
+													label=""
+													fileUploadListener="#{customTableRowDetailBean.handleBinaryFileUpload}"
+													mode="advanced" multiple="true"
+													update=":#{p:component(of:concat(fieldPrefix, 'BinaryListUploadPanel'))}">
+		
+													<f:attribute name="uuid"
+														value="#{customTableRowDetailBean.values.getValue('uuid')}" />
+													<f:attribute name="cetCode"
+														value="#{customTableRowDetailBean.cetCode}" />
+													<f:attribute name="cft" value="#{cft}" />
+													<f:attribute name="cfv" value="#{cfv}" />
+													<f:attribute name="isSingle" value="false" />
+													<f:attribute name="repository"
+														value="#{customTableRowDetailBean.repository}" />
+													<f:attribute name="values"
+														value="#{customTableRowDetailBean.values}" />
+												</p:fileUpload>
+											</p:scrollPanel>
+											<p:dataTable id="#{fieldPrefix}_customFields_binaries" lazy="false"
+												editMode="cell" reflow="true" tableStyle="table-layout: auto"
+												resizableColumns="true" rowIndexVar="rowIndex"
+												value="#{cfv.listValue}" var="path">
+									
+												<p:column headerText="#{messages['customFieldTemplate.filePath']}">
+													<h:outputText title="#{path}"
+														value="#{of:abbreviate(path, 25)}"></h:outputText>
+												</p:column>
+									
+												<p:column headerText="#{messages['commons.actions']}" width="15%">
+													<p:commandButton ajax="false"
+														onclick="PrimeFaces.monitorDownload(start, stop);"
+														icon="fa fa-arrow-down" immediate="true">
+														<p:fileDownload
+															value="#{customFieldDataEntryBean.downloadFile(path)}">
+														</p:fileDownload>
+													</p:commandButton>
+													<p:commandButton icon="ui-icon-minus" partialSubmit="false"
+														process="@this" update="@form"
+														action="#{cfv.listValue.remove(path)}" >
+														
+														<p:collector unique="true" value="#{path}" addTo="#{customTableRowDetailBean.filesToDeleteOnExit}"/>
+														
+														<p:confirm header="#{messages['commons.confirmationHeader']}"
+															message="#{messages['commons.confirmDelete']}"
+															icon="ui-icon-alert" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
 										</h:panelGrid>
 									</p:panel>
 								</c:when>
@@ -221,6 +295,7 @@
 			<p:commandButton value="Save"
 				style="margin-top: 5px; margin-left: 1px;"
 				process="@form"
+				actionListener="#{customTableRowDetailBean.deleteDeletedFiles}"
 				action="#{customTableBean.update(customTableRowDetailBean.valuesMap)}"
 				update=":ctForm:ctSearchResults :growl"
 				oncomplete="PF('rowDetail').hide()" />

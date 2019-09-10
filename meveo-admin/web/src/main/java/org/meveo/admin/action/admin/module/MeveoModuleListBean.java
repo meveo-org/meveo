@@ -26,8 +26,8 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.util.pagination.EntityListDataModelPF;
-import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -35,6 +35,11 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+/**
+ * @author Clément Bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ **/
 @Named
 @ConversationScoped
 public class MeveoModuleListBean extends MeveoModuleBean {
@@ -69,7 +74,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
         }
 
         if (selectedModuleDto.getModuleItems() != null) {
-            for (BaseEntityDto item : selectedModuleDto.getModuleItems()) {
+            for (MeveoModuleItemDto item : selectedModuleDto.getModuleItems()) {
 
                 TreeNode classNode = getOrCreateNodeByClass(item.getClass().getSimpleName());
                 new DefaultTreeNode("item", item, classNode);
