@@ -132,7 +132,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
 		Map<String, List<CustomEntityTemplate>> listMap = new HashMap<>();
-		List<CustomEntityTemplate> list = customEntityTemplateService.list();
+		List<CustomEntityTemplate> list = customEntityTemplateService.list(true);
 		for (CustomEntityTemplate customEntityTemplate : list) {
 			if (customEntityTemplate.getCustomEntityCategory() != null) {
 				String name = customEntityTemplate.getCustomEntityCategory().getName();
