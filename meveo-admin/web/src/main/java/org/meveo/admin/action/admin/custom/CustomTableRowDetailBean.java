@@ -18,6 +18,9 @@ package org.meveo.admin.action.admin.custom;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +48,7 @@ import org.primefaces.model.UploadedFile;
 
 /**
  * @author Clement Bareth
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @lastModifiedVersion 6.3.0
  */
 @Named
@@ -69,6 +72,8 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
     private String cetCode;
     
     private Repository repository;
+    
+    private List<String> filesToDeleteOnExit = new ArrayList<>();
     
     public void initEntity(String cetCode, Map<String, Object> valuesMap, Collection<CustomFieldTemplate> fields) {
     	this.cetCode = cetCode;
@@ -128,8 +133,8 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		String cetCode = (String) attrs.get("cetCode");
 		CustomFieldTemplate cft = (CustomFieldTemplate) attrs.get("cft");
 		CustomFieldValue cfv = (CustomFieldValue) attrs.get("cfv");
-//		String strIsSingle = (String) attrs.get("isSingle");
-//		boolean isSingle = Boolean.parseBoolean(strIsSingle);
+		String strIsSingle = (String) attrs.get("isSingle");
+		boolean isSingle = Boolean.parseBoolean(strIsSingle);
 		Repository repository = (Repository) attrs.get("repository");
 		CustomFieldValues fieldValues = (CustomFieldValues) attrs.get("values");
 		
@@ -161,10 +166,34 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		
 		log.debug("binary path={}", rootPath);
 		
-		cfv.setStringValue(rootPath);
+		if (isSingle) {
+			cfv.setStringValue(rootPath);
+
+		} else {
+			List<Object> listValue = cfv.getListValue();
+			if (listValue == null) {
+				listValue = new ArrayList<Object>();
+			}
+			listValue.add(rootPath);
+			cfv.setListValue(listValue);
+		}
 		
 		repository = null;
     }
+    
+	public void deleteDeletedFiles() {
+		if (filesToDeleteOnExit != null && !filesToDeleteOnExit.isEmpty()) {
+			for (String file : filesToDeleteOnExit) {
+				Path path = Paths.get(file);
+				try {
+					Files.delete(path);
+					
+				} catch (IOException e) {
+					log.debug("File does not exists {}", path.getFileName());
+				}
+			}
+		}
+	}
 	
 	@ActionMethod
 	public void onListElementUpdated() {
@@ -214,6 +243,14 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 
 	public void setRepository(Repository repository) {
 		this.repository = repository;
+	}
+
+	public List<String> getFilesToDeleteOnExit() {
+		return filesToDeleteOnExit;
+	}
+
+	public void setFilesToDeleteOnExit(List<String> filesToDeleteOnExit) {
+		this.filesToDeleteOnExit = filesToDeleteOnExit;
 	}
 	
 }

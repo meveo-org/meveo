@@ -84,9 +84,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Provides support for custom field value data entry
  * 
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author akadid abdelmounaim
- * @lastModifiedVersion 5.0.1
+ * @lastModifiedVersion 6.3.0
  */
 @Named
 @ViewScoped
@@ -1977,6 +1977,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public StreamedContent downloadFile(String path) throws IOException {
 
+		if(StringUtils.isBlank(path)) {
+			return null;
+		}
+		
 		File file = new File(path);
 		InputStream stream = new FileInputStream(file);
 
