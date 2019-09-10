@@ -462,6 +462,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         return crtsByCode.get(key);
     }
 
+    /**
+     * Get custom relationships
+     *
+     * @return Cached custom relationship templates
+     */
+    public Collection<CustomRelationshipTemplate> getCustomRelationshipTemplates() {
+        return crtsByCode.values();
+    }
+
     public List<CustomRelationshipTemplate> getCustomRelationshipTemplateByCet(String code) {
         return crtsByCode.values()
                 .stream()
