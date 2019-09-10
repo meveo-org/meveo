@@ -131,37 +131,51 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             return null;
         }
 
+        boolean invalid = false;
         if (getEntity().getFieldType()==CustomFieldTypeEnum.STRING) {
-            Boolean validateSamples = SampleValueHelper.validateStringType(getEntity().getSamples(), getEntity().getStorageType());
-            if (!validateSamples) {
-                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
-                return null;
+            List<Integer> validateSamples = SampleValueHelper.validateStringType(getEntity().getSamples(), getEntity().getStorageType());
+            if (CollectionUtils.isNotEmpty(validateSamples)) {
+                for (Integer validateSample : validateSamples) {
+                    messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
+                    invalid = true;
+                }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.LONG) {
-            Boolean validateSamples = SampleValueHelper.validateLongType(getEntity().getSamples(), getEntity().getStorageType());
-            if (!validateSamples) {
-                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
-                return null;
+            List<Integer> validateSamples = SampleValueHelper.validateLongType(getEntity().getSamples(), getEntity().getStorageType());
+            if (CollectionUtils.isNotEmpty(validateSamples)) {
+                for (Integer validateSample : validateSamples) {
+                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
+                        invalid = true;
+                }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.DOUBLE) {
-            Boolean validateSamples = SampleValueHelper.validateDoubleType(getEntity().getSamples(), getEntity().getStorageType());
-            if (!validateSamples) {
-                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
-                return null;
+            List<Integer> validateSamples = SampleValueHelper.validateDoubleType(getEntity().getSamples(), getEntity().getStorageType());
+            if (CollectionUtils.isNotEmpty(validateSamples)) {
+                for (Integer validateSample: validateSamples) {
+                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
+                        invalid = true;
+                }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.CHILD_ENTITY) {
             Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(getEntity().getAppliesTo());
-            Boolean validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, getEntity().getSamples(), getEntity().getStorageType());
-            if (!validateSamples) {
-                messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"));
-                return null;
+            List<Integer> validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, getEntity().getSamples(), getEntity().getStorageType());
+            if (CollectionUtils.isNotEmpty(validateSamples)) {
+                for (Integer validateSample : validateSamples) {
+                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
+                        invalid = true;
+
+                }
             }
+        }
+
+        if (invalid) {
+            return null;
         }
 
         // Update childEntityColumns
@@ -367,7 +381,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     /**
      * Copy and associate custom field template with another entity class
      * 
-     * @throws org.meveo.admin.exception.BusinessException
+     * @throws BusinessException
      */
     @ActionMethod
     public void copyCFT() throws BusinessException {
