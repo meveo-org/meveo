@@ -74,6 +74,7 @@ import org.primefaces.model.TreeNode;
  *
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @lastModifiedVersion 6.3.0
  */
 
@@ -259,7 +260,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         this.root = root;
     }
 
-    public LazyDataModel<MeveoModule> getSubModules() {
+    @SuppressWarnings("serial")
+	public LazyDataModel<MeveoModule> getSubModules() {
         HashMap<String, Object> filters = new HashMap<>();
 
         if (!getEntity().isTransient()) {

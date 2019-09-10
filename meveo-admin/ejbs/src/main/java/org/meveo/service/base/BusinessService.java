@@ -19,6 +19,12 @@
  */
 package org.meveo.service.base;
 
+import java.util.List;
+
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
@@ -31,6 +37,7 @@ import java.util.List;
 
 /**
  * @author phung
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Clément Bareth
  * @param <P> extension of Business Entity.
  */
