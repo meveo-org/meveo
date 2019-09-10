@@ -43,7 +43,7 @@ import org.meveo.model.scripts.ScriptInstance;
 @Entity
 @ObservableEntity
 @Cacheable
-@ModuleItem
+@ModuleItem("Module")
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_module", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_module_seq"), })

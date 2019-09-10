@@ -254,11 +254,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             populateCETCache();
         }
 
-        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
-            crtsByCodeClear();
-            populateCETCache();
-        }
-
     }
 
     /**
@@ -274,11 +269,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         }
 
         if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
-            populateCETCache();
-        }
-        
-        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
-            crtsByCodeClear();
             populateCETCache();
         }
     }

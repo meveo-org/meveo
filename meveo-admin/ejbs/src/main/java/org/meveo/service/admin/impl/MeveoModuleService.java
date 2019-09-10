@@ -57,6 +57,14 @@ import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
+import java.util.*;
+
 /**
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
@@ -74,7 +82,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private MeveoModuleItemService meveoModuleItemService;
-    
+
     /**
      * import module from remote meveo instance.
      * 
@@ -311,11 +319,58 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             return null;
         }
     }
-    
+
+    public List<MeveoModule> list(MeveoModuleFilters filters) {
+        return list(filters, "*", MeveoModule.class);
+    }
+
+    public List<String> listCodesOnly(MeveoModuleFilters filters) {
+        return list(filters, "code", String.class);
+    }
+
+    private <T> List<T> list(MeveoModuleFilters filters, String projection, Class<T> returnedClass) {
+        StringBuilder queryBuilder = new StringBuilder("SELECT DISTINCT m." + projection + " FROM " + entityClass.getName() + " m");
+        if(filters.getItemType() !=null && filters.getItemClass() != null){
+            queryBuilder.append(" INNER JOIN m.moduleItems i");
+        }
+
+        Map<String, Object> parameters = new HashMap<>();
+
+        queryBuilder.append(" WHERE 1 = 1 \n");
+
+        if(filters.getActive() != null){
+            if(filters.getActive()) {
+                queryBuilder.append(" AND m.disabled = 0 ");
+            } else {
+                queryBuilder.append(" AND m.disabled = 1 ");
+            }
+        }
+
+        if(filters.getDownloaded() != null){
+            if(!filters.getDownloaded()) {
+                queryBuilder.append(" AND m.moduleSource = '' OR m.moduleSource = null ");
+            } else {
+                queryBuilder.append(" AND m.moduleSource != null AND m.moduleSource != '' ");
+            }
+        }
+
+        if(filters.getItemCode() != null && filters.getItemClass() != null){
+            queryBuilder.append(" AND i.itemCode = :itemCode AND i.itemClass = :itemClass");
+            parameters.put("itemCode", filters.getItemCode());
+            parameters.put("itemClass", filters.getItemClass());
+        }
+
+        final TypedQuery<T> query = getEntityManager().createQuery(queryBuilder.toString(), returnedClass);
+        parameters.forEach(query::setParameter);
+
+        return query.getResultList();
+    }
+
+
 	/**
 	 * Observer when an entity that extends a BusinessEntity is deleted which is
 	 * annotated by MeveoModuleItem.
-	 * 
+	 *
 	 * @param be BusinessEntity
 	 * @throws BusinessException
 	 */

@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -29,10 +30,15 @@ import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+import java.util.List;
+
 /**
  * @author phung
  * @author Edward P. Legaspi <czetsuya@gmail.com>
- *
+ * @author Clément Bareth
  * @param <P> extension of Business Entity.
  */
 public abstract class BusinessService<P extends BusinessEntity> extends PersistenceService<P> {
@@ -164,5 +170,5 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return null;
         }
     }
-    
+
 }

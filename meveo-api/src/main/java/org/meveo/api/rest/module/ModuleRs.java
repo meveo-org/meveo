@@ -19,12 +19,15 @@ package org.meveo.api.rest.module;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
-import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 /**
  * JAX-RS interface for MeveoModule management
@@ -44,7 +47,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(MeveoModuleDto moduleDto);
+    ActionStatus create(MeveoModuleDto moduleDto, @QueryParam("development") @DefaultValue("false") boolean development);
 
     /**
      * Update an existing Meveo module
@@ -78,12 +81,12 @@ public interface ModuleRs extends IBaseRs {
 
     /**
      * List all Meveo's modules
-     * 
+     *
      * @return A list of Meveo's modules
      */
     @GET
     @Path("/list")
-    MeveoModuleDtosResponse list();
+    Response list(@QueryParam("codesOnly")  boolean codesOnly, @BeanParam MeveoModuleFilters filters);
 
     /**
      * Install Meveo module
@@ -133,4 +136,30 @@ public interface ModuleRs extends IBaseRs {
     @GET
     @Path("/disable")
     ActionStatus disable(@QueryParam("code") String code);
+
+    /**
+     * Add a business entity to a module
+     *
+     * @param moduleCode Code of the module to modify
+     * @param itemCode  Code of the item to add
+     * @param itemType Type of the item to add
+     * @return the modified module
+     */
+    @POST()
+    @Path("/{code}/items/add")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    MeveoModuleDto addToModule(@PathParam("code") String moduleCode, @FormParam("itemCode") String itemCode, @FormParam("itemType") String itemType) throws EntityDoesNotExistsException, BusinessException;
+
+    /**
+     * Remove a business entity from a module
+     *
+     * @param moduleCode Code of the module to modify
+     * @param itemCode  Code of the item to remove
+     * @param itemType Type of the item to remove
+     * @return the modified module
+     */
+    @POST()
+    @Path("/{code}/items/remove")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    MeveoModuleDto removeFromModule(@PathParam("code") String moduleCode, @FormParam("itemCode") String itemCode, @FormParam("itemType") String itemType) throws EntityDoesNotExistsException, BusinessException;
 }

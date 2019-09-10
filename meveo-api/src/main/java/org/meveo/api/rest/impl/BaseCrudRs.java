@@ -1,19 +1,25 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.api.rest.impl;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ServerErrorException;
-import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
@@ -21,9 +27,16 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.model.IEntity;
-import org.meveo.model.security.Role;
-import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
+
+import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.MediaType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 
 /**
@@ -109,7 +122,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportCSV(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportCSV(config);
-		} catch (InvalidParameterException | IOException | BusinessException e) {
+		} catch (InvalidParameterException | IOException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}
@@ -118,7 +131,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportJSON(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportJSON(config);
-		} catch (InvalidParameterException | IOException | BusinessException e) {
+		} catch (InvalidParameterException | IOException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}
@@ -127,7 +140,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportXML(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportXML(config);
-		} catch (InvalidParameterException | IOException | BusinessException e) {
+		} catch (InvalidParameterException | IOException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}
