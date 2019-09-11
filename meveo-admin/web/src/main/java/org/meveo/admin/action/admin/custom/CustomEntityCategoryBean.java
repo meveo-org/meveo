@@ -75,13 +75,13 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 		return customEntityCategories;
 	}
 
-	public void deleteRelatedCETsByCategory(Long id) throws BusinessException {
-		customEntityTemplateService.removeCETsByCategoryId(id);
-		super.delete(id);
+	public void deleteRelatedCETsByCategory() throws BusinessException {
+		customEntityTemplateService.removeCETsByCategoryId(entity.getId());
+		super.delete(entity.getId());
 	}
 
-	public void resetRelatedCETsByCategory(Long id) throws BusinessException {
-		customEntityTemplateService.resetCategoryCETsByCategoryId(id);
-		super.delete(id);
+	public void resetRelatedCETsByCategory() throws BusinessException {
+		customEntityTemplateService.resetCategoryCETsByCategoryId(entity.getId());
+		super.delete(entity.getId());
 	}
 }

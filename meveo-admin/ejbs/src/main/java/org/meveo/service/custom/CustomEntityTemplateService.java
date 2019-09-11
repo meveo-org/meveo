@@ -421,16 +421,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param categoryId
      */
     public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
-        getEntityManager().createNamedQuery("CustomEntityTemplate.RemoveByCategoryId", CustomEntityTemplate.class)
+        getEntityManager().createNamedQuery("CustomEntityTemplate.RemoveByCategoryId")
                 .setParameter("id", categoryId).executeUpdate();
     }
 
     /**
-     *
+     * update cet base on category id
      * @param id
      */
     public void resetCategoryCETsByCategoryId(Long id) {
-        getEntityManager().createNamedQuery("CustomEntityTemplate.ReSetCategoryEmptyByCategoryId", CustomEntityTemplate.class)
+        getEntityManager().createNamedQuery("CustomEntityTemplate.ReSetCategoryEmptyByCategoryId")
                 .setParameter("id", id).executeUpdate();
     }
 }
