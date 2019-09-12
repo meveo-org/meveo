@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -18,33 +19,26 @@
  */
 package org.meveo.service.base;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+import java.util.List;
 
 /**
  * @author phung
- *
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Clément Bareth
  * @param <P> extension of Business Entity.
  */
 public abstract class BusinessService<P extends BusinessEntity> extends PersistenceService<P> {
@@ -176,5 +170,5 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return null;
         }
     }
-    
+
 }

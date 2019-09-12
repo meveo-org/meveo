@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -18,28 +19,39 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
@@ -47,27 +59,29 @@ import org.meveo.service.script.module.ModuleScriptService;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.net.ssl.SSLContext;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
+import java.util.*;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
+/**
+ * EJB for managing MeveoModule entities
+ * @author Clément Bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
-
-    @Inject
-    protected EntityToDtoConverter entityToDtoConverter;
 
     @Inject
     private ModuleScriptService moduleScriptService;
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
+    
+    @Inject
+    private MeveoModuleItemService meveoModuleItemService;
 
     /**
      * import module from remote meveo instance.
@@ -75,10 +89,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @param meveoInstance meveo instance
      * @return list of meveo module
      * @throws BusinessException business exception.
-     * @throws RemoteAuthenticationException remote authentication exception.
      */
-    public List<MeveoModuleDto> downloadModulesFromMeveoInstance(MeveoInstance meveoInstance) throws BusinessException, RemoteAuthenticationException {
-        List<MeveoModuleDto> result = null;
+    public List<MeveoModuleDto> downloadModulesFromMeveoInstance(MeveoInstance meveoInstance) throws BusinessException {
+        List<MeveoModuleDto> result;
         try {
             String url = "api/rest/module/list";
             String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
@@ -99,24 +112,24 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
 
             MeveoModuleDtosResponse resultDto = response.readEntity(MeveoModuleDtosResponse.class);
-            log.debug("response {}", resultDto);
-            if (resultDto == null || ActionStatusEnum.SUCCESS != resultDto.getActionStatus().getStatus()) {
+            if (resultDto == null) {
+                throw new BusinessException("No response body from meveo instance " + meveoInstance.getCode());
+            }
+
+            if (ActionStatusEnum.SUCCESS != resultDto.getActionStatus().getStatus()) {
                 throw new BusinessException("Code " + resultDto.getActionStatus().getErrorCode() + ", info " + resultDto.getActionStatus().getMessage());
             }
+
             result = resultDto.getModules();
             if (result != null) {
-                Collections.sort(result, new Comparator<MeveoModuleDto>() {
-                    @Override
-                    public int compare(MeveoModuleDto dto1, MeveoModuleDto dto2) {
-                        return dto1.getCode().compareTo(dto2.getCode());
-                    }
-                });
+                result.sort(Comparator.comparing(BusinessEntityDto::getCode));
             }
+
             return result;
 
         } catch (Exception e) {
             log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
-            throw new BusinessException("Fail to communicate " + meveoInstance.getCode() + ". Error " + (e == null ? e.getClass().getSimpleName() : e.getMessage()));
+            throw new BusinessException("Fail to communicate " + meveoInstance.getCode() + ". Error " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
         }
     }
 
@@ -126,27 +139,31 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @param module meveo module
      * @param meveoInstance meveo instance.
      * @throws BusinessException business exception.
-     * @throws RemoteAuthenticationException remote exception.
      */
     @SuppressWarnings("unchecked")
-    public void publishModule2MeveoInstance(MeveoModule module, MeveoInstance meveoInstance) throws BusinessException, RemoteAuthenticationException {
+    public void publishModule2MeveoInstance(MeveoModule module, MeveoInstance meveoInstance) throws BusinessException {
         log.debug("export module {} to {}", module, meveoInstance);
         final String url = "api/rest/module/createOrUpdate";
 
         try {
             ApiService<MeveoModule, MeveoModuleDto> moduleApi = (ApiService<MeveoModule, MeveoModuleDto>) EjbUtils.getServiceInterface("MeveoModuleApi");
+            if(moduleApi == null){
+                throw new IllegalArgumentException("Cannot find api MeveoModuleApi bean");
+            }
+
             MeveoModuleDto moduleDto = moduleApi.find(module.getCode());
 
-            log.debug("Export module dto {}", moduleDto);
             Response response = meveoInstanceService.publishDto2MeveoInstance(url, meveoInstance, moduleDto);
             ActionStatus actionStatus = response.readEntity(ActionStatus.class);
-            log.debug("response {}", actionStatus);
-            if (actionStatus == null || ActionStatusEnum.SUCCESS != actionStatus.getStatus()) {
+            if (actionStatus == null) {
+                throw new BusinessException("Cannot read response status");
+            }
+
+            if (ActionStatusEnum.SUCCESS != actionStatus.getStatus()) {
                 throw new BusinessException("Code " + actionStatus.getErrorCode() + ", info " + actionStatus.getMessage());
             }
         } catch (Exception e) {
-            log.error("Error when export module {} to {}. Reason {}", module.getCode(), meveoInstance.getCode(),
-                (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+            log.error("Error when export module {} to {}. Reason {}", module.getCode(), meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
             throw new BusinessException("Fail to communicate " + meveoInstance.getCode() + ". Error " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
         }
     }
@@ -165,11 +182,15 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
 
     public MeveoModule uninstall(MeveoModule module) throws BusinessException {
-        return uninstall(module, false);
+        return uninstall(module, false, false);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private MeveoModule uninstall(MeveoModule module, boolean childModule) throws BusinessException {
+    public MeveoModule uninstall(MeveoModule module, boolean remove) throws BusinessException {
+        return uninstall(module, false, remove);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean remove) throws BusinessException {
 
         if (!module.isInstalled()) {
             throw new BusinessException("Module is not installed");
@@ -182,8 +203,8 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
         for (MeveoModuleItem item : module.getModuleItems()) {
             
-            // check if moduleItem is linked to other module
-            if (isChildOfOtherModule(item.getItemCode())) {
+            // check if moduleItem is linked to other active module
+            if (isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
                 continue;
             }
             
@@ -195,7 +216,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
             try {
                 if (itemEntity instanceof MeveoModule) {
-                    uninstall((MeveoModule) itemEntity, true);
+                    uninstall((MeveoModule) itemEntity, true, remove);
                 } else {
 
                     // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
@@ -205,12 +226,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                     if (persistenceServiceForItem == null) {
                         persistenceServiceForItem = (PersistenceService) EjbUtils.getServiceInterface(clazz.getSuperclass().getSimpleName() + "Service");
                     }
+
                     if (persistenceServiceForItem == null) {
                         log.error("Failed to find implementation of persistence service for class {}", item.getItemClass());
                         continue;
                     }
 
-                    persistenceServiceForItem.disable(itemEntity);
+                    if(remove) {
+                        persistenceServiceForItem.remove(itemEntity);
+                    } else {
+                        persistenceServiceForItem.disable(itemEntity);
+                    }
 
                 }
             } catch (Exception e) {
@@ -221,29 +247,38 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if (moduleScript != null) {
             moduleScriptService.postUninstallModule(moduleScript, module);
         }
-
+        
         // Remove if it is a child module
         if (childModule) {
             remove(module);
             return null;
 
-            // Otherwise mark it uninstalled and clear module items
+        // Otherwise mark it uninstalled and clear module items
         } else {
             module.setInstalled(false);
             module.getModuleItems().clear();
             return update(module);
         }
     }
-    
-    public boolean isChildOfOtherModule(String moduleItemCode) {
-        QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "i", null);
-        qb.addCriterion("itemCode", "=", moduleItemCode, true);
-        return qb.count(getEntityManager()) > 1 ? true : false;
+
+    /**
+     * Check whether the given item is a child of an other active module
+     *
+     * @param moduleItemCode Module item code
+     * @param itemClass      Class of the module item
+     * @return <code>true</code> if the given item exists in an other module
+     */
+    public boolean isChildOfOtherActiveModule(String moduleItemCode, String itemClass) {
+        QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "i", null, Collections.singletonList("meveoModule"));
+        qb.addCriterion("i.itemCode", "=", moduleItemCode, true);
+        qb.addCriterion("i.itemClass", "=", itemClass, false);
+        qb.addBooleanCriterion("meveoModule.disabled", false);
+        return qb.count(getEntityManager()) > 1;
     }
 
     @SuppressWarnings("unchecked")
     public String getRelatedModulesAsString(String itemCode, String itemClazz, String appliesTo) {
-        QueryBuilder qb = new QueryBuilder(MeveoModule.class, "m", Arrays.asList("moduleItems as i"));
+        QueryBuilder qb = new QueryBuilder(MeveoModule.class, "m", Collections.singletonList("moduleItems as i"));
         qb.addCriterion("i.itemCode", "=", itemCode, true);
         qb.addCriterion("i.itemClass", "=", itemClazz, false);
         qb.addCriterion("i.appliesTo", "=", appliesTo, false);
@@ -279,10 +314,85 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
 
             return (List<MeveoModule>) qb.getQuery(getEntityManager()).getResultList();
-        } catch (NoResultException ne) {
-            return null;
-        } catch (NonUniqueResultException nre) {
+
+        } catch (NoResultException | NonUniqueResultException ne) {
             return null;
         }
     }
+
+    public List<MeveoModule> list(MeveoModuleFilters filters) {
+        return list(filters, "*", MeveoModule.class);
+    }
+
+    public List<String> listCodesOnly(MeveoModuleFilters filters) {
+        return list(filters, "code", String.class);
+    }
+
+    private <T> List<T> list(MeveoModuleFilters filters, String projection, Class<T> returnedClass) {
+        StringBuilder queryBuilder = new StringBuilder("SELECT DISTINCT m." + projection + " FROM " + entityClass.getName() + " m");
+        if(filters.getItemType() !=null && filters.getItemClass() != null){
+            queryBuilder.append(" INNER JOIN m.moduleItems i");
+        }
+
+        Map<String, Object> parameters = new HashMap<>();
+
+        queryBuilder.append(" WHERE 1 = 1 \n");
+
+        if(filters.getActive() != null){
+            if(filters.getActive()) {
+                queryBuilder.append(" AND m.disabled = 0 ");
+            } else {
+                queryBuilder.append(" AND m.disabled = 1 ");
+            }
+        }
+
+        if(filters.getDownloaded() != null){
+            if(!filters.getDownloaded()) {
+                queryBuilder.append(" AND m.moduleSource = '' OR m.moduleSource = null ");
+            } else {
+                queryBuilder.append(" AND m.moduleSource != null AND m.moduleSource != '' ");
+            }
+        }
+
+        if(filters.getItemCode() != null && filters.getItemClass() != null){
+            queryBuilder.append(" AND i.itemCode = :itemCode AND i.itemClass = :itemClass");
+            parameters.put("itemCode", filters.getItemCode());
+            parameters.put("itemClass", filters.getItemClass());
+        }
+
+        final TypedQuery<T> query = getEntityManager().createQuery(queryBuilder.toString(), returnedClass);
+        parameters.forEach(query::setParameter);
+
+        return query.getResultList();
+    }
+
+
+	/**
+	 * Observer when an entity that extends a BusinessEntity is deleted which is
+	 * annotated by MeveoModuleItem.
+	 *
+	 * @param be BusinessEntity
+	 * @throws BusinessException
+	 */
+	public void onMeveoModuleItemDelete(@Observes @Removed BusinessEntity be) throws BusinessException {
+		if (be.getClass().isAnnotationPresent(ModuleItem.class)) {
+			QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "i");
+			qb = qb.addCriterion("itemCode", "=", be.getCode(), true);
+			qb = qb.addCriterion("itemClass", "=", be.getClass().getName(), true);
+
+			try {
+				Long count = qb.count(getEntityManager());
+
+				// need to do the check when uninstalling
+				if (count > 0) {
+					Query query = getEntityManager().createNamedQuery("MeveoModuleItem.delete");
+					query = query.setParameter("itemCode", be.getCode());
+					query = query.setParameter("itemClass", be.getClass().getName());
+					query.executeUpdate();
+				}
+			} catch (NoResultException e) {
+
+			}
+		}
+	}
 }

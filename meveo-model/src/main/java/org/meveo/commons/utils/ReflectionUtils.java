@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -207,12 +208,13 @@ public class ReflectionUtils {
     /**
      * @param className class name
      * @param annotationClass annotation class
+     * @param prefix
      * @return instance of Class.
      */
-    public static Class<?> getClassBySimpleNameAndAnnotation(String className, Class<? extends Annotation> annotationClass) {
+    public static Class<?> getClassBySimpleNameAndAnnotation(String className, Class<? extends Annotation> annotationClass, String prefix) {
         Class<?> entityClass = null;
         if (!StringUtils.isBlank(className)) {
-            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass, "org.meveo.model");
+            Set<Class<?>> classesWithAnnottation = getClassesAnnotatedWith(annotationClass, prefix);
             for (Class<?> clazz : classesWithAnnottation) {
                 if (className.equals(clazz.getSimpleName())) {
                     entityClass = clazz;
@@ -235,6 +237,13 @@ public class ReflectionUtils {
     public static Set<Class<?>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass, String prefix) {
         Reflections reflections = new Reflections(prefix);
         return reflections.getTypesAnnotatedWith(annotationClass);
+    }
+
+    public static <T> Set<Class<? extends T>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass, Class<T> baseClass) {
+        return new Reflections("").getSubTypesOf(baseClass)
+                .stream()
+                .filter(c -> c.isAnnotationPresent(annotationClass))
+                .collect(Collectors.toSet());
     }
 
     /**

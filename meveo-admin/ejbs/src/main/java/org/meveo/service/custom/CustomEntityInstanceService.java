@@ -41,6 +41,18 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
         return super.update(entity);
     }
 
+    /**
+     * Remove all records related to the given CET
+     *
+     * @param cetCode CET code the records are related to
+     */
+    public void removeByCet(String cetCode) {
+        String query = "DELETE FROM " + CustomEntityInstance.class.getName() + " \n"
+                + "WHERE cetCode = :cetCode";
+
+        getEntityManager().createQuery(query).setParameter("cetCode", cetCode).executeUpdate();
+    }
+
     public CustomEntityInstance findByCodeByCet(String cetCode, String code) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
         qb.addCriterion("cei.cetCode", "=", cetCode, true);

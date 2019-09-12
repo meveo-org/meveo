@@ -1,6 +1,17 @@
 package org.meveo.api.dto.module;
 
-public class MeveoModuleItemDto {
+import org.meveo.api.dto.BaseEntityDto;
+
+/**
+ * Module item dto.
+ *
+ * @author Clément Bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
+public class MeveoModuleItemDto extends BaseEntityDto {
+	
+	private static final long serialVersionUID = -5514899106616353330L;
 	
 	private String dtoClassName;
 	private Object dtoData;

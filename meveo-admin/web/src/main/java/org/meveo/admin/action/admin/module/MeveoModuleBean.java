@@ -18,7 +18,8 @@
  */
 package org.meveo.admin.action.admin.module;
 
-import javax.annotation.PostConstruct;
+import java.util.List;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -27,19 +28,15 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.module.MeveoModuleApi;
-import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
-
-import java.util.List;
 
 /**
  * Meveo module bean
  *
  * @author Tyshan Shi(tyshan@manaty.net)
- *
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  */
-
 @Named
 @ViewScoped
 public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {

@@ -11,7 +11,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.everit.json.schema.*;
 import org.everit.json.schema.internal.JSONPrinter;
-import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.json.schema.RootCombinedSchema;
 import org.meveo.json.schema.RootObjectSchema;
 import org.meveo.json.schema.RootRelationSchema;
@@ -22,19 +22,12 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomRelationshipTemplateService;
 
 @Stateless
 public class JSONSchemaGenerator {
-	@Inject
-	CustomEntityTemplateService entityTemplateService;
 
 	@Inject
-	CustomRelationshipTemplateService relationshipTemplateService;
-
-	@Inject
-	CustomFieldTemplateService fieldService;
+	CustomFieldsCacheContainerProvider cache;
 
 	public String generateSchema(String schemaLocation, boolean activeTemplatesOnly, String categoryCode) {
 		Map<String, Schema> processed = new HashMap<>();
@@ -103,7 +96,11 @@ public class JSONSchemaGenerator {
 	}
 
 	private void processCustomEntityTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
-		Collection<CustomEntityTemplate> templates = entityTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
+		Collection<CustomEntityTemplate> templates = cache.getCustomEntityTemplates();
+		if(activeTemplatesOnly){
+			templates = templates.stream().filter(CustomEntityTemplate::isActive).collect(Collectors.toList());
+		}
+
 		if(!StringUtils.isBlank(categoryCode)){
 			templates = templates.stream()
 					.filter(item -> StringUtils.isEmpty(categoryCode) || item.getCustomEntityCategory() != null && categoryCode.equals(item.getCustomEntityCategory().getCode()))
@@ -120,7 +117,11 @@ public class JSONSchemaGenerator {
 	}
 
 	private void processCustomRelationshipTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
-		Collection<CustomRelationshipTemplate> templates = relationshipTemplateService.list(activeTemplatesOnly ? Boolean.TRUE : null);
+		Collection<CustomRelationshipTemplate> templates = cache.getCustomRelationshipTemplates();
+		if(activeTemplatesOnly){
+			templates = templates.stream().filter(CustomRelationshipTemplate::isActive).collect(Collectors.toList());
+		}
+
 		if(!StringUtils.isBlank(categoryCode)){
 			templates = templates.stream()
 					.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode())) || (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
@@ -136,23 +137,23 @@ public class JSONSchemaGenerator {
 		primary.addAll(templatesCodes);
 	}
 
-	public String generateEntityTemplateSchema(String schemaLocation, String templateCode, String categoryCode) {
-		return generateSchema(schemaLocation, entityTemplateService.findByCode(templateCode), categoryCode);
+	public String generateEntityTemplateSchema(String schemaLocation, String templateCode) {
+		return generateSchema(schemaLocation, cache.getCustomEntityTemplate(templateCode));
 	}
 
-	public String generateRelationshipTemplateSchema(String schemaLocation, String templateCode, String categoryCode) throws BusinessException{
-		return generateSchema(schemaLocation, relationshipTemplateService.findByCode(templateCode), categoryCode);
+	public String generateRelationshipTemplateSchema(String schemaLocation, String templateCode) {
+		return generateSchema(schemaLocation, cache.getCustomRelationshipTemplate(templateCode));
 	}
 
-	private String generateSchema(String schemaLocation, CustomEntityTemplate template, String categoryCode) {
-		return generateSchema(schemaLocation, processorOf(template), categoryCode);
+	private String generateSchema(String schemaLocation, CustomEntityTemplate template) {
+		return generateSchema(schemaLocation, processorOf(template));
 	}
 
-	private String generateSchema(String schemaLocation, CustomRelationshipTemplate template, String categoryCode) {
-		return generateSchema(schemaLocation, processorOf(template), categoryCode);
+	private String generateSchema(String schemaLocation, CustomRelationshipTemplate template) {
+		return generateSchema(schemaLocation, processorOf(template));
 	}
 
-	private String generateSchema(String schemaLocation, CustomTemplateProcessor template, String categoryCode) {
+	private String generateSchema(String schemaLocation, CustomTemplateProcessor template) {
 		Map<String, Schema> processed = new HashMap<>();
 		ObjectSchema root = createSchema(schemaLocation, template, processed);
 		processed.remove(template.code());
@@ -177,12 +178,14 @@ public class JSONSchemaGenerator {
 	private ObjectSchema buildSchema(String schemaLocation, CustomTemplateProcessor template, Set<String> allRefs) {
 		ObjectSchema.Builder result = template.createJsonSchemaBuilder(schemaLocation, allRefs);
 		Map<String, CustomFieldTemplate> fields = template.fields();
-		fields.forEach((key, field) -> {
-			result.addPropertySchema(key, createFieldSchema(schemaLocation, template, field, allRefs).build());
-			if (field.isValueRequired()) {
-				result.addRequiredProperty(field.getCode());
-			}
-		});
+		if(fields != null) {
+			fields.forEach((key, field) -> {
+				result.addPropertySchema(key, createFieldSchema(schemaLocation, template, field, allRefs).build());
+				if (field.isValueRequired()) {
+					result.addRequiredProperty(field.getCode());
+				}
+			});
+		}
 
 		// If has super template
 		if(template.parentTemplate() != null){
@@ -474,7 +477,7 @@ public class JSONSchemaGenerator {
 				.uniqueItems(true);
 	}
 
-	private Schema.Builder<ReferenceSchema> createReferenceSchema(CustomFieldTemplate field, Set<String> allRefs) {
+	private Schema.Builder<?> createReferenceSchema(CustomFieldTemplate field, Set<String> allRefs) {
 		ReferenceSchema.Builder result = ReferenceSchema.builder();
 		Object defaultValue = field.getDefaultValue();
 		if (null != defaultValue) {
@@ -484,8 +487,25 @@ public class JSONSchemaGenerator {
 		if (StringUtils.isEmpty(refCode)) {
 			result.refValue("#entity-classes/" + field.getEntityClazz());
 		} else {
-			result.refValue(DEFINITIONS_PREFIX + refCode);
-			allRefs.add(refCode);
+			final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(refCode);
+			// Do not make a reference in case of a primitive entity
+			if(customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+				field.setMaxValue(customEntityTemplate.getNeo4JStorageConfiguration().getMaxValue());
+				switch (customEntityTemplate.getNeo4JStorageConfiguration().getPrimitiveType()) {
+					case STRING:
+						return createStringSchema(field);
+					case DATE:
+						return createStringSchema(field);
+					case LONG:
+						return createLongSchema(field);
+					case DOUBLE:
+						return createNumberSchema(field);
+				}
+			} else {
+				result.refValue(DEFINITIONS_PREFIX + refCode);
+				allRefs.add(refCode);
+			}
+
 		}
 		return result;
 	}
@@ -499,7 +519,7 @@ public class JSONSchemaGenerator {
 
 			@Override
 			Map<String, CustomFieldTemplate> fields() {
-				return fieldService.findByAppliesTo(entityTemplate.getAppliesTo());
+				return cache.getCustomFieldTemplates(entityTemplate.getAppliesTo());
 			}
 
 			@Override
@@ -543,7 +563,7 @@ public class JSONSchemaGenerator {
 
 			@Override
 			Map<String, CustomFieldTemplate> fields() {
-				return fieldService.findByAppliesTo(relationshipTemplate.getAppliesTo());
+				return cache.getCustomFieldTemplates(relationshipTemplate.getAppliesTo());
 			}
 
 			@Override

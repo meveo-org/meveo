@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -51,8 +52,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * @author Clément Bareth
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
+ * @lastModifiedVersion 6.3.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -74,6 +76,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomTableCreatorService customTableCreatorService;
+
+    @Inject
+    private CustomEntityInstanceService customEntityInstanceService;
 
     @Inject
     private Neo4jService neo4jService;
@@ -212,19 +217,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     @Override
-    public void remove(Long id) throws BusinessException {
-
-        CustomEntityTemplate cet = findById(id);
+    public void remove(CustomEntityTemplate cet) throws BusinessException {
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
-        super.remove(id);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        } else if(cet.getSqlStorageConfiguration() != null) {
+            customEntityInstanceService.removeByCet(cet.getCode());
         }
 
         if(cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
@@ -232,8 +236,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             neo4jService.removeUUIDIndexes(cet);
         }
 
-
         customFieldsCache.removeCustomEntityTemplate(cet);
+        
+        super.remove(cet);
+
     }
 
     /**
@@ -316,7 +322,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param entityCode  - code of entity
      * @return customer field entity
      */
-    @SuppressWarnings({"rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
         ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);

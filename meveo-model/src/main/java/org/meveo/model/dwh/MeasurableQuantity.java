@@ -24,7 +24,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 
 @Entity
-@ModuleItem
+@ModuleItem("MeasurableQuantity")
 @Cacheable
 @ExportIdentifier({ "code"})
 @Table(name = "dwh_measurable_quant", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))

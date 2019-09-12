@@ -15,7 +15,7 @@ import javax.persistence.Table;
  * Created by Hien.Bach
  */
 @Entity
-@ModuleItem
+@ModuleItem("CustomEntityReference")
 @Cacheable
 @Table(name = "cet_ref")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
