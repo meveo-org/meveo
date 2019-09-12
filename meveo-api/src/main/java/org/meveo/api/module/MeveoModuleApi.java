@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -47,6 +50,7 @@ import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.catalog.BusinessServiceModelDto;
@@ -68,6 +72,7 @@ import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -81,13 +86,6 @@ import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author Clément Bareth
@@ -494,9 +492,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	                        if (ReflectionUtils.hasField(dto, "appliesTo")) {
 	                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(),
 	                                (String) FieldUtils.readField(dto, "appliesTo", true), validity));
+	                        
 	                        } else {
 	                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(), null, validity));
 	                        }
+	                        
+	                        //add cft of cet
+							if (dto instanceof CustomEntityTemplateDto) {
+								// check and add if cft exists to moduleItem
+								addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
+							}
 	                    }
 	
 	                } catch (IllegalAccessException e) {
@@ -522,7 +527,22 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
     }
 
-    private void writeModulePicture(String filename, byte[] fileData) {
+	/**
+	 * Add cft which is a field of cet as a module item.
+	 * 
+	 * @param dto         CustomEntityTemplateDto instance
+	 * @param meveoModule where module item is added
+	 */
+	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) {
+		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
+			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
+				meveoModule.addModuleItem(itemDto);
+			}
+		}
+	}
+
+	private void writeModulePicture(String filename, byte[] fileData) {
         try {
             ModuleUtil.writeModulePicture(currentUser.getProviderCode(), filename, fileData);
         } catch (Exception e) {

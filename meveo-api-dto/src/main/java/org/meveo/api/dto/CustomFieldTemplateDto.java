@@ -13,7 +13,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.model.converter.StringListConverter;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -25,7 +24,8 @@ import org.meveo.model.persistence.DBStorageType;
 /**
  * The Class CustomFieldTemplateDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)

@@ -48,7 +48,8 @@ import org.meveo.util.PersistenceUtils;
 /**
  * @author Wassim Drira
  * @author Clément Bareth
- * @lastModifiedVersion 6.0
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
  */
 @Stateless
 public class CustomFieldTemplateService extends BusinessService<CustomFieldTemplate> {
@@ -236,10 +237,11 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
-			}else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			
+			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
-
+			
 		// CF Applies to a CRT
 		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);

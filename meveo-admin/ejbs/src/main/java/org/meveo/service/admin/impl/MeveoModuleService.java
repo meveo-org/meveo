@@ -48,17 +48,30 @@ import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+import org.meveo.util.EntityCustomizationUtils;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
+import java.util.*;
+
 
 /**
  * EJB for managing MeveoModule entities
@@ -327,7 +340,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		} else {
 			projection = "." + projection;
 		}
-    	
+
     	StringBuilder queryBuilder = new StringBuilder("SELECT DISTINCT m" + projection + " FROM " + entityClass.getName() + " m");
         if(filters.getItemType() !=null && filters.getItemClass() != null){
             queryBuilder.append(" INNER JOIN m.moduleItems i");
@@ -393,5 +406,37 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 			}
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public void onCftCreated(@Observes @Created CustomFieldTemplate cft) throws BusinessException {
+		String cetCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftCreate");
+		q = q.setParameter("itemCode", cetCode);
+		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
+
+		try {
+			List<MeveoModule> modules = q.getResultList();
+			if (modules != null && !modules.isEmpty()) {
+				for (MeveoModule module : modules) {
+					MeveoModuleItem mi = new MeveoModuleItem();
+					mi.setMeveoModule(module);
+					mi.setAppliesTo(cft.getAppliesTo());
+					mi.setItemClass(CustomFieldTemplate.class.getName());
+					mi.setItemCode(cft.getCode());
+					meveoModuleItemService.create(mi);
+				}
+			}
+
+		} catch (NoResultException e) {
+
+		}
+	}
+
+	public void onCftDeleted(@Observes @Removed CustomFieldTemplate cft) {
+		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftDelete");
+		q = q.setParameter("itemCode", cft.getCode());
+		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
+		q.executeUpdate();
 	}
 }

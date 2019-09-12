@@ -34,7 +34,9 @@ import org.meveo.model.ExportIdentifier;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "meveo_module_item_seq"), })
 @NamedQueries({ //
-	@NamedQuery(name = "MeveoModuleItem.delete", query = "DELETE FROM MeveoModuleItem WHERE itemCode=:itemCode AND itemClass=:itemClass")
+	@NamedQuery(name = "MeveoModuleItem.delete", query = "DELETE FROM MeveoModuleItem WHERE itemCode=:itemCode AND itemClass=:itemClass"), //
+	@NamedQuery(name = "MeveoModuleItem.synchronizeCftCreate", query = "SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass"), //
+	@NamedQuery(name = "MeveoModuleItem.synchronizeCftDelete", query = "DELETE FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass")
 })
 public class MeveoModuleItem extends BaseEntity {
 

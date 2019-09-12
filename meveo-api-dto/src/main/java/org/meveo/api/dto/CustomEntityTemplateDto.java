@@ -11,7 +11,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 
@@ -19,6 +18,8 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
  * The Class CustomEntityTemplateDto.
  *
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
  */
 
 @XmlRootElement(name = "CustomEntityTemplate")
