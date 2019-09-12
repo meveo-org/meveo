@@ -29,13 +29,10 @@
 
             <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderAddModule="true" renderDeleteLink="false">
                 <h:panelGroup>
-                    <p:commandButton id="deleteCec" icon="ui-icon-trash"
-                                     update="deleteCECForm" value="#{messages['commons.delete']}"
-                                     rendered="#{customEntityCategoryBean.entity.code != null}"
-                                     oncomplete="PF('deleteCECDlg').show()">
-                        <f:setPropertyActionListener target="#{customEntityCategoryBean.entity}" value="#{entity}"/>
+                    <p:commandButton id="deleteCec" immediate="true" icon="ui-icon-trash" oncomplete="PF('deleteCECDlg').show()" update="deleteCECForm">
+                        <f:setPropertyActionListener target="#{customEntityCategoryListBean.entity}" value="#{entity}" />
+                        <!--<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />-->
                     </p:commandButton>
-
                     <p:dialog widgetVar="deleteCECDlg" header="#{messages['commons.confirmationHeader']}" dynamic="true"
                               modal="true" styleClass="form-dialog"
                               closeOnEscape="true" width="50%" appendTo="@(body)">
@@ -48,14 +45,14 @@
                                                      update="@form" styleClass="ui-confirmdialog-yes"
                                                      icon="ui-icon-check"
                                                      oncomplete="if (args &amp;&amp; !args.validationFailed) PF('deleteCECDlg').hide()"
-                                                     action="#{customEntityCategoryListBean.deleteRelatedCETsByCategory}">
+                                                     action="#{customEntityCategoryListBean.deleteRelatedCETsByCategory()}">
                                     </p:commandButton>
                                     <p:commandButton value="#{messages['commons.no']}" process="@form"
                                                      partialSubmit="true"
                                                      update="@form" styleClass="ui-confirmdialog-no"
                                                      icon="ui-icon-close"
                                                      oncomplete="if (args &amp;&amp; !args.validationFailed) PF('deleteCECDlg').hide()"
-                                                     action="#{customEntityCategoryListBean.resetRelatedCETsByCategory}">
+                                                     action="#{customEntityCategoryListBean.resetRelatedCETsByCategory()}">
                                     </p:commandButton>
                                     <p:commandButton value="#{messages['action.cancel']}" update="@form"
                                                      styleClass="ui-confirmdialog" icon="ui-icon-cancel"

@@ -21,7 +21,7 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	private static final long serialVersionUID = -8940088434700385379L;
 
 	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
+	protected CustomEntityTemplateService customEntityTemplateService;
 
 	private List<CustomEntityCategory> customEntityCategories;
 
@@ -75,13 +75,15 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 		return customEntityCategories;
 	}
 
-	public void deleteRelatedCETsByCategory() throws BusinessException {
+	public String deleteRelatedCETsByCategory() throws BusinessException {
 		customEntityTemplateService.removeCETsByCategoryId(entity.getId());
 		super.delete(entity.getId());
+		return back();
 	}
 
-	public void resetRelatedCETsByCategory() throws BusinessException {
+	public String resetRelatedCETsByCategory() throws BusinessException {
 		customEntityTemplateService.resetCategoryCETsByCategoryId(entity.getId());
 		super.delete(entity.getId());
+		return back();
 	}
 }
