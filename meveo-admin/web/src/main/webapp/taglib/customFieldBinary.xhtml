@@ -42,21 +42,22 @@
 	<c:set var="fieldPrefix"
 		value="#{prefix}_#{fn:replace(cft.code, ' ','_')}_" />
 	<c:set var="dlgBinary" value="#{fieldPrefix}_dlgBinary" />
-
+	<c:set var="viewBinaryId" value="#{fieldPrefix}viewBinaryValue" />
+	
 	<hftl:decorateFormField for="#{fieldPrefix}viewBinaryValue"
 		label="#{cft.description}#{cft.valueRequired?' *':''}"
 		componentWidth="100" displayOneLine="false">
 
 		<h:outputText title="#{field.stringValue}"
 			value="#{of:abbreviate(field.stringValue, 25)}"></h:outputText>
-		<p:commandButton ajax="false"
+		<p:commandButton ajax="false" rendered="#{field.stringValue != null}"
 			onclick="PrimeFaces.monitorDownload(start, stop);"
 			icon="fa fa-arrow-down" immediate="true">
 			<p:fileDownload
 				value="#{customFieldDataEntryBean.downloadFile(field.stringValue)}">
 			</p:fileDownload>
 		</p:commandButton>
-		<p:inputText id="#{fieldPrefix}viewBinaryValue" type="hidden"
+		<p:inputText id="#{viewBinaryId}" type="hidden"
 			value="#{field.stringValue}"></p:inputText>
 
 		<p:commandButton type="button" onclick="PF('#{dlgBinary}').show();"
@@ -89,8 +90,6 @@
 			<h:panelGroup layout="block" styleClass="form-panel-actions">
 				<p:commandButton id="#{fieldPrefix}uploadButton"
 					value="#{messages['action.save']}" ajax="false"
-					process="#{fieldPrefix}binaryFileUploadForm @this"
-					update="#{fieldPrefix}binaryFileUploadForm #{fieldPrefix}viewBinaryValue}"
 					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
 			</h:panelGroup>
 		</h:form>
