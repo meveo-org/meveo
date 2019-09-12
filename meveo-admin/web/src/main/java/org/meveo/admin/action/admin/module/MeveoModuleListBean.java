@@ -75,8 +75,8 @@ public class MeveoModuleListBean extends MeveoModuleBean {
 
         if (selectedModuleDto.getModuleItems() != null) {
             for (MeveoModuleItemDto item : selectedModuleDto.getModuleItems()) {
-
-                TreeNode classNode = getOrCreateNodeByClass(item.getClass().getSimpleName());
+        		String classSimpleName = item.getDtoClassName().replaceAll(".*\\.(.*)Dto$", "$1");
+                TreeNode classNode = getOrCreateNodeByClass(classSimpleName);
                 new DefaultTreeNode("item", item, classNode);
             }
         }
