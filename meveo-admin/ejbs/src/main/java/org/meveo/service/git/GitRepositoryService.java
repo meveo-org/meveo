@@ -17,23 +17,61 @@
 package org.meveo.service.git;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.model.git.GitRepository;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessService;
+import org.slf4j.Logger;
 
+import javax.ejb.Stateless;
 import javax.inject.Inject;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Persistence class for GitRepository
+ *
  * @author Clement Bareth
  * @lastModifiedVersion 6.4.0
  */
-public class GitService extends BusinessService<GitRepository> {
+@Stateless
+public class GitRepositoryService extends BusinessService<GitRepository> {
 
     @Inject
     private GitClient gitClient;
 
+    @Inject
+    private Logger log;
+
+    @Inject
+    @CurrentUser
+    private MeveoUser currentUser;
+
+    @Override
+    public GitRepository findByCode(String code) {
+        final GitRepository repository = super.findByCode(code);
+
+        if (repository != null && !GitHelper.hasReadRole(currentUser, repository)) {
+            throw new UserNotAuthorizedException(currentUser.getUserName());
+        }
+        setBranchInformation(repository);
+
+        return repository;
+    }
+
+    @Override
+    public List<GitRepository> list() {
+        final List<GitRepository> repositories = super.list();
+        return repositories.stream()
+                .filter(r -> GitHelper.hasReadRole(currentUser, r))
+                .map(this::setBranchInformation)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Remove the GitRepository entity along with the corresponding repository in file system
+     *
      * @param entity Repository to remove
      */
     @Override
@@ -44,6 +82,7 @@ public class GitService extends BusinessService<GitRepository> {
 
     /**
      * Create the GitRepository entity along with the corresponding repository in file system
+     *
      * @param entity Repository to create
      */
     @Override
@@ -51,4 +90,22 @@ public class GitService extends BusinessService<GitRepository> {
         gitClient.create(entity);
         super.create(entity);
     }
+
+    private GitRepository setBranchInformation(GitRepository repository) {
+        // Set branches information if not null
+        if (repository != null) {
+            try {
+                final String currentBranch = gitClient.currentBranch(repository);
+                repository.setCurrentBranch(currentBranch);
+
+                final List<String> branches = gitClient.listBranch(repository);
+                repository.setBranches(branches);
+            } catch (BusinessException e) {
+                log.error("Cannot retrieve branch information for {}", repository, e);
+            }
+        }
+
+        return repository;
+    }
+
 }

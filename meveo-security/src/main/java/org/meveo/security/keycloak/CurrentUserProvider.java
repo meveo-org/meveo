@@ -49,17 +49,12 @@ public class CurrentUserProvider {
     /**
      * Contains a current tenant
      */
-    private static final ThreadLocal<String> currentTenant = new ThreadLocal<String>() {
-        @Override
-        protected String initialValue() {
-            return "NA";
-        }
-    };
+    private static final ThreadLocal<String> currentTenant = ThreadLocal.withInitial(() -> "NA");
 
     /**
      * Contains a forced authentication user username
      */
-    private static final ThreadLocal<String> forcedUserUsername = new ThreadLocal<String>();
+    private static final ThreadLocal<String> forcedUserUsername = new ThreadLocal<>();
 
     /**
      * Simulate authentication of a user. Allowed only when no security context is present, mostly used in jobs.
@@ -159,7 +154,7 @@ public class CurrentUserProvider {
 
         String username = MeveoUserKeyCloakImpl.extractUsername(ctx, getForcedUsername());
 
-        MeveoUser user = null;
+        MeveoUser user;
 
         // User was forced authenticated, so need to lookup the rest of user information
         if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
@@ -168,8 +163,14 @@ public class CurrentUserProvider {
         } else {
             user = new MeveoUserKeyCloakImpl(ctx, null, null, getAdditionalRoles(username, em), getRoleToPermissionMapping(providerCode, em));
         }
-        // log.trace("getCurrentUser username={}, providerCode={}, forcedAuthentication {}/{} ", username, user != null ? user.getProviderCode() : null, getForcedUsername(),
-        // getCurrentTenant());
+
+        if(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
+            KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+            final String email = keycloakPrincipal.getKeycloakSecurityContext().getToken().getEmail();
+            user.setMail(email != null ? email : "no-mail@meveo.com");
+            user.setToken(keycloakPrincipal.getKeycloakSecurityContext().getTokenString());
+        }
+
         supplementOrCreateUserInApp(user, em);
 
         log.trace("Current user is {}", user);
@@ -178,11 +179,7 @@ public class CurrentUserProvider {
     
     private boolean isSessionScopeActive() {
         try {
-            if (beanManager.getContext(SessionScoped.class).isActive()) {
-                return true;
-            } else {
-                return false;
-            }
+            return beanManager.getContext(SessionScoped.class).isActive();
         } catch (final ContextNotActiveException e) {
             return false;
         }
@@ -200,7 +197,7 @@ public class CurrentUserProvider {
         }
         // Create or retrieve current user
         try {
-            User user = null;
+            User user;
             try {
                 user = em.createNamedQuery("User.getByUsername", User.class).setParameter("username", currentUser.getUserName().toLowerCase()).getSingleResult();
                 if (isSessionScopeActive() && userAuthTimeProducer.getAuthTime() != currentUser.getAuthTime()) {

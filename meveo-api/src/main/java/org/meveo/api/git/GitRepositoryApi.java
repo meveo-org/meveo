@@ -23,8 +23,9 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.git.GitService;
+import org.meveo.service.git.GitRepositoryService;
 
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,25 +35,26 @@ import java.util.stream.Collectors;
  * @author Clement Bareth
  * @lastModifiedVersion 6.4.0
  */
+@Stateless
 public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDto> {
 
     @Inject
-    private GitService gitService;
+    private GitRepositoryService gitRepositoryService;
 
     public GitRepositoryApi() {
         super(GitRepository.class, GitRepositoryDto.class);
     }
 
     public List<GitRepositoryDto> list() {
-        return gitService.list()
+        return gitRepositoryService.list()
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     public void remove(String code) throws BusinessException {
-        final GitRepository repository = gitService.findByCode(code);
-        gitService.remove(repository);
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitRepositoryService.remove(repository);
     }
 
     @Override
@@ -61,25 +63,30 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         dto.setReadingRoles(entity.getReadingRoles());
         dto.setWritingRoles(entity.getWritingRoles());
         dto.setRemoteOrigin(entity.getRemoteOrigin());
-        dto.setRemoteUsername(entity.getRemoteUsername());
-        dto.setRemotePassword(entity.getRemotePassword());
+        dto.setRemoteUsername(entity.getDefaultRemoteUsername());
+        dto.setRemotePassword(entity.getDefaultRemotePassword());
+        dto.setCode(entity.getCode());
+        dto.setDescription(entity.getDescription());
+        dto.setMeveoRepository(entity.isMeveoRepository());
+        dto.setCurrentBranch(entity.getCurrentBranch());
+        dto.setBranches(entity.getBranches());
         return dto;
     }
 
     @Override
     public GitRepository fromDto(GitRepositoryDto dto) throws EntityDoesNotExistsException {
         GitRepository entity = new GitRepository();
-        entity.setReadingRoles(dto.getReadingRoles());
-        entity.setWritingRoles(dto.getWritingRoles());
         entity.setRemoteOrigin(dto.getRemoteOrigin());
-        entity.setRemoteUsername(dto.getRemoteUsername());
-        entity.setRemotePassword(dto.getRemotePassword());
+        entity.setCode(dto.getCode());
+
+        updateEntity(dto, entity);
+
         return entity;
     }
 
     @Override
     public IPersistenceService<GitRepository> getPersistenceService() {
-        return gitService;
+        return gitRepositoryService;
     }
 
     @Override
@@ -93,7 +100,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     @Override
     public GitRepositoryDto find(String code) throws MeveoApiException, EntityDoesNotExistsException {
-        return toDto(gitService.findByCode(code));
+        return toDto(gitRepositoryService.findByCode(code));
     }
 
     @Override
@@ -103,13 +110,30 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     public GitRepository create(GitRepositoryDto dtoData) throws BusinessException {
         final GitRepository repository = fromDto(dtoData);
-        gitService.create(repository);
+        gitRepositoryService.create(repository);
         return repository;
     }
 
-    public GitRepository update(GitRepositoryDto dtoData) throws BusinessException {
-        final GitRepository repository = fromDto(dtoData);
-        gitService.update(repository);
-        return repository;
+    public GitRepository update(GitRepositoryDto dto) throws BusinessException {
+        final GitRepository entity = gitRepositoryService.findByCode(dto.getCode());
+
+        if(dto.getRemoteOrigin() != null && entity.getRemoteOrigin() != null && !dto.getRemoteOrigin().equals(entity.getRemoteOrigin())) {
+            throw new IllegalArgumentException("Cannot update remote origin of GitRepository " + dto.getCode());
+        }
+
+        updateEntity(dto, entity);
+
+        gitRepositoryService.update(entity);
+
+        return entity;
+    }
+
+    private void updateEntity(GitRepositoryDto dto, GitRepository entity) {
+        entity.setReadingRoles(dto.getReadingRoles());
+        entity.setWritingRoles(dto.getWritingRoles());
+        entity.setDefaultRemoteUsername(dto.getRemoteUsername());
+        entity.setDefaultRemotePassword(dto.getRemotePassword());
+        entity.setDescription(dto.getDescription());
+        entity.setMeveoRepository(dto.isMeveoRepository());
     }
 }

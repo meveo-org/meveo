@@ -16,6 +16,8 @@
 
 package org.meveo.api.dto.git;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.BusinessEntityDto;
 
@@ -55,6 +57,30 @@ public class GitRepositoryDto extends BusinessEntityDto {
      *  If not provided, will use current user credentials.
      */
     private String remotePassword;
+
+    /**
+     * Whether the remote repository is hosted in a meveo instance
+     */
+    private boolean meveoRepository;
+
+    @JsonIgnore
+    private String currentBranch;
+
+    @JsonIgnore
+    private List<String> branches;
+
+    @JsonProperty
+    public List<String> getBranches() {
+        return branches;
+    }
+
+    public boolean isMeveoRepository() {
+        return meveoRepository;
+    }
+
+    public void setMeveoRepository(boolean meveoRepository) {
+        this.meveoRepository = meveoRepository;
+    }
 
     public List<String> getReadingRoles() {
         return readingRoles;
@@ -98,5 +124,20 @@ public class GitRepositoryDto extends BusinessEntityDto {
 
     public boolean isRemote(){
         return StringUtils.isBlank(this.remoteOrigin);
+    }
+
+    @JsonIgnore
+    public void setBranches(List<String> branches) {
+        this.branches = branches;
+    }
+
+    @JsonProperty
+    public String getCurrentBranch() {
+        return currentBranch;
+    }
+
+    @JsonIgnore
+    public void setCurrentBranch(String currentBranch) {
+        this.currentBranch = currentBranch;
     }
 }

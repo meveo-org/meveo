@@ -21,6 +21,7 @@ import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.git.GitHelper;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;

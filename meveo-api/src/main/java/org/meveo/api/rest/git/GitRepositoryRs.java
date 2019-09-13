@@ -21,12 +21,18 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.git.GitRepositoryApi;
+import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitRepositoryService;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.interceptor.Interceptors;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 /**
@@ -34,15 +40,31 @@ import java.util.List;
  * @author Clement Bareth
  * @lastModifiedVersion 6.4.0
  */
+@RequestScoped
 @Path("/git")
+@Interceptors({ WsRestApiInterceptor.class })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv" })
 public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto> {
 
     @Inject
     private GitRepositoryApi gitRepositoryApi;
 
+    @Inject
+    private GitRepositoryService gitRepositoryService;
+
+    @Inject
+    private GitClient gitClient;
+
     @Override
     public BaseCrudApi<GitRepository, GitRepositoryDto> getBaseCrudApi() {
         return gitRepositoryApi;
+    }
+
+    @GET
+    @Path("/repositories")
+    public List<GitRepositoryDto> list() {
+        return gitRepositoryApi.list();
     }
 
     @POST
@@ -53,32 +75,70 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 
     @PUT
     @Path("/repositories")
-    public void createOrUpdate(GitRepositoryDto postData) throws MeveoApiException, BusinessException {
-        gitRepositoryApi.createOrUpdate(postData);
+    public void overwrite(GitRepositoryDto postData) throws BusinessException {
+        final boolean exists = gitRepositoryApi.exists(postData);
+        if(exists){
+            gitRepositoryApi.remove(postData.getCode());
+        }
+
+        gitRepositoryApi.create(postData);
     }
 
     @POST
     @Path("/repositories/{code}")
-    public void update(GitRepositoryDto postData, String code) throws BusinessException {
+    public void update(GitRepositoryDto postData, @PathParam("code") String code) throws BusinessException {
         postData.setCode(code);
         gitRepositoryApi.update(postData);
     }
 
     @GET
     @Path("/repositories/{code}")
-    public GitRepositoryDto find(String code) throws MeveoApiException, EntityDoesNotExistsException {
+    public GitRepositoryDto find(@PathParam("code") String code) throws MeveoApiException, EntityDoesNotExistsException {
         return gitRepositoryApi.find(code);
-    }
-
-    @GET
-    @Path("/repositories")
-    public List<GitRepositoryDto> list() {
-        return gitRepositoryApi.list();
     }
 
     @DELETE
     @Path("/repositories/{code}")
-    public void remove(String code) throws BusinessException {
+    public void remove(@PathParam("code") String code) throws BusinessException {
         gitRepositoryApi.remove(code);
     }
+
+    @POST
+    @Path("/repositories/{code}/commit")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public void commit(@PathParam("code") String code, @FormParam("message") String message, @FormParam("pattern") List<String> files) throws BusinessException {
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitClient.commit(repository, files, message);
+    }
+
+    @POST
+    @Path("/repositories/{code}/push")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public void push(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitClient.push(repository, username, password);
+    }
+
+    @POST
+    @Path("/repositories/{code}/pull")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public void pull(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitClient.pull(repository, username, password);
+    }
+
+    @POST
+    @Path("/repositories/{code}/checkout/{branch}")
+    public void checkout(@PathParam("code") String code, @PathParam("branch") String branch, @QueryParam("create") boolean createBranch) throws BusinessException {
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitClient.checkout(repository, branch, createBranch);
+    }
+
+    @POST
+    @Path("/repositories/{code}/create/{branch}")
+    public void create(@PathParam("code") String code, @PathParam("branch") String branch) throws BusinessException {
+        final GitRepository repository = gitRepositoryService.findByCode(code);
+        gitClient.createBranch(repository, branch);
+    }
+
 }

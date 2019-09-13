@@ -17,7 +17,9 @@
 package org.meveo.model.git;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 
 import javax.persistence.*;
@@ -31,6 +33,10 @@ import java.util.List;
  */
 @Entity
 @Table(name = "git_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+        parameters = {
+                @Parameter(name = "sequence_name", value = "git_storage_repository_seq")
+        })
 public class GitRepository extends BusinessEntity {
 
     /**
@@ -43,7 +49,7 @@ public class GitRepository extends BusinessEntity {
     /**
      * Roles that allows a user to make commit, merge and push actions
      */
-    @Column(name = "reading_roles", columnDefinition = "TEXT")
+    @Column(name = "writing_roles", columnDefinition = "TEXT")
     @Type(type = "jsonList")
     private List<String> writingRoles = new ArrayList<>();
 
@@ -58,14 +64,51 @@ public class GitRepository extends BusinessEntity {
      * If not provided, will use current user credentials.
      */
     @Column(name = "remote_username")
-    private String remoteUsername;
+    private String defaultRemoteUsername;
 
     /**
      * (Optional) Remote password to use when making action with distant repository. <br>
      *  If not provided, will use current user credentials.
      */
     @Column(name = "remote_password")
-    private String remotePassword;
+    private String defaultRemotePassword;
+
+    /**
+     * Whether the remote repository is hosted in a meveo instance
+     */
+    @Column(name = "meveo_repository")
+    @Type(type = "numeric_boolean")
+    private boolean meveoRepository;
+
+    @Transient
+    private String currentBranch;
+
+    @Transient
+    private List<String> branches;
+
+    public List<String> getBranches() {
+        return branches;
+    }
+
+    public void setBranches(List<String> branches) {
+        this.branches = branches;
+    }
+
+    public String getCurrentBranch() {
+        return currentBranch;
+    }
+
+    public void setCurrentBranch(String currentBranch) {
+        this.currentBranch = currentBranch;
+    }
+
+    public boolean isMeveoRepository() {
+        return meveoRepository;
+    }
+
+    public void setMeveoRepository(boolean meveoRepository) {
+        this.meveoRepository = meveoRepository;
+    }
 
     public List<String> getReadingRoles() {
         return readingRoles;
@@ -91,23 +134,27 @@ public class GitRepository extends BusinessEntity {
         this.remoteOrigin = remoteOrigin;
     }
 
-    public String getRemoteUsername() {
-        return remoteUsername;
+    public String getDefaultRemoteUsername() {
+        return defaultRemoteUsername;
     }
 
-    public void setRemoteUsername(String remoteUsername) {
-        this.remoteUsername = remoteUsername;
+    public void setDefaultRemoteUsername(String defaultRemoteUsername) {
+        this.defaultRemoteUsername = defaultRemoteUsername;
     }
 
-    public String getRemotePassword() {
-        return remotePassword;
+    public String getDefaultRemotePassword() {
+        return defaultRemotePassword;
     }
 
-    public void setRemotePassword(String remotePassword) {
-        this.remotePassword = remotePassword;
+    public void setDefaultRemotePassword(String defaultRemotePassword) {
+        this.defaultRemotePassword = defaultRemotePassword;
     }
 
     public boolean isRemote(){
-        return StringUtils.isBlank(this.remoteOrigin);
+        return !StringUtils.isBlank(this.remoteOrigin);
+    }
+
+    public boolean hasCredentials(){
+        return !StringUtils.isBlank(this.defaultRemoteUsername) && !StringUtils.isBlank(this.defaultRemotePassword);
     }
 }
