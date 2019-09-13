@@ -19,10 +19,7 @@ package org.meveo.service.git;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -52,6 +49,13 @@ public class GitClient {
     @CurrentUser
     private MeveoUser currentUser;
 
+    /**
+     * Remove the corresponding git repository from file system
+     *
+     * @param gitRepository Repository to delete
+     * @throws BusinessException          if the directory cannot be deleted
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     */
     protected void remove(GitRepository gitRepository) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -67,6 +71,13 @@ public class GitClient {
         }
     }
 
+    /**
+     * Create and initiate the git repository in the file system
+     *
+     * @param gitRepository Repository to create
+     * @throws BusinessException          if repository cannot be cloned or initiated
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     */
     protected void create(GitRepository gitRepository) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -105,6 +116,16 @@ public class GitClient {
 
     }
 
+    /**
+     * Stage the files correspondings to the given pattern and create commit
+     *
+     * @param gitRepository Repository to commit
+     * @param patterns      Pattern of the files to stage
+     * @param message       Commit message
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws BusinessException          if repository cannot be open or commited
+     * @throws IllegalArgumentException   if pattern list is empty
+     */
     public void commit(GitRepository gitRepository, List<String> patterns, String message) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -138,6 +159,15 @@ public class GitClient {
 
     }
 
+    /**
+     * Stage the files in parameter and create commit
+     *
+     * @param gitRepository Repository to commit
+     * @param files         Files to stage
+     * @param message       Commit message
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws BusinessException          if repository cannot be open, commited, or if a file is not child of the repository
+     */
     public void commitFiles(GitRepository gitRepository, List<File> files, String message) throws BusinessException {
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
         List<String> patterns = new ArrayList<>();
@@ -161,6 +191,16 @@ public class GitClient {
         commit(gitRepository, patterns, message);
     }
 
+    /**
+     * Push the repositories' commits to upstream
+     *
+     * @param gitRepository Repository to push
+     * @param username      Optional - Username to use when pushing
+     * @param password      Optional - Password to use when pushing
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws IllegalArgumentException   if repository has no remote
+     * @throws BusinessException          if repository cannot be opened or if a problem happen during the push
+     */
     public void push(GitRepository gitRepository, String username, String password) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -184,8 +224,18 @@ public class GitClient {
         }
     }
 
+    /**
+     * Pull with rebase the upstream's content
+     *
+     * @param gitRepository Repository to update
+     * @param username      Optional - Username to use when pulling
+     * @param password      Optional - Password to use when pulling
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws IllegalArgumentException   if repository has no remote
+     * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
+     */
     public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
-        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
+        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
         }
 
@@ -210,6 +260,14 @@ public class GitClient {
         }
     }
 
+    /**
+     * Create a branch base on the current branch
+     *
+     * @param gitRepository Repository to update
+     * @param branch        Name of the branch to create
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws BusinessException          if repository cannot be opened or if a problem happen during branch creation
+     */
     public void createBranch(GitRepository gitRepository, String branch) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -223,11 +281,19 @@ public class GitClient {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
-            throw new BusinessException("Cannot create new branch " + branch +  " for repository " + gitRepository.getCode(), e);
+            throw new BusinessException("Cannot create new branch " + branch + " for repository " + gitRepository.getCode(), e);
         }
 
     }
 
+    /**
+     * Remove a branch
+     *
+     * @param gitRepository Repository to update
+     * @param branch        Name of the branch to delete
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws BusinessException          if repository cannot be opened or if a problem happen during branch deletion
+     */
     public void deleteBranch(GitRepository gitRepository, String branch) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -241,11 +307,19 @@ public class GitClient {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
-            throw new BusinessException("Cannot delete branch " + branch +  " for repository " + gitRepository.getCode(), e);
+            throw new BusinessException("Cannot delete branch " + branch + " for repository " + gitRepository.getCode(), e);
         }
 
     }
 
+    /**
+     * Retrieve the name of the current branch of the repository
+     *
+     * @param gitRepository Repository to get branch name from
+     * @return current branch name
+     * @throws BusinessException          if repository cannot be opened
+     * @throws UserNotAuthorizedException if user does not have read access to the repository
+     */
     public String currentBranch(GitRepository gitRepository) throws BusinessException {
         if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -261,6 +335,15 @@ public class GitClient {
         }
     }
 
+    /**
+     * Checkout an other branch of the repository
+     *
+     * @param gitRepository GitRepository where to execute the checkout
+     * @param branch        Name of the branch to checkout
+     * @param createBranch  Whether to create the branch if it does not exists
+     * @throws BusinessException          if the GitRepository cannot be opened or the checkout cannot be done
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     */
     public void checkout(GitRepository gitRepository, String branch, boolean createBranch) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
@@ -274,11 +357,67 @@ public class GitClient {
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
-        }  catch (GitAPIException e) {
-            throw new BusinessException("Cannot checkout branch " + branch +  " for repository " + gitRepository.getCode(), e);
+        } catch (GitAPIException e) {
+            throw new BusinessException("Cannot checkout branch " + branch + " for repository " + gitRepository.getCode(), e);
         }
     }
 
+    /**
+     * Merge a branch into an other
+     *
+     * @param gitRepository GitRepository where to merge branch
+     * @param from          Branch to get changes
+     * @param to            Branch to be updated
+     * @return <code>true</code> if the merge has no conflict.
+     * @throws BusinessException          if problem happens during merge
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     */
+    public boolean merge(GitRepository gitRepository, String from, String to) throws BusinessException {
+        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        try (Git git = Git.open(repositoryDir)) {
+            String previousBranch = git.getRepository().getBranch();
+
+            git.checkout().setCreateBranch(false).setName(to).call();
+
+            try {
+
+                boolean successful = git.rebase().setUpstream(from)
+                        .call()
+                        .getStatus()
+                        .isSuccessful();
+
+                if (!successful) {
+                    git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+                }
+
+                return successful;
+
+            } catch (GitAPIException e) {
+                throw new BusinessException("Cannot merge " + from + " into " + to, e);
+            } finally {
+                git.checkout().setCreateBranch(false).setName(previousBranch).call();
+            }
+
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+            throw new BusinessException("Checkout problem for repository " + gitRepository.getCode(), e);
+        }
+    }
+
+    /**
+     * Retrieve the names of the branches of the repository
+     *
+     * @param gitRepository Repository to get branches names from
+     * @return available branches name - local and remote
+     * @throws BusinessException          if repository cannot be opened or branches cannot be read
+     * @throws UserNotAuthorizedException if user does not have read access to the repository
+     */
     public List<String> listBranch(GitRepository gitRepository) throws BusinessException {
         if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
