@@ -19,6 +19,7 @@
  */
 package org.meveo.service.custom;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -27,6 +28,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -46,6 +48,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -416,13 +419,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     /**
      *
-     * remove cets have category is categoryId
+     * retrieve Custom Entity Templates given by categoryId then remove it so that we can remove it in the cache
      *
      * @param categoryId
      */
     public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
-        getEntityManager().createNamedQuery("CustomEntityTemplate.RemoveByCategoryId")
-                .setParameter("id", categoryId).executeUpdate();
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+                remove(entityTemplate);
+            }
+        }
     }
 
     /**
@@ -430,7 +438,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param id
      */
     public void resetCategoryCETsByCategoryId(Long id) {
-        getEntityManager().createNamedQuery("CustomEntityTemplate.ReSetCategoryEmptyByCategoryId")
-                .setParameter("id", id).executeUpdate();
+        getEntityManager().createNamedQuery("CustomEntityTemplate.ReSetCategoryEmptyByCategoryId").setParameter("id", id).executeUpdate();
     }
 }

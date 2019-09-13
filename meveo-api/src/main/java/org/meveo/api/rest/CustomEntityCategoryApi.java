@@ -77,12 +77,12 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
         CustomEntityCategory cec = customEntityCategoryService.findByCode(code);
         if (cec != null) {
-            // deleteRelatedTemplates is absent or set to false, for each related CETs, set the category to null.
-            if (!deleteRelatedTemplates) {
-                customEntityTemplateService.resetCategoryCETsByCategoryId(cec.getId());
-            } else {
-                // Delete the related CETs if deleteRelatedTemplates true
+            // Delete the related CETs if deleteRelatedTemplates true
+            if (deleteRelatedTemplates) {
                 customEntityTemplateService.removeCETsByCategoryId(cec.getId());
+            } else {
+                // Set the category to null for each related CETs if deleteRelatedTemplates is absent or set to false.
+                customEntityTemplateService.resetCategoryCETsByCategoryId(cec.getId());
             }
 
             // Related custom entity category will be removed along with CEC
