@@ -133,43 +133,42 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
         boolean invalid = false;
         if (getEntity().getFieldType()==CustomFieldTypeEnum.STRING) {
-            List<Integer> validateSamples = SampleValueHelper.validateStringType(getEntity().getSamples(), getEntity().getStorageType());
-            if (CollectionUtils.isNotEmpty(validateSamples)) {
-                for (Integer validateSample : validateSamples) {
-                    messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
+            Map<Integer, String> validateSamples = SampleValueHelper.validateStringType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples.isEmpty()) {
+                for (Map.Entry<Integer,String> validateSample : validateSamples.entrySet()) {
+                    messages.error(new BundleKey("messages", validateSample.getValue()), validateSample.getKey());
                     invalid = true;
                 }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.LONG) {
-            List<Integer> validateSamples = SampleValueHelper.validateLongType(getEntity().getSamples(), getEntity().getStorageType());
-            if (CollectionUtils.isNotEmpty(validateSamples)) {
-                for (Integer validateSample : validateSamples) {
-                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
-                        invalid = true;
+            Map<Integer, String> validateSamples = SampleValueHelper.validateLongType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples.isEmpty()) {
+                for (Map.Entry<Integer,String> validateSample : validateSamples.entrySet()) {
+                    messages.error(new BundleKey("messages", validateSample.getValue()), validateSample.getKey());
+                    invalid = true;
                 }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.DOUBLE) {
-            List<Integer> validateSamples = SampleValueHelper.validateDoubleType(getEntity().getSamples(), getEntity().getStorageType());
-            if (CollectionUtils.isNotEmpty(validateSamples)) {
-                for (Integer validateSample: validateSamples) {
-                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
-                        invalid = true;
+            Map<Integer, String> validateSamples = SampleValueHelper.validateDoubleType(getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples.isEmpty()) {
+                for (Map.Entry<Integer,String> validateSample: validateSamples.entrySet()) {
+                    messages.error(new BundleKey("messages", validateSample.getValue()), validateSample.getKey());
+                    invalid = true;
                 }
             }
         }
 
         if (getEntity().getFieldType()==CustomFieldTypeEnum.CHILD_ENTITY) {
-            Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(getEntity().getAppliesTo());
-            List<Integer> validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, getEntity().getSamples(), getEntity().getStorageType());
-            if (CollectionUtils.isNotEmpty(validateSamples)) {
-                for (Integer validateSample : validateSamples) {
-                        messages.error(new BundleKey("messages", "customFieldTemplate.invalidSamples"), validateSample);
-                        invalid = true;
-
+            Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(getEntity().getEntityClazzCetCode()));
+            Map<Integer, String> validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, getEntity().getSamples(), getEntity().getStorageType());
+            if (!validateSamples.isEmpty()) {
+                for (Map.Entry<Integer,String> validateSample : validateSamples.entrySet()) {
+                    messages.error(new BundleKey("messages", validateSample.getValue()), validateSample.getKey());
+                    invalid = true;
                 }
             }
         }

@@ -16,24 +16,24 @@ import java.util.stream.Collectors;
 
 public class SampleValueHelper {
 
-    public static List<Integer> validateStringType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
-        List<Integer> lines = new ArrayList<>();
+    public static Map<Integer, String> validateStringType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
+        Map<Integer, String> errors = new HashMap<>();
             if (CollectionUtils.isNotEmpty(sampleValues)) {
                 Integer line = 1;
                 for (String sampleValue : sampleValues) {
                     if (storageType == CustomFieldStorageTypeEnum.SINGLE) {
                         if (sampleValue.startsWith("[") || sampleValue.startsWith("{")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.single");
                         } else {
                             String[] values = sampleValue.split(",");
                             if (values == null || values.length == 0) {
-                                lines.add(line);
+                                errors.put(line, "cft.sample.error.typeString.single");
                                 break;
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.LIST) {
                         if (!sampleValue.startsWith("[") || !sampleValue.endsWith("]")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.list");
                         } else {
                             ObjectMapper mapper = new ObjectMapper();
                             List<String> list = new ArrayList<>();
@@ -42,13 +42,13 @@ public class SampleValueHelper {
                                 });
                             } catch (IOException e) {
                                 if (CollectionUtils.isEmpty(list)) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeString.list");
                                 }
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.MAP) {
                         if (!sampleValue.startsWith("{") || !sampleValue.endsWith("}")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.map");
                         } else {
                             ObjectMapper mapper = new ObjectMapper();
                             Map<String, String> map = new HashMap<>();
@@ -56,7 +56,7 @@ public class SampleValueHelper {
                                 map = mapper.readValue(sampleValue, new TypeReference<Map<String, String>>() {});
                             } catch (IOException e) {
                                 if (map.isEmpty()) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeString.map");
                                 }
                             }
                         }
@@ -64,30 +64,34 @@ public class SampleValueHelper {
                     line++;
                 }
             }
-        return lines;
+        return errors;
     }
 
-    public static List<Integer> validateLongType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
-        List<Integer> lines = new ArrayList<>();
+    public static Map<Integer, String> validateLongType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
+        Map<Integer, String> errors = new HashMap<>();
             if (CollectionUtils.isNotEmpty(sampleValues)) {
                 Integer line = 1;
                 for (String sampleValue : sampleValues) {
                     if (storageType == CustomFieldStorageTypeEnum.SINGLE) {
-                        List<String> values = Arrays.asList(sampleValue.split(","));
-                        if (CollectionUtils.isNotEmpty(values)) {
-                            List<Long> longs = new ArrayList<>();
-                            for (String value : values) {
-                                try {
-                                    longs.add(Long.parseLong(value.trim()));
-                                } catch (NumberFormatException e) {
-                                    lines.add(line);
-                                    break;
+                        if (sampleValue.startsWith("[") || sampleValue.startsWith("{")) {
+                            errors.put(line, "cft.sample.error.notContain.single");
+                        } else {
+                            List<String> values = Arrays.asList(sampleValue.split(","));
+                            if (CollectionUtils.isNotEmpty(values)) {
+                                List<Long> longs = new ArrayList<>();
+                                for (String value : values) {
+                                    try {
+                                        longs.add(Long.parseLong(value.trim()));
+                                    } catch (NumberFormatException e) {
+                                        errors.put(line, "cft.sample.error.typeLong.single");
+                                        break;
+                                    }
                                 }
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.LIST) {
                         if (!sampleValue.startsWith("[") || !sampleValue.endsWith("]")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.list");
                         } else {
                             sampleValue = sampleValue.substring(1, (sampleValue.length() - 1));
                             List<Long> longs = new ArrayList<>();
@@ -97,13 +101,13 @@ public class SampleValueHelper {
                                         .collect(Collectors.toList());
                             } catch (NumberFormatException e) {
                                 if (CollectionUtils.isEmpty(longs)) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeLong.list");
                                 }
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.MAP) {
                         if (!sampleValue.startsWith("{") || !sampleValue.endsWith("}")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.map");
                         } else {
                             ObjectMapper mapper = new ObjectMapper();
                             Map<String, Long> map = new HashMap<>();
@@ -111,7 +115,7 @@ public class SampleValueHelper {
                                 map = mapper.readValue(sampleValue, new TypeReference<Map<String, Long>>() {});
                             } catch (IOException e) {
                                 if (map.isEmpty()) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeLong.map");
                                 }
                             }
                         }
@@ -119,30 +123,34 @@ public class SampleValueHelper {
                     line++;
                 }
             }
-        return lines;
+        return errors;
     }
 
-    public static List<Integer> validateDoubleType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
-        List<Integer> lines = new ArrayList<>();
+    public static Map<Integer, String> validateDoubleType(List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
+        Map<Integer, String> errors = new HashMap<>();
             if (CollectionUtils.isNotEmpty(sampleValues)) {
                 Integer line = 1;
                 for (String sampleValue : sampleValues) {
                     if (storageType == CustomFieldStorageTypeEnum.SINGLE) {
-                        List<String> values = Arrays.asList(sampleValue.split(","));
-                        if (CollectionUtils.isNotEmpty(values)) {
-                            List<Double> doubles = new ArrayList<>();
-                            for (String value : values) {
-                                try {
-                                    doubles.add(Double.parseDouble(value.trim()));
-                                } catch (NumberFormatException e) {
-                                    lines.add(line);
-                                    break;
+                        if (sampleValue.startsWith("[") || sampleValue.startsWith("{")) {
+                            errors.put(line, "cft.sample.error.notContain.single");
+                        } else {
+                            List<String> values = Arrays.asList(sampleValue.split(","));
+                            if (CollectionUtils.isNotEmpty(values)) {
+                                List<Double> doubles = new ArrayList<>();
+                                for (String value : values) {
+                                    try {
+                                        doubles.add(Double.parseDouble(value.trim()));
+                                    } catch (NumberFormatException e) {
+                                        errors.put(line, "cft.sample.error.typeDouble.single");
+                                        break;
+                                    }
                                 }
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.LIST) {
                         if (!sampleValue.startsWith("[") || !sampleValue.endsWith("]")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.list");
                         } else {
                             sampleValue = sampleValue.substring(1, (sampleValue.length() - 1));
                             List<Double> doubles = new ArrayList<>();
@@ -152,13 +160,13 @@ public class SampleValueHelper {
                                     .collect(Collectors.toList());
                             } catch (NumberFormatException e) {
                                 if (CollectionUtils.isEmpty(doubles)) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeDouble.list");
                                 }
                             }
                         }
                     } else if (storageType == CustomFieldStorageTypeEnum.MAP) {
                         if (!sampleValue.startsWith("{") || !sampleValue.endsWith("}")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.map");
                         } else {
                             ObjectMapper mapper = new ObjectMapper();
                             Map<String, Double> map = new HashMap<>();
@@ -166,7 +174,7 @@ public class SampleValueHelper {
                                 map = mapper.readValue(sampleValue, new TypeReference<Map<String, Double>>() {});
                             } catch (IOException e) {
                                 if (map.isEmpty()) {
-                                    lines.add(line);
+                                    errors.put(line, "cft.sample.error.typeDouble.map");
                                 }
                             }
                         }
@@ -174,11 +182,11 @@ public class SampleValueHelper {
                     line++;
                 }
             }
-        return lines;
+        return errors;
     }
 
-    public static List<Integer> validateChildEntityType(Map<String, CustomFieldTemplate> customFieldTemplates, List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
-        List<Integer> lines = new ArrayList<>();
+    public static Map<Integer, String> validateChildEntityType(Map<String, CustomFieldTemplate> customFieldTemplates, List<String> sampleValues, CustomFieldStorageTypeEnum storageType) {
+        Map<Integer, String> errors = new HashMap<>();
         try {
             if (CollectionUtils.isNotEmpty(sampleValues)) {
                 Integer line = 1;
@@ -187,13 +195,13 @@ public class SampleValueHelper {
                         ObjectMapper mapper = new ObjectMapper();
                         sampleValue = sampleValue.trim();
                         if (!sampleValue.startsWith("{") || !sampleValue.endsWith("}")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.map");
                         } else {
                             Map<String, Object> data = mapper.readValue(sampleValue, new TypeReference<Map<String, Object>>() {});
                             if (!data.isEmpty()) {
                                 for (Map.Entry<String, Object> entry : data.entrySet()) {
                                     if (!customFieldTemplates.containsKey(entry.getKey())) {
-                                        lines.add(line);
+                                        errors.put(line, "cft.sample.error.typeChildEntity.notContainsKey");
                                         break;
                                     } else {
                                         Object value = entry.getValue();
@@ -209,7 +217,7 @@ public class SampleValueHelper {
                                                 Boolean converted = (Boolean) value;
                                             }
                                         } catch (ClassCastException e) {
-                                            lines.add(line);
+                                            errors.put(line, "cft.sample.error.typeChildEntity.notContainsValue");
                                             break;
                                         }
                                     }
@@ -221,7 +229,7 @@ public class SampleValueHelper {
                         ObjectMapper mapper = new ObjectMapper();
                         sampleValue = sampleValue.trim();
                         if (!sampleValue.startsWith("[") || !sampleValue.endsWith("]")) {
-                            lines.add(line);
+                            errors.put(line, "cft.sample.error.notContain.list");
                         } else {
                             List<Map<String, Object>> data = mapper.readValue(sampleValue, new TypeReference<List<Map<String, Object>>>() {
                             });
@@ -230,7 +238,7 @@ public class SampleValueHelper {
                                 for (Map<String, Object> item : data) {
                                     for (Map.Entry<String, Object> entry : item.entrySet()) {
                                         if (!customFieldTemplates.containsKey(entry.getKey())) {
-                                            lines.add(line);
+                                            errors.put(line, "cft.sample.error.typeChildEntity.notContainsKey");
                                             isBreak = true;
                                             break;
                                         } else {
@@ -247,7 +255,7 @@ public class SampleValueHelper {
                                                     Boolean converted = (Boolean) value;
                                                 }
                                             } catch (ClassCastException e) {
-                                                lines.add(line);
+                                                errors.put(line, "cft.sample.error.typeChildEntity.notContainsValue");
                                                 isBreak = true;
                                                 break;
                                             }
@@ -266,6 +274,6 @@ public class SampleValueHelper {
         } catch (IOException e) {
             return null;
         }
-        return lines;
+        return errors;
     }
 }
