@@ -168,7 +168,11 @@
 
             <h:panelGroup rendered="#{dataModel !=null and dataModel.size()>0}">
                 <p:commandButton id="#{formId}deleteEntitieslink" rendered="#{deleteManyButton}" value="#{messages['commons.deleteMultiple']}" action="#{backingBean.deleteMany()}" icon="ui-icon-trash"
-                                 onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}" update="@form" />
+                                 update="@form" >
+                 
+                 	<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
+                                 
+                 </p:commandButton>
 
                 <p:commandButton id="#{formId}buttonExport" icon="ui-icon-xls" value="#{messages['commons.exportExcel']}" ajax="false" rendered="#{exportButton}">
                     <p:dataExporter type="xls" target="datatable_#{resultsId}" fileName="data" pageOnly="false" />

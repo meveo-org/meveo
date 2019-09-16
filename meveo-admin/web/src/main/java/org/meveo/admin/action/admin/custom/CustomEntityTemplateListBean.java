@@ -3,11 +3,11 @@ package org.meveo.admin.action.admin.custom;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
@@ -27,6 +27,11 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
     private LazyDataModel<CustomizedEntity> customizedEntityDM = null;
 
     private List<CustomizedEntity> selectedCustomizedEntities;
+    
+    @PostConstruct
+    public void init() {
+    	this.filters.put("customEntity", true);
+    }
 
     public LazyDataModel<CustomizedEntity> getCustomizedEntities() {
 
