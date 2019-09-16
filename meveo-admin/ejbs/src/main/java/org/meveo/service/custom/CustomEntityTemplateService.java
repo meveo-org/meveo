@@ -85,7 +85,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private Neo4jService neo4jService;
-
+    
     private static boolean useCETCache = true;
 
     @PostConstruct
@@ -435,9 +435,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     /**
      * update cet base on category id
-     * @param id
+     * 
+     * @param categoryId Cateogry id
      */
-    public void resetCategoryCETsByCategoryId(Long id) {
-        getEntityManager().createNamedQuery("CustomEntityTemplate.ReSetCategoryEmptyByCategoryId").setParameter("id", id).executeUpdate();
+    public void resetCategoryCETsByCategoryId(Long categoryId) throws BusinessException {
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+            	entityTemplate.setCustomEntityCategory(null);
+            	update(entityTemplate);
+            }
+        }
     }
 }
