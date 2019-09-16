@@ -33,4 +33,10 @@
                                  referencedTableName="service_endpoint" referencedColumnNames="id"/>
         <addPrimaryKey tableName="service_endpoint_roles" columnNames="endpoint_id, role" constraintName="service_endpoint_role_pkey"/>
     </changeSet>
+    
+    <changeSet id="#3821" author="Hien Bach">
+        <addColumn tableName="crm_custom_field_tmpl">
+            <column name="samples" type="text" defaultValue="[]"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

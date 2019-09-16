@@ -297,6 +297,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @ColumnDefault("0")
     private boolean saveOnExplorer;
 
+    @Column(name = "samples", columnDefinition = "TEXT")
+    @Type(type = "jsonList")
+    private List<String> samples = new ArrayList<>();
+
     /**
      * Database field name - derived from code
      */
@@ -1120,7 +1124,25 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return storages != null && storages.contains(DBStorageType.SQL);
     }
 
-	public List<?> getNewListValue() {
+    public List<String> getSamples() {
+    	if(samples == null) {
+    		this.samples = new ArrayList<>();
+    	}
+    	
+        return samples;
+    }
+
+    public void setSamples(List<String> samples) {
+    	if(samples == null && this.samples == null) {
+    		samples = new ArrayList<>();
+    	} else if (samples == null && this.samples != null) { 
+    		this.samples.clear();
+    	} else {
+	        this.samples = samples;
+    	}
+    }
+
+    public List<?> getNewListValue() {
 		if (storageType != CustomFieldStorageTypeEnum.LIST) {
 			return null;
 		}
