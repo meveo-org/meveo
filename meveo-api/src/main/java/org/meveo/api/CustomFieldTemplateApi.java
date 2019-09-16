@@ -57,9 +57,6 @@ public class CustomFieldTemplateApi extends BaseApi {
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
     
-    @Inject
-    private ResourceBundle resourceMessages;
-    
     private String displayFormat;
 
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
@@ -492,7 +489,6 @@ public class CustomFieldTemplateApi extends BaseApi {
     }
 
 	private void validateSamples(CustomFieldTemplate template) {
-		String errorMessage = null;
 		
 		if(template.getSamples() == null || template.getSamples().isEmpty()) {
 			return;
@@ -502,7 +498,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 			Map<Integer, String> validateSamples = SampleValueHelper.validateStringType(template.getSamples(), template.getStorageType());
 			if (!validateSamples.isEmpty()) {
 				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
-					errorMessage = MessageFormat.format(resourceMessages.getString(validateSample.getValue()), validateSample.getKey());
+					throw new IllegalArgumentException();
 				}
 			}
 		}
@@ -511,7 +507,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 			Map<Integer, String> validateSamples = SampleValueHelper.validateLongType(template.getSamples(), template.getStorageType());
 			if (!validateSamples.isEmpty()) {
 				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
-					errorMessage = MessageFormat.format(resourceMessages.getString(validateSample.getValue()), validateSample.getKey());
+					throw new IllegalArgumentException();
 				}
 			}
 		}
@@ -520,7 +516,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 			Map<Integer, String> validateSamples = SampleValueHelper.validateDoubleType(template.getSamples(), template.getStorageType());
 			if (!validateSamples.isEmpty()) {
 				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
-					errorMessage = MessageFormat.format(resourceMessages.getString(validateSample.getValue()), validateSample.getKey());
+					throw new IllegalArgumentException();
 				}
 			}
 		}
@@ -530,13 +526,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 			Map<Integer, String> validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, template.getSamples(), template.getStorageType());
 			if (!validateSamples.isEmpty()) {
 				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
-					errorMessage = MessageFormat.format(resourceMessages.getString(validateSample.getValue()), validateSample.getKey());
+					throw new IllegalArgumentException();
 				}
 			}
-		}
-		
-		if(errorMessage != null) {
-			throw new IllegalArgumentException(errorMessage);
 		}
 
 	}
