@@ -19,18 +19,6 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Query;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -58,9 +46,11 @@ import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 import java.util.*;
@@ -79,7 +69,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
-    
+
     @Inject
     private MeveoModuleItemService meveoModuleItemService;
 
@@ -247,7 +237,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if (moduleScript != null) {
             moduleScriptService.postUninstallModule(moduleScript, module);
         }
-        
+
         // Remove if it is a child module
         if (childModule) {
             remove(module);

@@ -3,6 +3,7 @@ package org.meveo.admin.action.admin.custom;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -10,7 +11,8 @@ import javax.inject.Named;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
-import org.meveo.util.view.LazyDataModelWSize;
+import org.meveo.util.view.CustomizedEntityLazyDataModel;
+import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
 @Named
@@ -22,16 +24,53 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
     @Inject
     private CustomizedEntityService customizedEntityService;
     
-    private LazyDataModelWSize<CustomizedEntity> customizedEntityDM = null;
+    private LazyDataModel<CustomizedEntity> customizedEntityDM = null;
 
-    public LazyDataModelWSize<CustomizedEntity> getCustomizedEntities() {
+    private List<CustomizedEntity> selectedCustomizedEntities;
+    
+    @PostConstruct
+    public void init() {
+    	this.filters.put("customEntity", true);
+    }
+
+    public LazyDataModel<CustomizedEntity> getCustomizedEntities() {
 
         if (customizedEntityDM != null) {
             return customizedEntityDM;
         }
 
-        customizedEntityDM = new LazyDataModelWSize<CustomizedEntity>() {
+        customizedEntityDM = new CustomizedEntityLazyDataModel<CustomizedEntity>() {
             private static final long serialVersionUID = 1L;
+
+            @Override
+            public Long getRowKey(CustomizedEntity object) {
+                return object.getCustomEntityId();
+            }
+
+            @Override
+            public int getRowCount() {
+                return super.getRowCount();
+            }
+
+            @Override
+            public CustomizedEntity getRowData() {
+                return super.getRowData();
+            }
+
+            @Override
+            public int getRowIndex() {
+                return super.getRowIndex();
+            }
+
+            @Override
+            public void setRowIndex(int rowIndex) {
+                super.setRowIndex(rowIndex);
+            }
+
+            @Override
+            public CustomizedEntity getRowData(String rowKey) {
+                return super.getRowData(rowKey);
+            }
 
             @Override
             public List<CustomizedEntity> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
@@ -52,6 +91,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 	this.setRowIndex(0);
                 	first=0;
                 }
+
                 return entities.subList(first, (first + pageSize) > entities.size() ? entities.size() : (first + pageSize));
             }
         };

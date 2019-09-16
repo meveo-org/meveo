@@ -85,16 +85,18 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private DualListModel<DBStorageType> availableStoragesDM;
 
+	private Map<String, List<CustomEntityTemplate>> listMap;
+
+	private List<CustomizedEntity> selectedCustomizedEntities;
+
 	@Inject
 	private MeveoModuleService meveoModuleService;
-	private Map<String, List<CustomEntityTemplate>> listMap;
 
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
 	}
 
-	@Override
 	@PostConstruct
 	public void init() {
 		customEntityTemplates = customEntityTemplateService.list();
@@ -894,6 +896,35 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 			}
 		}
+	}
+
+	@Override
+	public void delete(Long customEntityId) throws BusinessException {
+		super.delete(customEntityId);
+	}
+
+	public void deleteMany(List<CustomizedEntity> entities) throws Exception {
+		if (entities == null || entities.isEmpty()) {
+			messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
+			return;
+		}
+
+		boolean allOk = true;
+		for (CustomizedEntity entity : entities) {
+			super.delete(entity.getCustomEntityId());
+		}
+
+		if (allOk) {
+			messages.info(new BundleKey("messages", "delete.entitities.successful"));
+		}
+	}
+
+	public List<CustomizedEntity> getSelectedCustomizedEntities() {
+		return selectedCustomizedEntities;
+	}
+
+	public void setSelectedCustomizedEntities(List<CustomizedEntity> selectedCustomizedEntities) {
+		this.selectedCustomizedEntities = selectedCustomizedEntities;
 	}
 }
 
