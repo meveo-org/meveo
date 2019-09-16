@@ -64,14 +64,6 @@ import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-import java.util.*;
-
 
 /**
  * EJB for managing MeveoModule entities
@@ -87,6 +79,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
+    
+    @Inject
+    private MeveoModuleItemService meveoModuleItemService;
 
     /**
      * import module from remote meveo instance.
