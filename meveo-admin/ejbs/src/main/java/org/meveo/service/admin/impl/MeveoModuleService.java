@@ -19,6 +19,21 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -45,16 +60,6 @@ import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-import java.util.*;
-
 /**
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
@@ -69,9 +74,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
-
-    @Inject
-    private MeveoModuleItemService meveoModuleItemService;
 
     /**
      * import module from remote meveo instance.
@@ -319,7 +321,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
 
     private <T> List<T> list(MeveoModuleFilters filters, String projection, Class<T> returnedClass) {
-        StringBuilder queryBuilder = new StringBuilder("SELECT DISTINCT m." + projection + " FROM " + entityClass.getName() + " m");
+    	if (projection == "*") {
+			projection = "";
+
+		} else {
+			projection = "." + projection;
+		}
+    	
+    	StringBuilder queryBuilder = new StringBuilder("SELECT DISTINCT m" + projection + " FROM " + entityClass.getName() + " m");
         if(filters.getItemType() !=null && filters.getItemClass() != null){
             queryBuilder.append(" INNER JOIN m.moduleItems i");
         }
