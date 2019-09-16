@@ -259,7 +259,7 @@
                     </p:dataTable>
                 </h:form>
             </p:dialog>
-            
+
             <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="#{formId}_exportSelectionDialog" styleClass="form-dialog" widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true" rendered="#{backingBean.getBaseCrudApi() != null}">
               	<hftl:decorateFormField fieldId="exportFormat" label="Format" layout = "block">
                    <p:selectOneMenu id="exportFormat" name="exporFormat" value="#{backingBean.exportFormat}">
@@ -273,7 +273,7 @@
 	                  </p:commandButton>
                   </div>
             </p:dialog>
-            
+
             <p:remoteCommand name="closeExportDialog" oncomplete="PF('exportSelectionDialog').hide()" />
 
             <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
