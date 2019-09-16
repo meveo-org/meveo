@@ -31,7 +31,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
      */
     @DELETE
     @Path("/entity/{customEntityCategoryCode}")
-    public ActionStatus removeEntityCategory(@PathParam("customEntityCategoryCode") String customEntityCategoryCode);
+    public ActionStatus removeEntityCategory(@PathParam("customEntityCategoryCode") String customEntityCategoryCode, @DefaultValue("false") @QueryParam("deleteRelatedTemplates") boolean deleteRelatedTemplates);
 
 
 
