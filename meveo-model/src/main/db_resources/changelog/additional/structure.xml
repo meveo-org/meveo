@@ -4,39 +4,5 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
 
-    <changeSet id="#3815 - Binary Storage - Save on explorer param should be at CFT level" author="ClémentBareth">
-        <addColumn tableName="crm_custom_field_tmpl">
-            <column name="save_on_explorer" type="${type.boolean}"/>
-        </addColumn>
-    </changeSet>
 
-    <changeSet id="#3815 - Binary Storage - Save on explorer param should be at CFT level - Set  default value" author="ClémentBareth">
-        <update tableName="crm_custom_field_tmpl">
-            <column name="save_on_explorer" value="0"/>
-        </update>
-    </changeSet>
-
-     <changeSet id="Binary Storage - Save on explorer - Set  default value on column" author="ClémentBareth">
-        <addDefaultValue tableName="crm_custom_field_tmpl" columnName="save_on_explorer" defaultValue="0"/>
-    </changeSet>
-
-    <changeSet id="service_endpoint_roles" author="Hien Bach">
-        <createTable tableName="service_endpoint_roles">
-            <column name="endpoint_id" type="BIGINT">
-                <constraints nullable="false" foreignKeyName=""/>
-            </column>
-            <column name="role" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <addForeignKeyConstraint constraintName="fk_service_endpoint_roles_id" baseTableName="service_endpoint_roles" baseColumnNames="endpoint_id"
-                                 referencedTableName="service_endpoint" referencedColumnNames="id"/>
-        <addPrimaryKey tableName="service_endpoint_roles" columnNames="endpoint_id, role" constraintName="service_endpoint_role_pkey"/>
-    </changeSet>
-    
-    <changeSet id="#3821" author="Hien Bach">
-        <addColumn tableName="crm_custom_field_tmpl">
-            <column name="samples" type="text" defaultValue="[]"/>
-        </addColumn>
-    </changeSet>
 </databaseChangeLog>
