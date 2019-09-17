@@ -25,11 +25,16 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
+import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +53,18 @@ public class GitClient {
     @Inject
     @CurrentUser
     private MeveoUser currentUser;
+
+    @Inject
+    @Commited
+    private Event<GitRepository> commitedEvent;
+
+    @Inject
+    @Created
+    private Event<GitBranch> branchCreated;
+
+    @Inject
+    @Removed
+    private Event<GitBranch> branchRemoved;
 
     /**
      * Remove the corresponding git repository from file system
@@ -138,6 +155,8 @@ public class GitClient {
 
             if (CollectionUtils.isNotEmpty(patterns)) {
                 patterns.forEach(add::addFilepattern);
+
+                commitedEvent.fire(gitRepository);
 
                 add.call();
 
@@ -275,6 +294,8 @@ public class GitClient {
 
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
         try (Git git = Git.open(repositoryDir)) {
+
+            branchCreated.fire(new GitBranch(branch, gitRepository));
             git.branchCreate().setName(branch).call();
 
         } catch (IOException e) {
@@ -301,6 +322,8 @@ public class GitClient {
 
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
         try (Git git = Git.open(repositoryDir)) {
+            branchRemoved.fire(new GitBranch(branch, gitRepository));
+
             git.branchDelete().setBranchNames(branch).setForce(true).call();
 
         } catch (IOException e) {
