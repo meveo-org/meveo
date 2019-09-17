@@ -1,4 +1,4 @@
 User guide
 =====
 
-[Ontology](/user-guide/ontology.md)
+[Ontology](user-guide/ontology.md)
