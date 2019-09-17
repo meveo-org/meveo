@@ -19,10 +19,16 @@ package org.meveo.api.git;
 import org.eclipse.jgit.http.server.GitServlet;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
+import org.meveo.event.qualifier.git.Commited;
+import org.meveo.model.git.GitActionType;
+import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.GitRepositoryService;
+import org.slf4j.Logger;
 
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -31,7 +37,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Servlet enabling git through HTTP(s)
@@ -42,10 +51,27 @@ import java.util.*;
         urlPatterns = "/git/*"
 )
 public class MeveoGitServlet extends GitServlet {
+
+    private static Map<String, GitActionType> SERVICE_ROLE_MAPPING = new HashMap<>();
+
+    static {
+        SERVICE_ROLE_MAPPING.put("git-upload-pack", GitActionType.READ);
+        SERVICE_ROLE_MAPPING.put("git-receive-pack", GitActionType.WRITE);
+    }
 	
     @Inject
     @CurrentUser
-    protected MeveoUser currentUser;
+    private MeveoUser currentUser;
+
+    @Inject
+    private GitRepositoryService gitRepositoryService;
+
+    @Inject
+    private Logger log;
+
+    @Inject
+    @Commited
+    private Event<GitRepository> gitRepositoryCommitedEvent;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -90,10 +116,6 @@ public class MeveoGitServlet extends GitServlet {
             return;
         }
         
-        Map<String, String> serviceRoleMapping = new HashMap<>();
-        serviceRoleMapping.put("git-upload-pack", "READ");
-        serviceRoleMapping.put("git-receive-pack", "WRITE");
-
         KeycloakPrincipal<?> principal = (KeycloakPrincipal<?>) req.getUserPrincipal();
         final AccessToken.Access gitAccess = principal.getKeycloakSecurityContext().getToken().getResourceAccess("git");
         if(gitAccess == null){
@@ -102,23 +124,43 @@ public class MeveoGitServlet extends GitServlet {
             return;
         }
 
-        final Set<String> gitRoles = gitAccess.getRoles();
-        
-        final String service;
+        String service = null;
         if(req.getQueryString() != null) {
         	service = req.getQueryString().replaceAll(".*service=([\\w-]+).*", "$1");
         } else if (req.getRequestURI().matches(".*(git-.*-pack).*")){
         	service = req.getRequestURI().replaceAll(".*(git-.*-pack).*", "$1");
-        } else {
-        	service = "git-upload-pack";
         }
 
-        if(!gitRoles.contains(serviceRoleMapping.get(service))) {
+        String code = req.getRequestURL().toString().replaceAll(".*/investigation-core/git/([^/]+).*", "$1");
+
+        boolean authorized;
+
+        final GitActionType gitActionType = SERVICE_ROLE_MAPPING.get(service);
+        final GitRepository gitRepository = gitRepositoryService.findByCode(code);
+
+        switch (gitActionType) {
+            case READ: authorized = GitHelper.hasReadRole(currentUser, gitRepository);
+                break;
+
+            case WRITE: authorized = GitHelper.hasWriteRole(currentUser, gitRepository);
+                break;
+
+            default:
+                authorized = false;
+                log.error("Unmapped service type {}", service);
+                break;
+        }
+
+        if(!authorized) {
             res.setStatus(403);
             res.getWriter().print("You are not authorized to execute this action");
             return;
         }
 
         super.service(req, res);
+
+        if(gitActionType == GitActionType.WRITE && req.getMethod().equals("POST")) {
+            gitRepositoryCommitedEvent.fire(gitRepository);
+        }
     }
 }
