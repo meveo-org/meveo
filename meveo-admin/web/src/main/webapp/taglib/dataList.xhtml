@@ -173,8 +173,6 @@
                 <p:commandButton id="#{formId}buttonXlsxExport" icon="ui-icon-xls" value="#{messages['commons.exportExcel']}" ajax="false" rendered="#{exportXlsxButton}">
                     <pe:exporter type="xlsx" target="datatable_#{resultsId}" fileName="data" pageOnly="false" skipComponents="true" selectionOnly="#{backingBean.selectedEntities.size()>0}" />
                 </p:commandButton>
-                <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
-                <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
                 <p:commandButton value="#{messages['commons.exportSelection']}" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('exportSelectionDialog').show()"/>
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
                 	<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
@@ -191,7 +189,10 @@
                 </p:commandButton>
 
 			</h:panelGroup>
-
+			
+			<p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
+            <p:commandButton value="#{messages['commons.importData']}" id="#{formId}buttonImport" type="button" onclick="PF('importDataDialog').show();" />
+                
             <p:dialog header="#{messages['commons.importCsv']}" id="#{formId}_strategyDlg" widgetVar="csvDialog" modal="true" closeOnEscape="true" >
                 <p:messages autoUpdate="true" />
                 <hftl:decorateFormField fieldId="#{formId}_strategy" label="#{messages['notification.strategyImportType']}" rendered="#{importStrategy}">
@@ -268,7 +269,7 @@
                    </p:selectOneMenu>
                  </hftl:decorateFormField>
                  <div class="clearLeft">
-	                 <p:commandButton id="buttonSelectionExport" value="#{messages['commons.export']}" ajax="false" onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+	                 <p:commandButton id="buttonSelectionExport" value="#{messages['action.export']}" ajax="false" onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
 	                      <p:fileDownload id="exportFileDownload" value="#{backingBean.export()}" />
 	                  </p:commandButton>
                   </div>
