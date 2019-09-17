@@ -146,7 +146,12 @@ public class JMeterService {
                 Element n = (Element) assertionResults.item(i);
                 boolean success = !Boolean.parseBoolean(n.getElementsByTagName("failure").item(0).getTextContent());
                 String name = n.getElementsByTagName("name").item(0).getTextContent();
-                String failureMessage = n.getElementsByTagName("failureMessage").item(0).getTextContent();
+                final NodeList failureMessageNodes = n.getElementsByTagName("failureMessage");
+                String failureMessage = "";
+                if(failureMessageNodes != null && failureMessageNodes.getLength() > 0) {
+                    failureMessage = failureMessageNodes.item(0).getTextContent();
+                }
+
                 sampleResults.add(new SampleResult(success, name, failureMessage));
             }
 
