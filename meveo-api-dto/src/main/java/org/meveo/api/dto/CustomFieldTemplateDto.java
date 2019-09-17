@@ -13,7 +13,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.model.converter.StringListConverter;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -25,7 +24,8 @@ import org.meveo.model.persistence.DBStorageType;
 /**
  * The Class CustomFieldTemplateDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -208,7 +208,10 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
     @XmlElement()
     private List<DBStorageType> storages;
-    
+
+    @XmlElement
+    private List<String> samples;
+
     @XmlElement
     private boolean summary;
 
@@ -292,6 +295,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         contentTypes = cf.getContentTypes();
         maxFileSizeAllowedInKb = cf.getMaxFileSizeAllowedInKb();
         filePath = cf.getFilePath();
+        samples = cf.getSamples();
 
     }
 
@@ -542,7 +546,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     public String toString() {
         return "CustomFieldTemplateDto [code=" + code + ", description=" + description + ", fieldType=" + fieldType + ", accountLevel=" + accountLevel + ", appliesTo=" + appliesTo
                 + ", defaultValue=" + defaultValue + ", storageType=" + storageType + ", mapKeyType=" + mapKeyType + ", valueRequired=" + valueRequired + ", versionable="
-                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + ", displayFormat=" + displayFormat + "]";
+                + versionable + ", triggerEndPeriodEvent=" + triggerEndPeriodEvent + ", calendar=" + calendar + ", entityClazz=" + entityClazz + ", indexType=" + indexType + ", displayFormat=" + displayFormat + ", samples=" + samples + "]";
     }
 
     /**
@@ -935,5 +939,13 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
     public void setSaveOnExplorer(boolean saveOnExplorer) {
         this.saveOnExplorer = saveOnExplorer;
+    }
+
+    public List<String> getSamples() {
+        return samples;
+    }
+
+    public void setSamples(List<String> samples) {
+        this.samples = samples;
     }
 }

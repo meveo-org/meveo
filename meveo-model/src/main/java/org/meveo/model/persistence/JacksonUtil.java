@@ -4,15 +4,24 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+/**
+ * Helper class for processing JSON.
+ *
+ * @author Clément Bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
+@SuppressWarnings("deprecation")
 public class JacksonUtil {
 
     static {
@@ -75,6 +84,14 @@ public class JacksonUtil {
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+    
+    public static <T> T convert(Object value, Class<T> clazz) {
+        return OBJECT_MAPPER.convertValue(value, clazz);
+    }
+    
+    public static <T> T read(String value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.readValue(value, clazz);
     }
 
     @SuppressWarnings("unchecked")

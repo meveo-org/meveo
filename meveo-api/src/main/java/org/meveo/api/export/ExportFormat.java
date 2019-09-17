@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,31 +14,21 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.service.technicalservice.endpoint;
+package org.meveo.api.export;
 
-import org.infinispan.Cache;
+public enum ExportFormat {
 
-import javax.annotation.Resource;
-import javax.ejb.Startup;
-import javax.ejb.Singleton;
-import java.util.concurrent.Future;
+    JSON("json"),
+    XML("xml"),
+    CSV("csv");
 
-@Singleton
-@Startup
-public class EndpointResultsCacheContainer {
+    private String format;
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, Future<String>> pendingExecutions;
-
-    public Future<String> getPendingExecution(String key) {
-        return pendingExecutions.get(key);
+    ExportFormat(String format){
+        this.format = format;
     }
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
-    }
-
-    public void put(String key, Future<String> value){
-        pendingExecutions.put(key, value);
+    public String getFormat() {
+        return format;
     }
 }

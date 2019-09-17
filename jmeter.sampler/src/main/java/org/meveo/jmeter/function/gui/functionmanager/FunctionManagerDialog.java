@@ -16,6 +16,7 @@
 
 package org.meveo.jmeter.function.gui.functionmanager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jorphan.gui.ComponentUtil;
 import org.meveo.jmeter.utils.SwingUtils;
 import org.meveo.jmeter.utils.Waiting;
@@ -23,6 +24,7 @@ import org.meveo.jmeter.utils.Waiting;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.util.List;
@@ -33,10 +35,13 @@ public class FunctionManagerDialog extends JDialog {
 
     private final JScrollPane scrollableList = new JScrollPane();
     private final JButton refreshBtn;
+    private final JTextField searchBox;
+    private final Checkbox isRegex;
     private final JPanel bottomPanel = new JPanel(new BorderLayout());
     private final Waiting waiter = new Waiting(bottomPanel, BorderLayout.WEST);
 
     private JList<String> stringJList;
+    private List<String> functionCodes;
 
     private MouseAdapter listItemClicked;
 
@@ -47,7 +52,6 @@ public class FunctionManagerDialog extends JDialog {
     public void setRefreshBtnClicked(ActionListener refreshBtnClicked) {
         refreshBtn.addActionListener(refreshBtnClicked);
     }
-
 
     public FunctionManagerDialog() {
         super((JFrame) null, "Function Tests Manager", true);
@@ -61,8 +65,27 @@ public class FunctionManagerDialog extends JDialog {
         refreshBtn = new JButton("Refresh");
         refreshBtn.setLayout(null);
 
+        searchBox = new JTextField();
+        searchBox.setPreferredSize(new Dimension(100, 50));
+        searchBox.setLayout(null);
+        searchBox.addActionListener(this::filterList);
+
+        isRegex = new Checkbox("Regex");
+        isRegex.setPreferredSize(new Dimension(50, 50));
+
+        final GridLayout layout = new GridLayout();
+        layout.setColumns(2);
+        layout.setRows(1);
+        layout.setHgap(10);
+
+        JPanel searchPanel = new JPanel(layout);
+        searchPanel.setPreferredSize(new Dimension(170, 50));
+        searchPanel.add(searchBox);
+        searchPanel.add(isRegex);
+
         bottomPanel.setPreferredSize(new Dimension(1024, 50));
         bottomPanel.add(refreshBtn, BorderLayout.EAST);
+        bottomPanel.add(searchPanel, BorderLayout.WEST);
         bottomPanel.setBorder(SPACING);
 
         scrollableList.setBorder(SPACING);
@@ -73,7 +96,25 @@ public class FunctionManagerDialog extends JDialog {
 
     }
 
+    public void filterList(ActionEvent e){
+        String searchBoxValue = searchBox.getText();
+        DefaultListModel<String> filteredListModel = new DefaultListModel<>();
+        int i = 0;
+        for (String functionCode : functionCodes) {
+            final boolean foundRegex = isRegex.getState() && functionCode.matches(searchBoxValue);
+            final boolean foundNoRegex = !isRegex.getState() && functionCode.contains(searchBoxValue);
+            if(StringUtils.isBlank(searchBoxValue) || foundRegex || foundNoRegex){
+                filteredListModel.add(i++, functionCode);
+            }
+        }
+
+        stringJList.setModel(filteredListModel);
+
+    }
+
     public void populateList(List<String> functionsCodes) {
+
+        this.functionCodes = functionsCodes;
 
         DefaultListModel<String> listModel = new DefaultListModel<>();
         int i = 0;

@@ -27,7 +27,7 @@
         <!-- ===================================== SEARCH USERS RESULTS ================================= -->
 
         <hftl:dataList resultsId="jobTriggers" backingBean="#{jobTriggerListBean}" exportButton="false" exportToCsv="true" fileName="JobTrigger" importCsv="true"
-            importStrategy="true" sortBy="code">
+            importStrategy="true" addToModule="true" sortBy="code">
             <hftl:column label="#{messages['entity.code']}" field="code" />
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
 <!--             <hftl:column style="display:none" label="#{messages['entity.notification.elFilter']}" field="elFilter" /> -->
@@ -35,7 +35,7 @@
             <hftl:column label="#{messages['entity.notification.scriptInstance']}" field="scriptInstance" />
             <hftl:column label="#{messages['entity.notification.jobInstance']}" field="jobInstance" />
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
-            <hftl:actionsColumn permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true"/>
+            <hftl:actionsColumn permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" renderAddModule="true"/>
         </hftl:dataList>
     </ui:define>
 </ui:composition>

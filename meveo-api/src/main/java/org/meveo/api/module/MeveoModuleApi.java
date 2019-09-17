@@ -1,20 +1,62 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.api.module;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
 
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.api.*;
-import org.meveo.api.catalog.ServiceTemplateApi;
+import org.meveo.api.ApiService;
+import org.meveo.api.ApiVersionedService;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.CustomFieldTemplateApi;
+import org.meveo.api.EntityCustomActionApi;
+import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.catalog.BusinessServiceModelDto;
 import org.meveo.api.dto.catalog.ServiceTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.exception.*;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
+import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityAlreadyExistsException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -22,9 +64,12 @@ import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
@@ -34,23 +79,25 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-
 /**
+ * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
- **/
+ * @lastModifiedVersion 6.3.0
+ */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
+
+    private static final ConcurrentHashMap<String, Class<? extends BusinessEntity>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
+
+    static {
+        final Set<Class<? extends BusinessEntity>> moduleItemClasses = ReflectionUtils.getClassesAnnotatedWith(ModuleItem.class, BusinessEntity.class);
+        for(Class<? extends BusinessEntity> aClass : moduleItemClasses){
+            String type = aClass.getAnnotation(ModuleItem.class).value();
+            MODULE_ITEM_TYPES.put(type, aClass);
+        }
+    }
 
     @Inject
     private MeveoModuleService meveoModuleService;
@@ -65,9 +112,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     private ScriptInstanceApi scriptInstanceApi;
 
     @Inject
-    private ServiceTemplateApi serviceTemplateApi;
-
-    @Inject
     private ServiceTemplateService serviceTemplateService;
 
     @Inject
@@ -76,21 +120,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     @Inject
     private ModuleScriptService moduleScriptService;
 
-    private static JAXBContext jaxbCxt;
-    
-    static {
-        try {
-            jaxbCxt = JAXBContext.newInstance(MeveoModuleDto.class);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-    }
-    
     public MeveoModuleApi() {
     	super(MeveoModule.class, MeveoModuleDto.class);
     }
 
-    public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+    public MeveoModule create(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(moduleDto.getCode())) {
             missingParameters.add("code");
@@ -124,6 +158,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
         MeveoModule meveoModule = new MeveoModule();
         parseModuleInfoOnlyFromDto(meveoModule, moduleDto);
+
+        if(development){
+            meveoModule.setModuleSource(null);
+        }
+
         meveoModuleService.create(meveoModule);
         return meveoModule;
     }
@@ -192,9 +231,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
     }
 
-    public List<MeveoModuleDto> list(Class<? extends MeveoModule> clazz) throws MeveoApiException, BusinessException {
+    public List<MeveoModuleDto> list(Class<? extends MeveoModule> clazz) throws BusinessException {
 
-        List<MeveoModule> meveoModules = null;
+        List<MeveoModule> meveoModules;
+
         if (clazz == null) {
             meveoModules = meveoModuleService.list();
 
@@ -205,8 +245,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             meveoModules = meveoModuleService.list(new PaginationConfiguration(filters));
         }
 
-        List<MeveoModuleDto> result = new ArrayList<MeveoModuleDto>();
-        MeveoModuleDto moduleDto = null;
+        List<MeveoModuleDto> result = new ArrayList<>();
+        MeveoModuleDto moduleDto;
         for (MeveoModule meveoModule : meveoModules) {
             try {
                 moduleDto = moduleToDto(meveoModule);
@@ -218,13 +258,32 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         return result;
     }
 
+    public List<MeveoModuleDto> list(MeveoModuleFilters filters) {
+        if(filters.getItemType() != null){
+            filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        }
+
+        return meveoModuleService.list(filters)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> listCodesOnly(MeveoModuleFilters filters) {
+        if(filters.getItemType() != null){
+            filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        }
+
+        return meveoModuleService.listCodesOnly(filters);
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public MeveoModuleDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+    public MeveoModuleDto find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code [BOM: businessOfferModelCode, BSM: businessServiceModelCode, BAM: businessAccountModelCode]");
@@ -235,15 +294,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         if (meveoModule == null) {
             throw new EntityDoesNotExistsException(MeveoModule.class, code);
         }
-        MeveoModuleDto moduleDto = moduleToDto(meveoModule);
-        return moduleDto;
+        return moduleToDto(meveoModule);
     }
 
+    @Override
     public MeveoModule createOrUpdate(MeveoModuleDto postData) throws MeveoApiException, BusinessException {
         MeveoModule meveoModule = meveoModuleService.findByCode(postData.getCode());
         if (meveoModule == null) {
             // create
-            return create(postData);
+            return create(postData, false);
         } else {
             // update
             return update(postData);
@@ -261,13 +320,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
         boolean installed = false;
         if (meveoModule == null) {
-            create(moduleDto);
+            create(moduleDto, false);
             meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
 
         } else {
             if (!meveoModule.isDownloaded()) {
-                throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install",
-                    "Module with the same code is being developped locally, can not overwrite it.");
+                throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");
             }
 
             if (meveoModule.isInstalled()) {
@@ -275,12 +333,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
                 installed = true;
 
             } else {
-                try {
-                    moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
-                } catch (JAXBException e) {
-                    log.error("Failed to parse module {} source", meveoModule.getCode(), e);
-                    throw new BusinessException("Failed to parse module source", e);
-                }
+                moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
             }
         }
 
@@ -303,7 +356,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         return meveoModule;
     }
 
-    public void uninstall(String code, Class<? extends MeveoModule> moduleClass) throws MeveoApiException, BusinessException {
+    public void uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code");
@@ -322,17 +375,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         if (!meveoModule.isInstalled()) {
             throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
         }
-        meveoModuleService.uninstall(meveoModule);
+        meveoModuleService.uninstall(meveoModule, remove);
     }
 
 
-    private void parseModuleInfoOnlyFromDtoBSM(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) throws MeveoApiException, BusinessException {
+    private void parseModuleInfoOnlyFromDtoBSM(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
 
         bsm.setDuplicatePricePlan(bsmDto.isDuplicatePricePlan());
         bsm.setDuplicateService(bsmDto.isDuplicateService());
     }
 
-    private void unpackAndInstallBSMItems(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) throws MeveoApiException, BusinessException {
+    private void unpackAndInstallBSMItems(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
         ServiceTemplate serviceTemplate = serviceTemplateService.findByCode(bsmDto.getServiceTemplate().getCode());
         bsm.setServiceTemplate(serviceTemplate);
     }
@@ -371,82 +424,90 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         meveoModule.setScript(scriptInstance);
 
         // Store module DTO into DB to be used later for installation
-        try {
-            Marshaller m = jaxbCxt.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            StringWriter w = new StringWriter();
-            m.marshal(moduleDto, w);
-            meveoModule.setModuleSource(w.toString());
-
-        } catch (JAXBException e) {
-            throw new BusinessException(e);
-        }
+        meveoModule.setModuleSource(JacksonUtil.toString(moduleDto));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 
         if (moduleDto.getModuleItems() != null) {
 
             meveoModule.getModuleItems().clear();
 
-            for (BaseEntityDto dto : moduleDto.getModuleItems()) {
-
-                try {
-
-                    if (dto instanceof MeveoModuleDto) {
-                        install((MeveoModuleDto) dto);
-
-                        Class<? extends MeveoModule> moduleClazz = MeveoModule.class;
-                        meveoModule.addModuleItem(new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null));
-
-                    } else if (dto instanceof CustomFieldTemplateDto) {
-                        customFieldTemplateApi.createOrUpdate((CustomFieldTemplateDto) dto, null);
-                        meveoModule.addModuleItem(new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
-                            ((CustomFieldTemplateDto) dto).getAppliesTo(), null));
-
-                    } else if (dto instanceof EntityCustomActionDto) {
-                        entityCustomActionApi.createOrUpdate((EntityCustomActionDto) dto, null);
-                        meveoModule.addModuleItem(
-                            new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null));
-
-                    } else {
-
-                        String entityClassName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
-                        Class<?> entityClass = ReflectionUtils.getClassBySimpleNameAndAnnotation(entityClassName, ModuleItem.class);
-                        if (entityClass == null) {
-                            throw new RuntimeException("No entity class or @ModuleItem annotation found for " + entityClassName);
-                        }
-
-                        if (entityClass.isAnnotationPresent(VersionedEntity.class)) {
-                            ApiVersionedService apiService = getApiVersionedService(entityClass, true);
-                            apiService.createOrUpdate(dto);
-                        } else {
-                            ApiService apiService = getApiService(entityClass, true);
-                            apiService.createOrUpdate(dto);
-                        }
-
-                        DatePeriod validity = null;
-                        if (ReflectionUtils.hasField(dto, "validFrom")) {
-                            validity = new DatePeriod((Date) FieldUtils.readField(dto, "validFrom", true), (Date) FieldUtils.readField(dto, "validTo", true));
-                        }
-
-                        if (ReflectionUtils.hasField(dto, "appliesTo")) {
-                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(),
-                                (String) FieldUtils.readField(dto, "appliesTo", true), validity));
-                        } else {
-                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(), null, validity));
-                        }
-                    }
-
-                } catch (IllegalAccessException e) {
-                    log.error("Failed to access field value in DTO {}", dto, e);
-                    throw new MeveoApiException("Failed to access field value in DTO: " + e.getMessage());
-
-                } catch (MeveoApiException | BusinessException e) {
-                    log.error("Failed to transform DTO into a module item. DTO {}", dto, e);
-                    throw e;
-                }
+            for (MeveoModuleItemDto moduleItemDto : moduleDto.getModuleItems()) {
+            	
+            	Class<? extends BaseEntityDto> dtoClass;
+				try {
+					dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+					BaseEntityDto dto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+            	
+	                try {
+	
+	
+	                    if (dto instanceof MeveoModuleDto) {
+	                        install((MeveoModuleDto) dto);
+	
+	                        Class<? extends MeveoModule> moduleClazz = MeveoModule.class;
+	                        meveoModule.addModuleItem(new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null));
+	
+	                    } else if (dto instanceof CustomFieldTemplateDto) {
+	                        customFieldTemplateApi.createOrUpdate((CustomFieldTemplateDto) dto, null);
+	                        meveoModule.addModuleItem(new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
+	                            ((CustomFieldTemplateDto) dto).getAppliesTo(), null));
+	
+	                    } else if (dto instanceof EntityCustomActionDto) {
+	                        entityCustomActionApi.createOrUpdate((EntityCustomActionDto) dto, null);
+	                        meveoModule.addModuleItem(
+	                            new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null));
+	
+	                    } else {
+	
+	                        String entityClassName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
+	                        Class<?> entityClass = ReflectionUtils.getClassBySimpleNameAndAnnotation(entityClassName, ModuleItem.class, "");
+	                        if (entityClass == null) {
+	                            throw new RuntimeException("No entity class or @ModuleItem annotation found for " + entityClassName);
+	                        }
+	
+	                        if (entityClass.isAnnotationPresent(VersionedEntity.class)) {
+	                            ApiVersionedService apiService = getApiVersionedService(entityClass, true);
+	                            apiService.createOrUpdate(dto);
+	                        } else {
+	                            ApiService apiService = getApiService(entityClass, true);
+	                            apiService.createOrUpdate(dto);
+	                        }
+	
+	                        DatePeriod validity = null;
+	                        if (ReflectionUtils.hasField(dto, "validFrom")) {
+	                            validity = new DatePeriod((Date) FieldUtils.readField(dto, "validFrom", true), (Date) FieldUtils.readField(dto, "validTo", true));
+	                        }
+	
+	                        if (ReflectionUtils.hasField(dto, "appliesTo")) {
+	                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(),
+	                                (String) FieldUtils.readField(dto, "appliesTo", true), validity));
+	                        
+	                        } else {
+	                            meveoModule.addModuleItem(new MeveoModuleItem((String) FieldUtils.readField(dto, "code", true), entityClass.getName(), null, validity));
+	                        }
+	                        
+	                        //add cft of cet
+							if (dto instanceof CustomEntityTemplateDto) {
+								// check and add if cft exists to moduleItem
+								addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
+							}
+	                    }
+	
+	                } catch (IllegalAccessException e) {
+	                    log.error("Failed to access field value in DTO {}", dto, e);
+	                    throw new MeveoApiException("Failed to access field value in DTO: " + e.getMessage());
+	
+	                } catch (MeveoApiException | BusinessException e) {
+	                    log.error("Failed to transform DTO into a module item. DTO {}", dto, e);
+	                    throw e;
+	                }
+	                
+				} catch (ClassNotFoundException e1) {
+					throw new BusinessException(e1);
+				}
             }
 
         }
@@ -458,7 +519,22 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
     }
 
-    private void writeModulePicture(String filename, byte[] fileData) {
+	/**
+	 * Add cft which is a field of cet as a module item.
+	 * 
+	 * @param dto         CustomEntityTemplateDto instance
+	 * @param meveoModule where module item is added
+	 */
+	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) {
+		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
+			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
+				meveoModule.addModuleItem(itemDto);
+			}
+		}
+	}
+
+	private void writeModulePicture(String filename, byte[] fileData) {
         try {
             ModuleUtil.writeModulePicture(currentUser.getProviderCode(), filename, fileData);
         } catch (Exception e) {
@@ -525,9 +601,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
      * @param module Module object
      * @return MeveoModuleDto object
      * @throws MeveoApiException meveo api exception.
-     * @throws org.meveo.exceptions.EntityDoesNotExistsException 
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes", "unchecked"})
     public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
         if (module.isDownloaded() && !module.isInstalled()) {
@@ -544,7 +619,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             dtoClass = BusinessServiceModelDto.class;
         }
 
-        MeveoModuleDto moduleDto = null;
+        MeveoModuleDto moduleDto;
         try {
             moduleDto = dtoClass.getConstructor(MeveoModule.class).newInstance(module);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -565,7 +640,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             for (MeveoModuleItem item : moduleItems) {
 
                 try {
-                    BaseEntityDto itemDto = null;
+                    BaseEntityDto itemDto;
 
                     if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
                         itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
@@ -630,25 +705,78 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@Override
 	public MeveoModuleDto toDto(MeveoModule entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        try {
+            return moduleToDto(entity);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	@Override
 	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        try {
+            MeveoModule meveoModule = new MeveoModule();
+            parseModuleInfoOnlyFromDto(meveoModule, dto);
+            return meveoModule;
+        } catch (MeveoApiException | BusinessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	@Override
 	public IPersistenceService<MeveoModule> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return meveoModuleService;
 	}
 
 	@Override
 	public boolean exists(MeveoModuleDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+        try {
+            return find(dto.getCode()) != null;
+        } catch (Exception e) {
+            return false;
+        }
 	}
+
+	public MeveoModuleDto addToModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if(module == null){
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+
+        MeveoModuleItem moduleItem = new MeveoModuleItem();
+        moduleItem.setMeveoModule(module);
+        moduleItem.setItemCode(itemCode);
+        moduleItem.setItemClass(itemClassName);
+
+        module.addModuleItem(moduleItem);
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if(module == null){
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+
+        MeveoModuleItem moduleItem = new MeveoModuleItem();
+        moduleItem.setMeveoModule(module);
+        moduleItem.setItemCode(itemCode);
+        moduleItem.setItemClass(itemClassName);
+
+        module.removeItem(moduleItem);
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public boolean isChildOfOtherActiveModule(String moduleItemCode, String itemType) {
+        final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
+        return meveoModuleService.isChildOfOtherActiveModule(moduleItemCode, itemClassName);
+    }
 }

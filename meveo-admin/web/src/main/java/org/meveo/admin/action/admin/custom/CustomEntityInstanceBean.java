@@ -1,7 +1,6 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,7 +14,6 @@ import javax.inject.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
-import org.meveo.admin.action.crm.CustomFieldTemplateBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
@@ -34,6 +32,10 @@ import org.meveo.service.custom.CustomizedEntityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
 @Named
 @ViewScoped
 public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstance> {
@@ -73,6 +75,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
     public String getCustomEntityTemplateCode() {
         return customEntityTemplateCode;
+    }
+
+    @Override
+    public void delete(Long id) throws BusinessException {
+        super.delete(id);
+        messages.info(new BundleKey("messages", "delete.successful"));
     }
 
     @Override

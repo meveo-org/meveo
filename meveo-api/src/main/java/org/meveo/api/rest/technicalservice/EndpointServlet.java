@@ -18,42 +18,18 @@ package org.meveo.api.rest.technicalservice;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.commons.io.Charsets;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.elresolver.ELException;
-import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
-import org.meveo.persistence.CrossStorageService;
-import org.meveo.persistence.scheduler.AtomicPersistencePlan;
-import org.meveo.persistence.scheduler.CyclicDependencyException;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
-import org.meveo.persistence.scheduler.SchedulingService;
-import org.meveo.service.technicalservice.endpoint.EndpointResultsCacheContainer;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
+import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -62,11 +38,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -95,16 +69,7 @@ public class EndpointServlet extends HttpServlet {
     private EndpointApi endpointApi;
 
     @Inject
-    private EndpointService endpointService;
-
-    @Inject
-    private SchedulingService schedulingService;
-
-    @Inject
-    private ScheduledPersistenceService<CrossStorageService> scheduledPersistenceService;
-
-    @Inject
-    private EndpointResultsCacheContainer endpointResultsCacheContainer;
+    private EndpointCacheContainer endpointCacheContainer;
     
     @Inject
     private EndpointExecutionFactory endpointExecutionFactory;
@@ -152,22 +117,22 @@ public class EndpointServlet extends HttpServlet {
 
         // If endpoint security is enabled, check if user has right to access that particular endpoint
         boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
-        if(endpointSecurityEnabled && endpoint != null && !endpointService.isUserAuthorized(endpoint)){
+        if(endpointSecurityEnabled && endpoint != null && !endpointApi.isUserAuthorized(endpoint)){
             endpointExecution.getResp().setStatus(403);
             endpointExecution.getResp().getWriter().print("You are not authorized to access this endpoint");
             return;
         }
 
         try {
-            final Future<String> execResult = endpointResultsCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
+            final Future<EndpointResult> execResult = endpointCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     endpointExecution.getResp().setStatus(200);
-                    endpointExecution.getResp().setContentType(endpoint.getContentType());
-                    endpointExecution.getResp().getWriter().print(execResult.get());
+                    endpointExecution.getResp().setContentType(execResult.get().getContentType());
+                    endpointExecution.getResp().getWriter().print(execResult.get().getResult());
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
-                        endpointResultsCacheContainer.remove(endpointExecution.getFirstUriPart());
+                        endpointCacheContainer.remove(endpointExecution.getFirstUriPart());
                     }
                 } else {
                     endpointExecution.getResp().setStatus(102);    // In progress
@@ -211,6 +176,11 @@ public class EndpointServlet extends HttpServlet {
             return returnValue.toString();
         }
 
+        if(returnValue instanceof Map){
+        	((Map<?, ?>) returnValue).remove("response");
+        	((Map<?, ?>) returnValue).remove("request");
+        }
+        
         final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return serializedResult;
@@ -251,17 +221,18 @@ public class EndpointServlet extends HttpServlet {
         // Execute the endpoint asynchronously
         final UUID id = UUID.randomUUID();
         log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
-        final CompletableFuture<String> execution = CompletableFuture.supplyAsync(() -> {
+        final CompletableFuture<EndpointResult> execution = CompletableFuture.supplyAsync(() -> {
             try {
                 final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
-                return transformData(endpoint, result);
+                String data = transformData(endpoint, result);
+                return new EndpointResult(data, endpoint.getContentType());
             } catch (BusinessException | ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         });
 
         // Store the pending result
-        endpointResultsCacheContainer.put(id.toString(), execution);
+        endpointCacheContainer.put(id.toString(), execution);
 
         // Don't wait execution to finish
         if(!endpointExecution.isWait()) {
@@ -271,18 +242,19 @@ public class EndpointServlet extends HttpServlet {
             return;
         }
 
-		final String execResult = execution.get(); 	// Wait until execution is over
+		final EndpointResult execResult = execution.get(); 	// Wait until execution is over
 		endpointExecution.getResp().setStatus(200); // OK
         if(endpointExecution.isKeep()){
         	// If user wants to keep the result in cache, return the data along with its id
             Map<String, Object> returnedValue = new HashMap<>();
             returnedValue.put("id", id.toString());
-            returnedValue.put("data", execResult);
+            returnedValue.put("data", execResult.getResult());
             endpointExecution.getResp().getWriter().println(JacksonUtil.toString(returnedValue));
         }else{
         	// If user doesn't want to keep the result in cache, only return the data
-            endpointExecution.getResp().getWriter().println(JacksonUtil.toString(execResult));
-            endpointResultsCacheContainer.remove(id.toString());
+            endpointExecution.getResp().setContentType(execResult.getContentType());
+            endpointExecution.getResp().getWriter().println(execResult.getResult());
+            endpointCacheContainer.remove(id.toString());
         }
 
     }

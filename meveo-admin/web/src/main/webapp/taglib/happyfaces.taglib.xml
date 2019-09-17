@@ -32,6 +32,11 @@
     </tag>
 
     <tag>
+        <tag-name>selectEntityPopup</tag-name>
+        <source>selectEntityPopup.xhtml</source>
+    </tag>
+
+    <tag>
         <tag-name>panelGroup</tag-name>
         <source>panelGroup.xhtml</source>
     </tag>

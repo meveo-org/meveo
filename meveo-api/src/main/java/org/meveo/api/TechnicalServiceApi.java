@@ -17,36 +17,46 @@
  */
 package org.meveo.api;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.api.dto.TechnicalServicesDto;
 import org.meveo.api.dto.technicalservice.InputOutputDescription;
 import org.meveo.api.dto.technicalservice.ProcessDescriptionsDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.technicalservice.DescriptionApi;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * TechnicalService management api
  *
  * @author Clément Bareth
  */
-public abstract class TechnicalServiceApi<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseApi {
+public abstract class TechnicalServiceApi<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseCrudApi<T, D> {
 
-    @Inject
+    public TechnicalServiceApi(Class<T> jpaClass, Class<D> dtoClass) {
+		super(jpaClass, dtoClass);
+	}
+
+	@Inject
     private DescriptionApi descriptionApi;
 
     @Inject
@@ -59,7 +69,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         persistenceService = technicalServiceService();
     }
 
-    protected D toDto(T technicalService) {
+    @Override
+	public IPersistenceService<T> getPersistenceService() {
+		return persistenceService;
+	}
+
+	@Override
+    public D toDto(T technicalService) {
         D dto = newDto();
         dto.setCode(technicalService.getCode());
         List<InputOutputDescription> descriptionDtos = descriptionApi.fromDescriptions(technicalService);
@@ -70,11 +86,20 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         return dto;
     }
 
-    protected T fromDto(D postData) throws EntityDoesNotExistsException, BusinessException {
+    @Override
+    public T fromDto(D postData) {
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
-        List<Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, postData);
-        technicalService.setDescriptions(descriptions);
+        
+        List<Description> descriptions;
+        
+		try {
+			descriptions = descriptionApi.fromDescriptionsDto(technicalService, postData);
+	        technicalService.setDescriptions(descriptions);
+		} catch (EntityDoesNotExistsException e) {
+			log.error("Cannot set description for Endpoint {}", postData.getCode(), e);
+		}
+		
         technicalService.setName(postData.getName());
         technicalService.setFunctionVersion(postData.getVersion());
         technicalService.setDisabled(postData.isDisabled());
@@ -106,7 +131,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * @throws BusinessException If technical service already exists for specified name and version
      * @throws EntityDoesNotExistsException If elements referenced in the dto does not exists
      */
-    public void create(@Valid @NotNull D postData) throws BusinessException, EntityDoesNotExistsException {
+    public T create(@Valid @NotNull D postData) throws BusinessException, EntityDoesNotExistsException {
         final T technicalService = fromDto(postData);
         if (postData.getVersion() == null) {
             int versionNumber = 1;
@@ -124,6 +149,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
             persistenceService.create(technicalService);
         }
 
+        return technicalService;
     }
 
     /**
@@ -133,10 +159,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * @throws EntityDoesNotExistsException if the technical service to update does not exists
      * @throws BusinessException            if the technical service can't be updated
      */
-    public void update(@Valid @NotNull D postData) throws EntityDoesNotExistsException, BusinessException {
+    public T update(@Valid @NotNull D postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(postData.getName(), postData.getVersion());
         final T updatedService = updateService(technicalService, postData);
         persistenceService.update(updatedService);
+        return updatedService;
     }
 
     protected T updateService(T service, D data) throws EntityDoesNotExistsException, BusinessException {
@@ -167,7 +194,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(service.getCode(), o).isEmpty());
 
         if(hasEndpoint){
-            throw new BusinessException("An Endpoint is associated to one of those properties : " + deletedProperties + " and therfore can't be deleted");
+            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those properties : " + deletedProperties + " and therfore can't be deleted");
         }
     }
 
@@ -313,11 +340,12 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * @throws BusinessException if the technical service can't be created or updated
      * @throws EntityDoesNotExistsException If an entity referenced in the dto does not exist
      */
-    public void createOrUpdate(@Valid @NotNull D postData) throws BusinessException, EntityDoesNotExistsException {
+    @Override
+    public T createOrUpdate(D postData) throws BusinessException, EntityDoesNotExistsException {
         try {
-            update(postData);
+            return update(postData);
         } catch (EntityDoesNotExistsException e) {
-            create(postData);
+            return create(postData);
         }
     }
 
@@ -394,7 +422,22 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         }
     }
 
+    @Override
+	public boolean exists(D dto) {
+		return technicalServiceService().findByCode(dto.getCode()) != null;
+	}
 
+	@Override
+    public D find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+        final T service = technicalServiceService().findByCode(code);
+        return toDto(service);
+    }
+
+    @Override
+    public D findIgnoreNotFound(String code) {
+        final T service = technicalServiceService().findByCode(code);
+        return toDto(service);
+    }
 
     /**
      * @param name    Name of the service to find

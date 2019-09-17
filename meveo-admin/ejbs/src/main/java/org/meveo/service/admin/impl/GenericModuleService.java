@@ -18,6 +18,14 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -33,13 +41,6 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
-import java.util.List;
-
 @Stateless
 public class GenericModuleService<T extends MeveoModule> extends BusinessService<T> {
 
@@ -51,10 +52,10 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @Inject
     private ModuleScriptService moduleScriptService;
-
+    
     @SuppressWarnings("rawtypes")
-    public void loadModuleItem(MeveoModuleItem item) {
-
+    public void loadModuleItem(MeveoModuleItem item) throws BusinessException {
+    	
         BusinessEntity entity = null;
         if (CustomFieldTemplate.class.getName().equals(item.getItemClass())) {
             entity = customFieldTemplateService.findByCodeAndAppliesToNoCache(item.getItemCode(), item.getAppliesTo());
@@ -98,15 +99,15 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
                 entity = query.getSingleResult();
 
             } catch (NoResultException | NonUniqueResultException e) {
-                log.error("Failed to find a module item {}. Reason: {}", item, e.getClass().getSimpleName());
+                log.error("Failed to find a module item {}. Reason: {}. This item will be removed from module", item, e.getClass().getSimpleName());
                 return;
             } catch (Exception e) {
                 log.error("Failed to find a module item {}", item, e);
                 return;
             }
         }
+        
         item.setItemEntity(entity);
-
     }
 
     @Override

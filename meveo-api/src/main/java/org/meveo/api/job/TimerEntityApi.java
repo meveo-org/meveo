@@ -16,6 +16,9 @@ import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.job.TimerEntityService;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Stateless
 public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 
@@ -92,6 +95,7 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
         return timerEntity;
     }
 
+    @Override
     public TimerEntity createOrUpdate(TimerEntityDto timerEntityDto) throws MeveoApiException, BusinessException {
 
         if (timerEntityService.findByCode(timerEntityDto.getCode()) == null) {
@@ -156,4 +160,11 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	public List<TimerEntityDto> list(){
+        return timerEntityService.list()
+            .stream()
+            .map(TimerEntityDto::new)
+            .collect(Collectors.toList());
+    }
 }

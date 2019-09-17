@@ -1,17 +1,14 @@
 package org.meveo.api.rest.job;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.api.dto.response.GetTimerEntityResponseDto;
 import org.meveo.api.rest.IBaseRs;
+
+import java.util.List;
 
 /**
  * 
@@ -60,8 +57,11 @@ public interface TimerEntityRs extends IBaseRs {
      * @param timerEntityCode The timer entity's code
      * @return Return timerEntity
      */
-    @Path("/")
+    @Path("/{timerEntityCode}")
     @GET
-    GetTimerEntityResponseDto find(@QueryParam("timerEntityCode") String timerEntityCode);
+    GetTimerEntityResponseDto find(@PathParam("timerEntityCode") String timerEntityCode);
+
+    @GET
+    List<TimerEntityDto> list();
 
 }

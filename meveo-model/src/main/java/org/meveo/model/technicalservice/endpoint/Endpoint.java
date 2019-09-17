@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -34,11 +36,14 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.scripts.Function;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
@@ -48,6 +53,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
  *
  * @author clement.bareth
  * @since 01.02.2019
+ * @lastModifiedVersion 6.3.0
  */
 @Entity
 @Table(name = "service_endpoint")
@@ -67,12 +73,19 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 )
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
-@ModuleItem
+@ModuleItem("Endpoint")
+@ObservableEntity
 public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 
-	/**
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(value = FetchMode.SUBSELECT)
+    @CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
+    @Column(name = "role")
+    private List<String> roles = new ArrayList<>();
+
+    /**
      * Technical service associated to the endpoint
      */
     @ManyToOne(fetch = FetchType.EAGER)
@@ -203,6 +216,12 @@ public class Endpoint extends BusinessEntity {
 
     public void setParametersMapping(List<TSParameterMapping> parametersMapping) {
         this.parametersMapping = parametersMapping;
+    }
+
+    public List<String> getRoles() { return roles; }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 
     @Transient

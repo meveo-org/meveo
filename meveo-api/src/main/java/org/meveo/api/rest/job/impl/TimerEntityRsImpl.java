@@ -13,6 +13,8 @@ import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.job.TimerEntityRs;
 
+import java.util.List;
+
 /**
  * 
  * @author Manu Liwanag
@@ -70,6 +72,11 @@ public class TimerEntityRsImpl extends BaseRs implements TimerEntityRs {
             processException(e, result.getActionStatus());
         }
         return result;
+    }
+
+    @Override
+    public List<TimerEntityDto> list() {
+        return timerEntityApi.list();
     }
 
 }

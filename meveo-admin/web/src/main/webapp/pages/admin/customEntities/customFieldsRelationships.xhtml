@@ -855,6 +855,12 @@
                         </hftl:decorateFormField>
                     </h:panelGroup>
                 </h:panelGrid>
+                <p:fieldset id="samples" toggleable="true" collapsed="true" legend="Sample">
+                    <h:panelGroup id="listOfExample">
+                        <hftl:formField label="#{messages['customFieldTemplate.sample']}"
+                                            field="samples" textArea="true" rows="3" maxlength="200000"/>
+                    </h:panelGroup>
+                </p:fieldset>
                 <ui:param name="buttons" value="true" />
                 <ui:define name="buttons">
                     <p:remoteCommand action="#{customEntityTemplateBean.refreshFields}"

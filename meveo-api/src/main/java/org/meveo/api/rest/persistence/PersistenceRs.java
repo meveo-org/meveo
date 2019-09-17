@@ -16,6 +16,35 @@
 
 package org.meveo.api.rest.persistence;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,24 +67,12 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
+import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Path("/{repository}/persistence")
 public class PersistenceRs {
@@ -123,6 +140,7 @@ public class PersistenceRs {
 
     @GET
     @Path("/{cetCode}/{uuid}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
@@ -152,7 +170,8 @@ public class PersistenceRs {
     @SuppressWarnings("unchecked")
 	@POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PersistedItem> persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
     	
     	java.nio.file.Path tempDir = Files.createTempDirectory("dataUpload");
     	
@@ -179,24 +198,24 @@ public class PersistenceRs {
 
                     String fileName;
                     String parameters = StringUtils.substringBetween(restingPart, "[", "]");
-
+                    
                     boolean base64Encoded = false;
-
+                    
                     if(StringUtils.isNotBlank(parameters)){
                         fileName = parameters.replaceFirst(".*filename=([^;]*).*", "$1");
                         if(StringUtils.isBlank(fileName)){
                             throw new IllegalArgumentException("You must provide a file name for the part " + formPart.getKey()+". " +
                                     "For exemple, the data-part name should be " + formPart.getKey() + "[filename=myFile.txt]");
                         }
-
+                        
                         base64Encoded = Pattern.compile(".*encoding=base64.*", Pattern.CASE_INSENSITIVE).matcher(parameters).matches();
                     } else {
                         fileName = RestUtils.getFileName(inputPart);
                     }
 
-
+                    
                     InputStream inputStream = inputPart.getBody(InputStream.class, null);
-
+                    
                     if(base64Encoded) {
                     	inputStream = new Base64InputStream(inputStream);
                     }
@@ -259,7 +278,8 @@ public class PersistenceRs {
     }
 
     @POST
-    public Response persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
@@ -302,13 +322,12 @@ public class PersistenceRs {
         try {
 
             /* Persist the entities and return 201 created response */
-            scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
-            return Response.status(201).build();
+            return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 
         } catch (BusinessException | ELException | IOException | BusinessApiException e) {
 
             /* An error happened */
-            return Response.serverError().entity(e).build();
+            throw new ServerErrorException(Response.serverError().entity(e).build());
         }
 
     }

@@ -25,8 +25,8 @@
 
         <!-- ===================================== SEARCH USERS RESULTS ================================= -->
 
-        <hftl:dataList backingBean="#{webHookListBean}" exportButton="false" exportToCsv="true" importCsv="true" fileName="WebHooks" importStrategy="true" sortBy="code">
-            <hftl:actionsColumn editView="/pages/notification/webHookDetail.xhtml" permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" />
+        <hftl:dataList backingBean="#{webHookListBean}" exportButton="false" exportToCsv="true" importCsv="true" fileName="WebHooks" importStrategy="true" addToModule="true" sortBy="code">
+            <hftl:actionsColumn editView="/pages/notification/webHookDetail.xhtml" permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" renderAddModule="true" />
             <hftl:column label="#{messages['entity.code']}" field="code" />
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
             <hftl:column label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" />

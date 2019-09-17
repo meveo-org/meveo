@@ -20,6 +20,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import javax.persistence.Entity;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -858,9 +859,14 @@ public abstract class BaseApi {
      * 
      */
     @SuppressWarnings("rawtypes")
-    protected ApiService getApiService(Class entityClass, boolean throwException) {
+    protected ApiService getApiService(Class<?> entityClass, boolean throwException) {
 
         ApiService apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api");
+        if(apiService == null){
+        	Entity entityAnnot = entityClass.getAnnotation(Entity.class);
+            apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api");
+        }
+
         if (apiService == null) {
             apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api");
         }

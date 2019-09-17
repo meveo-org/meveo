@@ -1,9 +1,7 @@
 package org.meveo.model.crm.custom;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -54,7 +52,8 @@ import com.google.gson.reflect.TypeToken;
  * entityReferenceValueForGUI, mapValuesForGUI, matrixValuesForGUI fields are used in data entry from GUI ONLY.
  * 
  * @author Andrius Karpavicius
- * 
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomFieldValue implements Serializable {
@@ -328,6 +327,10 @@ public class CustomFieldValue implements Serializable {
     }
     
     public void setListValue(List listValue, Class<?> itemClass) {
+    	if(itemClass == null) {
+    		return;
+    	}
+    	
     	if (itemClass == String.class) {
             listStringValue = new ArrayList<>();
             for (Object listItem : listValue) {

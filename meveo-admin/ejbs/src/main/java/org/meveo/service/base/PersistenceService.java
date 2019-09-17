@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -18,26 +19,20 @@
  */
 package org.meveo.service.base;
 
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.ImageUploadEventHandler;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.commons.utils.FilteredQueryBuilder;
-import org.meveo.commons.utils.ParamBeanFactory;
-import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.event.qualifier.*;
-import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.MeveoJpa;
-import org.meveo.model.*;
-import org.meveo.model.catalog.IImageUpload;
-import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.filter.Filter;
-import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
-import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.crm.impl.CustomFieldInstanceService;
-import org.meveo.service.index.ElasticClient;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
@@ -48,22 +43,51 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.math.BigDecimal;
-import java.util.*;
-import org.meveo.service.notification.DefaultObserver;
+
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.ImageUploadEventHandler;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.commons.utils.FilteredQueryBuilder;
+import org.meveo.commons.utils.ParamBeanFactory;
+import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Disabled;
+import org.meveo.event.qualifier.Enabled;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessCFEntity;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.EnableEntity;
+import org.meveo.model.IAuditable;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
+import org.meveo.model.ISearchable;
+import org.meveo.model.IdentifiableEnum;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
+import org.meveo.model.UniqueEntity;
+import org.meveo.model.catalog.IImageUpload;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.filter.Filter;
+import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.index.ElasticClient;
 
 /**
  * Generic implementation that provides the default implementation for persistence methods declared in the {@link IPersistenceService} interface.
- * 
- * @author Edward P. Legaspi
+ *
+ * @author Clément Bareth
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @lastModifiedVersion 6.3.0
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
     protected Class<E> entityClass;
@@ -134,6 +158,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     @Inject
     @Removed
     protected Event<BaseEntity> entityRemovedEventProducer;
+    
+    @Inject
+    @Removed
+    protected Event<BusinessEntity> moduleItemRemoveEventProducer;
 
     @EJB
     private CustomFieldInstanceService customFieldInstanceService;
@@ -310,6 +338,9 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
                 entityRemovedEventProducer.fire((BaseEntity) entity);
             }
+			if (entity instanceof BusinessEntity && entity.getClass().isAnnotationPresent(ModuleItem.class)) {
+				moduleItemRemoveEventProducer.fire((BusinessEntity) entity);
+			}
             // Remove entity from Elastic Search
             if (BusinessEntity.class.isAssignableFrom(entity.getClass())) {
                 elasticClient.remove((BusinessEntity) entity);
@@ -337,7 +368,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @see org.meveo.service.base.local.IPersistenceService#remove(java.lang.Long)
      */
     @Override
-    public void remove(Long id) throws BusinessException {
+    public final void remove(Long id) throws BusinessException {
         E e = findById(id);
         if (e != null) {
             remove(e);
@@ -397,7 +428,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      */
     @Override
     public void create(E entity) throws BusinessException {
-        log.debug("start of create {} entity={}", entity.getClass().getSimpleName());
+        log.debug("Start creation of entity {}", entity.getClass().getSimpleName());
 
         beforeUpdateOrCreate(entity);
 
@@ -1083,7 +1114,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @param params Parameters to pass
      * @return A map of values retrieved
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public List<Map<String, Object>> executeNativeSelectQuery(String query, Map<String, Object> params) {
         Session session = getEntityManager().unwrap(Session.class);
         SQLQuery q = session.createSQLQuery(query);

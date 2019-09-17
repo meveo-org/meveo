@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -18,20 +19,7 @@
  */
 package org.meveo.service.custom;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Any;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -40,6 +28,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -52,9 +41,23 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
+ * @author Clément Bareth
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
+ * @lastModifiedVersion 6.3.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -78,8 +81,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomTableCreatorService customTableCreatorService;
 
     @Inject
-    private Neo4jService neo4jService;
+    private CustomEntityInstanceService customEntityInstanceService;
 
+    @Inject
+    private Neo4jService neo4jService;
+    
     private static boolean useCETCache = true;
 
     @PostConstruct
@@ -142,7 +148,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 createPrimitiveCft(cet);
             } else {
                 boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
-                boolean maxValueChanged = valueCft.getMaxValue() != cet.getNeo4JStorageConfiguration().getMaxValue();
+                boolean maxValueChanged = !valueCft.getMaxValue().equals(cet.getNeo4JStorageConfiguration().getMaxValue());
                 boolean shouldUpdate = typeChanged || maxValueChanged;
                 if (shouldUpdate) {
                     flush();
@@ -161,8 +167,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 }
             }
         } else {
-        	cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
-        	cet.getNeo4JStorageConfiguration().setMaxValue(null);
+            if(cet.getNeo4JStorageConfiguration() != null) {
+                cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
+                cet.getNeo4JStorageConfiguration().setMaxValue(null);
+            }
         }
     }
 
@@ -212,24 +220,29 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     @Override
-    public void remove(Long id) throws BusinessException {
-
-        CustomEntityTemplate cet = findById(id);
+    public void remove(CustomEntityTemplate cet) throws BusinessException {
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
-        super.remove(id);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        } else if(cet.getSqlStorageConfiguration() != null) {
+            customEntityInstanceService.removeByCet(cet.getCode());
         }
 
-        neo4jService.removeUUIDIndexes(cet);
+        if(cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.removeCet(cet);
+            neo4jService.removeUUIDIndexes(cet);
+        }
 
         customFieldsCache.removeCustomEntityTemplate(cet);
+        
+        super.remove(cet);
+
     }
 
     /**
@@ -243,8 +256,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (active == null || active)) {
 
-            List<CustomEntityTemplate> cets = new ArrayList<>();
-            cets.addAll(customFieldsCache.getCustomEntityTemplates());
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
             if (cets.isEmpty()) {
@@ -270,8 +282,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
                 || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
-            List<CustomEntityTemplate> cets = new ArrayList<>();
-            cets.addAll(customFieldsCache.getCustomEntityTemplates());
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
             // Populate cache if record is not found in cache
             if (cets.isEmpty()) {
@@ -314,7 +325,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param entityCode  - code of entity
      * @return customer field entity
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
         ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
@@ -357,7 +368,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      *
      * @return A list of custom entity templates
      */
-    @SuppressWarnings("unchecked")
     public List<CustomEntityTemplate> listCustomTableTemplates() {
 
         if (useCETCache) {
@@ -405,5 +415,37 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
         return null;
+    }
+
+    /**
+     *
+     * retrieve Custom Entity Templates given by categoryId then remove it so that we can remove it in the cache
+     *
+     * @param categoryId
+     */
+    public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+                remove(entityTemplate);
+            }
+        }
+    }
+
+    /**
+     * update cet base on category id
+     * 
+     * @param categoryId Cateogry id
+     */
+    public void resetCategoryCETsByCategoryId(Long categoryId) throws BusinessException {
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+            	entityTemplate.setCustomEntityCategory(null);
+            	update(entityTemplate);
+            }
+        }
     }
 }

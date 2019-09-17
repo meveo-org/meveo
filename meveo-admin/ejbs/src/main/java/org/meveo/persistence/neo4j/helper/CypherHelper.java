@@ -61,7 +61,7 @@ public class CypherHelper {
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
             }else {
-            	log.error("Error executing query \n{} :\n", e);
+            	log.error("Error executing query \n{}\nwith parameters {}", request, parameters, e);
             }
             
         } finally {

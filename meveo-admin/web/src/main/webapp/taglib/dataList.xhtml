@@ -1,11 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org"
-    xmlns:l="http://www.lapis.com/jsf/exporter">
-
-<!-- 
+<!--
 
     Makes part of "happy faces" component group.
     A custom tag to enhance p:datatable component.
@@ -20,6 +13,7 @@
         checkMany - show multiple item checkboxes
         deleteManyButton - show delete multiple items button
         exportButton - show "export to xls" button
+        exportSelection - show "Export selected elements" button
         exportXlsxButton - show "export to xlsx" button
         exportToXml - show "export to xml" button. Defaults to True if any of the export buttons are enabled
         exportToCsv - show "export to Csv" button
@@ -39,12 +33,10 @@
         		</hftl:datalist>
          
 -->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org"
+                xmlns:l="http://www.lapis.com/jsf/exporter">
 
-<ui:composition>
-
-    <!--     <c:if test="${empty pdf}"> -->
-    <!--         <c:set var="pdf" value="false" /> -->
-    <!--     </c:if> -->
     <c:if test="${empty editable}">
         <c:set var="editable" value="false" />
     </c:if>
@@ -84,7 +76,7 @@
     <c:if test="${empty exportToCsv}">
         <c:set var="exportToCsv" value="false" />
     </c:if>
-    
+
      <c:if test="${empty exportToJson}">
         <c:set var="exportToJson" value="false" />
     </c:if>
@@ -99,6 +91,10 @@
 
     <c:if test="${empty importStrategy}">
         <c:set var="importStrategy" value="false" />
+    </c:if>
+
+    <c:if test="${empty addToModule}">
+        <c:set var="addToModule" value="false" />
     </c:if>
 
     <c:if test="${empty resultsId}">
@@ -134,26 +130,28 @@
     <p:panel id="#{resultsId}_panel" width="100">
 
         <h:form id="#{formId}" prependId="false" onkeypress="if (event.keyCode == 13) {return false;}">
-            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" paginator="true" rows="10" editable="#{editable}" editMode="#{editMode}"
-                widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
-                paginatorTemplate="${prePaginatorControls} {RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
-                rowsPerPageTemplate="#{rowsPerPage}" lazy="true" resizableColumns="true" styleClass="custom-grid #{styleClass}" rowKey="#{entity.id}" first="#{backingBean.dataTableFirstAttribute}"
-                reflow="true" paginatorPosition="#{paginatorPosition}">
+            <p:dataTable id="datatable_#{resultsId}" var="entity" scrollable="#{scrollable}" value="#{dataModel}" multiViewState="true" paginator="true" rows="#{backingBean.cacheNumRows}" editable="#{editable}" editMode="#{editMode}"
+                         widgetVar="cellEntity_#{resultsId}" selection="#{backingBean.selectedEntities}" sortBy="#{'sortBy'}" sortField="#{sortBy}" sortOrder="#{sortOrder}"
+                         paginatorTemplate="${prePaginatorControls} {RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+                         rowsPerPageTemplate="#{rowsPerPage}" lazy="true" resizableColumns="true" styleClass="custom-grid #{styleClass}" rowKey="#{entity.id}" first="#{backingBean.dataTableFirstAttribute}"
+                         reflow="true" paginatorPosition="#{paginatorPosition}">
                 <p:ajax event="page" listener="#{backingBean.onPageChange}" />
                 <p:ajax event="toggleSelect" update="@this" process="@this" />
-                <p:ajax event="rowSelectCheckbox" />
+                <p:ajax event="rowSelectCheckbox"/>
                 <p:ajax event="rowUnselectCheckbox" />
-                <p:ajax event="rowSelect" />
+                <p:ajax event="rowSelect"/>
                 <p:ajax event="rowUnselect" />
                 <c:if test="#{editable}">
                     <p:ajax event="cellEdit" listener="#{backingBean.onCellEdit}" />
                 </c:if>
 
+                <h:outputText id="rows" value="#{backingBean.rows}" />
+
                 <c:if test="${showFullTextSearch}">
                     <f:facet name="header">
                         <p:outputPanel>
                             <p:inputText id="globalFilter" onkeyup="if (event.keyCode == 13) { PF('cellEntity_#{resultsId}').filter();return false;}" style="width:150px"
-                                placeholder="#{messages['commons.search']}" />
+                                         placeholder="#{messages['commons.search']}" />
                         </p:outputPanel>
                     </f:facet>
                 </c:if>
@@ -163,7 +161,11 @@
 
             <h:panelGroup rendered="#{dataModel !=null and dataModel.size()>0}">
                 <p:commandButton id="#{formId}deleteEntitieslink" rendered="#{deleteManyButton}" value="#{messages['commons.deleteMultiple']}" action="#{backingBean.deleteMany()}" icon="ui-icon-trash"
-                    onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}" update="@form" />
+                                 update="@form" >
+
+                 	<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
+
+                 </p:commandButton>
 
                 <p:commandButton id="#{formId}buttonExport" icon="ui-icon-xls" value="#{messages['commons.exportExcel']}" ajax="false" rendered="#{exportButton}">
                     <p:dataExporter type="xls" target="datatable_#{resultsId}" fileName="data" pageOnly="false" />
@@ -171,22 +173,26 @@
                 <p:commandButton id="#{formId}buttonXlsxExport" icon="ui-icon-xls" value="#{messages['commons.exportExcel']}" ajax="false" rendered="#{exportXlsxButton}">
                     <pe:exporter type="xlsx" target="datatable_#{resultsId}" fileName="data" pageOnly="false" skipComponents="true" selectionOnly="#{backingBean.selectedEntities.size()>0}" />
                 </p:commandButton>
-                <p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
-                <p:commandButton value="Import data" id="#{formId}buttonImport" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('importDataDialog').show();" />
+                <p:commandButton value="#{messages['commons.exportSelection']}" type="button" rendered="#{backingBean.getBaseCrudApi() != null}" onclick="PF('exportSelectionDialog').show()"/>
                 <p:commandButton id="#{formId}buttonCsvExport" value="#{messages['commons.exportCsv']}" ajax="false" rendered="#{exportToCsv}">
                 	<l:dataExporter fileType="csv" source="datatable_#{resultsId}" fileName="#{fileName}" fileOptions="#{backingBean.csvOptions()}" />
                 </p:commandButton>
-				<c:if test="#{exportToXml}">
-					<p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
-						oncomplete="PF('exportParametersDialog').show()">
-						<f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
-						<f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
-						<f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
-					</p:commandButton>
-				</c:if>
+                <c:if test="#{exportToXml}">
+                    <p:commandButton id="#{formId}exportToXml" value="#{messages['export.exportToXml']}" update=":#{p:component('exportParametersDialog')}"
+                                     oncomplete="PF('exportParametersDialog').show()">
+                        <f:setPropertyActionListener target="#{entityExportImportBean.selectedExportTemplate}" value="#{null}" />
+                        <f:setPropertyActionListener target="#{entityExportImportBean.dataModelToExport}" value="#{dataModel}" />
+                        <f:setPropertyActionListener target="#{entityExportImportBean.selectedEntitiesToExport}" value="#{backingBean.selectedEntities}" />
+                    </p:commandButton>
+                </c:if>
+                <p:commandButton value="#{messages['commons.addToModule']}" update=":addModuleForm" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{addToModule and backingBean.canUserUpdateEntity()}" oncomplete="PF('addModuleDlg').show()">
+                </p:commandButton>
 
 			</h:panelGroup>
-
+			
+			<p:commandButton value="#{messages['commons.importCsv']}" rendered="#{importCsv and backingBean.canUserUpdateEntity()}" type="button" onclick="PF('csvDialog').show();" />
+            <p:commandButton value="#{messages['commons.importData']}" id="#{formId}buttonImport" type="button" onclick="PF('importDataDialog').show();" />
+                
             <p:dialog header="#{messages['commons.importCsv']}" id="#{formId}_strategyDlg" widgetVar="csvDialog" modal="true" closeOnEscape="true" >
                 <p:messages autoUpdate="true" />
                 <hftl:decorateFormField fieldId="#{formId}_strategy" label="#{messages['notification.strategyImportType']}" rendered="#{importStrategy}">
@@ -200,10 +206,77 @@
                 </hftl:decorateFormField>
                 <div class="clearLeft">
                     <p:fileUpload fileUploadListener="#{backingBean.handleFileUpload}" update=":#{formId} :datatable_#{resultsId}" rendered="#{importCsv}" multiple="true" mode="advanced" dragDropSupport="true"
-                        fileLimit="5" process=":#{formId}_strategy" />
+                                  fileLimit="5" process=":#{formId}_strategy" />
                 </div>
             </p:dialog>
-            
+            <p:dialog widgetVar="addModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+                <h:form id="addModuleForm">
+
+            		<p:growl id="moduleGrowl"/>
+
+                    <h:panelGroup layout="block" styleClass="search-panel">
+                        <p:outputPanel styleClass="search-panel-fields">
+                            <p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+                                <c:if test="#{not empty converter}">
+                                    <f:converter converterId="#{converter}" />
+                                </c:if>
+                            </p:inputText>
+                        </p:outputPanel>
+                        <h:panelGroup layout="block" styleClass="search-panel-actions">
+                            <p:commandButton id="buttonSearch" process="@this :addModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+                            <p:commandButton id="buttonClear" process="@this :addModuleForm" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.selectedMeveoModules}"
+                                 rowKey="#{e.id}" lazy="#{lazy}">
+                        <p:column id="multiSelectModule" selectionMode="multiple" width="4%" exportable="false" toggleable="false" />
+                        <p:ajax event="rowSelectCheckbox" />
+                        <p:ajax event="rowUnselectCheckbox" />
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{messages['BusinessEntity.code']}" />
+                            </f:facet>
+                            <h:outputText value="#{e['code']}" />
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{messages['BusinessEntity.description']}" />
+                            </f:facet>
+                            <h:outputText value="#{e['description']}" />
+                        </p:column>
+                        <f:facet name="footer">
+                            <p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@this :addModuleForm" partialSubmit="true"
+                                             partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form @form:moduleGrowl"
+                                             oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addModuleDlg').hide()"
+                                             action="#{backingBean.addManyToModule}">
+                                <p:resetInput target="@form" />
+                            </p:commandButton>
+                            <p:commandButton value="#{messages['commons.close']}" update="@this :datatable_#{resultsId}"
+                                             oncomplete="PF('addModuleDlg').hide()">
+                                <p:resetInput target="@form" />
+                            </p:commandButton>
+                        </f:facet>
+                    </p:dataTable>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="#{formId}_exportSelectionDialog" styleClass="form-dialog" widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true" rendered="#{backingBean.getBaseCrudApi() != null}">
+              	<hftl:decorateFormField fieldId="exportFormat" label="Format" layout = "block">
+                   <p:selectOneMenu id="exportFormat" name="exporFormat" value="#{backingBean.exportFormat}">
+                       <f:selectItems value="#{backingBean.exportFormats}"/>
+                       <p:ajax event="valueChange" update="exportFormat"/>
+                   </p:selectOneMenu>
+                 </hftl:decorateFormField>
+                 <div class="clearLeft">
+	                 <p:commandButton id="buttonSelectionExport" value="#{messages['action.export']}" ajax="false" onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+	                      <p:fileDownload id="exportFileDownload" value="#{backingBean.export()}" />
+	                  </p:commandButton>
+                  </div>
+            </p:dialog>
+
+            <p:remoteCommand name="closeExportDialog" oncomplete="PF('exportSelectionDialog').hide()" />
+
             <p:dialog header="Import data" id="#{formId}_importDataDialog" widgetVar="importDataDialog" modal="true" closeOnEscape="true">
 			     <hftl:decorateFormField fieldId="#{formId}_override" componentWidth = "100" >
                     <p:selectBooleanCheckbox immediate="true" id="#{formId}_override"
@@ -216,13 +289,13 @@
                 	fileUploadListener="#{backingBean.importData}" update=":#{formId} :datatable_#{resultsId}"/>
                 </div>
             </p:dialog>
-            
+
             <p:panel styleClass="buttons-set-data-table">
                 <ui:insert name="add-on-buttons" />
             </p:panel>
 
             <p:blockUI block="datatable_#{resultsId}" trigger="datatable_#{resultsId}">
-        		LOADING<br />
+                LOADING<br />
                 <p:graphicImage name="ajax-loader1.gif" library="img" />
             </p:blockUI>
 
@@ -230,7 +303,6 @@
                 <h:graphicImage library="img" name="ajax-loader1.gif" style="margin-right: 12px; vertical-align: middle;" />
                 <h:outputText value="#{messages['message.loading.data']}" style="white-space: nowrap;" />
             </p:panelGrid>
-
         </h:form>
 
         <c:if test="#{exportToXml}">
@@ -239,5 +311,3 @@
     </p:panel>
 
 </ui:composition>
-
-</html>

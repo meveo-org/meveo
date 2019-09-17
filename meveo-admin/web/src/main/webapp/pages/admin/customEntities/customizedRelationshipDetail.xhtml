@@ -35,7 +35,7 @@
         <h:panelGroup>
             <hftl:formPanel formId="crtForm"
                 label="#{messages['customizedRelationships.detail'].concat(customRelationshipTemplateBean.entity.code!=null?(' - '.concat(customRelationshipTemplateBean.entity.getCode())):'')}"
-                backingBean="#{customRelationshipTemplateBean}">
+                backingBean="#{customRelationshipTemplateBean}" showAddModuleButton="true">
                 <h:panelGrid columns = "3" width="60%">
                     <hftl:decorateFormField field ="code" fieldId="code" label="#{messages['BusinessEntity.code']}"  rendered="#{(customRelationshipTemplateBean.entity.code == null)}">
                         <p:inputText  id="code" field="code" value="#{customRelationshipTemplateBean.entity.code}" required="true" validateUnique="true" validatorMessage="#{messages['message.ontology.code.error']}" style="width: 180px">

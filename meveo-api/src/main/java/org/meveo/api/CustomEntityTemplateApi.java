@@ -475,7 +475,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		@SuppressWarnings("rawtypes")
 		Class entityClass = null;
 		// get all the class annotated with customFieldEntity
-		Set<Class<?>> cfClasses = ReflectionUtils.getClassesAnnotatedWith(CustomFieldEntity.class);
+		Set<Class<?>> cfClasses = ReflectionUtils.getClassesAnnotatedWith(CustomFieldEntity.class, "org.meveo.model");
 		for (Class<?> clazz : cfClasses) {
 			// check if appliesTo match, eg OFFER
 			if (appliesTo.equals(clazz.getAnnotation(CustomFieldEntity.class).cftCodePrefix())) {

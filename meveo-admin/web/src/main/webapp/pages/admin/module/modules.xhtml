@@ -17,13 +17,13 @@
             </h:form>
         <o:importFunctions type="org.meveo.commons.utils.ReflectionUtils" var="ref" />
 
-        <hftl:searchPanel backingBean="#{meveoModuleListBean}" label="#{messages['meveoModule.search']}">
+        <hftl:searchPanel backingBean="#{meveoModuleListBean}" label="#{messages['meveoModule.search']}" exportToJson="true">
             <hftl:searchField id="meveoModule" label="#{messages['BusinessEntity.code']}" field="code" />
             <hftl:searchField label="#{messages['BusinessEntity.description']}" field="description" />
             <hftl:searchField label="#{messages['meveoModule.license']}" field="license" />
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{meveoModuleListBean}">
+        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{meveoModuleListBean}" exportXlsxButton="false" exportToCsv="false" exportToJson="true" exportToXml="false">
             <hftl:column label="#{messages['BusinessEntity.code']}" field="code" useCustomIdParam="true"/>
             <hftl:column label="#{messages['BusinessEntity.description']}" field="description" />
             <p:column headerText="#{messages['meveoModule.logo']}">

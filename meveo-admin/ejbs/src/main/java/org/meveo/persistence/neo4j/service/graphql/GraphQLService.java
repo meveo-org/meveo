@@ -368,7 +368,7 @@ public class GraphQLService {
 
                             final String query = String.format(
                                     "@cypher(statement: \"MATCH (n:%s)-[rel:%s]->(this) RETURN rel\")",
-                                    endNode.getCode(),
+                                    startNode.getCode(),
                                     relationshipTemplate.getName()
                             );
 

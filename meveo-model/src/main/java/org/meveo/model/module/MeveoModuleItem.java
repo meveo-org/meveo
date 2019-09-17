@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -22,11 +24,20 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ExportIdentifier;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.3.0
+ */
 @Entity
 @ExportIdentifier({ "meveoModule.code", "appliesTo", "itemClass", "itemCode" })
 @Table(name = "meveo_module_item")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "meveo_module_item_seq"), })
+@NamedQueries({ //
+	@NamedQuery(name = "MeveoModuleItem.delete", query = "DELETE FROM MeveoModuleItem WHERE itemCode=:itemCode AND itemClass=:itemClass"), //
+	@NamedQuery(name = "MeveoModuleItem.synchronizeCftCreate", query = "SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass"), //
+	@NamedQuery(name = "MeveoModuleItem.synchronizeCftDelete", query = "DELETE FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass")
+})
 public class MeveoModuleItem extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
@@ -100,9 +111,18 @@ public class MeveoModuleItem extends BaseEntity {
     }
 
     public String getItemClassSimpleName() {
-        if (itemClass != null) {
-            return itemClass.substring(itemClass.lastIndexOf('.') + 1);
+        try {
+            final Entity annotation = Class.forName(itemClass).getAnnotation(Entity.class);
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(annotation.name())) {
+                return annotation.name();
+
+            } else if (itemClass != null) {
+                return itemClass.substring(itemClass.lastIndexOf('.') + 1);
+            }
+        } catch (ClassNotFoundException e) {
+            //NOOP
         }
+
         return null;
     }
 

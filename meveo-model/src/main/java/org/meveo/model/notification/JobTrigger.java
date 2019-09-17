@@ -15,7 +15,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.jobs.JobInstance;
 
 @Entity
-@ModuleItem
+@ModuleItem("JobTrigger")
 @Table(name="adm_notif_job")
 public class JobTrigger extends Notification {
 	

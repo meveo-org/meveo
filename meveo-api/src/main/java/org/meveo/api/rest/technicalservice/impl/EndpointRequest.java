@@ -44,18 +44,20 @@ public class EndpointRequest {
     public EndpointRequest(HttpServletRequest httpServletRequest, Endpoint endpoint) {
         this.httpServletRequest = httpServletRequest;
         
-        // Compute remainging path
-        remainingPath = httpServletRequest.getPathInfo();
-        remainingPath = remainingPath.replace("/" + endpoint.getCode() , "");
-    	for(EndpointPathParameter p : endpoint.getPathParameters()) {
-            final int slashIdx = remainingPath.indexOf("/");
-            if(remainingPath.substring(slashIdx + 1).contains("/")) {
-                final int secondSlashIdx = remainingPath.substring(slashIdx + 1).indexOf("/") + 1;
-                remainingPath = getRemainingPath().substring(secondSlashIdx);
-            }else{
-                remainingPath = remainingPath.substring(slashIdx);
+        // Compute remainging path if endpoint exists
+        if(endpoint != null) {
+            remainingPath = httpServletRequest.getPathInfo();
+            remainingPath = remainingPath.replace("/" + endpoint.getCode(), "");
+            for (EndpointPathParameter p : endpoint.getPathParameters()) {
+                final int slashIdx = remainingPath.indexOf("/");
+                if (remainingPath.substring(slashIdx + 1).contains("/")) {
+                    final int secondSlashIdx = remainingPath.substring(slashIdx + 1).indexOf("/") + 1;
+                    remainingPath = getRemainingPath().substring(secondSlashIdx);
+                } else {
+                    remainingPath = remainingPath.substring(slashIdx);
+                }
             }
-    	}
+        }
     }
     
     public String getRemainingPath() {

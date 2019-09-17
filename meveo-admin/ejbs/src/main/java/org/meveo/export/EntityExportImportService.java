@@ -16,11 +16,22 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -42,6 +53,7 @@ import javax.inject.Inject;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.NoResultException;
@@ -71,7 +83,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.meveo.api.MeveoApiErrorCodeEnum;
@@ -79,6 +90,8 @@ import org.meveo.api.dto.response.utilities.ImportExportResponseDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.commons.utils.EjbUtils;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.comparators.GenericComparator;
@@ -100,6 +113,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.PersistenceUtils;
 import org.primefaces.model.LazyDataModel;
@@ -167,6 +181,9 @@ public class EntityExportImportService implements Serializable {
     @Inject
     private JobCacheContainerProvider jobCacheContainerProvider;
 
+    @Inject
+    private MeveoInstanceService meveoInstanceService;
+
     private Map<Class<? extends IEntity>, String[]> exportIdMapping;
 
     private Map<String, Object[]> attributesToOmit;
@@ -217,10 +234,21 @@ public class EntityExportImportService implements Serializable {
         xstream.useAttributeFor(ExportTemplate.class, "name");
         xstream.useAttributeFor(ExportTemplate.class, "entityToExport");
         xstream.useAttributeFor(ExportTemplate.class, "canDeleteAfterExport");
+        xstream.addDefaultImplementation(ArrayList.class, Collection.class);
 
         xstream.setMode(XStream.NO_REFERENCES);
 
         List<ExportTemplate> templatesFromXml = (List<ExportTemplate>) xstream.fromXML(this.getClass().getClassLoader().getResourceAsStream("exportImportTemplates.xml"));
+
+        // Retrieve optional additional templates definition
+        final String additionalTemplatesPath = ParamBean.getInstance().getProperty("meveo.additional.templates", null);
+        if(additionalTemplatesPath != null){
+            final File additionalTemplates = new File(additionalTemplatesPath);
+            if(additionalTemplates.exists()){
+                templatesFromXml.addAll((List<ExportTemplate>) xstream.fromXML(additionalTemplates));
+            }
+        }
+
 
         for (ExportTemplate exportTemplate : templatesFromXml) {
             supplementExportTemplateWithAutomaticInfo(exportTemplate);
@@ -407,6 +435,8 @@ public class EntityExportImportService implements Serializable {
             parameters = new HashMap<>();
         }
 
+        loadAtributesToOmit();
+        loadExportImportTemplateDefinitions();
         ExportImportStatistics exportStats = new ExportImportStatistics();
 
         // When exporting to a remote meveo instance - always export to zip
@@ -549,7 +579,7 @@ public class EntityExportImportService implements Serializable {
      * @param exportStats Export statistics
      * @param writer Writer for serialized entity output
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void serializeEntities(ExportTemplate exportTemplate, Map<String, Object> parameters, DataModel<? extends IEntity> dataModelToExport,
@@ -642,6 +672,7 @@ public class EntityExportImportService implements Serializable {
                 xstream.registerConverter(new HibernatePersistentMapConverter(xstream.getMapper()));
                 xstream.registerConverter(new HibernatePersistentSortedMapConverter(xstream.getMapper()));
                 xstream.registerConverter(new HibernatePersistentSortedSetConverter(xstream.getMapper()));
+                xstream.addDefaultImplementation(ArrayList.class, Collection.class);
                 xstream.registerConverter(new IEntityClassConverter(xstream.getMapper(), xstream.getReflectionProvider(), true, null), XStream.PRIORITY_LOW);
 
                 xstream.processAnnotations(ScriptInstance.class);
@@ -778,6 +809,7 @@ public class EntityExportImportService implements Serializable {
             }
 
             XStream xstream = new XStream();
+            xstream.addDefaultImplementation(ArrayList.class, Collection.class);
             xstream.alias("exportInfo", ExportInfo.class);
             xstream.alias("exportTemplate", ExportTemplate.class);
             xstream.useAttributeFor(ExportTemplate.class, "name");
@@ -879,6 +911,7 @@ public class EntityExportImportService implements Serializable {
 
         xstream.registerConverter(entityExportIdentifierConverter, XStream.PRIORITY_NORMAL);
         xstream.registerConverter(iEntityClassConverter, XStream.PRIORITY_LOW);
+        xstream.addDefaultImplementation(ArrayList.class, Collection.class);
 
         ExportImportStatistics importStats = new ExportImportStatistics();
         int totalEntitiesCount = 0;
@@ -964,7 +997,7 @@ public class EntityExportImportService implements Serializable {
      * @param parentEntity Entity that entity to be saved was located in. Used to stop recursive relationship processing when handling not-managed fields. E.g. OfferTemplate >
      *        OfferServiceTemplate
      */
-    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private IEntity saveEntityToTarget(IEntity entityToSave, boolean lookupById, ExportImportStatistics importStats, boolean updateExistingOnly, Provider forceToProvider,
             IEntity parentEntity) {
 
@@ -993,15 +1026,8 @@ public class EntityExportImportService implements Serializable {
             saveNotManagedFields(entityToSave, lookupById, importStats, forceToProvider, parentEntity);
             return entityToSave;
         }
-        
-        TypeLiteral<PersistenceService<?>> type = new TypeLiteral<PersistenceService<?>>() {};
-        List<PersistenceService<?>> collect = CDI.current().select(type).stream().collect(Collectors.toList());
 
-        // Try to find the associated persistence service
-        Optional<PersistenceService<?>> persistenceService = collect
-                .stream()
-                .filter(service -> service.getEntityClass().equals(entityToSave.getClass()))
-                .findFirst();
+        Optional<PersistenceService<?>> persistenceService = EjbUtils.getPersistenceService(entityToSave);
 
         if (entityFound == null) {
             // Clear version field
@@ -1588,11 +1614,11 @@ public class EntityExportImportService implements Serializable {
         Map<String, Object[]> attributesToOmitLocal = new HashMap<>();
 
         Reflections reflections = new Reflections("org.meveo.model");
-        Set<Class<? extends IEntity>> classes = reflections.getSubTypesOf(IEntity.class);
+        Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Entity.class);
 
         for (Class clazz : classes) {
 
-            if (clazz.isInterface() || clazz.isAnnotation() || !IEntity.class.isAssignableFrom(clazz)) {
+            if (clazz.isInterface() || clazz.isAnnotation()) {
                 continue;
             }
 
@@ -1600,29 +1626,28 @@ public class EntityExportImportService implements Serializable {
             while (!Object.class.equals(cls) && cls != null) {
 
                 for (Field field : cls.getDeclaredFields()) {
-
+                	boolean omit = false;
+                	
                     if (field.isAnnotationPresent(Transient.class)) {
-                        attributesToOmitLocal.put(clazz.getName() + "." + field.getName(), new Object[] { clazz, field });
+                        omit = true;
 
                         // This is a workaround to BLOB import issue "blobs may not be accessed after serialization"//
                     } else if (field.isAnnotationPresent(Lob.class)) {
-                        attributesToOmitLocal.put(clazz.getName() + "." + field.getName(), new Object[] { clazz, field });
+                        omit = true;
+                        
+                    } else if (field.isAnnotationPresent(GeneratedValue.class)) {
+                        omit = true;
+                    }
 
-                    } else if (field.isAnnotationPresent(OneToMany.class)) {
-
-                        // Omit attribute only if backward relationship is set
-                        // boolean hasBackwardRelationship = checkIfClassContainsFieldOfType(field.getGenericType(), clazz);
-                        // if (hasBackwardRelationship) {
+                    if(omit){
                         attributesToOmitLocal.put(clazz.getName() + "." + field.getName(), new Object[] { clazz, field });
-                        // } else {
-                        // log.error("AKK field " + field.getName() + " of generic type " + field.getGenericType() + "will not be omitted from " + clazz.getSimpleName());
-                        // }
                     }
                 }
 
                 cls = cls.getSuperclass();
             }
         }
+
         attributesToOmit = attributesToOmitLocal;
     }
 
@@ -2268,7 +2293,7 @@ public class EntityExportImportService implements Serializable {
 
             log.debug("Uplading {} file to a remote meveo instance {}", filename, remoteInstance.getCode());
 
-            ResteasyClient client = new ResteasyClientBuilder().build();
+            ResteasyClient client = meveoInstanceService.getRestEasyClient();
             ResteasyWebTarget target = client.target(remoteInstance.getUrl() + (remoteInstance.getUrl().endsWith("/") ? "" : "/") + "api/rest/importExport/importData");
 
             BasicAuthentication basicAuthentication = new BasicAuthentication(remoteInstance.getAuthUsername(), remoteInstance.getAuthPassword());
@@ -2321,7 +2346,7 @@ public class EntityExportImportService implements Serializable {
 
         log.debug("Checking status of import in remote meveo instance {} with execution id {}", remoteInstance.getCode(), executionId);
 
-        ResteasyClient client = new ResteasyClientBuilder().build();
+        ResteasyClient client = meveoInstanceService.getRestEasyClient();
         ResteasyWebTarget target = client
             .target(remoteInstance.getUrl() + (remoteInstance.getUrl().endsWith("/") ? "" : "/") + "api/rest/importExport/checkImportDataResult?executionId=" + executionId);
 

@@ -1,7 +1,10 @@
 package org.meveo.api;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -26,6 +29,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.SampleValueHelper;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -52,7 +56,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
-
+    
     private String displayFormat;
 
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
@@ -78,7 +82,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
         	 missingParameters.add("relationshipName");
         }
-
+        
         } else if (postData.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
             for (CustomFieldMatrixColumnDto columnDto : postData.getMatrixColumns()) {
                 if (StringUtils.isBlank(columnDto.getCode())) {
@@ -124,6 +128,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
 
         CustomFieldTemplate cft = fromDTO(postData, appliesTo, null);
+        
+        validateSamples(cft);
         customFieldTemplateService.create(cft);
 
     }
@@ -186,6 +192,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
 
         cft = fromDTO(postData, appliesTo, cft);
+
+        validateSamples(cft);
 
         customFieldTemplateService.update(cft);
 
@@ -292,6 +300,14 @@ public class CustomFieldTemplateApi extends BaseApi {
         } else {
             update(postData, appliesTo);
         }
+    }
+    
+    public String getDisplayFormat() {
+        return displayFormat;
+    }
+
+    public void setDisplayFormat(String displayFormat) {
+        this.displayFormat = displayFormat;
     }
 
     protected CustomFieldTemplate fromDTO(CustomFieldTemplateDto dto, String appliesTo, CustomFieldTemplate cftToUpdate) throws InvalidParameterException {
@@ -447,6 +463,10 @@ public class CustomFieldTemplateApi extends BaseApi {
             cft.setDisplayFormat(dto.getDisplayFormat());
         }
 
+        if (dto.getSamples() != null) {
+            cft.setSamples(dto.getSamples());
+        }
+
         cft.setStorages(dto.getStorages());
         cft.setSummary(dto.isSummary());
 
@@ -468,11 +488,48 @@ public class CustomFieldTemplateApi extends BaseApi {
         return cftAppliesto;
     }
 
-    public String getDisplayFormat() {
-        return displayFormat;
-    }
+	private void validateSamples(CustomFieldTemplate template) {
+		
+		if(template.getSamples() == null || template.getSamples().isEmpty()) {
+			return;
+		}
 
-    public void setDisplayFormat(String displayFormat) {
-        this.displayFormat = displayFormat;
-    }
+		if (template.getFieldType() == CustomFieldTypeEnum.STRING) {
+			Map<Integer, String> validateSamples = SampleValueHelper.validateStringType(template.getSamples(), template.getStorageType());
+			if (!validateSamples.isEmpty()) {
+				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+
+		if (template.getFieldType() == CustomFieldTypeEnum.LONG) {
+			Map<Integer, String> validateSamples = SampleValueHelper.validateLongType(template.getSamples(), template.getStorageType());
+			if (!validateSamples.isEmpty()) {
+				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+
+		if (template.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+			Map<Integer, String> validateSamples = SampleValueHelper.validateDoubleType(template.getSamples(), template.getStorageType());
+			if (!validateSamples.isEmpty()) {
+				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+
+		if (template.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
+			Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(template.getEntityClazzCetCode()));
+			Map<Integer, String> validateSamples = SampleValueHelper.validateChildEntityType(customFieldTemplates, template.getSamples(), template.getStorageType());
+			if (!validateSamples.isEmpty()) {
+				for (Map.Entry<Integer, String> validateSample : validateSamples.entrySet()) {
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+
+	}
 }

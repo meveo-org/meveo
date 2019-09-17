@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "CustomEntityCategory")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CustomEntityCategoryDto extends BaseDto {
+public class CustomEntityCategoryDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6633504145323452803L;

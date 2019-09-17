@@ -24,7 +24,7 @@ public class CustomEntityCategoryRslmpl extends BaseRs implements CustomEntityCa
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityCategoryApi.createOrUpdateEntityCategory(dto);
+            customEntityCategoryApi.createOrUpdate(dto);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -33,11 +33,11 @@ public class CustomEntityCategoryRslmpl extends BaseRs implements CustomEntityCa
     }
 
     @Override
-    public ActionStatus removeEntityCategory(String customEntityCategoryCode) {
+    public ActionStatus removeEntityCategory(String customEntityCategoryCode, boolean deleteRelatedTemplates) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityCategoryApi.removeCustomEntityCategory(customEntityCategoryCode);
+            customEntityCategoryApi.removeCustomEntityCategory(customEntityCategoryCode, deleteRelatedTemplates);
         } catch (Exception e) {
             processException(e, result);
         }

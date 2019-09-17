@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2018-2019 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -22,14 +22,11 @@ package org.meveo.service.custom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -45,9 +42,13 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+/**
+ * Class used for persisting CustomRelationshipTemplate entities
+ * @author Clément Bareth
+ * @lastModifiedVersion 6.3.0
+ */
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
 
@@ -62,9 +63,6 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @Resource(lookup = "java:jboss/infinispan/cache/meveo/unique-crt")
     private Cache<String, Boolean> uniqueRelations;
@@ -139,17 +137,20 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
 
     @Override
-    public void remove(Long id) throws BusinessException {
-        CustomRelationshipTemplate crt = findById(id);
+    public void remove(CustomRelationshipTemplate crt) throws BusinessException {
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
+
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
+
         if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(crt));
         }
-        super.remove(id);
+
         customFieldsCache.removeCustomRelationshipTemplate(crt);
+
+        super.remove(crt);
     }
 
     /**
@@ -187,7 +188,6 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
      * Find entity by code
      *
      * @param code Code to match
-     * @return
      */
     @Override
     public CustomRelationshipTemplate findByCode(String code){

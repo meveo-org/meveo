@@ -1,3 +1,20 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is not suitable for any direct or indirect application in MILITARY industry
+ * See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.model.customEntities;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -8,10 +25,14 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * @author Clément Bareth
+ * @lastModifiedVersion 6.3.0
+ */
 @Entity
 @ObservableEntity
 @Cacheable
-@ModuleItem
+@ModuleItem("CustomEntityInstance")
 @CustomFieldEntity(cftCodePrefix = "CE", cftCodeFields = "cetCode")
 @ExportIdentifier({ "code", "cetCode"})
 @Table(name = "cust_cei", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "cet_code"}))
@@ -20,7 +41,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
     private static final long serialVersionUID = 8281478284763353310L;
 
-    @Column(name = "cet_code", length = 255, nullable = false)
+    @Column(name = "cet_code", nullable = false)
     @Size(max = 255)
     @NotNull
     public String cetCode;
@@ -68,9 +89,6 @@ public class CustomEntityInstance extends BusinessCFEntity {
             return false;
         } else if (cetCode == null && other.getCetCode() != null) {
             return false;
-        } else if (cetCode != null && !cetCode.equals(other.getCetCode())) {
-            return false;
-        }
-        return true;
+        } else return cetCode == null || cetCode.equals(other.getCetCode());
     }
 }

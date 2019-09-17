@@ -22,12 +22,12 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
-import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
@@ -147,6 +147,22 @@ public class Neo4jDao {
     		dropIndex.toString(),
     		e -> LOGGER.debug("Index on {}({}) does not exists", label, property)
 		);
+    }
+
+    /**
+     * Remove all data that has the given label
+     *
+     * @param neo4jConfiguration Code of the Neo4J instance
+     * @param label              Label to remove
+     */
+    public void removeByLabel(String neo4jConfiguration, String label) {
+        String query = String.format("MATCH (n:%s) DETACH DELETE n", label);
+
+        cypherHelper.update(
+                neo4jConfiguration,
+                query,
+                e -> LOGGER.debug("Cannot delete data with label {}", label)
+        );
     }
 
     public void removeNodeByUUID(String neo4jconfiguration, String label, String uuid){
@@ -404,6 +420,8 @@ public class Neo4jDao {
                     .map(Value::asMap)
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
+        } catch (ClientException e) {
+           throw e;
         } catch (Exception e) {
             transaction.failure();
             LOGGER.error("Error while executing a GraphQL query", e);

@@ -30,7 +30,7 @@ import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.security.Role;
 
 @Entity
-@ModuleItem
+@ModuleItem("ScriptInstance")
 @Cacheable
 @Table(name = "meveo_script_instance")
 @GenericGenerator(

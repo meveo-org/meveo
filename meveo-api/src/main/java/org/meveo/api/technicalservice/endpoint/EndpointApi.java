@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -31,21 +32,32 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.slf4j.Logger;
 
 /**
  * API for managing technical services endpoints
@@ -54,7 +66,7 @@ import org.meveo.service.technicalservice.endpoint.EndpointService;
  * @since 01.02.2019
  */
 @Stateless
-public class EndpointApi {
+public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto>{
 
     @EJB
     private EndpointService endpointService;
@@ -62,11 +74,18 @@ public class EndpointApi {
     @Inject
     private ConcreteFunctionService concreteFunctionService;
 
-    public EndpointApi(){
+    @Inject
+    private Logger logger;
 
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
+
+    public EndpointApi(){
+		super(Endpoint.class, EndpointDto.class);
     }
 
     public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
+		super(Endpoint.class, EndpointDto.class);
         this.endpointService = endpointService;
         this.concreteFunctionService = concreteFunctionService;
     }
@@ -131,7 +150,7 @@ public class EndpointApi {
 
         final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
         final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
-        
+
         if(executionEngine instanceof EndpointScript) {
         	// Explicitly pass the request and response information to the script
         	((EndpointScript) executionEngine).setEndpointRequest(execution.getRequest());
@@ -173,6 +192,7 @@ public class EndpointApi {
      * @return the created Endpoint
      */
     public Endpoint create(EndpointDto endpointDto) throws BusinessException {
+        validateCompositeRoles(endpointDto);
         Endpoint endpoint = fromDto(endpointDto);
         endpointService.create(endpoint);
         return endpoint;
@@ -200,10 +220,13 @@ public class EndpointApi {
      * @param code Code of the endpoint to remove
      * @throws BusinessException if endpoint does not exists
      */
-    public void delete(String code) throws BusinessException {
+    public void delete(String code) throws BusinessException, EntityDoesNotExistsException {
 
         // Retrieve existing entity
         Endpoint endpoint = endpointService.findByCode(code);
+        if(endpoint == null){
+            throw new EntityDoesNotExistsException("Endpoint with code " + code + " does not exists");
+        }
 
         endpointService.remove(endpoint);
 
@@ -245,7 +268,7 @@ public class EndpointApi {
     }
 
     private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-
+        validateCompositeRoles(endpointDto);
     	Endpoint updatedEndpoint = new Endpoint();
     	updatedEndpoint.setId(endpoint.getId());
     	updatedEndpoint.setCode(endpointDto.getCode());
@@ -263,11 +286,13 @@ public class EndpointApi {
         updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
         updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
         updatedEndpoint.setContentType(endpointDto.getContentType());
+        updatedEndpoint.setRoles(endpointDto.getRoles());
 
         endpointService.update(updatedEndpoint);
     }
 
-    private EndpointDto toDto(Endpoint endpoint) {
+    @Override
+    public EndpointDto toDto(Endpoint endpoint) {
         EndpointDto endpointDto = new EndpointDto();
         endpointDto.setCode(endpoint.getCode());
         endpointDto.setMethod(endpoint.getMethod());
@@ -291,10 +316,12 @@ public class EndpointApi {
         }
         endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
         endpointDto.setContentType(endpoint.getContentType());
+        endpointDto.setRoles(endpoint.getRoles());
         return endpointDto;
     }
 
-    private Endpoint fromDto(EndpointDto endpointDto){
+    @Override
+    public Endpoint fromDto(EndpointDto endpointDto){
 
         Endpoint endpoint = new Endpoint();
         
@@ -330,6 +357,8 @@ public class EndpointApi {
         
         endpoint.setContentType(endpointDto.getContentType());
         
+        endpoint.setRoles(endpointDto.getRoles());
+        
         return endpoint;
     }
 
@@ -364,4 +393,60 @@ public class EndpointApi {
         return endpointParameter;
     }
 
+    public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
+        KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
+        if (CollectionUtils.isNotEmpty(roles)) {
+            for (String selectedRole : endpointDto.getRoles()) {
+                if (!roles.contains(selectedRole)) {
+                    throw new IllegalArgumentException("The role does not exists");
+                }
+            }
+        }
+        return roles;
+    }
+
+    public boolean isUserAuthorized(Endpoint endpoint){
+        try {
+            Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
+            if(!currentUserRoles.contains(endpointService.getEndpointPermission(endpoint))) {
+                // If does not directly contained, for each role of meveo-web, check the role mappings for endpoints
+                KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+                currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
+                for (String userRole : currentUserRoles) {
+                    if(endpoint.getRoles().contains(userRole)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return true;
+
+        }catch (Exception e){
+            logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+            return false;
+        }
+    }
+
+	@Override
+	public EndpointDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		return findByCode(code);
+	}
+
+	@Override
+	public Endpoint createOrUpdate(EndpointDto dtoData) throws MeveoApiException, BusinessException {
+		return createOrReplace(dtoData);
+	}
+
+	@Override
+	public IPersistenceService<Endpoint> getPersistenceService() {
+		return endpointService;
+	}
+
+	@Override
+	public boolean exists(EndpointDto dto) {
+		return findByCode(dto.getCode()) != null;
+	}
 }

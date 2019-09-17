@@ -1,25 +1,20 @@
 package org.meveo.api.dto.module;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.api.dto.*;
-import org.meveo.api.dto.catalog.BusinessProductModelDto;
-import org.meveo.api.dto.catalog.BusinessServiceModelDto;
-import org.meveo.api.dto.dwh.BarChartDto;
-import org.meveo.api.dto.dwh.LineChartDto;
-import org.meveo.api.dto.dwh.MeasurableQuantityDto;
-import org.meveo.api.dto.dwh.PieChartDto;
-import org.meveo.api.dto.job.JobInstanceDto;
-import org.meveo.api.dto.job.TimerEntityDto;
-import org.meveo.api.dto.notification.EmailNotificationDto;
-import org.meveo.api.dto.notification.JobTriggerDto;
-import org.meveo.api.dto.notification.NotificationDto;
-import org.meveo.api.dto.notification.WebHookDto;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.ModuleLicenseEnum;
 
-import javax.xml.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * The Class MeveoModuleDto.
@@ -28,6 +23,7 @@ import java.util.List;
  */
 @XmlRootElement(name = "Module")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MeveoModuleDto extends BaseDataModelDto {
 
     /** The Constant serialVersionUID. */
@@ -47,27 +43,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
     private ScriptInstanceDto script;
 
     /** The module items. */
-    @XmlElementWrapper(name = "moduleItems")
-	@XmlElements({ @XmlElement(name = "customEntityTemplate", type = CustomEntityTemplateDto.class),
-			@XmlElement(name = "customFieldTemplate", type = CustomFieldTemplateDto.class),
-			@XmlElement(name = "filter", type = FilterDto.class),
-			@XmlElement(name = "jobInstance", type = JobInstanceDto.class),
-			@XmlElement(name = "script", type = ScriptInstanceDto.class),
-			@XmlElement(name = "notification", type = NotificationDto.class),
-			@XmlElement(name = "timerEntity", type = TimerEntityDto.class),
-			@XmlElement(name = "emailNotif", type = EmailNotificationDto.class),
-			@XmlElement(name = "jobTrigger", type = JobTriggerDto.class),
-			@XmlElement(name = "webhookNotif", type = WebHookDto.class),
-			@XmlElement(name = "businessServiceModel", type = BusinessServiceModelDto.class),
-			@XmlElement(name = "businessProductModel", type = BusinessProductModelDto.class),
-			@XmlElement(name = "subModule", type = MeveoModuleDto.class),
-			@XmlElement(name = "measurableQuantity", type = MeasurableQuantityDto.class),
-			@XmlElement(name = "pieChart", type = PieChartDto.class),
-			@XmlElement(name = "lineChart", type = LineChartDto.class),
-			@XmlElement(name = "barChart", type = BarChartDto.class),
-            @XmlElement(name = "customEntityInstance", type = CustomEntityInstanceDto.class),
-            })
-    private List<BaseEntityDto> moduleItems;
+    private List<MeveoModuleItemDto> moduleItems;
 
     /**
      * Instantiates a new meveo module dto.
@@ -84,7 +60,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
         super(meveoModule);
         this.license = meveoModule.getLicense();
         this.logoPicture = meveoModule.getLogoPicture();
-        this.moduleItems = new ArrayList<BaseEntityDto>();
+        this.moduleItems = new ArrayList<>();
         if (meveoModule.getScript() != null) {
             this.setScript(new ScriptInstanceDto(meveoModule.getScript()));
         }
@@ -149,7 +125,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
      *
      * @return the module items
      */
-    public List<BaseEntityDto> getModuleItems() {
+    public List<MeveoModuleItemDto> getModuleItems() {
         return moduleItems;
     }
 
@@ -158,7 +134,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
      *
      * @param moduleItems the new module items
      */
-    public void setModuleItems(List<BaseEntityDto> moduleItems) {
+    public void setModuleItems(List<MeveoModuleItemDto> moduleItems) {
         this.moduleItems = moduleItems;
     }
 
@@ -168,8 +144,9 @@ public class MeveoModuleDto extends BaseDataModelDto {
      * @param item the item
      */
     public void addModuleItem(BaseEntityDto item) {
-        if (!moduleItems.contains(item)) {
-            moduleItems.add(item);
+    	MeveoModuleItemDto meveoModuleItemDto = new MeveoModuleItemDto(item.getClass().getName(), item);
+        if (!moduleItems.contains(meveoModuleItemDto)) {
+            moduleItems.add(meveoModuleItemDto);
         }
     }
 

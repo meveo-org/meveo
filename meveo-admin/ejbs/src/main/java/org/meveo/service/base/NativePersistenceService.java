@@ -177,9 +177,11 @@ public class NativePersistenceService extends BaseService {
 
             StringBuilder selectQuery = new StringBuilder("SELECT ");
 
-            if(selectFields == null || selectFields.isEmpty()){
+            if(selectFields == null){
                 selectQuery.append("*");
-            }else if(!selectFields.isEmpty()){
+            } else if(selectFields.isEmpty()) {
+                selectQuery.append("uuid");
+            } else {
                 for(String field : selectFields){
                     selectQuery.append(field).append(", ");
                 }

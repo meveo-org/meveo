@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -52,7 +53,7 @@ import org.meveo.model.ModuleItem;
  * @lastModifiedVersion 5.1
  */
 @Entity
-@ModuleItem
+@ModuleItem("JobInstance")
 @CustomFieldEntity(cftCodePrefix = "JOB", cftCodeFields = "jobTemplate")
 @ExportIdentifier({ "code" })
 @Table(name = "meveo_job_instance", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))

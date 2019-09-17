@@ -26,9 +26,12 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.IEntity;
+import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.job.JobInstanceService;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -41,8 +44,13 @@ import java.util.*;
 public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
 
+    public static final String FUNCTION_TEST_JOB = "FunctionTestJob";
+
     @Inject
     private ClusterEventPublisher clusterEventPublisher;
+
+    @Inject
+    private JobInstanceService jobInstanceService;
 
     private Map<CacheKeyStr, List<String>> allLogs = new HashMap<>();
 
@@ -133,6 +141,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     @Override
     public void remove(T executable) throws BusinessException {
+        // First remove test jobs
+        final List<JobInstance> jobsToRemove = jobInstanceService.findJobsByTypeAndParameters(FUNCTION_TEST_JOB, executable.getCode(), JobCategoryEnum.TEST);
+        for(JobInstance jobToRemove : jobsToRemove){
+            jobInstanceService.remove(jobToRemove);
+        }
+
         super.remove(executable);
         clusterEventPublisher.publishEvent(executable, CrudActionEnum.remove);
     }

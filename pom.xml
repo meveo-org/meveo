@@ -4,7 +4,7 @@
     <groupId>org.meveo</groupId>
     <artifactId>meveo</artifactId>
     <packaging>pom</packaging>
-    <version>6.2.2</version>
+    <version>6.3.0</version>
     <name>Meveo Parent Project</name>
     <properties>
         <env>dev</env>
@@ -17,7 +17,7 @@
 
     <scm>
         <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-        <tag>6.2.2</tag>
+        <tag>0.0.12</tag>
     </scm>
 
     <modules>
@@ -363,11 +363,6 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-xml</artifactId>
-                <version>2.7.4</version>
-            </dependency>
-            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
@@ -451,6 +446,9 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.1</version>
                     <configuration>
+                        <compilerArgs>
+                            <arg>-Xlint:unchecked</arg>
+                        </compilerArgs>
                         <source>1.8</source>
                         <target>1.8</target>
                         <useIncrementalCompilation>false</useIncrementalCompilation>
