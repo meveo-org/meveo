@@ -12,7 +12,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.service.base.BusinessService;
 
 /**
- * Persistence layer for {@link Repository.}
+ * Persistence layer for {@link Repository}
  * 
  * @author Edward P. Legaspi
  */

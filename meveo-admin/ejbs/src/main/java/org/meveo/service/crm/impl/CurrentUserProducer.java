@@ -22,9 +22,6 @@ public class CurrentUserProducer {
     @Inject
     EntityManagerProvider entityManagerProvider;
 
-    @Inject
-    Logger log;
-
     /**
      * produce a current user
      * 
@@ -37,8 +34,7 @@ public class CurrentUserProducer {
     public MeveoUser getCurrentUser() {
         String providerCode = currentUserProvider.getCurrentUserProviderCode();
         EntityManager em = entityManagerProvider.getEntityManager(providerCode);
-        MeveoUser meveoUser = currentUserProvider.getCurrentUser(providerCode, em);
 
-        return meveoUser;
+        return currentUserProvider.getCurrentUser(providerCode, em);
     }
 }

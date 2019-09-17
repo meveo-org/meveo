@@ -5,4 +5,40 @@
 
 
 
+    <changeSet id="GitRepository" author="Clément">
+        <createTable tableName="git_repository">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="version" type="INT4" />
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="disabled" type="INT4"/>
+            <column name="updated" type="datetime" />
+            <column name="creator" type="varchar(100)" />
+            <column name="updater" type="varchar(100)" />
+            <column name="description" type="varchar(255)" />
+            <column name="code" type="varchar(255)" />
+            <column name="reading_roles" type="text" />
+            <column name="writing_roles" type="text" />
+            <column name="remote_origin" type="varchar(255)" />
+            <column name="remote_username" type="varchar(255)" />
+            <column name="remote_password" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    <changeSet id="GitRepository_Sequence" author="Clément Bareth">
+        <createSequence sequenceName="git_storage_repository_seq" />
+    </changeSet>
+    <changeSet id="GitRepository_meveo_repository" author="Clément Bareth">
+        <addColumn tableName="git_repository">
+            <column name="meveo_repository" defaultValue="0" type="${type.boolean}"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="GitRepository_unique_code" author="Clément Bareth">
+        <addUniqueConstraint tableName="git_repository" columnNames="code"/>
+    </changeSet>
+    <changeSet id="GitRepository_pk" author="Clément Bareth">
+        <addPrimaryKey tableName="git_repository" columnNames="id"/>
+    </changeSet>
 </databaseChangeLog>

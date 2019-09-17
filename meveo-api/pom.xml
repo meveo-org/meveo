@@ -11,6 +11,11 @@
     <name>Meveo API</name>
     <dependencies>
         <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit.http.server</artifactId>
+            <version>5.4.3.201909031940-r</version>
+        </dependency>
+        <dependency>
             <groupId>org.meveo</groupId>
             <artifactId>meveo-admin-ejbs</artifactId>
         </dependency>

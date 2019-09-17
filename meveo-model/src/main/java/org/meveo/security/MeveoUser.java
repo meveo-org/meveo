@@ -44,6 +44,8 @@ public abstract class MeveoUser implements Serializable {
      */
     protected boolean forcedAuthentication;
 
+    protected String mail;
+
     /**
      * Roles/permissions held by a user. Contains both role, composite role child role and permission names
      */
@@ -52,6 +54,8 @@ public abstract class MeveoUser implements Serializable {
     protected String locale;
 
     protected int authTime;
+
+    protected String token;
 
     public MeveoUser() {
     }
@@ -153,6 +157,14 @@ public abstract class MeveoUser implements Serializable {
         this.fullName = fullName;
     }
 
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
+
     /**
      * Return unproxied instance of MeveoUser - preserving username and provider code only
      * 
@@ -175,5 +187,17 @@ public abstract class MeveoUser implements Serializable {
         return new MeveoUser(userName, providerCode) {
             private static final long serialVersionUID = 1864122036421892838L;
         };
+    }
+
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

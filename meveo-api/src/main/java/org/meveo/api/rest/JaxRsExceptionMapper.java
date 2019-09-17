@@ -13,10 +13,12 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.api.validation.Validation;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
+import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,12 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             return toResponse(((EJBException) e).getCausedByException());
 
         } else if(e instanceof ExistsRelatedEntityException) {
+            return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
+
+        } else if(e instanceof UserNotAuthorizedException) {
+            return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
+
+        } else if(e instanceof EntityAlreadyExistsException || e instanceof org.meveo.api.exception.EntityAlreadyExistsException) {
             return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
 
         }
