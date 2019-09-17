@@ -16,8 +16,20 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -38,8 +50,20 @@ import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.util.TypeLiteral;
 import javax.faces.model.DataModel;
 import javax.inject.Inject;
-import javax.net.ssl.SSLContext;
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Query;
+import javax.persistence.Transient;
+import javax.persistence.TypedQuery;
+import javax.persistence.Version;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -56,12 +80,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.meveo.api.MeveoApiErrorCodeEnum;
@@ -558,7 +579,7 @@ public class EntityExportImportService implements Serializable {
      * @param exportStats Export statistics
      * @param writer Writer for serialized entity output
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void serializeEntities(ExportTemplate exportTemplate, Map<String, Object> parameters, DataModel<? extends IEntity> dataModelToExport,
@@ -976,7 +997,7 @@ public class EntityExportImportService implements Serializable {
      * @param parentEntity Entity that entity to be saved was located in. Used to stop recursive relationship processing when handling not-managed fields. E.g. OfferTemplate >
      *        OfferServiceTemplate
      */
-    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private IEntity saveEntityToTarget(IEntity entityToSave, boolean lookupById, ExportImportStatistics importStats, boolean updateExistingOnly, Provider forceToProvider,
             IEntity parentEntity) {
 
@@ -1604,15 +1625,16 @@ public class EntityExportImportService implements Serializable {
             Class cls = clazz;
             while (!Object.class.equals(cls) && cls != null) {
 
-                boolean omit = false;
-
                 for (Field field : cls.getDeclaredFields()) {
+                	boolean omit = false;
+                	
                     if (field.isAnnotationPresent(Transient.class)) {
                         omit = true;
 
                         // This is a workaround to BLOB import issue "blobs may not be accessed after serialization"//
                     } else if (field.isAnnotationPresent(Lob.class)) {
                         omit = true;
+                        
                     } else if (field.isAnnotationPresent(GeneratedValue.class)) {
                         omit = true;
                     }

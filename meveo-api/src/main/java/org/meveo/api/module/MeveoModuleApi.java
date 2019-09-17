@@ -17,9 +17,6 @@
  */
 package org.meveo.api.module;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,11 +30,6 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
