@@ -18,6 +18,7 @@ package org.meveo.service.git;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -25,7 +26,10 @@ import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
 
 import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +51,26 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Inject
     @CurrentUser
     private MeveoUser currentUser;
+
+    /**
+     * Initialize the Meveo repository if not initialized
+     *
+     * @return the Meveo repository instance
+     */
+    @Produces
+    @MeveoRepository
+    @ApplicationScoped
+    @Named("meveoRepository")
+    public GitRepository getMeveoRepository() throws BusinessException {
+
+        try {
+            gitClient.create(GitHelper.MEVEO_DIR);
+        } catch (EntityAlreadyExistsException e) {
+            //NOOP
+        }
+
+        return GitHelper.MEVEO_DIR;
+    }
 
     @Override
     public GitRepository findByCode(String code) {
