@@ -159,10 +159,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
     @Removed
     protected Event<BaseEntity> entityRemovedEventProducer;
     
-    @Inject
-    @Removed
-    protected Event<BusinessEntity> moduleItemRemoveEventProducer;
-
     @EJB
     private CustomFieldInstanceService customFieldInstanceService;
 
@@ -335,12 +331,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         entity = findById((Long) entity.getId());
         if (entity != null) {
             getEntityManager().remove(entity);
-            if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+
+            if (entity instanceof BaseEntity && (entity.getClass().isAnnotationPresent(ObservableEntity.class) || entity.getClass().isAnnotationPresent(ModuleItem.class))) {
                 entityRemovedEventProducer.fire((BaseEntity) entity);
             }
-			if (entity instanceof BusinessEntity && entity.getClass().isAnnotationPresent(ModuleItem.class)) {
-				moduleItemRemoveEventProducer.fire((BusinessEntity) entity);
-			}
+
             // Remove entity from Elastic Search
             if (BusinessEntity.class.isAssignableFrom(entity.getClass())) {
                 elasticClient.remove((BusinessEntity) entity);
