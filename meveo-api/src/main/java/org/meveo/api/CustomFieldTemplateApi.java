@@ -141,7 +141,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             missingParameters.add("appliesTo");
         }
         
-        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages() != null && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
        	 	missingParameters.add("relationshipName");
         }
 
