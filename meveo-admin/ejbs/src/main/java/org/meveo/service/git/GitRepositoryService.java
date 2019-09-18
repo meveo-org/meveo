@@ -61,12 +61,14 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @MeveoRepository
     @ApplicationScoped
     @Named("meveoRepository")
-    public GitRepository getMeveoRepository() throws BusinessException {
+    public GitRepository getMeveoRepository() {
 
         try {
             gitClient.create(GitHelper.MEVEO_DIR);
         } catch (EntityAlreadyExistsException e) {
             //NOOP
+        } catch (BusinessException e) {
+            log.error("Cannot retrieve Meveo directory", e);
         }
 
         return GitHelper.MEVEO_DIR;

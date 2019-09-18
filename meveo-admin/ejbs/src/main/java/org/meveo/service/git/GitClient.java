@@ -158,12 +158,28 @@ public class GitClient {
 
                 commitedEvent.fire(gitRepository);
 
-                add.call();
+                final Status status = git.status().call();
 
-                git.commit().setMessage(message)
-                        .setAuthor(currentUser.getUserName(), currentUser.getMail())
-                        .setCommitter(currentUser.getUserName(), currentUser.getMail())
-                        .call();
+                final RmCommand rm = git.rm();
+                boolean doRm = false;
+
+                for(String missing : status.getMissing()) {
+                    if(patterns.contains(missing)){
+                        rm.addFilepattern(missing);
+                        doRm = true;
+                    }
+                }
+
+                if(doRm){
+                    rm.call();
+                }
+
+                if(status.hasUncommittedChanges()) {
+                    git.commit().setMessage(message)
+                            .setAuthor(currentUser.getUserName(), currentUser.getMail())
+                            .setCommitter(currentUser.getUserName(), currentUser.getMail())
+                            .call();
+                }
 
             } else {
                 throw new IllegalArgumentException("Cannot commit repository " + gitRepository.getCode() + " : no staged files");

@@ -68,7 +68,14 @@ public class GitHelper {
         // Obtain relative path of file
         String repositoryBasePath = repositoryDir.getAbsolutePath();
         String filePath = file.getAbsolutePath();
-        return filePath.replace(repositoryBasePath, "");
+        final String relativePath = filePath.replace(repositoryBasePath, "")
+                .replaceAll("\\\\", "/");
+
+        if(relativePath.startsWith("/")) {
+            return relativePath.substring(1);
+        }
+
+        return relativePath;
     }
 
     public static boolean hasReadRole(MeveoUser user, GitRepository repository) {
