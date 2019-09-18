@@ -35,6 +35,22 @@ public class GitHelper {
 
     private final static String GIT_DIR = "/git";
 
+    protected final static GitRepository MEVEO_DIR;
+
+    static {
+        final ParamBean paramBean = ParamBean.getInstance();
+        final String remoteUrl = paramBean.getProperty("meveo.git.directory.remote.url", null);
+        final String remoteUsername = paramBean.getProperty("meveo.git.directory.remote.username", null);
+        final String remotePassword = paramBean.getProperty("meveo.git.directory.remote.password", null);
+
+        MEVEO_DIR = new GitRepository();
+        MEVEO_DIR.setCode("Meveo");
+        MEVEO_DIR.setRemoteOrigin(remoteUrl);
+        MEVEO_DIR.setDefaultRemoteUsername(remoteUsername);
+        MEVEO_DIR.setDefaultRemotePassword(remotePassword);
+
+    }
+
     /**
      * @param currentUser Logged user
      * @return the git directory relative to the file explorer directory for the user's provider
