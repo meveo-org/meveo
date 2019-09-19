@@ -21,12 +21,22 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
@@ -39,7 +49,9 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +68,7 @@ public class GitClient {
 
     @Inject
     @Commited
-    private Event<GitRepository> commitedEvent;
+    private Event<CommitEvent> commitedEvent;
 
     @Inject
     @Created
@@ -156,29 +168,37 @@ public class GitClient {
             if (CollectionUtils.isNotEmpty(patterns)) {
                 patterns.forEach(add::addFilepattern);
 
-                commitedEvent.fire(gitRepository);
 
                 final Status status = git.status().call();
 
                 final RmCommand rm = git.rm();
                 boolean doRm = false;
 
-                for(String missing : status.getMissing()) {
-                    if(patterns.contains(missing)){
+                for (String missing : status.getMissing()) {
+                    if (patterns.contains(missing)) {
                         rm.addFilepattern(missing);
                         doRm = true;
                     }
                 }
 
-                if(doRm){
+                if (doRm) {
                     rm.call();
                 }
 
-                if(status.hasUncommittedChanges()) {
+                if (status.hasUncommittedChanges()) {
                     git.commit().setMessage(message)
                             .setAuthor(currentUser.getUserName(), currentUser.getMail())
                             .setCommitter(currentUser.getUserName(), currentUser.getMail())
                             .call();
+
+                    Set<String> modifiedFiles = new HashSet<>();
+                    modifiedFiles.addAll(status.getAdded());
+                    modifiedFiles.addAll(status.getChanged());
+                    modifiedFiles.addAll(status.getModified());
+                    modifiedFiles.addAll(status.getRemoved());
+
+                    commitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+
                 }
 
             } else {
@@ -476,6 +496,91 @@ public class GitClient {
             throw new BusinessException("Cannot list branches of repository " + gitRepository.getCode(), e);
         }
 
+    }
+
+    /**
+     * Return the head commit of a repository
+     *
+     * @param gitRepository {@link GitRepository} to retrieve head commit from
+     * @return the head commit
+     * @throws BusinessException if we cannot read the repositories branches
+     */
+    public RevCommit getHeadCommit(GitRepository gitRepository) throws BusinessException {
+        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+
+        try (Git git = Git.open(repositoryDir)) {
+            try (RevWalk rw = new RevWalk(git.getRepository())) {
+                ObjectId head = git.getRepository().resolve(Constants.HEAD);
+                return rw.parseCommit(head);
+            }
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+        }
+    }
+
+    /**
+     * Build the list of files modified in a given commit
+     *
+     * @param gitRepository Repository holding the commit
+     * @param commit        The commit to analyze
+     * @return the list of files modified
+     */
+    public Set<String> getModifiedFiles(GitRepository gitRepository, RevCommit commit) throws BusinessException {
+        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        Set<String> modifiedFiles = new HashSet<>();
+
+        try (Git git = Git.open(repositoryDir)) {
+            Repository repository = git.getRepository();
+            RevWalk rw = new RevWalk(repository);
+            RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
+            DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
+            df.setRepository(repository);
+            df.setDiffComparator(RawTextComparator.DEFAULT);
+            df.setDetectRenames(true);
+            List<DiffEntry> diffs = df.scan(parent.getTree(), commit.getTree());
+            for (DiffEntry diff : diffs) {
+                modifiedFiles.add(diff.getNewPath());
+            }
+
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        }
+
+        return modifiedFiles;
+    }
+
+    /**
+     * Reset a repository to a given commit
+     *
+     * @param gitRepository {@link GitRepository} to reset
+     * @param commit        Commit to reset onto
+     */
+    public void reset(GitRepository gitRepository, RevCommit commit) throws BusinessException {
+        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        try (Git git = Git.open(repositoryDir)) {
+            git.reset().setMode(ResetCommand.ResetType.HARD)
+                    .setRef(commit.getId().getName())
+                    .call();
+
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+            throw new BusinessException("Cannot reset repository to commit " + commit.getId().getName(), e);
+        }
     }
 
 }
