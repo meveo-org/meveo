@@ -17,15 +17,23 @@
 package org.meveo.api.git;
 
 import org.eclipse.jgit.http.server.GitServlet;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.PacketLineOut;
+import org.eclipse.jgit.transport.SideBandOutputStream;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
-import org.meveo.event.qualifier.git.Commited;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.git.GitActionType;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.git.MeveoRepository;
 import org.slf4j.Logger;
 
 import javax.enterprise.event.Event;
@@ -33,14 +41,15 @@ import javax.inject.Inject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static org.eclipse.jgit.transport.SideBandOutputStream.CH_ERROR;
+import static org.eclipse.jgit.transport.SideBandOutputStream.MAX_BUF;
 
 /**
  * Servlet enabling git through HTTP(s)
@@ -64,14 +73,21 @@ public class MeveoGitServlet extends GitServlet {
     private MeveoUser currentUser;
 
     @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
+    @Inject
     private GitRepositoryService gitRepositoryService;
 
     @Inject
     private Logger log;
 
     @Inject
-    @Commited
-    private Event<GitRepository> gitRepositoryCommitedEvent;
+    @CommitReceived
+    private Event<CommitEvent> gitRepositoryCommitedEvent;
+
+    @Inject
+    private GitClient gitClient;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -136,7 +152,7 @@ public class MeveoGitServlet extends GitServlet {
         boolean authorized;
 
         final GitActionType gitActionType = SERVICE_ROLE_MAPPING.get(service);
-        final GitRepository gitRepository = gitRepositoryService.findByCode(code);
+        final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
 
         switch (gitActionType) {
             case READ: authorized = GitHelper.hasReadRole(currentUser, gitRepository);
@@ -157,10 +173,48 @@ public class MeveoGitServlet extends GitServlet {
             return;
         }
 
-        super.service(req, res);
-
         if(gitActionType == GitActionType.WRITE && req.getMethod().equals("POST")) {
-            gitRepositoryCommitedEvent.fire(gitRepository);
+            // Do not let the git server send directly the response, in case an observer raise an exception
+            FakeServletResponse fakeServletResponse = new FakeServletResponse(res);
+            super.service(req, fakeServletResponse);
+
+            try {
+                RevCommit headCommit = gitClient.getHeadCommit(gitRepository);
+                Set<String> modifiedFiles = gitClient.getModifiedFiles(gitRepository, headCommit);
+                gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+
+                ServletOutputStream outputStream = res.getOutputStream();
+                for(Integer b : fakeServletResponse.getLines()) {
+                    outputStream.write(b);
+                }
+
+                outputStream.flush();
+                outputStream.close();
+
+            } catch (Exception e) {
+                try {
+                    log.error("Error raised after commit, rolling back to previous commit", e);
+                    RevCommit headCommit = gitClient.getHeadCommit(gitRepository);
+                    gitClient.reset(gitRepository, headCommit.getParent(0));
+                    res.setContentType("application/x-git-receive-pack-result");
+                    ServletOutputStream outputStream = res.getOutputStream();
+
+                    PacketLineOut packetLineOut = new PacketLineOut(outputStream);
+                    packetLineOut.setFlushOnEnd(false);
+
+                    SideBandOutputStream sideBandOutputStream = new SideBandOutputStream(CH_ERROR, MAX_BUF, outputStream);
+                    sideBandOutputStream.write(Constants.encode(e.getMessage() + "\n"));
+                    sideBandOutputStream.flush();
+
+                    packetLineOut.end();
+                } catch (BusinessException ex) {
+                   res.sendError(500, e.getMessage());
+                }
+
+            }
+
+        } else {
+            super.service(req, res);
         }
     }
 }
