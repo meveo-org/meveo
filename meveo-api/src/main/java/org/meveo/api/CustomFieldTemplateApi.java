@@ -1,10 +1,8 @@
 package org.meveo.api;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -488,6 +486,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         return cftAppliesto;
     }
 
+	@SuppressWarnings("unused")
 	private void validateSamples(CustomFieldTemplate template) {
 		
 		if(template.getSamples() == null || template.getSamples().isEmpty()) {

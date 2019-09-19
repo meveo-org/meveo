@@ -434,4 +434,5 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
 		q.executeUpdate();
 	}
+
 }

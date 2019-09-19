@@ -13,6 +13,8 @@ import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 /**
  * The Class CustomEntityTemplateDto.
@@ -47,6 +49,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
+    @JsonProperty("fields")
     private List<CustomFieldTemplateDto> fields;
 
     /** The actions. */

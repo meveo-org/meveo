@@ -42,6 +42,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
@@ -183,20 +184,36 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                     return module;
                 }
 
-                for (MeveoModuleItemDto moduleItemDto: dto.getModuleItems()) {
-                	Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-                	BaseEntityDto itemDto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
-                	
-                    if (itemDto instanceof CustomFieldTemplateDto) {
-                        CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;
-                        TreeNode classNode = getOrCreateNodeByAppliesTo(customFieldTemplateDto.getAppliesTo(), itemDto.getClass().getName());
-                        new DefaultTreeNode("item", itemDto, classNode);
-                        
-                    } else {
-                        TreeNode classNode = getOrCreateNodeByClass(itemDto.getClass().getName());
-                        new DefaultTreeNode("item", itemDto, classNode);
-                    }
-                }
+				for (MeveoModuleItemDto moduleItemDto : dto.getModuleItems()) {
+					Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+					BaseEntityDto itemDto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+
+					if (itemDto instanceof CustomFieldTemplateDto) {
+						CustomFieldTemplateDto customFieldTemplateDto = (CustomFieldTemplateDto) itemDto;
+						TreeNode classNode = getOrCreateNodeByAppliesTo(customFieldTemplateDto.getAppliesTo(), itemDto.getClass().getName());
+						new DefaultTreeNode("item", itemDto, classNode);
+
+					} else if (itemDto instanceof CustomEntityTemplateDto) {
+						// include the cft as well
+						TreeNode classNode = getOrCreateNodeByClass(itemDto.getClass().getName());
+						new DefaultTreeNode("item", itemDto, classNode);
+						CustomEntityTemplateDto customEntityTemplateDto = (CustomEntityTemplateDto) itemDto;
+
+						if (customEntityTemplateDto.getFields() != null && !customEntityTemplateDto.getFields().isEmpty()) {
+							String cftClassName = CustomFieldTemplate.class.getName();
+							TreeNode cftNode = new DefaultTreeNode(cftClassName, ReflectionUtils.getHumanClassName(cftClassName), classNode);
+							cftNode.setExpanded(true);
+
+							for (CustomFieldTemplateDto cftDto : customEntityTemplateDto.getFields()) {
+								new DefaultTreeNode("item", cftDto, cftNode);
+							}
+						}
+
+					} else {
+						TreeNode classNode = getOrCreateNodeByClass(itemDto.getClass().getName());
+						new DefaultTreeNode("item", itemDto, classNode);
+					}
+				}
 
             } catch (Exception e) {
                 log.error("Failed to load module source {}", module.getCode(), e);

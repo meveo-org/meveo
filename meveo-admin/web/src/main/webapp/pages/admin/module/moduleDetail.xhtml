@@ -71,7 +71,11 @@
 
                     <p:commandButton value="#{messages['meveoModule.install']}" action="#{meveoModuleBean.install}" update="@form"
                         rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}" />
-                        
+                       
+                	<p:commandButton value="#{messages['action.fork']}" action="#{meveoModuleBean.fork}" update="@form" rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}">
+                		 <p:confirm header="#{messages['action.confirm']}" message="#{messages['commons.confirmForkModule']}" icon="pi pi-exclamation-triangle" />
+               		</p:commandButton>
+                
                     <p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed}">
 <!--                        <p:confirm update="@form"  header="#{messages['meveoModule.uninstall']}" message="#{messages['meveoModule.confirmUninstall']}" /> -->
                     </p:commandButton>

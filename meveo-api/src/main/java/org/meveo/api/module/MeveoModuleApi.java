@@ -32,6 +32,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.reflect.FieldUtils;
+import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -75,9 +76,11 @@ import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.ServiceTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * @author Clément Bareth
@@ -119,6 +122,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
     @Inject
     private ModuleScriptService moduleScriptService;
+    
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
     public MeveoModuleApi() {
     	super(MeveoModule.class, MeveoModuleDto.class);
@@ -640,10 +646,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             for (MeveoModuleItem item : moduleItems) {
 
                 try {
-                    BaseEntityDto itemDto;
+                    BaseEntityDto itemDto = null;
 
-                    if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
-                        itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+					if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
+						// we will only add a cft if it's not a field of a cet
+						if (!StringUtils.isBlank(item.getAppliesTo())) {
+							String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
+							if (customEntityTemplateService.findByCode(cetCode) == null) {
+								itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+							}
+
+						} else {
+							itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+						}
 
                     } else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
                         itemDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
@@ -662,8 +677,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
                     }
                     if (itemDto != null) {
                         moduleDto.addModuleItem(itemDto);
+                        
                     } else {
-                        log.warn("Failed to find a module item {}", item);
+                        log.warn("Failed to find a module item or not added in case of CFT that is a field of CET {}", item);
                     }
 
                 } catch (ClassNotFoundException e) {
@@ -779,4 +795,22 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         final String itemClassName = MODULE_ITEM_TYPES.get(itemType).getName();
         return meveoModuleService.isChildOfOtherActiveModule(moduleItemCode, itemClassName);
     }
+
+	public void fork(String moduleCode) throws MeveoApiException, BusinessException {
+		MeveoModule module = meveoModuleService.findByCode(moduleCode);
+
+		if (module == null) {
+			throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
+		}
+
+		if (!module.isDownloaded()) {
+			throw new BusinessEntityException("Module must be downloaded");
+		}
+
+		MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
+
+		module = install(moduleDto);
+		
+		module.setModuleSource(null);
+	}
 }
