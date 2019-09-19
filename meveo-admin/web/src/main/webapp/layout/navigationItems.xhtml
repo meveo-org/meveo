@@ -143,6 +143,8 @@
             <p:menuitem id="binaryStorageConfigurations" value="#{messages['binaryStorageConfiguration.title']}"
                     outcome="binaryStorageConfigurations"
                     rendered="#{currentUser.hasRole('administrationVisualization')}" />
+            <p:menuitem id="gitRepositories"
+                        value="#{messages['menu.gitRepositories']}" outcome="gitRepositories" />
         </p:submenu>
         
     </p:submenu>
