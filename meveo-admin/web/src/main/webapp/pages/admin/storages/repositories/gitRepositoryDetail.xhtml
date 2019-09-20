@@ -18,8 +18,8 @@
             </p:breadCrumb>
         </h:form>
 
-        <o:importConstants type="org.meveo.model.crm.custom.ReadingRoleType" />
-        <o:importConstants type="org.meveo.model.crm.custom.WritingRoleType" />
+        <o:importConstants type="org.meveo.model.crm.custom.ReadingRoleTypeEnum" />
+        <o:importConstants type="org.meveo.model.crm.custom.WritingRoleTypeEnum" />
 
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}" backingBean="#{gitRepositoryBean}">
             <h:panelGrid columns="3">
@@ -31,14 +31,15 @@
             <h:panelGrid columns="2">
                 <hftl:decorateFormField componentWidth="100%" label="#{messages['gitRepositories.readingRoles']}">
                     <p:pickList id="pickListReading" value="#{gitRepositoryBean.readingRolesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                        <o:converter converterId="omnifaces.ListConverter" list="#{gitRepositoryBean.readingRolesTypeList}" />
                     </p:pickList>
                 </hftl:decorateFormField>
                 <hftl:decorateFormField componentWidth="100%" label="#{messages['gitRepositories.writingRoles']}">
                     <p:pickList id="pickListWriting" value="#{gitRepositoryBean.writingRolesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                        <o:converter converterId="omnifaces.ListConverter" list="#{gitRepositoryBean.writingRolesTypeList}" />
                     </p:pickList>
                 </hftl:decorateFormField>
             </h:panelGrid>
-
         </hftl:formPanel>
 
     </ui:define>

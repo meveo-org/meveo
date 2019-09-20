@@ -1,5 +1,6 @@
 package org.meveo.admin.action.storage;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
@@ -40,8 +41,25 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        String editView = super.saveOrUpdate(killConversation);
-        return editView;
+
+        if (CollectionUtils.isNotEmpty(readingRolesDM.getTarget())) {
+            getEntity().getReadingRoles().clear();
+            for (ReadingRoleTypeEnum readingRoleTypeEnum : readingRolesDM.getTarget()) {
+                getEntity().getReadingRoles().add(readingRoleTypeEnum.name());
+            }
+        } else {
+            getEntity().getReadingRoles().clear();
+        }
+
+        if (CollectionUtils.isNotEmpty(writingRolesDM.getTarget())) {
+            getEntity().getWritingRoles().clear();
+            for (WritingRoleTypeEnum writingRoleTypeEnum : writingRolesDM.getTarget()) {
+                getEntity().getWritingRoles().add(writingRoleTypeEnum.name());
+            }
+        } else {
+            getEntity().getWritingRoles().clear();
+        }
+        return super.saveOrUpdate(killConversation);
     }
 
     public DualListModel<ReadingRoleTypeEnum> getReadingRolesDM() {
@@ -52,13 +70,20 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
             }
             List<ReadingRoleTypeEnum> perksTarget = new ArrayList<>();
             if (getEntity().getReadingRoles() != null) {
-                List<ReadingRoleTypeEnum> allReadingRoles = (List<ReadingRoleTypeEnum>)(List<?>)(new ArrayList<>(getEntity().getReadingRoles()));
-                perksTarget.addAll(allReadingRoles);
+                for (String action : getEntity().getReadingRoles()) {
+                    perksTarget.add(ReadingRoleTypeEnum.valueOf(action));
+                }
             }
             perksSource.removeAll(perksTarget);
-            readingRolesDM = new DualListModel<>(perksSource, perksTarget);
+            readingRolesDM = new DualListModel<ReadingRoleTypeEnum>(perksSource, perksTarget);
         }
         return readingRolesDM;
+    }
+
+    public List<ReadingRoleTypeEnum> getReadingRolesTypeList() {
+        ArrayList<ReadingRoleTypeEnum> arrayList = new ArrayList<>(readingRolesDM.getSource());
+        arrayList.addAll(readingRolesDM.getTarget());
+        return arrayList;
     }
 
     public void setReadingRolesDM(DualListModel<ReadingRoleTypeEnum> readingRolesDM) {
@@ -68,27 +93,29 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     public DualListModel<WritingRoleTypeEnum> getWritingRolesDM() {
         if (writingRolesDM == null) {
             List<WritingRoleTypeEnum> perksSource = new ArrayList<>();
-            for (WritingRoleTypeEnum writingRoleType : WritingRoleTypeEnum.values()) {
-                perksSource.add(writingRoleType);
+            for (WritingRoleTypeEnum writingRoleTypeEnum : WritingRoleTypeEnum.values()) {
+                perksSource.add(writingRoleTypeEnum);
             }
             List<WritingRoleTypeEnum> perksTarget = new ArrayList<>();
             if (getEntity().getWritingRoles() != null) {
-                List<WritingRoleTypeEnum> allWritingRoles = (List<WritingRoleTypeEnum>)(List<?>)(new ArrayList<>(getEntity().getWritingRoles()));
-                perksTarget.addAll(allWritingRoles);
+                for (String action : getEntity().getWritingRoles()) {
+                    perksTarget.add(WritingRoleTypeEnum.valueOf(action));
+                }
             }
             perksSource.removeAll(perksTarget);
-            writingRolesDM = new DualListModel<>(perksSource, perksTarget);
+            writingRolesDM = new DualListModel<WritingRoleTypeEnum>(perksSource, perksTarget);
         }
         return writingRolesDM;
     }
 
-    public void setWritingRolesDM(DualListModel<WritingRoleTypeEnum> writingRolesDM) {
-        this.writingRolesDM = writingRolesDM;
+    public List<WritingRoleTypeEnum> getWritingRolesTypeList() {
+        ArrayList<WritingRoleTypeEnum> arrayList = new ArrayList<>(writingRolesDM.getSource());
+        arrayList.addAll(writingRolesDM.getTarget());
+        return arrayList;
     }
 
-    @Override
-    public String getEditViewName() {
-        return "gitRepositoryDetail";
+    public void setWritingRolesDM(DualListModel<WritingRoleTypeEnum> writingRolesDM) {
+        this.writingRolesDM = writingRolesDM;
     }
 
     @Override
@@ -105,4 +132,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     protected IPersistenceService<GitRepository> getPersistenceService() {
         return gitRepositoryService;
     }
+
+
 }
