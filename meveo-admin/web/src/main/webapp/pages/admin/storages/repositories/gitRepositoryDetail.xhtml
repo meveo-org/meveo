@@ -28,17 +28,15 @@
                 <hftl:formField label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" />
             </h:panelGrid>
 
-            <h:panelGrid columns="2">
-                <hftl:decorateFormField componentWidth="100%" label="#{messages['gitRepositories.readingRoles']}">
-                    <p:pickList id="pickListReading" value="#{gitRepositoryBean.readingRolesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
-                        <o:converter converterId="omnifaces.ListConverter" list="#{gitRepositoryBean.readingRolesTypeList}" />
-                    </p:pickList>
-                </hftl:decorateFormField>
-                <hftl:decorateFormField componentWidth="100%" label="#{messages['gitRepositories.writingRoles']}">
-                    <p:pickList id="pickListWriting" value="#{gitRepositoryBean.writingRolesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
-                        <o:converter converterId="omnifaces.ListConverter" list="#{gitRepositoryBean.writingRolesTypeList}" />
-                    </p:pickList>
-                </hftl:decorateFormField>
+            <h:panelGrid columns="1">
+                <h:panelGroup id="readingRole">
+                    <hftl:formField label="#{messages['gitRepositories.readingRoles']}"
+                                    field="readingRoles" textArea="true" rows="3" maxlength="200000"/>
+                </h:panelGroup>
+                <h:panelGroup id="writingRole">
+                    <hftl:formField label="#{messages['gitRepositories.writingRoles']}"
+                                    field="writingRoles" textArea="true" rows="3" maxlength="200000"/>
+                </h:panelGroup>
             </h:panelGrid>
         </hftl:formPanel>
 
