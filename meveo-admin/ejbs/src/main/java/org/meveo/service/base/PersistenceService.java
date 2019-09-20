@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -403,7 +404,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
             customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
         }
 
-        entity = getEntityManager().merge(entity);
+        try {
+        	entity = getEntityManager().merge(entity);
+        } catch(Exception e) {
+        	if(e instanceof UndeclaredThrowableException) {
+            	throw new BusinessException(e.getCause().getCause());
+        	} else {
+            	throw new BusinessException(e);
+        	}
+        }
 
         // Update entity in Elastic Search. ICustomFieldEntity is updated
         // partially, as entity itself does not have Custom field values

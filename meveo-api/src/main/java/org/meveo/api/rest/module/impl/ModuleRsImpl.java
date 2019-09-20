@@ -22,7 +22,6 @@ import java.util.List;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
@@ -200,4 +199,16 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     public MeveoModuleDto removeFromModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
         return moduleApi.removeFromModule(moduleCode, itemCode, itemType);
     }
+
+	@Override
+	public ActionStatus fork(String moduleCode) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+        try {
+            moduleApi.fork(moduleCode);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+
+        return result;
+	}
 }
