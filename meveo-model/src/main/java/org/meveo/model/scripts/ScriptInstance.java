@@ -26,11 +26,13 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.security.Role;
 
 @Entity
 @ModuleItem("ScriptInstance")
+@ObservableEntity
 @Cacheable
 @Table(name = "meveo_script_instance")
 @GenericGenerator(
@@ -50,11 +52,11 @@ public class ScriptInstance extends CustomScript {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_script_exec_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> executionRoles = new HashSet<Role>();
+    private Set<Role> executionRoles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> sourcingRoles = new HashSet<Role>();
+    private Set<Role> sourcingRoles = new HashSet<>();
 
     /**
      * @return the executionRoles

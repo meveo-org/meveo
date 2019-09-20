@@ -203,7 +203,14 @@ public class MeveoGitServlet extends GitServlet {
                     packetLineOut.setFlushOnEnd(false);
 
                     SideBandOutputStream sideBandOutputStream = new SideBandOutputStream(CH_ERROR, MAX_BUF, outputStream);
-                    sideBandOutputStream.write(Constants.encode(e.getMessage() + "\n"));
+
+                    // Find root cause
+                    Throwable cause = e;
+                    while(cause.getCause() != null){
+                        cause = cause.getCause();
+                    }
+
+                    sideBandOutputStream.write(Constants.encode(cause.getMessage() + "\n"));
                     sideBandOutputStream.flush();
 
                     packetLineOut.end();

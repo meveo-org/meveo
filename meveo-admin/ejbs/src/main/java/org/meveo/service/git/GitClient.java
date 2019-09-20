@@ -134,10 +134,15 @@ public class GitClient {
             }
 
         } else {
-            try {
-                Git.init().setDirectory(repoDir).call().close();
-
-            } catch (GitAPIException e) {
+            try (Git git = Git.init().setDirectory(repoDir).call()){
+                // Init repo with a dummy commit
+                new File(repoDir, "README.md").createNewFile();
+                git.add().addFilepattern(".").call();
+                git.commit().setMessage("First commit")
+                        .setAuthor(currentUser.getUserName(), currentUser.getMail())
+                        .setCommitter(currentUser.getUserName(), currentUser.getMail())
+                        .call();
+            } catch (GitAPIException | IOException e) {
                 repoDir.delete();
                 throw new BusinessException("Error initating repository " + gitRepository.getCode(), e);
             }
@@ -548,6 +553,7 @@ public class GitClient {
             List<DiffEntry> diffs = df.scan(parent.getTree(), commit.getTree());
             for (DiffEntry diff : diffs) {
                 modifiedFiles.add(diff.getNewPath());
+                modifiedFiles.add(diff.getOldPath());
             }
 
         } catch (IOException e) {
