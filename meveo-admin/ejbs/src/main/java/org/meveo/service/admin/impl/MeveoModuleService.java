@@ -256,8 +256,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         // Otherwise mark it uninstalled and clear module items
         } else {
             module.setInstalled(false);
-            module.getModuleItems().clear();
-            return update(module);
+            MeveoModule moduleUpdated = update(module);
+            
+            getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
+            	.setParameter("meveoModule", module)
+            	.executeUpdate();
+            
+			return moduleUpdated;
         }
     }
 
