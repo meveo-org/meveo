@@ -41,7 +41,9 @@ import org.meveo.model.security.Role;
         parameters = {@Parameter(name = "sequence_name", value = "meveo_function_seq")}
 )
 @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
-@NamedQueries({ @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
+@NamedQueries({
+    @NamedQuery(name = "CustomScript.updateScript", query = "UPDATE ScriptInstance SET script = :script WHERE code = :code"),
+    @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceOnError", query = "from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceByTypeActive", query = "from ScriptInstance o where o.sourceTypeEnum=:sourceTypeEnum and o.disabled = false")})
 @ImportOrder(4)

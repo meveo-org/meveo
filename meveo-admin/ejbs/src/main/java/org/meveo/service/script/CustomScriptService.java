@@ -421,7 +421,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     public void compileScript(T script, boolean testCompile) {
 
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), script.getScript(), script.isActive(), testCompile);
+        String source = testCompile ? script.getScript() : readScriptFile(script);
+
+        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
 
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
@@ -795,7 +797,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @throws BusinessException
      */
     public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
-        File file = new File(scriptInstance.getScriptLocation());
+        File file = findScriptFile(scriptInstance);
         if(file.exists()) {
             file.delete();
             gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
@@ -825,7 +827,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         CustomScript scriptInstance = new ScriptInstance();
                         scriptInstance.setCode(scriptCode);
                         String absolutePath = scriptFile.getAbsolutePath();
-                        scriptInstance.setScriptLocation(absolutePath);
                         ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
                         scriptInstance.setSourceTypeEnum(scriptType);
                         create((T) scriptInstance);
@@ -837,10 +838,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     } else if(script != null && scriptFile.exists()){
                         // Scipt has been updated
                         compileScript(script, false);
+                        updateScript(script, readScriptFile(script));
                     }
                 }
             }
         }
+    }
+
+    private void updateScript(CustomScript scriptInstance, String script) {
+        getEntityManager().createNamedQuery("CustomScript.updateScript")
+                .setParameter("code", scriptInstance.getCode())
+                .setParameter("script", script)
+                .executeUpdate();
     }
 
     private void buildScriptFile(File scriptFile, CustomScript scriptInstance) throws IOException {
@@ -849,8 +858,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript());
-
-        scriptInstance.setScriptLocation(scriptFile.getAbsolutePath());
     }
 
     private File findScriptFile(CustomScript scriptInstance) {
@@ -863,6 +870,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
         String path = scriptInstance.getCode().replaceAll("\\.", "/");
         return new File(scriptDir, path + extension);
+    }
+
+    public String readScriptFile(CustomScript script){
+        File scriptFile = findScriptFile(script);
+
+        try {
+            return MeveoFileUtils.readString(scriptFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }
