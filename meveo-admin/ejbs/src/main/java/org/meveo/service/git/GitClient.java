@@ -172,8 +172,8 @@ public class GitClient {
 
             if (CollectionUtils.isNotEmpty(patterns)) {
                 patterns.forEach(add::addFilepattern);
-
-
+                add.call();
+                
                 final Status status = git.status().call();
 
                 final RmCommand rm = git.rm();
