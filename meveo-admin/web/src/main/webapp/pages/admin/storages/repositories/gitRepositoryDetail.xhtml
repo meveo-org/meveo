@@ -19,10 +19,22 @@
         </h:form>
 
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}" backingBean="#{gitRepositoryBean}">
-            <h:panelGrid columns="3">
+            <h:panelGrid columns="2">
                 <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
-                <hftl:formField label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" />
+            </h:panelGrid>
+            <h:panelGrid columns="1">
+                <hftl:formField label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword"/>
+                <h:panelGroup id="defaultRemoteUsername">
+                    <hftl:formField label="#{messages['gitRepositories.defaultRemoteUsername']}"
+                                        field="defaultRemoteUsername" componentWidth="30"
+                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}" />
+                </h:panelGroup>
+                <h:panelGroup id="defaultRemotePassword">
+                    <hftl:formField label="#{messages['gitRepositories.defaultRemotePassword']}"
+                                        field="defaultRemotePassword" componentWidth="30"
+                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"/>
+                </h:panelGroup>
             </h:panelGrid>
 
             <h:panelGrid columns="1">
