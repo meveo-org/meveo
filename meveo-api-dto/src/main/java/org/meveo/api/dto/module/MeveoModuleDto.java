@@ -62,7 +62,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
         this.logoPicture = meveoModule.getLogoPicture();
         this.moduleItems = new ArrayList<>();
         if (meveoModule.getScript() != null) {
-            this.setScript(new ScriptInstanceDto(meveoModule.getScript()));
+            this.setScript(new ScriptInstanceDto(meveoModule.getScript(), meveoModule.getScript().getScript()));
         }
     }
 
