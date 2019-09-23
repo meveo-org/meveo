@@ -27,6 +27,7 @@ import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.git.MeveoRepository;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -54,6 +55,10 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 
     @Inject
     private GitRepositoryService gitRepositoryService;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
 
     @Inject
     private GitClient gitClient;
@@ -146,8 +151,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @Path("/repositories/{code}/commit")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public void commit(@PathParam("code") String code, @FormParam("message") String message, @FormParam("pattern") List<String> patterns) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
-        gitClient.commit(repository, patterns, message);
+        final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        gitClient.commit(gitRepository, patterns, message);
     }
 
     /**
@@ -161,8 +166,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @Path("/repositories/{code}/push")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public void push(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
-        gitClient.push(repository, username, password);
+        final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        gitClient.push(gitRepository, username, password);
     }
 
     /**
@@ -176,8 +181,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @Path("/repositories/{code}/pull")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public void pull(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
-        gitClient.pull(repository, username, password);
+        final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        gitClient.pull(gitRepository, username, password);
     }
 
     /**
@@ -190,7 +195,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/checkout/{branch}")
     public void checkout(@PathParam("code") String code, @PathParam("branch") String branch, @QueryParam("create") boolean createBranch) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.checkout(repository, branch, createBranch);
     }
 
@@ -203,7 +208,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/create/{branch}")
     public void createBranch(@PathParam("code") String code, @PathParam("branch") String branch) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.createBranch(repository, branch);
     }
 
@@ -216,7 +221,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/create/{branch}")
     public void deleteBranch(@PathParam("code") String code, @PathParam("branch") String branch) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.deleteBranch(repository, branch);
     }
 
@@ -230,7 +235,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/merge/{branch}/into/{to}")
     public Response merge(@PathParam("code") String code, @PathParam("branch") String from, @PathParam("to") String to) throws BusinessException {
-        final GitRepository repository = gitRepositoryService.findByCode(code);
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         final boolean mergeOk = gitClient.merge(repository, from, to);
         if (!mergeOk) {
             return Response.status(409).entity("Merge must be done manually").build();
