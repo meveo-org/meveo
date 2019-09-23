@@ -45,6 +45,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -124,22 +125,16 @@ public class MeveoGitServlet extends GitServlet {
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        // User should be authenticated
         if(req.getUserPrincipal() == null){
             res.addHeader("WWW-Authenticate", "Basic realm=\"Meveo Git access\", charset=\"UTF-8\"");
             res.getWriter().print("You must be logged to access the Meveo Git server");
             res.setStatus(401);
             return;
         }
-        
-        KeycloakPrincipal<?> principal = (KeycloakPrincipal<?>) req.getUserPrincipal();
-        final AccessToken.Access gitAccess = principal.getKeycloakSecurityContext().getToken().getResourceAccess("git");
-        if(gitAccess == null){
-            res.setStatus(500);
-            res.getWriter().print("Keycloak git client not configured or maybe your are not authorized to access it. Please refer to documentation to see how to configure it.");
-            return;
-        }
 
+        // Extract service and code
         String service = null;
         if(req.getQueryString() != null) {
         	service = req.getQueryString().replaceAll(".*service=([\\w-]+).*", "$1");
@@ -149,6 +144,7 @@ public class MeveoGitServlet extends GitServlet {
 
         String code = req.getRequestURL().toString().replaceAll(".*/git/([^/]+).*", "$1");
 
+        // Check if user is authorized
         boolean authorized;
 
         final GitActionType gitActionType = SERVICE_ROLE_MAPPING.get(service);
@@ -174,27 +170,28 @@ public class MeveoGitServlet extends GitServlet {
 
         if(!authorized) {
             res.setStatus(403);
-            res.getWriter().print("You are not authorized to execute this action");
+            sendErrorToClient(res, new Exception("You are not authorized to execute this action"));
             return;
         }
 
-        if(gitActionType == GitActionType.WRITE && req.getMethod().equals("POST")) {
-            // Do not let the git server send directly the response, in case an observer raise an exception
-            FakeServletResponse fakeServletResponse = new FakeServletResponse(res);
-            super.service(req, fakeServletResponse);
+        // Do not let the git server send directly the response, in case an observer raise an exception
+        FakeServletResponse fakeServletResponse = new FakeServletResponse(res);
 
+        try {
+            super.service(req, res);
+
+        } catch(Exception e) {
+            log.error("Git error", e);
+            sendErrorToClient(res, e);
+            return;
+        }
+
+        // Fire commit received event and rollback if an exception was raised
+        if(gitActionType == GitActionType.WRITE && req.getMethod().equals("POST")) {
             try {
                 RevCommit headCommit = gitClient.getHeadCommit(gitRepository);
                 Set<String> modifiedFiles = gitClient.getModifiedFiles(gitRepository, headCommit);
                 gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
-
-                ServletOutputStream outputStream = res.getOutputStream();
-                for(Integer b : fakeServletResponse.getLines()) {
-                    outputStream.write(b);
-                }
-
-                outputStream.flush();
-                outputStream.close();
 
             } catch (Exception e) {
                 try {
@@ -205,28 +202,36 @@ public class MeveoGitServlet extends GitServlet {
                     sendErrorToClient(res, e);
                     
                 } catch (BusinessException ex) {
-                   res.sendError(500, e.getMessage());
+                    log.error("Error while canceling commit", e);
+                    sendErrorToClient(res, e);
                 }
 
             }
 
-        } else {
-        	try {
-        		super.service(req, res);
-        		
-        	} catch(Exception e) {
-            	log.error("Git error", e);
-                sendErrorToClient(res, e);
+        }
+
+        if(res.getStatus() != 500) {
+            ServletOutputStream outputStream = res.getOutputStream();
+            for (Integer b : fakeServletResponse.getLines()) {
+                outputStream.write(b);
             }
+
+            outputStream.flush();
+            outputStream.close();
+
+        } else {
+            // Read the output stream and send error to the git client
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            fakeServletResponse.getLines().forEach(byteArrayOutputStream::write);
+            String errorMessage = byteArrayOutputStream.toString("UTF-8");
+            byteArrayOutputStream.close();
+
+            Exception e = new Exception(errorMessage);
+            sendErrorToClient(res, e);
         }
     }
 
-	/**
-	 * @param res
-	 * @param e
-	 * @throws IOException
-	 */
-	public void sendErrorToClient(HttpServletResponse res, Exception e) throws IOException {
+	private void sendErrorToClient(HttpServletResponse res, Exception e) throws IOException {
 		res.setContentType("application/x-git-receive-pack-result");
 		ServletOutputStream outputStream = res.getOutputStream();
 
