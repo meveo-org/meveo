@@ -147,13 +147,18 @@ public class MeveoGitServlet extends GitServlet {
         	service = req.getRequestURI().replaceAll(".*(git-.*-pack).*", "$1");
         }
 
-        String code = req.getRequestURL().toString().replaceAll(".*/investigation-core/git/([^/]+).*", "$1");
+        String code = req.getRequestURL().toString().replaceAll(".*/git/([^/]+).*", "$1");
 
         boolean authorized;
 
         final GitActionType gitActionType = SERVICE_ROLE_MAPPING.get(service);
         final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
 
+        if(gitRepository == null) {
+        	res.setStatus(404);
+        	return;
+        }
+        
         switch (gitActionType) {
             case READ: authorized = GitHelper.hasReadRole(currentUser, gitRepository);
                 break;
@@ -196,24 +201,9 @@ public class MeveoGitServlet extends GitServlet {
                     log.error("Error raised after commit, rolling back to previous commit", e);
                     RevCommit headCommit = gitClient.getHeadCommit(gitRepository);
                     gitClient.reset(gitRepository, headCommit.getParent(0));
-                    res.setContentType("application/x-git-receive-pack-result");
-                    ServletOutputStream outputStream = res.getOutputStream();
-
-                    PacketLineOut packetLineOut = new PacketLineOut(outputStream);
-                    packetLineOut.setFlushOnEnd(false);
-
-                    SideBandOutputStream sideBandOutputStream = new SideBandOutputStream(CH_ERROR, MAX_BUF, outputStream);
-
-                    // Find root cause
-                    Throwable cause = e;
-                    while(cause.getCause() != null){
-                        cause = cause.getCause();
-                    }
-
-                    sideBandOutputStream.write(Constants.encode(cause.getMessage() + "\n"));
-                    sideBandOutputStream.flush();
-
-                    packetLineOut.end();
+                    
+                    sendErrorToClient(res, e);
+                    
                 } catch (BusinessException ex) {
                    res.sendError(500, e.getMessage());
                 }
@@ -221,7 +211,40 @@ public class MeveoGitServlet extends GitServlet {
             }
 
         } else {
-            super.service(req, res);
+        	try {
+        		super.service(req, res);
+        		
+        	} catch(Exception e) {
+            	log.error("Git error", e);
+                sendErrorToClient(res, e);
+            }
         }
     }
+
+	/**
+	 * @param res
+	 * @param e
+	 * @throws IOException
+	 */
+	public void sendErrorToClient(HttpServletResponse res, Exception e) throws IOException {
+		res.setContentType("application/x-git-receive-pack-result");
+		ServletOutputStream outputStream = res.getOutputStream();
+
+		PacketLineOut packetLineOut = new PacketLineOut(outputStream);
+		packetLineOut.setFlushOnEnd(false);
+
+		SideBandOutputStream sideBandOutputStream = new SideBandOutputStream(CH_ERROR, MAX_BUF, outputStream);
+
+		// Find root cause
+		Throwable cause = e;
+		while(cause.getCause() != null){
+		    cause = cause.getCause();
+		}
+
+		sideBandOutputStream.write(Constants.encode(cause.getMessage() + "\n"));
+		sideBandOutputStream.flush();
+
+		packetLineOut.end();
+		sideBandOutputStream.close();
+	}
 }
