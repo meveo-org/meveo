@@ -8,7 +8,8 @@ import org.meveo.commons.utils.StringUtils;
  * Contains information to retrieve related entities for export once primary entity was retrieved
  * 
  * @author Andrius Karpavicius
- * 
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  */
 public class RelatedEntityToExport {
 
@@ -54,7 +55,6 @@ public class RelatedEntityToExport {
         this.parameters = parameters;
     }
 
-    @SuppressWarnings("rawtypes")
     public Class<?> getEntityClass() {
         return entityClass;
     }
