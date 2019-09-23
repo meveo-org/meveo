@@ -18,9 +18,6 @@
             </p:breadCrumb>
         </h:form>
 
-        <o:importConstants type="org.meveo.model.crm.custom.ReadingRoleTypeEnum" />
-        <o:importConstants type="org.meveo.model.crm.custom.WritingRoleTypeEnum" />
-
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}" backingBean="#{gitRepositoryBean}">
             <h:panelGrid columns="3">
                 <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
