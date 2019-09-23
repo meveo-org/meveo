@@ -83,12 +83,15 @@ public abstract class CustomScript extends Function {
      * @return the script
      */
     public String getScript() {
+    	if(script != null) {
+    		return script;
+    	}
+    	
         if(!StringUtils.isBlank(scriptLocation) && MeveoFileUtils.isValidPath(scriptLocation) && new File(scriptLocation).exists()) {
             try {
-                script = MeveoFileUtils.readString(scriptLocation);
+                return MeveoFileUtils.readString(scriptLocation);
             } catch (IOException e) {
                 logger.error("Cannot read file", e);
-                script = null;
             }
 
         } else if(!StringUtils.isBlank(scriptLocation)) {

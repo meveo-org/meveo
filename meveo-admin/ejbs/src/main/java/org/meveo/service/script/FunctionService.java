@@ -134,7 +134,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Override
     public T update(T executable) throws BusinessException {
         validateAndSetCode(executable);
-        executable = super.update(executable);
+        super.update(executable);
         publish(executable, CrudActionEnum.update);
         return executable;
     }
