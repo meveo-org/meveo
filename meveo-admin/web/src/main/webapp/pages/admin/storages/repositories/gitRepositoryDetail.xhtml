@@ -1,0 +1,53 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml" xmlns:o="http://omnifaces.org/ui">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{gitRepositoryBean.objectId}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.storages']}" disabled="true" />
+                <p:menuitem outcome="gitRepositories" value="#{messages['menu.gitRepositories']}" />
+                <p:menuitem value="#{messages['commons.new']} #{messages['menu.gitRepositories']}" disabled="true" rendered="#{gitRepositoryBean.entity.transient}" />
+                <p:menuitem value="#{messages['menu.gitRepositories']} - #{gitRepositoryBean.entity.code}" disabled="true"  rendered="#{!gitRepositoryBean.entity.transient}" />
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}" backingBean="#{gitRepositoryBean}">
+            <h:panelGrid columns="2">
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
+                <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+            </h:panelGrid>
+            <h:panelGrid columns="1">
+                <hftl:formField label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword"/>
+                <h:panelGroup id="defaultRemoteUsername">
+                    <hftl:formField label="#{messages['gitRepositories.defaultRemoteUsername']}"
+                                        field="defaultRemoteUsername" componentWidth="30"
+                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}" />
+                </h:panelGroup>
+                <h:panelGroup id="defaultRemotePassword">
+                    <hftl:formField label="#{messages['gitRepositories.defaultRemotePassword']}"
+                                        field="defaultRemotePassword" componentWidth="30"
+                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"/>
+                </h:panelGroup>
+            </h:panelGrid>
+
+            <h:panelGrid columns="1">
+                <h:panelGroup id="readingRole">
+                    <hftl:formField label="#{messages['gitRepositories.readingRoles']}"
+                                    field="readingRoles" textArea="true" rows="3" maxlength="200000"/>
+                </h:panelGroup>
+                <h:panelGroup id="writingRole">
+                    <hftl:formField label="#{messages['gitRepositories.writingRoles']}"
+                                    field="writingRoles" textArea="true" rows="3" maxlength="200000"/>
+                </h:panelGroup>
+            </h:panelGrid>
+        </hftl:formPanel>
+
+    </ui:define>
+</ui:composition>

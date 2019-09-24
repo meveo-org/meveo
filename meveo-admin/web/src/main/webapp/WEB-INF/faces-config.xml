@@ -1424,5 +1424,15 @@
             <to-view-id>/pages/admin/storages/repositories/repositoryDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>gitRepositories</from-outcome>
+            <to-view-id>/pages/admin/storages/repositories/gitRepositories.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>gitRepositoryDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/repositories/gitRepositoryDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
 </faces-config>
