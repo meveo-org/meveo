@@ -39,7 +39,8 @@ import java.util.List;
 
 /**
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  */
 @Entity
 @ModuleItem("CustomEntityTemplate")
@@ -60,6 +61,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	private static final long serialVersionUID = 8281478284763353310L;
 
+	/**
+	 * Prefix for CustomEntityTemplate. If this prefix is changed, the hard-coded value in exportImportTemplates.xml must be updated too.
+	 */
 	public static String CFT_PREFIX = "CE";
 
 	@Column(name = "name", length = 100, nullable = false)

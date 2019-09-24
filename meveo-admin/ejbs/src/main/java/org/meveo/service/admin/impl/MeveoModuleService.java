@@ -24,6 +24,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
@@ -69,7 +71,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
  * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -419,12 +421,23 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 			List<MeveoModule> modules = q.getResultList();
 			if (modules != null && !modules.isEmpty()) {
 				for (MeveoModule module : modules) {
-					MeveoModuleItem mi = new MeveoModuleItem();
-					mi.setMeveoModule(module);
-					mi.setAppliesTo(cft.getAppliesTo());
-					mi.setItemClass(CustomFieldTemplate.class.getName());
-					mi.setItemCode(cft.getCode());
-					meveoModuleItemService.create(mi);
+					// check if item already exists
+					Optional<MeveoModuleItem> moduleItem = Optional.empty();
+					if (module.getModuleItems() != null && !module.getModuleItems().isEmpty()) {
+						Predicate<MeveoModuleItem> isCft = e -> e.getItemClass().equals(CustomFieldTemplate.class.getName());
+						Predicate<MeveoModuleItem> isExisting = e -> e.getAppliesTo().equals(cft.getAppliesTo()) && e.getItemCode().equals(cft.getCode());
+
+						moduleItem = module.getModuleItems().stream().filter(isCft).filter(isExisting).findAny();
+					}
+
+					if (!moduleItem.isPresent()) {
+						MeveoModuleItem mi = new MeveoModuleItem();
+						mi.setMeveoModule(module);
+						mi.setAppliesTo(cft.getAppliesTo());
+						mi.setItemClass(CustomFieldTemplate.class.getName());
+						mi.setItemCode(cft.getCode());
+						meveoModuleItemService.create(mi);
+					}
 				}
 			}
 
