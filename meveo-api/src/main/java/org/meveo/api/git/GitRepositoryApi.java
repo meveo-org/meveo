@@ -20,13 +20,19 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.commons.utils.FileUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.git.MeveoRepository;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import java.io.File;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,8 +47,83 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     @Inject
     private GitRepositoryService gitRepositoryService;
 
+    @Inject
+    private GitClient gitClient;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
     public GitRepositoryApi() {
         super(GitRepository.class, GitRepositoryDto.class);
+    }
+
+    /**
+     * Import the given zip file in the file system.
+     * Create corresponding {@link GitRepository} if repo does not exists yet or override is true
+     *
+     * @param inputStream      ZIP file
+     * @param gitRepositoryDto {@link GitRepository} DTO representation
+     * @param override         Whether to delete existing data
+     */
+    public void importZip(InputStream inputStream, GitRepositoryDto gitRepositoryDto, boolean override) throws Exception {
+        if(gitRepositoryDto.getCode().equals(meveoRepository.getCode())){
+            throw new IllegalAccessException("Cannot import Meveo default directory");
+        }
+
+        boolean exists = exists(gitRepositoryDto);
+        if(exists && !override){
+            return;
+        }
+
+        if(exists){
+            remove(gitRepositoryDto.getCode());
+            gitRepositoryService.flush();
+        }
+
+        File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepositoryDto.getCode());
+        if(repositoryDir.exists()) {
+            org.apache.commons.io.FileUtils.deleteDirectory(repositoryDir);
+        }
+
+        FileUtils.unzipFile(repositoryDir.getAbsolutePath(), inputStream);
+        File dotGitDir = new File(repositoryDir, ".git");
+        if(dotGitDir.exists()) {
+            org.apache.commons.io.FileUtils.deleteDirectory(dotGitDir);
+        }
+
+        create(gitRepositoryDto, false);
+    }
+
+    /**
+     * Zip the folder of a {@link GitRepository},
+     * switching to the given branch then return to original branch if needed.
+     *
+     * @param code Code of the repository to export
+     * @param branch Branch to export. Will take current branch if not provided.
+     * @return the zipped folder corresponding to the given {@link GitRepository}
+     */
+    public byte[] exportZip(String code, String branch) throws Exception {
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        String currentBranch = gitClient.currentBranch(repository);
+
+        try {
+            // Switch to branch to export if needed
+            if (branch != null) {
+                if (!currentBranch.equals(branch)) {
+                    gitClient.checkout(repository, branch, false);
+                }
+            }
+
+            final File repositoryDir = GitHelper.getRepositoryDir(currentUser, code);
+            return FileUtils.createZipFile(repositoryDir.getAbsolutePath());
+
+        } finally {
+            // Return to original branch if needed
+            if (!currentBranch.equals(branch)) {
+                gitClient.checkout(repository, currentBranch, false);
+            }
+        }
     }
 
     public List<GitRepositoryDto> list() {
@@ -100,17 +181,18 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     @Override
     public GitRepositoryDto find(String code) throws MeveoApiException, EntityDoesNotExistsException {
-        return toDto(gitRepositoryService.findByCode(code));
+        final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        return toDto(repository);
     }
 
     @Override
     public GitRepository createOrUpdate(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {
-        return exists(dtoData) ? update(dtoData) : create(dtoData);
+        return exists(dtoData) ? update(dtoData) : create(dtoData, true);
     }
 
-    public GitRepository create(GitRepositoryDto dtoData) throws BusinessException {
+    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist) throws BusinessException {
         final GitRepository repository = fromDto(dtoData);
-        gitRepositoryService.create(repository);
+        gitRepositoryService.create(repository, failIfExist);
         return repository;
     }
 

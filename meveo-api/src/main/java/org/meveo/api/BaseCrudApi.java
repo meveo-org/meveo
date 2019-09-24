@@ -101,13 +101,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
      * @see org.meveo.api.ApiService#findIgnoreNotFound(java.lang.String)
      */
     @Override
-    public T findIgnoreNotFound(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+    public T findIgnoreNotFound(String code) throws MeveoApiException {
         try {
             return find(code);
-        } catch (EntityDoesNotExistsException e) {
+        } catch (EntityDoesNotExistsException | org.meveo.exceptions.EntityDoesNotExistsException e) {
             return null;
         }
-    }
+	}
     
     /**
      * Export entities matching filters to an XML file

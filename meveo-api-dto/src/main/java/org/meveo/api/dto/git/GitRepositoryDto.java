@@ -133,6 +133,10 @@ public class GitRepositoryDto extends BusinessEntityDto {
 
     @JsonProperty
     public String getCurrentBranch() {
+        if(currentBranch == null){
+            return "master";
+        }
+
         return currentBranch;
     }
 

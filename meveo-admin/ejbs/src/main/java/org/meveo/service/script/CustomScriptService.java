@@ -799,7 +799,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * When a script is deleted, remove the file from git repository
      *
      * @param scriptInstance Removed {@link ScriptInstance}
-     * @throws BusinessException
      */
     public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
         File file = findScriptFile(scriptInstance);
@@ -824,7 +823,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (modifiedFile.startsWith("scripts")) {
                     String scriptCode = modifiedFile.replaceAll("scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository());
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
                     File scriptFile = new File(repositoryDir, modifiedFile);
 
                     if (script == null  && scriptFile.exists()) {
@@ -866,7 +865,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     private File findScriptFile(CustomScript scriptInstance) {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
         final File scriptDir = new File(repositoryDir, "/scripts");
         if (!scriptDir.exists()) {
             scriptDir.mkdirs();

@@ -43,9 +43,12 @@ import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.synchronization.KeyLock;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,11 +63,12 @@ import java.util.stream.Collectors;
  * @author Clement Bareth
  * @lastModifiedVersion 6.4.0
  */
+@ApplicationScoped
 public class GitClient {
 
     @Inject
     @CurrentUser
-    private MeveoUser currentUser;
+    private Provider<MeveoUser> currentUser;
 
     @Inject
     @Commited
@@ -78,6 +82,9 @@ public class GitClient {
     @Removed
     private Event<GitBranch> branchRemoved;
 
+    @Inject
+    private KeyLock keyLock;
+
     /**
      * Remove the corresponding git repository from file system
      *
@@ -86,18 +93,22 @@ public class GitClient {
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
     protected void remove(GitRepository gitRepository) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repoDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repoDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
         if (repoDir.exists()) {
+            keyLock.lock(gitRepository.getCode());
             try {
                 FileUtils.deleteDirectory(repoDir);
             } catch (IOException e) {
                 throw new BusinessException("Cannot delete git repository " + gitRepository.getCode() + " from file system", e);
+            } finally {
+                keyLock.unlock(gitRepository.getCode());
             }
         }
+
     }
 
     /**
@@ -107,44 +118,52 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be cloned or initiated
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
-    protected void create(GitRepository gitRepository) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+    protected void create(GitRepository gitRepository, boolean failIfExist) throws BusinessException {
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repoDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
-        if (repoDir.exists()) {
+        final File repoDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+        if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());
         }
 
         repoDir.mkdirs();
 
         if (gitRepository.isRemote()) {
+            keyLock.lock(gitRepository.getCode());
             try {
                 final CloneCommand cloneCommand = Git.cloneRepository()
                         .setURI(gitRepository.getRemoteOrigin())
                         .setDirectory(repoDir);
 
-                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, null, null, currentUser);
+                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, null, null, currentUser.get());
                 cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call().close();
 
             } catch (GitAPIException e) {
                 repoDir.delete();
                 throw new BusinessException("Error cloning repository " + gitRepository.getRemoteOrigin(), e);
+
+            } finally {
+                keyLock.unlock(gitRepository.getCode());
             }
 
         } else {
+            keyLock.lock(gitRepository.getCode());
             try (Git git = Git.init().setDirectory(repoDir).call()){
                 // Init repo with a dummy commit
                 new File(repoDir, "README.md").createNewFile();
                 git.add().addFilepattern(".").call();
                 git.commit().setMessage("First commit")
-                        .setAuthor(currentUser.getUserName(), currentUser.getMail())
-                        .setCommitter(currentUser.getUserName(), currentUser.getMail())
+                        .setAuthor(currentUser.get().getUserName(), currentUser.get().getMail())
+                        .setCommitter(currentUser.get().getUserName(), currentUser.get().getMail())
                         .call();
             } catch (GitAPIException | IOException e) {
                 repoDir.delete();
                 throw new BusinessException("Error initating repository " + gitRepository.getCode(), e);
+
+            } finally {
+                keyLock.unlock(gitRepository.getCode());
             }
         }
 
@@ -161,11 +180,14 @@ public class GitClient {
      * @throws IllegalArgumentException   if pattern list is empty
      */
     public void commit(GitRepository gitRepository, List<String> patterns, String message) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
 
             final AddCommand add = git.add();
@@ -173,7 +195,7 @@ public class GitClient {
             if (CollectionUtils.isNotEmpty(patterns)) {
                 patterns.forEach(add::addFilepattern);
                 add.call();
-                
+
                 final Status status = git.status().call();
 
                 final RmCommand rm = git.rm();
@@ -192,8 +214,8 @@ public class GitClient {
 
                 if (status.hasUncommittedChanges()) {
                     git.commit().setMessage(message)
-                            .setAuthor(currentUser.getUserName(), currentUser.getMail())
-                            .setCommitter(currentUser.getUserName(), currentUser.getMail())
+                            .setAuthor(currentUser.get().getUserName(), currentUser.get().getMail())
+                            .setCommitter(currentUser.get().getUserName(), currentUser.get().getMail())
                             .call();
 
                     Set<String> modifiedFiles = new HashSet<>();
@@ -215,6 +237,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot create commit on repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
 
     }
@@ -229,7 +254,11 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be open, commited, or if a file is not child of the repository
      */
     public void commitFiles(GitRepository gitRepository, List<File> files, String message) throws BusinessException {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
         List<String> patterns = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(files)) {
@@ -262,18 +291,21 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the push
      */
     public void push(GitRepository gitRepository, String username, String password) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
         if (!gitRepository.isRemote()) {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to push to");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             final PushCommand push = git.push();
-            CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, currentUser);
+            CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, currentUser.get());
             push.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
 
         } catch (IOException e) {
@@ -281,6 +313,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot push repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -295,18 +330,21 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
      */
     public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
         if (!gitRepository.isRemote()) {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
 
-            CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, currentUser);
+            CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, currentUser.get());
 
             git.pull().setCredentialsProvider(usernamePasswordCredentialsProvider)
                     .setRebase(true)
@@ -317,6 +355,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot push repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -329,11 +370,14 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during branch creation
      */
     public void createBranch(GitRepository gitRepository, String branch) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
 
             branchCreated.fire(new GitBranch(branch, gitRepository));
@@ -344,6 +388,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot create new branch " + branch + " for repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
 
     }
@@ -357,11 +404,14 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during branch deletion
      */
     public void deleteBranch(GitRepository gitRepository, String branch) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             branchRemoved.fire(new GitBranch(branch, gitRepository));
 
@@ -372,8 +422,10 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot delete branch " + branch + " for repository " + gitRepository.getCode(), e);
-        }
 
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
     }
 
     /**
@@ -385,17 +437,22 @@ public class GitClient {
      * @throws UserNotAuthorizedException if user does not have read access to the repository
      */
     public String currentBranch(GitRepository gitRepository) throws BusinessException {
-        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasReadRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             return git.getRepository().getBranch();
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -409,20 +466,28 @@ public class GitClient {
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
     public void checkout(GitRepository gitRepository, String branch, boolean createBranch) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
-            git.checkout().setCreateBranch(createBranch).setName(branch).call();
-            gitRepository.setCurrentBranch(branch);
+            if(!git.getRepository().getBranch().equals(branch)) {
+                git.checkout().setCreateBranch(createBranch).setName(branch).call();
+                gitRepository.setCurrentBranch(branch);
+            }
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot checkout branch " + branch + " for repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -437,11 +502,14 @@ public class GitClient {
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
     public boolean merge(GitRepository gitRepository, String from, String to) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             String previousBranch = git.getRepository().getBranch();
 
@@ -471,6 +539,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Checkout problem for repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -483,11 +554,14 @@ public class GitClient {
      * @throws UserNotAuthorizedException if user does not have read access to the repository
      */
     public List<String> listBranch(GitRepository gitRepository) throws BusinessException {
-        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasReadRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             return git.branchList().call()
                     .stream()
@@ -499,8 +573,10 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot list branches of repository " + gitRepository.getCode(), e);
-        }
 
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
     }
 
     /**
@@ -511,11 +587,13 @@ public class GitClient {
      * @throws BusinessException if we cannot read the repositories branches
      */
     public RevCommit getHeadCommit(GitRepository gitRepository) throws BusinessException {
-        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasReadRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
             try (RevWalk rw = new RevWalk(git.getRepository())) {
@@ -524,6 +602,9 @@ public class GitClient {
             }
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 
@@ -535,12 +616,14 @@ public class GitClient {
      * @return the list of files modified
      */
     public Set<String> getModifiedFiles(GitRepository gitRepository, RevCommit commit) throws BusinessException {
-        if (!GitHelper.hasReadRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasReadRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
         Set<String> modifiedFiles = new HashSet<>();
+
+        keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
             Repository repository = git.getRepository();
@@ -559,6 +642,9 @@ public class GitClient {
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
 
         return modifiedFiles;
@@ -571,11 +657,14 @@ public class GitClient {
      * @param commit        Commit to reset onto
      */
     public void reset(GitRepository gitRepository, RevCommit commit) throws BusinessException {
-        if (!GitHelper.hasWriteRole(currentUser, gitRepository)) {
-            throw new UserNotAuthorizedException(currentUser.getUserName());
+        if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
+            throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser.get(), gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
         try (Git git = Git.open(repositoryDir)) {
             git.reset().setMode(ResetCommand.ResetType.HARD)
                     .setRef(commit.getId().getName())
@@ -586,6 +675,9 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Cannot reset repository to commit " + commit.getId().getName(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
         }
     }
 

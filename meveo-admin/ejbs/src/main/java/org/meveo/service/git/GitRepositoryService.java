@@ -64,7 +64,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     public GitRepository getMeveoRepository() {
 
         try {
-            gitClient.create(GitHelper.MEVEO_DIR);
+            gitClient.create(GitHelper.MEVEO_DIR, false);
         } catch (EntityAlreadyExistsException e) {
             //NOOP
         } catch (BusinessException e) {
@@ -113,7 +113,12 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
      */
     @Override
     public void create(GitRepository entity) throws BusinessException {
-        gitClient.create(entity);
+        gitClient.create(entity, true);
+        super.create(entity);
+    }
+
+    public void create(GitRepository entity, boolean failIfExist) throws BusinessException {
+        gitClient.create(entity, failIfExist);
         super.create(entity);
     }
 

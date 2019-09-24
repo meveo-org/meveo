@@ -60,8 +60,13 @@ public class GitHelper {
         return rootDir + GIT_DIR;
     }
 
-    public static File getRepositoryDir(MeveoUser currentUser, GitRepository repository) {
-        return new File(getGitDirectory(currentUser), repository.getCode());
+    /**
+     * @param currentUser Logged user
+     * @param code        Code of the git repository
+     * @return the {@link File} object linked to the fiven git repository
+     */
+    public static File getRepositoryDir(MeveoUser currentUser, String code) {
+        return new File(getGitDirectory(currentUser), code);
     }
 
     public static String computeRelativePath(File repositoryDir, File file) {

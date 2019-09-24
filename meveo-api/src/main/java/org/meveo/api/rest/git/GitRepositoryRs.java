@@ -16,6 +16,8 @@
 
 package org.meveo.api.rest.git;
 
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
@@ -69,15 +71,6 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     }
 
     /**
-     * @return List of all {@link GitRepository} in database
-     */
-    @GET
-    @Path("/repositories")
-    public List<GitRepositoryDto> list() {
-        return gitRepositoryApi.list();
-    }
-
-    /**
      * Create a new {@link GitRepository}
      *
      * @param postData data of the {@link GitRepository}
@@ -85,7 +78,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories")
     public void create(GitRepositoryDto postData) throws BusinessException {
-        gitRepositoryApi.create(postData);
+        gitRepositoryApi.create(postData, true);
     }
 
     /**
@@ -101,7 +94,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
             gitRepositoryApi.remove(postData.getCode());
         }
 
-        gitRepositoryApi.create(postData);
+        gitRepositoryApi.create(postData, false);
     }
 
     /**
@@ -118,6 +111,15 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     }
 
     /**
+     * @return List of all {@link GitRepository} in database
+     */
+    @GET
+    @Path("/repositories")
+    public List<GitRepositoryDto> list() {
+        return gitRepositoryApi.list();
+    }
+
+    /**
      * Retrieve a {@link GitRepository} by code
      *
      * @param code Code of the {@link GitRepository} to retrieve
@@ -125,8 +127,31 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @GET
     @Path("/repositories/{code}")
+    @Produces(MediaType.APPLICATION_JSON)
     public GitRepositoryDto find(@PathParam("code") String code) throws MeveoApiException, EntityDoesNotExistsException {
         return gitRepositoryApi.find(code);
+    }
+
+    /**
+     * @param code   Code of the repo
+     * @param branch Branch of the repo
+     * @return Zipped file of the repository content
+     */
+    @GET
+    @GZIP
+    @Path("/repositories/{code}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response exportZip(@PathParam("code") String code, @QueryParam("branch") String branch) throws Exception {
+        GitRepositoryDto gitRepositoryDto = gitRepositoryApi.find(code);
+        if (gitRepositoryDto == null) {
+            throw new EntityDoesNotExistsException(GitRepository.class, code);
+        }
+
+        byte[] bytes = gitRepositoryApi.exportZip(code, branch);
+        final String name = branch != null ? code + "-" + branch : code + "-" + gitRepositoryDto.getCurrentBranch();
+        return Response.ok(bytes, MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=\"" + name + ".zip\"") //optional
+                .build();
     }
 
     /**
@@ -242,6 +267,33 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
         } else {
             return Response.ok().build();
         }
+    }
+
+    /**
+     * Import new repository with content. Delete existing data
+     *
+     * @param uploadForm Contains the zipped file and the DTO
+     * @param code       Code of the repo
+     */
+    @PUT
+    @Path("/repositories/{code}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void importZipOverride(@GZIP @MultipartForm GitRepositoryUploadForm uploadForm, @PathParam("code") String code) throws Exception {
+        GitRepositoryDto repository = uploadForm.getRepository() != null ? uploadForm.getRepository() : new GitRepositoryDto();
+        repository.setCode(code);
+        gitRepositoryApi.importZip(uploadForm.getData(), repository, true);
+    }
+
+    /**
+     * Import new repository with content. Do nothing if data already exists
+     *
+     * @param uploadForm Contains the zipped file and the DTO
+     */
+    @POST
+    @Path("/repositories")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public void importZip(@GZIP @MultipartForm GitRepositoryUploadForm uploadForm) throws Exception {
+        gitRepositoryApi.importZip(uploadForm.getData(), uploadForm.getRepository(), false);
     }
 
 }

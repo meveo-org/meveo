@@ -103,12 +103,12 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
     }
 
     @Override
-    public CustomEntityCategoryDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+    public CustomEntityCategoryDto find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
         return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
     }
 
     @Override
-    public CustomEntityCategoryDto findIgnoreNotFound(String code) throws MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+    public CustomEntityCategoryDto findIgnoreNotFound(String code) {
         return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
     }
 

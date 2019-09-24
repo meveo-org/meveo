@@ -436,12 +436,12 @@ public class OntologyObserver {
     }
 
     private File getCetDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
         return new File(repositoryDir, "custom/entities");
     }
 
     private File getCrtDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
         return new File(repositoryDir, "custom/relationships");
     }
 
