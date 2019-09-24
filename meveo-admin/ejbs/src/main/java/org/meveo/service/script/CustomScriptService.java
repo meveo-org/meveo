@@ -422,7 +422,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void compileScript(T script, boolean testCompile) {
 
         final String source;
-        if(!testCompile && findScriptFile(script).exists() ) {
+        if(testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
         } else {
             source = readScriptFile(script);
