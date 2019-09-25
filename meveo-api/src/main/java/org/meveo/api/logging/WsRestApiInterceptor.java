@@ -33,13 +33,13 @@ public class WsRestApiInterceptor {
             MDC.put("providerCode", currentUser.getProviderCode());
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("\r\n\r\n===========================================================");
-            log.debug("Entering method {}.{}", invocationContext.getMethod().getDeclaringClass().getName(), invocationContext.getMethod().getName());
+        if (log.isTraceEnabled()) {
+            log.trace("\r\n\r\n===========================================================");
+            log.trace("Entering method {}.{}", invocationContext.getMethod().getDeclaringClass().getName(), invocationContext.getMethod().getName());
 
             if (invocationContext.getParameters() != null) {
                 for (Object obj : invocationContext.getParameters()) {
-                    log.debug("Parameter {}", obj == null ? null : obj.toString());
+                    log.trace("Parameter {}", obj == null ? null : obj.toString());
                 }
             }
         }

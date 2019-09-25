@@ -107,7 +107,18 @@ public class User extends EnableEntity implements ICustomFieldEntity {
     @Column(name = "last_login_date")
     private Date lastLoginDate;
 
+    @Column(name = "ssh_key", columnDefinition = "TEXT")
+    private String sshKey;
+
     public User() {
+    }
+
+    public String getSshKey() {
+        return sshKey;
+    }
+
+    public void setSshKey(String sshKey) {
+        this.sshKey = sshKey;
     }
 
     public Set<Role> getRoles() {

@@ -206,7 +206,10 @@ public class CurrentUserProvider {
                     em.merge(user);
                     em.flush();
                 }
+
                 currentUser.setFullName(user.getNameOrUsername());
+                currentUser.setSshKey(user.getSshKey());
+
             } catch (NoResultException e) {
                 user = new User();
                 user.setUserName(currentUser.getUserName().toUpperCase());

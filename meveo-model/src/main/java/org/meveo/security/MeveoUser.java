@@ -57,6 +57,8 @@ public abstract class MeveoUser implements Serializable {
 
     protected String token;
 
+    protected String sshKey;
+
     public MeveoUser() {
     }
 
@@ -73,6 +75,14 @@ public abstract class MeveoUser implements Serializable {
     public MeveoUser(String userName, String providerCode) {
         this.userName = userName;
         this.providerCode = providerCode;
+    }
+
+    public String getSshKey() {
+        return sshKey;
+    }
+
+    public void setSshKey(String sshKey) {
+        this.sshKey = sshKey;
     }
 
     public String getSubject() {

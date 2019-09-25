@@ -224,7 +224,7 @@
         <profile>
             <id>additional</id>
             <properties>
-                <liquibase.changeLogFile>src/main/db_resources/changelog/db.additional.xml</liquibase.changeLogFile>
+                <liquibase.changeLogFile>src/main/db_resources/changelog/db.releases.xml</liquibase.changeLogFile>
             </properties>
         </profile>
     </profiles>
