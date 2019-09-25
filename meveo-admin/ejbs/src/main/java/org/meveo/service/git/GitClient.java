@@ -115,10 +115,13 @@ public class GitClient {
      * Create and initiate the git repository in the file system
      *
      * @param gitRepository Repository to create
+     * @param failIfExist   Whether to fail if directory already exists
+     * @param username      Optional - Username to connect remote repository if any
+     * @param password      Optional - Password to connect remote repository if any
      * @throws BusinessException          if repository cannot be cloned or initiated
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
-    protected void create(GitRepository gitRepository, boolean failIfExist) throws BusinessException {
+    protected void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         if (!GitHelper.hasWriteRole(currentUser.get(), gitRepository)) {
             throw new UserNotAuthorizedException(currentUser.get().getUserName());
         }
@@ -137,7 +140,7 @@ public class GitClient {
                         .setURI(gitRepository.getRemoteOrigin())
                         .setDirectory(repoDir);
 
-                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, null, null, currentUser.get());
+                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, currentUser.get());
                 cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call().close();
 
             } catch (GitAPIException e) {

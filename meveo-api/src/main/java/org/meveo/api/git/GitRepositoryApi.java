@@ -92,7 +92,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
             org.apache.commons.io.FileUtils.deleteDirectory(dotGitDir);
         }
 
-        create(gitRepositoryDto, false);
+        create(gitRepositoryDto, false, null, null);
     }
 
     /**
@@ -187,12 +187,12 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     @Override
     public GitRepository createOrUpdate(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {
-        return exists(dtoData) ? update(dtoData) : create(dtoData, true);
+        return exists(dtoData) ? update(dtoData) : create(dtoData, true, null, null);
     }
 
-    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist) throws BusinessException {
+    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws BusinessException {
         final GitRepository repository = fromDto(dtoData);
-        gitRepositoryService.create(repository, failIfExist);
+        gitRepositoryService.create(repository, failIfExist, username, password);
         return repository;
     }
 

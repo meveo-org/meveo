@@ -74,27 +74,31 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * Create a new {@link GitRepository}
      *
      * @param postData data of the {@link GitRepository}
+     * @param username Optional - Username to connect to remote
+     * @param password Optional - Password to connect to remote
      */
     @POST
     @Path("/repositories")
-    public void create(GitRepositoryDto postData) throws BusinessException {
-        gitRepositoryApi.create(postData, true);
+    public void create(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password) throws BusinessException {
+        gitRepositoryApi.create(postData, true, username, password);
     }
 
     /**
      * Create a new {@link GitRepository} (delete existing one if any)
      *
      * @param postData data of the {@link GitRepository}
+     * @param username Optional - Username to connect to remote
+     * @param password Optional - Password to connect to remote
      */
     @PUT
     @Path("/repositories")
-    public void overwrite(GitRepositoryDto postData) throws BusinessException {
+    public void overwrite(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password) throws BusinessException {
         final boolean exists = gitRepositoryApi.exists(postData);
         if (exists) {
             gitRepositoryApi.remove(postData.getCode());
         }
 
-        gitRepositoryApi.create(postData, false);
+        gitRepositoryApi.create(postData, false, username, password);
     }
 
     /**
