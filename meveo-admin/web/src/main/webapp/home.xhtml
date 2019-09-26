@@ -77,27 +77,37 @@
 									</f:facet>
 									<h:panelGrid columns="1"
 										rendered="#{configIssuesReportingBean.nbrScriptInstanceWithError!=0}">
-										<hftl:dataList label="#{messages['scriptInstance.title']}"
-											resultsId="scriptInstances_panel" checkMany="true"
-											backingBean="#{scriptInstanceListBean}" sortBy="code"
-											dataModel="#{configIssuesReportingBean.scriptInstanceWithErrorList}"
-											exportToXml="false">
-											<hftl:column label="#{messages['businessEntity.code']}"
-												field="code" noLinkToView="true" />
-											<hftl:column
-												label="#{messages['businessEntity.description']}"
-												field="description" />
+										<p:dataTable var="script"
+													 value="#{configIssuesReportingBean.scriptInstanceWithErrorList}"
+													 id="scripts_dataTable" style="width:900px;" rows="10"
+													 paginator="true"
+													 paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+													 rowsPerPageTemplate="5,10,15">
+											<p:column sortBy="#{code}">
+												<f:facet name="header">
+													<h:outputText
+															value="#{messages['businessEntity.code']}" />
+												</f:facet>
+												<h:outputText value="#{script.code}" />
+											</p:column>
+											<p:column>
+												<f:facet name="header">
+													<h:outputText
+															value="#{messages['businessEntity.description']}" />
+												</f:facet>
+												<h:outputText value="#{script.description}" />
+											</p:column>
 											<p:column width="50">
 												<f:facet name="header">
 													<h:outputText value="Actions" />
 												</f:facet>
 												<p:button id="scriptInstancesButton"
 													outcome="scriptInstanceDetail" icon="ui-icon-search">
-													<f:param name="objectId" value="#{entity.id}" />
+													<f:param name="objectId" value="#{script.id}" />
 													<f:param name="backView" value="home" />
 												</p:button>
 											</p:column>
-										</hftl:dataList>
+										</p:dataTable>
 									</h:panelGrid>
 								</p:tab>
 							</p:accordionPanel>
