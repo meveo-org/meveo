@@ -79,8 +79,14 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @POST
     @Path("/repositories")
-    public void create(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password) throws BusinessException {
+    public void create(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password, @QueryParam("branch") String branch) throws BusinessException {
         gitRepositoryApi.create(postData, true, username, password);
+        if(branch != null) {
+            checkout(postData.getCode(), branch, true);
+            if(postData.getRemoteOrigin() != null){
+                pull(postData.getCode(), username, password);
+            }
+        }
     }
 
     /**
@@ -91,14 +97,21 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * @param password Optional - Password to connect to remote
      */
     @PUT
-    @Path("/repositories")
-    public void overwrite(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password) throws BusinessException {
+    @Path("/repositories/{code}")
+    public void overwrite(@PathParam("code") String code, GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password, @QueryParam("branch") String branch) throws BusinessException {
+        postData.setCode(code);
         final boolean exists = gitRepositoryApi.exists(postData);
         if (exists) {
             gitRepositoryApi.remove(postData.getCode());
         }
 
         gitRepositoryApi.create(postData, false, username, password);
+        if(branch != null) {
+            checkout(postData.getCode(), branch, true);
+            if(postData.getRemoteOrigin() != null){
+                pull(code, username, password);
+            }
+        }
     }
 
     /**

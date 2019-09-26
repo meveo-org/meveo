@@ -146,7 +146,7 @@ public class GitClient {
                     CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
                     cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call().close();
                 } else {
-                    SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshKey(), password);
+                    SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
                     cloneCommand.setTransportConfigCallback(sshTransportConfigCallback).call().close();
                 }
 
@@ -322,7 +322,7 @@ public class GitClient {
                 CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
                 push.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
             } else {
-                SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshKey(), password);
+                SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
                 push.setTransportConfigCallback(sshTransportConfigCallback).call();
             }
 
@@ -368,7 +368,7 @@ public class GitClient {
                 CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
                 pull.setCredentialsProvider(usernamePasswordCredentialsProvider);
             } else {
-                SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshKey(), password);
+                SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
                 pull.setTransportConfigCallback(sshTransportConfigCallback);
             }
 

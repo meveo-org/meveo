@@ -18,6 +18,7 @@ package org.meveo.service.git;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
@@ -42,6 +43,21 @@ import java.util.stream.Collectors;
 @Stateless
 public class GitRepositoryService extends BusinessService<GitRepository> {
 
+    protected final static GitRepository MEVEO_DIR;
+
+    static {
+        final ParamBean paramBean = ParamBean.getInstance();
+        final String remoteUrl = paramBean.getProperty("meveo.git.directory.remote.url", null);
+        final String remoteUsername = paramBean.getProperty("meveo.git.directory.remote.username", null);
+        final String remotePassword = paramBean.getProperty("meveo.git.directory.remote.password", null);
+
+        MEVEO_DIR = new GitRepository();
+        MEVEO_DIR.setCode("Meveo");
+        MEVEO_DIR.setRemoteOrigin(remoteUrl);
+        MEVEO_DIR.setDefaultRemoteUsername(remoteUsername);
+        MEVEO_DIR.setDefaultRemotePassword(remotePassword);
+    }
+
     @Inject
     private GitClient gitClient;
 
@@ -65,10 +81,10 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 
         try {
             gitClient.create(
-                    GitHelper.MEVEO_DIR,
+                    MEVEO_DIR,
                     false,
-                    GitHelper.MEVEO_DIR.getDefaultRemoteUsername(),
-                    GitHelper.MEVEO_DIR.getDefaultRemotePassword()
+                    MEVEO_DIR.getDefaultRemoteUsername(),
+                    MEVEO_DIR.getDefaultRemotePassword()
             );
 
         } catch (EntityAlreadyExistsException e) {
@@ -77,7 +93,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
             log.error("Cannot retrieve Meveo directory", e);
         }
 
-        return GitHelper.MEVEO_DIR;
+        return MEVEO_DIR;
     }
 
     @Override

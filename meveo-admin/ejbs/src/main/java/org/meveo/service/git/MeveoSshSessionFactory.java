@@ -23,11 +23,13 @@ import org.eclipse.jgit.util.FS;
 
 public class MeveoSshSessionFactory extends JschConfigSessionFactory {
 
-    private String sshKey;
+    private String sshPrivateKey;
+    private String sshPublicKey;
     private String sshPassphrase;
 
-    public MeveoSshSessionFactory(String sshKey, String sshPassphrase) {
-        this.sshKey = sshKey;
+    public MeveoSshSessionFactory(String sshPrivateKey, String sshPublicKey, String sshPassphrase) {
+        this.sshPrivateKey = sshPrivateKey;
+        this.sshPublicKey = sshPublicKey;
         this.sshPassphrase = sshPassphrase;
     }
 
@@ -40,7 +42,7 @@ public class MeveoSshSessionFactory extends JschConfigSessionFactory {
     protected JSch createDefaultJSch(FS fs) throws JSchException {
         JSch jSch = super.createDefaultJSch(fs);
         jSch.removeAllIdentity();
-        jSch.addIdentity("identity", this.sshKey.trim().getBytes(), null, this.sshPassphrase.getBytes());
+        jSch.addIdentity("identity", this.sshPrivateKey.trim().getBytes(), sshPublicKey.trim().getBytes(), this.sshPassphrase.getBytes());
         return jSch;
     }
 

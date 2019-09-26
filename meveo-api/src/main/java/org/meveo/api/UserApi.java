@@ -21,6 +21,8 @@ import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.RSAKeyPair;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.model.SortOrder;
@@ -376,6 +378,28 @@ public class UserApi extends BaseApi {
         remove(username);
 
         keycloakAdminClientService.deleteUser(httpServletRequest, username);
+    }
+
+    /**
+     * Generate and set ssh keys for a user.
+     *
+     * @param username If provided, will set ssh keys for corresponding user. Instead, will set ssh keys for logged user
+     * @return the generated {@link RSAKeyPair}
+     */
+    public RSAKeyPair generateShKey(String username, String passphrase) throws BusinessException {
+        if(username == null) {
+            username = currentUser.getUserName();
+        }
+
+        RSAKeyPair rsaKeyPair = GitHelper.generateRSAKey(username, passphrase);
+
+        User user = userService.findByUsername(username);
+        user.setSshPrivateKey(rsaKeyPair.getPrivateKey());
+        user.setSshPublicKey(rsaKeyPair.getPublicKey());
+        userService.update(user);
+
+        return rsaKeyPair;
+
     }
     
 }

@@ -56,9 +56,10 @@
         <addPrimaryKey tableName="git_repository" columnNames="id"/>
     </changeSet>
 
-    <changeSet id="#3894 - Add ssh key column to User" author="">
+    <changeSet id="#3894 - Add ssh private and public key column to User" author="">
         <addColumn tableName="adm_user">
-            <column name="ssh_key" type="${type.longText}"/>
+            <column name="ssh_private_key" type="${type.longText}"/>
+            <column name="ssh_public_key" type="${type.longText}"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>

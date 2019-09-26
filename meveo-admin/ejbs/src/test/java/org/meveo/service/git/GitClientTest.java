@@ -21,6 +21,7 @@ import org.junit.Test;
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class GitClientTest {
 
@@ -31,7 +32,7 @@ public class GitClientTest {
         File repoDir = new File("C:/toto/");
         File file = new File("C:/toto/tati/tata/MyClass.java");
         String relativePath = GitHelper.computeRelativePath(repoDir, file).replaceAll("\\\\", "/");
-        assertEquals("/tati/tata/MyClass.java", relativePath);
+        assertEquals("tati/tata/MyClass.java", relativePath);
 
         // File is not a child of repo
         repoDir = new File("C:/toto/");
@@ -44,6 +45,13 @@ public class GitClientTest {
         file = new File("C:/toto/");
         relativePath = GitHelper.computeRelativePath(repoDir, file);
         assertEquals("", relativePath);
+    }
+
+    @Test
+    public void sshKeyGenTest(){
+        RSAKeyPair rsaKeyPair = GitHelper.generateRSAKey("test.user@meveo", "meveo-user-pwd");
+        assertNotNull(rsaKeyPair.getPrivateKey());
+        assertNotNull(rsaKeyPair.getPublicKey());
     }
 
 }

@@ -6,6 +6,7 @@ import javax.interceptor.Interceptors;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.UserApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.UserDto;
@@ -15,6 +16,7 @@ import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.UserRs;
+import org.meveo.service.git.RSAKeyPair;
 
 /**
  * @author Mohamed Hamidi
@@ -117,7 +119,12 @@ public class UserRsImpl extends BaseRs implements UserRs {
 
         return result;
     }
-    
+
+    @Override
+    public RSAKeyPair generateShKey(String username, String passphrase) throws BusinessException {
+        return userApi.generateShKey(username, passphrase);
+    }
+
     @Override
     public ActionStatus createExternalUser(UserDto postData) {
         ActionStatus result = new ActionStatus();

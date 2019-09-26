@@ -16,6 +16,9 @@
 
 package org.meveo.service.git;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.KeyPair;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -24,7 +27,10 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.MeveoUser;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Helper class for Git usage
@@ -34,22 +40,6 @@ import java.io.File;
 public class GitHelper {
 
     private final static String GIT_DIR = "/git";
-
-    protected final static GitRepository MEVEO_DIR;
-
-    static {
-        final ParamBean paramBean = ParamBean.getInstance();
-        final String remoteUrl = paramBean.getProperty("meveo.git.directory.remote.url", null);
-        final String remoteUsername = paramBean.getProperty("meveo.git.directory.remote.username", null);
-        final String remotePassword = paramBean.getProperty("meveo.git.directory.remote.password", null);
-
-        MEVEO_DIR = new GitRepository();
-        MEVEO_DIR.setCode("Meveo");
-        MEVEO_DIR.setRemoteOrigin(remoteUrl);
-        MEVEO_DIR.setDefaultRemoteUsername(remoteUsername);
-        MEVEO_DIR.setDefaultRemotePassword(remotePassword);
-
-    }
 
     /**
      * @param currentUser Logged user
@@ -118,5 +108,36 @@ public class GitHelper {
         }
 
         return null;
+    }
+
+    /**
+     * Generate a RSA key pair
+     *
+     * @param username Username to put on public key
+     * @param passphrase Passphrase to encrypt private key
+     * @return the generated key pair
+     */
+    public static RSAKeyPair generateRSAKey(String username, String passphrase) {
+
+        try (ByteArrayOutputStream privateOutputStream = new ByteArrayOutputStream();
+             ByteArrayOutputStream publicOutputStream = new ByteArrayOutputStream()) {
+
+            JSch jsch = new JSch();
+
+            KeyPair kpair = KeyPair.genKeyPair(jsch, KeyPair.RSA);
+            kpair.writePrivateKey(privateOutputStream, passphrase.getBytes());
+            kpair.writePublicKey(publicOutputStream, username);
+            kpair.dispose();
+
+            String privateKey = privateOutputStream.toString(StandardCharsets.UTF_8.name());
+            String publicKey = publicOutputStream.toString(StandardCharsets.UTF_8.name());
+
+            return new RSAKeyPair(privateKey, publicKey);
+
+        } catch (JSchException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 }

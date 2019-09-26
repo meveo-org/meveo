@@ -16,26 +16,21 @@
 
 package org.meveo.service.git;
 
-import org.eclipse.jgit.api.TransportConfigCallback;
-import org.eclipse.jgit.transport.SshTransport;
-import org.eclipse.jgit.transport.Transport;
+public class RSAKeyPair {
 
-public class SshTransportConfigCallback implements TransportConfigCallback {
+    private String privateKey;
+    private String publicKey;
 
-    private String sshPrivateKey;
-    private String sshPublicKey;
-    private String sshPassphrase;
-
-    public SshTransportConfigCallback(String sshPrivateKey, String sshPublicKey, String sshPassphrase) {
-        this.sshPrivateKey = sshPrivateKey;
-        this.sshPublicKey = sshPublicKey;
-        this.sshPassphrase = sshPassphrase;
+    public RSAKeyPair(String privateKey, String publicKey) {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
     }
 
-    @Override
-    public void configure(Transport transport) {
-        SshTransport sshTransport = (SshTransport) transport;
-        MeveoSshSessionFactory meveoSshSessionFactory = new MeveoSshSessionFactory(sshPrivateKey, sshPublicKey, sshPassphrase);
-        sshTransport.setSshSessionFactory(meveoSshSessionFactory);
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
     }
 }

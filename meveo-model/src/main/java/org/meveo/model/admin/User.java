@@ -107,18 +107,29 @@ public class User extends EnableEntity implements ICustomFieldEntity {
     @Column(name = "last_login_date")
     private Date lastLoginDate;
 
-    @Column(name = "ssh_key", columnDefinition = "TEXT")
-    private String sshKey;
+    @Column(name = "ssh_private_key", columnDefinition = "TEXT")
+    private String sshPrivateKey;
+
+    @Column(name = "ssh_public_key", columnDefinition = "TEXT")
+    private String sshPublicKey;
 
     public User() {
     }
 
-    public String getSshKey() {
-        return sshKey;
+    public String getSshPrivateKey() {
+        return sshPrivateKey;
     }
 
-    public void setSshKey(String sshKey) {
-        this.sshKey = sshKey;
+    public void setSshPrivateKey(String sshPrivateKey) {
+        this.sshPrivateKey = sshPrivateKey;
+    }
+
+    public String getSshPublicKey() {
+        return sshPublicKey;
+    }
+
+    public void setSshPublicKey(String sshPublicKey) {
+        this.sshPublicKey = sshPublicKey;
     }
 
     public Set<Role> getRoles() {
