@@ -316,8 +316,7 @@ public class Neo4jService implements CustomPersistenceService {
     
     public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, CustomEntityInstance cei) {
     	
-    	Map<String, Object> fields = JacksonUtil.convertToMap(cei);
-    	return addCetNode(neo4JConfiguration, cetCode, fields);
+    	return addCetNode(neo4JConfiguration, cetCode, cei.getCfValuesAsValues());
     }
 
     public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
@@ -956,8 +955,7 @@ public class Neo4jService implements CustomPersistenceService {
     
     public void deleteEntity(String neo4jConfiguration, String cetCode, CustomEntityInstance cei) throws BusinessException {
     	
-    	Map<String, Object> fields = JacksonUtil.convertToMap(cei);
-    	deleteEntity(neo4jConfiguration, cetCode, fields);
+    	deleteEntity(neo4jConfiguration, cetCode, cei.getCfValuesAsValues());
     }
 
     public void deleteEntity(String neo4jConfiguration, String cetCode, Map<String, Object> values) throws BusinessException {
