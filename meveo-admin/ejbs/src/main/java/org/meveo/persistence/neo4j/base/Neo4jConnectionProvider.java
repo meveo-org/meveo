@@ -15,7 +15,25 @@
  */
 package org.meveo.persistence.neo4j.base;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
@@ -26,25 +44,11 @@ import org.neo4j.driver.v1.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * @author Rachid
  * @author clement.bareth
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  */
 @Startup
 @Singleton
@@ -122,17 +126,22 @@ public class Neo4jConnectionProvider {
 
     }
 
-    private synchronized Driver generateDriver(String neo4JConfigurationCode) {
-        Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
-        if (neo4JConfigurationCode != null) {
-            try {
-                neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
-            } catch (NoResultException e) {
-                LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
-            }
-        }
-        return GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
-    }
+	private synchronized Driver generateDriver(String neo4JConfigurationCode) {
+		Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
+		if (neo4JConfigurationCode != null) {
+			try {
+				neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
+			} catch (NoResultException e) {
+				LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
+			}
+		}
+
+		return createDriver(neo4JConfiguration);
+	}
+
+	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
+		return GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
+	}
 
     public String getNeo4jUrl() {
         return neo4jUrl;
@@ -173,14 +182,19 @@ public class Neo4jConnectionProvider {
      * @param code Code of the configuration
      * @return The configuration corresponding to the code
      */
-    public Neo4JConfiguration findByCode(String code){
-        EntityManager entityManager = emWrapperProvider.get().getEntityManager();
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Neo4JConfiguration> query = cb.createQuery(Neo4JConfiguration.class);
-        Root<Neo4JConfiguration> root = query.from(Neo4JConfiguration.class);
-        query.select(root);
-        query.where(cb.equal(root.get("code"), code));
-        return entityManager.createQuery(query).getSingleResult();
-    }
+	public Neo4JConfiguration findByCode(String code) {
+		EntityManager entityManager = emWrapperProvider.get().getEntityManager();
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Neo4JConfiguration> query = cb.createQuery(Neo4JConfiguration.class);
+		Root<Neo4JConfiguration> root = query.from(Neo4JConfiguration.class);
+		query.select(root);
+		query.where(cb.equal(root.get("code"), code));
+		return entityManager.createQuery(query).getSingleResult();
+	}
+
+	public void onNeo4jConnectionCreated(@Observes @Updated Neo4JConfiguration entity) {
+		configurationMap.put(entity.getCode(), entity);
+		DRIVER_MAP.put(entity.getCode(), createDriver(entity));
+	}
 
 }

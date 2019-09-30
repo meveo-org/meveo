@@ -75,9 +75,11 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
@@ -279,6 +281,12 @@ public class Neo4jService implements CustomPersistenceService {
 
         return relationsIds.get(0);
     }
+    
+	public String findNodeId(String neo4JConfiguration, CustomEntityTemplate cet, CustomEntityInstance cei) throws ELException, BusinessException {
+
+		Map<String, Object> fields = JacksonUtil.convertToMap(cei);
+		return findNodeId(neo4JConfiguration, cet, fields);
+	}
 
     public String findNodeId(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fields) throws ELException, BusinessException {
         final Set<CustomEntityTemplateUniqueConstraint> trustedQueries = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
@@ -304,6 +312,12 @@ public class Neo4jService implements CustomPersistenceService {
         validateAndConvertCustomFields(cfts, fields, uniqueFields, true);
 
         return neo4jDao.findNodeId(neo4JConfiguration, cet.getCode(), uniqueFields);
+    }
+    
+    public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, CustomEntityInstance cei) {
+    	
+    	Map<String, Object> fields = JacksonUtil.convertToMap(cei);
+    	return addCetNode(neo4JConfiguration, cetCode, fields);
     }
 
     public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
@@ -938,6 +952,12 @@ public class Neo4jService implements CustomPersistenceService {
         } else {
             return null;
         }
+    }
+    
+    public void deleteEntity(String neo4jConfiguration, String cetCode, CustomEntityInstance cei) throws BusinessException {
+    	
+    	Map<String, Object> fields = JacksonUtil.convertToMap(cei);
+    	deleteEntity(neo4jConfiguration, cetCode, fields);
     }
 
     public void deleteEntity(String neo4jConfiguration, String cetCode, Map<String, Object> values) throws BusinessException {

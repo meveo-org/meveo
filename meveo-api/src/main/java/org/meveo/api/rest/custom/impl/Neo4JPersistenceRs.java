@@ -2,6 +2,7 @@ package org.meveo.api.rest.custom.impl;
 
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.elresolver.ELException;
@@ -16,6 +17,7 @@ import org.meveo.persistence.scheduler.SchedulingService;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -112,4 +114,13 @@ public class Neo4JPersistenceRs {
         }
 
     }
+    
+    @POST
+    @Path("/entities/cei")
+    public Response persistCei(Collection<CustomEntityInstanceDto> dtos) throws CyclicDependencyException {
+
+      
+    	return null;
+    }
+    
 }
