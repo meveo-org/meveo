@@ -1,5 +1,6 @@
 package org.meveo.api.rest.impl;
 
+import io.swagger.annotations.ApiOperation;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
@@ -76,6 +77,7 @@ public abstract class BaseRs implements IBaseRs {
      */
     @GET
     @Path("/user")
+    @ApiOperation(value = "user", hidden = true)
     public ActionStatus user() {
         ActionStatus result = new ActionStatus();
 

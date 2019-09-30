@@ -13,7 +13,6 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit.http.server</artifactId>
-            <version>5.4.3.201909031940-r</version>
         </dependency>
         <dependency>
             <groupId>org.meveo</groupId>
@@ -94,6 +93,22 @@
             <groupId>org.jboss.spec.javax.servlet</groupId>
             <artifactId>jboss-servlet-api_4.0_spec</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.5.23</version>
+        </dependency>
+        <dependency>
+		  <groupId>io.swagger</groupId>
+		  <artifactId>swagger-jaxrs</artifactId>
+		  <version>1.5.23</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
+		</dependency>
     </dependencies>
     <build>
         <plugins>

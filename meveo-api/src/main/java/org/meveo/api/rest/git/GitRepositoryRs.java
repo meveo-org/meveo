@@ -16,6 +16,26 @@
 
 package org.meveo.api.rest.git;
 
+import java.util.List;
+
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.interceptor.Interceptors;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import io.swagger.annotations.*;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.admin.exception.BusinessException;
@@ -31,14 +51,6 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.interceptor.Interceptors;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.List;
-
 /**
  * REST interface to manage git repositories
  *
@@ -50,6 +62,7 @@ import java.util.List;
 @Interceptors({WsRestApiInterceptor.class})
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA, "text/csv"})
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv"})
+@Api("Git")
 public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto> {
 
     @Inject
@@ -79,7 +92,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @POST
     @Path("/repositories")
-    public void create(GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password, @QueryParam("branch") String branch) throws BusinessException {
+    @ApiOperation(value = "Create a new repository", notes = "If branch is specified and does not exist, will create it")
+    public void create(@NotNull @ApiParam("Repository information") GitRepositoryDto postData,
+                       @QueryParam("username") @ApiParam("Username to connect to remote") String username,
+                       @QueryParam("password") @ApiParam("Password to connect to remote") String password,
+                       @QueryParam("branch") @ApiParam("Branch to checkout") String branch) throws BusinessException {
         gitRepositoryApi.create(postData, true, username, password);
         if(branch != null) {
             checkout(postData.getCode(), branch, true);
@@ -98,7 +115,13 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @PUT
     @Path("/repositories/{code}")
-    public void overwrite(@PathParam("code") String code, GitRepositoryDto postData, @QueryParam("username") String username, @QueryParam("password") String password, @QueryParam("branch") String branch) throws BusinessException {
+    @ApiOperation(value = "Create or update a new repository",
+            notes = "If repository with specified code exists, first delete it. If branch is specified and does not exist, will create it.")
+    public void overwrite(@PathParam("code") String code,
+                          @NotNull @ApiParam("Repository information") GitRepositoryDto postData,
+                          @QueryParam("username") @ApiParam("Username to connect to remote") String username,
+                          @QueryParam("password") @ApiParam("Password to connect to remote") String password,
+                          @QueryParam("branch") @ApiParam("Branch to checkout") String branch) throws BusinessException {
         postData.setCode(code);
         final boolean exists = gitRepositoryApi.exists(postData);
         if (exists) {
@@ -122,7 +145,12 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @POST
     @Path("/repositories/{code}")
-    public void update(GitRepositoryDto postData, @PathParam("code") String code) throws BusinessException {
+    @ApiOperation("Update an existing repository")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "If update is ok"),
+            @ApiResponse(code = 404, message = "If specified repository does not exists")
+    })
+    public void update(@NotNull @ApiParam("Repository information") GitRepositoryDto postData, @PathParam("code") @ApiParam("Code of the repository") String code) throws BusinessException {
         postData.setCode(code);
         gitRepositoryApi.update(postData);
     }
@@ -132,6 +160,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @GET
     @Path("/repositories")
+    @ApiOperation("List all existing repositories")
     public List<GitRepositoryDto> list() {
         return gitRepositoryApi.list();
     }
@@ -144,8 +173,9 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @GET
     @Path("/repositories/{code}")
+    @ApiOperation("Retrieve one repository by code")
     @Produces(MediaType.APPLICATION_JSON)
-    public GitRepositoryDto find(@PathParam("code") String code) throws MeveoApiException, EntityDoesNotExistsException {
+    public GitRepositoryDto find(@PathParam("code") @ApiParam("Code of the repository") String code) throws MeveoApiException, EntityDoesNotExistsException {
         return gitRepositoryApi.find(code);
     }
 
@@ -157,8 +187,10 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @GET
     @GZIP
     @Path("/repositories/{code}")
+    @ApiOperation(value = "Get zipped repository content", notes = "If no branch are provided, will export the current branch")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportZip(@PathParam("code") String code, @QueryParam("branch") String branch) throws Exception {
+    public Response exportZip(@PathParam("code") @ApiParam("Code of the repository") String code,
+                              @QueryParam("branch") @ApiParam("Branch to export") String branch) throws Exception {
         GitRepositoryDto gitRepositoryDto = gitRepositoryApi.find(code);
         if (gitRepositoryDto == null) {
             throw new EntityDoesNotExistsException(GitRepository.class, code);
@@ -178,7 +210,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      */
     @DELETE
     @Path("/repositories/{code}")
-    public void remove(@PathParam("code") String code) throws BusinessException {
+    @ApiOperation("Remove a repository by code")
+    public void remove(@PathParam("code") @ApiParam("Code of the repository") String code) throws BusinessException {
         gitRepositoryApi.remove(code);
     }
 
@@ -192,7 +225,10 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/commit")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public void commit(@PathParam("code") String code, @FormParam("message") String message, @FormParam("pattern") List<String> patterns) throws BusinessException {
+    @ApiOperation(value = "Commit content of a repository", notes = "Will commit every file if patterns is empty")
+    public void commit(@PathParam("code") @ApiParam("Code of the repository") String code,
+                       @FormParam("message") @ApiParam("Commit message") String message,
+                       @FormParam("pattern") @ApiParam("Patterns of the files to commit") List<String> patterns) throws BusinessException {
         final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.commit(gitRepository, patterns, message);
     }
@@ -207,7 +243,14 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/push")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public void push(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
+    @ApiOperation("Push the commit to remote origin")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "If push is successful"),
+            @ApiResponse(code = 400, message = "If repository has no remote")
+    })
+    public void push(@PathParam("code") @ApiParam("Code of the repository") String code,
+                     @FormParam("username") @ApiParam("Username to use during push") String username,
+                     @FormParam("password") @ApiParam("Password to use during push") String password) throws BusinessException {
         final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.push(gitRepository, username, password);
     }
@@ -222,7 +265,14 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories/{code}/pull")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public void pull(@PathParam("code") String code, @FormParam("username") String username, @FormParam("password") String password) throws BusinessException {
+    @ApiOperation("Pull changes from remote origin")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "If pull is successful"),
+            @ApiResponse(code = 400, message = "If repository has no remote")
+    })
+    public void pull(@PathParam("code") @ApiParam("Code of the repository") String code,
+                     @FormParam("username") @ApiParam("Username to use during pull") String username,
+                     @FormParam("password") @ApiParam("Password to use during pull") String password) throws BusinessException {
         final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.pull(gitRepository, username, password);
     }
@@ -235,8 +285,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * @param createBranch Whether to create branch if not exists
      */
     @POST
-    @Path("/repositories/{code}/checkout/{branch}")
-    public void checkout(@PathParam("code") String code, @PathParam("branch") String branch, @QueryParam("create") boolean createBranch) throws BusinessException {
+    @Path("/repositories/{code}/branches/{branch}/checkout")
+    @ApiOperation("Checkout a branch")
+    public void checkout(@PathParam("code") @ApiParam("Code of the repository") String code,
+                         @PathParam("branch") @ApiParam("Name of the branch to checkout") String branch,
+                         @QueryParam("create") @ApiParam("Whether to create branch if it does not exist") boolean createBranch) throws BusinessException {
         final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.checkout(repository, branch, createBranch);
     }
@@ -248,8 +301,10 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * @param branch Name of the branch to create
      */
     @POST
-    @Path("/repositories/{code}/create/{branch}")
-    public void createBranch(@PathParam("code") String code, @PathParam("branch") String branch) throws BusinessException {
+    @Path("/repositories/{code}/branches/{branch}")
+    @ApiOperation("Create a branch")
+    public void createBranch(@PathParam("code") @ApiParam("Code of the repository") String code,
+                             @PathParam("branch") @ApiParam("Name of the branch to create") String branch) throws BusinessException {
         final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.createBranch(repository, branch);
     }
@@ -260,9 +315,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * @param code   Code of the {@link GitRepository} where to delete the branch
      * @param branch Name of the branch to delete
      */
-    @POST
-    @Path("/repositories/{code}/create/{branch}")
-    public void deleteBranch(@PathParam("code") String code, @PathParam("branch") String branch) throws BusinessException {
+    @DELETE
+    @Path("/repositories/{code}/branches/{branch}")
+    @ApiOperation("Delete a branch")
+    public void deleteBranch(@PathParam("code") @ApiParam("Code of the repository") String code,
+                             @PathParam("branch") @ApiParam("Name of the branch to delte") String branch) throws BusinessException {
         final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         gitClient.deleteBranch(repository, branch);
     }
@@ -275,8 +332,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
      * @param to   Name of the target branch
      */
     @POST
-    @Path("/repositories/{code}/merge/{branch}/into/{to}")
-    public Response merge(@PathParam("code") String code, @PathParam("branch") String from, @PathParam("to") String to) throws BusinessException {
+    @Path("/repositories/{code}/branches/merge")
+    @ApiOperation("Merge one branch into another")
+    public Response merge(@PathParam("code") @ApiParam("Code of the repository") String code,
+                          @FormParam("source") @NotNull @ApiParam("Source branch of the merge") String from,
+                          @FormParam("target") @NotNull @ApiParam("Target branch of the merge") String to) throws BusinessException {
         final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
         final boolean mergeOk = gitClient.merge(repository, from, to);
         if (!mergeOk) {
@@ -295,7 +355,9 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @PUT
     @Path("/repositories/{code}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importZipOverride(@GZIP @MultipartForm GitRepositoryUploadForm uploadForm, @PathParam("code") String code) throws Exception {
+    @ApiOperation("Upload a repository")
+    public void importZipOverride(@GZIP @MultipartForm @NotNull @ApiParam("Upload form") GitRepositoryUploadForm uploadForm,
+                                  @PathParam("code") @ApiParam("Code of the repository") String code) throws Exception {
         GitRepositoryDto repository = uploadForm.getRepository() != null ? uploadForm.getRepository() : new GitRepositoryDto();
         repository.setCode(code);
         gitRepositoryApi.importZip(uploadForm.getData(), repository, true);
@@ -309,7 +371,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
     @POST
     @Path("/repositories")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importZip(@GZIP @MultipartForm GitRepositoryUploadForm uploadForm) throws Exception {
+    @ApiOperation("Upload a new repository")
+    public void importZip(@GZIP @MultipartForm @ApiParam("Upload form") @NotNull GitRepositoryUploadForm uploadForm) throws Exception {
         gitRepositoryApi.importZip(uploadForm.getData(), uploadForm.getRepository(), false);
     }
 

@@ -74,6 +74,8 @@ import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.annotations.ApiOperation;
+
 @Path("/{repository}/persistence")
 public class PersistenceRs {
 
@@ -100,6 +102,7 @@ public class PersistenceRs {
     @POST
     @Path("/{cetCode}/list")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation("List data for a given CET")
     public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){

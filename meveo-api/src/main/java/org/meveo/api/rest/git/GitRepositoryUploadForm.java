@@ -16,6 +16,7 @@
 
 package org.meveo.api.rest.git;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 import org.meveo.api.dto.git.GitRepositoryDto;
 
@@ -27,10 +28,12 @@ public class GitRepositoryUploadForm {
 
     @FormParam("zipFile")
     @PartType(MediaType.APPLICATION_OCTET_STREAM)
+    @ApiModelProperty("Zipped repository content")
     private InputStream data;
 
     @FormParam("repository")
     @PartType(MediaType.APPLICATION_JSON)
+    @ApiModelProperty("Repository information")
     private GitRepositoryDto repository;
 
     public InputStream getData() {
