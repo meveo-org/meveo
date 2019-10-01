@@ -6,6 +6,6 @@ It is intended to be run by Wildfly 15 with full Jakarta EE stack.
 
 licence : AGPLv3.0
 
-[User Guide](user-guide.adoc)
+[User Guide](user-guide.html)
 
 [API Reference](api-reference.html)
