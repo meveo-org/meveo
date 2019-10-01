@@ -1,0 +1,12 @@
+= Meveo - User guide
+:nofooter:
+
+[[_git_server_]]
+== Git server
+
+You can access the git server like in any other git hosting provider. The remote origin will be accessible at
+....
+https://{host}(:{port})/{context-root}/git/{repository-code}
+....
+
+You must authenticate using your Meveo login / password

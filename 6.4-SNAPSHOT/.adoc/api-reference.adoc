@@ -1,0 +1,747 @@
+= Meveo
+
+
+[[_overview]]
+== Overview
+
+=== Version information
+[%hardbreaks]
+__Version__ : 6.4.0-SNAPSHOT
+
+
+=== URI scheme
+[%hardbreaks]
+__BasePath__ : /api/rest
+
+
+=== Tags
+
+* Git : Manage git repositories
+
+
+
+
+[[_paths]]
+== Resources
+
+[[_git_resource]]
+=== Git
+Manage git repositories
+
+
+[[_exportzip]]
+==== Get zipped repository content
+....
+GET /git/repositories/{code}
+....
+
+
+===== Description
+If no branch are provided, will export the current branch
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**Query**|**branch** +
+__optional__|Branch to export|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/octet-stream`
+
+
+[[_importzipoverride]]
+==== Upload a repository
+....
+PUT /git/repositories/{code}
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Body**|**body** +
+__optional__|Upload form|<<_gitrepositoryuploadform,GitRepositoryUploadForm>>
+|**Path**|**code** +
+__required__|Code of the repository|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `multipart/form-data`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_update]]
+==== Update an existing repository
+....
+POST /git/repositories/{code}
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Body**|**body** +
+__optional__|Repository information|<<_gitrepositorydto,GitRepositoryDto>>
+|**Path**|**code** +
+__required__|Code of the repository|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**200**|If update is ok|No Content
+|**404**|If specified repository does not exists|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_remove]]
+==== Remove a repository by code
+....
+DELETE /git/repositories/{code}
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_push]]
+==== Push the commit to remote origin
+....
+POST /git/repositories/{code}/push
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**FormData**|**username** +
+__optional__|Username to use during push|string
+|**FormData**|**password** +
+__optional__|Password to use during push|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**200**|If push is successful|No Content
+|**400**|If repository has no remote|No Content
+|===
+
+
+===== Consumes
+
+* `application/x-www-form-urlencoded`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_list]]
+==== List all existing repositories
+....
+GET /git/repositories
+....
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**200**|successful operation|< <<_gitrepositorydto,GitRepositoryDto>> > array
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_importzip]]
+==== Upload a new repository
+....
+POST /git/repositories
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Body**|**body** +
+__optional__|Upload form|<<_gitrepositoryuploadform,GitRepositoryUploadForm>>
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `multipart/form-data`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_merge]]
+==== Merge one branch into another
+....
+POST /git/repositories/{code}/branches/merge
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**FormData**|**source** +
+__required__|Source branch of the merge|string
+|**FormData**|**target** +
+__required__|Target branch of the merge|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_commit]]
+==== Commit content of a repository
+....
+POST /git/repositories/{code}/commit
+....
+
+
+===== Description
+Will commit every file if patterns is empty
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**FormData**|**message** +
+__optional__|Commit message|string
+|**FormData**|**pattern** +
+__optional__|Patterns of the files to commit|< string > array(multi)
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/x-www-form-urlencoded`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_createbranch]]
+==== Create a branch
+....
+POST /git/repositories/{code}/branches/{branch}
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**Path**|**branch** +
+__required__|Name of the branch to create|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_deletebranch]]
+==== Delete a branch
+....
+DELETE /git/repositories/{code}/branches/{branch}
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**Path**|**branch** +
+__required__|Name of the branch to delte|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_checkout]]
+==== Checkout a branch
+....
+POST /git/repositories/{code}/branches/{branch}/checkout
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**Path**|**branch** +
+__required__|Name of the branch to checkout|string
+|**Query**|**create** +
+__optional__|Whether to create branch if it does not exist|boolean
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_pull]]
+==== Pull changes from remote origin
+....
+POST /git/repositories/{code}/pull
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Path**|**code** +
+__required__|Code of the repository|string
+|**FormData**|**username** +
+__optional__|Username to use during pull|string
+|**FormData**|**password** +
+__optional__|Password to use during pull|string
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**200**|If pull is successful|No Content
+|**400**|If repository has no remote|No Content
+|===
+
+
+===== Consumes
+
+* `application/x-www-form-urlencoded`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+[[_exportcsv]]
+==== Export to a file
+....
+POST /git/export
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^4a"]
+|===
+|Type|Name|Schema
+|**Body**|**body** +
+__optional__|<<_pagingandfiltering,PagingAndFiltering>>
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**200**|successful operation|file
+|===
+
+
+===== Consumes
+
+* `application/json`
+* `application/xml`
+* `multipart/form-data`
+* `text/csv`
+
+
+===== Produces
+
+* `text/csv`
+* `application/xml`
+* `application/json`
+
+
+[[_importdata]]
+==== Import from multiple files
+....
+POST /git/import
+....
+
+
+===== Parameters
+
+[options="header", cols=".^2a,.^3a,.^9a,.^4a"]
+|===
+|Type|Name|Description|Schema
+|**Query**|**overwrite** +
+__optional__|Whether to overwrite existing data|boolean
+|**FormData**|**file** +
+__required__|File contained serialized data|< file > array(multi)
+|===
+
+
+===== Responses
+
+[options="header", cols=".^2a,.^14a,.^4a"]
+|===
+|HTTP Code|Description|Schema
+|**default**|successful operation|No Content
+|===
+
+
+===== Consumes
+
+* `multipart/form-data`
+
+
+===== Produces
+
+* `application/json`
+* `application/xml`
+* `text/csv`
+
+
+
+
+[[_definitions]]
+== Definitions
+
+[[_gitrepositorydto]]
+=== GitRepositoryDto
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**active** +
+__optional__|boolean
+|**code** +
+__optional__|string
+|**description** +
+__optional__|string
+|**updatedCode** +
+__optional__|string
+|**readingRoles** +
+__optional__|< string > array
+|**writingRoles** +
+__optional__|< string > array
+|**remoteOrigin** +
+__optional__|string
+|**remoteUsername** +
+__optional__|string
+|**remotePassword** +
+__optional__|string
+|**meveoRepository** +
+__optional__|boolean
+|**currentBranch** +
+__optional__ +
+__read-only__|string
+|**branches** +
+__optional__ +
+__read-only__|< string > array
+|**remote** +
+__optional__|boolean
+|===
+
+
+[[_gitrepositoryuploadform]]
+=== GitRepositoryUploadForm
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**data** +
+__optional__|Zipped repository content|<<_inputstream,InputStream>>
+|**repository** +
+__optional__|Repository information|<<_gitrepositorydto,GitRepositoryDto>>
+|===
+
+
+[[_inputstream]]
+=== InputStream
+__Type__ : object
+
+
+[[_pagingandfiltering]]
+=== PagingAndFiltering
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**fullTextFilter** +
+__optional__|string
+|**filters** +
+__optional__|< string, object > map
+|**fields** +
+__optional__|string
+|**offset** +
+__optional__|integer (int32)
+|**limit** +
+__optional__|integer (int32)
+|**sortBy** +
+__optional__|string
+|**sortOrder** +
+__optional__|enum (ASCENDING, DESCENDING)
+|**totalNumberOfRecords** +
+__optional__|integer (int32)
+|===
+
+
+
+
+
