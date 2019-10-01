@@ -436,9 +436,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <!-- Generate a nice TOC -->
-<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"></script>
+<script src="/dependencies/jquery.js"></script>
+<script src="/dependencies/jquery-ui.js"></script>
+<script src="/dependencies/tocify.js"></script>
 <!-- We do not need the tocify CSS because the asciidoc CSS already provides most of what we neeed -->
 
 <style>
@@ -508,8 +508,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
         $(window).resize(handleTocOnResize);
         handleTocOnResize();
-
-        $(".sectlevel1").hide();
     });
 </script>
 </head>
