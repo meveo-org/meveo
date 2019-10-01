@@ -37,6 +37,7 @@ import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
@@ -71,6 +72,10 @@ public class GitClient {
     private Provider<MeveoUser> currentUser;
 
     @Inject
+    @CommitReceived
+    private Event<CommitEvent> gitRepositoryCommitedEvent;
+
+    @Inject
     @Commited
     private Event<CommitEvent> commitedEvent;
 
@@ -81,6 +86,10 @@ public class GitClient {
     @Inject
     @Removed
     private Event<GitBranch> branchRemoved;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
 
     @Inject
     private KeyLock keyLock;
@@ -348,6 +357,8 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
      */
     public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
+        RevCommit headCommitBeforePull = getHeadCommit(gitRepository);
+
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -374,6 +385,19 @@ public class GitClient {
 
             pull.setRebase(true).call();
 
+            try (RevWalk rw = new RevWalk(git.getRepository())) {
+                ObjectId head = git.getRepository().resolve(Constants.HEAD);
+                RevCommit headCommitAfterPull = rw.parseCommit(head);
+
+                // Fire commit received event if commits are different and Meveo repository is concerned
+                if(gitRepository.getCode().equals(meveoRepository.getCode()) && !headCommitBeforePull.getId().equals(headCommitAfterPull.getId())) {
+                    Set<String> modifiedFiles = getModifiedFiles(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
+                    if(modifiedFiles != null && !modifiedFiles.isEmpty()) {
+                        gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+                    }
+                }
+            }
+
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
@@ -383,6 +407,7 @@ public class GitClient {
         } finally {
             keyLock.unlock(gitRepository.getCode());
         }
+
     }
 
     /**
@@ -653,7 +678,6 @@ public class GitClient {
         }
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
-        Set<String> modifiedFiles = new HashSet<>();
 
         keyLock.lock(gitRepository.getCode());
 
@@ -661,15 +685,7 @@ public class GitClient {
             Repository repository = git.getRepository();
             RevWalk rw = new RevWalk(repository);
             RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
-            DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
-            df.setRepository(repository);
-            df.setDiffComparator(RawTextComparator.DEFAULT);
-            df.setDetectRenames(true);
-            List<DiffEntry> diffs = df.scan(parent.getTree(), commit.getTree());
-            for (DiffEntry diff : diffs) {
-                modifiedFiles.add(diff.getNewPath());
-                modifiedFiles.add(diff.getOldPath());
-            }
+            return getModifiedFiles(repository, parent, commit);
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
@@ -678,8 +694,6 @@ public class GitClient {
         } finally {
             keyLock.unlock(gitRepository.getCode());
         }
-
-        return modifiedFiles;
     }
 
     /**
@@ -712,6 +726,30 @@ public class GitClient {
         } finally {
             keyLock.unlock(gitRepository.getCode());
         }
+    }
+
+    /**
+     * Compute difference between two commits for a given repository
+     *
+     * @param repository  {@link Repository} to scan
+     * @param leftCommit  Left commit to compare
+     * @param rightCommit Right commit to compare
+     * @return the modified files between the two commits
+     */
+    protected Set<String> getModifiedFiles(Repository repository, RevCommit leftCommit, RevCommit rightCommit) throws IOException {
+        Set<String> modifiedFiles = new HashSet<>();
+
+        DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
+        df.setRepository(repository);
+        df.setDiffComparator(RawTextComparator.DEFAULT);
+        df.setDetectRenames(true);
+        List<DiffEntry> diffs = df.scan(leftCommit.getTree(), rightCommit.getTree());
+        for (DiffEntry diff : diffs) {
+            modifiedFiles.add(diff.getNewPath());
+            modifiedFiles.add(diff.getOldPath());
+        }
+
+        return modifiedFiles;
     }
 
 }

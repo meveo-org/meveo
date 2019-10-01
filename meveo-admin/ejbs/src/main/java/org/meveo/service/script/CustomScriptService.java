@@ -817,7 +817,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *     </ul>
      */
     @SuppressWarnings("unchecked")
-    public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException {
+    public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
                 if (modifiedFile.startsWith("scripts")) {
@@ -833,6 +833,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         String absolutePath = scriptFile.getAbsolutePath();
                         ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
                         scriptInstance.setSourceTypeEnum(scriptType);
+                        scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
                         create((T) scriptInstance);
 
                     } else if (script != null && !scriptFile.exists()) {
