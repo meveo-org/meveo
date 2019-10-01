@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -39,7 +40,9 @@ import org.meveo.model.security.Role;
  * The Class UserDto.
  *
  * @author Mohamed Hamidi
+ * @author Clement Bareth
  * @since Mai 23, 2016
+ * @lastModifiedVersion 6.4.0
  */
 @XmlRootElement(name = "User")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -97,10 +100,30 @@ public class UserDto extends BaseEntityDto {
     /** The last login date. */
     private Date lastLoginDate;
 
+    private String sshPrivateKey;
+
+    private String sshPublicKey;
+
     /**
      * Instantiates a new user dto.
      */
     public UserDto() {
+    }
+
+    public String getSshPrivateKey() {
+        return sshPrivateKey;
+    }
+
+    public void setSshPrivateKey(String sshPrivateKey) {
+        this.sshPrivateKey = sshPrivateKey;
+    }
+
+    public String getSshPublicKey() {
+        return sshPublicKey;
+    }
+
+    public void setSshPublicKey(String sshPublicKey) {
+        this.sshPublicKey = sshPublicKey;
     }
 
     /**
@@ -145,6 +168,9 @@ public class UserDto extends BaseEntityDto {
             }
             Collections.sort(this.securedEntities, Comparator.comparing(SecuredEntityDto::getCode));
         }
+
+        sshPrivateKey = user.getSshPrivateKey();
+        sshPublicKey = user.getSshPublicKey();
     }
 
     /**
