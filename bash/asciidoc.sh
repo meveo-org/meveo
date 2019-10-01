@@ -26,8 +26,8 @@ java -jar ${dir}/swagger2markup-cli-1.3.3.jar convert \
    -c ${dir}/config.properties
 
 # Convert AsciiDoc to HTML
-asciidoctor -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/api-reference.adoc --out-file=${dir}/../${version}/api-reference.html
-asciidoctor -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/user-guide.adoc --out-file=${dir}/../${version}/user-guide.html
+asciidoctor -a docinfo=shared -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/api-reference.adoc --out-file=${dir}/../${version}/api-reference.html
+asciidoctor -a docinfo=shared -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/user-guide.adoc --out-file=${dir}/../${version}/user-guide.html
 
 # Remove tmp file
 rm ${dir}/swagger-tmp.json
