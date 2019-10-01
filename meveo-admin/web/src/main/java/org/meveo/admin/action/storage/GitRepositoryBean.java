@@ -7,17 +7,23 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.git.GitRepositoryApi;
+import org.meveo.commons.utils.FileUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
+import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.slf4j.Logger;
 
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 @Named
 @ViewScoped
@@ -77,6 +83,31 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
         	log.error("Failed to pull", e);
             messages.error(new BundleKey("messages", "gitRepositories.pull.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         }
+    }
+
+    public void importZip(FileUploadEvent event) throws Exception {
+        InputStream inputStream = event.getFile().getInputstream();
+        GitRepositoryDto dto = new GitRepositoryDto();
+        dto.setReadingRoles(entity.getReadingRoles());
+        dto.setWritingRoles(entity.getWritingRoles());
+        dto.setRemoteOrigin(entity.getRemoteOrigin());
+        dto.setRemoteUsername(entity.getDefaultRemoteUsername());
+        dto.setRemotePassword(entity.getDefaultRemotePassword());
+        dto.setCode(entity.getCode());
+        dto.setDescription(entity.getDescription());
+        dto.setMeveoRepository(entity.isMeveoRepository());
+        dto.setCurrentBranch(entity.getCurrentBranch());
+        dto.setBranches(entity.getBranches());
+        gitRepositoryApi.importZip(inputStream, dto, false);
+    }
+
+    public StreamedContent exportZip() {
+        try {
+            byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), entity.getCurrentBranch());
+            InputStream zip = new ByteArrayInputStream(exportZip);
+            return new DefaultStreamedContent(zip);
+        } catch (Exception e) {}
+        return null;
     }
 
     @Override
