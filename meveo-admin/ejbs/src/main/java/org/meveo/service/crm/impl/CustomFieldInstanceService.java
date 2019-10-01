@@ -40,10 +40,13 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +54,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class CustomFieldInstanceService extends BaseService {
@@ -82,6 +85,12 @@ public class CustomFieldInstanceService extends BaseService {
 
     @Inject
     private ParamBeanFactory paramBeanFactory;
+    
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
 
     // Previous comments
     // /**
@@ -2294,4 +2303,23 @@ public class CustomFieldInstanceService extends BaseService {
     private EntityManager getEntityManager() {
         return emWrapper.getEntityManager();
     }
+    
+    /**
+     * Sets the {@link CustomFieldValues} of a given {@link CustomEntityInstance}.
+     * @param entity the custom entity instance
+     * @param cetCode custom entity template code
+     * @param values map of cft values
+     * @throws BusinessException thrown when values are not set
+     */
+	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
+
+		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
+			Object value = values.getOrDefault(cetField.getKey(), null);
+			if (value != null) {
+				setCFValue(entity, cetField.getKey(), value);
+			}
+		}
+	}
 }

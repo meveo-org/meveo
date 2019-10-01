@@ -112,6 +112,8 @@ import com.google.gson.GsonBuilder;
 
 /**
  * @author Rachid AITYAAZZA
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  */
 public class Neo4jService implements CustomPersistenceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(Neo4jService.class);
@@ -314,9 +316,9 @@ public class Neo4jService implements CustomPersistenceService {
         return neo4jDao.findNodeId(neo4JConfiguration, cet.getCode(), uniqueFields);
     }
     
-    public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, CustomEntityInstance cei) {
+    public Set<EntityRef> addCetNode(String neo4JConfiguration, CustomEntityInstance cei) {
     	
-    	return addCetNode(neo4JConfiguration, cetCode, cei.getCfValuesAsValues());
+    	return addCetNode(neo4JConfiguration, cei.getCetCode(), cei.getCfValuesAsValues());
     }
 
     public Set<EntityRef> addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
@@ -1344,8 +1346,8 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Override
-    public PersistenceActionResult createOrUpdate(Repository repository, String entityCode, Map<String, Object> values) throws BusinessException {
-        final Set<EntityRef> entityRefs = addCetNode(repository.getNeo4jConfiguration().getCode(), entityCode, values);
+    public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei) throws BusinessException {
+        final Set<EntityRef> entityRefs = addCetNode(repository.getNeo4jConfiguration().getCode(), cei);
         String uuid = getTrustedUuids(entityRefs).get(0);
         if(uuid == null){
             throw new NullPointerException("Generated UUID from Neo4J cannot be null");

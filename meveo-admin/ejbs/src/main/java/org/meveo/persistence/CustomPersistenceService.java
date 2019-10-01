@@ -25,15 +25,20 @@ import java.util.stream.Collectors;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.scheduler.EntityRef;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 public interface CustomPersistenceService {
 
     PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException, BusinessApiException;
 
-    PersistenceActionResult createOrUpdate(Repository repository, String entityCode, Map<String, Object> values) throws BusinessException, IOException, BusinessApiException;
-
+    PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei) throws BusinessException, IOException, BusinessApiException;
+    
     PersistenceActionResult addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException;
 
     PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException;

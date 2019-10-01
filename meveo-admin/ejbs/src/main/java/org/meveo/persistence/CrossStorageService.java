@@ -34,7 +34,6 @@ import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -54,12 +53,17 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 @Default
 public class CrossStorageService implements CustomPersistenceService {
 
@@ -86,6 +90,9 @@ public class CrossStorageService implements CustomPersistenceService {
 
     @Inject
     private FileSystemService fileSystemService;
+    
+    @Inject
+    private CustomFieldInstanceService customFieldInstanceService;
 
     /**
      * Retrieves one entity instance
@@ -350,24 +357,32 @@ public class CrossStorageService implements CustomPersistenceService {
         String targetUUUID = findEntityId(repository, targetValues, endNode);
 
         // Target does not exists. We create the source
-        if (targetUUUID == null) {
-            return createOrUpdate(repository, startNode.getCode(), sourceValues);
+		if (targetUUUID == null) {
+			CustomEntityInstance cei = new CustomEntityInstance();
+			cei.setCetCode(startNode.getCode());
+			customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
 
-        } else {
-            // Target exists. Let's check if the relation exist.
-            final String relationUUID = findUniqueRelationByTargetUuid(repository, targetUUUID, crt);
+			return createOrUpdate(repository, cei);
 
-            // Relation does not exists. We create the source.
-            if (relationUUID == null) {
-                return createOrUpdate(repository, startNode.getCode(), sourceValues);
+		} else {
+			// Target exists. Let's check if the relation exist.
+			final String relationUUID = findUniqueRelationByTargetUuid(repository, targetUUUID, crt);
 
-            } else {
-                // Relation exists. We update the source node.
-                String sourceUUID = findIdOfSourceEntityByRelationId(repository, relationUUID, crt);
-                update(repository, startNode, sourceValues, sourceUUID);
-                return new PersistenceActionResult(sourceUUID);
-            }
-        }
+			// Relation does not exists. We create the source.
+			if (relationUUID == null) {
+				CustomEntityInstance cei = new CustomEntityInstance();
+				cei.setCetCode(startNode.getCode());
+				customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
+
+				return createOrUpdate(repository, cei);
+
+			} else {
+				// Relation exists. We update the source node.
+				String sourceUUID = findIdOfSourceEntityByRelationId(repository, relationUUID, crt);
+				update(repository, startNode, sourceValues, sourceUUID);
+				return new PersistenceActionResult(sourceUUID);
+			}
+		}
     }
 
     private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
@@ -381,16 +396,15 @@ public class CrossStorageService implements CustomPersistenceService {
      *
      * @param repository Code of the repository / configuration to store the data.
      *                   <br> NOTE : only available for NEO4J at the moment.
-     * @param entityCode Code of the entity to create
-     * @param values     Values of the entity
+     * @param cei the {@link CustomEntityInstance}
      * @return the persisted entites
      */
     @Override
-    public PersistenceActionResult createOrUpdate(Repository repository, String entityCode, Map<String, Object> values) throws BusinessException, IOException, BusinessApiException {
+    public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei) throws BusinessException, IOException, BusinessApiException {
 
-        Map<String, Object> entityValues = new HashMap<>(values);
+        Map<String, Object> entityValues = new HashMap<>(cei.getCfValuesAsValues());
 
-        CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(entityCode);
+        CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cei.getCetCode());
         final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
 
         createEntityReferences(repository, entityValues, cet);
@@ -970,16 +984,20 @@ public class CrossStorageService implements CustomPersistenceService {
                 final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
                 for (Object e : entitiesToCreate) {
-                	if(e instanceof Map) {
-	                    final Set<EntityRef> createdEntities = createOrUpdate(repository, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e).getPersistedEntities();
-	                    createdEntityReferences.addAll(createdEntities);
-	                    
-                	} else if(e instanceof String) {
-                		// If entity reference is a string, then it means it refers to an existing UUID
-                		EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
-                		entityRef.setTrustScore(100);
-                		createdEntityReferences.add(entityRef);
-                	}
+					if (e instanceof Map) {
+						CustomEntityInstance cei = new CustomEntityInstance();
+						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
+						customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
+
+						final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
+						createdEntityReferences.addAll(createdEntities);
+
+					} else if (e instanceof String) {
+						// If entity reference is a string, then it means it refers to an existing UUID
+						EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
+						entityRef.setTrustScore(100);
+						createdEntityReferences.add(entityRef);
+					}
                 }
 
                 List<String> uuids = getTrustedUuids(createdEntityReferences);
@@ -1067,6 +1085,5 @@ public class CrossStorageService implements CustomPersistenceService {
         }
 
     }
-
 
 }
