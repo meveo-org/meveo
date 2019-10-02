@@ -79,20 +79,19 @@
                     <hf:clearButton label="#{messages['action.reset']}" edit="#{gitRepositoryBean.edit}"
                                     rendered="#{gitRepositoryBean.canUserUpdateEntity()}"
                                     resetAction="#{gitRepositoryBean.resetFormEntity()}"/>
-                    <p:button id="backButton" value="#{messages['action.back']}" outcome="#{gitRepositoryBean.back()}"/>
+                    <p:button id="backButton" value="#{messages['action.back']}"
+                              outcome="#{gitRepositoryBean.back()}"/>
                     <p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
                                      action="#{gitRepositoryBean.deleteWithBack}" immediate="true" update="@form">
                         <p:confirm header="#{messages['commons.confirmationHeader']}"
                                    message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
                     </p:commandButton>
-                    <p:commandButton value="#{messages['gitRepositories.importZip']}" type="button" onclick="PF('importDialog').show();" rendered="#{gitRepositoryBean.entity.id == null}"/>
-                    <h:form>
-                        <p:commandButton value="#{messages['gitRepositories.exportZip']}" ajax="false" rendered="#{gitRepositoryBean.entity.id != null}">
-                            <p:fileDownload value="#{gitRepositoryBean.exportZip}" />
-                            <f:param name="cid"
-                                     value="#{javax.enterprise.context.conversation.id}" />
-                        </p:commandButton>
-                    </h:form>
+                    <p:commandButton value="#{messages['gitRepositories.importZip']}" process="@form" type="submit"
+                                     onclick="PF('importDialog').show();"
+                                     rendered="#{gitRepositoryBean.entity.id == null}"/>
+                    <p:commandButton value="#{messages['gitRepositories.exportZip']}" type="button"
+                                     rendered="#{gitRepositoryBean.entity.id != null}"
+                                     onclick="PF('exportDialog').show()"/>
                 </h:panelGrid>
             </ui:define>
         </hftl:formPanel>
@@ -170,15 +169,32 @@
             </h:form>
         </p:dialog>
 
-        <p:dialog header="#{messages['gitRepositories.importZip']}" id="importDialog" widgetVar="importDialog"
-                  modal="true" closeOnEscape="true">
-            <p:selectBooleanCheckbox immediate="true" id="override"
-                                     value="#{gitRepositoryBean.override}"
-                                     itemLabel="#{messages['gitRepositories.override']}">
-                <p:ajax/>
-            </p:selectBooleanCheckbox>
-            <p:fileUpload  accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced" dragDropSupport="true"
-                           allowTypes="/(\.|\/)(zip)$/" update=":formGitRepository" styleClass="TexAlCenter"/>
-        </p:dialog>
+        <h:form>
+            <p:dialog header="#{messages['gitRepositories.importZip']}" id="importDialog" widgetVar="importDialog"
+                      modal="true" closeOnEscape="true">
+                <p:messages autoUpdate="true"/>
+                <p:selectBooleanCheckbox immediate="true" id="override"
+                                         value="#{gitRepositoryBean.override}"
+                                         itemLabel="#{messages['gitRepositories.override']}">
+                    <p:ajax/>
+                </p:selectBooleanCheckbox>
+                <p:fileUpload accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced"
+                              dragDropSupport="true"
+                              allowTypes="/(\.|\/)(zip)$/" update=":formGitRepository" styleClass="TexAlCenter"/>
+            </p:dialog>
+
+            <p:dialog resizable="false" header="#{messages['gitRepositories.exportZip']}" id="exportDialog"
+                      styleClass="form-dialog" widgetVar="exportDialog" modal="true" closeOnEscape="true">
+				<p:messages autoUpdate="true"/>
+                <div class="clearLeft">
+                    <p:commandButton id="buttonExport" value="#{messages['action.export']}" ajax="false"
+                                     onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+                        <p:fileDownload id="exportFileDownload" value="#{gitRepositoryBean.exportZip()}"/>
+                    </p:commandButton>
+                </div>
+            </p:dialog>
+        </h:form>
+
+        <p:remoteCommand name="closeExportDialog" oncomplete="PF('exportDialog').hide()"/>
     </ui:define>
 </ui:composition>

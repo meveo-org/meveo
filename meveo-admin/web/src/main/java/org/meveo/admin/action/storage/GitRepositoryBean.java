@@ -7,7 +7,6 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.git.GitRepositoryApi;
-import org.meveo.commons.utils.FileUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.service.base.local.IPersistenceService;
@@ -16,6 +15,7 @@ import org.meveo.service.git.GitRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
 import javax.faces.context.FacesContext;
@@ -46,6 +46,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     private String username;
 
     private String password;
+
+    private boolean override;
 
     public GitRepositoryBean() {
         super(GitRepository.class);
@@ -85,28 +87,38 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
         }
     }
 
-    public void importZip(FileUploadEvent event) throws Exception {
-        InputStream inputStream = event.getFile().getInputstream();
-        GitRepositoryDto dto = new GitRepositoryDto();
-        dto.setReadingRoles(entity.getReadingRoles());
-        dto.setWritingRoles(entity.getWritingRoles());
-        dto.setRemoteOrigin(entity.getRemoteOrigin());
-        dto.setRemoteUsername(entity.getDefaultRemoteUsername());
-        dto.setRemotePassword(entity.getDefaultRemotePassword());
-        dto.setCode(entity.getCode());
-        dto.setDescription(entity.getDescription());
-        dto.setMeveoRepository(entity.isMeveoRepository());
-        dto.setCurrentBranch(entity.getCurrentBranch());
-        dto.setBranches(entity.getBranches());
-        gitRepositoryApi.importZip(inputStream, dto, false);
+    public void importZip(FileUploadEvent event) {
+        UploadedFile file = event.getFile();
+        String filename = file.getFileName();
+        try {
+            InputStream inputStream = file.getInputstream();
+            GitRepositoryDto dto = new GitRepositoryDto();
+            dto.setCode(entity.getCode());
+            dto.setDescription(entity.getDescription());
+            dto.setReadingRoles(entity.getReadingRoles());
+            dto.setWritingRoles(entity.getWritingRoles());
+            dto.setRemoteOrigin(entity.getRemoteOrigin());
+            dto.setRemoteUsername(entity.getDefaultRemoteUsername());
+            dto.setRemotePassword(entity.getDefaultRemotePassword());
+            dto.setMeveoRepository(entity.isMeveoRepository());
+            dto.setCurrentBranch(entity.getCurrentBranch());
+            dto.setBranches(entity.getBranches());
+            gitRepositoryApi.importZip(inputStream, dto, override);
+            messages.info(new BundleKey("messages", "importZip.successfull"), filename);
+        } catch (Exception e) {
+            messages.error(new BundleKey("messages","importZip.error"), filename);
+        }
     }
 
     public StreamedContent exportZip() {
+        String filename = entity.getCode();
         try {
             byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), entity.getCurrentBranch());
-            InputStream zip = new ByteArrayInputStream(exportZip);
-            return new DefaultStreamedContent(zip);
-        } catch (Exception e) {}
+            InputStream is = new ByteArrayInputStream(exportZip);
+            return new DefaultStreamedContent(is, "application/octet-stream", filename + ".zip");
+        } catch (Exception e) {
+            messages.error(new BundleKey("messages","exportZip.error"));
+        }
         return null;
     }
 
@@ -145,5 +157,15 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public boolean isOverride() {
+        return override;
+    }
+
+    @Override
+    public void setOverride(boolean override) {
+        this.override = override;
     }
 }
