@@ -1,6 +1,9 @@
 package org.meveo.model.persistence;
 
 import java.io.IOException;
+import java.util.Map;
+
+import org.meveo.model.customEntities.CustomEntityInstance;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -88,6 +91,10 @@ public class JacksonUtil {
     
     public static <T> T convert(Object value, Class<T> clazz) {
         return OBJECT_MAPPER.convertValue(value, clazz);
+    }
+    
+    public static Map<String, Object> convertToMap(CustomEntityInstance value) {
+    	return OBJECT_MAPPER.convertValue(value, new TypeReference<Map<String, Object>>() {});
     }
     
     public static <T> T read(String value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {

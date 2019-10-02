@@ -41,5 +41,5 @@ public interface FileSystemRs extends IBaseRs {
 						@PathParam("repositoryCode") String repositoryCode,
 						@PathParam("cetCode") String cetCode,
 						@PathParam("uuid") String uuid,
-						@PathParam("cftCode") String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException;
+						@PathParam("cftCode") String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException, org.meveo.api.exception.EntityDoesNotExistsException;
 }

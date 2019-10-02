@@ -54,6 +54,7 @@ import org.hibernate.SQLQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -933,7 +934,7 @@ public class CustomTableService extends NativePersistenceService {
         return valuesConverted;
     }
 
-    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid) {
+    public Map<String, Object> findById(CustomEntityTemplate cet, String uuid) throws EntityDoesNotExistsException {
         return findById(cet, uuid, null);
     }
 
@@ -969,12 +970,16 @@ public class CustomTableService extends NativePersistenceService {
 	 * @return the converted row data
 	 */
 	@SuppressWarnings("deprecation")
-	public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) {
+	public Map<String, Object> findById(CustomEntityTemplate cet, String uuid, List<String> selectFields) throws EntityDoesNotExistsException {
 		// Retrieve fields of the template
 		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
 		// Get raw data
 		Map<String, Object> data = super.findById(SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+
+		if(data == null) {
+		    throw new EntityDoesNotExistsException("CET " + cet.getCode() + " with UUID : " + uuid);
+        }
 
 		// Format the data to the representation defined by the fields
 		Map<String, Object> convertedData = convertData(data, cet);

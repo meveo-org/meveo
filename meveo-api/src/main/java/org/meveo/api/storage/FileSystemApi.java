@@ -38,7 +38,7 @@ public class FileSystemApi extends BaseApi {
 	@Inject
 	private CrossStorageService crossStorageService;
 
-	public File findBinary(String repositoryCode, String cetCode, String uuid, String cftCode, Integer index) throws EntityDoesNotExistsException, BusinessApiException, IOException {
+	public File findBinary(String repositoryCode, String cetCode, String uuid, String cftCode, Integer index) throws EntityDoesNotExistsException, BusinessApiException, IOException, org.meveo.api.exception.EntityDoesNotExistsException {
 
 		// Retrieve repository
 		Repository repository = repositoryService.findByCode(repositoryCode);

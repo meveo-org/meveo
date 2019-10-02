@@ -1,9 +1,25 @@
 package org.meveo.api.rest.custom.impl;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
@@ -14,16 +30,10 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 
-import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 @Path("/neo4j/persist")
 public class Neo4JPersistenceRs {
 
@@ -105,11 +115,12 @@ public class Neo4JPersistenceRs {
             scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
             return Response.status(201).build();
 
-        } catch (BusinessException | ELException | IOException | BusinessApiException e) {
+        } catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
 
             /* An error happened */
             return Response.serverError().entity(e).build();
         }
 
     }
+    
 }

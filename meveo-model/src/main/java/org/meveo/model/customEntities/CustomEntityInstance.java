@@ -49,6 +49,9 @@ public class CustomEntityInstance extends BusinessCFEntity {
     @Column(name = "parent_uuid", updatable = false, length = 60)
     @Size(max = 60)
     public String parentEntityUuid;
+    
+    @Transient
+    private CustomEntityTemplate cet;
 
     public String getCetCode() {
         return cetCode;
@@ -65,8 +68,16 @@ public class CustomEntityInstance extends BusinessCFEntity {
     public String getParentEntityUuid() {
         return parentEntityUuid;
     }
+    
+    public CustomEntityTemplate getCet() {
+		return cet;
+	}
 
-    @Override
+	public void setCet(CustomEntityTemplate cet) {
+		this.cet = cet;
+	}
+
+	@Override
     public boolean equals(Object obj) {
         
         if (this == obj) {
@@ -91,4 +102,11 @@ public class CustomEntityInstance extends BusinessCFEntity {
             return false;
         } else return cetCode == null || cetCode.equals(other.getCetCode());
     }
+
+	@Override
+	public String toString() {
+		return "CustomEntityInstance [cetCode=" + cetCode + ", code=" + code + ", id=" + id + "]";
+	}
+	
+	
 }
