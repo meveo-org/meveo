@@ -8,6 +8,7 @@ import javax.ws.rs.core.Application;
 
 import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
 import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
+import org.meveo.api.rest.custom.impl.GraphQLRs;
 import org.meveo.api.rest.custom.impl.Neo4JPersistenceRs;
 import org.meveo.api.rest.filter.PragmaRemover;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
@@ -45,6 +46,7 @@ public class JaxRsActivator extends Application {
 	        resources.add(PersistenceRs.class);
 	        resources.add(SwaggerSerializers.class);
 	        resources.add(SwaggerApiDefinition.class);
+	        resources.add(GraphQLRs.class);
         }
         
     	MeveoBeanConfig beanConfig = new MeveoBeanConfig();

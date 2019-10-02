@@ -1,8 +1,9 @@
 package org.meveo.model;
 
-import org.meveo.model.crm.custom.CustomFieldValues;
-
+import java.util.HashMap;
 import java.util.Map;
+
+import org.meveo.model.crm.custom.CustomFieldValues;
 
 /**
  * An entity that contains custom fields
@@ -51,4 +52,13 @@ public interface ICustomFieldEntity {
         }
         return null;
     }
+    
+    default Map<String, Object> getValuesNullSafe() {
+        CustomFieldValues cfValues = getCfValues();
+        if (cfValues != null && cfValues.getValuesByCode() != null) {
+            return cfValues.getValues();
+        }
+        return new HashMap<>();
+    }
+    
 }

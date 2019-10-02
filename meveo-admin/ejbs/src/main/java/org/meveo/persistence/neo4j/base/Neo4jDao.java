@@ -338,12 +338,17 @@ public class Neo4jDao {
 
         query.append(" }");
 
-        return cypherHelper.execute(
-                neo4jConfiguration,
-                query.toString(),
-                Collections.singletonMap("uuid", uuid),
-                (transaction, result) -> result.single().get(0).asMap()
-        );
+        Transaction transaction = null;
+        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
+            transaction = session.beginTransaction();
+            final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
+            return result.single().get(0).asMap();
+
+        } finally {
+            if (transaction != null) {
+                transaction.close();
+            }
+        }
 
     }
 
@@ -368,8 +373,11 @@ public class Neo4jDao {
             if (transaction != null) {
                 transaction.failure();
             }
-
-            LOGGER.error("Cannot find id of node with label {} and key values {} for repository {} : {}", code, fieldsKeys, neo4jConfiguration, e.getMessage());
+            
+            if(!(e instanceof NoSuchRecordException)) {
+	            LOGGER.error("Cannot find id of node with label {} and key values {} for repository {} : {}", code, fieldsKeys, neo4jConfiguration, e);
+            }
+            
             return null;
         } finally {
             if (transaction != null) {
@@ -420,11 +428,9 @@ public class Neo4jDao {
                     .map(Value::asMap)
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
-        } catch (ClientException e) {
-           throw e;
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while executing a GraphQL query", e);
+            LOGGER.error("Error while executing a GraphQL query : {}", query,  e);
             return null;
         } finally {
             // End session and transaction
@@ -435,6 +441,20 @@ public class Neo4jDao {
     }
 
     /**
+	 * Merge a Neo4J node based on its unique fields
+	 *
+	 * @param neo4JConfiguration Neo4J coordinates
+	 * @param cetCode            Code of the corresponding CustomEntityTemplate
+	 * @param uniqueFields       Unique fields that identifies the node
+	 * @param fields             Properties of the node
+	 * @param labels             Additionnal labels of the node
+	 * @return the id of the created node, or null if it has failed
+	 */
+	public String mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
+		return mergeNode(neo4JConfiguration, cetCode, uniqueFields, fields, updatableFields, labels, null);
+	}
+
+	/**
      * Merge a Neo4J node based on its unique fields
      *
      * @param neo4JConfiguration Neo4J coordinates
@@ -442,9 +462,10 @@ public class Neo4jDao {
      * @param uniqueFields       Unique fields that identifies the node
      * @param fields             Properties of the node
      * @param labels             Additionnal labels of the node
+     * @param uuid TODO
      * @return the id of the created node, or null if it has failed
      */
-    public String mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels) {
+    public String mergeNode(String neo4JConfiguration, String cetCode, Map<String, Object> uniqueFields, Map<String, Object> fields, Map<String, Object> updatableFields, List<String> labels, String uuid) {
 
         String alias = "n"; // Alias to use in query
         String nodeId = null;        // Id of the created node
@@ -460,6 +481,11 @@ public class Neo4jDao {
         fieldValues.putAll(uniqueFields);
         fieldValues.putAll(fields);
         fieldValues.putAll(updatableFields);
+        if(uuid != null) {
+            fieldValues.put(NODE_ID, uuid);
+        } else {
+            fieldValues.put(NODE_ID, UUID.randomUUID().toString());
+        }
 
         // Build statement
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
@@ -513,6 +539,10 @@ public class Neo4jDao {
     }
 
     public String createNode(String neo4JConfiguration, String cetCode, Map<String, Object> fields, List<String> labels) {
+		return createNode(neo4JConfiguration, cetCode, fields, labels, null);
+	}
+
+	public String createNode(String neo4JConfiguration, String cetCode, Map<String, Object> fields, List<String> labels, String uuid) {
 
         String alias = "n"; // Alias to use in query
         String nodeId = null;        // Id of the created node
@@ -537,13 +567,20 @@ public class Neo4jDao {
         // Begin transaction
         Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
         final Transaction transaction = session.beginTransaction();
+        
+        Map<String, Object> fieldValues = new HashMap<>(fields);
+        if(uuid == null) {
+        	fieldValues.put(NODE_ID, UUID.randomUUID().toString());
+        } else {
+        	fieldValues.put(NODE_ID, uuid);
+        }
 
         Node node = null;
 
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, fields);
+            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
@@ -670,6 +707,7 @@ public class Neo4jDao {
         final String fieldsString = getFieldsString(fields.keySet());
         values.put(FIELDS, fieldsString);
         values.putAll(fields);
+        values.put(NODE_ID, UUID.randomUUID().toString());
 
         if(StringUtils.isBlank(label)){
             throw new IllegalArgumentException("Cannot create relation between " + startNodeId + " and " + endNodeId + " with fields "+ fields + " : relationship label must be provided");

@@ -117,7 +117,7 @@ public class GraphQLService {
         if (CollectionUtils.isEmpty(missingEntities)) {
             neo4jDao.updateIDL(neo4jConfiguration, idl);
         } else{
-            log.error("Cannot update IDL, missing entities : {}", missingEntities);
+            log.error("Cannot update IDL, missing entities : {} in IDL \n{}", missingEntities, idl);
         }
     }
 
@@ -457,7 +457,7 @@ public class GraphQLService {
 
     public List<String> validateIdl(String idl) {
         List<String> result = new ArrayList<>();
-        String pattern = ": \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s";
+        String pattern = "\\t\\w+: \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s";
         // Create a Pattern object
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.

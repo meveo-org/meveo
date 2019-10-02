@@ -19,6 +19,7 @@ import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
@@ -114,7 +115,7 @@ public class Neo4JPersistenceRs {
             scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
             return Response.status(201).build();
 
-        } catch (BusinessException | ELException | IOException | BusinessApiException e) {
+        } catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
 
             /* An error happened */
             return Response.serverError().entity(e).build();

@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.storage.Repository;
@@ -64,7 +65,7 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException {
+    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException, EntityDoesNotExistsException {
 
         /* Iterate over persistence schedule and persist the node */
 
@@ -96,7 +97,7 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
                     final EntityToPersist entityToPersist = (EntityToPersist) itemToPersist;
                     
                     CustomEntityInstance cei = new CustomEntityInstance();
-                    cei.setCode(entityToPersist.getName());
+                    cei.setCode((String) entityToPersist.getValues().get("code"));
                     cei.setCetCode(entityToPersist.getCode());
                     customFieldInstanceService.setCfValues(cei, entityToPersist.getCode(), itemToPersist.getValues());
                     result = storageService.createOrUpdate(repository, cei);

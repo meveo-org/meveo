@@ -2312,7 +2312,6 @@ public class CustomFieldInstanceService extends BaseService {
      * @throws BusinessException thrown when values are not set
      */
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
-		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
 		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
 
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {

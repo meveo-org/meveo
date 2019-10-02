@@ -54,6 +54,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.RestUtils;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
@@ -103,7 +104,7 @@ public class PersistenceRs {
     @Path("/{cetCode}/list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration){
+    public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
@@ -144,7 +145,7 @@ public class PersistenceRs {
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) {
+    public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException();
@@ -160,7 +161,7 @@ public class PersistenceRs {
 
     @PUT
     @Path("/{cetCode}/{uuid}")
-    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException {
+    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if(customEntityTemplate == null){
             throw new NotFoundException();
@@ -327,7 +328,7 @@ public class PersistenceRs {
             /* Persist the entities and return 201 created response */
             return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 
-        } catch (BusinessException | ELException | IOException | BusinessApiException e) {
+        } catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
 
             /* An error happened */
             throw new ServerErrorException(Response.serverError().entity(e).build());

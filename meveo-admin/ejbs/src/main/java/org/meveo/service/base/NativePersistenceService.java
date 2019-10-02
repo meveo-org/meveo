@@ -969,7 +969,7 @@ public class NativePersistenceService extends BaseService {
     public String findIdByValues(String tableName, Map<String, Object> queryValues) {
         QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
         queryValues.forEach((key, value) -> {
-        	if(!(value instanceof Collection) && !(value instanceof File)) {
+        	if(!(value instanceof Collection) && !(value instanceof File) &&!(value instanceof Map)) {
                 queryBuilder.addCriterion(key, "=", value, false);
         	}
         });
