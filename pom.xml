@@ -13,7 +13,12 @@
         <dbtype>generic</dbtype>
         <releaseOption />
         <jackson.version>2.9.5</jackson.version>
+        <scm.url/>
     </properties>
+
+    <scm>
+        <developerConnection>${scm.url}</developerConnection>
+    </scm>
 
     <modules>
         <module>meveo-security</module>
