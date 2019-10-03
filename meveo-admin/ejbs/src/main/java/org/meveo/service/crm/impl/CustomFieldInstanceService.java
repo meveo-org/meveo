@@ -386,7 +386,7 @@ public class CustomFieldInstanceService extends BaseService {
      */
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
 
-        log.info("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
+        log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
 
         // Can not set the value if field is versionable without a date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -408,14 +408,14 @@ public class CustomFieldInstanceService extends BaseService {
         if (entity.getCfValues() != null) {
             cfValue = entity.getCfValues().getCfValue(cfCode);
         }
-        log.info("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
+        log.trace("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
         // No existing CF value. Create CF value with new value. Assign(persist) NULL value only if cft.defaultValue is present
         if (cfValue == null) {
             if (value == null && cft.getDefaultValue() == null) {
                 return null;
             }
             cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
-            log.info("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
+            log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
             // Existing CFI found. Update with new value or NULL value only if cft.defaultValue is present
         } else if (value != null || (value == null && cft.getDefaultValue() != null)) {
             cfValue.setValue(value);
@@ -430,7 +430,7 @@ public class CustomFieldInstanceService extends BaseService {
 
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value, Date valueDate) throws BusinessException {
 
-        log.debug("Setting CF value. Code: {}, entity {} value {} valueDate {}", cfCode, entity, value, valueDate);
+        log.trace("Setting CF value. Code: {}, entity {} value {} valueDate {}", cfCode, entity, value, valueDate);
 
         // If field is not versionable - set the value without the date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -480,7 +480,7 @@ public class CustomFieldInstanceService extends BaseService {
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value, Date valueDateFrom, Date valueDateTo, Integer valuePriority)
             throws BusinessException {
 
-        log.debug("Setting CF value. Code: {}, entity {} value {} valueDateFrom {} valueDateTo {}", cfCode, entity, value, valueDateFrom, valueDateTo);
+        log.trace("Setting CF value. Code: {}, entity {} value {} valueDateFrom {} valueDateTo {}", cfCode, entity, value, valueDateFrom, valueDateTo);
 
         // If field is not versionable - set the value without the date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);

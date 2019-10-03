@@ -430,7 +430,7 @@ public class Neo4jDao {
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while executing a GraphQL query : {}", query,  e);
+            LOGGER.error("[{}] Error while executing a GraphQL query : {}", neo4JConfiguration, query,  e);
             return null;
         } finally {
             // End session and transaction
