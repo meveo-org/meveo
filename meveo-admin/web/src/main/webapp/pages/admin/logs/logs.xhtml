@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	template="/layout/template.xhtml">
+
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.logs']}" disabled="true"/>
+			</p:breadCrumb>
+		</h:form>
+		
+		<p:growl id="growl" showDetail="true" sticky="true" />
+
+		<p:panel id="logPanel">
+			<p:panel id="actions">
+				<h:form id="config">
+					<p:outputLabel for="logFile" value="#{messages['logs.viewer.logFile']}"/>
+					<p:inputText id="logFile" value="#{logViewerBean.logFile}">
+						<p:ajax/>
+					</p:inputText>
+					
+					<p:outputLabel for="bufferSize" value="#{messages['logs.viewer.bufferSize']}"/>
+					<p:inputText id="bufferSize" value="#{logViewerBean.bufferSize}">
+						<p:ajax/>
+					</p:inputText>
+					
+					<p:commandButton id="submit" process="@form" value="#{messages['logs.viewer.submit']}"/>
+				</h:form>
+				
+				<p:panel id="buttons">
+					<p:button id="pause" value="#{messages['logs.viewer.pause']}"/>
+					<p:button id="start" value="#{messages['logs.viewer.start']}"/>
+				</p:panel>
+			</p:panel>
+			
+			<p:inputTextarea id="logsValue" value="#{logViewerBean.value}" disabled="true"/>
+			<p:poll interval="1" listener="#{logViewerBean.read}" update="logsValue" />
+		
+		</p:panel>
+
+	</ui:define>
+
+</ui:composition>

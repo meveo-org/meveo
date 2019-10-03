@@ -114,6 +114,8 @@
                         value="#{messages['menu.workflowHistory']}"
                         outcome="workflowHistory" />
         </p:submenu>
+        
+        <p:menuitem id="logs" value="#{messages['menu.logs']}" outcome="logs" />
         <p:submenu id="auditLogSubMenu" label="#{messages['menu.auditLog']}"
                    rendered="#{currentUser.hasRole('administrationVisualization')}">
             <p:menuitem id="auditConfiguration" outcome="auditConfiguration"

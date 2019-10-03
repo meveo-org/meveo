@@ -683,6 +683,11 @@
             <redirect include-view-params="true"/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>logs</from-outcome>
+            <to-view-id>/pages/admin/logs/logs.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>matchingCodes</from-outcome>
             <to-view-id>/pages/payments/matchingCode/matchingCodes.xhtml
             </to-view-id>
