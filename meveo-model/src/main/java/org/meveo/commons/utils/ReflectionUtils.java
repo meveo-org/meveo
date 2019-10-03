@@ -239,8 +239,9 @@ public class ReflectionUtils {
         return reflections.getTypesAnnotatedWith(annotationClass);
     }
 
-    public static <T> Set<Class<? extends T>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass, Class<T> baseClass) {
-        return new Reflections("").getSubTypesOf(baseClass)
+    public static <T> Set<Class<? extends T>> getClassesAnnotatedWith(Class<? extends Annotation> annotationClass, Class<T> baseClass, Object... prefixes) {
+        Reflections reflections = new Reflections(prefixes);
+        return reflections.getSubTypesOf(baseClass)
                 .stream()
                 .filter(c -> c.isAnnotationPresent(annotationClass))
                 .collect(Collectors.toSet());

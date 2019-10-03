@@ -55,6 +55,7 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -95,7 +96,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     private static final ConcurrentHashMap<String, Class<? extends BusinessEntity>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
 
     static {
-        final Set<Class<? extends BusinessEntity>> moduleItemClasses = ReflectionUtils.getClassesAnnotatedWith(ModuleItem.class, BusinessEntity.class);
+        String property = ParamBean.getInstance().getProperty("module.items.packages", null);
+        String[] additionalPackages = new String[0];
+
+        if(property != null) {
+            additionalPackages = property.split(",");
+        }
+
+        final Set<Class<? extends BusinessEntity>> moduleItemClasses = ReflectionUtils.getClassesAnnotatedWith(
+                ModuleItem.class,
+                BusinessEntity.class,
+                "org.meveo.model", additionalPackages
+        );
+
         for(Class<? extends BusinessEntity> aClass : moduleItemClasses){
             String type = aClass.getAnnotation(ModuleItem.class).value();
             MODULE_ITEM_TYPES.put(type, aClass);
