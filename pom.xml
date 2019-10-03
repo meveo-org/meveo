@@ -34,21 +34,11 @@
     </modules>
     <repositories>
         <repository>
-            <id>wd</id>
-            <name>webdrone nexus</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/groups/webdrone</url>
-        </repository>
-        <repository>
             <id>jboss-repo</id>
             <url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
         </repository>
     </repositories>
     <distributionManagement>
-        <repository>
-            <id>wd</id>
-            <name>Webdrone Repo</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/repositories/wd</url>
-        </repository>
         <site>
             <id>internal.repo</id>
             <name>Temporary Staging Repository</name>
@@ -218,11 +208,6 @@
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections-maven</artifactId>
                 <version>0.9.8</version>
-            </dependency>
-            <dependency>
-                <groupId>com.blackbear</groupId>
-                <artifactId>flatworm</artifactId>
-                <version>3.0.2</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>

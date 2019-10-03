@@ -111,11 +111,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<configuration>
-					<tasks>
-						<copy file="../lib/flatworm-3.0.2.jar" tofile="${project.build.directory}/meveo/WEB-INF/lib/flatworm-3.0.2.jar" />
-					</tasks>
-				</configuration>
 				<executions>
 					<execution>
 						<id>install-web</id>
