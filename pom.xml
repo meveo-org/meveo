@@ -15,11 +15,6 @@
         <jackson.version>2.9.5</jackson.version>
     </properties>
 
-    <scm>
-        <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-        <tag>0.0.12</tag>
-    </scm>
-
     <modules>
         <module>meveo-security</module>
         <module>meveo-model</module>
@@ -44,11 +39,6 @@
             <name>Temporary Staging Repository</name>
             <url>file://${project.groupId}</url>
         </site>
-        <snapshotRepository>
-            <id>wd</id>
-            <name>Internal Releases</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
     <pluginRepositories>
         <pluginRepository>
