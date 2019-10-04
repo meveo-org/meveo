@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.jboss.seam.international.status.Messages;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.util.FileTail;
+import org.primefaces.PrimeFaces;
+import org.slf4j.Logger;
 
 @Named
 @ViewScoped
@@ -19,13 +21,23 @@ public class LogViewerBean implements Serializable {
 	
 	private static final long serialVersionUID = 3761175276890871506L;
 	
-	private ParamBean paramBean = ParamBean.getInstance();
+	@Inject
+	private Logger log;
 	
-	private int bufferSize = 2048;
+    @Inject
+    protected Messages messages;
+	
+	private ParamBean paramBean = ParamBean.getInstance();
 	
 	private String logFile;
 	
+	private Integer offset = 0;
+	
 	private FileTail fileTail = null;
+	
+    private boolean paused = true;
+    
+    private boolean initialized;
 	
 	public LogViewerBean() {
 		super();
@@ -33,72 +45,67 @@ public class LogViewerBean implements Serializable {
 
 	@PostConstruct
 	protected void init() {
-		bufferSize = Integer.parseInt(paramBean.getProperty("meveo.log.viewer.buffer", "2048"));
 		logFile = paramBean.getProperty("meveo.log.file", null);
+	}
+	
+	public void start() {
 		
 		try {
 			if(logFile != null) {
-				fileTail = new FileTail(logFile, bufferSize);
+				/* Create new tail only if file has changed */
+				if(fileTail == null || !fileTail.getFileName().equals(logFile)) {
+					fileTail = new FileTail(logFile, offset);
+				}
+				
+				this.paused = false;
+				this.initialized = true;
+				read();
 			}
 			
 		} catch (Exception e) {
 			logFile = null;
-			FacesContext context = FacesContext.getCurrentInstance();
-	        context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,  "Error", e.getLocalizedMessage()));
+	        messages.error(e.getLocalizedMessage());
+	        log.error("Cannot create file tail", e);
 		}
- 
 	}
+	
+	public void stop() {
+		this.paused = true;
 
-	public void setBufferSize(int bufferSize) {
-		if(this.bufferSize == bufferSize) {
-			return;
-		}
-		
-		try { 
-			fileTail = new FileTail(fileTail, bufferSize);
-			this.bufferSize = bufferSize;
-			paramBean.setProperty("meveo.log.viewer.buffer", String.valueOf(bufferSize));
-		} catch(Exception e) {
-			
-		}
 	}
 
 	public void setLogFile(String logFile) {
-		if(this.logFile != null && this.logFile.equals(logFile)) {
-			return;
-		}
-		
-		try { 
-			fileTail = new FileTail(fileTail, logFile);
-			this.logFile = logFile;
-			paramBean.setProperty("meveo.log.file", logFile);
-			
-		} catch (Exception e) {
-			FacesContext context = FacesContext.getCurrentInstance();
-	        context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,  "Error", e.getLocalizedMessage()));
-		}
+		this.logFile = logFile;
+		paramBean.setProperty("meveo.log.file", logFile);
 	}
 	
 	public String getLogFile() {
 		return logFile;
 	}
 	
-	public int getBufferSize() {
-		return bufferSize;
-	}
-
 	public void read() throws FileNotFoundException, IOException {
 		if(fileTail != null) {
 			fileTail.read();
-		}
-	}
-
-	public String getValue() {
-		if(fileTail == null) {
-			return "";
+			PrimeFaces.current().ajax().addCallbackParam("value", fileTail.getAsString());
 		}
 		
-		return fileTail.getAsString();
 	}
+
+	public boolean isPaused() {
+		return paused;
+	}
+
+	public Integer getOffset() {
+		return offset;
+	}
+
+	public void setOffset(Integer offset) {
+		this.offset = offset;
+	}
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+	
 
 }

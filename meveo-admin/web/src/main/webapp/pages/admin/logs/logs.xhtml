@@ -7,44 +7,79 @@
 	xmlns:hftl="http://hftl.org"
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	template="/layout/template.xhtml">
-
+	
 	<ui:define name="body">
+	
+<!-- 		<h:outputScript library="js/highlight/topto" name="highlight.pack.js" /> -->
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/highlight.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/default.min.css"/>
+	
+		<script id="refreshLogScript">
+			const div = document.querySelector("#logsValue");
+
+			window.updateLogs = function(xhr, status, args) {
+				const value = args.value;
+				if(value != "") {
+					if(value !== undefined) {
+						div.innerHTML += value;
+						hljs.initHighlighting.called = false;
+						hljs.initHighlighting();
+						div.scrollTop = div.scrollHeight;
+					}
+				}
+			}
+			
+			$(document).ready(function() {
+				document.querySelector("img[src*='loading.gif']").parentElement.parentElement.remove();
+				document.body.style["padding-bottom"] = "0px";
+	        });
+			
+			window.onStart = function() {
+			}
+			
+		</script>
+	
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
 				<p:menuitem value="#{messages['menu.logs']}" disabled="true"/>
 			</p:breadCrumb>
 		</h:form>
-		
-		<p:growl id="growl" showDetail="true" sticky="true" />
 
 		<p:panel id="logPanel">
-			<p:panel id="actions">
-				<h:form id="config">
+		
+			<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
+			
+			<div id="actions" class="flex-container">
+				<h:form id="config" styleClass="inline-form">
 					<p:outputLabel for="logFile" value="#{messages['logs.viewer.logFile']}"/>
-					<p:inputText id="logFile" value="#{logViewerBean.logFile}">
-						<p:ajax/>
-					</p:inputText>
+					<p:inputText id="logFile" value="#{logViewerBean.logFile}" disabled="#{logViewerBean.initialized}"/>
 					
-					<p:outputLabel for="bufferSize" value="#{messages['logs.viewer.bufferSize']}"/>
-					<p:inputText id="bufferSize" value="#{logViewerBean.bufferSize}">
-						<p:ajax/>
-					</p:inputText>
+					<p:outputLabel for="offset" value="#{messages['logs.viewer.offset']}"/>
+					<p:inputText id="offset" value="#{logViewerBean.offset}" disabled="#{logViewerBean.initialized}"/>
 					
-					<p:commandButton id="submit" process="@form" value="#{messages['logs.viewer.submit']}"/>
+					<p:commandButton id="pause" update="refresh @form" value="#{messages['logs.viewer.pause']}" rendered="#{!logViewerBean.paused}" actionListener="#{logViewerBean.stop}"/>
+					<p:commandButton id="start" update="refresh @form" value="#{messages['logs.viewer.start']}" oncomplete="updateLogs(xhr, status, args); onStart();" actionListener="#{logViewerBean.start}" rendered="#{logViewerBean.paused}"/>
 				</h:form>
-				
-				<p:panel id="buttons">
-					<p:button id="pause" value="#{messages['logs.viewer.pause']}"/>
-					<p:button id="start" value="#{messages['logs.viewer.start']}"/>
-				</p:panel>
+			</div>
+		
+			<p:panel  id="refresh">
+				<p:poll id="refreshLogsPoll" interval="1" delay="10000"
+						async="true" listener="#{logViewerBean.read}" stop="#{logViewerBean.paused}" 
+						oncomplete="updateLogs(xhr, status, args)" />
 			</p:panel>
 			
-			<p:inputTextarea id="logsValue" value="#{logViewerBean.value}" disabled="true"/>
-			<p:poll interval="1" listener="#{logViewerBean.read}" update="logsValue" />
+			<div class="container">
+				<pre style="height: 58vh; display: flex; margin-top: 0px; margin-bottom: 0px;">
+					<code class="accesslogs" id="logsValue" style="font-size: 16px; resize: vertical; border: 1px solid black; max-width: 98vw; width: 98vw;"></code>
+				</pre>
+			</div>
 		
 		</p:panel>
+		
 
 	</ui:define>
+	
 
 </ui:composition>
