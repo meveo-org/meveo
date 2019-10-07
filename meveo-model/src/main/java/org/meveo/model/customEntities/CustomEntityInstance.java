@@ -17,17 +17,29 @@
  */
 package org.meveo.model.customEntities;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.meveo.model.*;
-
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.BusinessCFEntity;
+import org.meveo.model.CustomFieldEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+
 /**
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Entity
 @ObservableEntity
@@ -49,9 +61,12 @@ public class CustomEntityInstance extends BusinessCFEntity {
     @Column(name = "parent_uuid", updatable = false, length = 60)
     @Size(max = 60)
     public String parentEntityUuid;
-    
+
     @Transient
     private CustomEntityTemplate cet;
+
+    @Transient
+    private String tableName;
 
     public String getCetCode() {
         return cetCode;
@@ -68,7 +83,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
     public String getParentEntityUuid() {
         return parentEntityUuid;
     }
-    
+
     public CustomEntityTemplate getCet() {
 		return cet;
 	}
@@ -107,6 +122,23 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	public String toString() {
 		return "CustomEntityInstance [cetCode=" + cetCode + ", code=" + code + ", id=" + id + "]";
 	}
-	
-	
+
+
+
+    /**
+     * Retrieves the computed table name base on cetCode.
+     *
+     * @return table name use by SQL
+     */
+	public String getTableName() {
+		if (StringUtils.isBlank(tableName)) {
+			tableName = SQLStorageConfiguration.getCetDbTablename(cetCode);
+		}
+
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
 }
