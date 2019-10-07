@@ -9,6 +9,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.Messages;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.util.FileTail;
@@ -33,7 +34,7 @@ public class LogViewerBean implements Serializable {
 	
 	private Integer offset = 0;
 	
-	private FileTail fileTail = null;
+	private volatile FileTail fileTail = null;
 	
     private boolean paused = true;
     
@@ -76,7 +77,10 @@ public class LogViewerBean implements Serializable {
 
 	public void setLogFile(String logFile) {
 		this.logFile = logFile;
-		paramBean.setProperty("meveo.log.file", logFile);
+		if(!StringUtils.isEmpty(logFile)) {
+			paramBean.setProperty("meveo.log.file", logFile);
+			paramBean.saveProperties();
+		}
 	}
 	
 	public String getLogFile() {
@@ -84,9 +88,23 @@ public class LogViewerBean implements Serializable {
 	}
 	
 	public void read() throws FileNotFoundException, IOException {
-		if(fileTail != null) {
-			fileTail.read();
-			PrimeFaces.current().ajax().addCallbackParam("value", fileTail.getAsString());
+		
+		if(logFile != null) {
+			if(fileTail == null) {
+				synchronized(this) {
+					if(fileTail == null) {
+						fileTail = new FileTail(logFile, offset);
+						this.initialized = true;
+					}
+				}
+			}
+		}
+		
+		synchronized(fileTail) {
+			if(fileTail != null) {
+				fileTail.read();
+				PrimeFaces.current().ajax().addCallbackParam("value", fileTail.getAsString());
+			}
 		}
 		
 	}

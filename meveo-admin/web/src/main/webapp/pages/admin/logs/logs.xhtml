@@ -58,13 +58,19 @@
 					<p:outputLabel for="offset" value="#{messages['logs.viewer.offset']}"/>
 					<p:inputText id="offset" value="#{logViewerBean.offset}" disabled="#{logViewerBean.initialized}"/>
 					
+					<p:commandButton id="read" update="@form" 
+						value="#{logViewerBean.initialized ?  messages['logs.viewer.refresh'] : messages['logs.viewer.read']}"
+						disabled="#{!logViewerBean.paused}"
+						actionListener="#{logViewerBean.read}" oncomplete="updateLogs(xhr, status, args)"/>
+					
 					<p:commandButton id="pause" update="refresh @form" value="#{messages['logs.viewer.pause']}" rendered="#{!logViewerBean.paused}" actionListener="#{logViewerBean.stop}"/>
-					<p:commandButton id="start" update="refresh @form" value="#{messages['logs.viewer.start']}" oncomplete="updateLogs(xhr, status, args);" actionListener="#{logViewerBean.start}" rendered="#{logViewerBean.paused}"/>
+					<p:commandButton id="start" update="refresh @form" value="#{messages['logs.viewer.start']}" oncomplete="updateLogs(xhr, status, args); PF('poll').start();" actionListener="#{logViewerBean.start}" rendered="#{logViewerBean.paused}"/>
 				</h:form>
 			</div>
 		
 			<p:panel  id="refresh">
-				<p:poll id="refreshLogsPoll" interval="1" delay="10000"
+				<p:poll id="refreshLogsPoll" interval="1" delay="10000" autoStart="false"
+						widgetVar="poll"
 						async="true" listener="#{logViewerBean.read}" stop="#{logViewerBean.paused}" 
 						oncomplete="updateLogs(xhr, status, args)" />
 			</p:panel>
