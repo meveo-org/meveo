@@ -16,13 +16,13 @@
 	<ui:define name="body">
 	
 		<script id="refreshLogScript">
-			const div = document.querySelector("#logsValue");
 
 			// Append new content to existing one and scroll to bottom
 			window.updateLogs = function(xhr, status, args) {
 				const value = args.value;
 				if(value != "") {
 					if(value !== undefined) {
+						const div = document.querySelector("#logsValue");
 						div.innerHTML += value;
 						hljs.initHighlighting.called = false;
 						hljs.initHighlighting();
