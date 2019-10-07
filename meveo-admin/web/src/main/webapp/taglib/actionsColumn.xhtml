@@ -150,6 +150,9 @@
 
 		<p:dialog widgetVar="addOneItemToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
 			<h:form id="addOneItemToModuleForm">
+
+				<p:growl id="moduleGrowl"/>
+
 				<h:panelGroup layout="block" styleClass="search-panel">
 					<p:outputPanel styleClass="search-panel-fields">
 						<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
