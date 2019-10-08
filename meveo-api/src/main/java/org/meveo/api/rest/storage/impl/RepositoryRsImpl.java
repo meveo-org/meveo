@@ -17,7 +17,8 @@ import org.meveo.api.storage.RepositoryDto;
 import org.meveo.model.storage.Repository;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
@@ -107,6 +108,19 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 	@Override
 	public BaseCrudApi<Repository, RepositoryDto> getBaseCrudApi() {
 		return repositoryApi;
+	}
+
+	@Override
+	public ActionStatus removeHierarchy(String code) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+
+		try {
+			repositoryApi.removeHierarchy(code);
+
+		} catch (Exception e) {
+			processException(e, result);
+		}
+		return result;
 	}
 
 }

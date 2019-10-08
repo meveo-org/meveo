@@ -13,13 +13,15 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 
 /**
  * Storage for logical repository separation.
  * 
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Entity
 @Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -48,6 +50,13 @@ public class Repository extends BusinessEntity {
 	@NotNull
 	@Column(name = "path", length = 255)
 	private String path;
+	
+	/**
+	 * If true, deletes the repository hierarchy, including all the children.
+	 */
+	@Type(type = "numeric_boolean")
+	@Column(name = "force_delete")
+	private Boolean forceDelete;
 
 	public Repository getParentRepository() {
 		return parentRepository;
@@ -87,5 +96,13 @@ public class Repository extends BusinessEntity {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	public Boolean getForceDelete() {
+		return forceDelete;
+	}
+
+	public void setForceDelete(Boolean forceDelete) {
+		this.forceDelete = forceDelete;
 	}
 }

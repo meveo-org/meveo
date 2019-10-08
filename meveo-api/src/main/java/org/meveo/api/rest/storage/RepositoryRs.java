@@ -15,9 +15,13 @@ import org.meveo.api.dto.response.storage.RepositoriesResponseDto;
 import org.meveo.api.dto.response.storage.RepositoryResponseDto;
 import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.model.storage.Repository;
 
 /**
- * @author Edward P. Legaspi
+ * REST API for managing {@link Repository}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Path("/storages/repositories")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
@@ -76,4 +80,14 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	@DELETE
 	@Path("/{code}")
 	public ActionStatus remove(@PathParam("code") String code);
+	
+	/**
+	 * Removes a repository hierarchy of a given code
+	 * 
+	 * @param code The repository's code
+	 * @return Request processing status
+	 */
+	@DELETE
+	@Path("/{code}/hierarchy")
+	public ActionStatus removeHierarchy(@PathParam("code") String code);
 }

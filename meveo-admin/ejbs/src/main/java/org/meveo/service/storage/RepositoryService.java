@@ -5,6 +5,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.elasticsearch.repositories.RepositoryException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.commons.utils.QueryBuilder;
@@ -14,7 +15,8 @@ import org.meveo.service.base.BusinessService;
 /**
  * Persistence layer for {@link Repository}
  * 
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class RepositoryService extends BusinessService<Repository> {
@@ -55,11 +57,37 @@ public class RepositoryService extends BusinessService<Repository> {
 
 	@Override
 	public void remove(Repository entity) throws BusinessException {
-		List<Repository> result = findByParent(entity);
-		if (result != null && !result.isEmpty()) {
-			throw new BusinessException(resourceMessages.getString("repository.error.delete.parent"));
+
+		if (entity.getForceDelete() == null || !entity.getForceDelete()) {
+
+			List<Repository> result = findByParent(entity);
+			if (result != null && !result.isEmpty()) {
+				throw new BusinessException(resourceMessages.getString("repository.error.delete.parent"));
+			}
+
+			super.remove(entity);
+			
+		} else {
+			removeHierarchy(entity);
+		}
+	}
+	
+	/**
+	 * Removes a {@linkplain Repository} hierarchy.
+	 * 
+	 * @param entity the parent {@link RepositoryException}
+	 * @throws BusinessException fail removing the entity hierarchy
+	 */
+	public void removeHierarchy(Repository entity) throws BusinessException {
+
+		List<Repository> childRepositories = findByParent(entity);
+		if (childRepositories != null && !childRepositories.isEmpty()) {
+			for (Repository r : childRepositories) {
+				removeHierarchy(r);
+			}
 		}
 
 		super.remove(entity);
 	}
+	
 }

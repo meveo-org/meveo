@@ -23,7 +23,8 @@ import org.meveo.service.storage.BinaryStorageConfigurationService;
 import org.meveo.service.storage.RepositoryService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
@@ -108,6 +109,10 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		if (source.getDataSeparationType() != null && !StringUtils.isBlank(source.getDataSeparationType())) {
 			target.setDataSeparationType(source.getDataSeparationType());
 		}
+		
+		if (source.getForceDelete() != null) {
+			target.setForceDelete(source.getForceDelete());
+		}
 
 		return target;
 	}
@@ -156,15 +161,13 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 			throw new EntityDoesNotExistsException(Repository.class, code);
 		}
 
-		RepositoryDto dto = new RepositoryDto(entity);
-
-		return dto;
+		return new RepositoryDto(entity);
 	}
 
 	public List<RepositoryDto> findAll() {
 		List<Repository> entities = repositoryService.list();
 
-		return entities != null ? entities.stream().map(e -> new RepositoryDto(e)).collect(Collectors.toList()) : new ArrayList<RepositoryDto>();
+		return entities != null ? entities.stream().map(RepositoryDto::new).collect(Collectors.toList()) : new ArrayList<>();
 	}
 
 	public void remove(String code) throws BusinessException {
@@ -179,5 +182,15 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	@Override
 	public boolean exists(RepositoryDto dto) {
 		return repositoryService.findByCode(dto.getCode()) != null;
+	}
+
+	public void removeHierarchy(String code) throws BusinessException {
+
+		Repository entity = repositoryService.findByCode(code);
+		if (entity == null) {
+			throw new EntityDoesNotExistsException(Repository.class, code);
+		}
+
+		repositoryService.removeHierarchy(entity);
 	}
 }

@@ -1292,4 +1292,10 @@
             <column name="samples" type="text" defaultValue="[]"/>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="#3909 - Force delete repository" author="EdwardPLegaspi">
+        <addColumn tableName="storage_repository">
+            <column name="force_delete" type="${type.boolean}" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -6,7 +6,8 @@ import org.meveo.model.storage.DataSeparationTypeEnum;
 import org.meveo.model.storage.Repository;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 public class RepositoryDto extends BusinessEntityDto {
 
@@ -17,6 +18,7 @@ public class RepositoryDto extends BusinessEntityDto {
 	private String neo4jConfigurationCode;
 	private DataSeparationTypeEnum dataSeparationType;
 	private String path;
+	private Boolean forceDelete;
 
 	public RepositoryDto() {
 
@@ -35,6 +37,7 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
+		forceDelete = e.getForceDelete();
 	}
 
 	public String getParentCode() {
@@ -75,5 +78,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	public Boolean getForceDelete() {
+		return forceDelete;
+	}
+
+	public void setForceDelete(Boolean forceDelete) {
+		this.forceDelete = forceDelete;
 	}
 }
