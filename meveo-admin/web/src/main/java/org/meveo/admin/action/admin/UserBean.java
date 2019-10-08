@@ -179,7 +179,7 @@ public class UserBean extends CustomFieldBean<User> {
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         log.debug("saving new user={}", entity.getUserName());
 
-        if (getObjectId() != null) {
+        if (entity.getId() != null) {
             if (userService.isUsernameExists(entity.getUserName(), entity.getId())) {
                 messages.error(new BundleKey("messages", "exception.UsernameAlreadyExistsException"));
                 return null;

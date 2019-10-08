@@ -125,7 +125,13 @@ public class GitHelper {
             JSch jsch = new JSch();
 
             KeyPair kpair = KeyPair.genKeyPair(jsch, KeyPair.RSA);
-            kpair.writePrivateKey(privateOutputStream, passphrase.getBytes());
+            
+            if(passphrase != null) {
+            	kpair.writePrivateKey(privateOutputStream, passphrase.getBytes());
+            } else {
+            	kpair.writePrivateKey(privateOutputStream);
+            }
+            
             kpair.writePublicKey(publicOutputStream, username);
             kpair.dispose();
 
