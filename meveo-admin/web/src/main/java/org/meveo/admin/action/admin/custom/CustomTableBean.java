@@ -37,11 +37,13 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -77,6 +79,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     
     @Inject
     protected CustomFieldDataEntryBean customFieldDataEntryBean;
+    
+    @Inject
+    private CustomFieldInstanceService customFieldInstanceService;
 
     /**
      * Custom table name. Determined from customEntityTemplate.code value.
@@ -303,7 +308,14 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     public void onCellEdit(CellEditEvent event) throws BusinessException {
         DataTable o = (DataTable) event.getSource();
         Map<String, Object> mapValue = (Map<String, Object>) o.getRowData();
-        customTableService.update(entity, mapValue);
+        
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCet(entity);
+        cei.setCetCode(entity.getCode());
+        cei.setUuid((String) mapValue.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), mapValue);
+        
+        customTableService.update(entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
@@ -313,14 +325,28 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
     	Object newId = selectedEntityInPopup.get("uuid");
     	selectedRow.put(selectedRowField.getDbFieldname(), newId);
-        customTableService.update(entity, selectedRow);
+    	
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCet(entity);
+        cei.setCetCode(entity.getCode());
+        cei.setUuid((String) selectedRow.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
+        
+        customTableService.update(entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
     public void onChildEntityUpdated(CustomFieldValues cfValues) throws BusinessException {
     	String serializedValues = JacksonUtil.toString(cfValues.getValues());
     	selectedRow.put(selectedRowField.getDbFieldname(), serializedValues);
-        customTableService.update(entity, selectedRow);
+    	
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCet(entity);
+        cei.setCetCode(entity.getCode());
+        cei.setUuid((String) selectedRow.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
+        
+        customTableService.update(entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
 
@@ -341,9 +367,13 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     public void addNewValues() throws BusinessException {
 
         Map<String, Object> convertedValues = customTableService.convertValue(newValues, fields, false, null);
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCet(entity);
+        cei.setCetCode(entity.getCode());
+        cei.setUuid((String) convertedValues.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
 
-
-        customTableService.create(entity, convertedValues);
+        customTableService.create(entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
         newValues = new HashMap<>();
         customTableBasedDataModel = null;
@@ -352,7 +382,13 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     @ActionMethod
     public void update(Map<String, Object> values) throws BusinessException {
         Map<String, Object> convertedValues = customTableService.convertValue(values, fields, false, null);
-    	customTableService.update(entity, convertedValues);
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCet(entity);
+        cei.setCetCode(entity.getCode());
+        cei.setUuid((String) convertedValues.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
+        
+    	customTableService.update(entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     

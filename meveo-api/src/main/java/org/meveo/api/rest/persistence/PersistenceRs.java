@@ -63,6 +63,7 @@ import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
@@ -71,6 +72,7 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +98,9 @@ public class PersistenceRs {
     
     @Inject 
     private RepositoryService repositoryService;
+
+    @Inject
+    private CustomFieldInstanceService customFieldInstanceService;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -167,8 +172,14 @@ public class PersistenceRs {
             throw new NotFoundException();
         }
 
+        CustomEntityInstance cei = new CustomEntityInstance();
+        cei.setCetCode(cetCode);
+        cei.setCet(cache.getCustomEntityTemplate(cetCode));
+        cei.setUuid(uuid);
+        customFieldInstanceService.setCfValues(cei, cetCode, body);
+
         final Repository repository = repositoryService.findByCode(repositoryCode);
-        crossStorageService.update(repository, customEntityTemplate, body, uuid);
+        crossStorageService.update(repository, cei);
     }
     
     @SuppressWarnings("unchecked")

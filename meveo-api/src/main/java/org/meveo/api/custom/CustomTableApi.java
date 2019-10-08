@@ -17,6 +17,17 @@
 //TODO: Add opencell license
 package org.meveo.api.custom;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ejb.Stateless;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -31,24 +42,21 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTableService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.primefaces.model.SortOrder;
 
-import javax.ejb.Stateless;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import java.util.*;
-
 /**
  * @author Andrius Karpavicius
  * @author Clément Bareth
- * @lastModifiedVersion 6.0.15
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  **/
 @Stateless
 @Dependent
@@ -92,15 +100,16 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCustomTableCode());
         }
 
-        List<Map<String, Object>> values = new ArrayList<>();
+        List<CustomEntityInstance> values = new ArrayList<>();
 
         for (CustomTableRecordDto record : dto.getValues()) {
-            values.add(record.getValues());
+        	CustomEntityInstance cei = new CustomEntityInstance();
+        	cei.setCetCode(dto.getCustomTableCode());
+            customFieldInstanceService.setCfValues(cei, cei.getCetCode(), record.getValues());
+            values.add(cei);
         }
-        
-        String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 
-        customTableService.importData(dbTablename, cet, values, !dto.getOverwrite());
+        customTableService.importData(cet, values, !dto.getOverwrite());
 
     }
 
@@ -140,8 +149,8 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
             // Update every 500 records
             if (importedLines >= 500) {
 
-                values = customTableService.convertValues(values, cfts, false);
-                customTableService.update(cet, values);
+				values = customTableService.convertValues(values, cfts, false);
+				customTableService.update(cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
 
                 values.clear();
                 importedLines = 0;
@@ -153,7 +162,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 
         // Update remaining records
         values = customTableService.convertValues(values, cfts, false);
-        customTableService.update(cet, values);
+        customTableService.update(cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
     }
 
     /**
@@ -184,14 +193,18 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
             throw new ValidationException("No fields are defined for custom table", "customTable.noFields");
         }
 
-        for (CustomTableRecordDto record : dto.getValues()) {
+		for (CustomTableRecordDto record : dto.getValues()) {
+			CustomEntityInstance cei = new CustomEntityInstance();
+			cei.setCetCode(dto.getCustomTableCode());
+			customFieldInstanceService.setCfValues(cei, cei.getCetCode(), customTableService.convertValue(record.getValues(), cfts, false, null));
+			
+			if (record.getValues().containsKey(NativePersistenceService.FIELD_ID)) {
+				customTableService.update(cet, cei);
 
-            if (record.getValues().containsKey(NativePersistenceService.FIELD_ID)) {
-                customTableService.update(cet, customTableService.convertValue(record.getValues(), cfts, false, null));
-            } else {
-                customTableService.create(cet, customTableService.convertValue(record.getValues(), cfts, false, null));
-            }
-        }
+			} else {
+				customTableService.create(cet, cei);
+			}
+		}
     }
 
     /**
@@ -330,5 +343,23 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
             customTableService.disable(SQLStorageConfiguration.getDbTablename(cet), ids);
         }
     }
+	
+	/**
+	 * Converts a list of Map to List of {@linkplain CustomEntityInstance}.
+	 * @param customTableCode the table name of the {@link CustomEntityTable}
+	 * @param values Map of values
+	 * @return List of {@link CustomEntityInstance}
+	 * @throws BusinessException when a value cannot be set
+	 */
+	public List<CustomEntityInstance> convertListOfMapToCei(String customTableCode, List<Map<String, Object>> values) throws BusinessException {
+		
+		List<CustomEntityInstance> ceis = new ArrayList<>();
+		for (Map<String, Object> value : values) {
+			CustomEntityInstance cei = new CustomEntityInstance();
+			cei.setCetCode(customTableCode);
+			customFieldInstanceService.setCfValues(cei, cei.getCetCode(), value);
+		}
+		return ceis;
+	}
     
 }
