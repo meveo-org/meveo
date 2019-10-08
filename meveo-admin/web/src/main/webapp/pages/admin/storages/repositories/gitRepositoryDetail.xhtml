@@ -148,7 +148,7 @@
                         <p:inputText id="username" value="#{gitRepositoryBean.username}" size="50"/>
                     </hftl:decorateFormField>
                     <hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
-                        <h:inputSecret id="password" value="#{gitRepositoryBean.password}" size="50"/>
+                        <h:inputSecret id="password" value="#{gitRepositoryBean.password}" maxlength="50" redisplay="true"/>
                     </hftl:decorateFormField>
                 </h:panelGrid>
                 <p:commandButton
