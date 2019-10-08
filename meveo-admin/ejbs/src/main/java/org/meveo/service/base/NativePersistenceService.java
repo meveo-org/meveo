@@ -63,6 +63,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
@@ -236,7 +237,7 @@ public class NativePersistenceService extends BaseService {
 	 */
 	protected String create(CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) throws BusinessException {
 
-		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered, cfts, removeNullValues);
+		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		return create(cei.getTableName(), values, returnId);
 	}
 
@@ -487,7 +488,7 @@ public class NativePersistenceService extends BaseService {
 	public void update(CustomEntityInstance cei, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) throws BusinessException {
 
 		String tableName = cei.getTableName();
-		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered, cfts, removeNullValues);
+		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 
 		if (values.get(FIELD_ID) == null) {
 			throw new BusinessException("'uuid' field value not provided to update values in native table");

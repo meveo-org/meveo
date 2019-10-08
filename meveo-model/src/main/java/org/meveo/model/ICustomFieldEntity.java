@@ -73,7 +73,7 @@ public interface ICustomFieldEntity {
 	 * @param removeNullValues remove null values if true
 	 * @return map of values with key being custom field code.
 	 */
-	default Map<String, Object> getCfValuesAsValues(boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) {
+	default Map<String, Object> getCfValuesAsValues(DBStorageType filterType, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) {
 		CustomFieldValues cfValues = getCfValues();
 
 		if (cfValues == null || cfValues.getValuesByCode() == null) {
@@ -82,7 +82,7 @@ public interface ICustomFieldEntity {
 
 		Map<String, Object> mapValues = cfValues.getValues();
 
-		return !isFiltered ? mapValues : mapValues.entrySet().stream().filter(entry -> {
+		Map<String, Object> returnedMap = filterType != null ? mapValues : mapValues.entrySet().stream().filter(entry -> {
 			// Do not allow files to be stored directly in table
 			if (entry.getValue() instanceof File) {
 				return false;
@@ -106,14 +106,14 @@ public interface ICustomFieldEntity {
 
 			Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
 
-			if (customFieldTemplateOpt.isPresent()) {
-				return customFieldTemplateOpt.get().getStorages().contains(DBStorageType.SQL);
-
-			} else {
-				return false;
-			}
+			return customFieldTemplateOpt.map(customFieldTemplate -> customFieldTemplate.getStorages().contains(filterType))
+					.orElse(false);
 
 		}).collect(HashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
+
+		returnedMap.putIfAbsent("uuid", this.getUuid());
+
+		return returnedMap;
 	}
 
 	default Optional<CustomFieldTemplate> getCustomFieldTemplate(Collection<CustomFieldTemplate> cfts, Entry<String, Object> entry) {
