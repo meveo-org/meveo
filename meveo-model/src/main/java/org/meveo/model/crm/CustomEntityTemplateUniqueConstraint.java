@@ -11,11 +11,13 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "cust_cet_unique_constraint", uniqueConstraints = @UniqueConstraint(columnNames = {"code","cypher_query", "trust_score", "applicable_on_el"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "cust_cet_unique_constraint_seq")})
 @IdClass(CetUcPk.class)
-public class CustomEntityTemplateUniqueConstraint {
+public class CustomEntityTemplateUniqueConstraint implements Serializable {
     public static final String RETURNED_ID_PROPERTY_NAME = "id";
 
     @Id

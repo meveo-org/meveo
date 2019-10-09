@@ -16,7 +16,9 @@
 
 package org.meveo.model.customEntities;
 
-public class GraphQLQueryField {
+import java.io.Serializable;
+
+public class GraphQLQueryField implements Serializable {
 
     private String fieldName;
     private String fieldType;

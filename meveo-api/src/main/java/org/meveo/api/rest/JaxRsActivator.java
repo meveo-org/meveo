@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.meveo.api.rest.cache.CacheRs;
 import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
 import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
 import org.meveo.api.rest.custom.impl.GraphQLRs;
@@ -47,6 +48,7 @@ public class JaxRsActivator extends Application {
 	        resources.add(SwaggerSerializers.class);
 	        resources.add(SwaggerApiDefinition.class);
 	        resources.add(GraphQLRs.class);
+	        resources.add(CacheRs.class);
         }
         
     	MeveoBeanConfig beanConfig = new MeveoBeanConfig();

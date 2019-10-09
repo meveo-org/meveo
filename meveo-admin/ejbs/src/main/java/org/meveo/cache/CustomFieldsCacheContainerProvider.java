@@ -18,10 +18,18 @@
 package org.meveo.cache;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.commons.api.BasicCache;
+import org.infinispan.commons.configuration.BasicConfiguration;
 import org.infinispan.commons.util.CloseableIterator;
+import org.infinispan.configuration.cache.*;
 import org.infinispan.context.Flag;
+import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
@@ -41,14 +49,18 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +77,11 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
 
+    private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
+    private static final String MEVEO_CFT_CACHE = "meveo-cft-cache";
+    private static final String MEVEO_CET_CACHE = "meveo-cet-cache";
+    private static final String MEVEO_CRT_CACHE = "meveo-crt-cache";
+
     @Inject
     protected Logger log;
 
@@ -79,54 +96,57 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private ParamBean paramBean = ParamBean.getInstance();
 
-    private static boolean useCFTCache;
-    private static boolean useCETCache;
-
     /**
      * Groups custom field templates applicable to the same entity type. Key format: &lt;custom field template appliesTo code&gt;. Value is a map of custom field templates
      * identified by a template code
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-cft-cache")
     private Cache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftsByAppliesTo;
 
     /**
      * Contains custom entity templates. Key format: &lt;CET code&gt;, value: &lt;CustomEntityTemplate&gt;
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-cet-cache")
     private Cache<CacheKeyStr, CustomEntityTemplate> cetsByCode;
 
     /**
      * Contains custom entity templates. Key format: &lt;CET code&gt;, value: &lt;CustomEntityTemplate&gt;
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-crt-cache")
     private Cache<CacheKeyStr, CustomRelationshipTemplate> crtsByCode;
+
+    @Resource(lookup = "java:jboss/infinispan/container/meveo")
+    private EmbeddedCacheManager cacheContainer;
 
     @Inject
     @CurrentUser
     protected MeveoUser currentUser;
 
-    static {
-        ParamBean tmpParamBean = ParamBean.getInstance();
-        useCFTCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheCFT", "true"));
-        useCETCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheCET", "true"));
+    @PostConstruct
+    protected void initCaches(){
+        SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder()
+                .persistence()
+                .passivation(true)
+                .addSingleFileStore()
+                .purgeOnStartup(false);
+
+        String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
+        if(!StringUtils.isEmpty(cacheLocation)) {
+            confBuilder.location(cacheLocation);
+        }
+
+        Configuration configuration = confBuilder.build();
+
+        cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
+        cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
+        cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+
+        cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
+        cetsByCode = cacheContainer.getCache(MEVEO_CET_CACHE, true);
+        crtsByCode = cacheContainer.getCache(MEVEO_CRT_CACHE, true);
     }
 
     /**
      * Populate custom field template cache.
      */
     private void populateCFTCache() {
-
-        if (!useCFTCache) {
-            log.info("CFT cache population will be skipped as cache will not be used");
-            return;
-        }
-
-        boolean prepopulateCFTCache = Boolean.parseBoolean(paramBean.getProperty("cache.cacheCFT.prepopulate", "true"));
-
-        if (!prepopulateCFTCache) {
-            log.info("CFT cache pre-population will be skipped");
-            return;
-        }
 
         String currentProvider = currentUser.getProviderCode();
 
@@ -182,11 +202,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     private void populateCETCache() {
 
-        if (!useCETCache) {
-            log.info("CET cache population will be skipped as cache will not be used");
-            return;
-        }
-
         boolean prepopulateCETCache = Boolean.parseBoolean(paramBean.getProperty("cache.cacheCET.prepopulate", "true"));
 
         if (!prepopulateCETCache) {
@@ -206,6 +221,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentProvider, cet.getCode()), cet);
         }
 
+        log.info("CET cache populated with {} values of provider {}.", allCets.size(), currentProvider);
+    }
+
+    private void populateCRTCache() {
+
+        String currentProvider = currentUser.getProviderCode();
+
         // Cache custom relationship templates sorted by a crt.name
         List<CustomRelationshipTemplate> allCrts = customRelationshipTemplateService.getCRTForCache();
 
@@ -216,7 +238,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentProvider, crt.getCode()), crt);
         }
 
-        log.info("CET cache populated with {} values of provider {}.", allCets.size(), currentProvider);
+        log.info("CRT cache populated with {} values of provider {}.", allCrts.size(), currentProvider);
     }
 
     /**
@@ -242,7 +264,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     // @Override
     @Asynchronous
-    public void refreshCache(String cacheName) {
+    public Future<Void> refreshCache(String cacheName) {
 
         if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
             cftsByAppliesToClear();
@@ -254,23 +276,52 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             populateCETCache();
         }
 
+        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
+            crtsByCodeClear();
+            populateCRTCache();
+        }
+
+        return new AsyncResult<>(null);
+
     }
 
     /**
      * Populate cache by name
-     * 
+     *
      * @param cacheName Name of cache to populate or null to populate all caches
+     * @param onlyIfEmpty If <code>true</code>, will popuplate cache only if it is empty
      */
     @Asynchronous
-    public void populateCache(String cacheName) {
+    public Future<Void> populateCache(String cacheName, boolean onlyIfEmpty) {
 
         if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
-            populateCFTCache();
+            AdvancedCache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftCache = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+            if (cftCache.isEmpty() || !onlyIfEmpty) {
+                populateCFTCache();
+            } else {
+                log.info("CFT cache already loaded with {} values", cftCache.size());
+            }
         }
 
         if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
-            populateCETCache();
+            AdvancedCache<CacheKeyStr, CustomEntityTemplate> cetCache = cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+            if (cetCache.isEmpty() || !onlyIfEmpty) {
+                populateCETCache();
+            } else {
+                log.info("CET cache already loaded with {} values", cetCache.size());
+            }
         }
+
+        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
+            AdvancedCache<CacheKeyStr, CustomRelationshipTemplate> crtCache = crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+            if (crtCache.isEmpty() || !onlyIfEmpty) {
+                populateCRTCache();
+            } else {
+                log.info("CRT cache already loaded with {} values", crtCache.size());
+            }
+        }
+
+        return new AsyncResult<>(null);
     }
 
     /**
@@ -279,10 +330,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cft Custom field template definition
      */
     public void addUpdateCustomFieldTemplate(CustomFieldTemplate cft) {
-
-        if (!useCFTCache) {
-            return;
-        }
 
         CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
@@ -324,11 +371,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cft Custom field template definition
      */
     public void removeCustomFieldTemplate(CustomFieldTemplate cft) {
-
-        if (!useCFTCache) {
-            return;
-        }
-
         CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
         String currentProvider = currentUser.getProviderCode();
@@ -369,11 +411,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cet Custom entity template definition
      */
     public void addUpdateCustomEntityTemplate(CustomEntityTemplate cet) {
-
-        if (!useCETCache) {
-            return;
-        }
-
         log.trace("Adding CET template {} to CET cache", cet.getCode());
 
         cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()), cet);
@@ -389,28 +426,17 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cet Custom entity template definition
      */
     public void removeCustomEntityTemplate(CustomEntityTemplate cet) {
-
-        if (!useCETCache) {
-            return;
-        }
-
         log.trace("Removing CET template {} from CET cache", cet.getCode());
 
         cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
     }
 
     public void addUpdateCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
-        if (!useCETCache) {
-            return;
-        }
         log.trace("Adding / Updating CRT template {} to CRT cache", crt.getCode());
         crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
     }
 
     public void removeCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
-        if (!useCETCache) {
-            return;
-        }
         log.trace("Removing CRT template {} from CRT cache", crt.getCode());
         crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
     }
