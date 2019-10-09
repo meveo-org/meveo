@@ -8,6 +8,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
@@ -75,19 +76,11 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 * Remove an existing repository with a given code
 	 * 
 	 * @param code The repository's code
+	 * @param forceDelete if true, delete the children of the repository
 	 * @return Request processing status
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code);
+	public ActionStatus remove(@PathParam("code") String code, @QueryParam("forceDelete") Boolean forceDelete);
 	
-	/**
-	 * Removes a repository hierarchy of a given code
-	 * 
-	 * @param code The repository's code
-	 * @return Request processing status
-	 */
-	@DELETE
-	@Path("/{code}/hierarchy")
-	public ActionStatus removeHierarchy(@PathParam("code") String code);
 }

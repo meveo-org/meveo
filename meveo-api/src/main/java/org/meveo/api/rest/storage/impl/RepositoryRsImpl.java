@@ -93,11 +93,11 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 	}
 
 	@Override
-	public ActionStatus remove(String code) {
+	public ActionStatus remove(String code, Boolean forceDelete) {
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
 		try {
-			repositoryApi.remove(code);
+			repositoryApi.remove(code, forceDelete);
 
 		} catch (Exception e) {
 			processException(e, result);
@@ -108,19 +108,6 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 	@Override
 	public BaseCrudApi<Repository, RepositoryDto> getBaseCrudApi() {
 		return repositoryApi;
-	}
-
-	@Override
-	public ActionStatus removeHierarchy(String code) {
-		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-
-		try {
-			repositoryApi.removeHierarchy(code);
-
-		} catch (Exception e) {
-			processException(e, result);
-		}
-		return result;
 	}
 
 }

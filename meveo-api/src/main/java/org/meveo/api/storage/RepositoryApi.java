@@ -109,10 +109,6 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		if (source.getDataSeparationType() != null && !StringUtils.isBlank(source.getDataSeparationType())) {
 			target.setDataSeparationType(source.getDataSeparationType());
 		}
-		
-		if (source.getForceDelete() != null) {
-			target.setForceDelete(source.getForceDelete());
-		}
 
 		return target;
 	}
@@ -151,7 +147,6 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		} else {
 			return update(postData);
 		}
-
 	}
 
 	public RepositoryDto find(String code) throws EntityDoesNotExistsException {
@@ -170,12 +165,14 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		return entities != null ? entities.stream().map(RepositoryDto::new).collect(Collectors.toList()) : new ArrayList<>();
 	}
 
-	public void remove(String code) throws BusinessException {
+	public void remove(String code, Boolean forceDelete) throws BusinessException {
 		Repository entity = repositoryService.findByCode(code);
+		
 		if (entity == null) {
 			throw new EntityDoesNotExistsException(Repository.class, code);
 		}
 
+		entity.setForceDelete(forceDelete);
 		repositoryService.remove(entity);
 	}
 

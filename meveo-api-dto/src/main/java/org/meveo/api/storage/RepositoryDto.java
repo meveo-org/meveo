@@ -1,7 +1,6 @@
 package org.meveo.api.storage;
 
 import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.storage.DataSeparationTypeEnum;
 import org.meveo.model.storage.Repository;
 
@@ -37,7 +36,6 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
-		forceDelete = e.getForceDelete();
 	}
 
 	public String getParentCode() {

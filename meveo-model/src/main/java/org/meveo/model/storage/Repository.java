@@ -8,12 +8,12 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 
@@ -54,8 +54,7 @@ public class Repository extends BusinessEntity {
 	/**
 	 * If true, deletes the repository hierarchy, including all the children.
 	 */
-	@Type(type = "numeric_boolean")
-	@Column(name = "force_delete")
+	@Transient
 	private Boolean forceDelete;
 
 	public Repository getParentRepository() {
