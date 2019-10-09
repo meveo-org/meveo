@@ -49,6 +49,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     private boolean override;
 
+    private String branch;
+
     public GitRepositoryBean() {
         super(GitRepository.class);
     }
@@ -87,7 +89,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
         }
     }
 
-    public void importZip(FileUploadEvent event) {
+    public String importZip(FileUploadEvent event) {
         UploadedFile file = event.getFile();
         String filename = file.getFileName();
         try {
@@ -108,12 +110,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
         } catch (Exception e) {
             messages.error(new BundleKey("messages","importZip.error"), filename);
         }
+        return getEditViewName();
     }
 
     public StreamedContent exportZip() {
         String filename = entity.getCode();
         try {
-            byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), entity.getCurrentBranch());
+            byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), branch);
             InputStream is = new ByteArrayInputStream(exportZip);
             return new DefaultStreamedContent(is, "application/octet-stream", filename + ".zip");
         } catch (Exception e) {
@@ -167,5 +170,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     @Override
     public void setOverride(boolean override) {
         this.override = override;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
     }
 }

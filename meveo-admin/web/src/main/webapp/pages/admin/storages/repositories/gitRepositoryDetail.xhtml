@@ -62,7 +62,7 @@
 
             <ui:param name="buttons" value="true"/>
             <ui:define name="buttons">
-                <h:panelGrid id="actionButtons" columns="5">
+                <h:panelGrid id="actionButtons" columns="6">
                     <p:commandButton id="savePopupRemote" value="#{messages['action.save']}"
                                      oncomplete="PF('remoteDlg').show()"
                                      icon="ui-icon-check" update=":remoteForm"
@@ -87,8 +87,7 @@
                                    message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
                     </p:commandButton>
                     <p:commandButton value="#{messages['gitRepositories.importZip']}" process="@form" type="submit"
-                                     onclick="PF('importDialog').show();"
-                                     rendered="#{gitRepositoryBean.entity.id == null}"/>
+                                     onclick="PF('importDialog').show();"/>
                     <p:commandButton value="#{messages['gitRepositories.exportZip']}" type="button"
                                      rendered="#{gitRepositoryBean.entity.id != null}"
                                      onclick="PF('exportDialog').show()"/>
@@ -171,21 +170,23 @@
 
         <h:form>
             <p:dialog header="#{messages['gitRepositories.importZip']}" id="importDialog" widgetVar="importDialog"
-                      modal="true" closeOnEscape="true">
+                          modal="true" closeOnEscape="true">
                 <p:messages autoUpdate="true"/>
-                <p:selectBooleanCheckbox immediate="true" id="override"
-                                         value="#{gitRepositoryBean.override}"
-                                         itemLabel="#{messages['gitRepositories.override']}">
-                    <p:ajax/>
-                </p:selectBooleanCheckbox>
                 <p:fileUpload accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced"
-                              dragDropSupport="true"
-                              allowTypes="/(\.|\/)(zip)$/" update=":formGitRepository" styleClass="TexAlCenter"/>
+                                  dragDropSupport="true" allowTypes="/(\.|\/)(zip)$/" update="@form :formGitRepository" styleClass="TexAlCenter">
+                </p:fileUpload>
             </p:dialog>
 
             <p:dialog resizable="false" header="#{messages['gitRepositories.exportZip']}" id="exportDialog"
-                      styleClass="form-dialog" widgetVar="exportDialog" modal="true" closeOnEscape="true">
+                      styleClass="form-dialog" widgetVar="exportDialog" modal="true" closeOnEscape="true" width="200">
 				<p:messages autoUpdate="true"/>
+                <hftl:decorateFormField fieldId="branch" label="#{messages['gitRepositories.branch']}">
+                    <p:selectOneMenu id="branch" value="#{gitRepositoryBean.branch}">
+                        <hftl:objectConverter />
+                        <f:selectItem itemLabel="#{messages['commons.select']}" />
+                        <f:selectItems value="#{gitRepositoryBean.entity.branches}"/>
+                    </p:selectOneMenu>
+                </hftl:decorateFormField>
                 <div class="clearLeft">
                     <p:commandButton id="buttonExport" value="#{messages['action.export']}" ajax="false"
                                      onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
