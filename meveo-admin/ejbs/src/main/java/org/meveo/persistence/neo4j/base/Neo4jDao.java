@@ -509,12 +509,18 @@ public class Neo4jDao {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
             final StatementResult result = transaction.run(resolvedStatement, fieldValues);
-            node = result.single().get(alias).asNode();
+            List<Record> results = result.list();
+
+            if(results.size() > 0) {
+                LOGGER.warn("Multiple nodes affected by merge.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues);
+            }
+
+            node = results.get(0).get(alias).asNode();
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while merging Neo4J nodes", e);
+            LOGGER.error("Error while merging Neo4J nodes.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues, e);
         } finally {
             // End session and transaction
             transaction.close();
