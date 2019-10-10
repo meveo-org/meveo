@@ -31,6 +31,8 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 	@Inject
 	private RepositoryApi repositoryApi;
 	
+	private Boolean forceDelete;
+	
 	public RepositoryBean() {
 		super(Repository.class);
 	}
@@ -55,6 +57,15 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 		return repositoryApi;
 	}
 	
+	
+	public Boolean getForceDelete() {
+		return forceDelete;
+	}
+
+	public void setForceDelete(Boolean forceDelete) {
+		this.forceDelete = forceDelete;
+	}
+
 	/**
 	 * Deletes a given repository and it's children when value of forceDelete is true.
 	 * 
@@ -64,8 +75,7 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 	 */
 	@ActionMethod
 	public void delete(Repository entity, Boolean forceDelete) throws BusinessException {
-		entity.setForceDelete(forceDelete);
-		repositoryService.remove(entity);
+		repositoryService.remove(entity, forceDelete);
 	}
 	
 	@ActionMethod

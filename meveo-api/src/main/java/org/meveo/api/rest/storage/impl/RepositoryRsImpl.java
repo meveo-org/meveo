@@ -14,6 +14,7 @@ import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.api.rest.storage.RepositoryRs;
 import org.meveo.api.storage.RepositoryApi;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.storage.Repository;
 
 /**
@@ -99,9 +100,12 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 		try {
 			repositoryApi.remove(code, forceDelete);
 
+		} catch(EntityDoesNotExistsException e) {
+			// NOOOP
 		} catch (Exception e) {
 			processException(e, result);
 		}
+		
 		return result;
 	}
 

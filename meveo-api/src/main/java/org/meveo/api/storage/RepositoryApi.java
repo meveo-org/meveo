@@ -172,8 +172,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 			throw new EntityDoesNotExistsException(Repository.class, code);
 		}
 
-		entity.setForceDelete(forceDelete);
-		repositoryService.remove(entity);
+		repositoryService.remove(entity, forceDelete);
 	}
 
 	@Override

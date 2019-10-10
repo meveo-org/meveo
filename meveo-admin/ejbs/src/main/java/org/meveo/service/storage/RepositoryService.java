@@ -57,15 +57,17 @@ public class RepositoryService extends BusinessService<Repository> {
 
 	@Override
 	public void remove(Repository entity) throws BusinessException {
+		List<Repository> result = findByParent(entity);
+		if (result != null && !result.isEmpty()) {
+			throw new BusinessException(resourceMessages.getString("repository.error.delete.parent"));
+		}
 
-		if (entity.getForceDelete() == null || !entity.getForceDelete()) {
-
-			List<Repository> result = findByParent(entity);
-			if (result != null && !result.isEmpty()) {
-				throw new BusinessException(resourceMessages.getString("repository.error.delete.parent"));
-			}
-
-			super.remove(entity);
+		super.remove(entity);
+	}
+	
+	public void remove(Repository entity, Boolean forceDelete) throws BusinessException {
+		if (forceDelete == null || !forceDelete) {
+			remove(entity);
 			
 		} else {
 			removeHierarchy(entity);

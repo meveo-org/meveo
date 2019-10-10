@@ -51,12 +51,6 @@ public class Repository extends BusinessEntity {
 	@Column(name = "path", length = 255)
 	private String path;
 	
-	/**
-	 * If true, deletes the repository hierarchy, including all the children.
-	 */
-	@Transient
-	private Boolean forceDelete;
-
 	public Repository getParentRepository() {
 		return parentRepository;
 	}
@@ -97,11 +91,4 @@ public class Repository extends BusinessEntity {
 		this.path = path;
 	}
 
-	public Boolean getForceDelete() {
-		return forceDelete;
-	}
-
-	public void setForceDelete(Boolean forceDelete) {
-		this.forceDelete = forceDelete;
-	}
 }
