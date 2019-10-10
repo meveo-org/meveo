@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.configuration.BasicConfiguration;
 import org.infinispan.commons.util.CloseableIterator;
@@ -134,9 +135,17 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
         Configuration configuration = confBuilder.build();
 
-        cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
-        cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
-        cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+        if(!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
+            cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
+        }
+
+        if(!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
+            cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
+        }
+
+        if(!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
+            cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+        }
 
         cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
         cetsByCode = cacheContainer.getCache(MEVEO_CET_CACHE, true);
