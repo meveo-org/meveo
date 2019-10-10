@@ -115,9 +115,9 @@ public class Neo4JPersistenceRs {
             scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
             return Response.status(201).build();
 
-        } catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
+        } catch (Exception e) {
 
-            /* An error happened */
+            LOGGER.error("Error persisting entities {}", e);
             return Response.serverError().entity(e).build();
         }
 

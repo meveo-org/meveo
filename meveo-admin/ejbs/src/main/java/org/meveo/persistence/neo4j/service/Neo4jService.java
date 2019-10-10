@@ -737,7 +737,7 @@ public class Neo4jService implements CustomPersistenceService {
         final String fieldsString = neo4jDao.getFieldsString(crtFields.keySet());
         valuesMap.put(FIELDS, fieldsString);
         valuesMap.putAll(crtFields);
-        valuesMap.put("uuid", UUID.randomUUID());
+        valuesMap.put(NODE_ID, UUID.randomUUID().toString());
 
         // Build the statement
         StringBuffer statement = neo4jDao.appendReturnStatement(Neo4JRequests.crtStatement, relationshipAlias, valuesMap);
@@ -807,7 +807,7 @@ public class Neo4jService implements CustomPersistenceService {
         final String fieldsString = neo4jDao.getFieldsString(crtFields.keySet());
         valuesMap.put(FIELDS, fieldsString);
         valuesMap.putAll(crtFields);
-        valuesMap.put("uuid", UUID.randomUUID());
+        valuesMap.put(NODE_ID, UUID.randomUUID().toString());
 
         // Build the statement
         StringBuffer statement;
