@@ -115,8 +115,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 		setBranchInformation(repo);
 		return repo;
 	}
-    
-    
+
+
 
 	@Override
 	public GitRepository findByCode(String code, List<String> fetchFields) {
