@@ -623,6 +623,7 @@ public class GitClient {
             return git.branchList().call()
                     .stream()
                     .map(Ref::getName)
+                    .map(Repository::shortenRefName)
                     .collect(Collectors.toList());
 
         } catch (IOException e) {
@@ -685,10 +686,10 @@ public class GitClient {
 
         try (Git git = Git.open(repositoryDir)) {
             Repository repository = git.getRepository();
-            RevWalk rw = new RevWalk(repository);
-            RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
-            return getModifiedFiles(repository, parent, commit);
-
+            try(RevWalk rw = new RevWalk(repository)) {
+                RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
+                return getModifiedFiles(repository, parent, commit);
+            }
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
@@ -741,14 +742,15 @@ public class GitClient {
     protected Set<String> getModifiedFiles(Repository repository, RevCommit leftCommit, RevCommit rightCommit) throws IOException {
         Set<String> modifiedFiles = new HashSet<>();
 
-        DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
-        df.setRepository(repository);
-        df.setDiffComparator(RawTextComparator.DEFAULT);
-        df.setDetectRenames(true);
-        List<DiffEntry> diffs = df.scan(leftCommit.getTree(), rightCommit.getTree());
-        for (DiffEntry diff : diffs) {
-            modifiedFiles.add(diff.getNewPath());
-            modifiedFiles.add(diff.getOldPath());
+        try(DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            df.setRepository(repository);
+            df.setDiffComparator(RawTextComparator.DEFAULT);
+            df.setDetectRenames(true);
+            List<DiffEntry> diffs = df.scan(leftCommit.getTree(), rightCommit.getTree());
+            for (DiffEntry diff : diffs) {
+                modifiedFiles.add(diff.getNewPath());
+                modifiedFiles.add(diff.getOldPath());
+            }
         }
 
         return modifiedFiles;

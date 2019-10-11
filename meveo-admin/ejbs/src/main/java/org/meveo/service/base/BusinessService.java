@@ -149,8 +149,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
         return criteria;
     }
 
-    @SuppressWarnings("rawtypes")
-    public BusinessEntity findByEntityClassAndCode(Class clazz, String code) {
+    public BusinessEntity findByEntityClassAndCode(Class<?> clazz, String code) {
         QueryBuilder qb = new QueryBuilder(clazz, "be", null);
         qb.addCriterion("be.code", "=", code, true);
 

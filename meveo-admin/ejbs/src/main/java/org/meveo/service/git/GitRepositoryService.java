@@ -20,6 +20,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.exceptions.EntityAlreadyExistsException;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -109,6 +110,66 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     @Override
+	public GitRepository findById(Long id) {
+		GitRepository repo = super.findById(id);
+		setBranchInformation(repo);
+		return repo;
+	}
+    
+    
+
+	@Override
+	public GitRepository findByCode(String code, List<String> fetchFields) {
+		GitRepository repo = super.findByCode(code, fetchFields);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	protected GitRepository findByCode(String code, List<String> fetchFields, String additionalSql, Object... additionalParameters) {
+		GitRepository repo = super.findByCode(code, fetchFields, additionalSql, additionalParameters);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	public BusinessEntity findByEntityClassAndCode(Class<?> clazz, String code) {
+		GitRepository repo = (GitRepository) super.findByEntityClassAndCode(clazz, code);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	public GitRepository findById(Long id, boolean refresh) {
+		GitRepository repo = super.findById(id, refresh);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	public GitRepository findById(Long id, List<String> fetchFields) {
+		GitRepository repo = super.findById(id, fetchFields);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	public GitRepository findById(Long id, List<String> fetchFields, boolean refresh) {
+		GitRepository repo =  super.findById(id, fetchFields, refresh);
+		setBranchInformation(repo);
+		return repo;
+	}
+
+	@Override
+	public List<GitRepository> findByCodeLike(String wildcode) {
+		List<GitRepository> repositories = super.findByCodeLike(wildcode);
+		return repositories.stream()
+	        .filter(r -> GitHelper.hasReadRole(currentUser, r))
+	        .map(this::setBranchInformation)
+	        .collect(Collectors.toList());
+	}
+
+	@Override
     public List<GitRepository> list() {
         final List<GitRepository> repositories = super.list();
         return repositories.stream()
