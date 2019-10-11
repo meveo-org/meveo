@@ -40,29 +40,29 @@ public class CacheRs {
     @POST
     @Path("/refresh")
     @ApiOperation("Clean and populate all caches")
-    public void refreshAll() throws ExecutionException, InterruptedException {
-        cache.refreshCache(null).get();
+    public void refreshAll() {
+        cache.refreshCache(null);
     }
 
     @POST
     @Path("/populate")
     @ApiOperation("Populate all caches")
-    public void populateAll() throws ExecutionException, InterruptedException {
-        cache.populateCache(null, false).get();
+    public void populateAll() {
+        cache.populateCache(null, false);
     }
 
     @POST
     @Path("/{name}/refresh")
     @ApiOperation("Clean and popuplate a cache")
-    public void refresh(@PathParam("name") @ApiParam(value = "Name of the cache to refresh", example = "meveo-cft-cache") String cacheName) throws ExecutionException, InterruptedException {
-        cache.refreshCache(cacheName).get();
+    public void refresh(@PathParam("name") @ApiParam(value = "Name of the cache to refresh", example = "meveo-cft-cache") String cacheName) {
+        cache.refreshCache(cacheName);
     }
 
     @POST
     @Path("/{name}/populate")
     @ApiOperation("Populate a cache")
-    public void populate(@PathParam("name") @ApiParam(value = "Name of the cache to populate", example = "meveo-cft-cache") String cacheName) throws ExecutionException, InterruptedException {
-        cache.populateCache(cacheName, false).get();
+    public void populate(@PathParam("name") @ApiParam(value = "Name of the cache to populate", example = "meveo-cft-cache") String cacheName) {
+        cache.populateCache(cacheName, false);
     }
 
     @GET

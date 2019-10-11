@@ -271,9 +271,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * 
      * @param cacheName Name of cache to refresh or null to refresh all caches
      */
-    // @Override
-    @Asynchronous
-    public Future<Void> refreshCache(String cacheName) {
+    public void refreshCache(String cacheName) {
 
         if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
             cftsByAppliesToClear();
@@ -290,8 +288,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             populateCRTCache();
         }
 
-        return new AsyncResult<>(null);
-
     }
 
     /**
@@ -300,8 +296,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cacheName Name of cache to populate or null to populate all caches
      * @param onlyIfEmpty If <code>true</code>, will popuplate cache only if it is empty
      */
-    @Asynchronous
-    public Future<Void> populateCache(String cacheName, boolean onlyIfEmpty) {
+    public void populateCache(String cacheName, boolean onlyIfEmpty) {
 
         if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
             AdvancedCache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftCache = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
@@ -329,8 +324,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
                 log.info("CRT cache already loaded with {} values", crtCache.size());
             }
         }
-
-        return new AsyncResult<>(null);
     }
 
     /**
