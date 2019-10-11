@@ -1,12 +1,18 @@
 package org.meveo.api.rest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.CustomEntityCategoryDto;
+import org.meveo.api.dto.response.CustomEntityCategoriesResponseDto;
+import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
@@ -16,7 +22,12 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.primefaces.model.SortOrder;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 @Stateless
 public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, CustomEntityCategoryDto> {
 
@@ -102,10 +113,16 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
         }
     }
 
-    @Override
-    public CustomEntityCategoryDto find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
-        return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
-    }
+	@Override
+	public CustomEntityCategoryDto find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+
+		CustomEntityCategory cec = customEntityCategoryService.findByCode(code);
+		if (cec == null) {
+			throw new EntityDoesNotExistsException(CustomEntityCategory.class, code);
+		}
+
+		return CustomEntityCategoryDto.toDTO(cec);
+	}
 
     @Override
     public CustomEntityCategoryDto findIgnoreNotFound(String code) {
@@ -135,4 +152,32 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
             return false;
         }
     }
+
+	public CustomEntityCategoriesResponseDto list(PagingAndFiltering pagingAndFiltering) throws InvalidParameterException {
+
+		if (pagingAndFiltering == null) {
+			pagingAndFiltering = new PagingAndFiltering();
+		}
+
+		PaginationConfiguration paginationConfig = toPaginationConfiguration("id", SortOrder.ASCENDING, null, pagingAndFiltering, CustomEntityCategoryDto.class);
+
+		long totalCount = customEntityCategoryService.count(paginationConfig);
+
+		CustomEntityCategoriesResponseDto result = new CustomEntityCategoriesResponseDto();
+		result.setPaging(pagingAndFiltering);
+		result.getPaging().setTotalNumberOfRecords((int) totalCount);
+
+		List<CustomEntityCategoryDto> customEntityCategoryDtos = new ArrayList<>();
+		if (totalCount > 0) {
+			List<CustomEntityCategory> customEntityCategoryCategories = customEntityCategoryService.list(paginationConfig);
+			if (customEntityCategoryCategories != null) {
+				for (CustomEntityCategory cec : customEntityCategoryCategories) {
+					customEntityCategoryDtos.add(new CustomEntityCategoryDto(cec));
+				}
+			}
+		}
+		result.setCustomEntityCategories(customEntityCategoryDtos);
+
+		return result;
+	}
 }
