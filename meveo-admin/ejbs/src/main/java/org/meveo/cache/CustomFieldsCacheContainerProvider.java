@@ -62,6 +62,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +78,8 @@ import java.util.stream.Collectors;
 public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
+
+    private static AtomicBoolean cacheInitialized = new AtomicBoolean(false);
 
     private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
     private static final String MEVEO_CFT_CACHE = "meveo-cft-cache";
@@ -122,29 +125,41 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     @PostConstruct
     protected void initCaches(){
-        SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder()
-                .persistence()
-                .passivation(true)
-                .addSingleFileStore()
-                .purgeOnStartup(false);
 
-        String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
-        if(!StringUtils.isEmpty(cacheLocation)) {
-            confBuilder.location(cacheLocation);
-        }
-
-        Configuration configuration = confBuilder.build();
-
-        if(!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
-            cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
-        }
-
-        if(!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
-            cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
-        }
-
-        if(!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
-            cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+        if(!cacheInitialized.get()) {
+        	synchronized (cacheInitialized) {
+                if(!cacheInitialized.get()) {
+                	log.info("Initializing ontology caches");
+                	
+	        		SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder()
+	                        .persistence()
+	                        .passivation(true)
+	                        .addSingleFileStore()
+	                        .purgeOnStartup(false);
+	
+	                String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
+	                if (!StringUtils.isEmpty(cacheLocation)) {
+	                    confBuilder.location(cacheLocation);
+	                }
+	
+	                Configuration configuration = confBuilder.build();
+	
+	                if (!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
+	                    cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
+	                }
+	
+	                if (!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
+	                    cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
+	                }
+	
+	                if (!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
+	                    cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+	                }
+	                
+	                cacheInitialized.set(true);
+                }
+			}
+            
         }
 
         cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
