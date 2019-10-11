@@ -154,7 +154,7 @@
                 <p:commandButton
                         value="#{messages['action.save']}"
                         action="#{gitRepositoryBean.saveOrUpdateGit}"
-                        update="@form :formGitRepository" process="@this"
+                        update="@form :formGitRepository" process="@form" type="submit"
                         oncomplete="if (args &amp;&amp; !args.validationFailed) PF('remoteDlg').hide()">
                 </p:commandButton>
                 <p:button value="#{messages['action.cancel']}"

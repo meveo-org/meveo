@@ -47,6 +47,9 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     @ActionMethod
     public String saveOrUpdateGit() throws BusinessException, ELException {
+        if (entity.getId() == null && entity.getRemoteOrigin() != null) {
+            gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+        }
         String result = saveOrUpdate(false);
         if (result == null) {
             FacesContext.getCurrentInstance().validationFailed();
