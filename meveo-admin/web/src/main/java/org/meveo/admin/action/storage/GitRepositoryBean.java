@@ -47,8 +47,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     private String password;
 
-    private boolean override;
-
     private String branch;
 
     public GitRepositoryBean() {
@@ -105,7 +103,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
             dto.setMeveoRepository(entity.isMeveoRepository());
             dto.setCurrentBranch(entity.getCurrentBranch());
             dto.setBranches(entity.getBranches());
-            gitRepositoryApi.importZip(inputStream, dto, override);
+            gitRepositoryApi.importZip(inputStream, dto, isEdit());
             messages.info(new BundleKey("messages", "importZip.successfull"), filename);
         } catch (Exception e) {
             messages.error(new BundleKey("messages","importZip.error"), filename);
@@ -115,10 +113,11 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     public StreamedContent exportZip() {
         String filename = entity.getCode();
+        branch = branch != null ? branch : entity.getCurrentBranch();
         try {
             byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), branch);
             InputStream is = new ByteArrayInputStream(exportZip);
-            return new DefaultStreamedContent(is, "application/octet-stream", filename + ".zip");
+            return new DefaultStreamedContent(is, "application/octet-stream", filename + "-" + branch + ".zip");
         } catch (Exception e) {
             messages.error(new BundleKey("messages","exportZip.error"));
         }
@@ -160,16 +159,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    @Override
-    public boolean isOverride() {
-        return override;
-    }
-
-    @Override
-    public void setOverride(boolean override) {
-        this.override = override;
     }
 
     public String getBranch() {
