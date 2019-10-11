@@ -185,8 +185,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
      */
     @Override
     public void remove(GitRepository entity) throws BusinessException {
-        gitClient.remove(entity);
         super.remove(entity);
+        gitClient.remove(entity);
     }
 
     /**
