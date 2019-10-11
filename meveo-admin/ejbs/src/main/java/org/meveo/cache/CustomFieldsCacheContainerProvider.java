@@ -455,7 +455,14 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
-        return cftsByAppliesTo.get(key);
+        Map<String, CustomFieldTemplate> cfMaps = cftsByAppliesTo.get(key);
+        if(cfMaps == null || cfMaps.isEmpty()) {
+            cfMaps = customFieldTemplateService.findByAppliesTo(appliesTo);
+            if(cfMaps != null){
+                cfMaps.forEach((k,v) -> addUpdateCustomFieldTemplate(v));
+            }
+        }
+        return cfMaps;
     }
 
     /**
@@ -476,7 +483,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public CustomEntityTemplate getCustomEntityTemplate(String code) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
-        return cetsByCode.get(key);
+        CustomEntityTemplate customEntityTemplate = cetsByCode.get(key);
+        if(customEntityTemplate == null){
+            customEntityTemplate = customEntityTemplateService.findByCode(code);
+            if(customEntityTemplate != null) {
+                addUpdateCustomEntityTemplate(customEntityTemplate);
+            }
+        }
+
+        return customEntityTemplate;
     }
 
     /**
@@ -487,7 +502,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public CustomRelationshipTemplate getCustomRelationshipTemplate(String code) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
-        return crtsByCode.get(key);
+        CustomRelationshipTemplate customRelationshipTemplate = crtsByCode.get(key);
+        if(customRelationshipTemplate == null) {
+            customRelationshipTemplate = customRelationshipTemplateService.findByCode(code);
+            if(customRelationshipTemplate != null){
+                addUpdateCustomRelationshipTemplate(customRelationshipTemplate);
+            }
+        }
+
+        return customRelationshipTemplate;
     }
 
     /**
@@ -572,7 +595,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public void cetsByCodeClear() {
         String currentProvider = currentUser.getProviderCode();
         log.debug("cetsByCodeClear() => " + currentProvider + ".");
-        // cetsByCode.keySet().removeIf(key -> (key.getProvider() == null) ? currentProvider == null : key.getProvider().equals(currentProvider));
         Iterator<Entry<CacheKeyStr, CustomEntityTemplate>> iter = cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
         while (iter.hasNext()) {
