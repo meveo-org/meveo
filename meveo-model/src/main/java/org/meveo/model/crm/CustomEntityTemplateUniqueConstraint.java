@@ -103,4 +103,13 @@ public class CustomEntityTemplateUniqueConstraint implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    @Override
+    public String toString() {
+        return "CustomEntityTemplateUniqueConstraint{" +
+                "code='" + code + '\'' +
+                ", description='" + description + '\'' +
+                ", cypherQuery='" + cypherQuery + '\'' +
+                '}';
+    }
 }

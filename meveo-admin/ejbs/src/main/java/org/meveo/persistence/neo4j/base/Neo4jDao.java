@@ -691,7 +691,7 @@ public class Neo4jDao {
             return ids;
         } catch (Exception e) {
             transaction.failure();
-            LOGGER.error("Error while executing a UniqueConstraint", e);
+            LOGGER.error("Error while executing UniqueConstraint {}", uniqueConstraint, e);
         } finally {
             // End session and transaction
             transaction.close();
