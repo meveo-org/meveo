@@ -10,11 +10,16 @@ import javax.inject.Named;
 
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.view.CustomizedEntityLazyDataModel;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 @Named
 @ConversationScoped
 public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
@@ -26,7 +31,8 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
     
     private LazyDataModel<CustomizedEntity> customizedEntityDM = null;
 
-    private List<CustomizedEntity> selectedCustomizedEntities;
+    @SuppressWarnings("unused")
+	private List<CustomizedEntity> selectedCustomizedEntities;
     
     @PostConstruct
     public void init() {
@@ -80,11 +86,26 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 				String cecId = (String) filters.get("cecId");
                 boolean isCustomEntityOnly = filters.get("customEntity") != null && (boolean) filters.get("customEntity");
                 String sortBy = sortOrder != null ? sortOrder.name() : null;
-                if(StringUtils.isBlank(cecId)) {
-                	entities = customizedEntityService.getCustomizedEntities(query, isCustomEntityOnly, false, false, sortField, sortBy, false);
-                }else {
-                	entities=customizedEntityService.getCustomizedEntities(query, Long.valueOf(cecId), sortField, sortBy);
-                }
+                String primitiveEntity = (String) filters.get("primitiveEntity");
+                primitiveEntity = primitiveEntity == null ? "0" : primitiveEntity;
+                
+                CustomizedEntityFilter filter = new CustomizedEntityFilter();
+                filter.setEntityName(query);                
+                filter.setCustomEntityTemplatesOnly(isCustomEntityOnly);
+                filter.setSortBy(sortField);
+                filter.setSortBy(sortBy);
+                filter.setPrimitiveEntity(primitiveEntity);
+                
+				if (StringUtils.isBlank(cecId)) {
+					filter.setIncludeNonManagedEntities(false);
+					filter.setIncludeParentClassesOnly(false);
+					filter.setIncludeRelationships(false);
+				
+				} else {
+					filter.setCecId(Long.valueOf(cecId));
+				}
+				
+				entities = customizedEntityService.getCustomizedEntities(filter);
                 setRowCount(entities.size());
                 
                 if(first>entities.size()) {
