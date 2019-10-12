@@ -26,8 +26,7 @@
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}"
                         backingBean="#{gitRepositoryBean}" showFormButtons="false">
             <h:panelGrid columns="3">
-                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true"
-                                validateUnique="true"/>
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true"/>
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
             </h:panelGrid>
             <h:panelGrid columns="3">
@@ -171,15 +170,13 @@
         <h:form>
             <p:dialog header="#{messages['gitRepositories.importZip']}" id="importDialog" widgetVar="importDialog"
                           modal="true" closeOnEscape="true">
-                <p:messages autoUpdate="true"/>
-                <p:fileUpload accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced"
+                <p:fileUpload accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced" process="@this"
                                   dragDropSupport="true" allowTypes="/(\.|\/)(zip)$/" update="@form :formGitRepository" styleClass="TexAlCenter">
                 </p:fileUpload>
             </p:dialog>
 
             <p:dialog resizable="false" header="#{messages['gitRepositories.exportZip']}" id="exportDialog"
                       styleClass="form-dialog" widgetVar="exportDialog" modal="true" closeOnEscape="true" width="200">
-				<p:messages autoUpdate="true"/>
                 <hftl:decorateFormField fieldId="branch" label="#{messages['gitRepositories.branch']}">
                     <p:selectOneMenu id="branch" value="#{gitRepositoryBean.branch}">
                         <hftl:objectConverter />
