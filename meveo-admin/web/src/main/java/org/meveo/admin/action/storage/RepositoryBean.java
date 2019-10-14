@@ -68,4 +68,10 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 		repositoryService.remove(entity);
 	}
 	
+	@ActionMethod
+	public String deleteAndNavigate() throws BusinessException {
+		repositoryService.remove(entity);
+		return getListViewName();
+	}
+	
 }
