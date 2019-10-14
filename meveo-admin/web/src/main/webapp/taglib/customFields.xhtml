@@ -89,7 +89,8 @@
 
         </p:tab>
     </c:forEach>
-       <p:tab title="#{messages['customFieldTemplate.cfTab.treeEditor']}" rendered="#{customFieldDataEntryBean.isEmbeddedEntity(entity)}"> 
+       <p:tab title="#{messages['customFieldTemplate.cfTab.treeEditor']}" rendered="#{customFieldDataEntryBean.isEmbeddedEntity(entity)}">
+       	<h:outputScript name="js/tree-lib.js" library="layout" />
 		<div id="tree_container"></div>
 		<script type="text/javascript">
 		TreeEditor.init({

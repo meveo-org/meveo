@@ -58,7 +58,7 @@ public class GitRepository extends BusinessEntity {
     /**
      * (Optional) Remote origin url if the repository is hosted somewhere else than locally
      */
-    @Column(name = "remote_origin")
+    @Column(name = "remote_origin", updatable = false)
     private String remoteOrigin;
 
     /**

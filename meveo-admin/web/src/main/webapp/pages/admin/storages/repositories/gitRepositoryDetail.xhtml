@@ -23,17 +23,17 @@
                 <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
             </h:panelGrid>
-            <h:panelGrid columns="1">
-                <hftl:formField label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword"/>
+            <h:panelGrid columns="3">
+                <hftl:formField allowEdit="false" label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions"/>
                 <h:panelGroup id="defaultRemoteUsername">
                     <hftl:formField label="#{messages['gitRepositories.defaultRemoteUsername']}"
-                                        field="defaultRemoteUsername" componentWidth="30"
-                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}" />
+                                    field="defaultRemoteUsername" componentWidth="30"
+                                    rendered="#{gitRepositoryBean.entity.remoteOrigin != null}" listenerUpdate="actions"/>
                 </h:panelGroup>
                 <h:panelGroup id="defaultRemotePassword">
                     <hftl:formField label="#{messages['gitRepositories.defaultRemotePassword']}"
-                                        field="defaultRemotePassword" componentWidth="30"
-                                        rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"/>
+                                    field="defaultRemotePassword" componentWidth="30"
+                                    rendered="#{gitRepositoryBean.entity.remoteOrigin != null}" listenerUpdate="actions"/>
                 </h:panelGroup>
             </h:panelGrid>
 
@@ -47,7 +47,62 @@
                                     field="writingRoles" textArea="true" rows="3" maxlength="200000"/>
                 </h:panelGroup>
             </h:panelGrid>
+
+            <h:panelGrid id="actions" columns="2">
+                <p:commandButton id="push" value="#{messages['gitRepositories.push']}" rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pushRemoteDlg').show()" icon="ui-icon-arrowthick-1-ne" immediate="true" update="@form"/>
+                <p:commandButton id="pull" value="#{messages['gitRepositories.pull']}" rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pullRemoteDlg').show()" icon="ui-icon-arrowthick-1-sw" immediate="true" update="@form"/>
+            </h:panelGrid>
+
         </hftl:formPanel>
 
+        <p:dialog id="pushRemoteDlg" widgetVar="pushRemoteDlg" header="#{messages['gitRepositories.header']}" dynamic="true"
+                  modal="true" styleClass="form-dialog"
+                  closeOnEscape="true" width="50%" appendTo="@(body)">
+            <p:messages autoUpdate="true"/>
+            <h:form id="pushRemoteForm">
+                <h:panelGrid columns="1">
+                    <hftl:decorateFormField fieldId="username" label="#{messages['gitRepositories.username']}">
+                        <p:inputText autocomplete="off" id="username" value="#{gitRepositoryBean.username}" size="50"/>
+                    </hftl:decorateFormField>
+                    <hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
+                        <h:inputSecret autocomplete="off" id="password" value="#{gitRepositoryBean.password}" size="50" redisplay="true"/>
+                    </hftl:decorateFormField>
+                </h:panelGrid>
+                <p:commandButton
+                        value="#{messages['gitRepositories.push']}"
+                        action="#{gitRepositoryBean.pushRemote}"
+                        update="@form :formGitRepository" process="@form"
+                        oncomplete="if (args &amp;&amp; !args.validationFailed) PF('pushRemoteDlg').hide()">
+                    <f:ajax render="@all"/>
+                </p:commandButton>
+                <p:button value="#{messages['action.cancel']}"
+                          onclick="PF('pushRemoteDlg').hide(); return false;"/>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog id="pullRemoteDlg" widgetVar="pullRemoteDlg" header="#{messages['gitRepositories.header']}" dynamic="true"
+                  modal="true" styleClass="form-dialog"
+                  closeOnEscape="true" width="50%" appendTo="@(body)">
+            <p:messages autoUpdate="true"/>
+            <h:form id="pullRemoteForm" autocomplete="off">
+                <h:panelGrid columns="1">
+                    <hftl:decorateFormField fieldId="username" label="#{messages['gitRepositories.username']}">
+                        <p:inputText autocomplete="off" id="username" value="#{gitRepositoryBean.username}" size="50"/>
+                    </hftl:decorateFormField>
+                    <hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
+                        <h:inputSecret autocomplete="off" id="password" value="#{gitRepositoryBean.password}" size="50" redisplay="true"/>
+                    </hftl:decorateFormField>
+                </h:panelGrid>
+                <p:commandButton
+                        value="#{messages['gitRepositories.pull']}"
+                        action="#{gitRepositoryBean.pullRemote}"
+                        update="@form :formGitRepository" process="@form"
+                        oncomplete="if (args &amp;&amp; !args.validationFailed) PF('pullRemoteDlg').hide()">
+                    <f:ajax render="@all"/>
+                </p:commandButton>
+                <p:button value="#{messages['action.cancel']}"
+                          onclick="PF('pullRemoteDlg').hide(); return false;"/>
+            </h:form>
+        </p:dialog>
     </ui:define>
 </ui:composition>

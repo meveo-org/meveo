@@ -404,7 +404,7 @@ public class GitClient {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
-            throw new BusinessException("Cannot push repository " + gitRepository.getCode(), e);
+            throw new BusinessException("Cannot pull repository " + gitRepository.getCode(), e);
 
         } finally {
             keyLock.unlock(gitRepository.getCode());
