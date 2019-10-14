@@ -141,6 +141,8 @@
 			<f:setPropertyActionListener target="#{backingBean.entity}" value="#{entity}" />
 			<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
 		</p:commandButton>
+		
+		<ui:insert name="actionButtons" />
 
 		<p:commandButton id="#{resultsId}addModule" icon="ui-icon-newwin"
 						 update="addOneItemToModuleForm" actionListener="#{meveoModuleBean.initializeModules()}" rendered="#{renderAddModule and backingBean.canUserUpdateEntity()}" oncomplete="PF('addOneItemToModuleDlg').show()">

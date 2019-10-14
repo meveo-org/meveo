@@ -14,10 +14,12 @@ import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.api.rest.storage.RepositoryRs;
 import org.meveo.api.storage.RepositoryApi;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.storage.Repository;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
@@ -92,15 +94,18 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 	}
 
 	@Override
-	public ActionStatus remove(String code) {
+	public ActionStatus remove(String code, Boolean forceDelete) {
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
 		try {
-			repositoryApi.remove(code);
+			repositoryApi.remove(code, forceDelete);
 
+		} catch(EntityDoesNotExistsException e) {
+			// NOOOP
 		} catch (Exception e) {
 			processException(e, result);
 		}
+		
 		return result;
 	}
 
