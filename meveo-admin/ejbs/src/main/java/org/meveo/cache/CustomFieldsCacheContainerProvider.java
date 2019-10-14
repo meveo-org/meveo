@@ -22,14 +22,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
-import org.infinispan.commons.CacheConfigurationException;
-import org.infinispan.commons.api.BasicCache;
-import org.infinispan.commons.configuration.BasicConfiguration;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.configuration.cache.*;
 import org.infinispan.context.Flag;
-import org.infinispan.manager.CacheContainer;
-import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.ICustomFieldEntity;
@@ -52,17 +47,18 @@ import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
@@ -74,12 +70,12 @@ import java.util.stream.Collectors;
  * @lastModifiedVersion 6.3.0
  * 
  */
-@Stateless
+@Startup
+@Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
-
-    private static AtomicBoolean cacheInitialized = new AtomicBoolean(false);
 
     private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
     private static final String MEVEO_CFT_CACHE = "meveo-cft-cache";
@@ -123,48 +119,47 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     @CurrentUser
     protected MeveoUser currentUser;
 
+    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+
     @PostConstruct
     protected void initCaches(){
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            log.info("Initializing ontology caches");
 
-        if(!cacheInitialized.get()) {
-        	synchronized (cacheInitialized) {
-                if(!cacheInitialized.get()) {
-                	log.info("Initializing ontology caches");
-                	
-	        		SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder()
-	                        .persistence()
-	                        .passivation(true)
-	                        .addSingleFileStore()
-	                        .purgeOnStartup(false);
-	
-	                String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
-	                if (!StringUtils.isEmpty(cacheLocation)) {
-	                    confBuilder.location(cacheLocation);
-	                }
-	
-	                Configuration configuration = confBuilder.build();
-	
-	                if (!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
-	                    cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
-	                }
-	
-	                if (!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
-	                    cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
-	                }
-	
-	                if (!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
-	                    cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
-	                }
-	                
-	                cacheInitialized.set(true);
-                }
-			}
-            
+            SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder().persistence()
+                .passivation(true)
+                .addSingleFileStore()
+                .purgeOnStartup(false);
+
+            String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
+            if (!StringUtils.isEmpty(cacheLocation)) {
+                confBuilder.location(cacheLocation);
+            }
+
+            Configuration configuration = confBuilder.build();
+
+            if (!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
+                cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
+            }
+
+            if (!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
+                cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
+            }
+
+            if (!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
+                cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
+            }
+
+            log.info("Finished initializing ontology caches");
+
+            cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
+            cetsByCode = cacheContainer.getCache(MEVEO_CET_CACHE, true);
+            crtsByCode = cacheContainer.getCache(MEVEO_CRT_CACHE, true);
+        } finally {
+            lock.unlock();
         }
-
-        cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
-        cetsByCode = cacheContainer.getCache(MEVEO_CET_CACHE, true);
-        crtsByCode = cacheContainer.getCache(MEVEO_CRT_CACHE, true);
     }
 
     /**
@@ -288,21 +283,26 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public void refreshCache(String cacheName) {
 
-        if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
-            cftsByAppliesToClear();
-            populateCFTCache();
-        }
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
+                cftsByAppliesToClear();
+                populateCFTCache();
+            }
 
-        if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
-            cetsByCodeClear();
-            populateCETCache();
-        }
+            if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
+                cetsByCodeClear();
+                populateCETCache();
+            }
 
-        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
-            crtsByCodeClear();
-            populateCRTCache();
+            if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
+                crtsByCodeClear();
+                populateCRTCache();
+            }
+        } finally {
+            lock.unlock();
         }
-
     }
 
     /**
@@ -313,31 +313,37 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public void populateCache(String cacheName, boolean onlyIfEmpty) {
 
-        if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
-            AdvancedCache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftCache = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
-            if (cftCache.isEmpty() || !onlyIfEmpty) {
-                populateCFTCache();
-            } else {
-                log.info("CFT cache already loaded with {} values", cftCache.size());
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            if (cacheName == null || cacheName.equals(cftsByAppliesTo.getName()) || cacheName.contains(cftsByAppliesTo.getName())) {
+                AdvancedCache<CacheKeyStr, Map<String, CustomFieldTemplate>> cftCache = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+                if (cftCache.isEmpty() || !onlyIfEmpty) {
+                    populateCFTCache();
+                } else {
+                    log.info("CFT cache already loaded with {} values", cftCache.size());
+                }
             }
-        }
 
-        if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
-            AdvancedCache<CacheKeyStr, CustomEntityTemplate> cetCache = cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
-            if (cetCache.isEmpty() || !onlyIfEmpty) {
-                populateCETCache();
-            } else {
-                log.info("CET cache already loaded with {} values", cetCache.size());
+            if (cacheName == null || cacheName.equals(cetsByCode.getName()) || cacheName.contains(cetsByCode.getName())) {
+                AdvancedCache<CacheKeyStr, CustomEntityTemplate> cetCache = cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+                if (cetCache.isEmpty() || !onlyIfEmpty) {
+                    populateCETCache();
+                } else {
+                    log.info("CET cache already loaded with {} values", cetCache.size());
+                }
             }
-        }
 
-        if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
-            AdvancedCache<CacheKeyStr, CustomRelationshipTemplate> crtCache = crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
-            if (crtCache.isEmpty() || !onlyIfEmpty) {
-                populateCRTCache();
-            } else {
-                log.info("CRT cache already loaded with {} values", crtCache.size());
-            }
+            if (cacheName == null || cacheName.equals(crtsByCode.getName()) || cacheName.contains(crtsByCode.getName())) {
+                AdvancedCache<CacheKeyStr, CustomRelationshipTemplate> crtCache = crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES);
+                if (crtCache.isEmpty() || !onlyIfEmpty) {
+                    populateCRTCache();
+                } else {
+                    log.info("CRT cache already loaded with {} values", crtCache.size());
+                }
+        }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -378,8 +384,16 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
         cft = SerializationUtils.clone(cft);
 
-        cfts.put(cft.getCode(), cft);
-        cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, cfts);
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            cfts.put(cft.getCode(), cft);
+            cftsByAppliesTo.getAdvancedCache()
+                .withFlags(Flag.IGNORE_RETURN_VALUES)
+                .put(cacheKeyByAppliesTo, cfts);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -388,24 +402,31 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param cft Custom field template definition
      */
     public void removeCustomFieldTemplate(CustomFieldTemplate cft) {
-        CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
-        String currentProvider = currentUser.getProviderCode();
-        log.trace("Removing custom field template {} for {} from CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentProvider);
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
-        Map<String, CustomFieldTemplate> cftsOld = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKeyByAppliesTo);
+            String currentProvider = currentUser.getProviderCode();
+            log.trace("Removing custom field template {} for {} from CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentProvider);
 
-        if (cftsOld != null && cftsOld.containsKey(cft.getCode())) {
+            Map<String, CustomFieldTemplate> cftsOld = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKeyByAppliesTo);
 
-            Map<String, CustomFieldTemplate> cfts = new TreeMap<>(cftsOld);
-            cfts.remove(cft.getCode());
+            if (cftsOld != null && cftsOld.containsKey(cft.getCode())) {
 
-            // If no value are left in the map - LEAVE, as cache can be populated at runtime
-            // instead of at application start and need to distinguish
-            // between not cached key and key with no records
-            cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, cfts);
+                Map<String, CustomFieldTemplate> cfts = new TreeMap<>(cftsOld);
+                cfts.remove(cft.getCode());
 
-            log.trace("Removed custom field template {} for {} from CFT cache for Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentProvider);
+                // If no value are left in the map - LEAVE, as cache can be populated at runtime
+                // instead of at application start and need to distinguish
+                // between not cached key and key with no records
+                cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, cfts);
+
+                log.trace("Removed custom field template {} for {} from CFT cache for Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentProvider);
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -418,7 +439,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
         CacheKeyStr cacheKeyByAppliesTo = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
         if (!cftsByAppliesTo.getAdvancedCache().containsKey(cacheKeyByAppliesTo)) {
-            cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, new HashMap<>());
+            Lock lock = cacheLock.writeLock();
+            lock.lock();
+            try {
+                cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(cacheKeyByAppliesTo, new HashMap<>());
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
@@ -430,7 +457,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public void addUpdateCustomEntityTemplate(CustomEntityTemplate cet) {
         log.trace("Adding CET template {} to CET cache", cet.getCode());
 
-        cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()), cet);
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()), cet);
+        } finally {
+            lock.unlock();
+        }
 
         // Sort values by cet.name
         // Collections.sort(cetsByProvider);
@@ -445,17 +478,41 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public void removeCustomEntityTemplate(CustomEntityTemplate cet) {
         log.trace("Removing CET template {} from CET cache", cet.getCode());
 
-        cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void addUpdateCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
         log.trace("Adding / Updating CRT template {} to CRT cache", crt.getCode());
-        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
+
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            crtsByCode.getAdvancedCache()
+                .withFlags(Flag.IGNORE_RETURN_VALUES)
+                .put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void removeCustomRelationshipTemplate(CustomRelationshipTemplate crt) {
         log.trace("Removing CRT template {} from CRT cache", crt.getCode());
-        crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
+
+        Lock lock = cacheLock.writeLock();
+        lock.lock();
+        try {
+            crtsByCode.getAdvancedCache()
+                .withFlags(Flag.IGNORE_RETURN_VALUES)
+                .remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
+        } finally {
+            lock.unlock();
+        }
     }
 
     private CacheKeyStr getCFTCacheKeyByAppliesTo(CustomFieldTemplate cft) {
@@ -470,7 +527,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
-        Map<String, CustomFieldTemplate> cfMaps = cftsByAppliesTo.get(key);
+
+        Map<String, CustomFieldTemplate> cfMaps;
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            cfMaps = cftsByAppliesTo.get(key);
+        } finally {
+            lock.unlock();
+        }
         if(cfMaps == null || cfMaps.isEmpty()) {
             cfMaps = customFieldTemplateService.findByAppliesTo(appliesTo);
             if(cfMaps != null){
@@ -487,7 +552,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public Collection<CustomEntityTemplate> getCustomEntityTemplates() {
 
-        return cetsByCode.values();
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            return cetsByCode.values();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -498,7 +569,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public CustomEntityTemplate getCustomEntityTemplate(String code) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
-        CustomEntityTemplate customEntityTemplate = cetsByCode.get(key);
+        CustomEntityTemplate customEntityTemplate;
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            customEntityTemplate = cetsByCode.get(key);
+        } finally {
+            lock.unlock();
+        }
+
         if(customEntityTemplate == null){
             customEntityTemplate = customEntityTemplateService.findByCode(code);
             if(customEntityTemplate != null) {
@@ -517,7 +596,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public CustomRelationshipTemplate getCustomRelationshipTemplate(String code) {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
-        CustomRelationshipTemplate customRelationshipTemplate = crtsByCode.get(key);
+        CustomRelationshipTemplate customRelationshipTemplate;
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            customRelationshipTemplate = crtsByCode.get(key);
+        } finally {
+            lock.unlock();
+        }
+
         if(customRelationshipTemplate == null) {
             customRelationshipTemplate = customRelationshipTemplateService.findByCode(code);
             if(customRelationshipTemplate != null){
@@ -534,14 +621,26 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @return Cached custom relationship templates
      */
     public Collection<CustomRelationshipTemplate> getCustomRelationshipTemplates() {
-        return crtsByCode.values();
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            return crtsByCode.values();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public List<CustomRelationshipTemplate> getCustomRelationshipTemplateByCet(String code) {
-        return crtsByCode.values()
-                .stream()
-                .filter(crt -> crtHasSourceOrTargetConcerned(code, crt))
-                .collect(Collectors.toList());
+        Lock lock = cacheLock.readLock();
+        lock.lock();
+        try {
+            return crtsByCode.values()
+                    .stream()
+                    .filter(crt -> crtHasSourceOrTargetConcerned(code, crt))
+                    .collect(Collectors.toList());
+        } finally {
+            lock.unlock();
+        }
     }
 
     private boolean crtHasSourceOrTargetConcerned(String code, CustomRelationshipTemplate crt) {
@@ -610,19 +709,39 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public void cetsByCodeClear() {
         String currentProvider = currentUser.getProviderCode();
         log.debug("cetsByCodeClear() => " + currentProvider + ".");
-        Iterator<Entry<CacheKeyStr, CustomEntityTemplate>> iter = cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
-        while (iter.hasNext()) {
-            Entry<CacheKeyStr, CustomEntityTemplate> entry = iter.next();
-            boolean comparison = (entry.getKey().getProvider() == null) ? currentProvider == null : entry.getKey().getProvider().equals(currentProvider);
-            if (comparison) {
-                itemsToBeRemoved.add(entry.getKey());
+
+        Lock readLock = cacheLock.readLock();
+        readLock.lock();
+        try {
+            Iterator<Entry<CacheKeyStr, CustomEntityTemplate>> iter = cetsByCode.getAdvancedCache()
+                .withFlags(Flag.IGNORE_RETURN_VALUES)
+                .entrySet()
+                .iterator();
+            while (iter.hasNext()) {
+                Entry<CacheKeyStr, CustomEntityTemplate> entry = iter.next();
+                boolean comparison = (entry.getKey().getProvider() == null)
+                    ? currentProvider == null
+                    : entry.getKey().getProvider().equals(currentProvider);
+                if (comparison) {
+                    itemsToBeRemoved.add(entry.getKey());
+                }
             }
+        } finally {
+          readLock.unlock();
         }
 
         for (CacheKeyStr elem : itemsToBeRemoved) {
             log.debug("Remove element Provider:" + elem.getProvider() + " Key:" + elem.getKey() + ".");
-            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(elem);
+            Lock writeLock = cacheLock.writeLock();
+            writeLock.lock();
+            try {
+                cetsByCode.getAdvancedCache()
+                    .withFlags(Flag.IGNORE_RETURN_VALUES)
+                    .remove(elem);
+            } finally {
+                writeLock.unlock();;
+            }
         }
     }
 
@@ -632,19 +751,32 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public void crtsByCodeClear() {
         String currentProvider = currentUser.getProviderCode();
         log.debug("crtsByCodeClear() => " + currentProvider + ".");
-        CloseableIterator<Entry<CacheKeyStr, CustomRelationshipTemplate>> iter = crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
-        while (iter.hasNext()) {
-            Entry<CacheKeyStr, CustomRelationshipTemplate> entry = iter.next();
-            boolean comparison = (entry.getKey().getProvider() == null) ? currentProvider == null : entry.getKey().getProvider().equals(currentProvider);
-            if (comparison) {
-                itemsToBeRemoved.add(entry.getKey());
+
+        Lock readLock = cacheLock.readLock();
+        readLock.lock();
+        try {
+            CloseableIterator<Entry<CacheKeyStr, CustomRelationshipTemplate>> iter = crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<CacheKeyStr, CustomRelationshipTemplate> entry = iter.next();
+                boolean comparison = (entry.getKey().getProvider() == null) ? currentProvider == null : entry.getKey().getProvider().equals(currentProvider);
+                if (comparison) {
+                    itemsToBeRemoved.add(entry.getKey());
+                }
             }
+        } finally {
+            readLock.unlock();
         }
 
         for (CacheKeyStr elem : itemsToBeRemoved) {
             log.debug("Remove element Provider:" + elem.getProvider() + " Key:" + elem.getKey() + ".");
-            crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(elem);
+            Lock writeLock = cacheLock.writeLock();
+            writeLock.lock();
+            try {
+                crtsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(elem);
+            } finally {
+                writeLock.unlock();;
+            }
         }
     }
 
@@ -655,19 +787,32 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         String currentProvider = currentUser.getProviderCode();
         log.info("Clear CFTS cache for {}/{} ", currentProvider, currentUser);
         // cftsByAppliesTo.keySet().removeIf(key -> (key.getProvider() == null) ? currentProvider == null : key.getProvider().equals(currentProvider));
-        Iterator<Entry<CacheKeyStr, Map<String, CustomFieldTemplate>>> iter = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
-        while (iter.hasNext()) {
-            Entry<CacheKeyStr, Map<String, CustomFieldTemplate>> entry = iter.next();
-            boolean comparison = (entry.getKey().getProvider() == null) ? currentProvider == null : entry.getKey().getProvider().equals(currentProvider);
-            if (comparison) {
-                itemsToBeRemoved.add(entry.getKey());
+
+        Lock readLock = cacheLock.readLock();
+        readLock.lock();
+        try {
+            Iterator<Entry<CacheKeyStr, Map<String, CustomFieldTemplate>>> iter = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<CacheKeyStr, Map<String, CustomFieldTemplate>> entry = iter.next();
+                boolean comparison = (entry.getKey().getProvider() == null) ? currentProvider == null : entry.getKey().getProvider().equals(currentProvider);
+                if (comparison) {
+                    itemsToBeRemoved.add(entry.getKey());
+                }
             }
+        } finally {
+            readLock.unlock();
         }
 
         for (CacheKeyStr elem : itemsToBeRemoved) {
             log.debug("Remove element Provider:" + elem.getProvider() + " Key:" + elem.getKey() + ".");
-            cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(elem);
+            Lock writeLock = cacheLock.writeLock();
+            writeLock.lock();
+            try {
+                cftsByAppliesTo.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(elem);
+            } finally {
+                writeLock.unlock();;
+            }
         }
     }
 
@@ -675,6 +820,12 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * Clear all the data in CFT cache
      */
     public void cftsByAppliesToClearAll() {
-        cftsByAppliesTo.clear();
+        Lock writeLock = cacheLock.writeLock();
+        writeLock.lock();
+        try {
+            cftsByAppliesTo.clear();
+        } finally {
+            writeLock.unlock();;
+        }
     }
 }
