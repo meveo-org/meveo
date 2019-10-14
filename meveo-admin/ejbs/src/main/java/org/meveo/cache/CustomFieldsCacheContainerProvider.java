@@ -537,7 +537,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             lock.unlock();
         }
         if(cfMaps == null || cfMaps.isEmpty()) {
-            cfMaps = customFieldTemplateService.findByAppliesTo(appliesTo);
+            cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
             if(cfMaps != null){
                 cfMaps.forEach((k,v) -> addUpdateCustomFieldTemplate(v));
             }
