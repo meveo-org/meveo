@@ -25,6 +25,7 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.UserApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
@@ -41,6 +42,7 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.git.RSAKeyPair;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.event.FileUploadEvent;
@@ -79,6 +81,9 @@ public class UserBean extends CustomFieldBean<User> {
     @Inject
     private SecuredBusinessEntityService securedBusinessEntityService;
 
+    @Inject
+    private UserApi userApi;
+
     /** paramBeanFactory */
     @Inject
     private ParamBeanFactory paramBeanFactory;
@@ -101,6 +106,8 @@ public class UserBean extends CustomFieldBean<User> {
     private Map<String, BaseBean<? extends BusinessEntity>> accountBeanMap;
     private BusinessEntity selectedEntity;
     private BaseBean<?> selectedAccountBean;
+    private String passphrase;
+    private String confirmPassphrase;
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
@@ -173,7 +180,7 @@ public class UserBean extends CustomFieldBean<User> {
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         log.debug("saving new user={}", entity.getUserName());
 
-        if (getObjectId() != null) {
+        if (entity.getId() != null) {
             if (userService.isUsernameExists(entity.getUserName(), entity.getId())) {
                 messages.error(new BundleKey("messages", "exception.UsernameAlreadyExistsException"));
                 return null;
@@ -196,7 +203,7 @@ public class UserBean extends CustomFieldBean<User> {
     }
 
     /**
-     * @see org.meveo.admin.action.BaseBean#getPersistenceService()
+     * @see BaseBean#getPersistenceService()
      */
     @Override
     protected IPersistenceService<User> getPersistenceService() {
@@ -204,7 +211,7 @@ public class UserBean extends CustomFieldBean<User> {
     }
 
     /**
-     * @see org.meveo.admin.action.BaseBean#getFormFieldsToFetch()
+     * @see BaseBean#getFormFieldsToFetch()
      */
     @Override
     protected List<String> getFormFieldsToFetch() {
@@ -212,7 +219,7 @@ public class UserBean extends CustomFieldBean<User> {
     }
 
     /**
-     * @see org.meveo.admin.action.BaseBean#getListFieldsToFetch()
+     * @see BaseBean#getListFieldsToFetch()
      */
     @Override
     protected List<String> getListFieldsToFetch() {
@@ -687,5 +694,32 @@ public class UserBean extends CustomFieldBean<User> {
         log.debug("this.securedEntityTypes: {}", this.securedEntityTypes);
         log.debug("this.accountBeanMap: {}", this.accountBeanMap);
         log.debug("initSelectionOptions done.");
+    }
+
+    public void generateKey() {
+        try {
+            String username = entity.getUserName();
+            userApi.generateShKey(username, this.getPassphrase());
+            initEntity(entity.getId());
+            messages.info(new BundleKey("messages", "user.generate.successful"));
+        } catch (BusinessException e) {
+            messages.error(new BundleKey("messages", "user.generate.error"));
+        }
+    }
+
+    public String getPassphrase() {
+        return passphrase;
+    }
+
+    public void setPassphrase(String passphrase) {
+        this.passphrase = passphrase;
+    }
+
+    public String getConfirmPassphrase() {
+        return confirmPassphrase;
+    }
+
+    public void setConfirmPassphrase(String confirmPassphrase) {
+        this.confirmPassphrase = confirmPassphrase;
     }
 }
