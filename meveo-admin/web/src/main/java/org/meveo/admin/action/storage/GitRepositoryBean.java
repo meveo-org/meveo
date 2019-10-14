@@ -1,12 +1,9 @@
 package org.meveo.admin.action.storage;
 
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.git.GitRepositoryApi;
@@ -16,6 +13,11 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
 import org.slf4j.Logger;
+
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 @Named
 @ViewScoped
@@ -30,22 +32,29 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     private GitRepositoryApi gitRepositoryApi;
 
     @Inject
+    private Logger log;
+
+    @Inject
     private GitClient gitClient;
 
     private String username;
 
     private String password;
-    
-    @Inject
-    private Logger log;
 
     public GitRepositoryBean() {
         super(GitRepository.class);
     }
 
-    @Override
-    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        return super.saveOrUpdate(killConversation);
+    @ActionMethod
+    public String saveOrUpdateGit() throws BusinessException, ELException {
+        if (entity.getId() == null && entity.getRemoteOrigin() != null) {
+            gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+        }
+        String result = saveOrUpdate(false);
+        if (result == null) {
+            FacesContext.getCurrentInstance().validationFailed();
+        }
+        return result;
     }
 
     public void pushRemote() {

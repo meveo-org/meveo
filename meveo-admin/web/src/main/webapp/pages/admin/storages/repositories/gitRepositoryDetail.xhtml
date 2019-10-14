@@ -1,30 +1,37 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
-                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml" xmlns:o="http://omnifaces.org/ui">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+                xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" template="/layout/template.xhtml"
+                xmlns:o="http://omnifaces.org/ui">
 
     <ui:define name="metadata">
         <f:metadata>
-            <f:viewParam name="objectId" value="#{gitRepositoryBean.objectId}" />
+            <f:viewParam name="objectId" value="#{gitRepositoryBean.objectId}"/>
         </f:metadata>
     </ui:define>
 
     <ui:define name="body">
         <h:form id="crumbmenuForm">
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-                <p:menuitem value="#{messages['menu.storages']}" disabled="true" />
-                <p:menuitem outcome="gitRepositories" value="#{messages['menu.gitRepositories']}" />
-                <p:menuitem value="#{messages['commons.new']} #{messages['menu.gitRepositories']}" disabled="true" rendered="#{gitRepositoryBean.entity.transient}" />
-                <p:menuitem value="#{messages['menu.gitRepositories']} - #{gitRepositoryBean.entity.code}" disabled="true"  rendered="#{!gitRepositoryBean.entity.transient}" />
+                <p:menuitem value="#{messages['menu.admin']}" disabled="true"/>
+                <p:menuitem value="#{messages['menu.storages']}" disabled="true"/>
+                <p:menuitem outcome="gitRepositories" value="#{messages['menu.gitRepositories']}"/>
+                <p:menuitem value="#{messages['commons.new']} #{messages['menu.gitRepositories']}" disabled="true"
+                            rendered="#{gitRepositoryBean.entity.transient}"/>
+                <p:menuitem value="#{messages['menu.gitRepositories']} - #{gitRepositoryBean.entity.code}"
+                            disabled="true" rendered="#{!gitRepositoryBean.entity.transient}"/>
             </p:breadCrumb>
         </h:form>
 
-        <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}" backingBean="#{gitRepositoryBean}">
-            <h:panelGrid columns="2">
-                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
-                <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+        <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}"
+                        backingBean="#{gitRepositoryBean}" showFormButtons="false">
+            <h:panelGrid columns="3">
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true"
+                                validateUnique="true"/>
+                <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
             </h:panelGrid>
             <h:panelGrid columns="3">
-                <hftl:formField allowEdit="false" label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions"/>
+                <hftl:formField allowEdit="false" label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions actionButtons"/>
                 <h:panelGroup id="defaultRemoteUsername">
                     <hftl:formField label="#{messages['gitRepositories.defaultRemoteUsername']}"
                                     field="defaultRemoteUsername" componentWidth="30"
@@ -49,10 +56,37 @@
             </h:panelGrid>
 
             <h:panelGrid id="actions" columns="2">
-                <p:commandButton id="push" value="#{messages['gitRepositories.push']}" rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pushRemoteDlg').show()" icon="ui-icon-arrowthick-1-ne" immediate="true" update="@form"/>
-                <p:commandButton id="pull" value="#{messages['gitRepositories.pull']}" rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pullRemoteDlg').show()" icon="ui-icon-arrowthick-1-sw" immediate="true" update="@form"/>
+                <p:commandButton id="push" value="#{messages['gitRepositories.push']}" rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pushRemoteDlg').show()" immediate="true" icon="ui-icon-arrowthick-1-ne" update="@form"/>
+                <p:commandButton id="pull" value="#{messages['gitRepositories.pull']}" rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"  oncomplete="PF('pullRemoteDlg').show()" immediate="true" icon="ui-icon-arrowthick-1-sw" update="@form"/>
             </h:panelGrid>
 
+            <ui:param name="buttons" value="true"/>
+            <ui:define name="buttons">
+                <h:panelGrid id="actionButtons" columns="5">
+                    <p:commandButton id="savePopupRemote" value="#{messages['action.save']}"
+                                     oncomplete="PF('remoteDlg').show()"
+                                     icon="ui-icon-check" update=":remoteForm"
+                                     rendered="#{gitRepositoryBean.entity.id == null and not empty gitRepositoryBean.entity.remoteOrigin}">
+                    </p:commandButton>
+                    <p:commandButton id="saveButtonRemote" value="#{messages['action.save']}"
+                                     onclick="delayDisable(this);"
+                                     oncomplete="this.disabled=false;"
+                                     action="#{gitRepositoryBean.saveOrUpdateGit}"
+                                     icon="ui-icon-check" update="@form"
+                                     rendered="#{gitRepositoryBean.entity.id != null or (gitRepositoryBean.entity.id == null and gitRepositoryBean.entity.remoteOrigin == null)}">
+                        <f:param name="edit" value="true"/>
+                    </p:commandButton>
+                    <hf:clearButton label="#{messages['action.reset']}" edit="#{gitRepositoryBean.edit}"
+                                    rendered="#{gitRepositoryBean.canUserUpdateEntity()}"
+                                    resetAction="#{gitRepositoryBean.resetFormEntity()}"/>
+                    <p:button id="backButton" value="#{messages['action.back']}" outcome="#{gitRepositoryBean.back()}"/>
+                    <p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
+                                     action="#{gitRepositoryBean.deleteWithBack}" immediate="true" update="@form">
+                        <p:confirm header="#{messages['commons.confirmationHeader']}"
+                                   message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
+                    </p:commandButton>
+                </h:panelGrid>
+            </ui:define>
         </hftl:formPanel>
 
         <p:dialog id="pushRemoteDlg" widgetVar="pushRemoteDlg" header="#{messages['gitRepositories.header']}" dynamic="true"
@@ -102,6 +136,29 @@
                 </p:commandButton>
                 <p:button value="#{messages['action.cancel']}"
                           onclick="PF('pullRemoteDlg').hide(); return false;"/>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog id="remoteDlg" widgetVar="remoteDlg" header="#{messages['gitRepositories.header']}" dynamic="true"
+                  modal="true" styleClass="form-dialog"
+                  closeOnEscape="true" width="50%" appendTo="@(body)">
+            <h:form id="remoteForm">
+                <h:panelGrid columns="1">
+                    <hftl:decorateFormField fieldId="username" label="#{messages['gitRepositories.username']}">
+                        <p:inputText id="username" value="#{gitRepositoryBean.username}" size="50"/>
+                    </hftl:decorateFormField>
+                    <hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
+                        <h:inputSecret id="password" value="#{gitRepositoryBean.password}" maxlength="50" redisplay="true"/>
+                    </hftl:decorateFormField>
+                </h:panelGrid>
+                <p:commandButton
+                        value="#{messages['action.save']}"
+                        action="#{gitRepositoryBean.saveOrUpdateGit}"
+                        update="@form :formGitRepository" process="@form" type="submit"
+                        oncomplete="if (args &amp;&amp; !args.validationFailed) PF('remoteDlg').hide()">
+                </p:commandButton>
+                <p:button value="#{messages['action.cancel']}"
+                          onclick="PF('remoteDlg').hide(); return false;"/>
             </h:form>
         </p:dialog>
     </ui:define>
