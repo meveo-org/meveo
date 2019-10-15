@@ -140,7 +140,7 @@ public class GitClient {
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
         if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());
-        } else if(repoDir.exists()) {
+        } else if(repoDir.exists() && new File(repoDir, ".git").exists()) {
             return;
         }
 
@@ -687,7 +687,7 @@ public class GitClient {
         try (Git git = Git.open(repositoryDir)) {
             Repository repository = git.getRepository();
             try(RevWalk rw = new RevWalk(repository)) {
-                RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
+	            RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
                 return getModifiedFiles(repository, parent, commit);
             }
         } catch (IOException e) {

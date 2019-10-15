@@ -70,13 +70,19 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         if(gitRepositoryDto.getCode().equals(meveoRepository.getCode())){
             throw new IllegalAccessException("Cannot import Meveo default directory");
         }
-
-        boolean exists = exists(gitRepositoryDto);
+        
+        GitRepositoryDto existingRepo = find(gitRepositoryDto.getCode());
+        boolean exists = existingRepo != null;
         if(exists && !override){
             return;
         }
+        
+        if(gitRepositoryDto.isRemote() || (exists && existingRepo.isRemote())) {
+        	throw new IllegalAccessException("Cannot import directory with remote origin. Please pull instead.");
+        }
 
         if(exists){
+            
             remove(gitRepositoryDto.getCode());
             gitRepositoryService.flush();
         }

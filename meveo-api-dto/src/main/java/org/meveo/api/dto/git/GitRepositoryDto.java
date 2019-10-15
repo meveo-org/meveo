@@ -123,7 +123,7 @@ public class GitRepositoryDto extends BusinessEntityDto {
     }
 
     public boolean isRemote(){
-        return StringUtils.isBlank(this.remoteOrigin);
+        return StringUtils.isNotBlank(this.remoteOrigin);
     }
 
     @JsonIgnore

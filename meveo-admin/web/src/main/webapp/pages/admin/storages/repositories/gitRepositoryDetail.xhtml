@@ -18,7 +18,7 @@
                 <p:menuitem outcome="gitRepositories" value="#{messages['menu.gitRepositories']}"/>
                 <p:menuitem value="#{messages['commons.new']} #{messages['menu.gitRepositories']}" disabled="true"
                             rendered="#{gitRepositoryBean.entity.transient}"/>
-                <p:menuitem value="#{messages['menu.gitRepositories']} - #{gitRepositoryBean.entity.code}"
+                <p:menuitem value="#{gitRepositoryBean.entity.code}"
                             disabled="true" rendered="#{!gitRepositoryBean.entity.transient}"/>
             </p:breadCrumb>
         </h:form>
@@ -26,8 +26,7 @@
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}"
                         backingBean="#{gitRepositoryBean}" showFormButtons="false">
             <h:panelGrid columns="3">
-                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true"
-                                validateUnique="true"/>
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" allowEdit="false"/>
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
             </h:panelGrid>
             <h:panelGrid columns="3">
@@ -62,7 +61,7 @@
 
             <ui:param name="buttons" value="true"/>
             <ui:define name="buttons">
-                <h:panelGrid id="actionButtons" columns="5">
+                <h:panelGrid id="actionButtons" columns="6">
                     <p:commandButton id="savePopupRemote" value="#{messages['action.save']}"
                                      oncomplete="PF('remoteDlg').show()"
                                      icon="ui-icon-check" update=":remoteForm"
@@ -79,12 +78,18 @@
                     <hf:clearButton label="#{messages['action.reset']}" edit="#{gitRepositoryBean.edit}"
                                     rendered="#{gitRepositoryBean.canUserUpdateEntity()}"
                                     resetAction="#{gitRepositoryBean.resetFormEntity()}"/>
-                    <p:button id="backButton" value="#{messages['action.back']}" outcome="#{gitRepositoryBean.back()}"/>
+                    <p:button id="backButton" value="#{messages['action.back']}"
+                              outcome="#{gitRepositoryBean.back()}"/>
                     <p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
                                      action="#{gitRepositoryBean.deleteWithBack}" immediate="true" update="@form">
                         <p:confirm header="#{messages['commons.confirmationHeader']}"
                                    message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
                     </p:commandButton>
+                    <p:commandButton value="#{messages['gitRepositories.importZip']}" process="@form" type="submit"
+                                     onclick="PF('importDialog').show();" rendered="#{gitRepositoryBean.entity.remoteOrigin == null}"/>
+                    <p:commandButton value="#{messages['gitRepositories.exportZip']}" type="button"
+                                     rendered="#{gitRepositoryBean.entity.id != null}"
+                                     onclick="PF('exportDialog').show()"/>
                 </h:panelGrid>
             </ui:define>
         </hftl:formPanel>
@@ -161,5 +166,33 @@
                           onclick="PF('remoteDlg').hide(); return false;"/>
             </h:form>
         </p:dialog>
+
+        <h:form>
+            <p:dialog header="#{messages['gitRepositories.importZip']}" id="importDialog" widgetVar="importDialog"
+                          modal="true" closeOnEscape="true">
+                <p:fileUpload accept=".zip" fileUploadListener="#{gitRepositoryBean.importZip}" mode="advanced" process="@this"
+                                  dragDropSupport="true" allowTypes="/(\.|\/)(zip)$/" update="@form :formGitRepository" styleClass="TexAlCenter">
+                </p:fileUpload>
+            </p:dialog>
+
+            <p:dialog resizable="false" header="#{messages['gitRepositories.exportZip']}" id="exportDialog"
+                      styleClass="form-dialog" widgetVar="exportDialog" modal="true" closeOnEscape="true" width="200">
+                <hftl:decorateFormField fieldId="branch" label="#{messages['gitRepositories.branch']}">
+                    <p:selectOneMenu id="branch" value="#{gitRepositoryBean.branch}">
+                        <hftl:objectConverter />
+                        <f:selectItem itemLabel="#{messages['commons.select']}" />
+                        <f:selectItems value="#{gitRepositoryBean.entity.branches}"/>
+                    </p:selectOneMenu>
+                </hftl:decorateFormField>
+                <div class="clearLeft">
+                    <p:commandButton id="buttonExport" value="#{messages['action.export']}" ajax="false"
+                                     onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+                        <p:fileDownload id="exportFileDownload" value="#{gitRepositoryBean.exportZip()}"/>
+                    </p:commandButton>
+                </div>
+            </p:dialog>
+        </h:form>
+
+        <p:remoteCommand name="closeExportDialog" oncomplete="PF('exportDialog').hide()"/>
     </ui:define>
 </ui:composition>
