@@ -539,7 +539,10 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         if(cfMaps == null || cfMaps.isEmpty()) {
             cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
             if(cfMaps != null){
-                cfMaps.forEach((k,v) -> addUpdateCustomFieldTemplate(v));
+                cfMaps.forEach((k,v) -> {
+                    customFieldTemplateService.detach(v);
+                    addUpdateCustomFieldTemplate(v);
+                });
             }
         }
         return cfMaps;
@@ -581,6 +584,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         if(customEntityTemplate == null){
             customEntityTemplate = customEntityTemplateService.findByCode(code);
             if(customEntityTemplate != null) {
+                customEntityTemplateService.detach(customEntityTemplate);
                 addUpdateCustomEntityTemplate(customEntityTemplate);
             }
         }
@@ -608,6 +612,9 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         if(customRelationshipTemplate == null) {
             customRelationshipTemplate = customRelationshipTemplateService.findByCode(code);
             if(customRelationshipTemplate != null){
+                customRelationshipTemplateService.detach(customRelationshipTemplate);
+                customRelationshipTemplate.setStartNode((CustomEntityTemplate) Hibernate.unproxy(customRelationshipTemplate.getStartNode()));
+                customRelationshipTemplate.setEndNode((CustomEntityTemplate) Hibernate.unproxy(customRelationshipTemplate.getEndNode()));
                 addUpdateCustomRelationshipTemplate(customRelationshipTemplate);
             }
         }
