@@ -18,7 +18,7 @@
                 <p:menuitem outcome="gitRepositories" value="#{messages['menu.gitRepositories']}"/>
                 <p:menuitem value="#{messages['commons.new']} #{messages['menu.gitRepositories']}" disabled="true"
                             rendered="#{gitRepositoryBean.entity.transient}"/>
-                <p:menuitem value="#{messages['menu.gitRepositories']} - #{gitRepositoryBean.entity.code}"
+                <p:menuitem value="#{gitRepositoryBean.entity.code}"
                             disabled="true" rendered="#{!gitRepositoryBean.entity.transient}"/>
             </p:breadCrumb>
         </h:form>
@@ -26,7 +26,7 @@
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}"
                         backingBean="#{gitRepositoryBean}" showFormButtons="false">
             <h:panelGrid columns="3">
-                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true"/>
+                <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" allowEdit="false"/>
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
             </h:panelGrid>
             <h:panelGrid columns="3">
@@ -86,7 +86,7 @@
                                    message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
                     </p:commandButton>
                     <p:commandButton value="#{messages['gitRepositories.importZip']}" process="@form" type="submit"
-                                     onclick="PF('importDialog').show();"/>
+                                     onclick="PF('importDialog').show();" rendered="#{gitRepositoryBean.entity.remoteOrigin == null}"/>
                     <p:commandButton value="#{messages['gitRepositories.exportZip']}" type="button"
                                      rendered="#{gitRepositoryBean.entity.id != null}"
                                      onclick="PF('exportDialog').show()"/>

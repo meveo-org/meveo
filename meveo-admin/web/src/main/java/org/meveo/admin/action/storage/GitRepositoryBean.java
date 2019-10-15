@@ -106,7 +106,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
             gitRepositoryApi.importZip(inputStream, dto, isEdit());
             messages.info(new BundleKey("messages", "importZip.successfull"), filename);
         } catch (Exception e) {
-            messages.error(new BundleKey("messages","importZip.error"), filename);
+            messages.error(new BundleKey("messages","importZip.error"), filename, e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         }
         return getEditViewName();
     }
@@ -119,7 +119,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
             InputStream is = new ByteArrayInputStream(exportZip);
             return new DefaultStreamedContent(is, "application/octet-stream", filename + "-" + branch + ".zip");
         } catch (Exception e) {
-            messages.error(new BundleKey("messages","exportZip.error"));
+            messages.error(new BundleKey("messages","exportZip.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         }
         return null;
     }

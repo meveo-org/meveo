@@ -140,7 +140,7 @@ public class GitClient {
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
         if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());
-        } else if(repoDir.exists()) {
+        } else if(repoDir.exists() && new File(repoDir, ".git").exists()) {
             return;
         }
 
