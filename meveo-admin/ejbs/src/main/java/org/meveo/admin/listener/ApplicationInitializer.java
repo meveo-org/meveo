@@ -142,7 +142,7 @@ public class ApplicationInitializer {
 
         // Initialize caches
         notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        cftCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD), true);
+        cftCache.populateCache(null, true);
         jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
 
 
