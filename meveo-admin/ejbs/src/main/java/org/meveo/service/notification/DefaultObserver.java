@@ -149,8 +149,16 @@ public class DefaultObserver {
         }
 
         try {
-            if (!matchExpression(notif.getElFilter(), entityOrEvent)) {
-                log.debug("Expression {} does not match", notif.getElFilter());
+            try {
+                if (!matchExpression(notif.getElFilter(), entityOrEvent)) {
+                    log.debug("Expression {} does not match", notif.getElFilter());
+                    return false;
+                }
+            } catch (ELException e) {
+                log.warn("Cannot evaluate expression {}. Reason : {}. Notification {} won't be executed",
+                        notif.getElFilter(),
+                        e.getCause() != null ? e.getCause().getMessage() : e.getMessage(),
+                        notif);
                 return false;
             }
 
