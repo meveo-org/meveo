@@ -73,12 +73,18 @@ import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.ApiOperation;
 
+/**
+ * @author Clement Bareth
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
+ */
 @Path("/{repository}/persistence")
 public class PersistenceRs {
 
@@ -101,6 +107,9 @@ public class PersistenceRs {
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
+    
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -393,6 +402,21 @@ public class PersistenceRs {
 				.append(uuid).append("/")
 				.append(binaryField.getCode())
 				.toString();
+	}
+
+	/**
+	 * This service build an iterable list of CET/CRT by using cartesian product of example values of its CFTs.
+	 * @param cetCode 
+	 * @param paginationConfiguration
+	 * @throws EntityDoesNotExistsException
+	 */
+	@POST
+    @Path("/{cetCode}/examples")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation("List data for a given CET")
+    public List<List<String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+		
+		return customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
 	}
 
 }

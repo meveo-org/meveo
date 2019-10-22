@@ -20,9 +20,13 @@
 package org.meveo.service.custom;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -54,11 +58,14 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 /**
  * @author Clément Bareth
  * @author Wassim Drira
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -449,4 +456,42 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
     }
+
+	/**
+	 * Computes the cartesian product all {@linkplain CustomFieldTemplate} sample
+	 * values.
+	 * 
+	 * @param cetCode                 {@link CustomEntityTemplate} code
+	 * @param paginationConfiguration page information
+	 * @return list of list of string of sample values.
+	 */
+	public List<List<String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
+
+		CustomEntityTemplate cet = findByCode(cetCode);
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		Collection<Collection<String>> listOfValues = new HashSet<>();
+		for (Entry<String, CustomFieldTemplate> es : cfts.entrySet()) {
+			listOfValues.add(es.getValue().getSamples());
+		}
+
+		List<ImmutableList<String>> immutableElements = makeListofImmutable(listOfValues);
+		
+		return Lists.cartesianProduct(immutableElements);
+	}
+	
+	/**
+	 * Converts to {@linkplain LinkedList} of {@linkplain ImmutableList} object.
+	 * 
+	 * @param listOfValues list of values to be converted
+	 * @return the converted values
+	 */
+	private static List<ImmutableList<String>> makeListofImmutable(Collection<Collection<String>> listOfValues) {
+
+		List<ImmutableList<String>> converted = new LinkedList<>();
+		listOfValues.forEach(array -> {
+			converted.add(ImmutableList.copyOf(array));
+		});
+		return converted;
+	}
 }

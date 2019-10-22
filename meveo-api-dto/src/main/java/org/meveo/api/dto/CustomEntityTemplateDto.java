@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -20,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * The Class CustomEntityTemplateDto.
  *
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
  */
 
 @XmlRootElement(name = "CustomEntityTemplate")
@@ -76,6 +77,8 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 
     @XmlElement()
     private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
+    
+    private List<String> samples = new ArrayList<>();
 
     public List<DBStorageType> getAvailableStorages() {
         return availableStorages;
@@ -229,5 +232,13 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     public String toString() {
         return "CustomEntityTemplateDto [code=" + code + ", name=" + name + ", description=" + description + ", fields=" + fields + "]";
     }
+
+	public List<String> getSamples() {
+		return samples;
+	}
+
+	public void setSamples(List<String> samples) {
+		this.samples = samples;
+	}
 
 }
