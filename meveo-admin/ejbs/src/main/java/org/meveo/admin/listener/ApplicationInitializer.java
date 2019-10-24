@@ -141,10 +141,23 @@ public class ApplicationInitializer {
         }
 
         // Initialize caches
-        notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        cftCache.populateCache(null, true);
-        jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        try {
+            notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        } catch (Exception e){
+            log.error("Failed to populate notification cache", e);
+        }
 
+        try {
+            cftCache.populateCache(null, true);
+        } catch (Exception e) {
+            log.error("Failed to populate CET / CRT / CFT caches", e);
+        }
+
+        try {
+            jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        } catch (Exception e) {
+            log.error("Failed to populate Job cache", e);
+        }
 
         if (createESIndex) {
             // Here cache will be populated as part of reindexing

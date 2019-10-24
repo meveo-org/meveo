@@ -37,8 +37,7 @@ public class StartupListener {
 
     @PostConstruct
     private void init() {
-        log.info("Thank you for running Meveo Community code.");
-
         applicationInitializer.init();
+        log.info("Thank you for running Meveo Community code.");
     }
 }
