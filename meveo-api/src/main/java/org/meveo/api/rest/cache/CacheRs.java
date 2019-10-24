@@ -22,16 +22,15 @@ import io.swagger.annotations.ApiParam;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Path("/caches")
 @Api("Cache")
+@Produces(MediaType.APPLICATION_JSON)
 public class CacheRs {
 
     @Inject

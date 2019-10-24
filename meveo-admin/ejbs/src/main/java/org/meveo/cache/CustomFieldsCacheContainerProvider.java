@@ -133,7 +133,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
                 .addSingleFileStore()
                 .purgeOnStartup(false);
 
-            String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, null);
+            String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, "/tmp/meveo/infinispan");
             if (!StringUtils.isEmpty(cacheLocation)) {
                 confBuilder.location(cacheLocation);
             }
