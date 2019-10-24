@@ -16,78 +16,128 @@
 
 package org.meveo.api.rest;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.api.function.FunctionApi;
-import org.meveo.api.rest.impl.BaseRs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.function.FunctionDto;
+import org.meveo.api.function.FunctionApi;
+import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.model.scripts.Function;
+import org.meveo.service.script.ConcreteFunctionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
+ */
 @Stateless
 @Path("/function")
 public class FunctionRs extends BaseRs {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FunctionRs.class);
+	private static final Logger LOG = LoggerFactory.getLogger(FunctionRs.class);
 
-    @Inject
-    private FunctionApi functionApi;
+	@Inject
+	private FunctionApi functionApi;
+	
+	@Inject
+	private ConcreteFunctionService functionService;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<FunctionDto> getFunctions() {
-        return functionApi.list();
-    }
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<FunctionDto> getFunctions() {
+		return functionApi.list();
+	}
 
-    @Path("/{code}/test")
-    @PATCH
-    public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
+	@Path("/{code}/test")
+	@PATCH
+	public void updateTest(@PathParam("code") String code, File testSuite) throws IOException, BusinessException {
 
-        functionApi.updateTest(code, testSuite);
+		functionApi.updateTest(code, testSuite);
 
-    }
+	}
 
-    /**
-     * Execute function and return result
-     *
-     * @param code Code of the function
-     * @param params Parameters to execute the function with
-     * @return result of the fucnction execution
-     * @throws BusinessException
-     */
-    @Path("/{code}/test")
-    @POST
-    @Produces("application/json; charset=UTF-8")
-    public Map<String, Object> test(@PathParam("code") String code, Map<String, Object> params) throws BusinessException {
-        if (params == null) {
-            params = new HashMap<>();
-        }
+	/**
+	 * Execute function and return result
+	 *
+	 * @param code   Code of the function
+	 * @param params Parameters to execute the function with
+	 * @return result of the fucnction execution
+	 * @throws BusinessException
+	 */
+	@Path("/{code}/test")
+	@POST
+	@Produces("application/json; charset=UTF-8")
+	public Map<String, Object> test(@PathParam("code") String code, Map<String, Object> params) throws BusinessException {
+		if (params == null) {
+			params = new HashMap<>();
+		}
 
-        params.put(FunctionApi.TEST_MODE, true);
-        LOG.info("Starting test execution for function " + code);
-        final Map<String, Object> execute = functionApi.execute(code, params);
-        LOG.info("Ended test execution for function " + code);
-        return execute;
-    }
+		params.put(FunctionApi.TEST_MODE, true);
+		LOG.info("Starting test execution for function " + code);
+		final Map<String, Object> execute = functionApi.execute(code, params);
+		LOG.info("Ended test execution for function " + code);
+		return execute;
+	}
 
-    /**
-     * Execute the associated test job for given function
-     *
-     * @param code Code of the function
-     */
-    @Path("/{code}/job/start")
-    @POST
-    public void startJob(@PathParam("code") String code) throws BusinessException {
-        functionApi.startJob(code);
-    }
+	/**
+	 * Execute the associated test job for given function
+	 *
+	 * @param code Code of the function
+	 */
+	@Path("/{code}/job/start")
+	@POST
+	public void startJob(@PathParam("code") String code) throws BusinessException {
+		functionApi.startJob(code);
+	}
+
+	@Path("/test/create")
+	@POST
+	public void testCreate() throws BusinessException {
+
+		Function f = new Function();
+		f.setCode("test");
+
+		List<Map<String, String>> sampleInputs = new ArrayList<Map<String, String>>();
+		Map<String, String> input1 = new HashMap<String, String>();
+		input1.put("a", "1");
+		input1.put("b", "2");
+		sampleInputs.add(input1);
+
+		Map<String, String> input2 = new HashMap<String, String>();
+		input2.put("3", "c");
+		input2.put("4", "d");
+		sampleInputs.add(input2);
+
+		List<Map<String, String>> sampleOutputs = new ArrayList<Map<String, String>>();
+		Map<String, String> output1 = new HashMap<String, String>();
+		output1.put("e", "5");
+		output1.put("f", "6");
+		sampleOutputs.add(output1);
+
+		Map<String, String> output2 = new HashMap<String, String>();
+		output2.put("7", "g");
+		output2.put("8", "h");
+		sampleOutputs.add(output2);
+
+		f.setSampleInputs(sampleInputs);
+		f.setSampleOutputs(sampleOutputs);
+
+		functionService.create(f);
+	}
 
 }

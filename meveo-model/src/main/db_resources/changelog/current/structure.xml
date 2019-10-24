@@ -1292,4 +1292,38 @@
             <column name="samples" type="text" defaultValue="[]"/>
         </addColumn>
     </changeSet>
+
+	<changeSet id="#3915" author="EdwardPLegaspi">
+		<createTable tableName="sample_io">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="version" type="int4" />
+			<column name="function_id" type="BIGINT"></column>
+			<column name="name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="value" type="varchar(255)" />
+			<column name="sampleio_type" type="varchar(10)" />
+		</createTable>
+		<createSequence sequenceName="sample_io_seq" />
+		<addPrimaryKey columnNames="id" tableName="sample_io"/>
+		<addForeignKeyConstraint
+			constraintName="fk_sample_io_function"
+			referencedTableName="meveo_function" baseColumnNames="function_id"
+			baseTableName="sample_io" referencedColumnNames="id" />
+		<addColumn tableName="meveo_function">
+			<column name="sample_inputs" type="text"></column>
+			<column name="sample_outputs" type="text"></column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#3915" author="EdwardLegaspi" dbms="mysql">
+        <createTable tableName="sample_io_seq">
+            <column name="next_val" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sample_io_seq_seq_pk" />
+            </column>
+        </createTable>
+        <sql>insert into ${db.schema.adapted}sample_io_seq values(1)</sql>
+     </changeSet>
 </databaseChangeLog>
