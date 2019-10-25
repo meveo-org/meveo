@@ -66,7 +66,6 @@ import java.util.stream.Collectors;
  * @lastModifiedVersion 6.3.0
  * 
  */
-@Startup
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 @DependsOn("CachesInitializer")
