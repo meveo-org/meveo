@@ -111,6 +111,7 @@ public class OntologyObserver {
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if the json schema file already exists
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -142,6 +143,7 @@ public class OntologyObserver {
      * @param cet The updated {@link CustomEntityTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -169,6 +171,7 @@ public class OntologyObserver {
      * @param cet The removed {@link CustomEntityTemplate}
      * @throws BusinessException if we failed to commit the deletion
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
         final File cetDir = getCetDir();
         final File schemaFile = new File(cetDir, cet.getCode() + ".json");
@@ -188,6 +191,7 @@ public class OntologyObserver {
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if the json schema file already exists
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -219,6 +223,7 @@ public class OntologyObserver {
      * @param crt The updated {@link CustomRelationshipTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -246,6 +251,7 @@ public class OntologyObserver {
      * @param crt The removed {@link CustomRelationshipTemplate}
      * @throws BusinessException if we failed to commit the deletion
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
         final File cetDir = getCrtDir();
         final File schemaFile = new File(cetDir, crt.getCode() + ".json");
@@ -265,6 +271,7 @@ public class OntologyObserver {
      * @param cft The created {@link CustomFieldTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomFieldTemplate cft) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -323,6 +330,7 @@ public class OntologyObserver {
      * @param cft The updated {@link CustomFieldTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomFieldTemplate cft) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -380,6 +388,7 @@ public class OntologyObserver {
      *
      * @param cft The removed {@link CustomFieldTemplate}
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomFieldTemplate cft) throws BusinessException {
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
