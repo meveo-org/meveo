@@ -7,9 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
@@ -39,7 +41,7 @@ import org.slf4j.Logger;
  * @lastModifiedVersion 5.0
  * 
  */
-@Stateless
+@Singleton
 public class NotificationCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
 
     private static final long serialVersionUID = 358151068726872948L;
@@ -67,6 +69,15 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
     static {
         ParamBean tmpParamBean = ParamBean.getInstance();
         useNotificationCache = Boolean.parseBoolean(tmpParamBean.getProperty("cache.cacheNotification", "true"));
+    }
+
+    @PostConstruct
+    protected void init() {
+        try {
+            populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        } catch (Exception e){
+            log.error("Failed to populate notification cache", e);
+        }
     }
 
     /**

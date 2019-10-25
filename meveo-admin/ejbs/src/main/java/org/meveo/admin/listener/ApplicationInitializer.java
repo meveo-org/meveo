@@ -78,7 +78,6 @@ public class ApplicationInitializer {
     @Inject
     private ElasticSearchIndexPopulationService esPopulationService;
 
-    @Transactional(Transactional.TxType.REQUIRED)
     public void init() {
 
         final List<Provider> providers = providerService.list(new PaginationConfiguration("id", SortOrder.ASCENDING));
@@ -141,25 +140,6 @@ public class ApplicationInitializer {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        // Initialize caches
-        try {
-            notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        } catch (Exception e){
-            log.error("Failed to populate notification cache", e);
-        }
-
-        try {
-            cftCache.populateCache(null, true);
-        } catch (Exception e) {
-            log.error("Failed to populate CET / CRT / CFT caches", e);
-        }
-
-        try {
-            jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        } catch (Exception e) {
-            log.error("Failed to populate Job cache", e);
         }
 
         try {

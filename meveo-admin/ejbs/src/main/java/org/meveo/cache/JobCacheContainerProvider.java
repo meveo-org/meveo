@@ -9,9 +9,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
@@ -32,7 +34,7 @@ import org.slf4j.Logger;
  */
 // @Singleton
 // @Lock(LockType.READ)
-@Stateless
+@Singleton
 public class JobCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
 
     private static final long serialVersionUID = -4730906690144309131L;
@@ -52,6 +54,15 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
     @Inject
     @CurrentUser
     protected MeveoUser currentUser;
+
+    @PostConstruct
+    protected void init(){
+        try {
+            populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        } catch (Exception e) {
+            log.error("Failed to populate Job cache", e);
+        }
+    }
 
     /**
      * Get a summary of cached information.

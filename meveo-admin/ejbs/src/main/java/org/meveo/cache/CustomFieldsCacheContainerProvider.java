@@ -47,11 +47,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.*;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.*;
@@ -73,14 +69,14 @@ import java.util.stream.Collectors;
 @Startup
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@DependsOn("CachesInitializer")
 public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
 
-    private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
-    private static final String MEVEO_CFT_CACHE = "meveo-cft-cache";
-    private static final String MEVEO_CET_CACHE = "meveo-cet-cache";
-    private static final String MEVEO_CRT_CACHE = "meveo-crt-cache";
+    public static final String MEVEO_CFT_CACHE = "meveo-cft-cache";
+    public static final String MEVEO_CET_CACHE = "meveo-cet-cache";
+    public static final String MEVEO_CRT_CACHE = "meveo-crt-cache";
 
     @Inject
     protected Logger log;
@@ -122,41 +118,21 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
     @PostConstruct
-    protected void initCaches(){
+    protected void initCaches() {
         Lock lock = cacheLock.writeLock();
         lock.lock();
+
         try {
-            log.info("Initializing ontology caches");
-
-            SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder().persistence()
-                .passivation(true)
-                .addSingleFileStore()
-                .purgeOnStartup(false);
-
-            String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, "/tmp/meveo/infinispan");
-            if (!StringUtils.isEmpty(cacheLocation)) {
-                confBuilder.location(cacheLocation);
-            }
-
-            Configuration configuration = confBuilder.build();
-
-            if (!cacheContainer.cacheExists(MEVEO_CFT_CACHE)) {
-                cacheContainer.defineConfiguration(MEVEO_CFT_CACHE, configuration);
-            }
-
-            if (!cacheContainer.cacheExists(MEVEO_CET_CACHE)) {
-                cacheContainer.defineConfiguration(MEVEO_CET_CACHE, configuration);
-            }
-
-            if (!cacheContainer.cacheExists(MEVEO_CRT_CACHE)) {
-                cacheContainer.defineConfiguration(MEVEO_CRT_CACHE, configuration);
-            }
-
-            log.info("Finished initializing ontology caches");
-
             cftsByAppliesTo = cacheContainer.getCache(MEVEO_CFT_CACHE, true);
             cetsByCode = cacheContainer.getCache(MEVEO_CET_CACHE, true);
             crtsByCode = cacheContainer.getCache(MEVEO_CRT_CACHE, true);
+
+            try {
+                populateCache(null, true);
+            } catch (Exception e) {
+                log.error("Failed to populate CET / CRT / CFT caches", e);
+            }
+
         } finally {
             lock.unlock();
         }
