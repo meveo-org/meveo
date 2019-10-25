@@ -130,16 +130,10 @@ public class ApplicationInitializer {
         // Register jobs
         jobInstanceService.registerJobs();
 
-        // Initialize scripts
-        boolean compileAllScripts = Boolean.parseBoolean(paramBeanFactory.getInstance().getProperty("scripts.compileAll", "true"));
-        if(compileAllScripts){
-            scriptInstanceService.compileAll();
-        }else{
-            try {
-                scriptInstanceService.constructClassPath();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            scriptInstanceService.constructClassPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         try {
