@@ -117,7 +117,9 @@ public interface ICustomFieldEntity {
 	}
 
 	default Optional<CustomFieldTemplate> getCustomFieldTemplate(Collection<CustomFieldTemplate> cfts, Entry<String, Object> entry) {
-		return cfts.stream().filter(f -> f.getCode().equals(entry.getKey()) || f.getDbFieldname().equals(entry.getKey())).findFirst();
+		return cfts.stream()
+				.filter(f -> f.getCode().equals(entry.getKey()) || (f.getDbFieldname() != null && f.getDbFieldname().equals(entry.getKey())))
+				.findFirst();
 	}
 
     default Map<String, Object> getValuesNullSafe() {

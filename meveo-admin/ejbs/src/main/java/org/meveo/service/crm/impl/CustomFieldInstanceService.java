@@ -411,13 +411,13 @@ public class CustomFieldInstanceService extends BaseService {
         log.trace("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
         // No existing CF value. Create CF value with new value. Assign(persist) NULL value only if cft.defaultValue is present
         if (cfValue == null) {
-            if (value == null && cft.getDefaultValue() == null) {
-                return null;
-            }
+//            if (value == null && cft.getDefaultValue() == null) {
+//                return null;
+//            }
             cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
             log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
             // Existing CFI found. Update with new value or NULL value only if cft.defaultValue is present
-        } else if (value != null || (value == null && cft.getDefaultValue() != null)) {
+        } else if (value != null || cft.getDefaultValue() != null) {
             cfValue.setValue(value);
 
             // Existing CF value found, but new value is null, so remove CF value all together
@@ -2316,9 +2316,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), null);
-			if (value != null) {
-				setCFValue(entity, cetField.getKey(), value);
-			}
+            setCFValue(entity, cetField.getKey(), value);
 		}
 	}
 }

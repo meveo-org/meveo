@@ -324,6 +324,11 @@ public class NativePersistenceService extends BaseService {
 				if (fieldValue instanceof Collection) {
 					fieldValue = JacksonUtil.toString(fieldValue);
 				}
+
+				if(fieldValue instanceof File) {
+					fieldValue = ((File) fieldValue).getAbsolutePath();
+				}
+
 				query.setParameter(fieldName, fieldValue);
 			}
 			query.executeUpdate();
@@ -346,6 +351,11 @@ public class NativePersistenceService extends BaseService {
 					if (fieldValue instanceof Collection) {
 						fieldValue = JacksonUtil.toString(fieldValue);
 					}
+
+					if(fieldValue instanceof File) {
+						fieldValue = ((File) fieldValue).getAbsolutePath();
+					}
+
 					query.setParameter(fieldName, fieldValue);
 				}
 
@@ -528,6 +538,11 @@ public class NativePersistenceService extends BaseService {
 					if (fieldValue instanceof Collection) {
 						fieldValue = JacksonUtil.toString(fieldValue);
 					}
+
+					if(fieldValue instanceof File) {
+						fieldValue = ((File) fieldValue).getAbsolutePath();
+					}
+
 					query.setParameter(fieldName, fieldValue);
 				}
 			}

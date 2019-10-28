@@ -213,6 +213,7 @@ public class CrossStorageService implements CustomPersistenceService {
      * @param paginationConfiguration Pagination and filters
      * @return list of matching entities
      */
+    @SuppressWarnings("unchecked")
     public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
 
         final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
@@ -304,10 +305,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
                     valuesList.add(resultMap);
                 });
-            } else {
-                //TODO: retrieve every records ?
-            }
-
+            } //XXXX: retrieve every records otherwise ?
         }
 
         // Complete missing data
@@ -484,7 +482,7 @@ public class CrossStorageService implements CustomPersistenceService {
         	cei = ceiToSave;
 
             if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, Collections.EMPTY_MAP);
+				fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
             }
 
             customEntityInstanceService.create(cei);
@@ -543,7 +541,8 @@ public class CrossStorageService implements CustomPersistenceService {
     /**
      * TODO: Document
      */
-    private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessException, BusinessApiException {
+    @SuppressWarnings("unchecked")
+    private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessApiException {
         List<CustomFieldTemplate> binariesInNeo4J = customFieldTemplates.values().stream()
                 .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
                 .filter(f -> f.getStorages().contains(DBStorageType.NEO4J))
@@ -641,10 +640,10 @@ public class CrossStorageService implements CustomPersistenceService {
 
             }
 
-            customTableService.update(cei);
+            customTableService.update(cei.getCet(), cei);
 
         } else {
-            String uuid = customTableService.create(cei);
+            String uuid = customTableService.create(cei.getCet(), cei);
             cei.setUuid(uuid);
 
             // Save binaries
@@ -1001,6 +1000,7 @@ public class CrossStorageService implements CustomPersistenceService {
                 }).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
     	Map<String, Object> updatedValues = new HashMap<>(entityValues);    	
     	
@@ -1025,12 +1025,12 @@ public class CrossStorageService implements CustomPersistenceService {
                 if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
                     Collection collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
                     if (!collectionValue.isEmpty()) {
-                        entitiesToCreate.add((Map<String, Object>) collectionValue.iterator().next());
+                        entitiesToCreate.add(collectionValue.iterator().next());
                     }
                 } else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
                     entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
                 } else if (fieldValue instanceof Map) {
-                    entitiesToCreate.add((Map<String, Object>) fieldValue);
+                    entitiesToCreate.add(fieldValue);
                 } else if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                     entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
                 }
