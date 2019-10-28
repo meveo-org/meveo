@@ -30,6 +30,8 @@ import org.meveo.model.ExportIdentifier;
 public class Function extends BusinessEntity {
 
 	private static final long serialVersionUID = -1615762108685208441L;
+	
+	public static final String UNKNOWN = "Unknown";
 
 	@Column(name = "function_version")
 	private Integer functionVersion = 1;
@@ -40,11 +42,15 @@ public class Function extends BusinessEntity {
 
 	@Column(name = "sample_inputs", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
-	private List<Map<String, String>> sampleInputs;
+	private List<Map<String, Object>> sampleInputs;
 
 	@Column(name = "sample_outputs", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
-	private List<Map<String, String>> sampleOutputs;
+	private List<Map<String, Object>> sampleOutputs;
+	
+	@Type(type="numeric_boolean")
+    @Column(name = "generate_outputs")
+    private Boolean generateOutputs = false;
 
 	public Integer getFunctionVersion() {
 		return functionVersion;
@@ -79,22 +85,30 @@ public class Function extends BusinessEntity {
 	}
 
 	public String getFunctionType() {
-		return "Unknown";
+		return UNKNOWN;
 	}
 
-	public List<Map<String, String>> getSampleInputs() {
+	public List<Map<String, Object>> getSampleInputs() {
 		return sampleInputs;
 	}
 
-	public void setSampleInputs(List<Map<String, String>> sampleInputs) {
+	public void setSampleInputs(List<Map<String, Object>> sampleInputs) {
 		this.sampleInputs = sampleInputs;
 	}
 
-	public List<Map<String, String>> getSampleOutputs() {
+	public List<Map<String, Object>> getSampleOutputs() {
 		return sampleOutputs;
 	}
 
-	public void setSampleOutputs(List<Map<String, String>> sampleOutputs) {
+	public void setSampleOutputs(List<Map<String, Object>> sampleOutputs) {
 		this.sampleOutputs = sampleOutputs;
+	}
+
+	public Boolean getGenerateOutputs() {
+		return generateOutputs == null ? false : generateOutputs;
+	}
+
+	public void setGenerateOutputs(Boolean generateOutputs) {
+		this.generateOutputs = generateOutputs;
 	}
 }

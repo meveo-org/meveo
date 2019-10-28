@@ -10,7 +10,8 @@ import org.meveo.model.BusinessEntity;
 /**
  * The dto for business entities.
  * 
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.5.0
  * @since Oct 4, 2013
  **/
 @XmlTransient

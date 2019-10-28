@@ -1326,4 +1326,10 @@
         </createTable>
         <sql>insert into ${db.schema.adapted}sample_io_seq values(1)</sql>
      </changeSet>
+     
+    <changeSet id="#3917" author="EdwardLegaspi">
+		<addColumn tableName="meveo_function">
+			<column name="generate_outputs" type="${type.boolean}" defaultValueNumeric="0"/>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

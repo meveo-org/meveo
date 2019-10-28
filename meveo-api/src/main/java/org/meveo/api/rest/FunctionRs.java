@@ -33,6 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
@@ -53,9 +54,12 @@ public class FunctionRs extends BaseRs {
 
 	@Inject
 	private FunctionApi functionApi;
-	
+
 	@Inject
 	private ConcreteFunctionService functionService;
+
+	@Inject
+	private ScriptInstanceApi scriptInstanceApi;
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -105,6 +109,66 @@ public class FunctionRs extends BaseRs {
 		functionApi.startJob(code);
 	}
 
+	/**
+	 * Retrieves the sample inputs for the {@linkplain Function} with the given id.
+	 * 
+	 * @param functionId id of the function
+	 * @return the sample inputs of the function
+	 */
+	@GET
+	@Path("/sample/id/{id}/inputs")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Map<String, Object>> getSampleInputs(@PathParam("id") Long functionId) {
+
+		return scriptInstanceApi.getSampleInputs(functionId);
+	}
+
+	/**
+	 * Retrieves the sample inputs for the {@linkplain Function} with the given
+	 * code.
+	 * 
+	 * @param code code of the function
+	 * @return the sample inputs of the function
+	 */
+	@GET
+	@Path("/sample/code/{code}/inputs")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Map<String, Object>> getSampleInputs(@PathParam("code") String code) {
+
+		return scriptInstanceApi.getSampleInputs(code);
+	}
+
+	/**
+	 * Retrieves the sample outputs for the {@linkplain Function} with the given id.
+	 * 
+	 * @param functionId id of the function
+	 * @return the sample outputs of the function
+	 * @throws BusinessException
+	 */
+	@GET
+	@Path("/sample/id/{id}/outputs")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Map<String, Object>> getSampleOutputs(@PathParam("id") Long functionId) throws BusinessException {
+
+		return scriptInstanceApi.getSampleOutputs(functionId);
+	}
+
+	/**
+	 * Retrieves the sample outputs for the {@linkplain Function} with the given
+	 * code.
+	 * 
+	 * @param code code of the function
+	 * @return the sample outputs of the function
+	 * @throws BusinessException
+	 */
+	@GET
+	@Path("/sample/code/{code}/outputs")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Map<String, Object>> getSampleOutputs(@PathParam("code") String code) throws BusinessException {
+
+		return scriptInstanceApi.getSampleOutputs(code);
+	}
+
 	@Path("/test/create")
 	@POST
 	public void testCreate() throws BusinessException {
@@ -112,24 +176,24 @@ public class FunctionRs extends BaseRs {
 		Function f = new Function();
 		f.setCode("test");
 
-		List<Map<String, String>> sampleInputs = new ArrayList<Map<String, String>>();
-		Map<String, String> input1 = new HashMap<String, String>();
+		List<Map<String, Object>> sampleInputs = new ArrayList<>();
+		Map<String, Object> input1 = new HashMap<>();
 		input1.put("a", "1");
 		input1.put("b", "2");
 		sampleInputs.add(input1);
 
-		Map<String, String> input2 = new HashMap<String, String>();
+		Map<String, Object> input2 = new HashMap<>();
 		input2.put("3", "c");
 		input2.put("4", "d");
 		sampleInputs.add(input2);
 
-		List<Map<String, String>> sampleOutputs = new ArrayList<Map<String, String>>();
-		Map<String, String> output1 = new HashMap<String, String>();
+		List<Map<String, Object>> sampleOutputs = new ArrayList<>();
+		Map<String, Object> output1 = new HashMap<>();
 		output1.put("e", "5");
 		output1.put("f", "6");
 		sampleOutputs.add(output1);
 
-		Map<String, String> output2 = new HashMap<String, String>();
+		Map<String, Object> output2 = new HashMap<>();
 		output2.put("7", "g");
 		output2.put("8", "h");
 		sampleOutputs.add(output2);

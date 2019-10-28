@@ -14,7 +14,8 @@ import org.meveo.model.security.Role;
 /**
  * The Class ScriptInstanceDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
  */
 @XmlRootElement(name = "ScriptInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -42,7 +43,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
      * @param scriptInstance the ScriptInstance entity
      */
     public ScriptInstanceDto(ScriptInstance scriptInstance, String source) {
-        super(scriptInstance.getCode(), scriptInstance.getDescription(), scriptInstance.getSourceTypeEnum(), source);
+        super(scriptInstance, source);
 
         if (scriptInstance.getExecutionRoles() != null) {
             for (Role role : scriptInstance.getExecutionRoles()) {
