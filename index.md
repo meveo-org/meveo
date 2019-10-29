@@ -10,4 +10,4 @@ The latest stable release is 6.3.0.
 
 [6.3.0 Documentation](6.3)
 
-[6.4.0-SNAPSHOT](6.4-SNAPSHOT)
+[6.4](6.4)
