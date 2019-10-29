@@ -18,12 +18,16 @@
  */
 package org.meveo.admin.listener;
 
+import org.hibernate.Session;
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
+import org.slf4j.Logger;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
-
-import org.slf4j.Logger;
+import javax.transaction.Transactional;
 
 @Startup
 @Singleton
@@ -35,10 +39,18 @@ public class StartupListener {
     @Inject
     private Logger log;
 
-    @PostConstruct
-    private void init() {
-        log.info("Thank you for running Meveo Community code.");
+    @Inject
+    @MeveoJpa
+    private EntityManagerWrapper entityManagerWrapper;
 
-        applicationInitializer.init();
+    @PostConstruct
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void init() {
+        entityManagerWrapper.getEntityManager().joinTransaction();
+        Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
+        session.doWork(connection -> {
+            applicationInitializer.init();
+            log.info("Thank you for running Meveo Community code.");
+        });
     }
 }

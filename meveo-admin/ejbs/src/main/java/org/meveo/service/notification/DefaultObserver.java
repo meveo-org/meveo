@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.ejb.*;
 import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
@@ -34,6 +35,7 @@ import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Terminated;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.admin.User;
@@ -149,8 +151,16 @@ public class DefaultObserver {
         }
 
         try {
-            if (!matchExpression(notif.getElFilter(), entityOrEvent)) {
-                log.debug("Expression {} does not match", notif.getElFilter());
+            try {
+                if (!matchExpression(notif.getElFilter(), entityOrEvent)) {
+                    log.debug("Expression {} does not match", notif.getElFilter());
+                    return false;
+                }
+            } catch (ELException e) {
+                log.warn("Cannot evaluate expression {}. Reason : {}. Notification {} won't be executed",
+                        notif.getElFilter(),
+                        e.getCause() != null ? e.getCause().getMessage() : e.getMessage(),
+                        notif);
                 return false;
             }
 
@@ -361,5 +371,10 @@ public class DefaultObserver {
     public  void relationshipUpdated(@Observes @Updated Neo4jRelationship e) throws  BusinessException {
         log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} updated", e.startNodeId(), e.endNodeId(), e.type(), e.id());
         checkEvent(NotificationEventTypeEnum.UPDATED, e);
+    }
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void commit(@Observes(during = TransactionPhase.AFTER_SUCCESS) CommitEvent commitEvent) throws BusinessException {
+        checkEvent(NotificationEventTypeEnum.CREATED, commitEvent);
     }
 }

@@ -16,6 +16,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * @author Rachid AITYAAZZA
  **/
@@ -40,6 +42,7 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
+    @JsonProperty("fields")
     private List<CustomFieldTemplateDto> fields = new ArrayList<>();
 
     @XmlAttribute(required = true)

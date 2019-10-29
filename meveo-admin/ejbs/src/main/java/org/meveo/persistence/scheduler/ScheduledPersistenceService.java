@@ -27,19 +27,33 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.storage.RepositoryService;
 
+/**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ * @param <T> implementing service
+ */
 public abstract class ScheduledPersistenceService<T extends CustomPersistenceService> {
 
     @Inject 
     private RepositoryService repositoryService;
     
-    private T storageService;
+    @Inject
+    private CustomFieldInstanceService customFieldInstanceService;
 
+    @Inject
+    private CustomFieldsCacheContainerProvider cacheContainerProvider;
+    
+    private T storageService;
 
     @PostConstruct
     private void init(){
@@ -55,7 +69,7 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
      * @param atomicPersistencePlan The schedule to follow
      * @throws BusinessException If the relation cannot be persisted
      */
-    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException {
+    public List<PersistedItem> persist(String repositoryCode, AtomicPersistencePlan atomicPersistencePlan) throws BusinessException, ELException, IOException, BusinessApiException, EntityDoesNotExistsException {
 
         /* Iterate over persistence schedule and persist the node */
 
@@ -85,7 +99,14 @@ public abstract class ScheduledPersistenceService<T extends CustomPersistenceSer
 
                     /* Node is target or leaf node */
                     final EntityToPersist entityToPersist = (EntityToPersist) itemToPersist;
-                    result = storageService.createOrUpdate(repository, entityToPersist.getCode(), entityToPersist.getValues());
+                    
+                    CustomEntityInstance cei = new CustomEntityInstance();
+                    cei.setCode((String) entityToPersist.getValues().get("code"));
+                    cei.setCetCode(entityToPersist.getCode());
+                    customFieldInstanceService.setCfValues(cei, entityToPersist.getCode(), itemToPersist.getValues());
+                    cei.setCet(cacheContainerProvider.getCustomEntityTemplate(cei.getCetCode()));
+
+                    result = storageService.createOrUpdate(repository, cei);
                     Set<EntityRef> persistedEntities = result.getPersistedEntities();
                     context.putNodeReferences(entityToPersist.getName(), persistedEntities);
 

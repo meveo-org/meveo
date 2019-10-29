@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
-		<version>6.3.0</version>
+		<version>6.4.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>meveo-admin-ejbs</artifactId>
@@ -161,6 +161,10 @@
 		</pluginManagement>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
@@ -397,10 +401,6 @@
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.blackbear</groupId>
-			<artifactId>flatworm</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>

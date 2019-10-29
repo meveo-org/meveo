@@ -1278,3 +1278,17 @@ footer .footer-copyright {
 /* .ui-dialog { */
 /*   z-index: 99999999 !important; */
 /* } */
+
+.flex-container {
+	display: flex;
+	width: 100%;
+}
+
+form.inline-form {
+	width: 100%;
+}
+
+form.inline-form > input {
+	margin-left: 5px;
+	margin-right: 5px;
+}

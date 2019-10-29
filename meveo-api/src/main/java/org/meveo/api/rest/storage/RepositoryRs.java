@@ -8,6 +8,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.api.dto.ActionStatus;
@@ -15,9 +16,13 @@ import org.meveo.api.dto.response.storage.RepositoriesResponseDto;
 import org.meveo.api.dto.response.storage.RepositoryResponseDto;
 import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.model.storage.Repository;
 
 /**
- * @author Edward P. Legaspi
+ * REST API for managing {@link Repository}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Path("/storages/repositories")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
@@ -71,9 +76,11 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 * Remove an existing repository with a given code
 	 * 
 	 * @param code The repository's code
+	 * @param forceDelete if true, delete the children of the repository
 	 * @return Request processing status
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code);
+	public ActionStatus remove(@PathParam("code") String code, @QueryParam("forceDelete") Boolean forceDelete);
+	
 }

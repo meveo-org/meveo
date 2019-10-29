@@ -100,7 +100,7 @@
             <relatedEntity pathToEntityRelatedTo="moduleItems" condition="#{entity.itemClass eq 'org.meveo.model.crm.CustomFieldTemplate'}">
                 <entityClass>org.meveo.model.crm.CustomFieldTemplate</entityClass>
                 <selection>
-                    select mie from CustomFieldTemplate mie where mie.code=:itemCode and mie.appliesTo=:appliesTo
+                    select mie from CustomFieldTemplate mie where mie.code=:itemCode and mie.appliesTo=:appliesTo and mie.appliesTo not in (select concat('CE_', cet.code) from CustomEntityTemplate cet)
                 </selection>
                 <parameters>
                     <entry>

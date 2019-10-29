@@ -77,9 +77,8 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
             }
 
             // Import client roles
-            String clientName = System.getProperty("meveo.keycloak.client");
-            if (accessToken.getResourceAccess(clientName) != null) {
-                this.roles.addAll(accessToken.getResourceAccess(clientName).getRoles());
+            for(AccessToken.Access access : accessToken.getResourceAccess().values()) {
+                this.roles.addAll(access.getRoles());
             }
 
             this.locale = accessToken.getLocale();
@@ -111,12 +110,6 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
             if (roleToPermissionMapping.containsKey(roleName)) {
                 this.roles.addAll(roleToPermissionMapping.get(roleName));
             }
-        }
-
-        // log.trace("Current user {} resolved roles/permissions {}", this.userName, this.roles);
-
-        if (this.authenticated && !this.forcedAuthentication && this.providerCode == null) {
-            // throw new RuntimeException("User has no provider assigned");
         }
     }
 

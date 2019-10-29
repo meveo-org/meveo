@@ -7,6 +7,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 @XmlRootElement(name = "CustomEntityCategory")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CustomEntityCategoryDto extends BaseEntityDto {
@@ -19,8 +23,19 @@ public class CustomEntityCategoryDto extends BaseEntityDto {
 
     @XmlAttribute(required = true)
     private String name;
+    
+    public CustomEntityCategoryDto() {
+    	
+    }
 
-    public String getCode() {
+    public CustomEntityCategoryDto(CustomEntityCategory e) {
+    	super(e);
+    	
+    	this.code = e.getCode();
+    	this.name = e.getName();
+	}
+
+	public String getCode() {
         return code;
     }
 

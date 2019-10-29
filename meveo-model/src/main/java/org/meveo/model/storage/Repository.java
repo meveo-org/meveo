@@ -8,6 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
@@ -19,7 +20,8 @@ import org.meveo.model.neo4j.Neo4JConfiguration;
 /**
  * Storage for logical repository separation.
  * 
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Entity
 @Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -48,7 +50,7 @@ public class Repository extends BusinessEntity {
 	@NotNull
 	@Column(name = "path", length = 255)
 	private String path;
-
+	
 	public Repository getParentRepository() {
 		return parentRepository;
 	}
@@ -88,4 +90,5 @@ public class Repository extends BusinessEntity {
 	public void setPath(String path) {
 		this.path = path;
 	}
+
 }

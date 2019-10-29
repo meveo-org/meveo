@@ -8,6 +8,10 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.service.job.Job;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
+ */
 public class EntityCustomizationUtils {
 
     /**
@@ -58,4 +62,5 @@ public class EntityCustomizationUtils {
         }
         return true;
     }
+    
 }

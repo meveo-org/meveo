@@ -185,7 +185,7 @@ public class ValueExpressionWrapper {
         expression = StringUtils.trim(expression);
 
         if (!expression.contains("#{") && !expression.contains("${")) {
-            log.debug("the expression '{}' doesn't contain any EL", expression);
+            log.trace("the expression '{}' doesn't contain any EL", expression);
             if (resultClass.equals(String.class)) {
                 return expression;
             } else if (resultClass.equals(Double.class)) {
@@ -200,7 +200,7 @@ public class ValueExpressionWrapper {
         }
         try {
             result = ValueExpressionWrapper.getValue(expression, userMap, resultClass);
-            log.debug("EL {} => {}", expression, result);
+            log.trace("EL {} => {}", expression, result);
 
         } catch (Exception e) {
             log.warn("EL {} throw error with variables {}", expression, userMap, e);

@@ -162,4 +162,13 @@ public interface ModuleRs extends IBaseRs {
     @Path("/{code}/items/remove")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     MeveoModuleDto removeFromModule(@PathParam("code") String moduleCode, @FormParam("itemCode") String itemCode, @FormParam("itemType") String itemType) throws EntityDoesNotExistsException, BusinessException;
+
+	/**
+	 * Forks a Meveo module
+	 * 
+	 * @return Request processing status
+	 */
+	@PUT
+	@Path("/fork/{code}")
+	ActionStatus fork(@PathParam("code") String moduleCode);
 }

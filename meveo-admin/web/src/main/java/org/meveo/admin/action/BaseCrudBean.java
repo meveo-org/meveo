@@ -19,19 +19,22 @@
  */
 package org.meveo.admin.action;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.export.ExportFormat;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.model.IEntity;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -42,7 +45,8 @@ import org.primefaces.model.StreamedContent;
  *
  * @author Clément Bareth
  * @author Wassim Drira
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  */
 @Named
 @ViewScoped

@@ -81,7 +81,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
         this.labelsTranslated = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(action.getLabelI18n());
         this.guiPosition = action.getGuiPosition();
 
-        this.setScript(new ScriptInstanceDto(action.getScript()));
+        this.setScript(new ScriptInstanceDto(action.getScript(), action.getScript().getScript()));
     }
 
     /**

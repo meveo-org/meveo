@@ -72,7 +72,8 @@ import com.google.common.collect.Maps;
  * Provides functionality to interact with Elastic Search cluster
  *
  * @author Andrius Karpavicius
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class ElasticClient {
@@ -208,6 +209,26 @@ public class ElasticClient {
 
         log.trace("Queueing Elastic Search document changes {}", change);
     }
+    
+	/**
+	 * Store and index values in Elastic Search.
+	 * 
+	 * @param entityClass   Entity class to store in Elastic Search
+	 * @param identifier    the id of the entity
+	 * @param cei           the {@link CustomEntityInstance}
+	 * @param partialUpdate Should it be treated as partial update instead of
+	 *                      replace if document exists. This value can be overridden
+	 *                      in elasticSearchConfiguration.json to always do upsert.
+	 * @param immediate     True if changes should be propagated immediately to
+	 *                      Elastic search. False - changes will be queued until JPA
+	 *                      flush event
+	 * @throws BusinessException Communication with ES/request execution exception
+	 */
+	public void createOrUpdate(Class<? extends ISearchable> entityClass, Object identifier, CustomEntityInstance cei, boolean partialUpdate, boolean immediate)
+			throws BusinessException {
+
+		createOrUpdate(entityClass, cei.getCetCode(), identifier, cei.getCfValuesAsValues(), partialUpdate, immediate);
+	}
 
     /**
      * Store and index values in Elastic Search
@@ -221,10 +242,9 @@ public class ElasticClient {
      * @param immediate True if changes should be propagated immediately to Elastic search. False - changes will be queued until JPA flush event
      * @throws BusinessException Communication with ES/request execution exception
      */
-    public void createOrUpdate(Class<? extends ISearchable> entityClass, String cetCode, Object identifier, Map<String, Object> values, boolean partialUpdate, boolean immediate)
-            throws BusinessException {
+	public void createOrUpdate(Class<? extends ISearchable> entityClass, String cetCode, Object identifier, Map<String, Object> values, boolean partialUpdate, boolean immediate) throws BusinessException {
 
-        if (!esConnection.isEnabled()) {
+    	if (!esConnection.isEnabled()) {
             return;
         }
 

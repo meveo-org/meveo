@@ -25,8 +25,10 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
+import java.io.Serializable;
+
 @Embeddable
-public class SQLStorageConfiguration {
+public class SQLStorageConfiguration implements Serializable {
 
     /**
      * Should data be stored in a separate table

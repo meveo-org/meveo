@@ -30,7 +30,7 @@
                 </h:outputText>
             </p:column>
             <p:column headerText="#{messages['commons.actions']}">
-                <p:commandButton icon="ui-icon-minus" partialSubmit="true" process="@this" update="moduleItems" action="#{backingBean.removeTreeNode(node)}" rendered="#{node.type eq 'item'}" />
+                <p:commandButton icon="ui-icon-minus" partialSubmit="true" immediate="true" update="moduleItems" action="#{backingBean.removeTreeNode(node)}" rendered="#{node.type eq 'item'}" />
             </p:column>
             <f:facet name="footer" layout="block">
                 <p:commandButton value="#{messages['meveoModuleItem.add']}" type="button" onclick="PF('dlg_addModuleItem').show()" />

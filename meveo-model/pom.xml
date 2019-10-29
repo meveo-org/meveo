@@ -4,7 +4,7 @@
         <groupId>org.meveo</groupId>
         <artifactId>meveo</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>6.3.0</version>
+        <version>6.4.0</version>
     </parent>
     <artifactId>meveo-model</artifactId>
     <packaging>jar</packaging>
@@ -224,7 +224,7 @@
         <profile>
             <id>additional</id>
             <properties>
-                <liquibase.changeLogFile>src/main/db_resources/changelog/db.additional.xml</liquibase.changeLogFile>
+                <liquibase.changeLogFile>src/main/db_resources/changelog/db.releases.xml</liquibase.changeLogFile>
             </properties>
         </profile>
     </profiles>

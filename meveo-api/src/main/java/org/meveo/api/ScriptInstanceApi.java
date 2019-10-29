@@ -109,7 +109,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
         if (scriptInstance == null) {
             throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
         }
-        scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance);
+
+        String source = scriptInstanceService.readScriptFile(scriptInstance);
+
+        scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
         if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
             scriptInstanceDtoResult.setScript("InvalidPermission");
         }

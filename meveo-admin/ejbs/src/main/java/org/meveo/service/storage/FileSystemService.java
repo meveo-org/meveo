@@ -294,7 +294,8 @@ public class FileSystemService {
      * @param repository Repository where to store binaries
      * @return the persisted binaries by custom field templates
      */
-    public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, CustomEntityTemplate cet, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessApiException {
+    @SuppressWarnings("unchecked")
+	public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, CustomEntityTemplate cet, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessApiException {
         Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
         for (CustomFieldTemplate field : fields) {
         	
@@ -315,8 +316,15 @@ public class FileSystemService {
             	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) != null) {
 					// Remove old file
                     if (previousValues != null && previousValues.get(field.getCode()) != null) {
-                        String oldFile = (String) previousValues.get(field.getCode());
-                        new File(oldFile).delete();
+                        Object oldFile = previousValues.get(field.getCode());
+
+                        // If file was persisted from CEI, conversion from String to File is automatic
+                        if(oldFile instanceof String) {
+							new File((String) oldFile).delete();
+
+						} else if(oldFile instanceof File) {
+                        	((File) oldFile).delete();
+						}
                     }
                     
                     File tempFile = (File) values.get(field.getCode());
@@ -344,9 +352,26 @@ public class FileSystemService {
                     }
 
                     // Append new persisted files path to existing ones
-                    List<String> persistedPaths = new ArrayList<>();
+					List<String> persistedPaths = new ArrayList<>();
+                    List<File> existingFiles = new ArrayList<>();
                     if(previousValues != null && previousValues.get(field.getCode()) != null) {
-                        persistedPaths = (List<String>) previousValues.get(field.getCode());
+                        List existingValues = (List) previousValues.get(field.getCode());
+
+                        // When persisted from CEI, the file references are automatically de-serialized so we need to check
+                        if(!existingValues.isEmpty()) {
+							if(existingValues.get(0) instanceof String) {
+								persistedPaths = existingValues;
+								existingFiles = persistedPaths.stream()
+										.map(File::new)
+										.collect(Collectors.toList());
+
+							} else if(existingValues.get(0) instanceof File) {
+								existingFiles = existingValues;
+								persistedPaths = existingFiles.stream()
+										.map(File::getAbsolutePath)
+										.collect(Collectors.toList());
+							}
+						}
                     }
 
                     // If list of File, concatenate to existing ones
@@ -367,7 +392,6 @@ public class FileSystemService {
                     } else if (firstItem instanceof String && CollectionUtils.isNotEmpty(persistedPaths)){
                     	List<String> uris = (List<String>) value;
                     	
-                    	List<File> existingFiles = persistedPaths.stream().map(File::new).collect(Collectors.toList());
                     	List<File> filesToReorder = new ArrayList<>();
                     	
                     	for(String uri : uris) {

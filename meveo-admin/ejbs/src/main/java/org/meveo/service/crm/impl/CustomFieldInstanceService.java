@@ -40,10 +40,13 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +54,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @lastModifiedVersion 6.4.0
  */
 @Stateless
 public class CustomFieldInstanceService extends BaseService {
@@ -82,6 +85,12 @@ public class CustomFieldInstanceService extends BaseService {
 
     @Inject
     private ParamBeanFactory paramBeanFactory;
+    
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
 
     // Previous comments
     // /**
@@ -377,7 +386,7 @@ public class CustomFieldInstanceService extends BaseService {
      */
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
 
-        log.info("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
+        log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
 
         // Can not set the value if field is versionable without a date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -399,16 +408,16 @@ public class CustomFieldInstanceService extends BaseService {
         if (entity.getCfValues() != null) {
             cfValue = entity.getCfValues().getCfValue(cfCode);
         }
-        log.info("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
+        log.trace("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
         // No existing CF value. Create CF value with new value. Assign(persist) NULL value only if cft.defaultValue is present
         if (cfValue == null) {
-            if (value == null && cft.getDefaultValue() == null) {
-                return null;
-            }
+//            if (value == null && cft.getDefaultValue() == null) {
+//                return null;
+//            }
             cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
-            log.info("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
+            log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
             // Existing CFI found. Update with new value or NULL value only if cft.defaultValue is present
-        } else if (value != null || (value == null && cft.getDefaultValue() != null)) {
+        } else if (value != null || cft.getDefaultValue() != null) {
             cfValue.setValue(value);
 
             // Existing CF value found, but new value is null, so remove CF value all together
@@ -421,7 +430,7 @@ public class CustomFieldInstanceService extends BaseService {
 
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value, Date valueDate) throws BusinessException {
 
-        log.debug("Setting CF value. Code: {}, entity {} value {} valueDate {}", cfCode, entity, value, valueDate);
+        log.trace("Setting CF value. Code: {}, entity {} value {} valueDate {}", cfCode, entity, value, valueDate);
 
         // If field is not versionable - set the value without the date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -471,7 +480,7 @@ public class CustomFieldInstanceService extends BaseService {
     public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value, Date valueDateFrom, Date valueDateTo, Integer valuePriority)
             throws BusinessException {
 
-        log.debug("Setting CF value. Code: {}, entity {} value {} valueDateFrom {} valueDateTo {}", cfCode, entity, value, valueDateFrom, valueDateTo);
+        log.trace("Setting CF value. Code: {}, entity {} value {} valueDateFrom {} valueDateTo {}", cfCode, entity, value, valueDateFrom, valueDateTo);
 
         // If field is not versionable - set the value without the date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -2294,4 +2303,20 @@ public class CustomFieldInstanceService extends BaseService {
     private EntityManager getEntityManager() {
         return emWrapper.getEntityManager();
     }
+    
+    /**
+     * Sets the {@link CustomFieldValues} of a given {@link CustomEntityInstance}.
+     * @param entity the custom entity instance
+     * @param cetCode custom entity template code
+     * @param values map of cft values
+     * @throws BusinessException thrown when values are not set
+     */
+	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
+		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
+
+		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
+			Object value = values.getOrDefault(cetField.getKey(), null);
+            setCFValue(entity, cetField.getKey(), value);
+		}
+	}
 }

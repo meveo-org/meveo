@@ -1,3 +1,18 @@
+/*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+ * not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.meveo.api;
 
 import org.meveo.admin.exception.BusinessException;
@@ -21,6 +36,8 @@ import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.RSAKeyPair;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.model.SortOrder;
@@ -33,7 +50,9 @@ import java.util.*;
 
 /**
  * @author Edward P. Legaspi
- **/
+ * @author Clement Bareth
+ * @lastModifiedVersion 6.4.0
+ */
 @Stateless
 @Interceptors(SecuredBusinessEntityMethodInterceptor.class)
 public class UserApi extends BaseApi {
@@ -131,6 +150,8 @@ public class UserApi extends BaseApi {
             user.setName(name);
             user.setRoles(roles);
             user.setSecuredEntities(securedEntities);
+            user.setSshPublicKey(postData.getSshPublicKey());
+            user.setSshPrivateKey(postData.getSshPrivateKey());
 
             userService.create(user);
         }
@@ -212,6 +233,10 @@ public class UserApi extends BaseApi {
             user.setRoles(roles);
             user.setSecuredEntities(securedEntities);
         }
+
+        user.setSshPrivateKey(postData.getSshPrivateKey());
+        user.setSshPublicKey(postData.getSshPublicKey());
+
         userService.update(user);
     }
 
@@ -376,6 +401,28 @@ public class UserApi extends BaseApi {
         remove(username);
 
         keycloakAdminClientService.deleteUser(httpServletRequest, username);
+    }
+
+    /**
+     * Generate and set ssh keys for a user.
+     *
+     * @param username If provided, will set ssh keys for corresponding user. Instead, will set ssh keys for logged user
+     * @return the generated {@link RSAKeyPair}
+     */
+    public RSAKeyPair generateShKey(String username, String passphrase) throws BusinessException {
+        if(username == null) {
+            username = currentUser.getUserName();
+        }
+
+        RSAKeyPair rsaKeyPair = GitHelper.generateRSAKey(username, passphrase);
+
+        User user = userService.findByUsername(username);
+        user.setSshPrivateKey(rsaKeyPair.getPrivateKey());
+        user.setSshPublicKey(rsaKeyPair.getPublicKey());
+        userService.update(user);
+
+        return rsaKeyPair;
+
     }
     
 }

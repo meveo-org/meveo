@@ -10,6 +10,7 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -109,7 +110,8 @@ public class ApplicationInitializer {
      * @return A future with value of True
      * @throws BusinessException Business exception
      */
-    @Asynchronous
+//    @Asynchronous
+    @Transactional(Transactional.TxType.REQUIRED)
     public Future<Boolean> initializeTenant(Provider provider, boolean isMainProvider, boolean createESIndex) throws BusinessException {
 
         log.debug("Will initialize application for provider {}", provider.getCode());
@@ -128,29 +130,23 @@ public class ApplicationInitializer {
         // Register jobs
         jobInstanceService.registerJobs();
 
-        // Initialize scripts
-        boolean compileAllScripts = Boolean.parseBoolean(paramBeanFactory.getInstance().getProperty("scripts.compileAll", "true"));
-        if(compileAllScripts){
-            scriptInstanceService.compileAll();
-        }else{
-            try {
-                scriptInstanceService.constructClassPath();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            scriptInstanceService.constructClassPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        // Initialize caches
-        notifCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        cftCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        jobCache.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        try {
 
+            if (createESIndex) {
+                // Here cache will be populated as part of reindexing
+                elasticClient.cleanAndReindex(MeveoUser.instantiate("applicationInitializer", isMainProvider ? null : provider.getCode()), true);
+            } else {
+                esPopulationService.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+            }
 
-        if (createESIndex) {
-            // Here cache will be populated as part of reindexing
-            elasticClient.cleanAndReindex(MeveoUser.instantiate("applicationInitializer", isMainProvider ? null : provider.getCode()), true);
-        } else {
-            esPopulationService.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
+        } catch (Exception e) {
+            log.error("Failed to initialize Elastic search client", e);
         }
 
         log.info("Initialized application for provider {}", provider.getCode());

@@ -1,5 +1,6 @@
 package org.meveo.model.crm.custom;
 
+import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -15,7 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import org.meveo.commons.utils.CustomDateSerializer;
+import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
@@ -86,6 +90,9 @@ public class CustomFieldValue implements Serializable {
     @JsonProperty("string")
     private String stringValue;
 
+    @JsonProperty("file")
+    private File fileValue;
+
     /**
      * Date type value
      */
@@ -149,6 +156,11 @@ public class CustomFieldValue implements Serializable {
      */
     @JsonProperty("listMap")
     private List<Map<?,?>> listMapValue;
+
+    @JsonProperty("listFile")
+    @JsonSerialize(contentUsing = FileSerializer.class)
+    @JsonDeserialize(contentUsing = FileDeserializer.class)
+    private List<File> listFileValue;
 
     /**
      * Map of String type value
@@ -240,6 +252,10 @@ public class CustomFieldValue implements Serializable {
         return stringValue;
     }
 
+    public File getFileValue(){
+        return fileValue;
+    }
+
     public void setStringValue(String stringValue) {
         this.stringValue = stringValue;
     }
@@ -321,6 +337,8 @@ public class CustomFieldValue implements Serializable {
             return (List<T>) listEntityValue;
         } else if(listMapValue != null) {
         	return (List<T>) listMapValue;
+        } else if(listFileValue != null) {
+            return (List<T>) listFileValue;
         }
 
         return null;
@@ -330,7 +348,7 @@ public class CustomFieldValue implements Serializable {
     	if(itemClass == null) {
     		return;
     	}
-    	
+
     	if (itemClass == String.class) {
             listStringValue = new ArrayList<>();
             for (Object listItem : listValue) {
@@ -353,6 +371,14 @@ public class CustomFieldValue implements Serializable {
                 }
             }
 
+        } else if(itemClass == File.class) {
+    	    listFileValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+                if(listItem instanceof File){
+                    listFileValue.add((File) listItem);
+                }
+            }
+
         } else if (itemClass == Double.class || itemClass == BigDecimal.class) {
             listDoubleValue = new ArrayList<>();
             for (Object listItem : listValue) {
@@ -369,10 +395,13 @@ public class CustomFieldValue implements Serializable {
                 listEntityValue.add((EntityReferenceWrapper) listItem);
             }
         } else if(Map.class.isAssignableFrom(itemClass)) {
-        	listMapValue = new ArrayList<>();
-        	for(Object listItem : listValue) {
-        		listMapValue.add((Map<?,?>) listItem);
-        	}
+            listMapValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+                listMapValue.add((Map<?, ?>) listItem);
+            }
+
+        } else {
+    	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
         }
     }
 
@@ -1205,7 +1234,10 @@ public class CustomFieldValue implements Serializable {
             return longValue;
         } else if (entityReferenceValue != null) {
             return entityReferenceValue;
+        } else if(fileValue != null) {
+            return fileValue;
         }
+
         return null;
     }
 
@@ -1232,19 +1264,28 @@ public class CustomFieldValue implements Serializable {
         listLongValue = null;
         listDoubleValue = null;
         listEntityValue = null;
+        fileValue = null;
 
         if (value instanceof Date) {
             dateValue = (Date) value;
+
         } else if (value instanceof BigDecimal) {
             doubleValue = ((BigDecimal) value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+
         } else if (value instanceof Double) {
             doubleValue = (Double) value;
+
         } else if (value instanceof Boolean) {
             booleanValue = (Boolean) value;
+
         } else if (value instanceof Number) {
             longValue = ((Number) value).longValue();
+
         } else if (value instanceof String) {
             stringValue = (String) value;
+
+        } else if(value instanceof File) {
+            fileValue = (File) value;
 
         } else if (value instanceof BusinessEntity) {
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));

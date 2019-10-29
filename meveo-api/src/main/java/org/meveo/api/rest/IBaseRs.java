@@ -3,6 +3,7 @@ package org.meveo.api.rest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
+import io.swagger.annotations.ApiOperation;
 import org.meveo.api.dto.ActionStatus;
 
 /**
@@ -17,6 +18,7 @@ public interface IBaseRs {
      */
     @GET
     @Path("/version")
+    @ApiOperation(value = "index", hidden = true)
     public ActionStatus index();
 
 }

@@ -1,10 +1,8 @@
 package org.meveo.api;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -143,7 +141,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             missingParameters.add("appliesTo");
         }
         
-        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
+        if(postData.getFieldType() == CustomFieldTypeEnum.ENTITY && postData.getStorages() != null && postData.getStorages().contains(DBStorageType.NEO4J) && postData.getRelationshipName() == null){
        	 	missingParameters.add("relationshipName");
         }
 
@@ -488,6 +486,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         return cftAppliesto;
     }
 
+	@SuppressWarnings("unused")
 	private void validateSamples(CustomFieldTemplate template) {
 		
 		if(template.getSamples() == null || template.getSamples().isEmpty()) {

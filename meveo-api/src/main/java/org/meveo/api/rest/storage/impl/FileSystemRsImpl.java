@@ -28,7 +28,7 @@ public class FileSystemRsImpl extends BaseRs implements FileSystemRs {
 	private FileSystemApi fileSystemApi;
 
 	@Override
-	public Response findBinary(Integer index, String repositoryCode, String cetCode, String uuid, String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException {
+	public Response findBinary(Integer index, String repositoryCode, String cetCode, String uuid, String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException, org.meveo.api.exception.EntityDoesNotExistsException {
 			File file = fileSystemApi.findBinary(repositoryCode, cetCode, uuid, cftCode, index);
 
 			if(file == null){

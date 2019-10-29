@@ -41,8 +41,8 @@ public class ScriptInstanceDto extends CustomScriptDto {
      *
      * @param scriptInstance the ScriptInstance entity
      */
-    public ScriptInstanceDto(ScriptInstance scriptInstance) {
-        super(scriptInstance.getCode(), scriptInstance.getDescription(), scriptInstance.getSourceTypeEnum(), scriptInstance.getScript());
+    public ScriptInstanceDto(ScriptInstance scriptInstance, String source) {
+        super(scriptInstance.getCode(), scriptInstance.getDescription(), scriptInstance.getSourceTypeEnum(), source);
 
         if (scriptInstance.getExecutionRoles() != null) {
             for (Role role : scriptInstance.getExecutionRoles()) {

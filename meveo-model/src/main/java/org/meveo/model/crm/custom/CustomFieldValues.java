@@ -89,9 +89,11 @@ public class CustomFieldValues implements Serializable {
                 if (valueFound != null) {
                 	if(valueFound.getValue() != null) {
                         values.put(cfCode, valueFound.getValue());
-                	}else if(valueFound.getListValue() != null) {
+                	} else if(valueFound.getListValue() != null) {
                 		values.put(cfCode, valueFound.getListValue());
-                	}
+                	} else {
+                	    values.put(cfCode, null);
+                    }
                 }
             }
         }

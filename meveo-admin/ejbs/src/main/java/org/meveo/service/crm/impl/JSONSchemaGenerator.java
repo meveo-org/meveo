@@ -145,11 +145,11 @@ public class JSONSchemaGenerator {
 		return generateSchema(schemaLocation, cache.getCustomRelationshipTemplate(templateCode));
 	}
 
-	private String generateSchema(String schemaLocation, CustomEntityTemplate template) {
+	public String generateSchema(String schemaLocation, CustomEntityTemplate template) {
 		return generateSchema(schemaLocation, processorOf(template));
 	}
 
-	private String generateSchema(String schemaLocation, CustomRelationshipTemplate template) {
+	public String generateSchema(String schemaLocation, CustomRelationshipTemplate template) {
 		return generateSchema(schemaLocation, processorOf(template));
 	}
 

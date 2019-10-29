@@ -1,30 +1,31 @@
 package org.meveo.model.scripts;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ExportIdentifier({ "code"})
 @MappedSuperclass
 public abstract class CustomScript extends Function {
 
+    private static Logger logger = LoggerFactory.getLogger(CustomScript.class);
     private static final long serialVersionUID = 8176170199770220430L;
+
     public static final String TYPE = "Script";
 
     @Column(name = "script", nullable = false, columnDefinition = "TEXT")
-    @NotNull
     @XStreamConverter(XStreamCDATAConverter.class)
     private String script;
 
@@ -71,7 +72,7 @@ public abstract class CustomScript extends Function {
     }
 
     /**
-     * @param script the script to set
+     * @param script The script to set
      */
     public void setScript(String script) {
         this.script = script;

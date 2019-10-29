@@ -1,5 +1,6 @@
 package org.meveo.model.persistence.sql;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,7 @@ import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
 
 @Embeddable
-public class Neo4JStorageConfiguration {
+public class Neo4JStorageConfiguration implements Serializable {
 
 	/**
 	 * Labels to apply to the template.

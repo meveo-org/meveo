@@ -20,6 +20,7 @@ import org.meveo.api.dto.response.CustomEntityTemplatesResponseDto;
 import org.meveo.api.dto.response.EntityCustomActionResponseDto;
 import org.meveo.api.dto.response.EntityCustomizationResponseDto;
 import org.meveo.api.dto.response.GetCustomFieldTemplateReponseDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.EntityCustomizationRs;
@@ -74,6 +75,8 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 
         try {
             customEntityTemplateApi.removeEntityTemplate(customEntityTemplateCode);
+        } catch(EntityDoesNotExistsException e) {
+        	//NOOP
         } catch (Exception e) {
             processException(e, result);
         }

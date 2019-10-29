@@ -5,6 +5,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.action.BaseCrudBean;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.storage.RepositoryApi;
 import org.meveo.api.storage.RepositoryDto;
@@ -28,6 +30,8 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 	
 	@Inject
 	private RepositoryApi repositoryApi;
+	
+	private Boolean forceDelete;
 	
 	public RepositoryBean() {
 		super(Repository.class);
@@ -53,5 +57,31 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 		return repositoryApi;
 	}
 	
+	
+	public Boolean getForceDelete() {
+		return forceDelete;
+	}
+
+	public void setForceDelete(Boolean forceDelete) {
+		this.forceDelete = forceDelete;
+	}
+
+	/**
+	 * Deletes a given repository and it's children when value of forceDelete is true.
+	 * 
+	 * @param entity record to be deleted
+	 * @param forceDelete if true, delete the children
+	 * @throws BusinessException failed entity deletion
+	 */
+	@ActionMethod
+	public void delete(Repository entity, Boolean forceDelete) throws BusinessException {
+		repositoryService.remove(entity, forceDelete);
+	}
+	
+	@ActionMethod
+	public String deleteAndNavigate() throws BusinessException {
+		repositoryService.remove(entity);
+		return getListViewName();
+	}
 	
 }

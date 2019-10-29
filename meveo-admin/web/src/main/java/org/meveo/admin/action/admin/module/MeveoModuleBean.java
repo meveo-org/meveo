@@ -98,4 +98,11 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
     public void searchModules() {
         meveoModules = meveoModuleService.findLikeWithCode(moduleCode);
     }
+    
+    public void fork() {
+    	install();
+    	entity.setModuleSource(null);
+    	init();
+    	initEntity();
+    }
 }

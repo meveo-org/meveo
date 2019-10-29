@@ -142,7 +142,8 @@ import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 /**
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
  *
  */
 @Lock(LockType.READ)
@@ -1361,7 +1362,7 @@ public class EntityExportImportService implements Serializable {
             return fieldValue;
         }
 
-        log.error("Saving non-managed field {}.{}", clazz.getSimpleName(), field.getName());
+        log.trace("Saving non-managed field {}.{}", clazz.getSimpleName(), field.getName());
 
         // Ensure that field value is managed (or saved) before continuing. It calls saveEntityToTarget with updateExistingOnly = true for cascaded fields. That means that new
         // cascaded field values will be created with main entity saving.

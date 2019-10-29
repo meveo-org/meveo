@@ -4,7 +4,7 @@
     <groupId>org.meveo</groupId>
     <artifactId>meveo</artifactId>
     <packaging>pom</packaging>
-    <version>6.3.0</version>
+    <version>6.4.0</version>
     <name>Meveo Parent Project</name>
     <properties>
         <env>dev</env>
@@ -13,11 +13,11 @@
         <dbtype>generic</dbtype>
         <releaseOption />
         <jackson.version>2.9.5</jackson.version>
+        <scm.url/>
     </properties>
 
     <scm>
-        <developerConnection>scm:git:ssh://git@git.assembla.com/web-drone/webdrone-iep-kbstudio.meveo</developerConnection>
-        <tag>0.0.12</tag>
+        <developerConnection>${scm.url}</developerConnection>
     </scm>
 
     <modules>
@@ -34,31 +34,16 @@
     </modules>
     <repositories>
         <repository>
-            <id>wd</id>
-            <name>webdrone nexus</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/groups/webdrone</url>
-        </repository>
-        <repository>
             <id>jboss-repo</id>
             <url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
         </repository>
     </repositories>
     <distributionManagement>
-        <repository>
-            <id>wd</id>
-            <name>Webdrone Repo</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/repositories/wd</url>
-        </repository>
         <site>
             <id>internal.repo</id>
             <name>Temporary Staging Repository</name>
             <url>file://${project.groupId}</url>
         </site>
-        <snapshotRepository>
-            <id>wd</id>
-            <name>Internal Releases</name>
-            <url>http://maven.webdrone.fr:8081/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
     <pluginRepositories>
         <pluginRepository>
@@ -72,6 +57,16 @@
     </pluginRepositories>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit.http.server</artifactId>
+                <version>5.4.3.201909031940-r</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit</artifactId>
+                <version>5.0.2.201807311906-r</version>
+            </dependency>
             <!-- Wildfly boms -->
             <dependency>
                 <groupId>org.wildfly.bom</groupId>
@@ -208,11 +203,6 @@
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections-maven</artifactId>
                 <version>0.9.8</version>
-            </dependency>
-            <dependency>
-                <groupId>com.blackbear</groupId>
-                <artifactId>flatworm</artifactId>
-                <version>3.0.2</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>

@@ -26,11 +26,13 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.security.Role;
 
 @Entity
 @ModuleItem("ScriptInstance")
+@ObservableEntity
 @Cacheable
 @Table(name = "meveo_script_instance")
 @GenericGenerator(
@@ -39,7 +41,9 @@ import org.meveo.model.security.Role;
         parameters = {@Parameter(name = "sequence_name", value = "meveo_function_seq")}
 )
 @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
-@NamedQueries({ @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
+@NamedQueries({
+    @NamedQuery(name = "CustomScript.updateScript", query = "UPDATE ScriptInstance SET script = :script WHERE code = :code"),
+    @NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceOnError", query = "from ScriptInstance o where o.error=:isError "),
     @NamedQuery(name = "CustomScript.getScriptInstanceByTypeActive", query = "from ScriptInstance o where o.sourceTypeEnum=:sourceTypeEnum and o.disabled = false")})
 @ImportOrder(4)
@@ -50,11 +54,11 @@ public class ScriptInstance extends CustomScript {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_script_exec_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> executionRoles = new HashSet<Role>();
+    private Set<Role> executionRoles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> sourcingRoles = new HashSet<Role>();
+    private Set<Role> sourcingRoles = new HashSet<>();
 
     /**
      * @return the executionRoles

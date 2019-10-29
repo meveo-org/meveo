@@ -46,8 +46,8 @@
                 <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderEnableLink="true" renderAddModule="true"/>
             </hftl:dataList>
         </h:panelGroup>
-        <h:form>
-            <p:poll interval="5" update=":resultsDatatable" widgetVar="jobStatusPoll" onerror="PF('jobStatusPoll').stop()" />
-        </h:form>
+        <!--<h:form>-->
+            <!--<p:poll interval="5" update=":resultsDatatable" widgetVar="jobStatusPoll" onerror="PF('jobStatusPoll').stop()" />-->
+        <!--</h:form>-->
     </ui:define>
 </ui:composition>

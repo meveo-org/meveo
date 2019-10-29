@@ -13,10 +13,12 @@ import javax.ws.rs.ext.Provider;
 
 import org.jboss.resteasy.api.validation.Validation;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
+import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,28 +34,41 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception e) {
-    	if(!(e instanceof EJBException)) {
-    		log.error("REST request failed : ", e);
-    	}
+        try {
+            if (!(e instanceof EJBException)) {
+                log.error("REST request failed", e);
+            }
 
-        if (e instanceof UnrecognizedPropertyException) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
+            if (e instanceof UnrecognizedPropertyException) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
 
-        } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
+                return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
-        } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 
-        } else if(e instanceof EJBException) {
-            return toResponse(((EJBException) e).getCausedByException());
+            } else if (e instanceof EJBException) {
+                return toResponse(((EJBException) e).getCausedByException());
 
-        } else if(e instanceof ExistsRelatedEntityException) {
-            return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
+            } else if (e instanceof ExistsRelatedEntityException) {
+                return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
 
+            } else if (e instanceof UserNotAuthorizedException) {
+                return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
+
+            } else if (e instanceof EntityAlreadyExistsException || e instanceof org.meveo.api.exception.EntityAlreadyExistsException) {
+                return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
+
+            }
+
+            return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
+
+        } catch (Exception ex) {
+            log.error("REST request failed", e);
+            log.error("Error mapping exception", ex);
+            return Response.status(500).build();
         }
-
-        return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
     }
 
     protected Response buildResponse(Object entity, String mediaType, Status status) {

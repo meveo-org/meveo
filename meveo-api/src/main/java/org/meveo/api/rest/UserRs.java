@@ -12,12 +12,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.Query;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.UserDto;
 import org.meveo.api.dto.UsersDto;
 import org.meveo.api.dto.response.GetUserResponse;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
+import org.meveo.service.git.RSAKeyPair;
+
+import java.security.KeyPair;
 
 /**
  * Web service for managing {@link org.meveo.model.admin.User}. User has a unique username that is use for update, search and remove operation.
@@ -25,7 +30,7 @@ import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
  * @author Mohamed Hamidi
  **/
 @Path("/user")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 
 public interface UserRs extends IBaseRs {
@@ -132,5 +137,16 @@ public interface UserRs extends IBaseRs {
     @POST
     @Path("/list")
     UsersDto listPost(PagingAndFiltering pagingAndFiltering);
+
+    /**
+     * Generate and set ssh keys for a user.
+     *
+     * @param username If provided, will set ssh keys for corresponding user. Instead, will set ssh keys for logged user
+     * @return the generated {@link RSAKeyPair}
+     */
+    @POST
+    @Path("/ssh/generate")
+    @Consumes(MediaType.TEXT_PLAIN)
+    RSAKeyPair generateShKey(@QueryParam("username") String username, String passphrase) throws BusinessException;
 
 }

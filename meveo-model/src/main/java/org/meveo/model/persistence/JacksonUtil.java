@@ -1,6 +1,14 @@
 package org.meveo.model.persistence;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.FileSerializer;
+import org.meveo.commons.utils.FileDeserializer;
+import org.meveo.model.customEntities.CustomEntityInstance;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -8,11 +16,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  * Helper class for processing JSON.
@@ -32,6 +35,12 @@ public class JacksonUtil {
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.setSerializationInclusion(Include.NON_NULL);
+
+        SimpleModule fileModule = new SimpleModule()
+                .addSerializer(File.class, new FileSerializer())
+                .addDeserializer(File.class, new FileDeserializer());
+
+        om.registerModule(fileModule);
         OBJECT_MAPPER = om;
 
         /*                 .setSerializationInclusion(JsonInclude.Include.ALWAYS)
@@ -88,6 +97,10 @@ public class JacksonUtil {
     
     public static <T> T convert(Object value, Class<T> clazz) {
         return OBJECT_MAPPER.convertValue(value, clazz);
+    }
+    
+    public static Map<String, Object> convertToMap(CustomEntityInstance value) {
+    	return OBJECT_MAPPER.convertValue(value, new TypeReference<Map<String, Object>>() {});
     }
     
     public static <T> T read(String value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {

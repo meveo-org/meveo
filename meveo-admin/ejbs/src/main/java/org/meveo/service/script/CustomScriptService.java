@@ -32,13 +32,24 @@ import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.*;
 import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.tools.Diagnostic;
@@ -68,7 +79,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private EndpointService endpointService;
 
-//    protected final Class<ScriptInterface> scriptInterfaceClass;
+    @Inject
+    @CurrentUser
+    protected MeveoUser currentUser;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
+    @Inject
+    private GitClient gitClient;
 
     private Map<CacheKeyStr, ScriptInterfaceSupplier> allScriptInterfaces = new HashMap<>();
 
@@ -79,20 +99,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Constructor.
      */
-//    @SuppressWarnings({ "unchecked", "rawtypes" })
     public CustomScriptService() {
         super();
-//        Class clazz = getClass();
-//        while (!(clazz.getGenericSuperclass() instanceof ParameterizedType)) {
-//            clazz = clazz.getSuperclass();
-//        }
-//        Object o = ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[1];
-//
-//        if (o instanceof TypeVariable) {
-//            this.scriptInterfaceClass = (Class<ScriptInterface>) ((TypeVariable) o).getBounds()[0];
-//        } else {
-//            this.scriptInterfaceClass = (Class<ScriptInterface>) o;
-//        }
     }
 
     /**
@@ -103,17 +111,38 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @SuppressWarnings("unchecked")
     public List<T> findByType(ScriptSourceTypeEnum type) {
-        List<T> result = new ArrayList<T>();
+        List<T> result = new ArrayList<>();
         try {
             result = (List<T>) getEntityManager().createNamedQuery("CustomScript.getScriptInstanceByTypeActive").setParameter("sourceTypeEnum", type).getResultList();
-        } catch (NoResultException e) {
+        } catch (NoResultException ignored) {
 
         }
         return result;
     }
 
+    /**
+     * If script file has been changed, commit the differences.
+     * <br> Re-compile the script
+     * @param script Created or updated {@link CustomScript}
+     */
     @Override
     protected void afterUpdateOrCreate(T script) {
+        try {
+            File scriptFile = findScriptFile(script);
+            if(scriptFile.exists()) {
+                String previousScript = MeveoFileUtils.readString(scriptFile.getAbsolutePath());
+                if(previousScript.equals(script.getScript())) {
+                    // Don't commit if there are no difference
+                    return;
+                }
+            }
+
+            buildScriptFile(scriptFile, script);
+            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+        } catch (Exception e) {
+            log.error("Error committing script", e);
+        }
+
         compileScript(script, false);
     }
 
@@ -221,8 +250,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     /**
      * Construct classpath for script compilation
-     *
-     * @throws java.io.IOException
      */
     public void constructClassPath() throws IOException {
 
@@ -236,9 +263,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             // Was deployed as exploded archive
             if (realFile.exists()) {
                 File deploymentDir = realFile.getParentFile();
-                for (File file : deploymentDir.listFiles()) {
-                    if (file.getName().endsWith(".jar")) {
-                        classpath += file.getCanonicalPath() + File.pathSeparator;
+                File[] files = deploymentDir.listFiles();
+                if(files != null) {
+                    for (File file : files) {
+                        if (file.getName().endsWith(".jar")) {
+                            classpath += file.getCanonicalPath() + File.pathSeparator;
+                        }
                     }
                 }
 
@@ -329,12 +359,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 .map(Accessor::getName)
                 .collect(Collectors.toList());
 
-        final List<String> currentInputs = scriptInstance.getInputs()
+        List<String> deletedProperties = scriptInstance.getInputs()
                 .stream()
-                .map(FunctionIO::getName)
-                .collect(Collectors.toList());
+                .map(FunctionIO::getName).collect(Collectors.toList());
 
-        List<String> deletedProperties = new ArrayList<>(currentInputs);
         deletedProperties.removeAll(newInputs);
 
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
@@ -381,7 +409,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } else {
             compileScript(script, false);
         }
-        // detach(script);
+
     }
 
     /**
@@ -393,7 +421,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     public void compileScript(T script, boolean testCompile) {
 
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), script.getScript(), script.isActive(), testCompile);
+        final String source;
+        if(testCompile || !findScriptFile(script).exists()) {
+            source = script.getScript();
+        } else {
+            source = readScriptFile(script);
+        }
+
+        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
 
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
@@ -510,7 +545,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
                 if (!testCompile && isActive) {
 
-                    allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> compiledScript.newInstance());
+                    allScriptInterfaces.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
                     log.debug("Compiled script {} added to compiled interface map", scriptCode);
                 }
 
@@ -570,10 +605,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classpath);
         
-        compiler = new CharSequenceCompiler<ScriptInterface>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
-        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<JavaFileObject>();
-        Class<ScriptInterface> compiledScript = compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
-        return compiledScript;
+        compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classpath));
+        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
+        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
     }
 
     /**
@@ -622,7 +656,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return Script interface Class
-     * @throws Exception
      */
     @Lock(LockType.READ)
     public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
@@ -646,7 +679,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Lock(LockType.WRITE)
     protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
-        ScriptInterfaceSupplier result = null;
+        ScriptInterfaceSupplier result;
 
         result = allScriptInterfaces.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
@@ -678,10 +711,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param scriptCode Script code
      * @return A compiled script class
      * @throws InvalidScriptException   Were not able to instantiate or compile a script
-     * @throws ElementNotFoundException Script not found
      */
     @Lock(LockType.READ)
-    public ScriptInterface getScriptInstance(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
+    public ScriptInterface getScriptInstance(String scriptCode) throws InvalidScriptException {
         try {
             return getScriptInterface(scriptCode);
         } catch (Exception e) {
@@ -761,6 +793,99 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			e.printStackTrace();
 			
 		}
+    }
+
+    /**
+     * When a script is deleted, remove the file from git repository
+     *
+     * @param scriptInstance Removed {@link ScriptInstance}
+     */
+    public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
+        File file = findScriptFile(scriptInstance);
+        if(file.exists()) {
+            file.delete();
+            gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
+        }
+    }
+
+    /**
+     * When a commit concerning script is received :
+     *     <ul>
+     *         <li>If script file has been created, create the JPA entity</li>
+     *         <li>If script file has been modified, re-compile it</li>
+     *         <li>If script file has been deleted, remove the JPA entity</li>
+     *     </ul>
+     */
+    @SuppressWarnings("unchecked")
+    public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
+        if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
+            for (String modifiedFile : commitEvent.getModifiedFiles()) {
+                if (modifiedFile.startsWith("scripts")) {
+                    String scriptCode = modifiedFile.replaceAll("scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
+                    T script = findByCode(scriptCode);
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File scriptFile = new File(repositoryDir, modifiedFile);
+
+                    if (script == null  && scriptFile.exists()) {
+                        // Script has been created
+                        CustomScript scriptInstance = new ScriptInstance();
+                        scriptInstance.setCode(scriptCode);
+                        String absolutePath = scriptFile.getAbsolutePath();
+                        ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
+                        scriptInstance.setSourceTypeEnum(scriptType);
+                        scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
+                        create((T) scriptInstance);
+
+                    } else if (script != null && !scriptFile.exists()) {
+                        // Script has been removed
+                        remove(script);
+
+                    } else if(script != null && scriptFile.exists()){
+                        // Scipt has been updated
+                        compileScript(script, false);
+                        updateScript(script, readScriptFile(script));
+                    }
+                }
+            }
+        }
+    }
+
+    private void updateScript(CustomScript scriptInstance, String script) {
+        getEntityManager().createNamedQuery("CustomScript.updateScript")
+                .setParameter("code", scriptInstance.getCode())
+                .setParameter("script", script)
+                .executeUpdate();
+    }
+
+    private void buildScriptFile(File scriptFile, CustomScript scriptInstance) throws IOException {
+        if (!scriptFile.getParentFile().exists()) {
+            scriptFile.getParentFile().mkdirs();
+        }
+
+        org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript());
+    }
+
+    private File findScriptFile(CustomScript scriptInstance) {
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File scriptDir = new File(repositoryDir, "/scripts");
+        if (!scriptDir.exists()) {
+            scriptDir.mkdirs();
+        }
+
+        String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+        String path = scriptInstance.getCode().replaceAll("\\.", "/");
+        return new File(scriptDir, path + extension);
+    }
+
+    public String readScriptFile(CustomScript script){
+        File scriptFile = findScriptFile(script);
+
+        try {
+            return MeveoFileUtils.readString(scriptFile.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }
