@@ -473,11 +473,19 @@ public class Neo4jDao {
         // Build values map
         Map<String, Object> valuesMap = new HashMap<>();
         valuesMap.put(CET_CODE, cetCode);
-        valuesMap.put(FIELD_KEYS, getFieldsString(uniqueFields.keySet()));
+
+        Set<String> fieldsKeys = new HashSet<>(uniqueFields.keySet());
+        Map<String, Object> fieldValues = new HashMap<>();
+
+        if(uuid != null) {
+            fieldsKeys.add("meveo_uuid");
+            fieldValues.put("meveo_uuid", uuid);
+        }
+
+        valuesMap.put(FIELD_KEYS, getFieldsString(fieldsKeys));
         valuesMap.put(FIELDS, getFieldsString(fields.keySet()));
         valuesMap.put(UPDATABLE_FIELDS, getFieldsString(updatableFields.keySet()));
 
-        Map<String, Object> fieldValues = new HashMap<>();
         fieldValues.putAll(uniqueFields);
         fieldValues.putAll(fields);
         fieldValues.putAll(updatableFields);

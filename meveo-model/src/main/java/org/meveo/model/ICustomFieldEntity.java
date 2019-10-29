@@ -68,7 +68,7 @@ public interface ICustomFieldEntity {
 	/**
 	 * Retrieves the custom field values.
 	 *
-	 * @param isFiltered whether the return value is filtered. Fields must be able to stored on an SQL database.
+	 * @param filterType Storage type filtering. Fields must be able to stored on an SQL database.
 	 * @param cfts collection of {@link CustomFieldTemplate}
 	 * @param removeNullValues remove null values if true
 	 * @return map of values with key being custom field code.
@@ -82,19 +82,7 @@ public interface ICustomFieldEntity {
 
 		Map<String, Object> mapValues = cfValues.getValues();
 
-		Map<String, Object> returnedMap = filterType != null ? mapValues : mapValues.entrySet().stream().filter(entry -> {
-			// Do not allow files to be stored directly in table
-			if (entry.getValue() instanceof File) {
-				return false;
-			}
-
-			// Do not allow list of files to be stored directly in table
-			if (entry.getValue() instanceof List) {
-				List<?> listValue = (List<?>) entry.getValue();
-				if (!listValue.isEmpty() && (listValue.get(0) instanceof File)) {
-					return false;
-				}
-			}
+		Map<String, Object> returnedMap = mapValues.entrySet().stream().filter(entry -> {
 
 			if (entry.getKey().equals("uuid")) {
 				return true;
@@ -106,8 +94,12 @@ public interface ICustomFieldEntity {
 
 			Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
 
-			return customFieldTemplateOpt.map(customFieldTemplate -> customFieldTemplate.getStorages().contains(filterType))
-					.orElse(false);
+			if(filterType != null){
+				return customFieldTemplateOpt.map(customFieldTemplate -> customFieldTemplate.getStorages().contains(filterType))
+						.orElse(false);
+			} else {
+				return true;
+			}
 
 		}).collect(HashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
 

@@ -145,7 +145,7 @@ public class CrossStorageService implements CustomPersistenceService {
                     }
                 } catch (EJBException e){
                     if(e.getCausedByException() instanceof NoSuchRecordException) {
-                        throw new EntityDoesNotExistsException("CET " + cet.getCode() + ", UUID : " + uuid);
+                        throw new EntityDoesNotExistsException(cet.getCode() + " instance with UUID : " + uuid + " does not exist in NEO4J");
                     }
                 }
             }
@@ -617,8 +617,10 @@ public class CrossStorageService implements CustomPersistenceService {
     private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
         String tableName = cei.getTableName();
 
+        Map<String, Object> sqlValues = filterValues(cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL);
+
         //TODO: Find by UUID if updated in Neo4J and throw error if not found
-        String sqlUUID = customTableService.findIdByValues(tableName, cei.getCfValuesAsValues());
+        String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
 
         if (sqlUUID != null) {
 
