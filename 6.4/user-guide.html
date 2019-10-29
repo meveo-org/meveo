@@ -463,6 +463,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .tocify-focus > a {
     color: #7a2518;
 }
+
+p {
+    text-align: justify;
+}
+
 </style>
 
 <script type="text/javascript">
@@ -517,24 +522,116 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_git_server_">Git server</a></li>
+<li><a href="#git">Git</a>
+<ul class="sectlevel2">
+<li><a href="#git_server">Git server</a></li>
+<li><a href="#git_repository">Git repository</a>
+<ul class="sectlevel3">
+<li><a href="#_definition">Definition</a></li>
+<li><a href="#_operations">Operations</a></li>
+</ul>
+</li>
+<li><a href="#git_how_to">How to use Git in Meveo ?</a>
+<ul class="sectlevel3">
+<li><a href="#git_script">Scripts</a></li>
+<li><a href="#git_onto">Ontology</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_git_server_"><a class="anchor" href="#_git_server_"></a>Git server</h2>
+<h2 id="git"><a class="anchor" href="#git"></a>Git</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="git_server"><a class="anchor" href="#git_server"></a>Git server</h3>
 <div class="paragraph">
-<p>You can access the git server like in any other git hosting provider. The remote origin will be accessible at</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>https://{host}(:{port})/{context-root}/git/{repository-code}</pre>
-</div>
+<p>You can access the git server like in any other git hosting provider. The remote origin will be accessible at <code>https://{host}(:{port})/{context-root}/git/{repository-code}</code>.</p>
 </div>
 <div class="paragraph">
 <p>You must authenticate using your Meveo login / password</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="git_repository"><a class="anchor" href="#git_repository"></a>Git repository</h3>
+<div class="paragraph">
+<p>A git repository entity reflect a git repository hosted by the Meveo instance. It is defined by a code, a description, a optional remote origin (with optional username and password), reading roles and writing roles. You can access the mangament page at <code>/pages/admin/storages/repositories/gitRepositories.jsf</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_definition"><a class="anchor" href="#_definition"></a>Definition</h4>
+<div class="sect4">
+<h5 id="_remote_origin"><a class="anchor" href="#_remote_origin"></a>Remote origin</h5>
+<div class="paragraph">
+<p>When a git repository has a remote origin, the user can push / pull to / from the remote origin. Default credentials can be defined, but we can also specify them at execution of the action.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_reading_roles"><a class="anchor" href="#_reading_roles"></a>Reading roles</h5>
+<div class="paragraph">
+<p>If reading roles are provided, only user with one of these roles will be able to pull and clone the concerned repository.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_writing_roles"><a class="anchor" href="#_writing_roles"></a>Writing roles</h5>
+<div class="paragraph">
+<p>If writing roles are provided, only user with one of these roles will be able to push to the concerned repository.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_operations"><a class="anchor" href="#_operations"></a>Operations</h4>
+<div class="sect4">
+<h5 id="_commit_api"><a class="anchor" href="#_commit_api"></a>Commit [API]</h5>
+<div class="paragraph">
+<p>When committing a repository, you should provide a commit message and a pattern of the commited files (can be a regex). This operation is only available from API at the moment.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_push_pull"><a class="anchor" href="#_push_pull"></a>Push &amp; Pull</h5>
+<div class="paragraph">
+<p>When pushing or pulling a repository, you can specify credentials different from the default credentials. The Meveo instance will behave in the same way when he receives commits from a pull as when he receives a commit from a git client.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_import_a_repository"><a class="anchor" href="#_import_a_repository"></a>Import a repository</h5>
+<div class="paragraph">
+<p>A zip file can be imported from the file system. If the repository already exist, it will be overriden. This operation is only available for repositories that have no remote origin.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_export_a_repository"><a class="anchor" href="#_export_a_repository"></a>Export a repository</h5>
+<div class="paragraph">
+<p>The content of a repository can be exported as a zip file. The branch to export can be specified, default branch will be the current branch of the repository.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_managing_branches_api"><a class="anchor" href="#_managing_branches_api"></a>Managing branches [API]</h5>
+<div class="paragraph">
+<p>We can checkout, create and delete branches of a git repository. This operation is only available from API at the moment</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="git_how_to"><a class="anchor" href="#git_how_to"></a>How to use Git in Meveo ?</h3>
+<div class="paragraph">
+<p>Currently, the ontology elements and the scripts are stored in a dedicated git repository hosted by the running Meveo instance, called "Meveo" repository and accessible at <code>https://{host}(:{port})/{context-root}/git/Meveo</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="git_script"><a class="anchor" href="#git_script"></a>Scripts</h4>
+<div class="paragraph">
+<p>If you clone the Meveo repository, then make some changes to a script, and finally push it, the concerned script will be re-compiled by Meveo and updated. If you create or delete scripts, the action will be reflected on the Meveo instance.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="git_onto"><a class="anchor" href="#git_onto"></a>Ontology</h4>
+<div class="paragraph">
+<p>The ontology elements are serialized under an extended JSON Schema specification. However, it is just a view and modifying those files will not be reflected on the Meveo instance.</p>
+</div>
+</div>
 </div>
 </div>
 </div>

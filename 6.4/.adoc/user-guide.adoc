@@ -1,0 +1,56 @@
+= Meveo - User guide
+:nofooter:
+:source-highlighter: pygments
+
+[[git]]
+== Git
+
+[[git_server]]
+=== Git server
+
+You can access the git server like in any other git hosting provider. The remote origin will be accessible at `\https://{host}(:{port})/{context-root}/git/{repository-code}`.
+
+You must authenticate using your Meveo login / password
+
+[[git_repository]]
+=== Git repository
+A git repository entity reflect a git repository hosted by the Meveo instance. It is defined by a code, a description, a optional remote origin (with optional username and password), reading roles and writing roles. You can access the mangament page at `/pages/admin/storages/repositories/gitRepositories.jsf`.
+
+==== Definition
+===== Remote origin
+When a git repository has a remote origin, the user can push / pull to / from the remote origin. Default credentials can be defined, but we can also specify them at execution of the action.
+
+===== Reading roles
+If reading roles are provided, only user with one of these roles will be able to pull and clone the concerned repository.
+
+===== Writing roles
+If writing roles are provided, only user with one of these roles will be able to push to the concerned repository.
+
+==== Operations
+===== Commit [API]
+When committing a repository, you should provide a commit message and a pattern of the commited files (can be a regex). This operation is only available from API at the moment.
+
+===== Push & Pull
+When pushing or pulling a repository, you can specify credentials different from the default credentials. The Meveo instance will behave in the same way when he receives commits from a pull as when he receives a commit from a git client.
+
+===== Import a repository
+A zip file can be imported from the file system. If the repository already exist, it will be overriden. This operation is only available for repositories that have no remote origin.
+
+===== Export a repository
+The content of a repository can be exported as a zip file. The branch to export can be specified, default branch will be the current branch of the repository.
+
+===== Managing branches [API]
+We can checkout, create and delete branches of a git repository. This operation is only available from API at the moment
+
+[[git_how_to]]
+=== How to use Git in Meveo ?
+
+Currently, the ontology elements and the scripts are stored in a dedicated git repository hosted by the running Meveo instance, called "Meveo" repository and accessible at `\https://{host}(:{port})/{context-root}/git/Meveo`.
+
+[[git_script]]
+==== Scripts
+If you clone the Meveo repository, then make some changes to a script, and finally push it, the concerned script will be re-compiled by Meveo and updated. If you create or delete scripts, the action will be reflected on the Meveo instance.
+
+[[git_onto]]
+==== Ontology
+The ontology elements are serialized under an extended JSON Schema specification. However, it is just a view and modifying those files will not be reflected on the Meveo instance.
