@@ -126,6 +126,10 @@
             <hftl:formField label="#{messages['scriptInstance.sourcingRoles']}" field="sourcingRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.sourcRolesDM}"
                 valueLabelField="name" componentWidth="50" />
             </h:panelGrid>
+			<h:panelGrid columns="2">
+				<hftl:formField label="#{messages['scriptInstance.fileDependencies']}" field="fileDependencies" />
+				<hftl:formField label="#{messages['scriptInstance.mavenDependencies']}" field="mavenDependencies" />
+			</h:panelGrid>
             <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!scriptInstanceBean.entity.transient and scriptInstanceBean.getPartOfModules() != null and scriptInstanceBean.getPartOfModules() != ''}">
                 <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />
             </hftl:decorateFormField>

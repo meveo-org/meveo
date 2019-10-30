@@ -39,12 +39,7 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptIO;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.scripts.ScriptInstanceNode;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -81,6 +76,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
+
+    private List<FileDependencyJPA> fileDependencies = new ArrayList<>();
+
+    private List<MavenDependencyJPA> mavenDependencies = new ArrayList<>();
 
     private TreeNode rootNode;
 
@@ -475,5 +474,21 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
         return foundNode;
+    }
+
+    public List<FileDependencyJPA> getFileDependencies() {
+        return fileDependencies;
+    }
+
+    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
+        this.fileDependencies = fileDependencies;
+    }
+
+    public List<MavenDependencyJPA> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
     }
 }

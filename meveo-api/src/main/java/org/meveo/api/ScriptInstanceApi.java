@@ -196,6 +196,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setCode(dto.getCode());
 		scriptInstance.setDescription(dto.getDescription());
 		scriptInstance.setScript(dto.getScript());
+        scriptInstance.setFileDependencies(dto.getFileDependencies());
+        scriptInstance.setMavenDependencies(dto.getMavenDependencies());
 		scriptInstance.setSampleInputs(dto.getSampleInputs());
 		scriptInstance.setSampleOutputs(dto.getSampleOutputs());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());

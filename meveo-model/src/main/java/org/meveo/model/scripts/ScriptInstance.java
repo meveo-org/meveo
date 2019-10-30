@@ -23,6 +23,7 @@ import java.util.*;
 import javax.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
@@ -60,6 +61,14 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "adm_script_file_dependency", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "script_id"))
+    private List<FileDependencyJPA> fileDependencies;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "adm_script_maven_dependency", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "script_id"))
+    private List<MavenDependencyJPA> mavenDependencies;
+
     /**
      * @return the executionRoles
      */
@@ -79,5 +88,21 @@ public class ScriptInstance extends CustomScript {
      */
     public Set<Role> getSourcingRoles() {
         return sourcingRoles;
+    }
+
+    public List<FileDependencyJPA> getFileDependencies() {
+        return fileDependencies;
+    }
+
+    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
+        this.fileDependencies = fileDependencies;
+    }
+
+    public List<MavenDependencyJPA> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
     }
 }

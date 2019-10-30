@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.script.CustomScriptDto;
+import org.meveo.model.scripts.FileDependencyJPA;
+import org.meveo.model.scripts.MavenDependencyJPA;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.security.Role;
 
@@ -29,6 +31,12 @@ public class ScriptInstanceDto extends CustomScriptDto {
     
     /** The sourcing roles. */
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
+
+    /** The file dependencies. */
+    private List<FileDependencyJPA> fileDependencies;
+
+    /** The maven dependencies. */
+    private List<MavenDependencyJPA> mavenDependencies;
 
     /**
      * Instantiates a new script instance dto.
@@ -61,7 +69,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     @Override
     public String toString() {
         return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", script=" + getScript() + ", executionRoles="
-                + executionRoles + ", sourcingRoles=" + sourcingRoles + "]";
+                + executionRoles + ", sourcingRoles=" + sourcingRoles + ", fileDependencyJPAs=" + fileDependencies + ", mavenDependencyJPAs=" + mavenDependencies +"]";
     }
 
     /**
@@ -98,6 +106,22 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public void setSourcingRoles(List<RoleDto> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
+    }
+
+    public List<FileDependencyJPA> getFileDependencies() {
+        return fileDependencies;
+    }
+
+    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
+        this.fileDependencies = fileDependencies;
+    }
+
+    public List<MavenDependencyJPA> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
     }
 
     /* (non-Javadoc)
