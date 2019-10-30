@@ -33,6 +33,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.util.JMeterUtils;
 import org.meveo.api.dto.function.FunctionDto;
@@ -52,6 +53,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -100,8 +102,28 @@ public class FunctionManager {
             throw new IllegalArgumentException("Authorization token must not be null");
         }
 
+        Map<String, Object> argsMap = new HashMap<>();
+        arguments.getArguments().forEach(e -> {
+            Object argVal = argsMap.get(e.getName());
+            Argument arg = (Argument) e.getObjectValue();
+            if(argVal == null){
+                argsMap.put(e.getName(), arg.getValue());
+
+            } else if(argVal instanceof String) {
+                // The value is already set - we have a multi-valued arg
+                List<String> argValAsList = new ArrayList<>();
+                argValAsList.add(arg.getValue());
+                argValAsList.add((String) argVal);
+
+                argsMap.put(e.getName(), argValAsList);
+            } else if(argVal instanceof List) {
+                // Arg is multi-valued
+                ((List<String>) argVal).add(arg.getValue());
+            }
+        });
+
         return doRequest(() -> {
-            String serialiazedArgs = OBJECT_MAPPER.writeValueAsString(arguments.getArgumentsAsMap());
+            String serialiazedArgs = OBJECT_MAPPER.writeValueAsString(argsMap);
             String testUrl = String.format(getHostUri() + UPLOAD_URL, functionCode);
             HttpPost post = new HttpPost(testUrl);
 
