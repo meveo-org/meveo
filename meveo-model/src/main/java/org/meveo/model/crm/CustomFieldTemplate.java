@@ -573,6 +573,26 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return "Reference to "+ CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
 
+    public String getReferenceEntityClassName() {
+        return CustomFieldTemplate.retrieveClassName(entityClazz);
+    }
+
+    /**
+     * Retrieve a class name from classname and code as it is stored in entityClazz field.
+     *
+     * @param entityClazz entity class
+     * @return className
+     */
+    public static String retrieveClassName(String entityClazz) {
+        if (entityClazz == null) {
+            return null;
+        }
+        if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
+            return entityClazz.substring(0, entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length() - 3);
+        }
+        return entityClazz;
+    }
+
     /**
      * Retrieve a cet code from classname and code as it is stored in entityClazz field.
      * 

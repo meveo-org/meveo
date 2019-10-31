@@ -1439,5 +1439,11 @@
             <to-view-id>/pages/admin/storages/repositories/gitRepositoryDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+
+        <navigation-case>
+            <from-outcome>referenceCET</from-outcome>
+            <to-view-id>/pages/admin/customEntities/customizedEntityDetail.xhtml</to-view-id>
+<!--            <redirect include-view-params="true"/>-->
+        </navigation-case>
     </navigation-rule>
 </faces-config>
