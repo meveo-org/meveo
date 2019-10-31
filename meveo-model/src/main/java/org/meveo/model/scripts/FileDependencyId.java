@@ -3,9 +3,10 @@ package org.meveo.model.scripts;
 import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Embeddable
-public class FileDependencyId {
+public class FileDependencyId implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "script_id")

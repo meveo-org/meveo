@@ -4,9 +4,10 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 @Embeddable
-public class MavenDependencyId {
+public class MavenDependencyId implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "script_id")

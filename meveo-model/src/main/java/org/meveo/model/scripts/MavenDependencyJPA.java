@@ -12,13 +12,7 @@ public class MavenDependencyJPA {
     @EmbeddedId
     private MavenDependencyId mavenDependencyId;
 
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
-    @JoinColumn(name = "script_id")
-    @SubTypeOf(ScriptInstance.class)
-    @NotNull
-    private Function script;
-
-    @JoinColumn(name = "group_id", nullable =false)
+    @Column(name = "group_id", nullable =false)
     @NotNull
     private String groupId;
 
@@ -33,23 +27,12 @@ public class MavenDependencyJPA {
     @Column(name = "classifier")
     private String classifier;
 
-    @Column(name = "coordinates")
-    private String coordinates;
-
     public MavenDependencyId getMavenDependencyId() {
         return mavenDependencyId;
     }
 
     public void setMavenDependencyId(MavenDependencyId mavenDependencyId) {
         this.mavenDependencyId = mavenDependencyId;
-    }
-
-    public Function getScript() {
-        return script;
-    }
-
-    public void setScript(Function script) {
-        this.script = script;
     }
 
     public String getGroupId() {
@@ -85,6 +68,6 @@ public class MavenDependencyJPA {
     }
 
     public String getCoordinates() {
-        return coordinates= (groupId+artifactId+version+classifier);
+        return (groupId+artifactId+version+classifier);
     }
 }
