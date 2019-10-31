@@ -39,7 +39,7 @@ import java.util.List;
 
 /**
  * @author Clément Bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @lastModifiedVersion 6.4.0
  */
 @Entity
