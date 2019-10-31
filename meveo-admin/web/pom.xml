@@ -306,6 +306,11 @@
 <!--			<artifactId>hibernate-jpa-2.1-api</artifactId>-->
 <!--			<version>1.0.0.Final</version>-->
 <!--		</dependency>-->
+		<dependency>
+			<groupId>org.graalvm.js</groupId>
+			<artifactId>js</artifactId>
+			<version>19.2.0.1</version>
+		</dependency>
 		
 	</dependencies>
 	<profiles>

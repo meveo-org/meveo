@@ -162,17 +162,19 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
         handleMissingParameters();
 
-        String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
-        if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
-            throw new BusinessApiException("The code and the canonical script class name must be identical");
+        if(dto.getType() == ScriptSourceTypeEnum.JAVA) {
+	        String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
+	        if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
+	            throw new BusinessApiException("The code and the canonical script class name must be identical");
+	        }
+	
+	        // check script existed full class name in class path
+	        if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
+	            throw new InvalidParameterException("The class with such name already exists");
+	        }
+	
+	        dto.setCode(scriptCode);
         }
-
-        // check script existed full class name in class path
-        if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
-            throw new InvalidParameterException("The class with such name already exists");
-        }
-
-        dto.setCode(scriptCode);
     }
 
     /**
