@@ -111,4 +111,12 @@ public class ParamActionBean implements Serializable {
         property.setValue(newValue == null ? null : newValue.toString());
         log.debug("Old: " + oldValue + ", New:" + newValue);
     }
+
+    public void addNewLine(String key, String value) {
+        ParamProperty paramProperty = new ParamProperty(log);
+        paramProperty.setKey(key);
+        paramProperty.setValue(value);
+        properties.add(paramProperty);
+    }
+
 }
