@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -57,6 +58,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
+import org.primefaces.model.charts.axes.cartesian.CartesianAxes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -465,19 +467,39 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 	 * @param paginationConfiguration page information
 	 * @return list of list of string of sample values.
 	 */
-	public List<List<String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
+	public List<Map<String, String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
 
 		CustomEntityTemplate cet = findByCode(cetCode);
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		Collection<Collection<String>> listOfValues = new HashSet<>();
 		for (Entry<String, CustomFieldTemplate> es : cfts.entrySet()) {
-			listOfValues.add(es.getValue().getSamples());
+			List<String> sampleValues = es.getValue().getSamples().stream().map(e -> es.getKey() + "|" + e).collect(Collectors.toList());
+			listOfValues.add(sampleValues);
 		}
 
 		List<ImmutableList<String>> immutableElements = makeListofImmutable(listOfValues);
-		
-		return Lists.cartesianProduct(immutableElements);
+
+		List<List<String>> cartesianValues = Lists.cartesianProduct(immutableElements);
+
+		return convertListToMap(cartesianValues);
+	}
+	
+	private List<Map<String, String>> convertListToMap(List<List<String>> cartesianValues) {
+
+		List<Map<String, String>> result = new ArrayList<>();
+
+		for (List<String> listOfValues : cartesianValues) {
+			Map<String, String> mapOfValues = new HashMap<>();
+			for (String codeValue : listOfValues) {
+				String[] token = codeValue.split("\\|");
+				mapOfValues.put(token[0], token[1]);
+			}
+			
+			result.add(mapOfValues);
+		}
+
+		return result;
 	}
 	
 	/**
@@ -492,6 +514,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		listOfValues.forEach(array -> {
 			converted.add(ImmutableList.copyOf(array));
 		});
+		
 		return converted;
 	}
 }

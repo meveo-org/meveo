@@ -414,7 +414,7 @@ public class PersistenceRs {
     @Path("/{cetCode}/examples")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<List<String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+    public List<Map<String, String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
 		
 		return customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
 	}
