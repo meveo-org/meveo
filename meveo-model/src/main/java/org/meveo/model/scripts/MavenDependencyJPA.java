@@ -4,13 +4,22 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "maven_dependency_jpa")
-public class MavenDependencyJPA {
+@IdClass(MavenDependencyPk.class)
+public class MavenDependencyJPA implements Serializable {
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
+    @JoinColumn(name = "script_id")
+    @SubTypeOf(ScriptInstance.class)
+    @NotNull
+    private Function script;
 
-    @EmbeddedId
-    private MavenDependencyId mavenDependencyId;
+    @Id
+    @Column(name = "coordinates")
+    private String coordinates;
 
     @Column(name = "group_id", nullable =false)
     @NotNull
@@ -26,14 +35,6 @@ public class MavenDependencyJPA {
 
     @Column(name = "classifier")
     private String classifier;
-
-    public MavenDependencyId getMavenDependencyId() {
-        return mavenDependencyId;
-    }
-
-    public void setMavenDependencyId(MavenDependencyId mavenDependencyId) {
-        this.mavenDependencyId = mavenDependencyId;
-    }
 
     public String getGroupId() {
         return groupId;
@@ -67,7 +68,21 @@ public class MavenDependencyJPA {
         this.classifier = classifier;
     }
 
+
+
     public String getCoordinates() {
-        return (groupId+artifactId+version+classifier);
+        return groupId + ":" + artifactId + ":" + version + ":" + classifier;
+    }
+
+    public Function getScript() {
+        return script;
+    }
+
+    public void setScript(Function script) {
+        this.script = script;
+    }
+
+    public void setCoordinates(String coordinates) {
+        this.coordinates = groupId + ":" + artifactId + ":" + version + ":" + classifier;
     }
 }

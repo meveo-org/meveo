@@ -33,10 +33,10 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
     /** The file dependencies. */
-    private List<FileDependencyJPA> fileDependencies;
+    private List<FileDependencyJPA> fileDependencies = new ArrayList<>();
 
     /** The maven dependencies. */
-    private List<MavenDependencyJPA> mavenDependencies;
+    private List<MavenDependencyJPA> mavenDependencies = new ArrayList<>();
 
     /**
      * Instantiates a new script instance dto.
@@ -62,6 +62,12 @@ public class ScriptInstanceDto extends CustomScriptDto {
             for (Role role : scriptInstance.getSourcingRoles()) {
                 sourcingRoles.add(new RoleDto(role, true, true));
             }
+        }
+        if (scriptInstance.getFileDependencies() != null) {
+            fileDependencies.add(new FileDependencyJPA());
+        }
+        if (scriptInstance.getMavenDependencies() != null) {
+            mavenDependencies.add(new MavenDependencyJPA());
         }
     }
 

@@ -126,14 +126,66 @@
             <hftl:formField label="#{messages['scriptInstance.sourcingRoles']}" field="sourcingRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.sourcRolesDM}"
                 valueLabelField="name" componentWidth="50" />
             </h:panelGrid>
-			<h:panelGrid columns="2">
-				<hftl:formField label="#{messages['scriptInstance.fileDependencies']}" field="fileDependencies" />
-				<hftl:formField label="#{messages['scriptInstance.mavenDependencies']}" field="mavenDependencies" />
+			<h:panelGrid columns="1">
+				<p:panel componentWidth="50%" header="#{messages['scriptInstance.fileDependencies']}">
+					<h:panelGroup id="fileDependenciesPanel">
+						<p:dataTable id="fileDependencies" var="fileDependency" resizableColumns="true"
+									 value="#{scriptInstanceBean.fileDependencies}" editable="true"
+									 editMode="cell" widgetVar="fileDependenciesTable">
+							<p:column headerText="#{messages['fileDependencies.path']}" style="width:75%">
+								<h:outputText value="#{fileDependency.path}" style="width:98%"/>
+							</p:column>
+							<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  width="40">
+								<p:commandButton action="#{scriptInstanceBean.removeFileDependency(fileDependency)}" icon="ui-icon-trash" update=":scriptInstanceForm:fileDependenciesPanel" />
+							</p:column>
+							<f:facet name="footer">
+								<h:panelGrid columns="2">
+									<p:inputText id="path" value="#{scriptInstanceBean.path}" style="width:98%" required="true"></p:inputText>
+									<p:commandButton value="#{messages['commons.addNew']}" process="@form" update="@form"
+												 actionListener="#{scriptInstanceBean.addNewFileDependency()}" />
+							    </h:panelGrid>
+							</f:facet>
+						</p:dataTable>
+					</h:panelGroup>
+				</p:panel>
+				<p:panel componentWidth="50%" header="#{messages['scriptInstance.mavenDependencies']}">
+					<h:panelGroup id="mavenDependenciesPanel">
+						<p:dataTable id="mavenDependencies" value="#{scriptInstanceBean.mavenDependencies}" var="mavenDependency" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+									 paginator="true" rows="30" resizableColumns="true"
+									 paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
+									 lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+							<p:column headerText="#{messages['mavenDependencies.groupId']}">
+								<h:outputText value="#{mavenDependency.groupId}" styleClass="field-value"/>
+							</p:column>
+							<p:column headerText="#{messages['mavenDependencies.artifactId']}">
+								<h:outputText value="#{mavenDependency.artifactId}" styleClass="field-value"/>
+							</p:column>
+							<p:column headerText="#{messages['mavenDependencies.version']}">
+								<h:outputText value="#{mavenDependency.version}" styleClass="field-value"/>
+							</p:column>
+							<p:column headerText="#{messages['mavenDependencies.classifier']}">
+								<h:outputText value="#{mavenDependency.classifier}" styleClass="field-value"/>
+							</p:column>
+							<p:column headerText="#{messages['mavenDependencies.coordinates']}">
+								<h:outputText value="#{mavenDependency.coordinates}" styleClass="field-value"/>
+							</p:column>
+							<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="50">
+								<p:commandButton id="editField" icon="ui-icon-document" oncomplete="PF('mavenDependencesDialog').show()" update=":mavenDependencesDialogForm"
+												 actionListener="#{scriptInstanceBean.editMavenDependency(mavenDependency)}">
+								</p:commandButton>
+								<p:commandButton action="#{scriptInstanceBean.removeMavenDependency(mavenDependency)}" icon="ui-icon-trash" update=":scriptInstanceForm:mavenDependenciesPanel" />
+							</p:column>
+							<f:facet name="footer">
+								<p:commandButton action="#{scriptInstanceBean.addMavenDependency}" id="addMavenDependency" value="#{messages['commons.addNew']}" oncomplete="PF('mavenDependencesDialog').show()"  update=":mavenDependencesDialogForm"></p:commandButton>
+							</f:facet>
+						</p:dataTable>
+					</h:panelGroup>
+				</p:panel>
 			</h:panelGrid>
             <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!scriptInstanceBean.entity.transient and scriptInstanceBean.getPartOfModules() != null and scriptInstanceBean.getPartOfModules() != ''}">
                 <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />
             </hftl:decorateFormField>
-            
+
             <hf:formButtons backingBean="#{scriptInstanceBean}" 
            					edit="#{scriptInstanceBean.edit}" 
            					ajaxSubmit="true"
@@ -146,5 +198,31 @@
                 <h:outputText value="#{log}" />
             </p:column>
         </p:dataTable>
+
+		<p:dialog widgetVar="mavenDependencesDialog" header="Maven Dependences" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="70%" appendTo="@(body)">
+			<hftl:decorateFormPanel formId="mavenDependencesDialogForm">
+				<ui:define name="fields">
+					<h:panelGrid columns="2">
+						<hftl:decorateFormField fieldId="groupId" label="#{messages['mavenDependencies.groupId']}">
+							<p:inputText id="groupId" value="#{scriptInstanceBean.mavenDependency.groupId}" size="50" maxlength="100" required="true" readonly="#{scriptInstanceBean.isUpdate}"/>
+						</hftl:decorateFormField>
+						<hftl:decorateFormField fieldId="artifactId" label="#{messages['mavenDependencies.artifactId']}">
+							<p:inputText id="artifactId" value="#{scriptInstanceBean.mavenDependency.artifactId}" size="50" maxlength="100" required="true"/>
+						</hftl:decorateFormField>
+						<hftl:decorateFormField fieldId="version" label="#{messages['mavenDependencies.version']}">
+							<p:inputText id="version" value="#{scriptInstanceBean.mavenDependency.version}" size="50" maxlength="100" required="true"/>
+						</hftl:decorateFormField>
+						<hftl:decorateFormField fieldId="classifier" label="#{messages['mavenDependencies.classifier']}">
+							<p:inputText id="classifier" value="#{scriptInstanceBean.mavenDependency.classifier}" size="50" maxlength="100"/>
+						</hftl:decorateFormField>
+				</h:panelGrid>
+				</ui:define>
+				<ui:define name="buttons">
+					<p:commandButton value="#{messages['action.save']}" action="#{scriptInstanceBean.saveMavenDependency()}" update=":scriptInstanceForm:mavenDependenciesPanel"
+										 oncomplete="if (args &amp;&amp; !args.validationFailed){PF('mavenDependencesDialog').hide();}"/>
+					<p:button value="#{messages['action.cancel']}" onclick="PF('mavenDependencesDialog').hide(); return false;" />
+				</ui:define>
+			</hftl:decorateFormPanel>
+		</p:dialog>
     </ui:define>
 </ui:composition>
