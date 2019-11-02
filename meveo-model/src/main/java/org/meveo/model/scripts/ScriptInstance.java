@@ -62,10 +62,10 @@ public class ScriptInstance extends CustomScript {
     private Set<Role> sourcingRoles = new HashSet<>();
 
     @OneToMany(mappedBy = "script", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<FileDependencyJPA> fileDependencies = new ArrayList<>();
+    private List<FileDependencyJPA> fileDependenciesJPA = new ArrayList<>();
 
     @OneToMany(mappedBy = "script", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MavenDependencyJPA> mavenDependencies;
+    private List<MavenDependencyJPA> mavenDependenciesJPA = new ArrayList<>();
 
     /**
      * @return the executionRoles
@@ -88,19 +88,19 @@ public class ScriptInstance extends CustomScript {
         return sourcingRoles;
     }
 
-    public List<FileDependencyJPA> getFileDependencies() {
-        return fileDependencies;
+    public List<FileDependencyJPA> getFileDependenciesJPA() {
+        return fileDependenciesJPA;
     }
 
-    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
-        this.fileDependencies = fileDependencies;
+    public void setFileDependenciesJPA(List<FileDependencyJPA> fileDependenciesJPA) {
+        this.fileDependenciesJPA = fileDependenciesJPA;
     }
 
-    public List<MavenDependencyJPA> getMavenDependencies() {
-        return mavenDependencies;
+    public List<MavenDependencyJPA> getMavenDependenciesJPA() {
+        return mavenDependenciesJPA;
     }
 
-    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
-        this.mavenDependencies = mavenDependencies;
+    public void setMavenDependenciesJPA(List<MavenDependencyJPA> mavenDependenciesJPA) {
+        this.mavenDependenciesJPA = mavenDependenciesJPA;
     }
 }

@@ -33,10 +33,22 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
     /** The file dependencies. */
-    private List<FileDependencyJPA> fileDependencies = new ArrayList<>();
+    private List<FileDependencyDto> fileDependencies = new ArrayList<>();
 
     /** The maven dependencies. */
-    private List<MavenDependencyJPA> mavenDependencies = new ArrayList<>();
+    private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
+
+    private List<String> paths;
+
+    private String groupId;
+
+    private String artifactId;
+
+    private String version;
+
+    private String classifier;
+
+    private String coordinates;
 
     /**
      * Instantiates a new script instance dto.
@@ -63,11 +75,17 @@ public class ScriptInstanceDto extends CustomScriptDto {
                 sourcingRoles.add(new RoleDto(role, true, true));
             }
         }
-        if (scriptInstance.getFileDependencies() != null) {
-            fileDependencies.add(new FileDependencyJPA());
+
+        if (scriptInstance.getFileDependenciesJPA() != null) {
+            for (FileDependencyJPA file : scriptInstance.getFileDependenciesJPA() ) {
+                fileDependencies.add(new FileDependencyDto(file));
+            }
         }
-        if (scriptInstance.getMavenDependencies() != null) {
-            mavenDependencies.add(new MavenDependencyJPA());
+
+        if (scriptInstance.getMavenDependenciesJPA() != null) {
+            for (MavenDependencyJPA maven : scriptInstance.getMavenDependenciesJPA() ) {
+                mavenDependencies.add(new MavenDependencyDto(maven));
+            }
         }
     }
 
@@ -114,20 +132,68 @@ public class ScriptInstanceDto extends CustomScriptDto {
         this.sourcingRoles = sourcingRoles;
     }
 
-    public List<FileDependencyJPA> getFileDependencies() {
+    public List<FileDependencyDto> getFileDependencies() {
         return fileDependencies;
     }
 
-    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
+    public void setFileDependencies(List<FileDependencyDto> fileDependencies) {
         this.fileDependencies = fileDependencies;
     }
 
-    public List<MavenDependencyJPA> getMavenDependencies() {
+    public List<MavenDependencyDto> getMavenDependencies() {
         return mavenDependencies;
     }
 
-    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
+    public void setMavenDependencies(List<MavenDependencyDto> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
+    }
+
+    public List<String> getPaths() {
+        return paths;
+    }
+
+    public void setPaths(List<String> paths) {
+        this.paths = paths;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getArtifactId() {
+        return artifactId;
+    }
+
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getClassifier() {
+        return classifier;
+    }
+
+    public void setClassifier(String classifier) {
+        this.classifier = classifier;
+    }
+
+    public String getCoordinates() {
+        return coordinates;
+    }
+
+    public void setCoordinates(String coordinates) {
+        this.coordinates = coordinates;
     }
 
     /* (non-Javadoc)

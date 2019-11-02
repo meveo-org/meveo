@@ -8,9 +8,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.RoleDto;
-import org.meveo.api.dto.ScriptInstanceDto;
-import org.meveo.api.dto.ScriptInstanceErrorDto;
+import org.meveo.api.dto.*;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
@@ -19,9 +17,7 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.scripts.ScriptInstanceError;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -38,12 +34,12 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
-	@Inject
-	private RoleService roleService;
+    @Inject
+    private RoleService roleService;
 
-	public ScriptInstanceApi() {
-		super(ScriptInstance.class, ScriptInstanceDto.class);
-	}
+    public ScriptInstanceApi() {
+    	super(ScriptInstance.class, ScriptInstanceDto.class);
+    }
 
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
 			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
@@ -223,10 +219,33 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
+        List<FileDependencyJPA> fileDependencyJPAList = new ArrayList<>();
+        for (FileDependencyDto fileDependencyDto : dto.getFileDependencies()) {
+            FileDependencyJPA fileDependencyJPA = new FileDependencyJPA();
+            fileDependencyJPA.setPath(fileDependencyDto.getPath());
+            fileDependencyJPA.setScript(scriptInstance);
+            fileDependencyJPAList.add(fileDependencyJPA);
+        }
+        scriptInstance.getFileDependenciesJPA().clear();
+        scriptInstance.getFileDependenciesJPA().addAll(fileDependencyJPAList);
+
+        List<MavenDependencyJPA> mavenDependencyJPAList = new ArrayList<>();
+        for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
+            MavenDependencyJPA mavenDependencyJPA = new MavenDependencyJPA();
+            mavenDependencyJPA.setGroupId(mavenDependencyDto.getGroupId());
+            mavenDependencyJPA.setArtifactId(mavenDependencyDto.getArtifactId());
+            mavenDependencyJPA.setVersion(mavenDependencyDto.getVersion());
+            mavenDependencyJPA.setClassifier(mavenDependencyDto.getClassifier());
+            mavenDependencyJPA.setScript(scriptInstance);
+            mavenDependencyJPAList.add(mavenDependencyJPA);
+        }
+        scriptInstance.getMavenDependenciesJPA().clear();
+        scriptInstance.getMavenDependenciesJPA().addAll(mavenDependencyJPAList);
+
 		return scriptInstance;
 	}
 
-	@Override
+    @Override
 	public ScriptInstanceDto toDto(ScriptInstance entity) {
 		// TODO Auto-generated method stub
 		return null;

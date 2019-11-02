@@ -4,6 +4,7 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "file_dependency_jpa")
@@ -34,5 +35,19 @@ public class FileDependencyJPA implements Serializable {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileDependencyJPA fileDependencyJPA = (FileDependencyJPA) o;
+        return Objects.equals(getPath(), fileDependencyJPA.getPath()) &&
+                Objects.equals(getScript(), fileDependencyJPA.getScript());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getPath(), getScript());
     }
 }

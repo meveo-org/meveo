@@ -5,6 +5,7 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "maven_dependency_jpa")
@@ -68,10 +69,18 @@ public class MavenDependencyJPA implements Serializable {
         this.classifier = classifier;
     }
 
-
-
     public String getCoordinates() {
-        return groupId + ":" + artifactId + ":" + version + ":" + classifier;
+        StringBuilder coordinatesBuilder = new StringBuilder();
+        coordinatesBuilder.append(groupId != null ? groupId : "").append(":");
+        coordinatesBuilder.append(artifactId != null ? artifactId : "").append(":");
+        coordinatesBuilder.append(version != null ? version : "").append(":");
+        coordinatesBuilder.append(classifier != null ? classifier : "");
+        coordinates = coordinatesBuilder.toString();
+        return coordinates;
+    }
+
+    public void setCoordinates(String coordinates) {
+        this.coordinates = coordinates;
     }
 
     public Function getScript() {
@@ -82,7 +91,17 @@ public class MavenDependencyJPA implements Serializable {
         this.script = script;
     }
 
-    public void setCoordinates(String coordinates) {
-        this.coordinates = groupId + ":" + artifactId + ":" + version + ":" + classifier;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MavenDependencyJPA mavenDependencyJPA = (MavenDependencyJPA) o;
+        return Objects.equals(getCoordinates(), mavenDependencyJPA.getCoordinates()) &&
+                Objects.equals(getScript(), mavenDependencyJPA.getScript());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getCoordinates(), getScript());
     }
 }

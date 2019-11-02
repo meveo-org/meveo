@@ -18,13 +18,8 @@
  */
 package org.meveo.admin.action.catalog;
 
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
@@ -82,9 +77,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     private FileDependencyJPA fileDependency = new FileDependencyJPA();
     private MavenDependencyJPA mavenDependency = new MavenDependencyJPA();
-    private String path;
-
-    private Boolean isUpdate = false;
 
     private TreeNode rootNode;
 
@@ -233,15 +225,25 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
 
         if (CollectionUtils.isNotEmpty(fileDependencies)) {
-            List<FileDependencyJPA> scriptFile = new ArrayList<>();
-            getEntity().getFileDependencies().clear();
-            getEntity().getFileDependencies().addAll(scriptFile);
+            Set<FileDependencyJPA> scriptFiles = new HashSet<>();
+            for (FileDependencyJPA fileDependencyJPA: fileDependencies) {
+                if (fileDependencyJPA != null) {
+                    scriptFiles.add(fileDependencyJPA);
+                }
+            }
+            getEntity().getFileDependenciesJPA().clear();
+            getEntity().getFileDependenciesJPA().addAll(scriptFiles);
         }
 
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
-            List<MavenDependencyJPA> scriptMaven = new ArrayList<>();
-            getEntity().getMavenDependencies().clear();
-            getEntity().getMavenDependencies().addAll(scriptMaven);
+            Set<MavenDependencyJPA> scriptMavens = new HashSet<>();
+            for (MavenDependencyJPA mavenDependencyJPA : mavenDependencies) {
+                if (mavenDependencyJPA != null) {
+                    scriptMavens.add(mavenDependencyJPA);
+                }
+            }
+            getEntity().getMavenDependenciesJPA().clear();
+            getEntity().getMavenDependenciesJPA().addAll(scriptMavens);
         }
         super.saveOrUpdate(false);
 
@@ -493,6 +495,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public List<FileDependencyJPA> getFileDependencies() {
+        if (CollectionUtils.isEmpty(fileDependencies)) {
+            if (entity.getFileDependenciesJPA() != null) {
+                fileDependencies = entity.getFileDependenciesJPA();
+                return fileDependencies;
+            } else {
+                return new ArrayList<>();
+            }
+        }
         return fileDependencies;
     }
 
@@ -505,29 +515,25 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public void addNewFileDependency() {
-        isUpdate = false;
         FileDependencyJPA fileDependencyJPA = new FileDependencyJPA();
-        fileDependencyJPA.setPath(path);
+        fileDependencyJPA.setScript(entity);
         fileDependencies.add(fileDependencyJPA);
-        path = null;
     }
 
     public void removeFileDependency(FileDependencyJPA selectedFileDependency) {
-        for (FileDependencyJPA fileDependency : fileDependencies) {
-            if (fileDependency != null && fileDependency.equals(selectedFileDependency)) {
-                entity.getFileDependencies().remove(selectedFileDependency);
-                break;
-            }
-        }
+        fileDependencies.remove(selectedFileDependency);
     }
 
     public List<MavenDependencyJPA> getMavenDependencies() {
-        if (entity.getMavenDependencies() != null) {
-            mavenDependencies = entity.getMavenDependencies();
-            return mavenDependencies;
-        } else {
-            return new ArrayList<>();
+        if (CollectionUtils.isEmpty(mavenDependencies)) {
+            if (entity.getMavenDependenciesJPA() != null) {
+                mavenDependencies = entity.getMavenDependenciesJPA();
+                return mavenDependencies;
+            } else {
+                return new ArrayList<>();
+            }
         }
+        return mavenDependencies;
     }
 
     public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
@@ -539,60 +545,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public void removeMavenDependency(MavenDependencyJPA selectedMavenDependency) {
-        for (MavenDependencyJPA mavenDependencyJPA : mavenDependencies) {
-            if (mavenDependencyJPA != null && mavenDependencyJPA.equals(selectedMavenDependency)) {
-                entity.getMavenDependencies().remove(selectedMavenDependency);
-                break;
-            }
-        }
-        String message = "mavenDependencies.remove.successful";
-        messages.info(new BundleKey("messages", message));
-    }
-
-    public void editMavenDependency(MavenDependencyJPA selectedMavenDependency) {
-        isUpdate = true;
-        mavenDependency = selectedMavenDependency;
+       mavenDependencies.remove(selectedMavenDependency);
     }
 
     public void addMavenDependency() {
-        isUpdate = false;
         mavenDependency = new MavenDependencyJPA();
-    }
-
-    public void saveMavenDependency() {
-        if (!isUpdate) {
-            mavenDependencies.add(mavenDependency);
-        } else {
-            for (MavenDependencyJPA mavenDependencyJPA : mavenDependencies) {
-                if (mavenDependencyJPA != null && mavenDependencyJPA.getGroupId().equals(mavenDependency.getGroupId()) ) {
-                    mavenDependencyJPA.setGroupId(this.mavenDependency.getGroupId());
-                    mavenDependencyJPA.setArtifactId(this.mavenDependency.getArtifactId());
-                    mavenDependencyJPA.setVersion(this.mavenDependency.getVersion());
-                    mavenDependencyJPA.setClassifier(this.mavenDependency.getClassifier());
-                    break;
-                }
-            }
-        }
-
-        entity.setMavenDependencies(mavenDependencies);
-        isUpdate = false;
-        String message = "mavenDependencies.save.successful";
-        messages.info(new BundleKey("messages", message));
-    }
-
-    public Boolean getIsUpdate() {
-        return isUpdate;
-    }
-
-    public void setIsUpdate(Boolean isUpdate) {
-        this.isUpdate = isUpdate;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
+        mavenDependency.setScript(entity);
+        mavenDependencies.add(mavenDependency);
     }
 }
