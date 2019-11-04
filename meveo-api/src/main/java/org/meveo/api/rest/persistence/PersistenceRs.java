@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -406,7 +407,7 @@ public class PersistenceRs {
 
 	/**
 	 * This service build an iterable list of CET/CRT by using cartesian product of example values of its CFTs.
-	 * @param cetCode 
+	 * @param cetCode
 	 * @param paginationConfiguration
 	 * @throws EntityDoesNotExistsException
 	 */
@@ -415,8 +416,9 @@ public class PersistenceRs {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
     public List<Map<String, String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
-		
-		return customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
+		List<Map<String, String>> listExamples = customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
+		Collections.shuffle(listExamples);
+		return listExamples;
 	}
 
 }
