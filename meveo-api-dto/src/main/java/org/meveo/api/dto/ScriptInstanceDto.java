@@ -38,18 +38,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
     /** The maven dependencies. */
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
 
-    private List<String> paths;
-
-    private String groupId;
-
-    private String artifactId;
-
-    private String version;
-
-    private String classifier;
-
-    private String coordinates;
-
     /**
      * Instantiates a new script instance dto.
      */
@@ -146,54 +134,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
 
     public void setMavenDependencies(List<MavenDependencyDto> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
-    }
-
-    public List<String> getPaths() {
-        return paths;
-    }
-
-    public void setPaths(List<String> paths) {
-        this.paths = paths;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
-    }
-
-    public void setArtifactId(String artifactId) {
-        this.artifactId = artifactId;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getClassifier() {
-        return classifier;
-    }
-
-    public void setClassifier(String classifier) {
-        this.classifier = classifier;
-    }
-
-    public String getCoordinates() {
-        return coordinates;
-    }
-
-    public void setCoordinates(String coordinates) {
-        this.coordinates = coordinates;
     }
 
     /* (non-Javadoc)

@@ -61,10 +61,10 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<>();
 
-    @OneToMany(mappedBy = "script", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "script", cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FileDependencyJPA> fileDependenciesJPA = new ArrayList<>();
 
-    @OneToMany(mappedBy = "script", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "script", cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MavenDependencyJPA> mavenDependenciesJPA = new ArrayList<>();
 
     /**

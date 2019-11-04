@@ -20,10 +20,7 @@
 package org.meveo.service.script;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -42,6 +39,7 @@ import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
+import org.meveo.service.base.PersistenceService;
 
 @FunctionServiceFor(ScriptInstance.TYPE)
 @Stateless
@@ -218,4 +216,13 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         return scriptInterfaces;
     }
 
+    @Override
+    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
+        ScriptInstance scriptInstance = findById(executable.getId(), Arrays.asList("executionRoles", "sourcingRoles"));
+        scriptInstance.getFileDependenciesJPA().clear();
+        scriptInstance.getMavenDependenciesJPA().clear();
+        flush();
+        super.update(executable);
+        return scriptInstance;
+    }
 }
