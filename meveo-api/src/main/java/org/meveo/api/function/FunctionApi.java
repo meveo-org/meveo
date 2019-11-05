@@ -13,8 +13,20 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.meveo.api.function;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.ws.rs.PathParam;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -29,18 +41,10 @@ import org.meveo.service.job.TimerEntityService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.PathParam;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
+ */
 @Stateless
 public class FunctionApi {
 
@@ -130,6 +134,24 @@ public class FunctionApi {
     private static String getTestJobCode(String functionCode) {
         return "FunctionTestJob_" + functionCode;
     }
+    
+	public List<Map<String, Object>> getSampleInputs(Long functionId) {
 
+		return concreteFunctionService.getFunctionService(functionId).getSampleInputs(functionId);
+	}
 
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		return concreteFunctionService.getFunctionService(functionCode).getSampleInputs(functionCode);
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		return concreteFunctionService.getFunctionService(functionId).getSampleOutputs(functionId);
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		return concreteFunctionService.getFunctionService(functionCode).getSampleOutputs(functionCode);
+	}
 }

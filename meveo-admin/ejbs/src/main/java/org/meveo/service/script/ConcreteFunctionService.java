@@ -65,6 +65,15 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 		FunctionService<?, ScriptInterface> functionService = getFunctionService(function);
 		return functionService.getExecutionEngine(function.getCode(), context);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public FunctionService<?, ScriptInterface> getFunctionService(Long functionId) {
+		
+		Function function = findById(functionId);
+		String functionType = function.getFunctionType();
+		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
+		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+	}
 
 	@SuppressWarnings("unchecked")
 	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {

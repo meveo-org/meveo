@@ -302,5 +302,77 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
-    
+
+    public List<Map<String, Object>> getSampleInputs(Long functionId) {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(Function function) {
+
+		return function.getSampleInputs();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Function f) throws BusinessException {
+
+		if (f.getGenerateOutputs()) {
+			List<Map<String, Object>> outputs = new ArrayList<>();
+
+			if (f.getSampleOutputs() != null && !f.getSampleOutputs().isEmpty()) {
+				outputs.addAll(f.getSampleOutputs());
+			}
+
+			for (Map<String, Object> input : f.getSampleInputs()) {
+                HashMap<String, Object> copyOfInput = new HashMap<>(input);
+                Map<String, Object> output = execute(f.getCode(), copyOfInput);
+                // Keep only keys that were modified
+                new HashMap<>(output).forEach((s, o) -> {
+                    if(input.get(s) == o) {
+                        output.remove(s);
+                    }
+                });
+				outputs.add(output);
+			}
+
+			return outputs;
+
+		} else {
+			return f.getSampleOutputs();
+		}
+	}
 }

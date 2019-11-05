@@ -2,6 +2,7 @@ package org.meveo.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -28,196 +29,200 @@ import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
  **/
-
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
 
-    @Inject
-    private ScriptInstanceService scriptInstanceService;
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
 
-    @Inject
-    private RoleService roleService;
-    
-    public ScriptInstanceApi() {
-    	super(ScriptInstance.class, ScriptInstanceDto.class);
-    }
+	@Inject
+	private RoleService roleService;
 
-    public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
-            throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
-        List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
-        checkDtoAndUpdateCode(scriptInstanceDto);
+	public ScriptInstanceApi() {
+		super(ScriptInstance.class, ScriptInstanceDto.class);
+	}
 
-        if (scriptInstanceService.findByCode(scriptInstanceDto.getCode()) != null) {
-            throw new EntityAlreadyExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
-        }
+	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
+			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
+		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+		checkDtoAndUpdateCode(scriptInstanceDto);
 
-        ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
+		if (scriptInstanceService.findByCode(scriptInstanceDto.getCode()) != null) {
+			throw new EntityAlreadyExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
+		}
 
-        scriptInstanceService.create(scriptInstance);
+		ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
 
-        if (scriptInstance != null && scriptInstance.isError() != null && scriptInstance.isError().booleanValue()) {
-            for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
-                ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
-                result.add(errorDto);
-            }
-        }
-        return result;
-    }
+		scriptInstanceService.create(scriptInstance);
 
-    public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto)
-            throws MissingParameterException, EntityDoesNotExistsException, MeveoApiException, BusinessException {
+		if (scriptInstance != null && scriptInstance.isError() != null && scriptInstance.isError().booleanValue()) {
+			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
+				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
+				result.add(errorDto);
+			}
+		}
+		return result;
+	}
 
-        List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
-        checkDtoAndUpdateCode(scriptInstanceDto);
+	public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto)
+			throws MissingParameterException, EntityDoesNotExistsException, MeveoApiException, BusinessException {
 
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
+		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+		checkDtoAndUpdateCode(scriptInstanceDto);
 
-        if (scriptInstance == null) {
-            throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
-        } else if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
-            throw new MeveoApiException("User does not have a permission to update a given script");
-        }
+		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
 
-        scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
+		if (scriptInstance == null) {
+			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
+		} else if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
+			throw new MeveoApiException("User does not have a permission to update a given script");
+		}
 
-        scriptInstance = scriptInstanceService.update(scriptInstance);
+		scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
 
-        if (scriptInstance.isError().booleanValue()) {
-            for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
-                ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
-                result.add(errorDto);
-            }
-        }
-        return result;
-    }
+		scriptInstance = scriptInstanceService.update(scriptInstance);
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.meveo.api.ApiService#find(java.lang.String)
-     */
-    @Override
-    public ScriptInstanceDto find(String scriptInstanceCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
-        ScriptInstanceDto scriptInstanceDtoResult = null;
-        if (StringUtils.isBlank(scriptInstanceCode)) {
-            missingParameters.add("scriptInstanceCode");
-            handleMissingParameters();
-        }
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceCode);
-        if (scriptInstance == null) {
-            throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
-        }
+		if (scriptInstance.isError().booleanValue()) {
+			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
+				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
+				result.add(errorDto);
+			}
+		}
+		return result;
+	}
 
-        String source = scriptInstanceService.readScriptFile(scriptInstance);
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.meveo.api.ApiService#find(java.lang.String)
+	 */
+	@Override
+	public ScriptInstanceDto find(String scriptInstanceCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+		ScriptInstanceDto scriptInstanceDtoResult = null;
+		if (StringUtils.isBlank(scriptInstanceCode)) {
+			missingParameters.add("scriptInstanceCode");
+			handleMissingParameters();
+		}
+		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceCode);
+		if (scriptInstance == null) {
+			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
+		}
 
-        scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
-        if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
-            scriptInstanceDtoResult.setScript("InvalidPermission");
-        }
-        return scriptInstanceDtoResult;
-    }
+		String source = scriptInstanceService.readScriptFile(scriptInstance);
 
-    public void removeScriptInstance(String scriptInstanceCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
-        if (StringUtils.isBlank(scriptInstanceCode)) {
-            missingParameters.add("scriptInstanceCode");
-            handleMissingParameters();
-        }
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceCode);
-        if (scriptInstance == null) {
-            throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
-        }
-        scriptInstanceService.remove(scriptInstance);
-    }
+		scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
+		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
+			scriptInstanceDtoResult.setScript("InvalidPermission");
+		}
+		return scriptInstanceDtoResult;
+	}
 
-    @Override
-    public ScriptInstance createOrUpdate(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
-        createOrUpdateWithCompile(postData);
+	public void removeScriptInstance(String scriptInstanceCode) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+		if (StringUtils.isBlank(scriptInstanceCode)) {
+			missingParameters.add("scriptInstanceCode");
+			handleMissingParameters();
+		}
+		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceCode);
+		if (scriptInstance == null) {
+			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
+		}
+		scriptInstanceService.remove(scriptInstance);
+	}
 
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
-        return scriptInstance;
-    }
+	@Override
+	public ScriptInstance createOrUpdate(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
+		createOrUpdateWithCompile(postData);
 
-    public List<ScriptInstanceErrorDto> createOrUpdateWithCompile(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
+		ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
+		return scriptInstance;
+	}
 
-        List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
-        checkDtoAndUpdateCode(postData);
+	public List<ScriptInstanceErrorDto> createOrUpdateWithCompile(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
 
-        ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
+		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+		checkDtoAndUpdateCode(postData);
 
-        if (scriptInstance == null) {
-            result = create(postData);
-        } else {
-            result = update(postData);
-        }
-        return result;
-    }
+		ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
 
-    public void checkDtoAndUpdateCode(CustomScriptDto dto) throws BusinessApiException, MissingParameterException, InvalidParameterException {
+		if (scriptInstance == null) {
+			result = create(postData);
+		} else {
+			result = update(postData);
+		}
+		return result;
+	}
 
-        if (StringUtils.isBlank(dto.getScript())) {
-            missingParameters.add("script");
-        }
+	public void checkDtoAndUpdateCode(CustomScriptDto dto) throws BusinessApiException, MissingParameterException, InvalidParameterException {
 
-        handleMissingParameters();
+		if (StringUtils.isBlank(dto.getScript())) {
+			missingParameters.add("script");
+		}
+
+		handleMissingParameters();
 
         if(dto.getType() == ScriptSourceTypeEnum.JAVA) {
-	        String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
-	        if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
-	            throw new BusinessApiException("The code and the canonical script class name must be identical");
-	        }
-	
-	        // check script existed full class name in class path
-	        if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
-	            throw new InvalidParameterException("The class with such name already exists");
-	        }
-	
-	        dto.setCode(scriptCode);
-        }
+		String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
+		if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
+			throw new BusinessApiException("The code and the canonical script class name must be identical");
+		}
+
+		// check script existed full class name in class path
+		if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
+			throw new InvalidParameterException("The class with such name already exists");
+		}
+
+		dto.setCode(scriptCode);
+	}
     }
 
-    /**
-     * Convert ScriptInstanceDto to a ScriptInstance instance.
-     * 
-     * @param dto ScriptInstanceDto object to convert
-     * @param scriptInstanceToUpdate ScriptInstance to update with values from dto, or if null create a new one
-     * @return A new or updated ScriptInstance object
-     * @throws EntityDoesNotExistsException entity does not exist exception.
-     */
-    public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException {
+	/**
+	 * Convert ScriptInstanceDto to a ScriptInstance instance.
+	 *
+	 * @param dto                    ScriptInstanceDto object to convert
+	 * @param scriptInstanceToUpdate ScriptInstance to update with values from dto,
+	 *                               or if null create a new one
+	 * @return A new or updated ScriptInstance object
+	 * @throws EntityDoesNotExistsException entity does not exist exception.
+	 */
+	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException {
 
-        ScriptInstance scriptInstance = new ScriptInstance();
-        if (scriptInstanceToUpdate != null) {
-            scriptInstance = scriptInstanceToUpdate;
-        }
-        scriptInstance.setCode(dto.getCode());
-        scriptInstance.setDescription(dto.getDescription());
-        scriptInstance.setScript(dto.getScript());
+		ScriptInstance scriptInstance = new ScriptInstance();
+		if (scriptInstanceToUpdate != null) {
+			scriptInstance = scriptInstanceToUpdate;
+		}
+		scriptInstance.setCode(dto.getCode());
+		scriptInstance.setDescription(dto.getDescription());
+		scriptInstance.setScript(dto.getScript());
+		scriptInstance.setSampleInputs(dto.getSampleInputs());
+		scriptInstance.setSampleOutputs(dto.getSampleOutputs());
+		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
 
-        if (dto.getType() != null) {
-            scriptInstance.setSourceTypeEnum(dto.getType());
-        } else {
-            scriptInstance.setSourceTypeEnum(ScriptSourceTypeEnum.JAVA);
-        }
+		if (dto.getType() != null) {
+			scriptInstance.setSourceTypeEnum(dto.getType());
+		} else {
+			scriptInstance.setSourceTypeEnum(ScriptSourceTypeEnum.JAVA);
+		}
 
-        for (RoleDto roleDto : dto.getExecutionRoles()) {
-            Role role = roleService.findByName(roleDto.getName());
-            if (role == null) {
-                throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
-            }
-            scriptInstance.getExecutionRoles().add(role);
-        }
-        for (RoleDto roleDto : dto.getSourcingRoles()) {
-            Role role = roleService.findByName(roleDto.getName());
-            if (role == null) {
-                throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
-            }
-            scriptInstance.getSourcingRoles().add(role);
-        }
+		for (RoleDto roleDto : dto.getExecutionRoles()) {
+			Role role = roleService.findByName(roleDto.getName());
+			if (role == null) {
+				throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
+			}
+			scriptInstance.getExecutionRoles().add(role);
+		}
+		for (RoleDto roleDto : dto.getSourcingRoles()) {
+			Role role = roleService.findByName(roleDto.getName());
+			if (role == null) {
+				throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
+			}
+			scriptInstance.getSourcingRoles().add(role);
+		}
 
-        return scriptInstance;
-    }
+		return scriptInstance;
+	}
 
 	@Override
 	public ScriptInstanceDto toDto(ScriptInstance entity) {
@@ -241,5 +246,29 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	public boolean exists(ScriptInstanceDto dto) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+//	@Override
+	public List<Map<String, Object>> getSampleInputs(Long functionId) {
+
+		return scriptInstanceService.getSampleInputs(functionId);
+	}
+
+//	@Override
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		return scriptInstanceService.getSampleInputs(functionCode);
+	}
+
+//	@Override
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		return scriptInstanceService.getSampleOutputs(functionId);
+	}
+
+//	@Override
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		return scriptInstanceService.getSampleOutputs(functionCode);
 	}
 }
