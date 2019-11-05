@@ -1,5 +1,7 @@
 package org.meveo.security.keycloak;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +11,8 @@ import java.util.Set;
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.inject.spi.BeanManager;
@@ -21,7 +25,7 @@ import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 import org.meveo.security.MeveoUser;
-import org.meveo.security.UserAuthTimeProducer;
+import org.meveo.security.UserAuthTimeCache;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
@@ -37,7 +41,7 @@ public class CurrentUserProvider {
     private SessionContext ctx;
 
     @Inject
-    private UserAuthTimeProducer userAuthTimeProducer;
+    private UserAuthTimeCache userAuthTimeCache;
 
     @Inject
     private Logger log;
@@ -193,6 +197,7 @@ public class CurrentUserProvider {
      * 
      * @param currentUser Authenticated current user
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     private void supplementOrCreateUserInApp(MeveoUser currentUser, EntityManager em) {
         // Takes care of anonymous users
         if (currentUser.getUserName() == null) {
@@ -201,11 +206,13 @@ public class CurrentUserProvider {
         // Create or retrieve current user
         try {
             User user = null;
+            Instant currentInstant = Instant.ofEpochSecond(new Integer(currentUser.getAuthTime()).longValue());
+            boolean newlyLoggedIn = userAuthTimeCache.updateLoggingDateIfNeeded(currentUser.getUserName(), currentInstant);
             try {
                 user = em.createNamedQuery("User.getByUsername", User.class).setParameter("username", currentUser.getUserName().toLowerCase()).getSingleResult();
-                if (isSessionScopeActive() && userAuthTimeProducer.getAuthTime() != currentUser.getAuthTime()) {
-                    userAuthTimeProducer.setAuthTime(currentUser.getAuthTime());
-                    user.setLastLoginDate(new Date());
+
+                if (isSessionScopeActive() && newlyLoggedIn) {
+                    user.setLastLoginDate(Date.from(userAuthTimeCache.getLoggingDate(currentUser.getUserName())));
                     em.merge(user);
                     em.flush();
                 }
