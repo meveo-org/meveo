@@ -6,7 +6,7 @@
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.3.2-SNAPSHOT</version>
+		<version>6.3.2</version>
 	</parent>
 	<artifactId>meveo-api-dto</artifactId>
 	<name>Meveo API DTO</name>
