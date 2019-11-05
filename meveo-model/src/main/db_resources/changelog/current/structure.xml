@@ -1332,4 +1332,14 @@
 			<column name="generate_outputs" type="${type.boolean}" defaultValueNumeric="0"/>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="#3915 drop sample io" author="EdwardLegaspi" dbms="mysql">
+		<dropSequence sequenceName="sample_io_seq"/>
+		<dropTable tableName="sample_io"/>
+	</changeSet>
+	
+	<changeSet id="#3915 drop sequence" author="EdwardLegaspi" dbms="mysql">
+		<dropTable tableName="sample_io_seq"/>
+	</changeSet>
+	
 </databaseChangeLog>

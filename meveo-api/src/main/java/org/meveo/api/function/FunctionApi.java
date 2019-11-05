@@ -13,7 +13,6 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.meveo.api.function;
 
 import java.io.File;
@@ -135,4 +134,24 @@ public class FunctionApi {
     private static String getTestJobCode(String functionCode) {
         return "FunctionTestJob_" + functionCode;
     }
+    
+	public List<Map<String, Object>> getSampleInputs(Long functionId) {
+
+		return concreteFunctionService.getFunctionService(functionId).getSampleInputs(functionId);
+	}
+
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		return concreteFunctionService.getFunctionService(functionCode).getSampleInputs(functionCode);
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		return concreteFunctionService.getFunctionService(functionId).getSampleOutputs(functionId);
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		return concreteFunctionService.getFunctionService(functionCode).getSampleOutputs(functionCode);
+	}
 }

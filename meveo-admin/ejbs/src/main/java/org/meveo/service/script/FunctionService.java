@@ -302,5 +302,70 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
-    
+
+    public List<Map<String, Object>> getSampleInputs(Long functionId) {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(Function function) {
+
+		return function.getSampleInputs();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Function f) throws BusinessException {
+
+		if (f.getGenerateOutputs().booleanValue()) {
+			List<Map<String, Object>> outputs = new ArrayList<>();
+
+			if (f.getSampleOutputs() != null && !f.getSampleOutputs().isEmpty()) {
+				outputs.addAll(f.getSampleOutputs());
+			}
+
+			for (Map<String, Object> input : f.getSampleInputs()) {
+				Map<String, Object> output = execute(null, f.getCode(), input);
+				outputs.add(output);
+			}
+
+			return outputs;
+
+		} else {
+			return f.getSampleOutputs();
+		}
+	}
 }

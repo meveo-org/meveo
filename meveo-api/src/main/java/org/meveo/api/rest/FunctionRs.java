@@ -120,7 +120,7 @@ public class FunctionRs extends BaseRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Map<String, Object>> getSampleInputs(@PathParam("id") Long functionId) {
 
-		return scriptInstanceApi.getSampleInputs(functionId);
+		return functionApi.getSampleInputs(functionId);
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class FunctionRs extends BaseRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Map<String, Object>> getSampleInputs(@PathParam("code") String code) {
 
-		return scriptInstanceApi.getSampleInputs(code);
+		return functionApi.getSampleInputs(code);
 	}
 
 	/**
@@ -150,7 +150,7 @@ public class FunctionRs extends BaseRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Map<String, Object>> getSampleOutputs(@PathParam("id") Long functionId) throws BusinessException {
 
-		return scriptInstanceApi.getSampleOutputs(functionId);
+		return functionApi.getSampleOutputs(functionId);
 	}
 
 	/**
@@ -166,42 +166,6 @@ public class FunctionRs extends BaseRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Map<String, Object>> getSampleOutputs(@PathParam("code") String code) throws BusinessException {
 
-		return scriptInstanceApi.getSampleOutputs(code);
+		return functionApi.getSampleOutputs(code);
 	}
-
-	@Path("/test/create")
-	@POST
-	public void testCreate() throws BusinessException {
-
-		Function f = new Function();
-		f.setCode("test");
-
-		List<Map<String, Object>> sampleInputs = new ArrayList<>();
-		Map<String, Object> input1 = new HashMap<>();
-		input1.put("a", "1");
-		input1.put("b", "2");
-		sampleInputs.add(input1);
-
-		Map<String, Object> input2 = new HashMap<>();
-		input2.put("3", "c");
-		input2.put("4", "d");
-		sampleInputs.add(input2);
-
-		List<Map<String, Object>> sampleOutputs = new ArrayList<>();
-		Map<String, Object> output1 = new HashMap<>();
-		output1.put("e", "5");
-		output1.put("f", "6");
-		sampleOutputs.add(output1);
-
-		Map<String, Object> output2 = new HashMap<>();
-		output2.put("7", "g");
-		output2.put("8", "h");
-		sampleOutputs.add(output2);
-
-		f.setSampleInputs(sampleInputs);
-		f.setSampleOutputs(sampleOutputs);
-
-		functionService.create(f);
-	}
-
 }
