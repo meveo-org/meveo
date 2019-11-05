@@ -546,6 +546,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	configuration.setPrimitiveEntity(dto.getNeo4jStorageConfiguration().isPrimitiveEntity());
         	configuration.setPrimitiveType(dto.getNeo4jStorageConfiguration().getPrimitiveType());
         	configuration.setGraphqlQueryFields(dto.getNeo4jStorageConfiguration().getGraphqlQueryFields());
+        	configuration.setMutations(dto.getNeo4jStorageConfiguration().getMutations());
 
             if(dto.getNeo4jStorageConfiguration().getUniqueConstraints() != null){
                 final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getNeo4jStorageConfiguration().getUniqueConstraints().stream()
@@ -670,6 +671,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
             neo4jConf.setLabels(cet.getNeo4JStorageConfiguration().getLabels());
             neo4jConf.setGraphqlQueryFields(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields());
+            neo4jConf.setMutations(cet.getNeo4JStorageConfiguration().getMutations());
             neo4jConf.setPrimitiveEntity(cet.getNeo4JStorageConfiguration().isPrimitiveEntity());
             neo4jConf.setPrimitiveType(cet.getNeo4JStorageConfiguration().getPrimitiveType());
 
