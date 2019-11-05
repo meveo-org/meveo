@@ -219,28 +219,28 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
-        List<FileDependencyJPA> fileDependencyJPAList = new ArrayList<>();
+        List<FileDependency> fileDependencyList = new ArrayList<>();
         for (FileDependencyDto fileDependencyDto : dto.getFileDependencies()) {
-            FileDependencyJPA fileDependencyJPA = new FileDependencyJPA();
-            fileDependencyJPA.setPath(fileDependencyDto.getPath());
-            fileDependencyJPA.setScript(scriptInstance);
-            fileDependencyJPAList.add(fileDependencyJPA);
+            FileDependency fileDependency = new FileDependency();
+            fileDependency.setPath(fileDependencyDto.getPath());
+            fileDependency.setScript(scriptInstance);
+            fileDependencyList.add(fileDependency);
         }
-        scriptInstance.getFileDependenciesJPA().clear();
-        scriptInstance.getFileDependenciesJPA().addAll(fileDependencyJPAList);
+        scriptInstance.getFileDependencies().clear();
+        scriptInstance.getFileDependencies().addAll(fileDependencyList);
 
-        List<MavenDependencyJPA> mavenDependencyJPAList = new ArrayList<>();
+        List<MavenDependency> mavenDependencyList = new ArrayList<>();
         for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
-            MavenDependencyJPA mavenDependencyJPA = new MavenDependencyJPA();
-            mavenDependencyJPA.setGroupId(mavenDependencyDto.getGroupId());
-            mavenDependencyJPA.setArtifactId(mavenDependencyDto.getArtifactId());
-            mavenDependencyJPA.setVersion(mavenDependencyDto.getVersion());
-            mavenDependencyJPA.setClassifier(mavenDependencyDto.getClassifier());
-            mavenDependencyJPA.setScript(scriptInstance);
-            mavenDependencyJPAList.add(mavenDependencyJPA);
+            MavenDependency mavenDependency = new MavenDependency();
+            mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
+            mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
+            mavenDependency.setVersion(mavenDependencyDto.getVersion());
+            mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+            mavenDependency.setScript(scriptInstance);
+            mavenDependencyList.add(mavenDependency);
         }
-        scriptInstance.getMavenDependenciesJPA().clear();
-        scriptInstance.getMavenDependenciesJPA().addAll(mavenDependencyJPAList);
+        scriptInstance.getMavenDependencies().clear();
+        scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
 
 		return scriptInstance;
 	}

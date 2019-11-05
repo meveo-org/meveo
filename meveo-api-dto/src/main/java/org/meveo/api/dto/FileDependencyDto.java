@@ -1,13 +1,13 @@
 package org.meveo.api.dto;
 
-import org.meveo.model.scripts.FileDependencyJPA;
+import org.meveo.model.scripts.FileDependency;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "FileDependencyJPA")
+@XmlRootElement(name = "FileDependency")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FileDependencyDto extends BaseEntityDto{
 
@@ -25,8 +25,8 @@ public class FileDependencyDto extends BaseEntityDto{
 
     }
 
-    public FileDependencyDto(FileDependencyJPA fileDependencyJPA) {
-        this.setPath(fileDependencyJPA.getPath());
+    public FileDependencyDto(FileDependency fileDependency) {
+        this.setPath(fileDependency.getPath());
     }
 
     public String getPath() {

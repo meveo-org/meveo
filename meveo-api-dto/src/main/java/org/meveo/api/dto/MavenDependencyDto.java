@@ -1,13 +1,13 @@
 package org.meveo.api.dto;
 
-import org.meveo.model.scripts.MavenDependencyJPA;
+import org.meveo.model.scripts.MavenDependency;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "MavenDependencyJPA")
+@XmlRootElement(name = "MavenDependency")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MavenDependencyDto extends BaseEntityDto {
 
@@ -31,7 +31,6 @@ public class MavenDependencyDto extends BaseEntityDto {
     private String classifier;
 
     /** The coordinates. */
-    @XmlAttribute()
     private String coordinates;
 
     public String getGroupId() {
@@ -45,11 +44,11 @@ public class MavenDependencyDto extends BaseEntityDto {
 
     }
 
-    public MavenDependencyDto(MavenDependencyJPA mavenDependencyJPA) {
-        this.setGroupId(mavenDependencyJPA.getGroupId());
-        this.setArtifactId(mavenDependencyJPA.getArtifactId());
-        this.setVersion(mavenDependencyJPA.getVersion());
-        this.setCoordinates(mavenDependencyJPA.getCoordinates());
+    public MavenDependencyDto(MavenDependency mavenDependency) {
+        this.setGroupId(mavenDependency.getGroupId());
+        this.setArtifactId(mavenDependency.getArtifactId());
+        this.setVersion(mavenDependency.getVersion());
+        this.setCoordinates(mavenDependency.getCoordinates());
     }
 
     public void setGroupId(String groupId) {

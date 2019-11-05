@@ -72,11 +72,11 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
-    private List<FileDependencyJPA> fileDependencies = new ArrayList<>();
-    private List<MavenDependencyJPA> mavenDependencies = new ArrayList<>();
+    private Set<FileDependency> fileDependencies = new HashSet<>();
+    private Set<MavenDependency> mavenDependencies = new HashSet<>();
 
-    private FileDependencyJPA fileDependency = new FileDependencyJPA();
-    private MavenDependencyJPA mavenDependency = new MavenDependencyJPA();
+    private FileDependency fileDependency = new FileDependency();
+    private MavenDependency mavenDependency = new MavenDependency();
 
     private TreeNode rootNode;
 
@@ -225,25 +225,25 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
 
         if (CollectionUtils.isNotEmpty(fileDependencies)) {
-            Set<FileDependencyJPA> scriptFiles = new HashSet<>();
-            for (FileDependencyJPA fileDependencyJPA: fileDependencies) {
-                if (fileDependencyJPA != null) {
-                    scriptFiles.add(fileDependencyJPA);
+            Set<FileDependency> scriptFiles = new HashSet<>();
+            for (FileDependency fileDependency : fileDependencies) {
+                if (fileDependency != null) {
+                    scriptFiles.add(fileDependency);
                 }
             }
-            getEntity().getFileDependenciesJPA().clear();
-            getEntity().getFileDependenciesJPA().addAll(scriptFiles);
+            getEntity().getFileDependencies().clear();
+            getEntity().getFileDependencies().addAll(scriptFiles);
         }
 
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
-            Set<MavenDependencyJPA> scriptMavens = new HashSet<>();
-            for (MavenDependencyJPA mavenDependencyJPA : mavenDependencies) {
-                if (mavenDependencyJPA != null) {
-                    scriptMavens.add(mavenDependencyJPA);
+            Set<MavenDependency> scriptMavens = new HashSet<>();
+            for (MavenDependency mavenDependency : mavenDependencies) {
+                if (mavenDependency != null) {
+                    scriptMavens.add(mavenDependency);
                 }
             }
-            getEntity().getMavenDependenciesJPA().clear();
-            getEntity().getMavenDependenciesJPA().addAll(scriptMavens);
+            getEntity().getMavenDependencies().clear();
+            getEntity().getMavenDependencies().addAll(scriptMavens);
         }
         super.saveOrUpdate(false);
 
@@ -494,62 +494,62 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         return foundNode;
     }
 
-    public List<FileDependencyJPA> getFileDependencies() {
+    public Set<FileDependency> getFileDependencies() {
         if (CollectionUtils.isEmpty(fileDependencies)) {
-            if (entity.getFileDependenciesJPA() != null) {
-                fileDependencies = entity.getFileDependenciesJPA();
+            if (entity.getFileDependencies() != null) {
+                fileDependencies = entity.getFileDependencies();
                 return fileDependencies;
             } else {
-                return new ArrayList<>();
+                return new HashSet<>();
             }
         }
         return fileDependencies;
     }
 
-    public void setFileDependencies(List<FileDependencyJPA> fileDependencies) {
+    public void setFileDependencies(Set<FileDependency> fileDependencies) {
         this.fileDependencies = fileDependencies;
     }
 
-    public FileDependencyJPA getFileDependency() {
+    public FileDependency getFileDependency() {
         return fileDependency;
     }
 
     public void addNewFileDependency() {
-        FileDependencyJPA fileDependencyJPA = new FileDependencyJPA();
-        fileDependencyJPA.setScript(entity);
-        fileDependencies.add(fileDependencyJPA);
+        FileDependency fileDependency = new FileDependency();
+        fileDependency.setScript(entity);
+        fileDependencies.add(fileDependency);
     }
 
-    public void removeFileDependency(FileDependencyJPA selectedFileDependency) {
+    public void removeFileDependency(FileDependency selectedFileDependency) {
         fileDependencies.remove(selectedFileDependency);
     }
 
-    public List<MavenDependencyJPA> getMavenDependencies() {
+    public Set<MavenDependency> getMavenDependencies() {
         if (CollectionUtils.isEmpty(mavenDependencies)) {
-            if (entity.getMavenDependenciesJPA() != null) {
-                mavenDependencies = entity.getMavenDependenciesJPA();
+            if (entity.getMavenDependencies() != null) {
+                mavenDependencies = entity.getMavenDependencies();
                 return mavenDependencies;
             } else {
-                return new ArrayList<>();
+                return new HashSet<>();
             }
         }
         return mavenDependencies;
     }
 
-    public void setMavenDependencies(List<MavenDependencyJPA> mavenDependencies) {
+    public void setMavenDependencies(Set<MavenDependency> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
     }
 
-    public MavenDependencyJPA getMavenDependency() {
+    public MavenDependency getMavenDependency() {
         return mavenDependency;
     }
 
-    public void removeMavenDependency(MavenDependencyJPA selectedMavenDependency) {
+    public void removeMavenDependency(MavenDependency selectedMavenDependency) {
        mavenDependencies.remove(selectedMavenDependency);
     }
 
     public void addMavenDependency() {
-        mavenDependency = new MavenDependencyJPA();
+        mavenDependency = new MavenDependency();
         mavenDependency.setScript(entity);
         mavenDependencies.add(mavenDependency);
     }

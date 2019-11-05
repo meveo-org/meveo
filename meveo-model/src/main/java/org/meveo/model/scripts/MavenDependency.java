@@ -8,9 +8,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@Table(name = "maven_dependency_jpa")
+@Table(name = "maven_dependency")
 @IdClass(MavenDependencyPk.class)
-public class MavenDependencyJPA implements Serializable {
+public class MavenDependency implements Serializable {
     @Id
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
     @JoinColumn(name = "script_id")
@@ -95,9 +95,9 @@ public class MavenDependencyJPA implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MavenDependencyJPA mavenDependencyJPA = (MavenDependencyJPA) o;
-        return Objects.equals(getCoordinates(), mavenDependencyJPA.getCoordinates()) &&
-                Objects.equals(getScript(), mavenDependencyJPA.getScript());
+        MavenDependency mavenDependency = (MavenDependency) o;
+        return Objects.equals(getCoordinates(), mavenDependency.getCoordinates()) &&
+                Objects.equals(getScript(), mavenDependency.getScript());
     }
 
     @Override

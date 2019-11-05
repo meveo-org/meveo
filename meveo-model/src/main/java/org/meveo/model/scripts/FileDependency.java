@@ -7,9 +7,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@Table(name = "file_dependency_jpa")
+@Table(name = "file_dependency")
 @IdClass(FileDependencyPk.class)
-public class FileDependencyJPA implements Serializable {
+public class FileDependency implements Serializable {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
@@ -41,9 +41,9 @@ public class FileDependencyJPA implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FileDependencyJPA fileDependencyJPA = (FileDependencyJPA) o;
-        return Objects.equals(getPath(), fileDependencyJPA.getPath()) &&
-                Objects.equals(getScript(), fileDependencyJPA.getScript());
+        FileDependency fileDependency = (FileDependency) o;
+        return Objects.equals(getPath(), fileDependency.getPath()) &&
+                Objects.equals(getScript(), fileDependency.getScript());
     }
 
     @Override

@@ -39,7 +39,6 @@ import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
-import org.meveo.service.base.PersistenceService;
 
 @FunctionServiceFor(ScriptInstance.TYPE)
 @Stateless
@@ -219,8 +218,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
     @Override
     public ScriptInstance update(ScriptInstance executable) throws BusinessException {
         ScriptInstance scriptInstance = findById(executable.getId(), Arrays.asList("executionRoles", "sourcingRoles"));
-        scriptInstance.getFileDependenciesJPA().clear();
-        scriptInstance.getMavenDependenciesJPA().clear();
+        scriptInstance.getFileDependencies().clear();
+        scriptInstance.getMavenDependencies().clear();
         flush();
         super.update(executable);
         return scriptInstance;

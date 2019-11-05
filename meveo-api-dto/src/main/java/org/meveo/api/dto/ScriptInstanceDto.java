@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.script.CustomScriptDto;
-import org.meveo.model.scripts.FileDependencyJPA;
-import org.meveo.model.scripts.MavenDependencyJPA;
+import org.meveo.model.scripts.FileDependency;
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.security.Role;
 
@@ -64,14 +64,14 @@ public class ScriptInstanceDto extends CustomScriptDto {
             }
         }
 
-        if (scriptInstance.getFileDependenciesJPA() != null) {
-            for (FileDependencyJPA file : scriptInstance.getFileDependenciesJPA() ) {
+        if (scriptInstance.getFileDependencies() != null) {
+            for (FileDependency file : scriptInstance.getFileDependencies() ) {
                 fileDependencies.add(new FileDependencyDto(file));
             }
         }
 
-        if (scriptInstance.getMavenDependenciesJPA() != null) {
-            for (MavenDependencyJPA maven : scriptInstance.getMavenDependenciesJPA() ) {
+        if (scriptInstance.getMavenDependencies() != null) {
+            for (MavenDependency maven : scriptInstance.getMavenDependencies() ) {
                 mavenDependencies.add(new MavenDependencyDto(maven));
             }
         }
@@ -81,7 +81,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     @Override
     public String toString() {
         return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", script=" + getScript() + ", executionRoles="
-                + executionRoles + ", sourcingRoles=" + sourcingRoles + ", fileDependencyJPAs=" + fileDependencies + ", mavenDependencyJPAs=" + mavenDependencies +"]";
+                + executionRoles + ", sourcingRoles=" + sourcingRoles + "]";
     }
 
     /**
