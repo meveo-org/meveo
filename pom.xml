@@ -13,7 +13,7 @@
         <dbtype>generic</dbtype>
         <releaseOption />
         <jackson.version>2.9.5</jackson.version>
-        <scm.url>scm:git:ssh://git@github.com/manaty/meveo</scm.url>
+        <scm.url/>
     </properties>
 
     <scm>

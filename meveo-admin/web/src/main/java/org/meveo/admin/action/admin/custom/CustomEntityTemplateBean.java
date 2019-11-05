@@ -24,6 +24,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
@@ -82,6 +83,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private List<GraphQLQueryField> graphqlQueryFields = new ArrayList<>();
 
 	private GraphQLQueryField graphqlQueryField = new GraphQLQueryField();
+
+	private List<Mutation> mutations = new ArrayList<>();
+
+	private Mutation mutation = new Mutation();
 
 	private DualListModel<DBStorageType> availableStoragesDM;
 
@@ -719,6 +724,71 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	public Mutation getMutation() {
+		return mutation;
+	}
+
+	public List<Mutation> getMutations() {
+		if (entity.getNeo4JStorageConfiguration() != null) {
+			if (entity != null && entity.getNeo4JStorageConfiguration().getMutations() != null) {
+				mutations = entity.getNeo4JStorageConfiguration().getMutations();
+			}
+			return mutations;
+		} else {
+			return new ArrayList<>();
+		}
+	}
+
+	public void removeMutation(Mutation selectedMutation) {
+		for (Mutation mutation : mutations) {
+			if (mutation != null && mutation.equals(selectedMutation)) {
+				entity.getNeo4JStorageConfiguration().getMutations().remove(selectedMutation);
+				break;
+			}
+		}
+		String message = "mutation.remove.successful";
+		messages.info(new BundleKey("messages", message));
+	}
+
+	public void editMutation(Mutation selectedMutation) {
+		isUpdate = true;
+		mutation = selectedMutation;
+	}
+
+	public void addMutation() {
+		isUpdate = false;
+		mutation = new Mutation();
+	}
+
+	public void saveMutation() {
+		if (!isUpdate) {
+			mutations.add(mutation);
+		} else {
+			for (Mutation mutation : mutations) {
+				if (mutation != null) {
+					mutation.setCode(this.mutation.getCode());
+					mutation.setParameters(this.mutation.getParameters());
+					mutation.setCypherQuery(this.mutation.getCypherQuery());
+					break;
+				}
+			}
+		}
+		entity.getNeo4JStorageConfiguration().setMutations(mutations);
+		isUpdate = false;
+		String message = "mutation.save.successful";
+		messages.info(new BundleKey("messages", message));
+	}
+
+	public void removeMapParam(String key) {
+		if (mutation.getParameters() != null) {
+			mutation.getParameters().remove(key);
+		}
+	}
+
+	public void addMapParam() {
+		mutation.getParameters().put(new String(), new String());
+	}
+
 	public Boolean getIsUpdate() {
 		return isUpdate;
 	}
@@ -926,6 +996,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public void setSelectedCustomizedEntities(List<CustomizedEntity> selectedCustomizedEntities) {
 		this.selectedCustomizedEntities = selectedCustomizedEntities;
 	}
+
 }
 
 
