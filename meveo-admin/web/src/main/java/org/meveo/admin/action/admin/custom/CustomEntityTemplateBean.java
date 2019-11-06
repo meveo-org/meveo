@@ -94,6 +94,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private List<CustomizedEntity> selectedCustomizedEntities;
 
+	private List<Map<String, String>> parameters;
+
 	@Inject
 	private MeveoModuleService meveoModuleService;
 
@@ -144,7 +146,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
-		if(listMap != null){
+		if (listMap != null) {
 			return listMap;
 		}
 
@@ -762,13 +764,28 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	public void saveMutation() {
 		if (!isUpdate) {
+			mutation.getParameters().clear();
+			if (CollectionUtils.isNotEmpty(parameters)) {
+				Map<String, String> mapParameters = new HashMap<>();
+				for (Map<String, String> mapValue : parameters) {
+					mapParameters.put(mapValue.get("key"), mapValue.get("value"));
+				}
+				mutation.setParameters(mapParameters);
+			}
 			mutations.add(mutation);
 		} else {
 			for (Mutation mutation : mutations) {
 				if (mutation != null) {
 					mutation.setCode(this.mutation.getCode());
-					mutation.setParameters(this.mutation.getParameters());
 					mutation.setCypherQuery(this.mutation.getCypherQuery());
+					mutation.getParameters().clear();
+					if (CollectionUtils.isNotEmpty(parameters)) {
+						Map<String, String> mapParameters = new HashMap<>();
+						for (Map<String, String> mapValue : parameters) {
+							mapParameters.put(mapValue.get("key"), mapValue.get("value"));
+						}
+						mutation.setParameters(mapParameters);
+					}
 					break;
 				}
 			}
@@ -779,14 +796,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
-	public void removeMapParam(String key) {
-		if (mutation.getParameters() != null) {
-			mutation.getParameters().remove(key);
-		}
+	public void removeMapParam(Map<String, String> mapValue) {
+		parameters.remove(mapValue);
 	}
 
 	public void addMapParam() {
-		mutation.getParameters().put(new String(), new String());
+		Map<String, String> mapValue = new HashMap<String, String>();
+		mapValue.put("key", null);
+		mapValue.put("value", null);
+		parameters.add(mapValue);
 	}
 
 	public Boolean getIsUpdate() {
@@ -997,6 +1015,31 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		this.selectedCustomizedEntities = selectedCustomizedEntities;
 	}
 
+	public void resetMutation() {
+		mutation = new Mutation();
+		parameters = null;
+	}
+
+	public List<Map<String, String>> getParameters() {
+		if (CollectionUtils.isEmpty(parameters)) {
+			if (mutation.getParameters() != null) {
+				parameters = new ArrayList<>();
+				for (Map.Entry<String, String> entry : mutation.getParameters().entrySet()) {
+					Map<String, String> item = new HashMap<>();
+					item.put("key", entry.getKey());
+					item.put("value", entry.getValue());
+					parameters.add(item);
+				}
+			} else {
+				parameters = new ArrayList<>();
+			}
+		}
+		return parameters;
+	}
+
+	public void setParameters(List<Map<String, String>> parameters) {
+		this.parameters = parameters;
+	}
 }
 
 
