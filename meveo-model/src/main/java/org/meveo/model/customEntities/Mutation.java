@@ -2,12 +2,13 @@ package org.meveo.model.customEntities;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Mutation implements Serializable {
 
-    private String code;
+	private static final long serialVersionUID = 2535597940280255114L;
+	
+	private String code;
     private Map<String, String> parameters = new HashMap<>();
     private String cypherQuery;
 
