@@ -16,7 +16,16 @@
 
 package org.meveo.persistence.neo4j.service.graphql;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.SortedSet;
+import java.util.StringJoiner;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +35,7 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.CacheRetrieveMode;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -37,13 +47,14 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.neo4j.GraphQLRequest;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.persistence.neo4j.base.Neo4jDao;
+import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
-import org.meveo.persistence.neo4j.base.Neo4jDao;
-import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.slf4j.Logger;
 
 @Stateless
@@ -165,6 +176,8 @@ public class GraphQLService {
 
             idl.append("}\n\n");
         }
+        
+        idl.append(getMutations());
 
         return idl.toString();
     }
@@ -446,6 +459,49 @@ public class GraphQLService {
             graphQLFields.add(graphQLField);
         }
         return graphQLFields;
+    }
+    
+    private String getMutations() {
+    	// Retrieve all existing mutations
+    	List<List<Mutation>> mutationsLists = customEntityTemplateService.getEntityManager()
+    		.createQuery("SELECT neo4JStorageConfiguration.mutations FROM CustomEntityTemplate WHERE neo4JStorageConfiguration <> null AND neo4JStorageConfiguration.mutations <> null")
+    		.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.USE)
+    		.setHint("org.hibernate.readOnly", true)
+    		.getResultList();
+    	
+    	// Flatten the lists
+		List<Mutation> mutations = (List<Mutation>) mutationsLists.stream()
+    		.flatMap(e -> ((List<Mutation>) e).stream())
+    		.collect(Collectors.toList());
+    	
+    	StringBuilder mutationsStr = new StringBuilder("\nschema {\n\tmutation: Mutations\n } \n");
+    	
+    	StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n", "\n}");
+    	
+    	for(Mutation mutation : mutations) {
+    		StringBuilder mutationLine = new StringBuilder(mutation.getCode());
+    		
+    		StringJoiner parametersJoiner = new StringJoiner(", ","(", ")");
+    		mutation.getParameters().forEach((name, type) -> {
+    			parametersJoiner.add(name + ": " + type);
+    		});
+    		mutationLine.append(parametersJoiner.toString());
+    		
+    		String escapedQuery = mutation.getCypherQuery()
+    				.replaceAll("\"", "\\\"")
+    				.replaceAll("'", "\\'")
+    				.replaceAll("\n", " ");
+    		
+    		mutationLine.append(": String @cypher(statement: \"")
+    			.append(escapedQuery)
+    			.append(")");
+    		
+    	}
+    	
+    	mutationsStr.append(mutationsJoiner.toString());
+    	
+    	return mutationsStr.toString();
+    	
     }
 
     private static void add(Map<String, GraphQLEntity> graphQLEntityMap, GraphQLEntity graphQLEntity) {
