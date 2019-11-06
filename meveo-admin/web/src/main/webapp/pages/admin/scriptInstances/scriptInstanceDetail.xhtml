@@ -153,7 +153,7 @@
 							<h:outputText value="#{mavenDependency.coordinates}" size="50"/>
 						</p:column>
 						<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
-							<p:commandButton action="#{scriptInstanceBean.removeMavenDependency(mavenDependency)}" icon="ui-icon-trash" update="mavenDependenciesPanel" />
+							<p:commandButton action="#{scriptInstanceBean.removeMavenDependency(mavenDependency)}" icon="ui-icon-trash" update="mavenDependenciesPanel" immediate="true" />
 						</p:column>
 						<f:facet name="footer">
 							<p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this mavenDependenciesPanel" update="mavenDependenciesPanel"
@@ -167,7 +167,7 @@
 							<h:inputText value="#{fileDependency.path}" size="50" required="true"/>
 						</p:column>
 						<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
-							<p:commandButton action="#{scriptInstanceBean.removeFileDependency(fileDependency)}" icon="ui-icon-trash" update="fileDependenciesPanel" />
+							<p:commandButton action="#{scriptInstanceBean.removeFileDependency(fileDependency)}" icon="ui-icon-trash" update="fileDependenciesPanel" immediate="true" />
 						</p:column>
 						<f:facet name="footer">
 							<p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this fileDependenciesPanel" update="fileDependenciesPanel"

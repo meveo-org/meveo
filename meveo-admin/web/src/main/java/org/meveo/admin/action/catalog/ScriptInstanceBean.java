@@ -72,8 +72,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
-    private Set<FileDependency> fileDependencies = new HashSet<>();
-    private Set<MavenDependency> mavenDependencies = new HashSet<>();
+    private List<FileDependency> fileDependencies = new ArrayList<>();
+    private List<MavenDependency> mavenDependencies = new ArrayList<>();
 
     private FileDependency fileDependency = new FileDependency();
     private MavenDependency mavenDependency = new MavenDependency();
@@ -494,19 +494,19 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         return foundNode;
     }
 
-    public Set<FileDependency> getFileDependencies() {
+    public List<FileDependency> getFileDependencies() {
         if (CollectionUtils.isEmpty(fileDependencies)) {
             if (entity.getFileDependencies() != null) {
-                fileDependencies = entity.getFileDependencies();
+                fileDependencies = new ArrayList<>(entity.getFileDependencies());
                 return fileDependencies;
             } else {
-                return new HashSet<>();
+                return new ArrayList<>();
             }
         }
         return fileDependencies;
     }
 
-    public void setFileDependencies(Set<FileDependency> fileDependencies) {
+    public void setFileDependencies(List<FileDependency> fileDependencies) {
         this.fileDependencies = fileDependencies;
     }
 
@@ -524,19 +524,19 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         fileDependencies.remove(selectedFileDependency);
     }
 
-    public Set<MavenDependency> getMavenDependencies() {
+    public List<MavenDependency> getMavenDependencies() {
         if (CollectionUtils.isEmpty(mavenDependencies)) {
             if (entity.getMavenDependencies() != null) {
-                mavenDependencies = entity.getMavenDependencies();
+                mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
                 return mavenDependencies;
             } else {
-                return new HashSet<>();
+                return new ArrayList<>();
             }
         }
         return mavenDependencies;
     }
 
-    public void setMavenDependencies(Set<MavenDependency> mavenDependencies) {
+    public void setMavenDependencies(List<MavenDependency> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
     }
 
