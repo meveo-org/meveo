@@ -228,7 +228,7 @@
                                                     <p:commandButton action="#{customEntityTemplateBean.removeMutation(mutation)}" icon="ui-icon-trash" update=":cetForm:mutationsPanel" />
                                                 </p:column>
                                                 <f:facet name="footer">
-                                                    <p:commandButton action="#{customEntityTemplateBean.addMutation}" id="addMutation" value="#{messages['commons.addNew']}" oncomplete="PF('mutationsDialog').show()"  update=":mutationsDialogForm"></p:commandButton>
+                                                    <p:commandButton actionListener="#{customEntityTemplateBean.resetMutation}" action="#{customEntityTemplateBean.addMutation}" id="addMutation" value="#{messages['commons.addNew']}" oncomplete="PF('mutationsDialog').show()"  update=":mutationsDialogForm"></p:commandButton>
                                                 </f:facet>
                                             </p:dataTable>
                                         </h:panelGroup>
