@@ -210,7 +210,6 @@
                                 <p:fieldset id="cfMutation" toggleable="true" collapsed="true" legend="Mutations">
                                     <p:panel width="100" header="#{messages['customizedEntities.mutation']}">
                                         <h:panelGroup id="mutationsPanel">
-                                            <p:messages/>
                                             <p:dataTable id="muatationDatatable" value="#{customEntityTemplateBean.mutations}" var="mutation" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
                                                          paginator="true" rows="30" resizableColumns="true"
                                                          paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
