@@ -17,28 +17,24 @@
  */
 package org.meveo.service.script;
 
-import org.meveo.model.scripts.Function;
-import org.meveo.model.scripts.FunctionServiceLiteral;
-import org.meveo.model.scripts.test.ExpectedOutput;
+import java.util.List;
+import java.util.Map;
 
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionServiceLiteral;
+import org.meveo.model.scripts.test.ExpectedOutput;
 
 /**
  * @author clement.bareth
  */
 @Default
-@Singleton
-@Lock(LockType.READ)
+@Stateless
 public class ConcreteFunctionService extends FunctionService<Function, ScriptInterface> {
 	
 	@Inject @Any
@@ -68,6 +64,15 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) {
 		FunctionService<?, ScriptInterface> functionService = getFunctionService(function);
 		return functionService.getExecutionEngine(function.getCode(), context);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public FunctionService<?, ScriptInterface> getFunctionService(Long functionId) {
+		
+		Function function = findById(functionId);
+		String functionType = function.getFunctionType();
+		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
+		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
 
 	@SuppressWarnings("unchecked")

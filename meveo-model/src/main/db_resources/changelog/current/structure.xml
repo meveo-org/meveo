@@ -1293,9 +1293,4 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="#3935" author="Hien Bach">
-        <addColumn tableName="cust_cet">
-            <column name="mutations" type="${type.json}"/>
-        </addColumn>
-    </changeSet>
 </databaseChangeLog>

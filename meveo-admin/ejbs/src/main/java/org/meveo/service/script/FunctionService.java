@@ -35,6 +35,7 @@ import org.meveo.service.job.JobInstanceService;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @param <T> Type of function (service, script ...)
@@ -44,6 +45,8 @@ import java.util.*;
 public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
 
+    private static final Map<CacheKeyStr, List<String>> ALL_LOGS = new ConcurrentHashMap<>();
+
     public static final String FUNCTION_TEST_JOB = "FunctionTestJob";
 
     @Inject
@@ -51,10 +54,6 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     @Inject
     private JobInstanceService jobInstanceService;
-
-    private Map<CacheKeyStr, List<String>> allLogs = new HashMap<>();
-
-    private Map<CacheKeyStr, E> cachedExecutionEngines = new HashMap<>();
 
     /**
      * Parse parameters encoded in URL like style param=value&amp;param=value.
@@ -92,13 +91,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     /**
-     * Clear from cache and logs the execution engine corresponding to the given code
+     * Clear from logs the execution engine corresponding to the given code
      *
      * @param code Code of the execution engine
      */
     protected void clear(String code) {
-        cachedExecutionEngines.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
-        allLogs.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
+        ALL_LOGS.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
     }
 
     /**
@@ -182,11 +180,11 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param scriptCode code of script.
      */
     public void addLog(String message, String scriptCode) {
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode),
+        if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+            ALL_LOGS.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode),
                     new ArrayList<String>());
         }
-        allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
+        ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
     }
 
     /**
@@ -197,10 +195,10 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public List<String> getLogs(String scriptCode) {
 
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+        if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
             return new ArrayList<String>();
         }
-        return allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        return ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
 
     /**
@@ -209,8 +207,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param scriptCode script's code
      */
     public void clearLogs(String scriptCode) {
-        if (allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
+        if (ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+            ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
         }
     }
     
@@ -304,5 +302,77 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
-    
+
+    public List<Map<String, Object>> getSampleInputs(Long functionId) {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(String functionCode) {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleInputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleInputs(Function function) {
+
+		return function.getSampleInputs();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
+
+		Function f = findById(functionId);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
+
+		Function f = findByCode(functionCode);
+		if (f != null) {
+			return getSampleOutputs(f);
+		}
+
+		return new ArrayList<>();
+	}
+
+	public List<Map<String, Object>> getSampleOutputs(Function f) throws BusinessException {
+
+		if (f.getGenerateOutputs()) {
+			List<Map<String, Object>> outputs = new ArrayList<>();
+
+			if (f.getSampleOutputs() != null && !f.getSampleOutputs().isEmpty()) {
+				outputs.addAll(f.getSampleOutputs());
+			}
+
+			for (Map<String, Object> input : f.getSampleInputs()) {
+                HashMap<String, Object> copyOfInput = new HashMap<>(input);
+                Map<String, Object> output = execute(f.getCode(), copyOfInput);
+                // Keep only keys that were modified
+                new HashMap<>(output).forEach((s, o) -> {
+                    if(input.get(s) == o) {
+                        output.remove(s);
+                    }
+                });
+				outputs.add(output);
+			}
+
+			return outputs;
+
+		} else {
+			return f.getSampleOutputs();
+		}
+	}
 }

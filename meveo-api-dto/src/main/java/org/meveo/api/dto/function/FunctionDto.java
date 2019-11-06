@@ -16,54 +16,93 @@
 
 package org.meveo.api.dto.function;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.meveo.model.scripts.FunctionIO;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class FunctionDto implements Serializable {
+import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionIO;
 
-    public static final TypeReference<List<FunctionDto>> DTO_LIST_TYPE_REF = new TypeReference<List<FunctionDto>>() {};
+import com.fasterxml.jackson.core.type.TypeReference;
 
-    private String code;
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.5.0
+ */
+public class FunctionDto extends BusinessEntityDto implements Serializable {
 
-    private String testSuite;
+	private static final long serialVersionUID = -5247505855284959649L;
 
-    private List<FunctionIO> inputs = new ArrayList<>();
+	public static final TypeReference<List<FunctionDto>> DTO_LIST_TYPE_REF = new TypeReference<List<FunctionDto>>() {
+	};
 
-    private List<FunctionIO> outputs = new ArrayList<>();
+	private String testSuite;
 
-    public List<FunctionIO> getInputs() {
-        return inputs;
-    }
+	private List<FunctionIO> inputs = new ArrayList<>();
+	private List<FunctionIO> outputs = new ArrayList<>();
+	private List<Map<String, Object>> sampleInputs = new ArrayList<>();
+	private List<Map<String, Object>> sampleOutputs = new ArrayList<>();
+	
+	private Boolean generateOutputs = false;
 
-    public void setInputs(List<FunctionIO> inputs) {
-        this.inputs = inputs;
-    }
+	public FunctionDto() {
 
-    public List<FunctionIO> getOutputs() {
-        return outputs;
-    }
+	}
 
-    public void setOutputs(List<FunctionIO> outputs) {
-        this.outputs = outputs;
-    }
+	public FunctionDto(Function e) {
 
-    public String getCode() {
-        return code;
-    }
+		super(e);
+		this.description = e.getDescription();
+		this.generateOutputs = e.getGenerateOutputs();
+	}
 
-    public void setCode(String code) {
-        this.code = code;
-    }
+	public List<FunctionIO> getInputs() {
+		return inputs;
+	}
 
-    public String getTestSuite() {
-        return testSuite;
-    }
+	public void setInputs(List<FunctionIO> inputs) {
+		this.inputs = inputs;
+	}
 
-    public void setTestSuite(String testSuite) {
-        this.testSuite = testSuite;
-    }
+	public List<FunctionIO> getOutputs() {
+		return outputs;
+	}
+
+	public void setOutputs(List<FunctionIO> outputs) {
+		this.outputs = outputs;
+	}
+
+	public String getTestSuite() {
+		return testSuite;
+	}
+
+	public void setTestSuite(String testSuite) {
+		this.testSuite = testSuite;
+	}
+
+	public List<Map<String, Object>> getSampleInputs() {
+		return sampleInputs;
+	}
+
+	public void setSampleInputs(List<Map<String, Object>> sampleInputs) {
+		this.sampleInputs = sampleInputs;
+	}
+
+	public List<Map<String, Object>> getSampleOutputs() {
+		return sampleOutputs;
+	}
+
+	public void setSampleOutputs(List<Map<String, Object>> sampleOutputs) {
+		this.sampleOutputs = sampleOutputs;
+	}
+
+	public Boolean getGenerateOutputs() {
+		return generateOutputs;
+	}
+
+	public void setGenerateOutputs(Boolean generateOutputs) {
+		this.generateOutputs = generateOutputs;
+	}
 }
