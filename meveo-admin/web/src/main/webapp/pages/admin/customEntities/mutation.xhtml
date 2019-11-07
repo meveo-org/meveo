@@ -1,0 +1,48 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:o="http://omnifaces.org/ui"
+                xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <p:dialog id="mutationsDialog" header="#{messages['mutation.addMutation.header']}" widgetVar="mutationsDialog" modal="true" closeOnEscape="true" width="60%" closable="true" appendTo="@(body)">
+        <hftl:decorateFormPanel formId="mutationsDialogForm">
+            <ui:define name="fields">
+                <h:panelGrid columns="1">
+                    <h:panelGrid columns="1">
+                        <hftl:decorateFormField fieldId="code" label="#{messages['mutation.code']}">
+                            <p:inputText id="code" value="#{customEntityTemplateBean.mutation.code}" size="53" maxlength="100" />
+                        </hftl:decorateFormField>
+                    </h:panelGrid>
+                    <h:panelGrid columns="1" width="100%">
+                        <hftl:decorateFormField fieldId="query" label="#{messages['mutation.query']}" componentWidth="100">
+<!--                             <p:inputText id="query" value="#{customEntityTemplateBean.mutation.cypherQuery}" size="100" maxlength="120"/> -->
+							<p:inputTextarea id="query" style="width: inherit" value="#{customEntityTemplateBean.mutation.cypherQuery}"/>
+                        </hftl:decorateFormField>
+                    </h:panelGrid>
+                    <h:panelGrid columns="1">
+                        <hftl:decorateFormField fieldId="parameterDataTable" label="#{messages['mutation.parameter']}" newLine="true" componentWidth="100">
+                            <p:dataTable id="parameterDataTable" value="#{customEntityTemplateBean.parameters}" resizableColumns="true" var="mapValues" paginator="false" styleClass="custom-grid" reflow="true">
+                                <p:column headerText="#{messages['parameter.key']}">
+                                    <p:inputText value="#{mapValues['key']}" size="100" maxlength="100" />
+                                </p:column>
+                                <p:column headerText="#{messages['parameter.value']}">
+                                    <p:inputText value="#{mapValues['value']}" size="100" maxlength="100" />
+                                </p:column>
+                                <p:column headerText="#{messages['commons.actions']}">
+                                    <p:commandButton icon="ui-icon-minus" partialSubmit="true" process="@this parameterDataTable" update="parameterDataTable"
+                                                     actionListener="#{customEntityTemplateBean.removeMapParam(mapValues)}" />
+                                </p:column>
+                                <f:facet name="footer">
+                                    <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this parameterDataTable" update="parameterDataTable"
+                                                     actionListener="#{customEntityTemplateBean.addMapParam}" />
+                                </f:facet>
+                            </p:dataTable>
+                        </hftl:decorateFormField>
+                    </h:panelGrid>
+                </h:panelGrid>
+            </ui:define>
+            <ui:define name="buttons">
+                <p:commandButton value="#{messages['action.save']}" action="#{customEntityTemplateBean.saveMutation()}" update=":cetForm:messages :cetForm:mutationsPanel"
+                                 oncomplete="if (args &amp;&amp; !args.validationFailed){PF('mutationsDialog').hide();}" ajax="true" />
+                <p:button value="#{messages['action.cancel']}" onclick="PF('mutationsDialog').hide(); return false;" />
+            </ui:define>
+        </hftl:decorateFormPanel>
+    </p:dialog>
+</ui:composition>

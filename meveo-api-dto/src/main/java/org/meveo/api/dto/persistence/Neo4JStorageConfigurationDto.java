@@ -6,6 +6,7 @@ import java.util.List;
 import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 
 public class Neo4JStorageConfigurationDto {
 
@@ -29,6 +30,8 @@ public class Neo4JStorageConfigurationDto {
 	 * Additionnal fields that can be retrieved using graphql engine
 	 */
 	private List<GraphQLQueryField> graphqlQueryFields;
+
+	private List<Mutation> mutations;
 
 	/**
 	 * Unique constraint to be applied when persisiting custom entities
@@ -79,4 +82,11 @@ public class Neo4JStorageConfigurationDto {
 		this.graphqlQueryFields = graphqlQueryFields;
 	}
 
+	public List<Mutation> getMutations() {
+		return mutations;
+	}
+
+	public void setMutations(List<Mutation> mutations) {
+		this.mutations = mutations;
+	}
 }
