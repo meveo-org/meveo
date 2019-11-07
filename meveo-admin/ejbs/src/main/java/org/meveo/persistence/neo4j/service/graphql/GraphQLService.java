@@ -50,12 +50,15 @@ import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.neo4j.GraphQLRequest;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -463,39 +466,26 @@ public class GraphQLService {
     
     private String getMutations() {
     	// Retrieve all existing mutations
-    	List<List<Mutation>> mutationsLists = customEntityTemplateService.getEntityManager()
-    		.createQuery("SELECT neo4JStorageConfiguration.mutations FROM CustomEntityTemplate WHERE neo4JStorageConfiguration <> null AND neo4JStorageConfiguration.mutations <> null")
+    	List<String> mutationsLists = customEntityTemplateService.getEntityManager()
+    		.createNativeQuery("SELECT mutations "
+    				+ "FROM cust_cet "
+    				+ "WHERE mutations IS NOT null")
     		.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.USE)
     		.setHint("org.hibernate.readOnly", true)
     		.getResultList();
     	
     	// Flatten the lists
 		List<Mutation> mutations = (List<Mutation>) mutationsLists.stream()
-    		.flatMap(e -> ((List<Mutation>) e).stream())
+    		.map(e -> JacksonUtil.fromString(e, new TypeReference<List<Mutation>>() {}))
+    		.flatMap(List::stream)
     		.collect(Collectors.toList());
     	
-    	StringBuilder mutationsStr = new StringBuilder("\nschema {\n\tmutation: Mutations\n } \n");
+    	StringBuilder mutationsStr = new StringBuilder("schema {\n\tmutation: Mutations\n} \n");
     	
-    	StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n", "\n}");
+    	StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n\t", "\n}");
     	
     	for(Mutation mutation : mutations) {
-    		StringBuilder mutationLine = new StringBuilder(mutation.getCode());
-    		
-    		StringJoiner parametersJoiner = new StringJoiner(", ","(", ")");
-    		mutation.getParameters().forEach((name, type) -> {
-    			parametersJoiner.add(name + ": " + type);
-    		});
-    		mutationLine.append(parametersJoiner.toString());
-    		
-    		String escapedQuery = mutation.getCypherQuery()
-    				.replaceAll("\"", "\\\"")
-    				.replaceAll("'", "\\'")
-    				.replaceAll("\n", " ");
-    		
-    		mutationLine.append(": String @cypher(statement: \"")
-    			.append(escapedQuery)
-    			.append(")");
-    		
+    		mutationsJoiner.add(mutation.toString());
     	}
     	
     	mutationsStr.append(mutationsJoiner.toString());

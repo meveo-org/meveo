@@ -3,6 +3,7 @@ package org.meveo.model.customEntities;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 
 public class Mutation implements Serializable {
 
@@ -35,4 +36,28 @@ public class Mutation implements Serializable {
     public void setCypherQuery(String cypherQuery) {
         this.cypherQuery = cypherQuery;
     }
+
+	@Override
+	public String toString() {
+		StringBuilder mutationLine = new StringBuilder(getCode());
+		
+		StringJoiner parametersJoiner = new StringJoiner(", ","(", ")");
+		getParameters().forEach((name, type) -> {
+			parametersJoiner.add(name + ": " + type);
+		});
+		mutationLine.append(parametersJoiner.toString());
+		
+		String escapedQuery = getCypherQuery()
+				.replaceAll("\"", "\\\\\"")
+				.replaceAll("'", "\\\\'")
+				.replaceAll("\n", " ");
+		
+		mutationLine.append(": String @cypher(statement: \"")
+			.append(escapedQuery)
+			.append("\")");
+		
+		return mutationLine.toString();
+	}
+    
+    
 }

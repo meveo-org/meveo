@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.neo4j.GraphQLRequest;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 
@@ -31,16 +32,17 @@ public class GraphQLRs {
   @GET
   @Path("/idl")
   public String getIdl(){
-    return graphQLService.getIDL()
-            // Removing cypher annotations useless for end-user.
-            /*.replaceAll("@cypher.*", "")
-            .replaceAll("@relation.*", "")*/;
+    return graphQLService.getIDL();
   }
 
   @POST
   @Path("/idl")
-  public void updateIdl(){
-    graphQLService.updateIDL(neo4jConfiguration);
+  public void updateIdl() throws BusinessException{
+	  try {
+	  	graphQLService.updateIDL(neo4jConfiguration);
+	  } catch(Exception e) {
+		  throw new BusinessException("Cannot update IDL for repository " + neo4jConfiguration, e);
+	  }
   }
 
   @GET
