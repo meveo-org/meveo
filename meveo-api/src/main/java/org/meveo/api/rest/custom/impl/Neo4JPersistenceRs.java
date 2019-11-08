@@ -52,15 +52,11 @@ public class Neo4JPersistenceRs {
     private String neo4jConfiguration;
 
     @DELETE
-    public Response delete(Collection<PersistenceDto> dtos){
+    public Response delete(Collection<PersistenceDto> dtos) throws BusinessException {
 
         for (PersistenceDto persistenceDto : dtos) {
             if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
-                try {
-                    neo4jService.deleteEntity(neo4jConfiguration, persistenceDto.getType(), persistenceDto.getProperties());
-                } catch (BusinessException e) {
-                    Response.serverError();
-                }
+                neo4jService.deleteEntity(neo4jConfiguration, persistenceDto.getType(), persistenceDto.getProperties());
             }
         }
 
@@ -69,7 +65,7 @@ public class Neo4JPersistenceRs {
 
     @POST
     @Path("/entities")
-    public Response persistEntities(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
+    public Response persistEntities(Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
@@ -109,17 +105,9 @@ public class Neo4JPersistenceRs {
         entityOrRelations.addAll(relations);
         AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityOrRelations);
 
-        try {
-
-            /* Persist the entities and return 201 created response */
-            scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
-            return Response.status(201).build();
-
-        } catch (Exception e) {
-
-            LOGGER.error("Error persisting entities {}", e);
-            return Response.serverError().entity(e).build();
-        }
+        /* Persist the entities and return 201 created response */
+        scheduledPersistenceService.persist(neo4jConfiguration, atomicPersistencePlan);
+        return Response.status(201).build();
 
     }
     
