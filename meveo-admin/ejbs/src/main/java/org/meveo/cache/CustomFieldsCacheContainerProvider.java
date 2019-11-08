@@ -479,6 +479,30 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     }
 
     private boolean crtHasSourceOrTargetConcerned(String code, CustomRelationshipTemplate crt) {
+        boolean match = hasDirectMatch(code, crt);
+
+        // In last resort, try to see in the ancestors of the source CET ...
+        if(!match && crt.getStartNode().getSuperTemplate() != null){
+            CustomEntityTemplate startNode = crt.getStartNode();
+            while(!match && startNode.getSuperTemplate() != null) {
+                match = hasDirectMatch(startNode.getCode(), crt);
+                startNode = startNode.getSuperTemplate();
+            }
+        }
+
+        // ... or the target CET
+        if(!match && crt.getEndNode().getSuperTemplate() != null){
+            CustomEntityTemplate endNode = crt.getEndNode();
+            while(!match && endNode.getSuperTemplate() != null) {
+                match = hasDirectMatch(endNode.getCode(), crt);
+                endNode = endNode.getSuperTemplate();
+            }
+        }
+
+        return match;
+    }
+
+    private boolean hasDirectMatch(String code, CustomRelationshipTemplate crt) {
         // First look directly in target and source
         boolean match = crt.getStartNode().getCode().equals(code) || crt.getEndNode().getCode().equals(code);
 
@@ -491,17 +515,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         if(!match && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J)){
             match = crt.getEndNode().getNeo4JStorageConfiguration().getLabels().contains(code);
         }
-
-        // In last resort, try to see in the ancestors of the source CET ...
-        if(!match && crt.getStartNode().getSuperTemplate() != null){
-            match = crtHasSourceOrTargetConcerned(crt.getStartNode().getSuperTemplate().getCode(), crt);
-        }
-
-        // ... or the target CET
-        if(!match && crt.getEndNode().getSuperTemplate() != null){
-            match = crtHasSourceOrTargetConcerned(crt.getEndNode().getSuperTemplate().getCode(), crt);
-        }
-
         return match;
     }
 
