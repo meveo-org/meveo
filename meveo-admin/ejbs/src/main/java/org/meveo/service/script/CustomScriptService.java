@@ -101,8 +101,8 @@ import com.jcabi.aether.Aether;
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
-    private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+	private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
+	private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
 	private static final String SET = "set";
 	private static final String GET = "get";
@@ -124,7 +124,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	@Inject
 	private GitClient gitClient;
-	
+
 	@Inject
 	private MavenConfigurationService mavenConfigurationService;
 
@@ -283,110 +283,101 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 * Construct classpath for script compilation
 	 */
 	public void constructClassPath() throws IOException {
-        if (CLASSPATH_REFERENCE.get().length() == 0) {
-            synchronized (CLASSPATH_REFERENCE) {
-                if (CLASSPATH_REFERENCE.get().length() == 0) {
-                    String classpath = CLASSPATH_REFERENCE.get();
+		if (CLASSPATH_REFERENCE.get().length() == 0) {
+			synchronized (CLASSPATH_REFERENCE) {
+				if (CLASSPATH_REFERENCE.get().length() == 0) {
+					String classpath = CLASSPATH_REFERENCE.get();
 
-			// Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass()
-                        .getProtectionDomain()
-                        .getCodeSource()
-                        .getLocation()
-                        .getFile();
+					// Check if deploying an exploded archive or a compressed file
+					String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
-			File realFile = new File(thisClassfile);
+					File realFile = new File(thisClassfile);
 
-			// Was deployed as exploded archive
-			if (realFile.exists()) {
-				File deploymentDir = realFile.getParentFile();
-				File[] files = deploymentDir.listFiles();
-				if (files != null) {
-					for (File file : files) {
-                                if (file.getName()
-                                    .endsWith(".jar")) {
-							classpath += file.getCanonicalPath() + File.pathSeparator;
-						}
-					}
-				}
-
-				// War was deployed as compressed archive
-			} else {
-
-				org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
-                        realFile = new File(org.jboss.vfs.VFSUtils.getPhysicalURI(vFile)
-                            .getPath());
-
-                        File deploymentDir = realFile.getParentFile()
-                            .getParentFile();
-
-				Set<String> classPathEntries = new HashSet<>();
-
-				for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-					if (physicalLibDir.isDirectory()) {
-						for (File f : FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
-							classPathEntries.add(f.getCanonicalPath());
-						}
-					}
-				}
-
-				/* Fallback when thorntail is used */
-				if (classPathEntries.isEmpty()) {
-					for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-						if (physicalLibDir.isDirectory()) {
-							for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
-								if (subLib.isDirectory()) {
-									final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
-									classPathEntries.addAll(jars);
-                                            if (subLib.getName()
-                                                .equals("classes")) {
-										classPathEntries.add(subLib.getCanonicalPath());
-									}
+					// Was deployed as exploded archive
+					if (realFile.exists()) {
+						File deploymentDir = realFile.getParentFile();
+						File[] files = deploymentDir.listFiles();
+						if (files != null) {
+							for (File file : files) {
+								if (file.getName().endsWith(".jar")) {
+									classpath += file.getCanonicalPath() + File.pathSeparator;
 								}
 							}
 						}
-					}
-				} else {
-					// vfs used by thorntail
-                            File vfsDir = deploymentDir.getParentFile()
-                                .getParentFile();
-					for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
-						if (!tempDir.isDirectory()) {
-							continue;
+
+						// War was deployed as compressed archive
+					} else {
+
+						org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
+						realFile = new File(org.jboss.vfs.VFSUtils.getPhysicalURI(vFile).getPath());
+
+						File deploymentDir = realFile.getParentFile().getParentFile();
+
+						Set<String> classPathEntries = new HashSet<>();
+
+						for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
+							if (physicalLibDir.isDirectory()) {
+								for (File f : FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
+									classPathEntries.add(f.getCanonicalPath());
+								}
+							}
 						}
 
-						for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
-							if (!subTempDir.isDirectory()) {
-								continue;
+						/* Fallback when thorntail is used */
+						if (classPathEntries.isEmpty()) {
+							for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
+								if (physicalLibDir.isDirectory()) {
+									for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
+										if (subLib.isDirectory()) {
+											final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+											classPathEntries.addAll(jars);
+											if (subLib.getName().equals("classes")) {
+												classPathEntries.add(subLib.getCanonicalPath());
+											}
+										}
+									}
+								}
 							}
-
-							for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
-								if (!warDir.isDirectory()) {
+						} else {
+							// vfs used by thorntail
+							File vfsDir = deploymentDir.getParentFile().getParentFile();
+							for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
+								if (!tempDir.isDirectory()) {
 									continue;
 								}
 
-								for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
-									if (!webInfDir.isDirectory()) {
+								for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
+									if (!subTempDir.isDirectory()) {
 										continue;
 									}
 
-									for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
-										if (classesDir.isDirectory()) {
-											classPathEntries.add(classesDir.getCanonicalPath());
+									for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
+										if (!warDir.isDirectory()) {
+											continue;
+										}
+
+										for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
+											if (!webInfDir.isDirectory()) {
+												continue;
+											}
+
+											for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
+												if (classesDir.isDirectory()) {
+													classPathEntries.add(classesDir.getCanonicalPath());
+												}
+											}
 										}
 									}
 								}
 							}
 						}
+
+						classpath = String.join(File.pathSeparator, classPathEntries);
+
 					}
+
+					CLASSPATH_REFERENCE.set(classpath);
 				}
-
-				classpath = String.join(File.pathSeparator, classPathEntries);
-
-                    }
-
-                    CLASSPATH_REFERENCE.set(classpath);
-                }
 			}
 		}
 	}
@@ -464,7 +455,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		} else {
 			source = readScriptFile(script);
 		}
-		
+
 		addScriptDependencies(script);
 
 		List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
@@ -475,30 +466,44 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	private void addScriptDependencies(T script) {
 
-		if (CLASSPATH_REFERENCE.get().charAt(CLASSPATH_REFERENCE.get().length() - 1) == ';') {
-			synchronized (CLASSPATH_REFERENCE) {
-				CLASSPATH_REFERENCE.set(org.apache.commons.lang3.StringUtils.removeEnd(CLASSPATH_REFERENCE.get(), ";"));
-			}
-		}
-
 		if (script instanceof ScriptInstance) {
 			ScriptInstance scriptInstance = (ScriptInstance) script;
 
 			Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
 			Set<FileDependency> fileDependencies = scriptInstance.getFileDependencies();
 
-			mavenDependencies.addAll(fileDependencies.stream().map(e -> {
-				try {
-					return new File(e.getPath()).getCanonicalPath();
+			if (fileDependencies != null) {
+				Set<String> fileDependencyPaths = fileDependencies.stream().flatMap(e -> {
 
-				} catch (IOException e1) {
-					return null;
-				}
-			}).filter(Objects::nonNull).collect(Collectors.toSet()));
+					File f = new File(e.getPath());
+					if (f.isDirectory()) {
+						Collection<File> subFiles = org.apache.commons.io.FileUtils.listFiles(f, new String[] { "jar" }, true);
+						return subFiles.stream().map(t -> {
+							try {
+								return t.getCanonicalPath();
+
+							} catch (IOException e1) {
+								return null;
+							}
+						});
+
+					} else {
+						try {
+							return new HashSet<String>(Arrays.asList(f.getCanonicalPath())).stream();
+
+						} catch (IOException e1) {
+							return null;
+						}
+					}
+				}).filter(Objects::nonNull).filter(e -> !e.isEmpty()).collect(Collectors.toSet());
+
+				mavenDependencies.addAll(fileDependencyPaths);
+			}
 
 			synchronized (CLASSPATH_REFERENCE) {
 				mavenDependencies.stream().forEach(location -> {
-					if (!CLASSPATH_REFERENCE.get().contains(location)) {
+					if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+						addLibrary(location);
 						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
 					}
 				});
@@ -630,7 +635,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 				if (!testCompile && isActive) {
 
-                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
+					ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
 					log.debug("Compiled script {} added to compiled interface map", scriptCode);
 				}
 
@@ -670,7 +675,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			}
 		} else {
 			ScriptInterface engine = new ES5ScriptEngine(sourceCode);
-            ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
+			ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
 			return null;
 		}
 	}
@@ -690,13 +695,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 		String fullClassName = getFullClassname(javaSrc);
 
-		log.debug(CLASSPATH_REFERENCE.get());
-		
-        log.trace("Compile JAVA script {} with classpath {}", fullClassName, CLASSPATH_REFERENCE.get());
+		URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+		String classPath = CLASSPATH_REFERENCE.get();
 
-        URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        
-        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(classLoader, Arrays.asList("-cp", CLASSPATH_REFERENCE.get()));
+		log.debug(classPath);
+		log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
+
+		CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(classLoader, Arrays.asList("-cp", classPath));
 		final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
 		return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
 	}
@@ -754,7 +759,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 * @return Script interface Class
 	 */
 	public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
-        ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
 		if (supplier == null) {
 			supplier = getScriptInterfaceWCompile(scriptCode);
@@ -777,7 +782,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
 		ScriptInterfaceSupplier result;
 
-        result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
 		if (result == null) {
 			T script = findByCode(scriptCode);
@@ -790,7 +795,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 				log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
 				throw new InvalidScriptException(scriptCode, getEntityClass().getName());
 			}
-            result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+			result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 		}
 
 		if (result == null) {
@@ -862,11 +867,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 */
 	public void clearCompiledScripts(String scriptCode) {
 		super.clear(scriptCode);
-        ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 	}
 
 	public void clearCompiledScripts() {
-        ALL_SCRIPT_INTERFACES.clear();
+		ALL_SCRIPT_INTERFACES.clear();
 	}
 
 	@Override
