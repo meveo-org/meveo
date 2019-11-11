@@ -499,7 +499,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			synchronized (CLASSPATH_REFERENCE) {
 				mavenDependencies.stream().forEach(location -> {
 					if (!CLASSPATH_REFERENCE.get().contains(location)) {
-						addLibrary(location);
 						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
 					}
 				});
