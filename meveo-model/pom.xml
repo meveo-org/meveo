@@ -211,6 +211,10 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.meveo</groupId>
+            <artifactId>meveo-api-dto</artifactId>
+        </dependency>
 
     </dependencies>
 
