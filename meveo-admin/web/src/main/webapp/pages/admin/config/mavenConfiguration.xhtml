@@ -17,11 +17,6 @@
 			</f:facet>
 			<h:form id="mavenConfigurationForm">
 				<p:messages />
-				<hftl:decorateFormField fieldId="mavenExecutablePath"
-					label="#{messages['maven.configuration.mavenExecutablePath']}">
-					<p:inputText id="mavenExecutablePath" required="true"
-						value="#{mavenConfigurationBean.mavenConfiguration.mavenExecutablePath}" />
-				</hftl:decorateFormField>
 				<hftl:decorateFormField fieldId="m2FolderPath"
 					label="#{messages['maven.configuration.m2FolderPath']}">
 					<p:inputText id="m2FolderPath" required="true"

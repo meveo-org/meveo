@@ -517,24 +517,26 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		List<String> repos = mavenConfigurationService.getMavenRepositories();
 		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
 
-		File localRepository = new File(m2FolderPath);
-		List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(UUID.randomUUID().toString(), "default", e)).collect(Collectors.toList());
-
-		Aether aether = new Aether(remoteRepositories, localRepository);
-
-		if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
-			Set<Artifact> artifacts = mavenDependencies.stream().map(e -> {
-				try {
-					return aether.resolve(new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion()), "compile");
-
-				} catch (DependencyResolutionException e1) {
-					return null;
-				}
-			}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
-
-			result = artifacts.stream().map(e -> {
-				return e.getFile().getPath();
-			}).filter(Objects::nonNull).collect(Collectors.toSet());
+		if(!StringUtils.isBlank(m2FolderPath)) {
+			File localRepository = new File(m2FolderPath);
+			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(UUID.randomUUID().toString(), "default", e)).collect(Collectors.toList());
+	
+			Aether aether = new Aether(remoteRepositories, localRepository);
+	
+			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
+				Set<Artifact> artifacts = mavenDependencies.stream().map(e -> {
+					try {
+						return aether.resolve(new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion()), "compile");
+	
+					} catch (DependencyResolutionException e1) {
+						return null;
+					}
+				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+	
+				result = artifacts.stream().map(e -> {
+					return e.getFile().getPath();
+				}).filter(Objects::nonNull).collect(Collectors.toSet());
+			}
 		}
 
 		return result;

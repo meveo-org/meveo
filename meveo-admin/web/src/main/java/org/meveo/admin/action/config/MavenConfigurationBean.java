@@ -1,6 +1,7 @@
 package org.meveo.admin.action.config;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -85,10 +86,11 @@ public class MavenConfigurationBean implements Serializable {
 	public void save() throws BusinessApiException {
 
 		UrlValidator urlValidator = new UrlValidator();
-		List<String> urls = mavenConfiguration.getMavenRepositories();
+		List<String> urls = new ArrayList<>(mavenConfiguration.getMavenRepositories());
+		urls.removeIf(StringUtils::isBlank);
 		for (String url : urls) {
 			if (!urlValidator.isValid(url)) {
-				throw new BusinessApiException("Invalid URL format");
+				throw new BusinessApiException("Invalid URL format : " + url);
 			}
 		}
 		

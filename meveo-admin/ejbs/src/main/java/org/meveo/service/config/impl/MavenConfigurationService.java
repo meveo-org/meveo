@@ -23,14 +23,6 @@ public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
 
-	public String getMavenExecutablePath() {
-		return ParamBean.getInstance().getProperty("maven.path.executable", null);
-	}
-
-	public void setMavenExecutablePath(String mavenExecutablePath) {
-		ParamBean.getInstance().setProperty("maven.path.executable", mavenExecutablePath);
-	}
-
 	public String getM2FolderPath() {
 		return ParamBean.getInstance().getProperty("maven.path.m2", null);
 	}
@@ -53,7 +45,6 @@ public class MavenConfigurationService implements Serializable {
 
 	public void saveConfiguration(MavenConfigurationDto mavenConfiguration) {
 
-		setMavenExecutablePath(mavenConfiguration.getMavenExecutablePath());
 		setM2FolderPath(mavenConfiguration.getM2FolderPath());
 		setMavenRepositories(mavenConfiguration.getMavenRepositories());
 
@@ -63,7 +54,6 @@ public class MavenConfigurationService implements Serializable {
 	public MavenConfigurationDto loadConfig() {
 
 		MavenConfigurationDto result = new MavenConfigurationDto();
-		result.setMavenExecutablePath(getMavenExecutablePath());
 		result.setM2FolderPath(getM2FolderPath());
 		result.setMavenRepositories(getMavenRepositories());
 
