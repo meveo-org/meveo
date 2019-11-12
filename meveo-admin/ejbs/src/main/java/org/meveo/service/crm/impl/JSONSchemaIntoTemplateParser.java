@@ -3,6 +3,7 @@ package org.meveo.service.crm.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
 import java.io.File;
@@ -50,13 +51,25 @@ public class JSONSchemaIntoTemplateParser {
             CustomFieldTemplateDto customFieldTemplateDto = new CustomFieldTemplateDto();
             customFieldTemplateDto.setCode(code);
             customFieldTemplateDto.setDescription((String)values.get("description"));
+            customFieldTemplateDto.setAllowEdit(!(Boolean) values.get("readOnly"));
+            customFieldTemplateDto.setValueRequired(!(Boolean)values.get("nullable"));
             if (values.get("type").equals("array")) {
-                customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.LIST);
-                customFieldTemplateDto.setUnique((Boolean)values.get("uniqueItems"));
+                customFieldTemplateDto.setUnique((Boolean) values.get("uniqueItems"));
                 Map<String, Object> value = (Map<String, Object>) values.get("items");
-
+                if (value.containsKey("$ref")) {
+                    customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.ENTITY);
+                    customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.LIST);
+                    String ref = (String) value.get("$ref");
+                    if (ref != null) {
+                        String[] data = ref.split("/");
+                        if (data.length > 0) {
+                            customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
+                        }
+                    }
+                }
             } else {
                 customFieldTemplateDto.setFieldType((CustomFieldTypeEnum.valueOf(((String)values.get("type")).toUpperCase())));
+                customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
             }
             if (values.get("maxLength") != null) {
                 customFieldTemplateDto.setMaxValue(Long.valueOf(values.get("maxLength").toString()));
