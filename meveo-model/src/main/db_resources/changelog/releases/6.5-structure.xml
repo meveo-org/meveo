@@ -59,6 +59,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="#3935" author="Hien Bach">
+        <addColumn tableName="cust_cet">
+            <column name="mutations" type="${type.json}"/>
+        </addColumn>
+    </changeSet>
+
     <changeSet id="file_dependency" author="Hien Bach">
         <createTable tableName="file_dependency">
             <column name="script_id" type="bigint">

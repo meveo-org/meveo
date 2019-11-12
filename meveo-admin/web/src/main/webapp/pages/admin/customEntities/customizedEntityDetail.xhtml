@@ -206,6 +206,34 @@
                                         </h:panelGroup>
                                     </p:panel>
                                 </p:fieldset>
+
+                                <p:fieldset id="cfMutation" toggleable="true" collapsed="true" legend="Mutations">
+                                    <p:panel width="100" header="#{messages['customizedEntities.mutation']}">
+                                        <h:panelGroup id="mutationsPanel">
+                                            <p:messages/>
+                                            <p:dataTable id="muatationDatatable" value="#{customEntityTemplateBean.mutations}" var="mutation" sortOrder="ascending" sortBy="#{entity.classnameToDisplayHuman}"
+                                                         paginator="true" rows="30" resizableColumns="true"
+                                                         paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
+                                                         lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                                                <p:column headerText="#{messages['mutation.code']}">
+                                                    <h:outputText value="#{mutation.code}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column headerText="#{messages['mutation.query']}">
+                                                    <h:outputText value="#{mutation.cypherQuery}" styleClass="field-value" />
+                                                </p:column>
+                                                <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"  rendered="#{userBean.edit}">
+                                                    <p:commandButton id="edit" icon="ui-icon-document" oncomplete="PF('mutationsDialog').show()" update=":mutationsDialog"
+                                                                     actionListener="#{customEntityTemplateBean.editMutation(mutation)}">
+                                                    </p:commandButton>
+                                                    <p:commandButton action="#{customEntityTemplateBean.removeMutation(mutation)}" icon="ui-icon-trash" update=":cetForm:mutationsPanel" />
+                                                </p:column>
+                                                <f:facet name="footer">
+                                                    <p:commandButton actionListener="#{customEntityTemplateBean.resetMutation}" action="#{customEntityTemplateBean.addMutation}" id="addMutation" value="#{messages['commons.addNew']}" oncomplete="PF('mutationsDialog').show()"  update=":mutationsDialogForm"></p:commandButton>
+                                                </f:facet>
+                                            </p:dataTable>
+                                        </h:panelGroup>
+                                    </p:panel>
+                                </p:fieldset>
                             </h:panelGroup>
                         </h:panelGrid>
                    </p:fieldset>
@@ -225,6 +253,8 @@
         <ui:include src="customEntityTemplateUniqueConstaint.xhtml"/>
 
         <ui:include src="graphqlQueryField.xhtml"/>
+
+        <ui:include src="mutation.xhtml"/>
 
         <h:form>
             <p:panel width="100">

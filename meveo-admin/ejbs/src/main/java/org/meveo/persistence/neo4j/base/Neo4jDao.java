@@ -391,7 +391,7 @@ public class Neo4jDao {
 
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
             transaction = session.beginTransaction();
-            transaction.run("call graphql.idl($idl)", Collections.singletonMap("idl", idl));
+            transaction.run("call graphql.idl('"+idl+"')");
 
             transaction.success();
             transaction.close();

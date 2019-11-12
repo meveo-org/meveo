@@ -20,6 +20,7 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 
 @Embeddable
 public class Neo4JStorageConfiguration implements Serializable {
@@ -53,6 +54,10 @@ public class Neo4JStorageConfiguration implements Serializable {
 	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<GraphQLQueryField> graphqlQueryFields;
+
+	@Column(name = "mutations", columnDefinition = "TEXT")
+	@Type(type = "jsonList")
+	private List<Mutation> mutations;
 
 	@Column(name = "max_value")
 	private Long maxValue;
@@ -106,6 +111,14 @@ public class Neo4JStorageConfiguration implements Serializable {
 
 	public void setGraphqlQueryFields(List<GraphQLQueryField> graphqlQueryFields) {
 		this.graphqlQueryFields = graphqlQueryFields;
+	}
+
+	public List<Mutation> getMutations() {
+		return mutations;
+	}
+
+	public void setMutations(List<Mutation> mutations) {
+		this.mutations = mutations;
 	}
 
 	public Long getMaxValue() { return maxValue; }
