@@ -38,6 +38,8 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.ScriptInstanceApi;
+import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
@@ -75,6 +77,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Inject
     private RoleService roleService;
+    
+    @Inject
+    private ScriptInstanceApi scriptInstanceApi;
 
     private DualListModel<Role> execRolesDM;
     private DualListModel<Role> sourcRolesDM;
@@ -367,8 +372,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public TreeNode computeRootNode() {
-        log.info("Computing root node");
-
         Map<String, Object> filters = this.getFilters();
         String code = "";
         boolean isExpand = false;
@@ -376,29 +379,29 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             code = (String) filters.get("code");
         }
 
-        List<ScriptInstance> scriptInstances = new ArrayList<>();
+        List<ScriptInstanceDto> scriptInstances = new ArrayList<>();
         if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
-            scriptInstances = scriptInstanceService.findByCodeLike(code);
+            scriptInstances = scriptInstanceApi.getScriptsForTreeView(code);
             isExpand = true;
         } else {
-            scriptInstances = scriptInstanceService.list();
+            scriptInstances = scriptInstanceApi.getScriptsForTreeView(null);
         }
         rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
         rootNode.setExpanded(isExpand);
-        List<ScriptInstance> javaScriptInstances = null;
-        List<ScriptInstance> es5ScriptInstances = null;
+        List<ScriptInstanceDto> javaScriptInstances = null;
+        List<ScriptInstanceDto> es5ScriptInstances = null;
         if (CollectionUtils.isNotEmpty(scriptInstances)) {
             javaScriptInstances = scriptInstances.stream()
-                    .filter(e -> e.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA)
+                    .filter(e -> e.getType() == ScriptSourceTypeEnum.JAVA)
                     .collect(Collectors.toList());
             es5ScriptInstances = scriptInstances.stream()
-                    .filter(e -> e.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5)
+                    .filter(e -> e.getType() == ScriptSourceTypeEnum.ES5)
                     .collect(Collectors.toList());
         }
         if (CollectionUtils.isNotEmpty(javaScriptInstances)) {
             TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode(JAVA, JAVA), rootNode);
             rootJava.setExpanded(isExpand);
-            for (ScriptInstance scriptInstance : javaScriptInstances) {
+            for (ScriptInstanceDto scriptInstance : javaScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
                 createTree(JAVA, nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
@@ -407,7 +410,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (CollectionUtils.isNotEmpty(es5ScriptInstances)) {
             TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode(ES5, ES5), rootNode);
             rootEs5.setExpanded(isExpand);
-            for (ScriptInstance scriptInstance : es5ScriptInstances) {
+            for (ScriptInstanceDto scriptInstance : es5ScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
                 createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
@@ -476,4 +479,5 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         return foundNode;
     }
+    
 }

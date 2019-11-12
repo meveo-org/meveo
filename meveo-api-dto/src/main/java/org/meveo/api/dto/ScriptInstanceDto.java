@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
 /**
@@ -29,12 +30,21 @@ public class ScriptInstanceDto extends CustomScriptDto {
     
     /** The sourcing roles. */
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
+    
+    private Boolean error;
 
     /**
      * Instantiates a new script instance dto.
      */
     public ScriptInstanceDto() {
         super();
+    }
+    
+    public ScriptInstanceDto(Long id, String code, ScriptSourceTypeEnum type, Boolean error) {
+    	this.id = id;
+    	this.code = code;
+    	setType(type);
+    	this.error = error;
     }
 
     /**
@@ -99,6 +109,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     public void setSourcingRoles(List<RoleDto> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
     }
+    
 
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
@@ -126,4 +137,13 @@ public class ScriptInstanceDto extends CustomScriptDto {
         }
         return true;
     }
+
+	public Boolean getError() {
+		return error;
+	}
+
+	public void setError(Boolean error) {
+		this.error = error;
+	}
+    
 }
