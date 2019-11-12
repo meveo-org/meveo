@@ -43,6 +43,18 @@ public class JSONSchemaIntoTemplateParserTest {
     }
 
     @Test
+    public void testParseFieldNullable0() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(true, !customEntityTemplateDto.getFields().get(0).isValueRequired());
+    }
+
+    @Test
+    public void testParseFieldReadOnly0() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(false, !customEntityTemplateDto.getFields().get(0).isAllowEdit());
+    }
+
+    @Test
     public void testParseField1() {
         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
         Assert.assertEquals("title", customEntityTemplateDto.getFields().get(1).getCode());
@@ -52,6 +64,18 @@ public class JSONSchemaIntoTemplateParserTest {
     public void testParseFieldType1() {
         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
         Assert.assertEquals("string".toUpperCase(), customEntityTemplateDto.getFields().get(1).getFieldType().toString());
+    }
+
+    @Test
+    public void testParseFieldNullable1() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(true, !customEntityTemplateDto.getFields().get(1).isValueRequired());
+    }
+
+    @Test
+    public void testParseFieldReadOnly1() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(false, !customEntityTemplateDto.getFields().get(1).isAllowEdit());
     }
 
     @Test
@@ -69,12 +93,30 @@ public class JSONSchemaIntoTemplateParserTest {
     @Test
     public void testParseFieldType2() {
         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
-        Assert.assertEquals("list".toUpperCase(), customEntityTemplateDto.getFields().get(2).getFieldType().toString());
+        Assert.assertEquals("entity".toUpperCase(), customEntityTemplateDto.getFields().get(2).getFieldType().toString());
+    }
+
+    @Test
+    public void testParseFieldNullable2() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(true, !customEntityTemplateDto.getFields().get(2).isValueRequired());
+    }
+
+    @Test
+    public void testParseFieldReadOnly2() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals(false, !customEntityTemplateDto.getFields().get(2).isAllowEdit());
     }
 
     @Test
     public void testParseFieldUnique() {
         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
         Assert.assertEquals(true, customEntityTemplateDto.getFields().get(2).isUnique());
+    }
+
+    @Test
+    public void testParseFieldEntityClazz() {
+        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJson("D:\\json\\single_cet.json");
+        Assert.assertEquals("TodoItem", customEntityTemplateDto.getFields().get(2).getEntityClazz());
     }
 }
