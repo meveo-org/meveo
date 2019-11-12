@@ -16,21 +16,26 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
+import org.hibernate.result.Output;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -46,6 +51,9 @@ public class EndpointRs extends BaseRs {
 
     @EJB
     private EndpointApi endpointApi;
+
+    @Inject
+    private EndpointService endpointService;
 
     @POST
     public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
@@ -83,6 +91,12 @@ public class EndpointRs extends BaseRs {
     public Response delete(@PathParam("code") @NotNull String code) throws BusinessException, EntityDoesNotExistsException {
         endpointApi.delete(code);
         return Response.noContent().build();
+    }
+
+    @GET @Path("/{code}.js")
+    @Produces("application/javascript")
+    public String getScript(@PathParam("code") String code) throws EntityDoesNotExistsException, IOException {
+        return endpointApi.getEndpointScript(code);
     }
 
     @GET @Path("/{code}")

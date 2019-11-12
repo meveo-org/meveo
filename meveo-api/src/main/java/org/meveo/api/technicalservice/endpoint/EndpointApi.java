@@ -16,6 +16,9 @@
 package org.meveo.api.technicalservice.endpoint;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +36,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
@@ -56,6 +60,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.technicalservice.endpoint.ESGenerator;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.slf4j.Logger;
 
@@ -88,6 +93,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto>{
 		super(Endpoint.class, EndpointDto.class);
         this.endpointService = endpointService;
         this.concreteFunctionService = concreteFunctionService;
+    }
+
+    public String getEndpointScript(String code) throws EntityDoesNotExistsException {
+        Endpoint endpoint = endpointService.findByCode(code);
+        if(endpoint == null) {
+            throw new EntityDoesNotExistsException(Endpoint.class, code);
+        }
+
+        return ESGenerator.generate(endpoint);
     }
 
     /**
