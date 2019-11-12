@@ -1,4 +1,4 @@
-package org.meveo.model.customEntities;
+package org.meveo.service.crm.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.meveo.api.dto.CustomEntityTemplateDto;
