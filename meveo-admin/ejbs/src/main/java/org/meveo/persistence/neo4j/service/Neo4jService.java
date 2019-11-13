@@ -472,6 +472,7 @@ public class Neo4jService implements CustomPersistenceService {
                 for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
                     Set<String> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
 
+                    /*
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
                         String joinedIds = ids.stream() .map(Object::toString).collect(Collectors.joining(", "));
                         LOGGER.warn("UniqueConstraints with 100 trust score shouldn't return more than 1 ID : duplicated nodes will be merged (code = {}; IDs = {})", uniqueConstraint.getCode(), joinedIds);
@@ -479,6 +480,7 @@ public class Neo4jService implements CustomPersistenceService {
                         LOGGER.info("Nodes {} were merge into node {}", joinedIds, id);
                         ids = Collections.singleton(id);
                     }
+                    */
 
                     for (String id : ids) {
                         appliedUniqueConstraint = true;
