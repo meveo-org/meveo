@@ -1,7 +1,6 @@
 package org.meveo.api;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +8,11 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.*;
+import org.meveo.api.dto.FileDependencyDto;
+import org.meveo.api.dto.MavenDependencyDto;
+import org.meveo.api.dto.RoleDto;
+import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.api.dto.ScriptInstanceErrorDto;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
@@ -18,7 +21,11 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.FileDependency;
+import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;

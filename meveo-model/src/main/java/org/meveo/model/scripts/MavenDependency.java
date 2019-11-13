@@ -1,107 +1,145 @@
 package org.meveo.model.scripts;
 
-import org.meveo.validation.constraint.subtypeof.SubTypeOf;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+
+import org.meveo.commons.utils.StringUtils;
+import org.meveo.validation.constraint.subtypeof.SubTypeOf;
+
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.5.0
+ */
 @Entity
 @Table(name = "maven_dependency")
 @IdClass(MavenDependencyPk.class)
 public class MavenDependency implements Serializable {
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
-    @JoinColumn(name = "script_id")
-    @SubTypeOf(ScriptInstance.class)
-    @NotNull
-    private Function script;
 
-    @Id
-    @Column(name = "coordinates")
-    private String coordinates;
+	private static final long serialVersionUID = 4010437441199195133L;
 
-    @Column(name = "group_id", nullable =false)
-    @NotNull
-    private String groupId;
+	@Id
+	@ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
+	@JoinColumn(name = "script_id")
+	@SubTypeOf(ScriptInstance.class)
+	@NotNull
+	private Function script;
 
-    @Column(name = "artifact_id", nullable =false)
-    @NotNull
-    private String artifactId;
+	@Id
+	@Column(name = "coordinates")
+	private String coordinates;
 
-    @Column(name = "version", nullable =false)
-    @NotNull
-    private String version;
+	@Column(name = "group_id", nullable = false)
+	@NotNull
+	private String groupId;
 
-    @Column(name = "classifier")
-    private String classifier;
+	@Column(name = "artifact_id", nullable = false)
+	@NotNull
+	private String artifactId;
 
-    public String getGroupId() {
-        return groupId;
-    }
+	@Column(name = "version", nullable = false)
+	@NotNull
+	private String version;
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
+	@Column(name = "classifier")
+	private String classifier;
 
-    public String getArtifactId() {
-        return artifactId;
-    }
+	public String getGroupId() {
+		return groupId;
+	}
 
-    public void setArtifactId(String artifactId) {
-        this.artifactId = artifactId;
-    }
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getArtifactId() {
+		return artifactId;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
+	}
 
-    public String getClassifier() {
-        return classifier;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public void setClassifier(String classifier) {
-        this.classifier = classifier;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public String getCoordinates() {
-        StringBuilder coordinatesBuilder = new StringBuilder();
-        coordinatesBuilder.append(groupId != null ? groupId : "").append(":");
-        coordinatesBuilder.append(artifactId != null ? artifactId : "").append(":");
-        coordinatesBuilder.append(version != null ? version : "").append(":");
-        coordinatesBuilder.append(classifier != null ? classifier : "");
-        coordinates = coordinatesBuilder.toString();
-        return coordinates;
-    }
+	public String getClassifier() {
+		return classifier;
+	}
 
-    public void setCoordinates(String coordinates) {
-        this.coordinates = coordinates;
-    }
+	public void setClassifier(String classifier) {
+		this.classifier = classifier;
+	}
 
-    public Function getScript() {
-        return script;
-    }
+	public String getCoordinates() {
+		StringBuilder coordinatesBuilder = new StringBuilder();
+		coordinatesBuilder.append(groupId != null ? groupId : "").append(":");
+		coordinatesBuilder.append(artifactId != null ? artifactId : "").append(":");
+		coordinatesBuilder.append(version != null ? version : "").append(":");
+		coordinatesBuilder.append(classifier != null ? classifier : "");
+		coordinates = coordinatesBuilder.toString();
+		return coordinates;
+	}
 
-    public void setScript(Function script) {
-        this.script = script;
-    }
+	public void setCoordinates(String coordinates) {
+		this.coordinates = coordinates;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MavenDependency mavenDependency = (MavenDependency) o;
-        return Objects.equals(getCoordinates(), mavenDependency.getCoordinates()) &&
-                Objects.equals(getScript(), mavenDependency.getScript());
-    }
+	public Function getScript() {
+		return script;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getCoordinates(), getScript());
-    }
+	public void setScript(Function script) {
+		this.script = script;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		MavenDependency mavenDependency = (MavenDependency) o;
+		return Objects.equals(getCoordinates(), mavenDependency.getCoordinates()) && Objects.equals(getScript(), mavenDependency.getScript());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getCoordinates(), getScript());
+	}
+
+	public String toLocalM2Path(String m2Path) {
+
+		String convertedGroupId = groupId.replace(".", File.separator);
+
+		String clazzifier = StringUtils.isBlank(classifier) ? "" : "-" + classifier;
+
+		StringBuilder sb = new StringBuilder(m2Path);
+		sb = sb.append(File.separator);
+		sb = sb.append(convertedGroupId);
+		sb = sb.append(File.separator);
+		sb = sb.append(artifactId);
+		sb = sb.append(File.separator);
+		sb = sb.append(version);
+		sb = sb.append(File.separator);
+		sb = sb.append(artifactId + "-" + version + clazzifier);
+		sb = sb.append(".jar");
+
+		return sb.toString();
+	}
 }

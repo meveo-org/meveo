@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -517,22 +518,30 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		List<String> repos = mavenConfigurationService.getMavenRepositories();
 		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
 
-		if(!StringUtils.isBlank(m2FolderPath)) {
+		if (!StringUtils.isBlank(m2FolderPath)) {
 			File localRepository = new File(m2FolderPath);
 			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(UUID.randomUUID().toString(), "default", e)).collect(Collectors.toList());
-	
+
 			Aether aether = new Aether(remoteRepositories, localRepository);
-	
+
 			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
 				Set<Artifact> artifacts = mavenDependencies.stream().map(e -> {
 					try {
-						return aether.resolve(new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion()), "compile");
-	
+						// check if artifact exists in local repository
+						DefaultArtifact defaultArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
+						File localFile = Paths.get(e.toLocalM2Path(m2FolderPath)).toFile();
+						if (!localFile.exists()) {
+							return aether.resolve(defaultArtifact, "compile");
+
+						} else {
+							Artifact artifact = defaultArtifact.setFile(localFile);
+							return new HashSet<>(Arrays.asList(artifact));
+						}
 					} catch (DependencyResolutionException e1) {
 						return null;
 					}
 				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
-	
+
 				result = artifacts.stream().map(e -> {
 					return e.getFile().getPath();
 				}).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -725,7 +734,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			String className = matcher.group(1);
 			try {
 				if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-					Class clazz = Class.forName(className);
+					URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+					Class clazz = classLoader.loadClass(className);
 					try {
 						String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
 						if (location.startsWith("file:")) {
