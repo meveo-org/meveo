@@ -769,11 +769,13 @@ public class Neo4jDao {
      * @param firstNodeId        First node to merge
      * @param secondNodeId       Second node to merge
      */
-    public void mergeAndRemoveNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId) {
+    public void mergeAndRemoveNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId, Collection<String> updatableKeys) {
+        String updatableKeysStr = updatableKeys.stream().collect(Collectors.joining(", .", "{.", "}"));
+
         String queryStr = "MATCH (n1) WHERE ID(n1) = $firstId \n" +
                 "WITH n1, n1.creationDate as creationDate, n1.meveo_uuid as uuid \n" +
                 "MATCH (n2) WHERE ID(n2) = $secondId \n" +
-                "WITH n1, n2, creationDate, uuid, properties(n2) as props \n" +
+                "WITH n1, n2, creationDate, uuid, n2" +  updatableKeysStr + " as props \n" +
                 "DETACH DELETE (n2) \n" +
                 "WITH n1, n2, creationDate, props, uuid \n" +
                 "SET n1 += props, n1.creationDate = creationDate, n1.meveo_uuid = uuid \n" +
@@ -875,7 +877,7 @@ public class Neo4jDao {
                 .append("WITH startNode \n")
                 .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
                 .append("WITH startNode, endNode \n")
-                .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]-(endNode) \n")
+                .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]->(endNode) \n")
                 .append("ON CREATE SET relationship += $fields, relationship.").append(CREATION_DATE).append(" = $date, relationship.meveo_uuid = $relationId \n")
                 .append("ON MATCH SET relationship += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
                 .append("RETURN relationship")
