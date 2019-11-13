@@ -1,0 +1,67 @@
+{
+  "title": "Offering",
+  "description": "Offering",
+  "id": "Offering",
+  "allOf": [
+    {
+      "$ref": "#/definitions/WebContent"
+    }
+  ],
+  "type": "object",
+  "properties": {
+    "updateDate": {
+      "title": "Offering.updateDate",
+      "description": "updateDate",
+      "id": "CE_Offering_updateDate",
+      "nullable": true,
+      "readOnly": false,
+      "type": "string",
+      "format": "date-time"
+    },
+    "availabilityEndDate": {
+      "title": "Offering.availabilityEndDate",
+      "description": "ENTITY",
+      "id": "CE_Offering_availabilityEndDate",
+      "nullable": true,
+      "readOnly": false,
+      "$ref": "#/definitions/Datetime"
+    },
+    "package": {
+      "title": "Offering.package",
+      "description": "package",
+      "id": "CE_Offering_package",
+      "nullable": true,
+      "readOnly": false,
+      "type": "string",
+      "maxLength": 255
+    },
+    "languages": {
+      "title": "Offering.languages",
+      "description": "ENTITY",
+      "id": "CE_Offering_languages",
+      "nullable": true,
+      "readOnly": false,
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "title": "Offering.languages Element",
+        "id": "CE_Offering_languages_$element",
+        "type": "string"
+      }
+    },
+    "items": {
+      "title": "TodoList.items",
+      "description": "items",
+      "id": "CE_TodoList_items",
+      "nullable": true,
+      "readOnly": false,
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "title": "TodoList.items Element",
+        "id": "CE_TodoList_items_$element",
+        "$ref": "./TodoItem"
+      }
+    }
+  }
+}

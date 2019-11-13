@@ -19,7 +19,7 @@ public class JSONSchemaIntoTemplateParser {
     private Map<String, Object> jsonMap;
 
     @SuppressWarnings("unchecked")
-    public CustomEntityTemplateDto parseJson(String file) {
+    public CustomEntityTemplateDto parseJsonFromFile(String file) {
         CustomEntityTemplateDto customEntityTemplateDto = new CustomEntityTemplateDto();
         try {
             File sourceDir = new File(file);
@@ -28,6 +28,21 @@ public class JSONSchemaIntoTemplateParser {
             jsonMap = objectMapper.readValue(mapData, HashMap.class);
             parseCode(jsonMap, customEntityTemplateDto);
             parseName(jsonMap, customEntityTemplateDto);
+            parseSuperTemplate(jsonMap, customEntityTemplateDto);
+            parseFields(jsonMap, customEntityTemplateDto);
+        } catch (IOException e) {
+        }
+        return customEntityTemplateDto;
+    }
+
+    public CustomEntityTemplateDto parseJsonContent(String content) {
+        CustomEntityTemplateDto customEntityTemplateDto = new CustomEntityTemplateDto();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonMap = objectMapper.readValue(content, HashMap.class);
+            parseCode(jsonMap, customEntityTemplateDto);
+            parseName(jsonMap, customEntityTemplateDto);
+            parseSuperTemplate(jsonMap, customEntityTemplateDto);
             parseFields(jsonMap, customEntityTemplateDto);
         } catch (IOException e) {
         }
@@ -42,6 +57,23 @@ public class JSONSchemaIntoTemplateParser {
         customEntityTemplateDto.setName((String)jsonMap.get("title"));
     }
 
+    private void parseSuperTemplate(Map<String, Object> jsonMap, CustomEntityTemplateDto customEntityTemplateDto) {
+        if (jsonMap.containsKey("allOf")) {
+            List<HashMap<String, Object>> allOfs = (ArrayList<HashMap<String, Object>>) jsonMap.get("allOf");
+            for (HashMap<String, Object> allOf : allOfs) {
+                if (allOf.containsKey("$ref")) {
+                    String ref = (String) allOf.get("$ref");
+                    if (ref != null) {
+                        String[] data = ref.split("/");
+                        if (data.length > 0) {
+                            customEntityTemplateDto.setSuperTemplate(data[data.length - 1]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void parseFields(Map<String, Object> jsonMap, CustomEntityTemplateDto customEntityTemplateDto) {
         Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
         List<CustomFieldTemplateDto> customFieldTemplateDtos = new ArrayList<>();
@@ -53,23 +85,40 @@ public class JSONSchemaIntoTemplateParser {
             customFieldTemplateDto.setDescription((String)values.get("description"));
             customFieldTemplateDto.setAllowEdit(!(Boolean) values.get("readOnly"));
             customFieldTemplateDto.setValueRequired(!(Boolean)values.get("nullable"));
-            if (values.get("type").equals("array")) {
-                customFieldTemplateDto.setUnique((Boolean) values.get("uniqueItems"));
-                Map<String, Object> value = (Map<String, Object>) values.get("items");
-                if (value.containsKey("$ref")) {
-                    customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.ENTITY);
-                    customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.LIST);
-                    String ref = (String) value.get("$ref");
-                    if (ref != null) {
-                        String[] data = ref.split("/");
-                        if (data.length > 0) {
-                            customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
-                        }
+            if (values.containsKey("$ref")) {
+                customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                String ref = (String) values.get("$ref");
+                if (ref != null) {
+                    String[] data = ref.split("/");
+                    if (data.length > 0) {
+                        customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
                     }
                 }
             } else {
-                customFieldTemplateDto.setFieldType((CustomFieldTypeEnum.valueOf(((String)values.get("type")).toUpperCase())));
-                customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                if (values.get("type").equals("array")) {
+                    customFieldTemplateDto.setUnique((Boolean) values.get("uniqueItems"));
+                    Map<String, Object> value = (Map<String, Object>) values.get("items");
+                    if (value.containsKey("$ref")) {
+                        customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.ENTITY);
+                        customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.LIST);
+                        String ref = (String) value.get("$ref");
+                        if (ref != null) {
+                            String[] data = ref.split("/");
+                            if (data.length > 0) {
+                                customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
+                            }
+                        }
+                    }else {
+                        customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.STRING);
+                        customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.LIST);
+                    }
+                } else if (values.get("type").equals("number")) {
+                    customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.LONG);
+                    customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                } else {
+                    customFieldTemplateDto.setFieldType((CustomFieldTypeEnum.valueOf(((String) values.get("type")).toUpperCase())));
+                    customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                }
             }
             if (values.get("maxLength") != null) {
                 customFieldTemplateDto.setMaxValue(Long.valueOf(values.get("maxLength").toString()));
