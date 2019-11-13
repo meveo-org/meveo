@@ -612,59 +612,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         }
     }
 
-    public List<CustomRelationshipTemplate> getCustomRelationshipTemplateByCet(String code) {
-        Lock lock = cacheLock.readLock();
-        lock.lock();
-        try {
-            return crtsByCode.values()
-                    .stream()
-                    .filter(crt -> crtHasSourceOrTargetConcerned(code, crt))
-                    .collect(Collectors.toList());
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    private boolean crtHasSourceOrTargetConcerned(String code, CustomRelationshipTemplate crt) {
-        boolean match = hasDirectMatch(code, crt);
-
-        // In last resort, try to see in the ancestors of the source CET ...
-        if(!match && crt.getStartNode().getSuperTemplate() != null){
-            CustomEntityTemplate startNode = crt.getStartNode();
-            while(!match && startNode.getSuperTemplate() != null) {
-                match = hasDirectMatch(startNode.getCode(), crt);
-                startNode = startNode.getSuperTemplate();
-            }
-        }
-
-        // ... or the target CET
-        if(!match && crt.getEndNode().getSuperTemplate() != null){
-            CustomEntityTemplate endNode = crt.getEndNode();
-            while(!match && endNode.getSuperTemplate() != null) {
-                match = hasDirectMatch(endNode.getCode(), crt);
-                endNode = endNode.getSuperTemplate();
-            }
-        }
-
-        return match;
-    }
-
-    private boolean hasDirectMatch(String code, CustomRelationshipTemplate crt) {
-        // First look directly in target and source
-        boolean match = crt.getStartNode().getCode().equals(code) || crt.getEndNode().getCode().equals(code);
-
-        // If no direct match, try to see if we can match using labels of the source CET ...
-        if(!match && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J)){
-            match = crt.getStartNode().getNeo4JStorageConfiguration().getLabels().contains(code);
-        }
-
-        // ... or the target CET
-        if(!match && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J)){
-            match = crt.getEndNode().getNeo4JStorageConfiguration().getLabels().contains(code);
-        }
-        return match;
-    }
-
     /**
      * Get custom field template of a given code, applicable to a given entity
      * 

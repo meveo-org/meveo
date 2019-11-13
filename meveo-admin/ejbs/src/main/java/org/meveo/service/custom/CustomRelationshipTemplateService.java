@@ -22,11 +22,13 @@ package org.meveo.service.custom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -36,6 +38,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -202,4 +205,29 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
                 .getResultList();
 
     }
+
+    @SuppressWarnings("unchecked")
+    public List<String> findByCetAndName(CustomEntityTemplate cet, String name) {
+        String query = "WITH RECURSIVE ancestors AS (\n" +
+                "   SELECT id, code, super_template_id FROM cust_cet\n" +
+                "   WHERE id = :cetId\n" +
+                "   UNION\n" +
+                "      SELECT cet.id, cet.code, cet.super_template_id FROM cust_cet cet\n" +
+                "      INNER JOIN ancestors s ON s.super_template_id = cet.id\n" +
+                ") \n" +
+                "\n" +
+                "SELECT crt.code FROM cust_crt crt\n" +
+                "WHERE crt.name = :crtName\n" +
+                "AND EXISTS(SELECT 1 FROM ancestors a WHERE crt.start_node_id = a.id OR crt.end_node_id = a.id)";
+
+        List<Tuple> tuples = getEntityManager().createNativeQuery(query, Tuple.class)
+                .setParameter("cetId", cet.getId())
+                .setParameter("crtName", name)
+                .getResultList();
+
+        return tuples.stream().map(t -> t.get("code", String.class))
+                .collect(Collectors.toList());
+
+    }
+
 }
