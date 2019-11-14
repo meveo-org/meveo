@@ -15,14 +15,7 @@
  */
 package org.meveo.api.technicalservice.endpoint;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -554,8 +547,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		swagger.setInfo(info);
 		swagger.setBasePath(baseUrl);
 		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
-		swagger.setProduces(Arrays.asList(endpoint.getContentType()));
-		swagger.setConsumes(Arrays.asList(endpoint.getContentType()));
+		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
+		if(endpoint.getMethod() == EndpointHttpMethod.POST) {
+			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
+		}
 		swagger.setPaths(paths);
 		swagger.setResponses(responses);
 
