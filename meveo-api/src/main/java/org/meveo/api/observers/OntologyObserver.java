@@ -14,14 +14,20 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.observers;
+package org.meveo.api.observers;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.CustomEntityTemplateApi;
+import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -29,6 +35,8 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
+import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -77,6 +85,15 @@ public class OntologyObserver {
 
     @Inject
     private CustomFieldsCacheContainerProvider cache;
+
+    @Inject
+    private JSONSchemaIntoTemplateParser jsonSchemaIntoTemplateParser;
+
+    @Inject
+    private CustomEntityTemplateApi customEntityTemplateApi;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
 
@@ -440,6 +457,41 @@ public class OntologyObserver {
                         Collections.singletonList(schemaFile),
                         "Remove property " + cft.getCode() + " of CRT " + crt.getCode()
                 );
+            }
+        }
+    }
+
+    /**
+     * When a commit concerning script is received :
+     * <ul>
+     * <li>If script file has been created, create the JPA entity</li>
+     * <li>If script file has been modified, re-compile it</li>
+     * <li>If script file has been deleted, remove the JPA entity</li>
+     * </ul>
+     */
+    @SuppressWarnings("unchecked")
+    public void onCETsChanged(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, MeveoApiException {
+        if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
+            for (String modifiedFile : commitEvent.getModifiedFiles()) {
+                String[] cet = modifiedFile.split("/");
+                String fileName = cet[cet.length - 1];
+                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json")) {
+                    String[] cetFileName = fileName.split("\\.");
+                    String code = cetFileName[0];
+                    CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(code);
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File cetFile = new File(repositoryDir, modifiedFile);
+                    if (customEntityTemplate == null) {
+                        String absolutePath = cetFile.getAbsolutePath();
+                        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFile(absolutePath);
+                        customEntityTemplateApi.create(customEntityTemplateDto);
+                    } else if (customEntityTemplate != null && !cetFile.exists()) {
+                        customEntityTemplateApi.removeEntityTemplate(code);
+                    } else if (customEntityTemplate != null && cetFile.exists()) {
+                        CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFile(cetFile.getAbsolutePath());
+                        customEntityTemplateApi.updateEntityTemplate(customEntityTemplateDto);
+                    }
+                }
             }
         }
     }

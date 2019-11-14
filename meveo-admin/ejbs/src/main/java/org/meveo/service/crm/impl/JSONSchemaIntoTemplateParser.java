@@ -115,6 +115,9 @@ public class JSONSchemaIntoTemplateParser {
                 } else if (values.get("type").equals("number")) {
                     customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.LONG);
                     customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+                } else if (values.get("type").equals("object")) {
+                    customFieldTemplateDto.setFieldType(CustomFieldTypeEnum.STRING);
+                    customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.MAP);
                 } else {
                     customFieldTemplateDto.setFieldType((CustomFieldTypeEnum.valueOf(((String) values.get("type")).toUpperCase())));
                     customFieldTemplateDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
