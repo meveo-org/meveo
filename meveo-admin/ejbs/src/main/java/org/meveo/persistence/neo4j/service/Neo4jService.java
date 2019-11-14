@@ -1399,7 +1399,7 @@ public class Neo4jService implements CustomPersistenceService {
      * @return UUID of the merged node
      */
     public String mergeNodes(String configurationCode, CustomEntityTemplate customEntityTemplate, Collection<String> uuids) {
-        List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode);
+        List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode, customEntityTemplate.getCode());
 
         Node persistentNode = nodesToTreat.remove(0);
 
@@ -1409,9 +1409,10 @@ public class Neo4jService implements CustomPersistenceService {
 
             try {
                 mergeTask.get();
-                mergeTasks.remove(hash);
             } catch (Exception e) {
                 log.error("Merge task for merging {} into {} has been aborted", nodeToMerge, persistentNode, e);
+            } finally {
+                mergeTasks.remove(hash);
             }
         }
 
