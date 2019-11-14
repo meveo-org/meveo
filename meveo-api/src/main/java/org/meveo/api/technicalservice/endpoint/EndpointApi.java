@@ -15,16 +15,13 @@
  */
 package org.meveo.api.technicalservice.endpoint;
 
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,9 +31,10 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
@@ -52,6 +50,7 @@ import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
@@ -62,390 +61,407 @@ import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.ESGenerator;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.meveo.util.Version;
 import org.slf4j.Logger;
+
+import io.swagger.models.Info;
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.Scheme;
+import io.swagger.models.Swagger;
+import io.swagger.models.parameters.BodyParameter;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
+import io.swagger.util.Json;
 
 /**
  * API for managing technical services endpoints
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 01.02.2019
+ * @version 6.5.0
  */
 @Stateless
-public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto>{
+public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
-    @EJB
-    private EndpointService endpointService;
+	@EJB
+	private EndpointService endpointService;
 
-    @Inject
-    private ConcreteFunctionService concreteFunctionService;
+	@Inject
+	private ConcreteFunctionService concreteFunctionService;
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    @EJB
-    private KeycloakAdminClientService keycloakAdminClientService;
+	@EJB
+	private KeycloakAdminClientService keycloakAdminClientService;
 
-    public EndpointApi(){
+	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
-    }
+	}
 
-    public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
+	public EndpointApi(EndpointService endpointService, ConcreteFunctionService concreteFunctionService) {
 		super(Endpoint.class, EndpointDto.class);
-        this.endpointService = endpointService;
-        this.concreteFunctionService = concreteFunctionService;
-    }
+		this.endpointService = endpointService;
+		this.concreteFunctionService = concreteFunctionService;
+	}
 
-    public String getEndpointScript(String code) throws EntityDoesNotExistsException {
-        Endpoint endpoint = endpointService.findByCode(code);
-        if(endpoint == null) {
-            throw new EntityDoesNotExistsException(Endpoint.class, code);
-        }
+	public String getEndpointScript(String code) throws EntityDoesNotExistsException {
+		Endpoint endpoint = endpointService.findByCode(code);
+		if (endpoint == null) {
+			throw new EntityDoesNotExistsException(Endpoint.class, code);
+		}
 
-        return ESGenerator.generate(endpoint);
-    }
+		return ESGenerator.generate(endpoint);
+	}
 
-    /**
-     * Execute the technical service associated to the endpoint
-     *
-     * @param endpoint Endpoint to execute
-     * @param execution Parameters of the execution
-     * @return The result of the execution
-     * @throws BusinessException if error occurs while execution
-     */
-    public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
+	/**
+	 * Execute the technical service associated to the endpoint
+	 *
+	 * @param endpoint  Endpoint to execute
+	 * @param execution Parameters of the execution
+	 * @return The result of the execution
+	 * @throws BusinessException if error occurs while execution
+	 */
+	@SuppressWarnings("rawtypes")
+	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
-    	System.out.println(execution.getRequest().getRemainingPath());
-    	
-        List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
+		System.out.println(execution.getRequest().getRemainingPath());
 
-        Function service = endpoint.getService();
-        Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
+		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
-        // Set budget variables
-        parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
-        parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
+		Function service = endpoint.getService();
+		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 
-        // Assign path parameters
-        for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
-            parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
-        }
+		// Set budget variables
+		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
+		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
 
-        // Assign query or post parameters
-        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
-            Object parameterValue = execution.getParameters().get(tsParameterMapping.getParameterName());
+		// Assign path parameters
+		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+			parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+		}
 
-            // Use default value if parameter not provided
-            if (parameterValue == null) {
-                parameterValue = tsParameterMapping.getDefaultValue();
-            } else {
-                // Handle cases where parameter is multivalued
-                if (parameterValue instanceof String[]) {
-                    String[] arrValue = (String[]) parameterValue;
-                    if (tsParameterMapping.isMultivalued()) {
-                        parameterValue = new ArrayList<>(Arrays.asList(arrValue));
-                    } else if (arrValue.length == 1) {
-                        parameterValue = arrValue[0];
-                    } else {
-                        throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
-                    }
-                } else if (parameterValue instanceof Collection) {
-                    Collection colValue = (Collection) parameterValue;
-                    if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
-                        parameterValue = colValue.iterator().next();
-                    } else if (!tsParameterMapping.isMultivalued()) {
-                        throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
-                    }
-                }
-            }
-            String paramName = tsParameterMapping.getEndpointParameter().toString();
-            parameterMap.remove(tsParameterMapping.getParameterName());
-            parameterMap.put(paramName, parameterValue);
-        }
+		// Assign query or post parameters
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+			Object parameterValue = execution.getParameters().get(tsParameterMapping.getParameterName());
 
-        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
-        final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+			// Use default value if parameter not provided
+			if (parameterValue == null) {
+				parameterValue = tsParameterMapping.getDefaultValue();
+			} else {
+				// Handle cases where parameter is multivalued
+				if (parameterValue instanceof String[]) {
+					String[] arrValue = (String[]) parameterValue;
+					if (tsParameterMapping.isMultivalued()) {
+						parameterValue = new ArrayList<>(Arrays.asList(arrValue));
+					} else if (arrValue.length == 1) {
+						parameterValue = arrValue[0];
+					} else {
+						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+					}
+				} else if (parameterValue instanceof Collection) {
+					Collection colValue = (Collection) parameterValue;
+					if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
+						parameterValue = colValue.iterator().next();
+					} else if (!tsParameterMapping.isMultivalued()) {
+						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+					}
+				}
+			}
+			String paramName = tsParameterMapping.getEndpointParameter().toString();
+			parameterMap.remove(tsParameterMapping.getParameterName());
+			parameterMap.put(paramName, parameterValue);
+		}
 
-        if(executionEngine instanceof EndpointScript) {
-        	// Explicitly pass the request and response information to the script
-        	((EndpointScript) executionEngine).setEndpointRequest(execution.getRequest());
-        	if(endpoint.isSynchronous()) {
-        		((EndpointScript) executionEngine).setEndpointResponse(execution.getResponse());
-        	}
-        }else {
-        	// Implicitly pass the request and response information to the script
-            parameterMap.put("request", execution.getRequest());
-        	if(endpoint.isSynchronous()) {
-        		parameterMap.put("response", execution.getResponse());
-        	}
-        }
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 
-        // Start endpoint script with timeout if one was set
-        if(execution.getDelayValue() != null){
-            try {
-                final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
-                    try {
-                        return functionService.execute(executionEngine, parameterMap);
-                    } catch (BusinessException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-                return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
-            } catch (TimeoutException e) {
-                return executionEngine.cancel();
-            }
-        } else {
-            return functionService.execute(executionEngine, parameterMap);
-        }
+		if (executionEngine instanceof EndpointScript) {
+			// Explicitly pass the request and response information to the script
+			((EndpointScript) executionEngine).setEndpointRequest(execution.getRequest());
+			if (endpoint.isSynchronous()) {
+				((EndpointScript) executionEngine).setEndpointResponse(execution.getResponse());
+			}
+		} else {
+			// Implicitly pass the request and response information to the script
+			parameterMap.put("request", execution.getRequest());
+			if (endpoint.isSynchronous()) {
+				parameterMap.put("response", execution.getResponse());
+			}
+		}
 
-    }
+		// Start endpoint script with timeout if one was set
+		if (execution.getDelayValue() != null) {
+			try {
+				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
+					try {
+						return functionService.execute(executionEngine, parameterMap);
+					} catch (BusinessException e) {
+						throw new RuntimeException(e);
+					}
+				});
+				return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+			} catch (TimeoutException e) {
+				return executionEngine.cancel();
+			}
+		} else {
+			return functionService.execute(executionEngine, parameterMap);
+		}
 
-    /**
-     * Create an endpoint
-     *
-     * @param endpointDto Configuration of the endpoint
-     * @return the created Endpoint
-     */
-    public Endpoint create(EndpointDto endpointDto) throws BusinessException {
-        validateCompositeRoles(endpointDto);
-        Endpoint endpoint = fromDto(endpointDto);
-        endpointService.create(endpoint);
-        return endpoint;
-    }
+	}
 
-    /**
-     * Create or update an endpoint
-     *
-     * @param endpointDto Configuration of the endpoint
-     * @return null if endpoint was updated, the endpoint if it was created
-     */
-    public Endpoint createOrReplace(EndpointDto endpointDto) throws BusinessException {
-        Endpoint endpoint = endpointService.findByCode(endpointDto.getCode());
-        if(endpoint != null){
-            update(endpoint, endpointDto);
-            return endpoint;
-        }else {
-            return create(endpointDto);
-        }
-    }
+	/**
+	 * Create an endpoint
+	 *
+	 * @param endpointDto Configuration of the endpoint
+	 * @return the created Endpoint
+	 */
+	public Endpoint create(EndpointDto endpointDto) throws BusinessException {
+		validateCompositeRoles(endpointDto);
+		Endpoint endpoint = fromDto(endpointDto);
+		endpointService.create(endpoint);
+		return endpoint;
+	}
 
-    /**
-     * Remove the endpoint with the given code
-     *
-     * @param code Code of the endpoint to remove
-     * @throws BusinessException if endpoint does not exists
-     */
-    public void delete(String code) throws BusinessException, EntityDoesNotExistsException {
+	/**
+	 * Create or update an endpoint
+	 *
+	 * @param endpointDto Configuration of the endpoint
+	 * @return null if endpoint was updated, the endpoint if it was created
+	 */
+	public Endpoint createOrReplace(EndpointDto endpointDto) throws BusinessException {
+		Endpoint endpoint = endpointService.findByCode(endpointDto.getCode());
+		if (endpoint != null) {
+			update(endpoint, endpointDto);
+			return endpoint;
+		} else {
+			return create(endpointDto);
+		}
+	}
 
-        // Retrieve existing entity
-        Endpoint endpoint = endpointService.findByCode(code);
-        if(endpoint == null){
-            throw new EntityDoesNotExistsException("Endpoint with code " + code + " does not exists");
-        }
+	/**
+	 * Remove the endpoint with the given code
+	 *
+	 * @param code Code of the endpoint to remove
+	 * @throws BusinessException if endpoint does not exists
+	 */
+	public void delete(String code) throws BusinessException, EntityDoesNotExistsException {
 
-        endpointService.remove(endpoint);
+		// Retrieve existing entity
+		Endpoint endpoint = endpointService.findByCode(code);
+		if (endpoint == null) {
+			throw new EntityDoesNotExistsException("Endpoint with code " + code + " does not exists");
+		}
 
-    }
+		endpointService.remove(endpoint);
 
-    /**
-     * Retrieve an endpoint by its code
-     *
-     * @param code Code of the endpoint to retrieve
-     * @return DTO of the endpoint corresponding to the given code
-     */
-    public EndpointDto findByCode(String code){
-        return toDto(endpointService.findByCode(code));
-    }
+	}
 
-    /**
-     * Retrieve endpoints by service code
-     *
-     * @param code Code of the service used to filter endpoints
-     * @return DTOs of the endpoints that are associated to the given technical service
-     */
-    public List<EndpointDto> findByServiceCode(String code){
-        return endpointService.findByServiceCode(code)
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
+	/**
+	 * Retrieve an endpoint by its code
+	 *
+	 * @param code Code of the endpoint to retrieve
+	 * @return DTO of the endpoint corresponding to the given code
+	 */
+	public EndpointDto findByCode(String code) {
+		return toDto(endpointService.findByCode(code));
+	}
 
-    /**
-     * Retrieve all endpoints
-     *
-     * @return DTOs for all stored endpoints
-     */
-    public List<EndpointDto> list(){
-        return endpointService.list()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
+	/**
+	 * Retrieve endpoints by service code
+	 *
+	 * @param code Code of the service used to filter endpoints
+	 * @return DTOs of the endpoints that are associated to the given technical
+	 *         service
+	 */
+	public List<EndpointDto> findByServiceCode(String code) {
+		return endpointService.findByServiceCode(code).stream().map(this::toDto).collect(Collectors.toList());
+	}
 
-    private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-        validateCompositeRoles(endpointDto);
-    	Endpoint updatedEndpoint = new Endpoint();
-    	updatedEndpoint.setId(endpoint.getId());
-    	updatedEndpoint.setCode(endpointDto.getCode());
-    	
-    	updatedEndpoint.setSynchronous(endpointDto.isSynchronous());
-    	updatedEndpoint.setMethod(endpointDto.getMethod());
+	/**
+	 * Retrieve all endpoints
+	 *
+	 * @return DTOs for all stored endpoints
+	 */
+	public List<EndpointDto> list() {
+		return endpointService.list().stream().map(this::toDto).collect(Collectors.toList());
+	}
 
-        final List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-        updatedEndpoint.setPathParameters(endpointPathParameters);
+	private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
+		validateCompositeRoles(endpointDto);
+		Endpoint updatedEndpoint = new Endpoint();
+		updatedEndpoint.setId(endpoint.getId());
+		updatedEndpoint.setCode(endpointDto.getCode());
+		updatedEndpoint.setDescription(endpointDto.getDescription());
 
-        final List<TSParameterMapping> parameterMappings = getParameterMappings(endpointDto, endpoint);
-        updatedEndpoint.setParametersMapping(parameterMappings);
-        
-        updatedEndpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
-        updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
-        updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
-        updatedEndpoint.setContentType(endpointDto.getContentType());
-        updatedEndpoint.setRoles(endpointDto.getRoles());
+		updatedEndpoint.setSynchronous(endpointDto.isSynchronous());
+		updatedEndpoint.setMethod(endpointDto.getMethod());
 
-        endpointService.update(updatedEndpoint);
-    }
+		final List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+		updatedEndpoint.setPathParameters(endpointPathParameters);
 
-    @Override
-    public EndpointDto toDto(Endpoint endpoint) {
-        EndpointDto endpointDto = new EndpointDto();
-        endpointDto.setCode(endpoint.getCode());
-        endpointDto.setMethod(endpoint.getMethod());
-        endpointDto.setServiceCode(endpoint.getService().getCode());
-        endpointDto.setSynchronous(endpoint.isSynchronous());
-        endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
-        endpointDto.setSerializeResult(endpoint.isSerializeResult());
-        List<String> pathParameterDtos = new ArrayList<>();
-        endpointDto.setPathParameters(pathParameterDtos);
-        for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
-            pathParameterDtos.add(pathParameter.getEndpointParameter().getParameter());
-        }
-        List<TSParameterMappingDto> mappingDtos = new ArrayList<>();
-        endpointDto.setParameterMappings(mappingDtos);
-        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
-            TSParameterMappingDto mappingDto = new TSParameterMappingDto();
-            mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
-            mappingDto.setParameterName(tsParameterMapping.getParameterName());
-            mappingDto.setServiceParameter(tsParameterMapping.getEndpointParameter().getParameter());
-            mappingDtos.add(mappingDto);
-        }
-        endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
-        endpointDto.setContentType(endpoint.getContentType());
-        endpointDto.setRoles(endpoint.getRoles());
-        return endpointDto;
-    }
+		final List<TSParameterMapping> parameterMappings = getParameterMappings(endpointDto, endpoint);
+		updatedEndpoint.setParametersMapping(parameterMappings);
 
-    @Override
-    public Endpoint fromDto(EndpointDto endpointDto){
+		updatedEndpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
+		updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+		updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
+		updatedEndpoint.setContentType(endpointDto.getContentType());
+		updatedEndpoint.setRoles(endpointDto.getRoles());
 
-        Endpoint endpoint = new Endpoint();
-        
-        // Code
-        endpoint.setCode(endpointDto.getCode());
-
-        // Method
-        endpoint.setMethod(endpointDto.getMethod());
-
-        // Synchronous
-        endpoint.setSynchronous(endpointDto.isSynchronous());
-
-        // JSONata query
-        endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
-        
-        // Returned variable name
-        endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
-
-        // Technical Service
-        final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
-        Function service = functionService.findByCode(endpointDto.getServiceCode());
-        endpoint.setService(service);
-
-        // Parameters mappings
-        List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
-        endpoint.setParametersMapping(tsParameterMappings);
-
-        // Path parameters
-        List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-        endpoint.setPathParameters(endpointPathParameters);
-
-        endpoint.setSerializeResult(endpointDto.isSerializeResult());
-        
-        endpoint.setContentType(endpointDto.getContentType());
-        
-        endpoint.setRoles(endpointDto.getRoles());
-        
-        return endpoint;
-    }
-
-    private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
-        List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
-        for (String pathParameter : endpointDto.getPathParameters()) {
-            EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, pathParameter);
-            endpointPathParameter.setEndpointParameter(endpointParameter);
-            endpointPathParameters.add(endpointPathParameter);
-        }
-        return endpointPathParameters;
-    }
-
-    private List<TSParameterMapping> getParameterMappings(EndpointDto endpointDto, Endpoint endpoint) {
-        List<TSParameterMapping> tsParameterMappings = new ArrayList<>();
-        for (TSParameterMappingDto parameterMappingDto : endpointDto.getParameterMappings()) {
-            TSParameterMapping tsParameterMapping = new TSParameterMapping();
-            tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
-            tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
-            EndpointParameter endpointParameter = buildEndpointParameter(endpoint, parameterMappingDto.getServiceParameter());
-            tsParameterMapping.setEndpointParameter(endpointParameter);
-            tsParameterMappings.add(tsParameterMapping);
-        }
-        return tsParameterMappings;
-    }
-
-    private EndpointParameter buildEndpointParameter(Endpoint endpoint, String param){
-        EndpointParameter endpointParameter = new EndpointParameter();
-        endpointParameter.setEndpoint(endpoint);
-        endpointParameter.setParameter(param);
-        return endpointParameter;
-    }
-
-    public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
-        KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
-        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
-        if (CollectionUtils.isNotEmpty(roles)) {
-            for (String selectedRole : endpointDto.getRoles()) {
-                if (!roles.contains(selectedRole)) {
-                    throw new IllegalArgumentException("The role does not exists");
-                }
-            }
-        }
-        return roles;
-    }
-
-    public boolean isUserAuthorized(Endpoint endpoint){
-        try {
-            Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
-            if(!currentUserRoles.contains(endpointService.getEndpointPermission(endpoint))) {
-                // If does not directly contained, for each role of meveo-web, check the role mappings for endpoints
-                KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-                currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
-                for (String userRole : currentUserRoles) {
-                    if(endpoint.getRoles().contains(userRole)) {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            return true;
-
-        }catch (Exception e){
-            logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
-            return false;
-        }
-    }
+		endpointService.update(updatedEndpoint);
+	}
 
 	@Override
-	public EndpointDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+	public EndpointDto toDto(Endpoint endpoint) {
+		EndpointDto endpointDto = new EndpointDto();
+		endpointDto.setCode(endpoint.getCode());
+		endpointDto.setDescription(endpoint.getDescription());
+		endpointDto.setMethod(endpoint.getMethod());
+		endpointDto.setServiceCode(endpoint.getService().getCode());
+		endpointDto.setSynchronous(endpoint.isSynchronous());
+		endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
+		endpointDto.setSerializeResult(endpoint.isSerializeResult());
+		List<String> pathParameterDtos = new ArrayList<>();
+		endpointDto.setPathParameters(pathParameterDtos);
+		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+			pathParameterDtos.add(pathParameter.getEndpointParameter().getParameter());
+		}
+		List<TSParameterMappingDto> mappingDtos = new ArrayList<>();
+		endpointDto.setParameterMappings(mappingDtos);
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+			TSParameterMappingDto mappingDto = new TSParameterMappingDto();
+			mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
+			mappingDto.setParameterName(tsParameterMapping.getParameterName());
+			mappingDto.setServiceParameter(tsParameterMapping.getEndpointParameter().getParameter());
+			mappingDtos.add(mappingDto);
+		}
+		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
+		endpointDto.setContentType(endpoint.getContentType());
+		endpointDto.setRoles(endpoint.getRoles());
+		return endpointDto;
+	}
+
+	@Override
+	public Endpoint fromDto(EndpointDto endpointDto) {
+
+		Endpoint endpoint = new Endpoint();
+
+		// Code
+		endpoint.setCode(endpointDto.getCode());
+
+		// Description
+		endpoint.setDescription(endpointDto.getDescription());
+
+		// Method
+		endpoint.setMethod(endpointDto.getMethod());
+
+		// Synchronous
+		endpoint.setSynchronous(endpointDto.isSynchronous());
+
+		// JSONata query
+		endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
+
+		// Returned variable name
+		endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
+
+		// Technical Service
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
+		Function service = functionService.findByCode(endpointDto.getServiceCode());
+		endpoint.setService(service);
+
+		// Parameters mappings
+		List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
+		endpoint.setParametersMapping(tsParameterMappings);
+
+		// Path parameters
+		List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+		endpoint.setPathParameters(endpointPathParameters);
+
+		endpoint.setSerializeResult(endpointDto.isSerializeResult());
+
+		endpoint.setContentType(endpointDto.getContentType());
+
+		endpoint.setRoles(endpointDto.getRoles());
+
+		return endpoint;
+	}
+
+	private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
+		List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
+		for (String pathParameter : endpointDto.getPathParameters()) {
+			EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
+			EndpointParameter endpointParameter = buildEndpointParameter(endpoint, pathParameter);
+			endpointPathParameter.setEndpointParameter(endpointParameter);
+			endpointPathParameters.add(endpointPathParameter);
+		}
+		return endpointPathParameters;
+	}
+
+	private List<TSParameterMapping> getParameterMappings(EndpointDto endpointDto, Endpoint endpoint) {
+		List<TSParameterMapping> tsParameterMappings = new ArrayList<>();
+		for (TSParameterMappingDto parameterMappingDto : endpointDto.getParameterMappings()) {
+			TSParameterMapping tsParameterMapping = new TSParameterMapping();
+			tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
+			tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
+			EndpointParameter endpointParameter = buildEndpointParameter(endpoint, parameterMappingDto.getServiceParameter());
+			tsParameterMapping.setEndpointParameter(endpointParameter);
+			tsParameterMappings.add(tsParameterMapping);
+		}
+		return tsParameterMappings;
+	}
+
+	private EndpointParameter buildEndpointParameter(Endpoint endpoint, String param) {
+		EndpointParameter endpointParameter = new EndpointParameter();
+		endpointParameter.setEndpoint(endpoint);
+		endpointParameter.setParameter(param);
+		return endpointParameter;
+	}
+
+	public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
+		KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
+		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
+		if (CollectionUtils.isNotEmpty(roles)) {
+			for (String selectedRole : endpointDto.getRoles()) {
+				if (!roles.contains(selectedRole)) {
+					throw new IllegalArgumentException("The role does not exists");
+				}
+			}
+		}
+		return roles;
+	}
+
+	public boolean isUserAuthorized(Endpoint endpoint) {
+		try {
+			Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
+			if (!currentUserRoles.contains(EndpointService.getEndpointPermission(endpoint))) {
+				// If does not directly contained, for each role of meveo-web, check the role
+				// mappings for endpoints
+				KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+				currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
+				for (String userRole : currentUserRoles) {
+					if (endpoint.getRoles().contains(userRole)) {
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			return true;
+
+		} catch (Exception e) {
+			logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
+	public EndpointDto find(String code)
+			throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 		return findByCode(code);
 	}
 
@@ -462,5 +478,87 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto>{
 	@Override
 	public boolean exists(EndpointDto dto) {
 		return findByCode(dto.getCode()) != null;
+	}
+
+	public Response generateOpenApiJson(@NotNull String baseUrl, @NotNull String code) {
+
+		Endpoint endpoint = endpointService.findByCode(code);
+		if (endpoint == null) {
+			return Response.noContent().build();
+		}
+
+		Info info = new Info();
+		info.setTitle(endpoint.getCode());
+		info.setDescription(endpoint.getDescription());
+		info.setVersion(Version.appVersion);
+
+		Map<String, Path> paths = new HashMap<>();
+		Path path = new Path();
+
+		Operation operation = new Operation();
+
+		if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
+			path.setGet(operation);
+
+		} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
+			path.setPost(operation);
+		}
+
+		if (!Objects.isNull(endpoint.getPathParameters())) {
+			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParameters()) {
+				Parameter parameter = new PathParameter();
+				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
+				path.addParameter(parameter);
+			}
+		}
+
+		paths.put(endpoint.getEndpointUrl(), path);
+
+		if (!Objects.isNull(endpoint.getParametersMapping())) {
+			List<Parameter> operationParameter = new ArrayList<>();
+
+			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+
+				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
+					Parameter queryParameter = new QueryParameter();
+					queryParameter.setName(tsParameterMapping.getParameterName());
+					operationParameter.add(queryParameter);
+
+				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
+					Parameter bodyParameter = new BodyParameter();
+					bodyParameter.setName(tsParameterMapping.getParameterName());
+					operationParameter.add(bodyParameter);
+				}
+			}
+
+			operation.setParameters(operationParameter);
+		}
+
+		Map<String, io.swagger.models.Response> responses = new HashMap<>();
+		io.swagger.models.Response response = new io.swagger.models.Response();
+		Map<String, Object> examples = new HashMap<>();
+		if (endpoint.getService().getSampleInputs() != null && CollectionUtils.isNotEmpty(endpoint.getService().getSampleInputs())) {
+			examples.put("input", concreteFunctionService.getSampleInputs(endpoint.getService()));
+		}
+		if (endpoint.getService().getSampleOutputs() != null && CollectionUtils.isNotEmpty(endpoint.getService().getSampleOutputs())) {
+			try {
+				examples.put("output", concreteFunctionService.getSampleOutputs(endpoint.getService()));
+
+			} catch (BusinessException e) {
+			}
+		}
+		response.setExamples(examples);
+		responses.put("200", response);
+
+		Swagger swagger = new Swagger();
+		swagger.setInfo(info);
+		swagger.setBasePath(baseUrl);
+		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
+		swagger.setProduces(Arrays.asList(endpoint.getContentType()));
+		swagger.setConsumes(Arrays.asList(endpoint.getContentType()));
+		swagger.setPaths(paths);
+		swagger.setResponses(responses);
+
+		return Response.ok(Json.pretty(swagger)).build();
 	}
 }

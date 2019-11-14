@@ -16,106 +16,127 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
-import org.hibernate.result.Output;
+import java.io.IOException;
+import java.util.List;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
-
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 /**
  * Rest endpoint for managing service endpoints
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 04.02.2019
+ * @version 6.5.0
  */
 @Path("/endpoint")
-@DeclareRoles({"endpointManagement"})
-@RolesAllowed({"endpointManagement"})
+@DeclareRoles({ "endpointManagement" })
+@RolesAllowed({ "endpointManagement" })
 public class EndpointRs extends BaseRs {
 
-    @EJB
-    private EndpointApi endpointApi;
+	@EJB
+	private EndpointApi endpointApi;
 
-    @Inject
-    private EndpointService endpointService;
+	@Context
+	private UriInfo uriContextInfo;
 
-    @POST
-    public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
-        try {
-            final Endpoint endpoint = endpointApi.create(endpointDto);
-            return Response.status(201).entity(endpoint.getId()).build();
-        } catch (NullPointerException e) {
-            throw new NotFoundException("Function " + endpointDto.getServiceCode() + "does not exists.");
-        }
-    }
+	@POST
+	public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
+		try {
+			final Endpoint endpoint = endpointApi.create(endpointDto);
+			return Response.status(201).entity(endpoint.getId()).build();
+		} catch (NullPointerException e) {
+			throw new NotFoundException("Function " + endpointDto.getServiceCode() + "does not exists.");
+		}
+	}
 
-    @PUT
-    public Response createOrReplace(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
-        final Endpoint endpoint = endpointApi.createOrReplace(endpointDto);
-        if(endpoint != null){
-            return Response.status(201).entity(endpoint.getId()).build();
-        }else{
-            return Response.noContent().build();
-        }
-    }
+	@PUT
+	public Response createOrReplace(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
+		final Endpoint endpoint = endpointApi.createOrReplace(endpointDto);
+		if (endpoint != null) {
+			return Response.status(201).entity(endpoint.getId()).build();
+		} else {
+			return Response.noContent().build();
+		}
+	}
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response list(@QueryParam("service") String serviceCode){
-        List<EndpointDto> dtoList;
-        if(serviceCode != null){
-            dtoList = endpointApi.findByServiceCode(serviceCode);
-        }else{
-            dtoList = endpointApi.list();
-        }
-        return Response.ok(dtoList).build();
-    }
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response list(@QueryParam("service") String serviceCode) {
+		List<EndpointDto> dtoList;
+		if (serviceCode != null) {
+			dtoList = endpointApi.findByServiceCode(serviceCode);
+		} else {
+			dtoList = endpointApi.list();
+		}
+		return Response.ok(dtoList).build();
+	}
 
-    @DELETE @Path("/{code}")
-    public Response delete(@PathParam("code") @NotNull String code) throws BusinessException, EntityDoesNotExistsException {
-        endpointApi.delete(code);
-        return Response.noContent().build();
-    }
+	@DELETE
+	@Path("/{code}")
+	public Response delete(@PathParam("code") @NotNull String code) throws BusinessException, EntityDoesNotExistsException {
+		endpointApi.delete(code);
+		return Response.noContent().build();
+	}
 
-    @GET @Path("/{code}.js")
-    @Produces("application/javascript")
-    public String getScript(@PathParam("code") String code) throws EntityDoesNotExistsException, IOException {
-        return endpointApi.getEndpointScript(code);
-    }
+	@GET
+	@Path("/{code}.js")
+	@Produces("application/javascript")
+	public String getScript(@PathParam("code") String code) throws EntityDoesNotExistsException, IOException {
+		return endpointApi.getEndpointScript(code);
+	}
 
-    @GET @Path("/{code}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response find(@PathParam("code") @NotNull String code){
-        final EndpointDto endpointDto = endpointApi.findByCode(code);
-        if(endpointDto != null){
-            return Response.ok(endpointDto).build();
-        }
-        return Response.status(404).build();
-    }
+	@GET
+	@Path("/{code}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response find(@PathParam("code") @NotNull String code) {
+		final EndpointDto endpointDto = endpointApi.findByCode(code);
+		if (endpointDto != null) {
+			return Response.ok(endpointDto).build();
+		}
+		return Response.status(404).build();
+	}
 
-    @HEAD @Path("/{code}")
-    public Response exists(@PathParam("code") @NotNull String code){
-        final EndpointDto endpointDto = endpointApi.findByCode(code);
-        if(endpointDto != null){
-            return Response.noContent().build();
-        }
-        return Response.status(404).build();
-    }
+	@HEAD
+	@Path("/{code}")
+	public Response exists(@PathParam("code") @NotNull String code) {
+		final EndpointDto endpointDto = endpointApi.findByCode(code);
+		if (endpointDto != null) {
+			return Response.noContent().build();
+		}
+		return Response.status(404).build();
+	}
+
+	@GET
+	@Path("/openApi/{code}")
+	public Response generateOpenApiJson(@PathParam("code") @NotNull String code) {
+
+		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
+	}
 
 }
