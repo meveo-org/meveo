@@ -17,6 +17,7 @@
 package org.meveo.api.rest.technicalservice.impl;
 
 import org.hibernate.result.Output;
+import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -94,6 +95,7 @@ public class EndpointRs extends BaseRs {
     }
 
     @GET @Path("/{code}.js")
+    @Cache(maxAge = 86400)
     @Produces("application/javascript")
     public String getScript(@PathParam("code") String code) throws EntityDoesNotExistsException, IOException {
         return endpointApi.getEndpointScript(code);
