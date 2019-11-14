@@ -904,10 +904,10 @@ public class Neo4jDao {
 
     }
 
-    public List<Node> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration){
+    public List<Node> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration, String label){
         // Use labels to speed up things
 
-        String orderByQuery = new StringBuffer("MATCH (n) WHERE n.meveo_uuid IN $uuids \n")
+        String orderByQuery = new StringBuffer("MATCH (n:" + label + ") WHERE n.meveo_uuid IN $uuids \n")
                 .append("RETURN n \n")
                 .append("ORDER BY n.").append(property).append(" ASC \n")
                 .toString();
@@ -917,7 +917,7 @@ public class Neo4jDao {
                 orderByQuery,
                 ImmutableMap.of("uuids", uuids),
                 (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
-                e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property)
+                e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property, e)
         );
     }
     
