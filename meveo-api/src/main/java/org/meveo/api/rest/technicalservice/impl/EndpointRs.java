@@ -16,35 +16,26 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
-import java.io.IOException;
-import java.util.List;
-
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Rest endpoint for managing service endpoints
@@ -106,6 +97,7 @@ public class EndpointRs extends BaseRs {
 
 	@GET
 	@Path("/{code}.js")
+    @Cache(maxAge = 86400)
 	@Produces("application/javascript")
 	public String getScript(@PathParam("code") String code) throws EntityDoesNotExistsException, IOException {
 		return endpointApi.getEndpointScript(code);
