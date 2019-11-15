@@ -60,6 +60,12 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<>();
 
+    @OneToMany(mappedBy = "script", cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<FileDependency> fileDependencies = new HashSet<>();
+
+    @OneToMany(mappedBy = "script", cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<MavenDependency> mavenDependencies = new HashSet<>();
+
     /**
      * @return the executionRoles
      */
@@ -79,5 +85,21 @@ public class ScriptInstance extends CustomScript {
      */
     public Set<Role> getSourcingRoles() {
         return sourcingRoles;
+    }
+
+    public Set<FileDependency> getFileDependencies() {
+        return fileDependencies;
+    }
+
+    public void setFileDependencies(Set<FileDependency> fileDependencies) {
+        this.fileDependencies = fileDependencies;
+    }
+
+    public Set<MavenDependency> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(Set<MavenDependency> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
     }
 }

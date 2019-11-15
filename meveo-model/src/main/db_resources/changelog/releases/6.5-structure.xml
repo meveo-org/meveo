@@ -64,4 +64,42 @@
             <column name="mutations" type="${type.json}"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="file_dependency" author="Hien Bach">
+        <createTable tableName="file_dependency">
+            <column name="script_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="path" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey constraintName="pk_file_dependency" tableName="file_dependency" columnNames="script_id,path"/>
+        <addForeignKeyConstraint baseTableName="file_dependency" baseColumnNames="script_id"
+                                 constraintName="fk_file_dependency_sc_id" referencedTableName="meveo_script_instance"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="maven_dependency" author="Hien Bach">
+        <createTable tableName="maven_dependency">
+            <column name="script_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="artifact_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="classifier" type="varchar(255)"/>
+            <column name="coordinates" type="varchar(255)"/>
+        </createTable>
+        <addPrimaryKey constraintName="pk_maven_dependency" tableName="maven_dependency" columnNames="script_id,coordinates"/>
+        <addForeignKeyConstraint baseTableName="maven_dependency" baseColumnNames="script_id"
+                                 constraintName="fk_maven_dependency_sc_id" referencedTableName="meveo_script_instance"
+                                 referencedColumnNames="id" />
+    </changeSet>
 </databaseChangeLog>

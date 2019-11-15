@@ -35,6 +35,9 @@
         <p:menuitem id="countries"
                     rendered="#{currentUser.hasRole('superAdminManagement')}"
                     outcome="countries" value="#{messages['menu.countries']}" />
+       	<p:menuitem id="mavenConfiguration"
+                    rendered="#{currentUser.hasRole('superAdminManagement')}"
+                    outcome="mavenConfiguration" value="#{messages['maven.configuration']}" />
     </p:submenu>
     <p:submenu id="trading" label="#{messages['menu.trading']}"
                rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">

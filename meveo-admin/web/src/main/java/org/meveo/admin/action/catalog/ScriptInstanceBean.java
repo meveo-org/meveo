@@ -18,13 +18,8 @@
  */
 package org.meveo.admin.action.catalog;
 
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
@@ -41,12 +36,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptIO;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.scripts.ScriptInstanceNode;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -77,7 +67,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Inject
     private RoleService roleService;
-    
+
     @Inject
     private ScriptInstanceApi scriptInstanceApi;
 
@@ -86,6 +76,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
+
+    private List<FileDependency> fileDependencies = new ArrayList<>();
+    private List<MavenDependency> mavenDependencies = new ArrayList<>();
+
+    private FileDependency fileDependency = new FileDependency();
+    private MavenDependency mavenDependency = new MavenDependency();
 
     private TreeNode rootNode;
 
@@ -233,6 +229,27 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
+        if (CollectionUtils.isNotEmpty(fileDependencies)) {
+            Set<FileDependency> scriptFiles = new HashSet<>();
+            for (FileDependency fileDependency : fileDependencies) {
+                if (fileDependency != null) {
+                    scriptFiles.add(fileDependency);
+                }
+            }
+            getEntity().getFileDependencies().clear();
+            getEntity().getFileDependencies().addAll(scriptFiles);
+        }
+
+        if (CollectionUtils.isNotEmpty(mavenDependencies)) {
+            Set<MavenDependency> scriptMavens = new HashSet<>();
+            for (MavenDependency mavenDependency : mavenDependencies) {
+                if (mavenDependency != null) {
+                    scriptMavens.add(mavenDependency);
+                }
+            }
+            getEntity().getMavenDependencies().clear();
+            getEntity().getMavenDependencies().addAll(scriptMavens);
+        }
         super.saveOrUpdate(false);
 
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
@@ -479,5 +496,64 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         return foundNode;
     }
-    
+
+    public List<FileDependency> getFileDependencies() {
+        if (CollectionUtils.isEmpty(fileDependencies)) {
+            if (entity.getFileDependencies() != null) {
+                fileDependencies = new ArrayList<>(entity.getFileDependencies());
+                return fileDependencies;
+            } else {
+                return new ArrayList<>();
+            }
+        }
+        return fileDependencies;
+    }
+
+    public void setFileDependencies(List<FileDependency> fileDependencies) {
+        this.fileDependencies = fileDependencies;
+    }
+
+    public FileDependency getFileDependency() {
+        return fileDependency;
+    }
+
+    public void addNewFileDependency() {
+        FileDependency fileDependency = new FileDependency();
+        fileDependency.setScript(entity);
+        fileDependencies.add(fileDependency);
+    }
+
+    public void removeFileDependency(FileDependency selectedFileDependency) {
+        fileDependencies.remove(selectedFileDependency);
+    }
+
+    public List<MavenDependency> getMavenDependencies() {
+        if (CollectionUtils.isEmpty(mavenDependencies)) {
+            if (entity.getMavenDependencies() != null) {
+                mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
+                return mavenDependencies;
+            } else {
+                return new ArrayList<>();
+            }
+        }
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependency> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
+    }
+
+    public MavenDependency getMavenDependency() {
+        return mavenDependency;
+    }
+
+    public void removeMavenDependency(MavenDependency selectedMavenDependency) {
+       mavenDependencies.remove(selectedMavenDependency);
+    }
+
+    public void addMavenDependency() {
+        mavenDependency = new MavenDependency();
+        mavenDependency.setScript(entity);
+        mavenDependencies.add(mavenDependency);
+    }
 }

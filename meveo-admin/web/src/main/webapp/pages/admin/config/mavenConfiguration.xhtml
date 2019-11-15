@@ -1,0 +1,39 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:event type="preRenderView"
+				listener="#{mavenConfigurationBean.preRenderView()}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+		<p:panel>
+			<f:facet name="header">
+				<h:outputText value="#{messages['maven.configuration']}" />
+			</f:facet>
+			<h:form id="mavenConfigurationForm">
+				<p:messages />
+				<hftl:decorateFormField fieldId="m2FolderPath"
+					label="#{messages['maven.configuration.m2FolderPath']}">
+					<p:inputText id="m2FolderPath" required="true"
+						value="#{mavenConfigurationBean.mavenConfiguration.m2FolderPath}" />
+				</hftl:decorateFormField>
+				<hftl:decorateFormField fieldId="mavenRepositories"
+					label="#{messages['maven.configuration.mavenRepositories']}">
+					<p:inputTextarea id="mavenRepositories" rows="10" cols="50"
+						required="false"
+						value="#{mavenConfigurationBean.mavenRepositories}" />
+				</hftl:decorateFormField>
+
+				<h:panelGroup layout="block" styleClass="form-panel-actions">
+					<p:commandButton action="#{mavenConfigurationBean.save}"
+						update="mavenConfigurationForm" value="#{messages['action.save']}" />
+				</h:panelGroup>
+			</h:form>
+		</p:panel>
+	</ui:define>
+</ui:composition>

@@ -9,6 +9,8 @@ import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.FileDependencyDto;
+import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.ScriptInstanceErrorDto;
@@ -20,6 +22,8 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.FileDependency;
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
@@ -39,34 +43,34 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
-	@Inject
-	private RoleService roleService;
+    @Inject
+    private RoleService roleService;
 
-	public ScriptInstanceApi() {
-		super(ScriptInstance.class, ScriptInstanceDto.class);
-	}
-	
+    public ScriptInstanceApi() {
+    	super(ScriptInstance.class, ScriptInstanceDto.class);
+    }
+
 	/**
 	 * @param code Optional. Filter on script code
 	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type and error.
 	 */
 	public List<ScriptInstanceDto> getScriptsForTreeView(String code){
 		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
-		
+
 		if(code != null) {
 			query.append(" WHERE upper(s.code) LIKE :code");
 		}
-		
+
 		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager()
 			.createQuery(query.toString(), ScriptInstanceDto.class);
-		
+
 		if(code != null) {
 			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
 		}
-		
+
 		return jpaQuery.getResultList();
 	}
-	
+
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
 			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
 		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
@@ -243,10 +247,33 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
+        List<FileDependency> fileDependencyList = new ArrayList<>();
+        for (FileDependencyDto fileDependencyDto : dto.getFileDependencies()) {
+            FileDependency fileDependency = new FileDependency();
+            fileDependency.setPath(fileDependencyDto.getPath());
+            fileDependency.setScript(scriptInstance);
+            fileDependencyList.add(fileDependency);
+        }
+        scriptInstance.getFileDependencies().clear();
+        scriptInstance.getFileDependencies().addAll(fileDependencyList);
+
+        List<MavenDependency> mavenDependencyList = new ArrayList<>();
+        for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
+            MavenDependency mavenDependency = new MavenDependency();
+            mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
+            mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
+            mavenDependency.setVersion(mavenDependencyDto.getVersion());
+            mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+            mavenDependency.setScript(scriptInstance);
+            mavenDependencyList.add(mavenDependency);
+        }
+        scriptInstance.getMavenDependencies().clear();
+        scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
+
 		return scriptInstance;
 	}
 
-	@Override
+    @Override
 	public ScriptInstanceDto toDto(ScriptInstance entity) {
 		// TODO Auto-generated method stub
 		return null;

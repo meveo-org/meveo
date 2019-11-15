@@ -19,12 +19,37 @@
  */
 package org.meveo.service.script;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.javadoc.JavadocBlockTag;
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
@@ -38,35 +63,34 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FileDependency;
+import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.sonatype.aether.artifact.Artifact;
+import org.sonatype.aether.repository.RemoteRepository;
+import org.sonatype.aether.resolution.DependencyResolutionException;
+import org.sonatype.aether.util.artifact.DefaultArtifact;
 
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.jcabi.aether.Aether;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -76,8 +100,8 @@ import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
-    private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+	private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
+	private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
 	private static final String SET = "set";
 	private static final String GET = "get";
@@ -99,6 +123,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	@Inject
 	private GitClient gitClient;
+
+	@Inject
+	private MavenConfigurationService mavenConfigurationService;
 
 	/**
 	 * Constructor.
@@ -255,110 +282,101 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 * Construct classpath for script compilation
 	 */
 	public void constructClassPath() throws IOException {
-        if (CLASSPATH_REFERENCE.get().length() == 0) {
-            synchronized (CLASSPATH_REFERENCE) {
-                if (CLASSPATH_REFERENCE.get().length() == 0) {
-                    String classpath = CLASSPATH_REFERENCE.get();
+		if (CLASSPATH_REFERENCE.get().length() == 0) {
+			synchronized (CLASSPATH_REFERENCE) {
+				if (CLASSPATH_REFERENCE.get().length() == 0) {
+					String classpath = CLASSPATH_REFERENCE.get();
 
-			// Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass()
-                        .getProtectionDomain()
-                        .getCodeSource()
-                        .getLocation()
-                        .getFile();
+					// Check if deploying an exploded archive or a compressed file
+					String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
-			File realFile = new File(thisClassfile);
+					File realFile = new File(thisClassfile);
 
-			// Was deployed as exploded archive
-			if (realFile.exists()) {
-				File deploymentDir = realFile.getParentFile();
-				File[] files = deploymentDir.listFiles();
-				if (files != null) {
-					for (File file : files) {
-                                if (file.getName()
-                                    .endsWith(".jar")) {
-							classpath += file.getCanonicalPath() + File.pathSeparator;
-						}
-					}
-				}
-
-				// War was deployed as compressed archive
-			} else {
-
-				org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
-                        realFile = new File(org.jboss.vfs.VFSUtils.getPhysicalURI(vFile)
-                            .getPath());
-
-                        File deploymentDir = realFile.getParentFile()
-                            .getParentFile();
-
-				Set<String> classPathEntries = new HashSet<>();
-
-				for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-					if (physicalLibDir.isDirectory()) {
-						for (File f : FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
-							classPathEntries.add(f.getCanonicalPath());
-						}
-					}
-				}
-
-				/* Fallback when thorntail is used */
-				if (classPathEntries.isEmpty()) {
-					for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-						if (physicalLibDir.isDirectory()) {
-							for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
-								if (subLib.isDirectory()) {
-									final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
-									classPathEntries.addAll(jars);
-                                            if (subLib.getName()
-                                                .equals("classes")) {
-										classPathEntries.add(subLib.getCanonicalPath());
-									}
+					// Was deployed as exploded archive
+					if (realFile.exists()) {
+						File deploymentDir = realFile.getParentFile();
+						File[] files = deploymentDir.listFiles();
+						if (files != null) {
+							for (File file : files) {
+								if (file.getName().endsWith(".jar")) {
+									classpath += file.getCanonicalPath() + File.pathSeparator;
 								}
 							}
 						}
-					}
-				} else {
-					// vfs used by thorntail
-                            File vfsDir = deploymentDir.getParentFile()
-                                .getParentFile();
-					for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
-						if (!tempDir.isDirectory()) {
-							continue;
+
+						// War was deployed as compressed archive
+					} else {
+
+						org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
+						realFile = new File(org.jboss.vfs.VFSUtils.getPhysicalURI(vFile).getPath());
+
+						File deploymentDir = realFile.getParentFile().getParentFile();
+
+						Set<String> classPathEntries = new HashSet<>();
+
+						for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
+							if (physicalLibDir.isDirectory()) {
+								for (File f : FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
+									classPathEntries.add(f.getCanonicalPath());
+								}
+							}
 						}
 
-						for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
-							if (!subTempDir.isDirectory()) {
-								continue;
+						/* Fallback when thorntail is used */
+						if (classPathEntries.isEmpty()) {
+							for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
+								if (physicalLibDir.isDirectory()) {
+									for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
+										if (subLib.isDirectory()) {
+											final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+											classPathEntries.addAll(jars);
+											if (subLib.getName().equals("classes")) {
+												classPathEntries.add(subLib.getCanonicalPath());
+											}
+										}
+									}
+								}
 							}
-
-							for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
-								if (!warDir.isDirectory()) {
+						} else {
+							// vfs used by thorntail
+							File vfsDir = deploymentDir.getParentFile().getParentFile();
+							for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
+								if (!tempDir.isDirectory()) {
 									continue;
 								}
 
-								for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
-									if (!webInfDir.isDirectory()) {
+								for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
+									if (!subTempDir.isDirectory()) {
 										continue;
 									}
 
-									for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
-										if (classesDir.isDirectory()) {
-											classPathEntries.add(classesDir.getCanonicalPath());
+									for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
+										if (!warDir.isDirectory()) {
+											continue;
+										}
+
+										for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
+											if (!webInfDir.isDirectory()) {
+												continue;
+											}
+
+											for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
+												if (classesDir.isDirectory()) {
+													classPathEntries.add(classesDir.getCanonicalPath());
+												}
+											}
 										}
 									}
 								}
 							}
 						}
+
+						classpath = String.join(File.pathSeparator, classPathEntries);
+
 					}
+
+					CLASSPATH_REFERENCE.set(classpath);
 				}
-
-				classpath = String.join(File.pathSeparator, classPathEntries);
-
-                    }
-
-                    CLASSPATH_REFERENCE.set(classpath);
-                }
 			}
 		}
 	}
@@ -437,10 +455,100 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			source = readScriptFile(script);
 		}
 
+		addScriptDependencies(script);
+
 		List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
 
 		script.setError(scriptErrors != null && !scriptErrors.isEmpty());
 		script.setScriptErrors(scriptErrors);
+	}
+
+	private void addScriptDependencies(T script) {
+
+		if (script instanceof ScriptInstance) {
+			ScriptInstance scriptInstance = (ScriptInstance) script;
+
+			Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
+			Set<FileDependency> fileDependencies = scriptInstance.getFileDependencies();
+
+			if (fileDependencies != null) {
+				Set<String> fileDependencyPaths = fileDependencies.stream().flatMap(e -> {
+
+					File f = new File(e.getPath());
+					if (f.isDirectory()) {
+						Collection<File> subFiles = org.apache.commons.io.FileUtils.listFiles(f, new String[] { "jar" }, true);
+						return subFiles.stream().map(t -> {
+							try {
+								return t.getCanonicalPath();
+
+							} catch (IOException e1) {
+								return null;
+							}
+						});
+
+					} else {
+						try {
+							return new HashSet<String>(Arrays.asList(f.getCanonicalPath())).stream();
+
+						} catch (IOException e1) {
+							return null;
+						}
+					}
+				}).filter(Objects::nonNull).filter(e -> !e.isEmpty()).collect(Collectors.toSet());
+
+				mavenDependencies.addAll(fileDependencyPaths);
+			}
+
+			synchronized (CLASSPATH_REFERENCE) {
+				mavenDependencies.stream().forEach(location -> {
+					if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+						addLibrary(location);
+						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+					}
+				});
+			}
+		}
+	}
+
+//	private  File resolveInLocalRepo(DefaultArtifact artifact){
+//        LOG.debug("Trying to resolve $artifact in local repository...")
+//        def localRepoManager = new SimpleLocalRepositoryManager(localRepoRoot)
+//        def pathToLocalArtifact = localRepoManager.getPathForLocalArtifact(artifact)
+//        LOG.debug("pathToLocalArtifact: [$pathToLocalArtifact]")
+//        new File("$localRepoRoot.absolutePath/$pathToLocalArtifact")
+//    }
+
+	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
+
+		Set<String> result = new HashSet<>();
+		List<String> repos = mavenConfigurationService.getMavenRepositories();
+		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
+
+		if (!StringUtils.isBlank(m2FolderPath)) {
+			File localRepository = new File(m2FolderPath);
+			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(e, "default", e)).collect(Collectors.toList());
+
+			Aether aether = new Aether(remoteRepositories, localRepository);
+
+			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
+				Set<Artifact> artifacts = mavenDependencies.stream().map(e -> {
+					try {
+						// check if artifact exists in local repository
+						DefaultArtifact defaultArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
+						return aether.resolve(defaultArtifact, "compile");
+
+					} catch (DependencyResolutionException e1) {
+						return null;
+					}
+				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+
+				result = artifacts.stream().map(e -> {
+					return e.getFile().getPath();
+				}).filter(Objects::nonNull).collect(Collectors.toSet());
+			}
+		}
+
+		return result;
 	}
 
 	/**
@@ -538,7 +646,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 				if (!testCompile && isActive) {
 
-                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
+					ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
 					log.debug("Compiled script {} added to compiled interface map", scriptCode);
 				}
 
@@ -578,7 +686,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			}
 		} else {
 			ScriptInterface engine = new ES5ScriptEngine(sourceCode);
-            ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
+			ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
 			return null;
 		}
 	}
@@ -598,9 +706,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 		String fullClassName = getFullClassname(javaSrc);
 
-        log.trace("Compile JAVA script {} with classpath {}", fullClassName, CLASSPATH_REFERENCE.get());
+		URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+		String classPath = CLASSPATH_REFERENCE.get();
 
-        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", CLASSPATH_REFERENCE.get()));
+		log.debug(classPath);
+		log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
+
+		CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(classLoader, Arrays.asList("-cp", classPath));
 		final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
 		return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
 	}
@@ -622,7 +734,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			String className = matcher.group(1);
 			try {
 				if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-					Class clazz = Class.forName(className);
+					URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+					Class clazz = classLoader.loadClass(className);
 					try {
 						String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
 						if (location.startsWith("file:")) {
@@ -632,12 +745,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 							location = location.substring(0, location.length() - 2);
 						}
 
-                        if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                            synchronized (CLASSPATH_REFERENCE) {
-                                if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                                    CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-                                }
-                            }
+						if (!CLASSPATH_REFERENCE.get().contains(location)) {
+							synchronized (CLASSPATH_REFERENCE) {
+								if (!CLASSPATH_REFERENCE.get().contains(location)) {
+									CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+								}
+							}
 						}
 
 					} catch (Exception e) {
@@ -658,7 +771,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 * @return Script interface Class
 	 */
 	public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
-        ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
 		if (supplier == null) {
 			supplier = getScriptInterfaceWCompile(scriptCode);
@@ -681,7 +794,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
 		ScriptInterfaceSupplier result;
 
-        result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
 		if (result == null) {
 			T script = findByCode(scriptCode);
@@ -694,7 +807,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 				log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
 				throw new InvalidScriptException(scriptCode, getEntityClass().getName());
 			}
-            result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+			result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 		}
 
 		if (result == null) {
@@ -766,11 +879,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 */
 	public void clearCompiledScripts(String scriptCode) {
 		super.clear(scriptCode);
-        ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+		ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 	}
 
 	public void clearCompiledScripts() {
-        ALL_SCRIPT_INTERFACES.clear();
+		ALL_SCRIPT_INTERFACES.clear();
 	}
 
 	@Override
@@ -788,10 +901,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
 			method.setAccessible(true);
 			method.invoke(classLoader, url);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

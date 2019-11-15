@@ -18,17 +18,21 @@
  */
 package org.meveo.admin.listener;
 
-import org.hibernate.Session;
-import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.MeveoJpa;
-import org.slf4j.Logger;
-
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.hibernate.Session;
+import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.MeveoJpa;
+import org.slf4j.Logger;
+
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.5.0
+ */
 @Startup
 @Singleton
 public class StartupListener {
