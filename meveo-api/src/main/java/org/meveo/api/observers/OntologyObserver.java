@@ -462,11 +462,11 @@ public class OntologyObserver {
     }
 
     /**
-     * When a commit concerning script is received :
+     * When a commit concerning cet is received :
      * <ul>
-     * <li>If script file has been created, create the JPA entity</li>
-     * <li>If script file has been modified, re-compile it</li>
-     * <li>If script file has been deleted, remove the JPA entity</li>
+     * <li>If cet file has been created, create the JPA entity</li>
+     * <li>If cet file has been modified, re-compile it</li>
+     * <li>If cet file has been deleted, remove the JPA entity</li>
      * </ul>
      */
     @SuppressWarnings("unchecked")
