@@ -27,7 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,7 +37,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -512,6 +510,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		}
 	}
 
+//	private  File resolveInLocalRepo(DefaultArtifact artifact){
+//        LOG.debug("Trying to resolve $artifact in local repository...")
+//        def localRepoManager = new SimpleLocalRepositoryManager(localRepoRoot)
+//        def pathToLocalArtifact = localRepoManager.getPathForLocalArtifact(artifact)
+//        LOG.debug("pathToLocalArtifact: [$pathToLocalArtifact]")
+//        new File("$localRepoRoot.absolutePath/$pathToLocalArtifact")
+//    }
+
 	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
 
 		Set<String> result = new HashSet<>();
@@ -520,7 +526,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 		if (!StringUtils.isBlank(m2FolderPath)) {
 			File localRepository = new File(m2FolderPath);
-			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(UUID.randomUUID().toString(), "default", e)).collect(Collectors.toList());
+			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository(e, "default", e)).collect(Collectors.toList());
 
 			Aether aether = new Aether(remoteRepositories, localRepository);
 
@@ -529,14 +535,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 					try {
 						// check if artifact exists in local repository
 						DefaultArtifact defaultArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
-						File localFile = Paths.get(e.toLocalM2Path(m2FolderPath)).toFile();
-						if (!localFile.exists()) {
-							return aether.resolve(defaultArtifact, "compile");
+						return aether.resolve(defaultArtifact, "compile");
 
-						} else {
-							Artifact artifact = defaultArtifact.setFile(localFile);
-							return new HashSet<>(Arrays.asList(artifact));
-						}
 					} catch (DependencyResolutionException e1) {
 						return null;
 					}
