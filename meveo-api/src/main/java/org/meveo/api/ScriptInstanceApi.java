@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.TypedQuery;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.FileDependencyDto;
@@ -48,6 +49,27 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
     public ScriptInstanceApi() {
     	super(ScriptInstance.class, ScriptInstanceDto.class);
     }
+
+	/**
+	 * @param code Optional. Filter on script code
+	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type and error.
+	 */
+	public List<ScriptInstanceDto> getScriptsForTreeView(String code){
+		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
+
+		if(code != null) {
+			query.append(" WHERE upper(s.code) LIKE :code");
+		}
+
+		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager()
+			.createQuery(query.toString(), ScriptInstanceDto.class);
+
+		if(code != null) {
+			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
+		}
+
+		return jpaQuery.getResultList();
+	}
 
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
 			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {

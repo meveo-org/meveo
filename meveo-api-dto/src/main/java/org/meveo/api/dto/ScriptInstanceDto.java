@@ -11,6 +11,7 @@ import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.model.scripts.FileDependency;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
 /**
@@ -32,6 +33,8 @@ public class ScriptInstanceDto extends CustomScriptDto {
     /** The sourcing roles. */
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
+    private Boolean error;
+
     /** The file dependencies. */
     private List<FileDependencyDto> fileDependencies = new ArrayList<>();
 
@@ -43,6 +46,13 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public ScriptInstanceDto() {
         super();
+    }
+
+    public ScriptInstanceDto(Long id, String code, ScriptSourceTypeEnum type, Boolean error) {
+    	this.id = id;
+    	this.code = code;
+    	setType(type);
+    	this.error = error;
     }
 
     /**
@@ -162,4 +172,13 @@ public class ScriptInstanceDto extends CustomScriptDto {
         }
         return true;
     }
+
+	public Boolean getError() {
+		return error;
+	}
+
+	public void setError(Boolean error) {
+		this.error = error;
+	}
+
 }

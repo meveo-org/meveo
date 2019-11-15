@@ -16,25 +16,36 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * EJB for managing technical services endpoints
@@ -52,6 +63,13 @@ public class EndpointService extends BusinessService<Endpoint> {
 
     @Context
     private HttpServletRequest request;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
+    @Inject
+    private GitClient gitClient;
 
     public static String getEndpointPermission(Endpoint endpoint) {
         return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
@@ -75,6 +93,11 @@ public class EndpointService extends BusinessService<Endpoint> {
         return getEntityManager().createQuery(query).getResultList();
     }
 
+    /**
+     * @param code  Code of the service associated to the endpoint
+     * @param parameterName Filter on endpoint's parameters names
+     * @return the filtered list of endpoints
+     */
     public List<Endpoint> findByParameterName(String code, String parameterName){
         return getEntityManager()
                 .createNamedQuery("findByParameterName", Endpoint.class)
@@ -83,6 +106,11 @@ public class EndpointService extends BusinessService<Endpoint> {
                 .getResultList();
     }
 
+    /**
+     * Create a new endpoint in database. Also create associated client and roles in keycloak.
+     *
+     * @param entity Endpoint to create
+     */
     @Override
     public void create(Endpoint entity) throws BusinessException {
 
@@ -111,6 +139,11 @@ public class EndpointService extends BusinessService<Endpoint> {
         super.create(entity);
     }
 
+    /**
+     * Remove an endpoint from database. Also remove associated role in keycloak.
+     *
+     * @param entity Endpoint to remove
+     */
     @Override
     public void remove(Endpoint entity) throws BusinessException {
         super.remove(entity);
@@ -124,6 +157,12 @@ public class EndpointService extends BusinessService<Endpoint> {
         keycloakAdminClientService.removeRole(role);
     }
 
+    /**
+     * Update an endpoint.
+     *
+     * @param entity Endpoint to update
+     * @return the updated endpoint
+     */
     @Override
     public Endpoint update(Endpoint entity) throws BusinessException {
         Endpoint endpoint = findById(entity.getId());
@@ -171,5 +210,63 @@ public class EndpointService extends BusinessService<Endpoint> {
         }
         
         return entity;
+    }
+
+    /**
+     * Create and commit the generated JS file to call the endpoint.
+     * Automatically called at endpoint's creation.
+     *
+     * @param endpoint Created endpoint
+     * @return the generated file
+     * @throws IOException if file cannot be created
+     * @throws BusinessException if the changes can't be commited
+     */
+    public File createESFile(@Observes @Created Endpoint endpoint) throws IOException, BusinessException {
+        final File scriptFile = getScriptFile(endpoint);
+        FileUtils.write(scriptFile, ESGenerator.generate(endpoint));
+        gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
+        return scriptFile;
+    }
+
+    /**
+     * Update (or create if not exists yet) the generated JS file to call the endpoint and commit the changes if there are any.
+     * Automatically called at endpoint's update.
+     *
+     * @param endpoint Updated endpoint
+     * @return the updated generated file
+     * @throws IOException if file cannot be created or overwritten
+     * @throws BusinessException if the changes can't be commited
+     */
+    public File updateESFile(@Observes @Updated Endpoint endpoint) throws IOException, BusinessException {
+        final File scriptFile = getScriptFile(endpoint);
+        String updatedScript = ESGenerator.generate(endpoint);
+
+        if(!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
+            FileUtils.write(scriptFile, updatedScript);
+            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
+        }
+
+        return scriptFile;
+    }
+
+    /**
+     * Remove the generated JS file from Meveo git repository.
+     * Called at endpoint's deletion.
+     *
+     * @param endpoint Removed endpoint
+     * @return the result of {@link File#delete()} called on the script file
+     * @throws BusinessException if the changes can't be commited
+     */
+    public boolean removeESFile(@Observes @Removed Endpoint endpoint) throws BusinessException {
+        File scriptFile = getScriptFile(endpoint);
+        gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
+        return scriptFile.delete();
+    }
+
+    private File getScriptFile(Endpoint endpoint) {
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
+        endpointDir.mkdirs();
+        return new File(endpointDir, endpoint.getCode() + ".js");
     }
 }
