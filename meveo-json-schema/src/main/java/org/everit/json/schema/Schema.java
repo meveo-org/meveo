@@ -1,6 +1,7 @@
 package org.everit.json.schema;
 
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Objects;
 
 import org.everit.json.schema.internal.JSONPrinter;
@@ -37,6 +38,8 @@ public abstract class Schema {
 
         private Boolean writeOnly = null;
 
+        private List<String> storages;
+
         public Builder<S> title(String title) {
             this.title = title;
             return this;
@@ -49,6 +52,11 @@ public abstract class Schema {
 
         public Builder<S> id(String id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder<S> storages(List<String> storages) {
+            this.storages = storages;
             return this;
         }
 
@@ -87,6 +95,8 @@ public abstract class Schema {
 
     private final String id;
 
+    private List<String> storages;
+
     protected final String schemaLocation;
 
     private final Object defaultValue;
@@ -107,6 +117,7 @@ public abstract class Schema {
         this.title = builder.title;
         this.description = builder.description;
         this.id = builder.id;
+        this.storages = builder.storages;
         this.schemaLocation = builder.schemaLocation;
         this.defaultValue = builder.defaultValue;
         this.nullable = builder.nullable;
@@ -185,6 +196,7 @@ public abstract class Schema {
                     Objects.equals(defaultValue, schema.defaultValue) &&
                     Objects.equals(description, schema.description) &&
                     Objects.equals(id, schema.id) &&
+                    Objects.equals(storages, schema.storages) &&
                     Objects.equals(nullable, schema.nullable) &&
                     Objects.equals(readOnly, schema.readOnly) &&
                     Objects.equals(writeOnly, schema.writeOnly);
@@ -195,7 +207,7 @@ public abstract class Schema {
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, description, id, defaultValue, nullable, readOnly, writeOnly);
+        return Objects.hash(title, description, id, storages, defaultValue, nullable, readOnly, writeOnly);
     }
 
     public String getTitle() {
@@ -208,6 +220,10 @@ public abstract class Schema {
 
     public String getId() {
         return id;
+    }
+
+    public List<String> getStorages() {
+        return storages;
     }
 
     public String getSchemaLocation() {
@@ -250,6 +266,7 @@ public abstract class Schema {
         writer.ifPresent("title", title);
         writer.ifPresent("description", description);
         writer.ifPresent("id", id);
+        writer.ifPresent("storages", storages);
         writer.ifPresent("default", defaultValue);
         writer.ifPresent("nullable", nullable);
         writer.ifPresent("readOnly", readOnly);
