@@ -19,7 +19,9 @@ package org.meveo.api.observers;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
+import org.meveo.api.CustomRelationshipTemplateApi;
 import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
@@ -37,6 +39,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -94,6 +97,12 @@ public class OntologyObserver {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
+
+    @Inject
+    private CustomRelationshipTemplateApi customRelationshipTemplateApi;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
 
@@ -496,6 +505,33 @@ public class OntologyObserver {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public void onCRTsChanged(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, MeveoApiException {
+        if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
+            for (String modifiedFile : commitEvent.getModifiedFiles()) {
+                String[] crt = modifiedFile.split("/");
+                String fileName = crt[crt.length - 1];
+                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json")) {
+                    String[] crtFileName = fileName.split("\\.");
+                    String code = crtFileName[0];
+                    CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(code);
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File crtFile = new File(repositoryDir, modifiedFile);
+                    if (customRelationshipTemplate == null) {
+                        String absolutePath = crtFile.getAbsolutePath();
+                        CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(absolutePath);
+                        customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                    } else if (customRelationshipTemplate != null && !crtFile.exists()) {
+                        customRelationshipTemplateApi.removeCustomRelationshipTemplate(code);
+                    } else if (customRelationshipTemplate != null && crtFile.exists()) {
+                        CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(crtFile.getAbsolutePath());
+                        customRelationshipTemplateApi.updateCustomRelationshipTemplate(customRelationshipTemplateDto);
+                    }
+                }
+            }
+        }
+    }
+
     private File getCetDir() {
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
         return new File(repositoryDir, "custom/entities");
@@ -514,7 +550,7 @@ public class OntologyObserver {
 
     private String getTemplateSchema(CustomRelationshipTemplate crt) {
         String schema = jsonSchemaGenerator.generateSchema(crt.getCode(), crt);
-        return schema.replaceAll("\"\\$ref\".*:.*\"#/definitions/([^\"]+)\"", "\"\\$ref\": \"../entities/$1\"");
+        return schema.replaceAll("#/definitions", "../entities");
     }
 
 }
