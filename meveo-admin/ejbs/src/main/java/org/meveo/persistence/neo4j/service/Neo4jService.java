@@ -1214,6 +1214,8 @@ public class Neo4jService implements CustomPersistenceService {
                                         + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
                                         + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
+                            
+                            fieldValue = longValue;
                         } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                             Double doubleValue;
                             if (valueToCheck instanceof Integer) {
@@ -1233,6 +1235,8 @@ public class Neo4jService implements CustomPersistenceService {
                                         + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
                                         + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
+                            
+                            fieldValue = doubleValue;
                         }
                         if (cft.isUnique() && uniqueFields != null) {
                             uniqueFields.put(cft.getCode(), fieldValue);
