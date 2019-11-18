@@ -706,13 +706,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 		String fullClassName = getFullClassname(javaSrc);
 
-		URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 		String classPath = CLASSPATH_REFERENCE.get();
 
-		log.debug(classPath);
 		log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
 
-		CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(classLoader, Arrays.asList("-cp", classPath));
+		CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
 		final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
 		return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
 	}
