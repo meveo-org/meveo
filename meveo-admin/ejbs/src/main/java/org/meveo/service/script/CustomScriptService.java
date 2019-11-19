@@ -122,8 +122,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @PostConstruct
     private void init() {
-        defaultRepositorySystem = mavenConfigurationService.newRepositorySystem();
-        defaultRepositorySystemSession = mavenConfigurationService.newRepositorySystemSession(defaultRepositorySystem);
+        if(mavenConfigurationService.getM2FolderPath() != null) {
+            defaultRepositorySystem = mavenConfigurationService.newRepositorySystem();
+            defaultRepositorySystemSession = mavenConfigurationService.newRepositorySystemSession(defaultRepositorySystem);
+        }
     }
 
     /**
