@@ -33,8 +33,6 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.ScriptInstanceApi;
-import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
@@ -68,17 +66,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     @Inject
     private RoleService roleService;
 
-    @Inject
-    private ScriptInstanceApi scriptInstanceApi;
-
     private DualListModel<Role> execRolesDM;
     private DualListModel<Role> sourcRolesDM;
 
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
-    private List<FileDependency> fileDependencies = new ArrayList<>();
-    private List<MavenDependency> mavenDependencies = new ArrayList<>();
+    private List<FileDependency> fileDependencies;
+    private List<MavenDependency> mavenDependencies;
 
     private FileDependency fileDependency = new FileDependency();
     private MavenDependency mavenDependency = new MavenDependency();
@@ -238,6 +233,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
             getEntity().getFileDependencies().clear();
             getEntity().getFileDependencies().addAll(scriptFiles);
+        } else {
+            getEntity().getFileDependencies().clear();
         }
 
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
@@ -249,6 +246,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
             getEntity().getMavenDependencies().clear();
             getEntity().getMavenDependencies().addAll(scriptMavens);
+        } else {
+            getEntity().getMavenDependencies().clear();
         }
         super.saveOrUpdate(false);
 
@@ -389,6 +388,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public TreeNode computeRootNode() {
+        log.info("Computing root node");
+
         Map<String, Object> filters = this.getFilters();
         String code = "";
         boolean isExpand = false;
@@ -396,29 +397,29 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             code = (String) filters.get("code");
         }
 
-        List<ScriptInstanceDto> scriptInstances = new ArrayList<>();
+        List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
-            scriptInstances = scriptInstanceApi.getScriptsForTreeView(code);
+            scriptInstances = scriptInstanceService.findByCodeLike(code);
             isExpand = true;
         } else {
-            scriptInstances = scriptInstanceApi.getScriptsForTreeView(null);
+            scriptInstances = scriptInstanceService.list();
         }
         rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
         rootNode.setExpanded(isExpand);
-        List<ScriptInstanceDto> javaScriptInstances = null;
-        List<ScriptInstanceDto> es5ScriptInstances = null;
+        List<ScriptInstance> javaScriptInstances = null;
+        List<ScriptInstance> es5ScriptInstances = null;
         if (CollectionUtils.isNotEmpty(scriptInstances)) {
             javaScriptInstances = scriptInstances.stream()
-                    .filter(e -> e.getType() == ScriptSourceTypeEnum.JAVA)
+                    .filter(e -> e.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA)
                     .collect(Collectors.toList());
             es5ScriptInstances = scriptInstances.stream()
-                    .filter(e -> e.getType() == ScriptSourceTypeEnum.ES5)
+                    .filter(e -> e.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5)
                     .collect(Collectors.toList());
         }
         if (CollectionUtils.isNotEmpty(javaScriptInstances)) {
             TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode(JAVA, JAVA), rootNode);
             rootJava.setExpanded(isExpand);
-            for (ScriptInstanceDto scriptInstance : javaScriptInstances) {
+            for (ScriptInstance scriptInstance : javaScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
                 createTree(JAVA, nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
@@ -427,7 +428,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (CollectionUtils.isNotEmpty(es5ScriptInstances)) {
             TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode(ES5, ES5), rootNode);
             rootEs5.setExpanded(isExpand);
-            for (ScriptInstanceDto scriptInstance : es5ScriptInstances) {
+            for (ScriptInstance scriptInstance : es5ScriptInstances) {
                 String[] fullNames = scriptInstance.getCode().split("\\.");
                 List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
                 createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
@@ -498,7 +499,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public List<FileDependency> getFileDependencies() {
-        if (CollectionUtils.isEmpty(fileDependencies)) {
+        if (fileDependencies == null) {
             if (entity.getFileDependencies() != null) {
                 fileDependencies = new ArrayList<>(entity.getFileDependencies());
                 return fileDependencies;
@@ -528,7 +529,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public List<MavenDependency> getMavenDependencies() {
-        if (CollectionUtils.isEmpty(mavenDependencies)) {
+        if (mavenDependencies == null) {
             if (entity.getMavenDependencies() != null) {
                 mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
                 return mavenDependencies;
