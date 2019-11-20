@@ -1,8 +1,6 @@
 package org.meveo.api;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -100,7 +98,9 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
-
+		scriptInstance.getMavenDependencies().clear();
+		scriptInstance.getFileDependencies().clear();
+		scriptInstanceService.flush();
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
 		} else if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
@@ -247,7 +247,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
-        List<FileDependency> fileDependencyList = new ArrayList<>();
+        Set<FileDependency> fileDependencyList = new HashSet<>();
         for (FileDependencyDto fileDependencyDto : dto.getFileDependencies()) {
             FileDependency fileDependency = new FileDependency();
             fileDependency.setPath(fileDependencyDto.getPath());
@@ -257,7 +257,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
         scriptInstance.getFileDependencies().clear();
         scriptInstance.getFileDependencies().addAll(fileDependencyList);
 
-        List<MavenDependency> mavenDependencyList = new ArrayList<>();
+        Set<MavenDependency> mavenDependencyList = new HashSet<>();
         for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
             MavenDependency mavenDependency = new MavenDependency();
             mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
