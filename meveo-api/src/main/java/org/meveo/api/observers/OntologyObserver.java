@@ -484,7 +484,8 @@ public class OntologyObserver {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
                 String[] cet = modifiedFile.split("/");
                 String fileName = cet[cet.length - 1];
-                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json")) {
+                String templateType = cet[cet.length - 2];
+                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json") && templateType.equals("entities")) {
                     String[] cetFileName = fileName.split("\\.");
                     String code = cetFileName[0];
                     CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(code);
@@ -511,7 +512,8 @@ public class OntologyObserver {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
                 String[] crt = modifiedFile.split("/");
                 String fileName = crt[crt.length - 1];
-                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json")) {
+                String templateType = crt[crt.length - 2];
+                if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json") && templateType.equals("relationships")) {
                     String[] crtFileName = fileName.split("\\.");
                     String code = crtFileName[0];
                     CustomRelationshipTemplate customRelationshipTemplate = customRelationshipTemplateService.findByCode(code);
@@ -520,7 +522,9 @@ public class OntologyObserver {
                     if (customRelationshipTemplate == null) {
                         String absolutePath = crtFile.getAbsolutePath();
                         CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(absolutePath);
-                        customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                        if(customRelationshipTemplateDto.getStartNodeCode() != null) {	// Make sure we parsed a valid CRT and not a CET
+                        	customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                        }
                     } else if (customRelationshipTemplate != null && !crtFile.exists()) {
                         customRelationshipTemplateApi.removeCustomRelationshipTemplate(code);
                     } else if (customRelationshipTemplate != null && crtFile.exists()) {
