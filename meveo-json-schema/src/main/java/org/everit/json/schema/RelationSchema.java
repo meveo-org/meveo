@@ -1,5 +1,6 @@
 package org.everit.json.schema;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -124,6 +125,12 @@ public class RelationSchema extends ObjectSchema {
 		@Override
 		public Builder id(String id) {
 			super.id(id);
+			return this;
+		}
+
+		@Override
+		public Builder storages(List<String> storages) {
+			super.storages(storages);
 			return this;
 		}
 
