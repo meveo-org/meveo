@@ -558,8 +558,10 @@ public class JSONSchemaGenerator {
 
 	private List<String> buildDBStorageType(List<DBStorageType> dbStorageTypes) {
 		List<String> dbStorageTypeAsString = new ArrayList<>();
-		for (DBStorageType dbStorageType : dbStorageTypes) {
-			dbStorageTypeAsString.add(dbStorageType.name());
+		if(dbStorageTypes != null){
+			for (DBStorageType dbStorageType : dbStorageTypes) {
+				dbStorageTypeAsString.add(dbStorageType.name());
+			}
 		}
 		return dbStorageTypeAsString;
 	}
