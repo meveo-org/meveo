@@ -41,7 +41,9 @@ import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
@@ -507,20 +509,31 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		paths.put(endpoint.getEndpointUrl(), path);
 
+		List<Sample> samples = endpoint.getService().getSamples();
+
 		if (!Objects.isNull(endpoint.getParametersMapping())) {
 			List<Parameter> operationParameter = new ArrayList<>();
 
 			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
 
 				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
-					Parameter queryParameter = new QueryParameter();
+					QueryParameter queryParameter = new QueryParameter();
 					queryParameter.setName(tsParameterMapping.getParameterName());
 					operationParameter.add(queryParameter);
 
+					Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+					queryParameter.setExample(String.valueOf(inputExample));
+
 				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
-					Parameter bodyParameter = new BodyParameter();
+					BodyParameter bodyParameter = new BodyParameter();
 					bodyParameter.setName(tsParameterMapping.getParameterName());
 					operationParameter.add(bodyParameter);
+
+					Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+					String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+					String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
+					bodyParameter.addExample(mediaType, inputExampleSerialized);
+
 				}
 			}
 
@@ -529,18 +542,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		Map<String, io.swagger.models.Response> responses = new HashMap<>();
 		io.swagger.models.Response response = new io.swagger.models.Response();
-		Map<String, Object> examples = new HashMap<>();
-		if (endpoint.getService().getSampleInputs() != null && CollectionUtils.isNotEmpty(endpoint.getService().getSampleInputs())) {
-			examples.put("input", concreteFunctionService.getSampleInputs(endpoint.getService()));
-		}
-		if (endpoint.getService().getSampleOutputs() != null && CollectionUtils.isNotEmpty(endpoint.getService().getSampleOutputs())) {
-			try {
-				examples.put("output", concreteFunctionService.getSampleOutputs(endpoint.getService()));
-
-			} catch (BusinessException e) {
-			}
-		}
-		response.setExamples(examples);
+		Object outputExample = samples.get(0).getOutputs();
+		String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+		response.example(mediaType, outputExample);
 		responses.put("200", response);
 
 		Swagger swagger = new Swagger();

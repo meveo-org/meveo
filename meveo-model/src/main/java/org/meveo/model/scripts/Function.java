@@ -1,6 +1,7 @@
 package org.meveo.model.scripts;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +41,9 @@ public class Function extends BusinessEntity {
 	@Type(type = "json")
 	private String testSuite;
 
-	@Column(name = "sample_inputs", columnDefinition = "TEXT")
+	@Column(name = "samples", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
-	private List<Map<String, Object>> sampleInputs;
-
-	@Column(name = "sample_outputs", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
-	private List<Map<String, Object>> sampleOutputs;
+	private List<Sample> samples;
 	
 	@Type(type="numeric_boolean")
     @Column(name = "generate_outputs")
@@ -88,27 +85,19 @@ public class Function extends BusinessEntity {
 		return UNKNOWN;
 	}
 
-	public List<Map<String, Object>> getSampleInputs() {
-		return sampleInputs;
-	}
-
-	public void setSampleInputs(List<Map<String, Object>> sampleInputs) {
-		this.sampleInputs = sampleInputs;
-	}
-
-	public List<Map<String, Object>> getSampleOutputs() {
-		return sampleOutputs;
-	}
-
-	public void setSampleOutputs(List<Map<String, Object>> sampleOutputs) {
-		this.sampleOutputs = sampleOutputs;
-	}
-
 	public Boolean getGenerateOutputs() {
 		return generateOutputs == null ? false : generateOutputs;
 	}
 
 	public void setGenerateOutputs(Boolean generateOutputs) {
 		this.generateOutputs = generateOutputs;
+	}
+
+	public List<Sample> getSamples() {
+		return samples;
+	}
+
+	public void setSamples(List<Sample> samples) {
+		this.samples = samples;
 	}
 }

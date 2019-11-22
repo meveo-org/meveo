@@ -144,6 +144,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 			buildScriptFile(scriptFile, script);
 			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+
 		} catch (Exception e) {
 			log.error("Error committing script", e);
 		}

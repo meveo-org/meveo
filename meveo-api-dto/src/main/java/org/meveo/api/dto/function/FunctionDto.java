@@ -26,6 +26,7 @@ import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.meveo.model.scripts.Sample;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -42,8 +43,7 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 
 	private List<FunctionIO> inputs = new ArrayList<>();
 	private List<FunctionIO> outputs = new ArrayList<>();
-	private List<Map<String, Object>> sampleInputs = new ArrayList<>();
-	private List<Map<String, Object>> sampleOutputs = new ArrayList<>();
+	private List<Sample> samples;
 	
 	private Boolean generateOutputs = false;
 
@@ -82,20 +82,12 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 		this.testSuite = testSuite;
 	}
 
-	public List<Map<String, Object>> getSampleInputs() {
-		return sampleInputs;
+	public List<Sample> getSamples() {
+		return samples;
 	}
 
-	public void setSampleInputs(List<Map<String, Object>> sampleInputs) {
-		this.sampleInputs = sampleInputs;
-	}
-
-	public List<Map<String, Object>> getSampleOutputs() {
-		return sampleOutputs;
-	}
-
-	public void setSampleOutputs(List<Map<String, Object>> sampleOutputs) {
-		this.sampleOutputs = sampleOutputs;
+	public void setSamples(List<Sample> samples) {
+		this.samples = samples;
 	}
 
 	public Boolean getGenerateOutputs() {

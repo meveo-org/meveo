@@ -38,13 +38,15 @@ import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Clement Bareth
+ * @lastModifiedVersion 6.5.2
  */
 @Stateless
 @Path("/function")
@@ -54,12 +56,6 @@ public class FunctionRs extends BaseRs {
 
 	@Inject
 	private FunctionApi functionApi;
-
-	@Inject
-	private ConcreteFunctionService functionService;
-
-	@Inject
-	private ScriptInstanceApi scriptInstanceApi;
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -110,62 +106,17 @@ public class FunctionRs extends BaseRs {
 	}
 
 	/**
-	 * Retrieves the sample inputs for the {@linkplain Function} with the given id.
-	 * 
-	 * @param functionId id of the function
-	 * @return the sample inputs of the function
-	 */
-	@GET
-	@Path("/sample/id/{id}/inputs")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Map<String, Object>> getSampleInputs(@PathParam("id") Long functionId) {
-
-		return functionApi.getSampleInputs(functionId);
-	}
-
-	/**
-	 * Retrieves the sample inputs for the {@linkplain Function} with the given
-	 * code.
+	 * Retrieves the samples for the {@linkplain Function} with the given code.
 	 * 
 	 * @param code code of the function
 	 * @return the sample inputs of the function
 	 */
 	@GET
-	@Path("/sample/code/{code}/inputs")
+	@Path("/sample/code/{code}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Map<String, Object>> getSampleInputs(@PathParam("code") String code) {
+	public List<Sample> getSamples(@PathParam("code") String code) throws BusinessException {
 
-		return functionApi.getSampleInputs(code);
+		return functionApi.getSamples(code);
 	}
 
-	/**
-	 * Retrieves the sample outputs for the {@linkplain Function} with the given id.
-	 * 
-	 * @param functionId id of the function
-	 * @return the sample outputs of the function
-	 * @throws BusinessException
-	 */
-	@GET
-	@Path("/sample/id/{id}/outputs")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Map<String, Object>> getSampleOutputs(@PathParam("id") Long functionId) throws BusinessException {
-
-		return functionApi.getSampleOutputs(functionId);
-	}
-
-	/**
-	 * Retrieves the sample outputs for the {@linkplain Function} with the given
-	 * code.
-	 * 
-	 * @param code code of the function
-	 * @return the sample outputs of the function
-	 * @throws BusinessException
-	 */
-	@GET
-	@Path("/sample/code/{code}/outputs")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<Map<String, Object>> getSampleOutputs(@PathParam("code") String code) throws BusinessException {
-
-		return functionApi.getSampleOutputs(code);
-	}
 }

@@ -29,6 +29,7 @@ import org.meveo.model.IEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.job.JobInstanceService;
@@ -62,7 +63,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return A map of parameter keys and values
      */
     public static Map<String, Object> parseParameters(String encodedParameters) {
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
         if (!StringUtils.isBlank(encodedParameters)) {
             StringTokenizer tokenizer = new StringTokenizer(encodedParameters, "&");
             while (tokenizer.hasMoreElements()) {
@@ -182,7 +183,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     public void addLog(String message, String scriptCode) {
         if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
             ALL_LOGS.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode),
-                    new ArrayList<String>());
+                    new ArrayList<>());
         }
         ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
     }
@@ -196,7 +197,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     public List<String> getLogs(String scriptCode) {
 
         if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
         return ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
@@ -222,7 +223,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
         if (context == null) {
-            context = new HashMap<String, Object>();
+            context = new HashMap<>();
         }
         engine.init(context);
         engine.execute(context);
@@ -279,7 +280,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public Map<String, Object> execute(IEntity entity, String scriptCode, Map<String, Object> context) throws BusinessException {
         if (context == null) {
-            context = new HashMap<String, Object>();
+            context = new HashMap<>();
         }
         context.put(Script.CONTEXT_ENTITY, entity);
         return execute(scriptCode, context);
@@ -303,76 +304,40 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
 
-    public List<Map<String, Object>> getSampleInputs(Long functionId) {
+	public List<Sample> getSamples(String functioncode) {
+        T f = findByCode(functioncode);
+        if (f != null) {
+            return getSamples(f);
+        }
 
-		Function f = findById(functionId);
-		if (f != null) {
-			return getSampleInputs(f);
-		}
+        return new ArrayList<>();
+    }
 
-		return new ArrayList<>();
-	}
-
-	public List<Map<String, Object>> getSampleInputs(String functionCode) {
-
-		Function f = findByCode(functionCode);
-		if (f != null) {
-			return getSampleInputs(f);
-		}
-
-		return new ArrayList<>();
-	}
-
-	public List<Map<String, Object>> getSampleInputs(Function function) {
-
-		return function.getSampleInputs();
-	}
-
-	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
-
-		Function f = findById(functionId);
-		if (f != null) {
-			return getSampleOutputs(f);
-		}
-
-		return new ArrayList<>();
-	}
-
-	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
-
-		Function f = findByCode(functionCode);
-		if (f != null) {
-			return getSampleOutputs(f);
-		}
-
-		return new ArrayList<>();
-	}
-
-	public List<Map<String, Object>> getSampleOutputs(Function f) throws BusinessException {
-
-		if (f.getGenerateOutputs()) {
-			List<Map<String, Object>> outputs = new ArrayList<>();
-
-			if (f.getSampleOutputs() != null && !f.getSampleOutputs().isEmpty()) {
-				outputs.addAll(f.getSampleOutputs());
-			}
-
-			for (Map<String, Object> input : f.getSampleInputs()) {
-                HashMap<String, Object> copyOfInput = new HashMap<>(input);
-                Map<String, Object> output = execute(f.getCode(), copyOfInput);
-                // Keep only keys that were modified
-                new HashMap<>(output).forEach((s, o) -> {
-                    if(input.get(s) == o) {
-                        output.remove(s);
+	public List<Sample> getSamples(T script) {
+        try {
+            if (script.getGenerateOutputs()) {
+                for (Sample sample : script.getSamples()) {
+                    if (sample.getOutputs() == null) {
+                        HashMap<String, Object> copyOfInput = new HashMap<>(sample.getInputs());
+                        Map<String, Object> output = execute(script.getCode(), copyOfInput);
+                        // Keep only keys that were modified
+                        new HashMap<>(output).forEach((s, o) -> {
+                            if (sample.getInputs().get(s) == o) {
+                                output.remove(s);
+                            }
+                        });
+                        sample.setOutputs(output);
                     }
-                });
-				outputs.add(output);
-			}
+                }
 
-			return outputs;
+                this.update(script);
+            }
 
-		} else {
-			return f.getSampleOutputs();
-		}
-	}
+        } catch (Exception e) {
+            log.warn("Cannot generate outputs of script {}", script.getCode(), e);
+        }
+
+        return script.getSamples();
+    }
+
 }

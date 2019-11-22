@@ -218,8 +218,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setCode(dto.getCode());
 		scriptInstance.setDescription(dto.getDescription());
 		scriptInstance.setScript(dto.getScript());
-		scriptInstance.setSampleInputs(dto.getSampleInputs());
-		scriptInstance.setSampleOutputs(dto.getSampleOutputs());
+		scriptInstance.setSamples(dto.getSamples());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
 
 		if (dto.getType() != null) {
@@ -270,27 +269,4 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		return false;
 	}
 
-//	@Override
-	public List<Map<String, Object>> getSampleInputs(Long functionId) {
-
-		return scriptInstanceService.getSampleInputs(functionId);
-	}
-
-//	@Override
-	public List<Map<String, Object>> getSampleInputs(String functionCode) {
-
-		return scriptInstanceService.getSampleInputs(functionCode);
-	}
-
-//	@Override
-	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
-
-		return scriptInstanceService.getSampleOutputs(functionId);
-	}
-
-//	@Override
-	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
-
-		return scriptInstanceService.getSampleOutputs(functionCode);
-	}
 }
