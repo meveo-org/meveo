@@ -65,6 +65,14 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="Refactor function samples" author="Clément">
+        <addColumn tableName="meveo_function">
+            <column name="samples" type="text"/>
+        </addColumn>
+        <dropColumn tableName="meveo_function" columnName="sample_inputs"/>
+        <dropColumn tableName="meveo_function" columnName="sample_outputs"/>
+    </changeSet>
+
     <changeSet id="file_dependency" author="Hien Bach">
         <createTable tableName="file_dependency">
             <column name="script_id" type="bigint">

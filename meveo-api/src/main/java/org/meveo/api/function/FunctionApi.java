@@ -35,6 +35,7 @@ import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
@@ -134,24 +135,9 @@ public class FunctionApi {
     private static String getTestJobCode(String functionCode) {
         return "FunctionTestJob_" + functionCode;
     }
-    
-	public List<Map<String, Object>> getSampleInputs(Long functionId) {
 
-		return concreteFunctionService.getFunctionService(functionId).getSampleInputs(functionId);
-	}
+    public List<Sample> getSamples(String functionCode) {
+        return concreteFunctionService.getFunctionService(functionCode).getSamples(functionCode);
+    }
 
-	public List<Map<String, Object>> getSampleInputs(String functionCode) {
-
-		return concreteFunctionService.getFunctionService(functionCode).getSampleInputs(functionCode);
-	}
-
-	public List<Map<String, Object>> getSampleOutputs(Long functionId) throws BusinessException {
-
-		return concreteFunctionService.getFunctionService(functionId).getSampleOutputs(functionId);
-	}
-
-	public List<Map<String, Object>> getSampleOutputs(String functionCode) throws BusinessException {
-
-		return concreteFunctionService.getFunctionService(functionCode).getSampleOutputs(functionCode);
-	}
 }
