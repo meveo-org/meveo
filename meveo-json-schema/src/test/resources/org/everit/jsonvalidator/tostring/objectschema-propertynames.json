@@ -1,7 +1,0 @@
-{
-  "required" : ["a", "aa"],
-  "propertyNames": {
-    "type": "string",
-    "minLength": 3
-  }
-}

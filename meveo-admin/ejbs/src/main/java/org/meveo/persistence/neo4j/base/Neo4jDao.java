@@ -22,6 +22,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.persistence.neo4j.NonUniqueResult;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
@@ -342,7 +343,13 @@ public class Neo4jDao {
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
             transaction = session.beginTransaction();
             final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
-            return result.single().get(0).asMap();
+
+            List<Record> records = result.list();
+            if(records.size() == 1) {
+                return records.get(0).get(0).asMap();
+            } else {
+                throw new NonUniqueResult(records);
+            }
 
         } finally {
             if (transaction != null) {
@@ -390,11 +397,15 @@ public class Neo4jDao {
         Transaction transaction = null;
 
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
-            transaction.run("call graphql.idl('"+idl+"')");
+            if(session != null) {
+                transaction = session.beginTransaction();
+                transaction.run("call graphql.idl('" + idl + "')");
 
-            transaction.success();
-            transaction.close();
+                transaction.success();
+                transaction.close();
+            } else {
+                LOGGER.warn("Repository {} not found", neo4jConfiguration);
+            }
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.failure();
@@ -402,6 +413,7 @@ public class Neo4jDao {
             }
 
             LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
+            throw e;
         }
     }
 

@@ -473,24 +473,30 @@ public class GraphQLService {
     		.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.USE)
     		.setHint("org.hibernate.readOnly", true)
     		.getResultList();
-    	
-    	// Flatten the lists
-		List<Mutation> mutations = (List<Mutation>) mutationsLists.stream()
-    		.map(e -> JacksonUtil.fromString(e, new TypeReference<List<Mutation>>() {}))
-    		.flatMap(List::stream)
-    		.collect(Collectors.toList());
-    	
-    	StringBuilder mutationsStr = new StringBuilder("schema {\n\tmutation: Mutations\n} \n");
-    	
-    	StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n\t", "\n}");
-    	
-    	for(Mutation mutation : mutations) {
-    		mutationsJoiner.add(mutation.toString());
-    	}
-    	
-    	mutationsStr.append(mutationsJoiner.toString());
-    	
-    	return mutationsStr.toString();
+
+    	if(!mutationsLists.isEmpty()) {
+
+            // Flatten the lists
+            List<Mutation> mutations = (List<Mutation>) mutationsLists.stream()
+                    .map(e -> JacksonUtil.fromString(e, new TypeReference<List<Mutation>>() {
+                    }))
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+
+            StringBuilder mutationsStr = new StringBuilder("schema {\n\tmutation: Mutations\n} \n");
+
+            StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n\t", "\n}");
+
+            for (Mutation mutation : mutations) {
+                mutationsJoiner.add(mutation.toString());
+            }
+
+            mutationsStr.append(mutationsJoiner.toString());
+
+            return mutationsStr.toString();
+        } else {
+    	    return "";
+        }
     	
     }
 
