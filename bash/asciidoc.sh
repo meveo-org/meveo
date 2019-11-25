@@ -30,9 +30,18 @@ then
 
   # Convert AsciiDoc to HTML
   asciidoctor -a docinfo=shared -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/api-reference.adoc --out-file=${dir}/../${version}/api-reference.html
+  echo "${dir}/../${version}/api-reference.html generated"
   
   # Remove tmp file
   rm ${dir}/swagger-tmp.json
 fi
 
+if [ -z "$version" ] 
+then
+  echo "Please provide version number"
+  read version
+fi
+
 asciidoctor -a docinfo=shared -a toc=left -a toclevels=3 -a sectanchors ${dir}/../${version}/.adoc/user-guide.adoc --out-file=${dir}/../${version}/user-guide.html
+
+echo "${dir}/../${version}/user-guide.html generated"

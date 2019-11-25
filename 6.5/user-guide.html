@@ -522,6 +522,12 @@ p {
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
+<li><a href="#scripts">Scripts</a>
+<ul class="sectlevel2">
+<li><a href="#_java_scripts">Java scripts</a></li>
+<li><a href="#_javascript_scripts">Javascript scripts</a></li>
+</ul>
+</li>
 <li><a href="#git">Git</a>
 <ul class="sectlevel2">
 <li><a href="#git_server">Git server</a></li>
@@ -535,6 +541,7 @@ p {
 <ul class="sectlevel3">
 <li><a href="#git_script">Scripts</a></li>
 <li><a href="#git_onto">Ontology</a></li>
+<li><a href="#git_endpoint">Endpoints</a></li>
 </ul>
 </li>
 </ul>
@@ -543,6 +550,87 @@ p {
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="scripts"><a class="anchor" href="#scripts"></a>Scripts</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In Meveo, you can create Java and Javascript scripts. The code of these scripts are stored in the <a href="&lt;&lt;git&gt;">Meveo git repository</a>. You can either create them from the user interface under <code>/pages/admin/storages/scriptInstances/scriptInstances.jsf</code> or using the REST Api.</p>
+</div>
+<div class="paragraph">
+<p>A script can be executed from the REST Api using the default endpoint, by a Notification, a Job or an Endpoint.</p>
+</div>
+<div class="paragraph">
+<p>To ease the communication with other components of Meveo, the user can define named inputs and outputs.</p>
+</div>
+<div class="sect2">
+<h3 id="_java_scripts"><a class="anchor" href="#_java_scripts"></a>Java scripts</h3>
+<div class="paragraph">
+<p>All java scripts should be classes that implements the org.meveo.script.ScriptInterface interface. The code of the script is deduced from full name (package name + class name) of the java class.</p>
+</div>
+<div class="paragraph">
+<p>The parameters can either be taken from the map or be defined through setters. The parameters taken from setters will automatically be added to the list of user defined inputs.</p>
+</div>
+<div class="paragraph">
+<p>The output can either be added to the map (which is read after the script execution) or defined in a getter.The outputs taken from getters will automatically be added to the list of user defined outputs.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="java"><span></span><span class="tok-kn">package</span> <span class="tok-nn">org.meveo.test</span><span class="tok-o">;</span>
+
+<span class="tok-kn">import</span> <span class="tok-nn">org.meveo.service.script.Script</span><span class="tok-o">;</span>
+<span class="tok-kn">import</span> <span class="tok-nn">java.util.Map</span><span class="tok-o">;</span>
+<span class="tok-kn">import</span> <span class="tok-nn">org.meveo.admin.exception.BusinessException</span><span class="tok-o">;</span>
+
+<span class="tok-kd">public</span> <span class="tok-kd">class</span> <span class="tok-nc">TestSetterAndGetters</span> <span class="tok-kd">extends</span> <span class="tok-n">Script</span> <span class="tok-o">{</span>
+
+    <span class="tok-kd">private</span> <span class="tok-n">String</span> <span class="tok-n">field1</span><span class="tok-o">;</span>
+
+    <span class="tok-nd">@Override</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">execute</span><span class="tok-o">(</span><span class="tok-n">Map</span><span class="tok-o">&lt;</span><span class="tok-n">String</span><span class="tok-o">,</span> <span class="tok-n">Object</span><span class="tok-o">&gt;</span> <span class="tok-n">methodContext</span><span class="tok-o">)</span> <span class="tok-kd">throws</span> <span class="tok-n">BusinessException</span> <span class="tok-o">{</span>
+        <span class="tok-n">String</span> <span class="tok-n">fieldFromMap</span> <span class="tok-o">=</span> <span class="tok-n">methodContext</span><span class="tok-o">.</span><span class="tok-na">get</span><span class="tok-o">(</span><span class="tok-s">&quot;fieldFromMap&quot;</span><span class="tok-o">);</span>
+        <span class="tok-n">methodContext</span><span class="tok-o">.</span><span class="tok-na">put</span><span class="tok-o">(</span><span class="tok-s">&quot;output2&quot;</span><span class="tok-o">,</span> <span class="tok-s">&quot;output2&quot;</span><span class="tok-o">);</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">    * @param fieldValue Value of the field.</span>
+<span class="tok-cm">    * Just a test.</span>
+<span class="tok-cm">    */</span>
+    <span class="tok-kd">public</span> <span class="tok-kt">void</span> <span class="tok-nf">setField1</span><span class="tok-o">(</span><span class="tok-n">String</span> <span class="tok-n">fieldValue</span><span class="tok-o">){</span>
+        <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">field1</span> <span class="tok-o">=</span> <span class="tok-n">fieldValue</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+
+    <span class="tok-cm">/**</span>
+<span class="tok-cm">    * @return The field previously set</span>
+<span class="tok-cm">    */</span>
+    <span class="tok-kd">public</span> <span class="tok-n">String</span> <span class="tok-nf">getOutput1</span><span class="tok-o">(){</span>
+        <span class="tok-k">return</span> <span class="tok-k">this</span><span class="tok-o">.</span><span class="tok-na">field1</span> <span class="tok-o">+</span> <span class="tok-s">&quot;increased&quot;</span><span class="tok-o">;</span>
+    <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_javascript_scripts"><a class="anchor" href="#_javascript_scripts"></a>Javascript scripts</h3>
+<div class="paragraph">
+<p>The javascript scripts should just be simple scripts that will be evaluated in a java context by the GraalJS library.</p>
+</div>
+<div class="paragraph">
+<p>The parameters are injected as variables in the script context, so we can access them directly. We can also access them using the <code>methodContext</code> object.</p>
+</div>
+<div class="paragraph">
+<p>The outputs of the script must be added in the <code>methodContext</code> map.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="javascipt"><span></span>var inputA = methodContext.get(&#39;input&#39;);
+methodContext.put(&#39;result&#39;, inputA * 2);
+var declaredVar = input * 3;
+methodContext.put(&#39;result2&#39;, declaredVar);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="git"><a class="anchor" href="#git"></a>Git</h2>
 <div class="sectionbody">
@@ -629,12 +717,89 @@ p {
 <div class="sect3">
 <h4 id="git_onto"><a class="anchor" href="#git_onto"></a>Ontology</h4>
 <div class="paragraph">
-<p>The ontology elements are serialized under an extended JSON Schema specification. However, it is just a view and modifying those files will not be reflected on the Meveo instance.</p>
+<p>The ontology elements are serialized under an extended JSON Schema specification. The same rules than for script applies, so if you create, modify or delete a json file, it will be reflected on the Meveo instance you pushed to.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="git_endpoint"><a class="anchor" href="#git_endpoint"></a>Endpoints</h4>
+<div class="paragraph">
+<p>When updating, creating, or deleting an endpoint, a javascript file will be created. This file contains a default function exported that make a fetch call to the corresponding endpoint. It takes into account the method (GET / POST), the path parameters and the body / query parameters. The return value of this function is a Response object that must be handled.</p>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
+<style>
+pre.pygments .hll { background-color: #ffffcc }
+pre.pygments  { background: #f8f8f8; }
+pre.pygments .tok-c { color: #408080; font-style: italic } /* Comment */
+pre.pygments .tok-err { border: 1px solid #FF0000 } /* Error */
+pre.pygments .tok-k { color: #008000; font-weight: bold } /* Keyword */
+pre.pygments .tok-o { color: #666666 } /* Operator */
+pre.pygments .tok-ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+pre.pygments .tok-cm { color: #408080; font-style: italic } /* Comment.Multiline */
+pre.pygments .tok-cp { color: #BC7A00 } /* Comment.Preproc */
+pre.pygments .tok-cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+pre.pygments .tok-c1 { color: #408080; font-style: italic } /* Comment.Single */
+pre.pygments .tok-cs { color: #408080; font-style: italic } /* Comment.Special */
+pre.pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
+pre.pygments .tok-ge { font-style: italic } /* Generic.Emph */
+pre.pygments .tok-gr { color: #FF0000 } /* Generic.Error */
+pre.pygments .tok-gh { color: #000080; font-weight: bold } /* Generic.Heading */
+pre.pygments .tok-gi { color: #00A000 } /* Generic.Inserted */
+pre.pygments .tok-go { color: #888888 } /* Generic.Output */
+pre.pygments .tok-gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+pre.pygments .tok-gs { font-weight: bold } /* Generic.Strong */
+pre.pygments .tok-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+pre.pygments .tok-gt { color: #0044DD } /* Generic.Traceback */
+pre.pygments .tok-kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+pre.pygments .tok-kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+pre.pygments .tok-kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+pre.pygments .tok-kp { color: #008000 } /* Keyword.Pseudo */
+pre.pygments .tok-kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+pre.pygments .tok-kt { color: #B00040 } /* Keyword.Type */
+pre.pygments .tok-m { color: #666666 } /* Literal.Number */
+pre.pygments .tok-s { color: #BA2121 } /* Literal.String */
+pre.pygments .tok-na { color: #7D9029 } /* Name.Attribute */
+pre.pygments .tok-nb { color: #008000 } /* Name.Builtin */
+pre.pygments .tok-nc { color: #0000FF; font-weight: bold } /* Name.Class */
+pre.pygments .tok-no { color: #880000 } /* Name.Constant */
+pre.pygments .tok-nd { color: #AA22FF } /* Name.Decorator */
+pre.pygments .tok-ni { color: #999999; font-weight: bold } /* Name.Entity */
+pre.pygments .tok-ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+pre.pygments .tok-nf { color: #0000FF } /* Name.Function */
+pre.pygments .tok-nl { color: #A0A000 } /* Name.Label */
+pre.pygments .tok-nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+pre.pygments .tok-nt { color: #008000; font-weight: bold } /* Name.Tag */
+pre.pygments .tok-nv { color: #19177C } /* Name.Variable */
+pre.pygments .tok-ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+pre.pygments .tok-w { color: #bbbbbb } /* Text.Whitespace */
+pre.pygments .tok-mb { color: #666666 } /* Literal.Number.Bin */
+pre.pygments .tok-mf { color: #666666 } /* Literal.Number.Float */
+pre.pygments .tok-mh { color: #666666 } /* Literal.Number.Hex */
+pre.pygments .tok-mi { color: #666666 } /* Literal.Number.Integer */
+pre.pygments .tok-mo { color: #666666 } /* Literal.Number.Oct */
+pre.pygments .tok-sa { color: #BA2121 } /* Literal.String.Affix */
+pre.pygments .tok-sb { color: #BA2121 } /* Literal.String.Backtick */
+pre.pygments .tok-sc { color: #BA2121 } /* Literal.String.Char */
+pre.pygments .tok-dl { color: #BA2121 } /* Literal.String.Delimiter */
+pre.pygments .tok-sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+pre.pygments .tok-s2 { color: #BA2121 } /* Literal.String.Double */
+pre.pygments .tok-se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+pre.pygments .tok-sh { color: #BA2121 } /* Literal.String.Heredoc */
+pre.pygments .tok-si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+pre.pygments .tok-sx { color: #008000 } /* Literal.String.Other */
+pre.pygments .tok-sr { color: #BB6688 } /* Literal.String.Regex */
+pre.pygments .tok-s1 { color: #BA2121 } /* Literal.String.Single */
+pre.pygments .tok-ss { color: #19177C } /* Literal.String.Symbol */
+pre.pygments .tok-bp { color: #008000 } /* Name.Builtin.Pseudo */
+pre.pygments .tok-fm { color: #0000FF } /* Name.Function.Magic */
+pre.pygments .tok-vc { color: #19177C } /* Name.Variable.Class */
+pre.pygments .tok-vg { color: #19177C } /* Name.Variable.Global */
+pre.pygments .tok-vi { color: #19177C } /* Name.Variable.Instance */
+pre.pygments .tok-vm { color: #19177C } /* Name.Variable.Magic */
+pre.pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
+</style>
 </body>
 </html>
