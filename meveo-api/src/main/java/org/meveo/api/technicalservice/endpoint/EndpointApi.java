@@ -455,8 +455,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	@Override
-	public EndpointDto find(String code)
-			throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+	public EndpointDto find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 		return findByCode(code);
 	}
 
@@ -521,18 +520,22 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					queryParameter.setName(tsParameterMapping.getParameterName());
 					operationParameter.add(queryParameter);
 
-					Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-					queryParameter.setExample(String.valueOf(inputExample));
+					if(samples != null && !samples.isEmpty()) {
+						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+						queryParameter.setExample(String.valueOf(inputExample));
+					}
 
 				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
 					BodyParameter bodyParameter = new BodyParameter();
 					bodyParameter.setName(tsParameterMapping.getParameterName());
 					operationParameter.add(bodyParameter);
 
-					Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-					String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
-					String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
-					bodyParameter.addExample(mediaType, inputExampleSerialized);
+					if(samples != null && !samples.isEmpty()) {
+						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+						String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+						String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
+						bodyParameter.addExample(mediaType, inputExampleSerialized);
+					}
 
 				}
 			}
@@ -542,9 +545,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		Map<String, io.swagger.models.Response> responses = new HashMap<>();
 		io.swagger.models.Response response = new io.swagger.models.Response();
-		Object outputExample = samples.get(0).getOutputs();
-		String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
-		response.example(mediaType, outputExample);
+
+		if(samples != null && !samples.isEmpty()) {
+			Object outputExample = samples.get(0).getOutputs();
+			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+			response.example(mediaType, outputExample);
+		}
+
 		responses.put("200", response);
 
 		Swagger swagger = new Swagger();
