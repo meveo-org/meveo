@@ -492,4 +492,14 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             getEntity().setStorages(storagesDM.getTarget());
         }
     }
+
+    public Long getCetId(String entityClazz) {
+        if (!entityClazz.startsWith("org.meveo")) {
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomFieldTemplate.retrieveCetCode(entityClazz));
+            return cet.getId();
+        }
+        
+        return null;
+    }
+    
 }

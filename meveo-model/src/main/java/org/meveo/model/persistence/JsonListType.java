@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -158,7 +159,6 @@ public class JsonListType implements UserType, DynamicParameterizedType {
                     Class<?> listClass = (Class<?>) listType.getActualTypeArguments()[0];
                     valueType = OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, listClass);
                 }catch (ClassCastException e){
-                    LOGGER.error(e.toString());
                     valueType = OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, Object.class);
                 }
                 classType = List.class;

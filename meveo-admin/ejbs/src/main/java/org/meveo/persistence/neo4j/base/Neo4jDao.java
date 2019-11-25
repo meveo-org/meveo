@@ -22,6 +22,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.persistence.neo4j.NonUniqueResult;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
@@ -342,7 +343,13 @@ public class Neo4jDao {
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
             transaction = session.beginTransaction();
             final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
-            return result.single().get(0).asMap();
+
+            List<Record> records = result.list();
+            if(records.size() == 1) {
+                return records.get(0).get(0).asMap();
+            } else {
+                throw new NonUniqueResult(records);
+            }
 
         } finally {
             if (transaction != null) {
@@ -390,11 +397,15 @@ public class Neo4jDao {
         Transaction transaction = null;
 
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
-            transaction.run("call graphql.idl($idl)", Collections.singletonMap("idl", idl));
+            if(session != null) {
+                transaction = session.beginTransaction();
+                transaction.run("call graphql.idl('" + idl + "')");
 
-            transaction.success();
-            transaction.close();
+                transaction.success();
+                transaction.close();
+            } else {
+                LOGGER.warn("Repository {} not found", neo4jConfiguration);
+            }
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.failure();
@@ -402,6 +413,7 @@ public class Neo4jDao {
             }
 
             LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
+            throw e;
         }
     }
 
@@ -821,11 +833,13 @@ public class Neo4jDao {
      * @param firstNodeId        First node to merge
      * @param secondNodeId       Second node to merge
      */
-    public void mergeAndRemoveNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId) {
+    public void mergeAndRemoveNodes(String neo4JConfiguration, Long firstNodeId, Long secondNodeId, Collection<String> updatableKeys) {
+        String updatableKeysStr = updatableKeys.stream().collect(Collectors.joining(", .", "{.", "}"));
+
         String queryStr = "MATCH (n1) WHERE ID(n1) = $firstId \n" +
                 "WITH n1, n1.creationDate as creationDate, n1.meveo_uuid as uuid \n" +
                 "MATCH (n2) WHERE ID(n2) = $secondId \n" +
-                "WITH n1, n2, creationDate, uuid, properties(n2) as props \n" +
+                "WITH n1, n2, creationDate, uuid, n2" +  updatableKeysStr + " as props \n" +
                 "DETACH DELETE (n2) \n" +
                 "WITH n1, n2, creationDate, props, uuid \n" +
                 "SET n1 += props, n1.creationDate = creationDate, n1.meveo_uuid = uuid \n" +
@@ -927,7 +941,7 @@ public class Neo4jDao {
                 .append("WITH startNode \n")
                 .append("MATCH (endNode) WHERE ID(endNode) = $endNodeId \n")
                 .append("WITH startNode, endNode \n")
-                .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]-(endNode) \n")
+                .append("MERGE (startNode)-[relationship:").append(label).append(uniqueFieldLiteral).append("]->(endNode) \n")
                 .append("ON CREATE SET relationship += $fields, relationship.").append(CREATION_DATE).append(" = $date, relationship.meveo_uuid = $relationId \n")
                 .append("ON MATCH SET relationship += $fields,  relationship.").append(INTERNAL_UPDATE_DATE).append(" = $date \n")
                 .append("RETURN relationship")
@@ -954,10 +968,10 @@ public class Neo4jDao {
 
     }
 
-    public List<Node> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration){
+    public List<Node> orderNodesAscBy(String property, Collection<String> uuids, String neo4JConfiguration, String label){
         // Use labels to speed up things
 
-        String orderByQuery = new StringBuffer("MATCH (n) WHERE n.meveo_uuid IN $uuids \n")
+        String orderByQuery = new StringBuffer("MATCH (n:" + label + ") WHERE n.meveo_uuid IN $uuids \n")
                 .append("RETURN n \n")
                 .append("ORDER BY n.").append(property).append(" ASC \n")
                 .toString();
@@ -967,7 +981,7 @@ public class Neo4jDao {
                 orderByQuery,
                 ImmutableMap.of("uuids", uuids),
                 (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
-                e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property)
+                e -> LOGGER.error("Error sorting nodes {} by {} in ascending order", uuids, property, e)
         );
     }
     

@@ -21,5 +21,6 @@
     <include file="db.properties.xml" relativeToChangelogFile="true" />
 
     <include file="releases/6.4-structure.xml" relativeToChangelogFile="true"/>
+    <include file="releases/6.5-structure.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

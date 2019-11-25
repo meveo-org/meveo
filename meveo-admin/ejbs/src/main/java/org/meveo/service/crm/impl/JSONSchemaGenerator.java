@@ -22,6 +22,7 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 
 @Stateless
 public class JSONSchemaGenerator {
@@ -275,6 +276,7 @@ public class JSONSchemaGenerator {
 				.id(field.getAppliesTo() + '_' + field.getCode())
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
+				.storages(buildDBStorageType(field.getStorages()))
 				.schemaLocation(schemaLocation);
 		return result;
 	}
@@ -534,6 +536,7 @@ public class JSONSchemaGenerator {
 						.id(entityTemplate.getCode())
 						.title(entityTemplate.getName())
 						.description(entityTemplate.getDescription())
+						.storages(buildDBStorageType(entityTemplate.getAvailableStorages()))
 						.schemaLocation(schemaLocation)
 						;
 			}
@@ -551,6 +554,16 @@ public class JSONSchemaGenerator {
 			}
 
 		};
+	}
+
+	private List<String> buildDBStorageType(List<DBStorageType> dbStorageTypes) {
+		List<String> dbStorageTypeAsString = new ArrayList<>();
+		if(dbStorageTypes != null){
+			for (DBStorageType dbStorageType : dbStorageTypes) {
+				dbStorageTypeAsString.add(dbStorageType.name());
+			}
+		}
+		return dbStorageTypeAsString;
 	}
 
 	private CustomTemplateProcessor processorOf(CustomRelationshipTemplate relationshipTemplate) {
@@ -578,6 +591,7 @@ public class JSONSchemaGenerator {
 						.id(relationshipTemplate.getCode())
 						.title(relationshipTemplate.getName())
 						.description(relationshipTemplate.getDescription())
+						.storages(buildDBStorageType(relationshipTemplate.getAvailableStorages()))
 						.schemaLocation(schemaLocation)
 						;
 

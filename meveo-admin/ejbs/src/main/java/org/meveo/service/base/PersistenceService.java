@@ -974,7 +974,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                     } else if (SEARCH_WILDCARD_OR.equals(condition)) {
                         queryBuilder.startOrClause();
                         for (String field : fields) {
-                            queryBuilder.addSql("a." + field + " like '%" + filterValue + "%'");
+                        	String filterValueAsStr = (String) filterValue;
+                            queryBuilder.addSql("upper(a." + field + ") like '%" + filterValueAsStr.toUpperCase() + "%'");
                         }
                         queryBuilder.endOrClause();
 

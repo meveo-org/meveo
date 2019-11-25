@@ -1,9 +1,6 @@
 package org.meveo.json.schema;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.everit.json.schema.ObjectSchema;
@@ -55,6 +52,7 @@ public class RootObjectSchema extends ObjectSchema {
     			.schemaLocation(other.getSchemaLocation())
     			.title(other.getTitle())
     			.writeOnly(other.isWriteOnly())
+				.storages(other.getStorages())
         		;
         }
 
@@ -177,7 +175,12 @@ public class RootObjectSchema extends ObjectSchema {
 			super.writeOnly(writeOnly);
 			return this;
 		}
-        
+
+		@Override
+		public Builder storages(List<String> storages) {
+			super.storages(storages);
+			return this;
+		}
 	}
 	
     public static Builder builder() {

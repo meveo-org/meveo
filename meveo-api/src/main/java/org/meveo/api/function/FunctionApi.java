@@ -13,26 +13,8 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.meveo.api.function;
 
-import org.apache.commons.io.FileUtils;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.model.jobs.JobCategoryEnum;
-import org.meveo.model.jobs.JobInstance;
-import org.meveo.model.jobs.TimerEntity;
-import org.meveo.model.scripts.Function;
-import org.meveo.service.job.JobExecutionService;
-import org.meveo.service.job.JobInstanceService;
-import org.meveo.service.job.TimerEntityService;
-import org.meveo.service.script.ConcreteFunctionService;
-import org.meveo.service.script.FunctionService;
-
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.PathParam;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -41,6 +23,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.ws.rs.PathParam;
+
+import org.apache.commons.io.FileUtils;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.function.FunctionDto;
+import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.jobs.TimerEntity;
+import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
+import org.meveo.service.job.JobExecutionService;
+import org.meveo.service.job.JobInstanceService;
+import org.meveo.service.job.TimerEntityService;
+import org.meveo.service.script.ConcreteFunctionService;
+import org.meveo.service.script.FunctionService;
+
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
+ */
 @Stateless
 public class FunctionApi {
 
@@ -131,5 +136,8 @@ public class FunctionApi {
         return "FunctionTestJob_" + functionCode;
     }
 
+    public List<Sample> getSamples(String functionCode) {
+        return concreteFunctionService.getFunctionService(functionCode).getSamples(functionCode);
+    }
 
 }

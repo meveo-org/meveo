@@ -4,7 +4,7 @@
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.4.0</version>
+		<version>6.5.3</version>
 	</parent>
 	<artifactId>meveo-admin-web</artifactId>
 	<name>Meveo Admin Web Application - Web Module</name>
@@ -306,6 +306,11 @@
 <!--			<artifactId>hibernate-jpa-2.1-api</artifactId>-->
 <!--			<version>1.0.0.Final</version>-->
 <!--		</dependency>-->
+		<dependency>
+			<groupId>org.graalvm.js</groupId>
+			<artifactId>js</artifactId>
+			<version>19.2.0.1</version>
+		</dependency>
 		
 	</dependencies>
 	<profiles>

@@ -20,27 +20,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -48,6 +35,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.util.encoders.Base64Encoder;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
@@ -73,12 +61,19 @@ import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.ScheduledPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.ApiOperation;
 
+/**
+ * @author Clement Bareth
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
+ */
 @Path("/{repository}/persistence")
 public class PersistenceRs {
 
@@ -95,50 +90,58 @@ public class PersistenceRs {
 
     @Inject
     private CustomFieldsCacheContainerProvider cache;
-    
-    @Inject 
+
+    @Inject
     private RepositoryService repositoryService;
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
 
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+
     @PathParam("repository")
     private String repositoryCode;
+
+    @Inject
+    private FileSystemService fileSystemService;
+
+    private java.nio.file.Path tempDir;
 
     @POST
     @Path("/{cetCode}/list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, Object>> list(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+    public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
-        if(customEntityTemplate == null){
+        if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
         }
 
-        if(paginationConfiguration == null){
+        if (paginationConfiguration == null) {
             paginationConfiguration = new PaginationConfiguration();
         }
 
         Repository repository = repositoryService.findByCode(repositoryCode);
         List<Map<String, Object>> data = crossStorageService.find(repository, customEntityTemplate, paginationConfiguration);
 
-        for(Map<String, Object> values : data) {
-        	replaceFilePathsByUrls(customEntityTemplate, values);
+        for (Map<String, Object> values : data) {
+            convertFiles(customEntityTemplate, values, base64Encode);
         }
 
-		return data;
+        return data;
     }
 
     @DELETE
     @Path("/{cetCode}/{uuid}")
     public Response delete(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
-        if(customEntityTemplate == null){
+        if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
-        if(repository == null){
+        if (repository == null) {
             throw new NotFoundException("Repository with code " + repositoryCode + " does not exists");
         }
 
@@ -150,25 +153,25 @@ public class PersistenceRs {
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> get(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws EntityDoesNotExistsException {
+    public Map<String, Object> get(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
-        if(customEntityTemplate == null){
+        if (customEntityTemplate == null) {
             throw new NotFoundException();
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
         Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid);
 
-        replaceFilePathsByUrls(customEntityTemplate, values);
+        convertFiles(customEntityTemplate, values, base64Encode);
 
-		return values;
+        return values;
     }
 
     @PUT
     @Path("/{cetCode}/{uuid}")
     public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
-        if(customEntityTemplate == null){
+        if (customEntityTemplate == null) {
             throw new NotFoundException();
         }
 
@@ -181,120 +184,108 @@ public class PersistenceRs {
         final Repository repository = repositoryService.findByCode(repositoryCode);
         crossStorageService.update(repository, cei);
     }
-    
+
     @SuppressWarnings("unchecked")
-	@POST
+    @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public List<PersistedItem> persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
-    	
-    	java.nio.file.Path tempDir = Files.createTempDirectory("dataUpload");
-    	
-    	try {
 
-            Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
-            InputPart dtosPart = uploadForm.remove("data").get(0);
-            GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {};
+        Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+        InputPart dtosPart = uploadForm.remove("data").get(0);
+        GenericType<Collection<PersistenceDto>> dtosType = new GenericType<Collection<PersistenceDto>>() {
+        };
 
-            Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
+        Collection<PersistenceDto> dtos = dtosPart.getBody(dtosType);
 
-            Map<EntityProperty, List<DataPart>> dataParts = new HashMap<>();
+        Map<EntityProperty, List<DataPart>> dataParts = new HashMap<>();
 
-            // Build data part list
-            for (Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
-                for (InputPart inputPart : formPart.getValue()) {
-                    String[] splittedKey = formPart.getKey().split("\\.", 2);
-                    String entityName = splittedKey[0];
+        // Build data part list
+        for (Map.Entry<String, List<InputPart>> formPart : uploadForm.entrySet()) {
+            for (InputPart inputPart : formPart.getValue()) {
+                String[] splittedKey = formPart.getKey().split("\\.", 2);
+                String entityName = splittedKey[0];
 
-                    String restingPart = splittedKey[1];
-                    String propertyName = restingPart.split("\\[")[0];
+                String restingPart = splittedKey[1];
+                String propertyName = restingPart.split("\\[")[0];
 
-                    EntityProperty entityProperty = new EntityProperty(entityName, propertyName);
+                EntityProperty entityProperty = new EntityProperty(entityName, propertyName);
 
-                    String fileName;
-                    String parameters = StringUtils.substringBetween(restingPart, "[", "]");
-                    
-                    boolean base64Encoded = false;
-                    
-                    if(StringUtils.isNotBlank(parameters)){
-                        fileName = parameters.replaceFirst(".*filename=([^;]*).*", "$1");
-                        if(StringUtils.isBlank(fileName)){
-                            throw new IllegalArgumentException("You must provide a file name for the part " + formPart.getKey()+". " +
-                                    "For exemple, the data-part name should be " + formPart.getKey() + "[filename=myFile.txt]");
-                        }
-                        
-                        base64Encoded = Pattern.compile(".*encoding=base64.*", Pattern.CASE_INSENSITIVE).matcher(parameters).matches();
-                    } else {
-                        fileName = RestUtils.getFileName(inputPart);
+                String fileName;
+                String parameters = StringUtils.substringBetween(restingPart, "[", "]");
+
+                boolean base64Encoded = false;
+
+                if (StringUtils.isNotBlank(parameters)) {
+                    fileName = parameters.replaceFirst(".*filename=([^;]*).*", "$1");
+                    if (StringUtils.isBlank(fileName)) {
+                        throw new IllegalArgumentException("You must provide a file name for the part " + formPart.getKey() + ". " +
+                                "For exemple, the data-part name should be " + formPart.getKey() + "[filename=myFile.txt]");
                     }
 
-                    
-                    InputStream inputStream = inputPart.getBody(InputStream.class, null);
-                    
-                    if(base64Encoded) {
-                    	inputStream = new Base64InputStream(inputStream);
-                    }
-
-                    dataParts.computeIfAbsent(entityProperty, k -> new ArrayList<>()).add(new DataPart(inputStream, fileName));
+                    base64Encoded = Pattern.compile(".*encoding=base64.*", Pattern.CASE_INSENSITIVE).matcher(parameters).matches();
+                } else {
+                    fileName = RestUtils.getFileName(inputPart);
                 }
+
+
+                InputStream inputStream = inputPart.getBody(InputStream.class, null);
+
+                if (base64Encoded) {
+                    inputStream = new Base64InputStream(inputStream);
+                }
+
+                dataParts.computeIfAbsent(entityProperty, k -> new ArrayList<>()).add(new DataPart(inputStream, fileName));
             }
+        }
 
-            // Add the files to the DTOs
-            for(Map.Entry<EntityProperty, List<DataPart>> dataPartEntry : dataParts.entrySet()){
+        // Add the files to the DTOs
+        for (Map.Entry<EntityProperty, List<DataPart>> dataPartEntry : dataParts.entrySet()) {
 
 
-                if (dataPartEntry.getValue().size() == 1) {
+            if (dataPartEntry.getValue().size() == 1) {
 
-                    File file = new File(tempDir.toString(), dataPartEntry.getValue().get(0).getFileName());
-                    FileUtils.copyInputStreamToFile(dataPartEntry.getValue().get(0).getInputStream(), file);
+                File file = new File(tempDir.toString(), dataPartEntry.getValue().get(0).getFileName());
+                FileUtils.copyInputStreamToFile(dataPartEntry.getValue().get(0).getInputStream(), file);
+
+                dtos.stream()
+                        .filter(dto -> dto.getName().equals(dataPartEntry.getKey().getEntityName()))
+                        .findFirst()
+                        .ifPresent(dto -> dto.getProperties().put(dataPartEntry.getKey().getEntityProperty(), file));
+
+            } else {
+
+                for (DataPart dataPart : dataPartEntry.getValue()) {
+                    InputStream inputStream = dataPart.getInputStream();
+
+                    File file = new File(tempDir.toString(), dataPart.getFileName());
+                    FileUtils.copyInputStreamToFile(inputStream, file);
 
                     dtos.stream()
                             .filter(dto -> dto.getName().equals(dataPartEntry.getKey().getEntityName()))
                             .findFirst()
-                            .ifPresent(dto -> dto.getProperties().put(dataPartEntry.getKey().getEntityProperty(), file));
-
-                } else {
-
-                    for (DataPart dataPart : dataPartEntry.getValue()) {
-                        InputStream inputStream = dataPart.getInputStream();
-
-                        File file = new File(tempDir.toString(), dataPart.getFileName());
-                        FileUtils.copyInputStreamToFile(inputStream, file);
-
-                        dtos.stream()
-                                .filter(dto -> dto.getName().equals(dataPartEntry.getKey().getEntityName()))
-                                .findFirst()
-                                .ifPresent(dto -> {
-                                    List<File> property = (List<File>) dto.getProperties().computeIfAbsent(dataPartEntry.getKey().getEntityProperty(), s -> new ArrayList<File>());
-                                    property.add(file);
-                                });
-
-                    }
+                            .ifPresent(dto -> {
+                                List<File> property = (List<File>) dto.getProperties().computeIfAbsent(dataPartEntry.getKey().getEntityProperty(), s -> new ArrayList<File>());
+                                property.add(file);
+                            });
 
                 }
+
             }
+        }
 
-            return persist(dtos);
-
-    	} finally {
-    		
-    		Files.list(tempDir).forEach(path -> {
-				try {
-					Files.delete(path);
-				} catch (IOException e) {
-					LOGGER.warn("{} cannot be deleted", path.toString(), e);
-				}
-			});
-    		
-    		if(Files.list(tempDir).count() == 0) {
-    			Files.delete(tempDir);
-    		}
-    	}
+        return persist(dtos);
     }
 
+    @SuppressWarnings("unchecked")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
+    public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException {
+
+        // Deserialize binaries
+        for (PersistenceDto dto : dtos) {
+            decodeBase64Files(dto);
+        }
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
@@ -304,7 +295,7 @@ public class PersistenceRs {
                         .name(persistenceDto.getName())
                         .properties(persistenceDto.getProperties())
                         .build())
-                        .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
         /* Extract the relationships */
         final List<EntityRelation> relations = dtos.stream()
@@ -347,52 +338,169 @@ public class PersistenceRs {
 
     }
 
-	/**
-	 * Replace the hard drive file paths by URL that permit to download them
-	 *
-	 * @param customEntityTemplate Template of the values
-	 * @param values               Actual values containing the file paths
-	 */
-    private void replaceFilePathsByUrls(CustomEntityTemplate customEntityTemplate, Map<String, Object> values) {
-    	cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo())
-    		.values()
-    		.stream()
-			.filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))	// Only get binary fields
-			.filter(f -> values.get(f.getCode()) != null)						// Filter on present values
-			.forEach(binaryField -> {
-				Object binaryFieldValue = values.get(binaryField.getCode());
-				if(binaryFieldValue instanceof String) {
-					String url = buildFileUrl(customEntityTemplate, values, binaryField);
-					values.put(binaryField.getCode(), url);
+    private void decodeBase64Files(PersistenceDto dto) throws IOException {
+        for (Map.Entry<String, Object> propEntry : new HashSet<>(dto.getProperties().entrySet())) {
+            if (propEntry.getValue() instanceof Map) {
+                Map<String, Object> propertyAsMap = (Map<String, Object>) propEntry.getValue();
+                if (isBase64EncodedFile(propertyAsMap)) {
+                    File tmpFile = getFile(propertyAsMap);
+                    dto.getProperties().put(propEntry.getKey(), tmpFile);
+                }
 
-				} else if(binaryFieldValue instanceof Collection) {
-					List<String> urls = new ArrayList<>();
-					for(int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
-						String url = buildFileUrl(customEntityTemplate, values, binaryField);
-						url += "?index=" + index;
-						urls.add(url);
-					}
-					values.put(binaryField.getCode(), urls);
-				}
-			});
+            } else if (propEntry.getValue() instanceof List) {
+                if (!((List) propEntry.getValue()).isEmpty()) {
+                    List<File> files = new ArrayList<>();
+                    for (Object o : (List) propEntry.getValue()) {
+                        if (o instanceof Map) {
+                            Map<String, Object> propertyAsMap = (Map<String, Object>) o;
+                            if (isBase64EncodedFile(propertyAsMap)) {
+                                File tmpFile = getFile(propertyAsMap);
+                                files.add(tmpFile);
+                            }
+                        }
+                    }
+
+                    if (!files.isEmpty()) {
+                        dto.getProperties().put(propEntry.getKey(), files);
+                    }
+                }
+            }
+        }
     }
 
-	/**
-	 * Build an URL allowing to download a given file for a given entity in the FileSysytem
-	 *
-	 * @param customEntityTemplate Template of the entity
-	 * @param values               Actual values of the entity
-	 * @param binaryField          Field holding the file reference
-	 */
-	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
-		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
+    private boolean isBase64EncodedFile(Map<String, Object> propertyAsMap) {
+        return propertyAsMap.containsKey("filename") && propertyAsMap.containsKey("contentBase64");
+    }
 
-		return new StringBuilder("/api/rest/fileSystem/binaries/")
-				.append(repositoryCode).append("/")
-				.append(customEntityTemplate.getCode()).append("/")
-				.append(uuid).append("/")
-				.append(binaryField.getCode())
-				.toString();
-	}
+    private File getFile(Map<String, Object> propertyAsMap) throws IOException {
+        File tmpFile = new File(tempDir.toString(), (String) propertyAsMap.get("filename"));
+        Base64.Decoder dec = Base64.getDecoder();
+        byte[] contentBase64s = dec.decode((String) propertyAsMap.get("contentBase64"));
+        FileUtils.writeByteArrayToFile(tmpFile, contentBase64s);
+        return tmpFile;
+    }
+
+    /**
+     * Replace the hard drive file paths by URL that permit to download them
+     * @param customEntityTemplate Template of the values
+     * @param values               Actual values containing the file paths
+     * @param base64               Whether to encode files as base 64 string
+     */
+    private void convertFiles(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, boolean base64) throws IOException {
+        Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
+
+        if(base64) {
+            for (Map.Entry<String, Object> entry : new HashMap<>(values).entrySet()) {
+                String key = entry.getKey();
+                if(customFieldTemplates.get(key) == null){
+                    continue;
+                }
+
+                Object value = entry.getValue();
+                if (value instanceof File) {
+                    byte[] fileContent = FileUtils.readFileToByteArray((File) value);
+                    String encodedString = Base64.getEncoder().encodeToString(fileContent);
+                    values.put(key, encodedString);
+
+                } else if(value instanceof String && customFieldTemplates.get(key).getFieldType() == CustomFieldTypeEnum.BINARY) {
+                    byte[] fileContent = FileUtils.readFileToByteArray(new File((String) value));
+                    String encodedString = Base64.getEncoder().encodeToString(fileContent);
+                    values.put(key, encodedString);
+
+                } else if (value instanceof List && !((List) value).isEmpty()) {
+                    List<String> encodedStrings = new ArrayList<>();
+                    for(Object obj : (List) value){
+                        if(obj instanceof File){
+                            byte[] fileContent = FileUtils.readFileToByteArray((File) obj);
+                            String encodedString = Base64.getEncoder().encodeToString(fileContent);
+                            encodedStrings.add(encodedString);
+
+                        } else if(obj instanceof String && customFieldTemplates.get(key).getFieldType() == CustomFieldTypeEnum.BINARY) {
+                            byte[] fileContent = FileUtils.readFileToByteArray(new File((String) obj));
+                            String encodedString = Base64.getEncoder().encodeToString(fileContent);
+                            values.put(key, encodedString);
+                        }
+                    }
+
+                    if(!encodedStrings.isEmpty()){
+                        values.put(key, encodedStrings);
+                    }
+                }
+            }
+
+        } else {
+            customFieldTemplates.values()
+                    .stream()
+                    .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))    // Only get binary fields
+                    .filter(f -> values.get(f.getCode()) != null)                        // Filter on present values
+                    .forEach(binaryField -> {
+                        Object binaryFieldValue = values.get(binaryField.getCode());
+                        if (binaryFieldValue instanceof String) {
+                            String url = buildFileUrl(customEntityTemplate, values, binaryField);
+                            values.put(binaryField.getCode(), url);
+
+                        } else if (binaryFieldValue instanceof Collection) {
+                            List<String> urls = new ArrayList<>();
+                            for (int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
+                                String url = buildFileUrl(customEntityTemplate, values, binaryField);
+                                url += "?index=" + index;
+                                urls.add(url);
+                            }
+                            values.put(binaryField.getCode(), urls);
+                        }
+                    });
+        }
+    }
+
+    /**
+     * Build an URL allowing to download a given file for a given entity in the FileSysytem
+     *
+     * @param customEntityTemplate Template of the entity
+     * @param values               Actual values of the entity
+     * @param binaryField          Field holding the file reference
+     */
+    private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
+        String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
+
+        return new StringBuilder("/api/rest/fileSystem/binaries/")
+                .append(repositoryCode).append("/")
+                .append(customEntityTemplate.getCode()).append("/")
+                .append(uuid).append("/")
+                .append(binaryField.getCode())
+                .toString();
+    }
+
+    /**
+     * This service build an iterable list of CET/CRT by using cartesian product of example values of its CFTs.
+     */
+    @POST
+    @Path("/{cetCode}/examples")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation("List data for a given CET")
+    public List<Map<String, String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+        List<Map<String, String>> listExamples = customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
+        Collections.shuffle(listExamples);
+        return listExamples;
+    }
+
+    @PostConstruct
+    private void init() throws IOException {
+        tempDir = Files.createTempDirectory("dataUpload");
+    }
+
+    @PreDestroy
+    private void onDestroy() throws IOException {
+        Files.list(tempDir).forEach(path -> {
+            try {
+                Files.delete(path);
+            } catch (IOException e) {
+                LOGGER.warn("{} cannot be deleted", path.toString(), e);
+            }
+        });
+
+        if (Files.list(tempDir).count() == 0) {
+            Files.delete(tempDir);
+        }
+    }
 
 }

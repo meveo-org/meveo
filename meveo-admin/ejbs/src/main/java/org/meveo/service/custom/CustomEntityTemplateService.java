@@ -20,9 +20,14 @@
 package org.meveo.service.custom;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -53,12 +58,16 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
+import org.primefaces.model.charts.axes.cartesian.CartesianAxes;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * @author Clément Bareth
  * @author Wassim Drira
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.5.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -449,4 +458,63 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
     }
+
+	/**
+	 * Computes the cartesian product all {@linkplain CustomFieldTemplate} sample
+	 * values.
+	 * 
+	 * @param cetCode                 {@link CustomEntityTemplate} code
+	 * @param paginationConfiguration page information
+	 * @return list of list of string of sample values.
+	 */
+	public List<Map<String, String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
+
+		CustomEntityTemplate cet = findByCode(cetCode);
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		Collection<Collection<String>> listOfValues = new HashSet<>();
+		for (Entry<String, CustomFieldTemplate> es : cfts.entrySet()) {
+			List<String> sampleValues = es.getValue().getSamples().stream().map(e -> es.getKey() + "|" + e).collect(Collectors.toList());
+			listOfValues.add(sampleValues);
+		}
+
+		List<ImmutableList<String>> immutableElements = makeListofImmutable(listOfValues);
+
+		List<List<String>> cartesianValues = Lists.cartesianProduct(immutableElements);
+
+		return convertListToMap(cartesianValues);
+	}
+	
+	private List<Map<String, String>> convertListToMap(List<List<String>> cartesianValues) {
+
+		List<Map<String, String>> result = new ArrayList<>();
+
+		for (List<String> listOfValues : cartesianValues) {
+			Map<String, String> mapOfValues = new HashMap<>();
+			for (String codeValue : listOfValues) {
+				String[] token = codeValue.split("\\|");
+				mapOfValues.put(token[0], token[1]);
+			}
+			
+			result.add(mapOfValues);
+		}
+
+		return result;
+	}
+	
+	/**
+	 * Converts to {@linkplain LinkedList} of {@linkplain ImmutableList} object.
+	 * 
+	 * @param listOfValues list of values to be converted
+	 * @return the converted values
+	 */
+	private static List<ImmutableList<String>> makeListofImmutable(Collection<Collection<String>> listOfValues) {
+
+		List<ImmutableList<String>> converted = new LinkedList<>();
+		listOfValues.forEach(array -> {
+			converted.add(ImmutableList.copyOf(array));
+		});
+		
+		return converted;
+	}
 }

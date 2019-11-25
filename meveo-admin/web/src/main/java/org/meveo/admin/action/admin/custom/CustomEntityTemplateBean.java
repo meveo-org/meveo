@@ -24,6 +24,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
@@ -83,11 +84,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private GraphQLQueryField graphqlQueryField = new GraphQLQueryField();
 
+	private List<Mutation> mutations = new ArrayList<>();
+
+	private Mutation mutation = new Mutation();
+
 	private DualListModel<DBStorageType> availableStoragesDM;
 
 	private Map<String, List<CustomEntityTemplate>> listMap;
 
 	private List<CustomizedEntity> selectedCustomizedEntities;
+
+	private List<Map<String, String>> parameters;
 
 	@Inject
 	private MeveoModuleService meveoModuleService;
@@ -139,7 +146,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
-		if(listMap != null){
+		if (listMap != null) {
 			return listMap;
 		}
 
@@ -719,6 +726,87 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	public Mutation getMutation() {
+		return mutation;
+	}
+
+	public List<Mutation> getMutations() {
+		if (entity.getNeo4JStorageConfiguration() != null) {
+			if (entity != null && entity.getNeo4JStorageConfiguration().getMutations() != null) {
+				mutations = entity.getNeo4JStorageConfiguration().getMutations();
+			}
+			return mutations;
+		} else {
+			return new ArrayList<>();
+		}
+	}
+
+	public void removeMutation(Mutation selectedMutation) {
+		for (Mutation mutation : mutations) {
+			if (mutation != null && mutation.equals(selectedMutation)) {
+				entity.getNeo4JStorageConfiguration().getMutations().remove(selectedMutation);
+				break;
+			}
+		}
+		String message = "mutation.remove.successful";
+		messages.info(new BundleKey("messages", message));
+	}
+
+	public void editMutation(Mutation selectedMutation) {
+		isUpdate = true;
+		mutation = selectedMutation;
+	}
+
+	public void addMutation() {
+		isUpdate = false;
+		mutation = new Mutation();
+	}
+
+	public void saveMutation() {
+		if (!isUpdate) {
+			mutation.getParameters().clear();
+			if (CollectionUtils.isNotEmpty(parameters)) {
+				Map<String, String> mapParameters = new HashMap<>();
+				for (Map<String, String> mapValue : parameters) {
+					mapParameters.put(mapValue.get("key"), mapValue.get("value"));
+				}
+				mutation.setParameters(mapParameters);
+			}
+			mutations.add(mutation);
+		} else {
+			for (Mutation mutation : mutations) {
+				if (mutation != null) {
+					mutation.setCode(this.mutation.getCode());
+					mutation.setCypherQuery(this.mutation.getCypherQuery());
+					mutation.getParameters().clear();
+					if (CollectionUtils.isNotEmpty(parameters)) {
+						Map<String, String> mapParameters = new HashMap<>();
+						for (Map<String, String> mapValue : parameters) {
+							mapParameters.put(mapValue.get("key"), mapValue.get("value"));
+						}
+						mutation.setParameters(mapParameters);
+					}
+					break;
+				}
+			}
+		}
+		entity.getNeo4JStorageConfiguration().setMutations(mutations);
+		isUpdate = false;
+		String message = "mutation.save.successful";
+		messages.info(new BundleKey("messages", message));
+	}
+
+	public void removeMapParam(Map<String, String> mapValue) {
+		parameters.remove(mapValue);
+	}
+
+	public void addMapParam() {
+		Map<String, String> mapValue = new HashMap<String, String>();
+		mapValue.put("key", null);
+		mapValue.put("value", null);
+		parameters.add(mapValue);
+	}
+
 	public Boolean getIsUpdate() {
 		return isUpdate;
 	}
@@ -925,6 +1013,32 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	public void setSelectedCustomizedEntities(List<CustomizedEntity> selectedCustomizedEntities) {
 		this.selectedCustomizedEntities = selectedCustomizedEntities;
+	}
+
+	public void resetMutation() {
+		mutation = new Mutation();
+		parameters = null;
+	}
+
+	public List<Map<String, String>> getParameters() {
+		if (CollectionUtils.isEmpty(parameters)) {
+			if (mutation.getParameters() != null) {
+				parameters = new ArrayList<>();
+				for (Map.Entry<String, String> entry : mutation.getParameters().entrySet()) {
+					Map<String, String> item = new HashMap<>();
+					item.put("key", entry.getKey());
+					item.put("value", entry.getValue());
+					parameters.add(item);
+				}
+			} else {
+				parameters = new ArrayList<>();
+			}
+		}
+		return parameters;
+	}
+
+	public void setParameters(List<Map<String, String>> parameters) {
+		this.parameters = parameters;
 	}
 }
 

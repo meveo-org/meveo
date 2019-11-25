@@ -5,7 +5,7 @@
         <groupId>org.meveo</groupId>
         <artifactId>meveo</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>6.4.0</version>
+        <version>6.5.3</version>
     </parent>
     <artifactId>meveo-api</artifactId>
     <name>Meveo API</name>
@@ -120,6 +120,17 @@
                 </exclusion>
             </exclusions>
 		</dependency>
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js</artifactId>
+            <version>19.2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js-scriptengine</artifactId>
+            <version>19.2.0.1</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -134,36 +145,6 @@
         </plugins>
     </build>
     <profiles>
-        <profile>
-            <id>meveo-api-windows</id>
-            <activation>
-                <os>
-                    <family>Windows</family>
-                </os>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.eclipsesource.j2v8</groupId>
-                    <artifactId>j2v8_win32_x86_64</artifactId>
-                    <version>4.6.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>meveo-api-linux</id>
-            <activation>
-                <os>
-                    <family>Linux</family>
-                </os>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.eclipsesource.j2v8</groupId>
-                    <artifactId>j2v8_linux_x86_64</artifactId>
-                    <version>4.8.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
         <profile>
             <id>api</id>
             <!-- Dependencies for api documention generation -->

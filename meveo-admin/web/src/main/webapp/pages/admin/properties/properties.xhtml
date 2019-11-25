@@ -1,7 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:hftl="http://hftl.org"
 	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 	<ui:define name="metadata">
 		<f:metadata>
@@ -19,10 +19,18 @@
 				<p:dataTable id="properties" var="property" resizableColumns="true"
 					value="#{paramActionBean.properties}" editable="true"
 					editMode="cell" widgetVar="propertiesTable">
-					 <p:ajax event="cellEdit" listener="#{paramActionBean.onCellEdit}" update=":form:messages" />  
+					<p:ajax event="cellEdit" listener="#{paramActionBean.onCellEdit}" update=":form:messages" />
 					<p:column headerText="#{messages['properties.key']}"
 						style="width:25%">
-						<h:outputText value="#{property.key}" />
+						<p:cellEditor>
+							<f:facet name="output">
+								<h:outputText value="#{property.key}" />
+							</f:facet>
+							<f:facet name="input">
+								<p:inputText id="key" value="#{property.key}"
+											 style="width:96%" />
+							</f:facet>
+						</p:cellEditor>
 					</p:column>
 					<p:column headerText="#{messages['properties.value']}"
 						style="width:75%">
@@ -31,14 +39,18 @@
 								<h:outputText value="#{property.value}" />
 							</f:facet>
 							<f:facet name="input">
-								<p:inputText id="key" value="#{property.value}"
+								<p:inputText id="value" value="#{property.value}"
 									style="width:96%" />
 							</f:facet>
 						</p:cellEditor>
 					</p:column>
+					<f:facet name="footer">
+						<p:commandButton value="#{messages['commons.addNew']}" process="@form" update="@form"
+										 actionListener="#{paramActionBean.addNewLine(property.key, property.value)}" />
+					</f:facet>
 				</p:dataTable>
 				<p:commandButton action="#{paramActionBean.save}"
-					value="#{messages['action.save']}" ajax="false">
+					value="#{messages['action.save']}" process="@form" type="submit" ajax="false">
 				</p:commandButton>
 				<p:commandButton action="#{paramActionBean.reset}"
 					value="#{messages['action.reset']}" ajax="false"></p:commandButton>

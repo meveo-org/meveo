@@ -16,33 +16,9 @@
 
 package org.meveo.persistence.neo4j.service;
 
-import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
-
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -91,24 +67,36 @@ import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+
+import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
 
 /**
  * @author Rachid AITYAAZZA
@@ -123,10 +111,14 @@ public class Neo4jService implements CustomPersistenceService {
     private static final String FIELDS = "fields";
     public static final String ID = "id";
     private static final String MEVEO_UUID = "meveo_uuid";
+    private static final ConcurrentHashMap<String, Future> mergeTasks = new ConcurrentHashMap<>();
     
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
+
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
     private Neo4jConnectionProvider neo4jSessionFactory;
@@ -470,7 +462,6 @@ public class Neo4jService implements CustomPersistenceService {
                     
                 } else {
                     Map<String, Object> editableFields = getEditableFields(cetFields, fields);
-
                     String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels, uuid);
                     
                     if(nodeId != null) {
@@ -1127,7 +1118,7 @@ public class Neo4jService implements CustomPersistenceService {
 
                 // Validate that value is not empty when field is mandatory
                 boolean isEmpty = fieldValue == null && (cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION);
-                if (cft.isValueRequired() && isEmpty) {
+                if (cft.isValueRequired() && isEmpty && cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
                     final String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
                     final CustomEntityTemplate customEntityTemplate = customFieldsCache.getCustomEntityTemplate(cetCode);
 
@@ -1223,6 +1214,8 @@ public class Neo4jService implements CustomPersistenceService {
                                         + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
                                         + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
+                            
+                            fieldValue = longValue;
                         } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                             Double doubleValue;
                             if (valueToCheck instanceof Integer) {
@@ -1242,6 +1235,8 @@ public class Neo4jService implements CustomPersistenceService {
                                         + ". Allowed value range is from " + (cft.getMinValue() == null ? "unspecified" : cft.getMinValue()) + " to "
                                         + (cft.getMaxValue() == null ? "unspecified" : cft.getMaxValue()) + ".");
                             }
+                            
+                            fieldValue = doubleValue;
                         }
                         if (cft.isUnique() && uniqueFields != null) {
                             uniqueFields.put(cft.getCode(), fieldValue);
@@ -1408,68 +1403,93 @@ public class Neo4jService implements CustomPersistenceService {
      * @return UUID of the merged node
      */
     public String mergeNodes(String configurationCode, CustomEntityTemplate customEntityTemplate, Collection<String> uuids) {
-        List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode);
+        List<Node> nodesToTreat = neo4jDao.orderNodesAscBy(Neo4JRequests.CREATION_DATE, uuids, configurationCode, customEntityTemplate.getCode());
 
         Node persistentNode = nodesToTreat.remove(0);
-        LOGGER.info("Merging nodes {} into node {}", uuids, persistentNode.get("meveo_uuid"));
 
-        final List<CustomRelationshipTemplate> availableCrts = customFieldsCache.getCustomRelationshipTemplateByCet(customEntityTemplate.getCode());
+        for (Node nodeToMerge : nodesToTreat) {
+            String hash = nodeToMerge.get(MEVEO_UUID).asString() + "/"  + persistentNode.get(MEVEO_UUID).asString();
+            Future mergeTask = mergeTasks.computeIfAbsent(hash, k -> mergeNode(configurationCode, customEntityTemplate, persistentNode, nodeToMerge));
 
-        for (Node node : nodesToTreat) {
-            final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, node.id(), customEntityTemplate.getCode());
-            List<Long> relIds = relationships.stream().map(org.neo4j.driver.v1.types.Entity::id).collect(Collectors.toList());
-
-            LOGGER.info("Merging relationships {} of node {} into node {}", relIds, node.id(), persistentNode.id());
-            for (Relationship relationship : relationships) {
-                Map<String, Object> uniqueFields = new HashMap<>();
-                final Map<String, Object> relationProperties = relationship.asMap();
-                final String type = relationship.type();
-
-                final List<CustomRelationshipTemplate> correspondingCrt = availableCrts.stream()
-                        .filter(crt -> crt.getName().equals(type))
-                        .collect(Collectors.toList());
-
-                try {
-                    // Determine unique fields
-                    if (correspondingCrt.isEmpty()) {
-                        log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
-                        uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
-                    } else {
-                        final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(correspondingCrt.get(0).getAppliesTo());
-                        validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
-                        if (correspondingCrt.size() > 1) {
-                            log.warn("Multiple CRT available for relation type {} and node label {} : {}", type, customEntityTemplate.getCode(), correspondingCrt);
-                        }
-                    }
-                }catch(Exception e){
-                    log.error("Cannot determine unique fields for relation {}", type, e);
-                    uniqueFields = relationProperties;
-                }
-
-                Long creationOrUpdateDate = (Long) (relationProperties.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE) ?
-                        relationProperties.get(Neo4JRequests.INTERNAL_UPDATE_DATE) :
-                        relationProperties.get(Neo4JRequests.CREATION_DATE));
-
-                neo4jDao.mergeRelationshipById(
-                        configurationCode,
-                        persistentNode.id(),
-                        relationship.endNodeId(),
-                        relationship.get(MEVEO_UUID).asString(),
-                        type,
-                        uniqueFields,
-                        relationProperties,
-                        creationOrUpdateDate
-                );
-
+            try {
+                mergeTask.get();
+            } catch (Exception e) {
+                log.error("Merge task for merging {} into {} has been aborted", nodeToMerge, persistentNode, e);
+            } finally {
+                mergeTasks.remove(hash);
             }
-
-            LOGGER.info("Merging properties of node {} into node {} then removing node {}", node.id(), persistentNode.id(), node.id());
-            neo4jDao.mergeAndRemoveNodes(configurationCode, persistentNode.id(), node.id());
         }
+
         return persistentNode.get(MEVEO_UUID).asString();
     }
 
-	/**
+    @Asynchronous
+    private AsyncResult<Void> mergeNode(String configurationCode, CustomEntityTemplate customEntityTemplate, Node persistentNode, Node nodeToMerge) {
+        LOGGER.info("Merging node {} into node {}", nodeToMerge.get(MEVEO_UUID), persistentNode.get(MEVEO_UUID));
+
+        final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, nodeToMerge.id(), customEntityTemplate.getCode());
+        List<Long> relIds = relationships.stream().map(org.neo4j.driver.v1.types.Entity::id).collect(Collectors.toList());
+
+        LOGGER.info("Merging relationships {} of node {} into node {}", relIds, nodeToMerge.id(), persistentNode.id());
+        for (Relationship relationship : relationships) {
+            Map<String, Object> uniqueFields = new HashMap<>();
+            final Map<String, Object> relationProperties = relationship.asMap();
+            final String type = relationship.type();
+
+            final List<String> correspondingCrts = customRelationshipTemplateService.findByCetAndName(customEntityTemplate, type);
+
+            try {
+                // Determine unique fields
+                if (correspondingCrts.isEmpty()) {
+                    log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
+                    uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
+                } else {
+                    final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(CustomRelationshipTemplate.getAppliesTo(correspondingCrts.get(0)));
+                    validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
+                    if (correspondingCrts.size() > 1) {
+                        log.warn("Multiple CRT available for relation type {} and nodeToMerge label {} : {}", type, customEntityTemplate.getCode(), correspondingCrts);
+                    }
+                }
+            }catch(Exception e){
+                log.error("Cannot determine unique fields for relation {}", type, e);
+                uniqueFields = relationProperties;
+            }
+
+            Long creationOrUpdateDate = (Long) (relationProperties.containsKey(Neo4JRequests.INTERNAL_UPDATE_DATE) ?
+                    relationProperties.get(Neo4JRequests.INTERNAL_UPDATE_DATE) :
+                    relationProperties.get(Neo4JRequests.CREATION_DATE));
+
+            Long sourceId = relationship.startNodeId() == nodeToMerge.id() ? persistentNode.id() : relationship.startNodeId();
+            Long targetId = relationship.endNodeId() == nodeToMerge.id() ? persistentNode.id() : relationship.endNodeId();
+
+            neo4jDao.mergeRelationshipById(
+                    configurationCode,
+                    sourceId,
+                    targetId,
+                    relationship.get(MEVEO_UUID).asString(),
+                    type,
+                    uniqueFields,
+                    relationProperties,
+                    creationOrUpdateDate
+            );
+
+        }
+
+        LOGGER.info("Merging properties of node {} into node {} then removing node {}", nodeToMerge.id(), persistentNode.id(), nodeToMerge.id());
+
+        List<String> updatableKeys = customFieldsCache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo())
+                .values()
+                .stream()
+                .filter(customFieldTemplate -> customFieldTemplate.isAllowEdit() && !customFieldTemplate.isUnique())
+                .map(CustomFieldTemplate::getCode)
+                .collect(Collectors.toList());
+
+        neo4jDao.mergeAndRemoveNodes(configurationCode, persistentNode.id(), nodeToMerge.id(), updatableKeys);
+
+        return new AsyncResult<>(null);
+    }
+
+    /**
 	 * Remove the binaries attached to the source node
 	 *
 	 * @param neo4jConfigurationCode Code of the configuration to update

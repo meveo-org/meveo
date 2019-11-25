@@ -408,6 +408,10 @@ public class CrossStorageService implements CustomPersistenceService {
      */
     @Override
     public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance ceiToSave) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+        if(repository == null){
+            throw new IllegalArgumentException("Reposiroty should be provided");
+        }
+
         Set<EntityRef> persistedEntities = new HashSet<>();
 
         // Initialize the CEI that will be manipulated
@@ -478,11 +482,17 @@ public class CrossStorageService implements CustomPersistenceService {
     	
 		CustomEntityInstance cei = getCustomEntityInstance(ceiToSave.getCetCode(), ceiToSave.getCode(), values);
 
+        Map<CustomFieldTemplate, Object> persistedBinaries = new HashMap<>();
+
         if (cei == null) {
         	cei = ceiToSave;
 
             if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
+                persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
+            }
+
+            for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
+                cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
             }
 
             customEntityInstanceService.create(cei);
@@ -492,10 +502,13 @@ public class CrossStorageService implements CustomPersistenceService {
 
             if (CollectionUtils.isNotEmpty(binariesInSql)) {
                 final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-                fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
+                persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
             }
 
             cei.setCfValues(ceiToSave.getCfValues());
+            for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
+                cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
+            }
 
             customEntityInstanceService.update(cei);
         }

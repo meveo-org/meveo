@@ -5,11 +5,14 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
@@ -17,11 +20,16 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.jobs.JobInstance;
+import org.meveo.service.base.PersistenceService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @lastModifiedVersion 6.4.0
+ */
 public class CustomizedEntityService implements Serializable {
 
     private static final long serialVersionUID = 4108034108745598588L;
@@ -35,64 +43,140 @@ public class CustomizedEntityService implements Serializable {
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
-    /**
-     * Get a list of customized/customizable entities optionally filtering by a name and custom entities only and whether to include non-managed entities. Non-managed Entities are
-     * entities that will not be shown in the Entity Customization list page.
-     * 
-     * @param entityName Optional filter by a name
-     * @param customEntityTemplatesOnly Return custom entity templates only
-     * @param includeNonManagedEntities If true, entities that are not managed through the Entity Customization list page will be included - that is those that
-     *        have @CustomFieldEntity(isManualyManaged=true)
-     * @param sortBy Sort by. Valid values are: "description" or null to sort by entity name
-     * @param sortOrder Sort order. Valid values are "DESCENDING" or "ASCENDING". By default will sort in Ascending order.
-     * @param includeParentClassesOnly true if including parent classes.
-     * @return A list of customized/customizable entities
-     */
-    public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
-                                                             final String sortBy, final String sortOrder, boolean includeRelationships) {
-        List<CustomizedEntity> entities = new ArrayList<>();
 
-        if (entityName != null) {
-            entityName = entityName.toLowerCase();
-        }
+	/**
+	 * @deprecated use method getCustomizedEntities with
+	 *             {@link CustomizedEntityFilter} parameter.
+	 * @param entityName
+	 * @param customEntityTemplatesOnly
+	 * @param includeNonManagedEntities
+	 * @param includeParentClassesOnly
+	 * @param sortBy
+	 * @param sortOrder
+	 * @return
+	 */
+	@Deprecated
+	public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
+			final String sortBy, final String sortOrder) {
 
-        if (!customEntityTemplatesOnly) {
-            entities.addAll(
-                    searchAllCustomFieldEntities(entityName, includeNonManagedEntities, includeParentClassesOnly));
-            entities.addAll(searchJobs(entityName));
-        }
-        entities.addAll(searchCustomEntityTemplates(entityName));
-
-        if(includeRelationships) {
-            entities.addAll(searchCustomRelationshipTemplates(entityName));
-        }
-
-        Collections.sort(entities, sortEntitiesBy(sortBy, sortOrder));
-        return entities;
-    }
-
-    public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
-                                                        final String sortBy, final String sortOrder) {
-
-        return getCustomizedEntities(entityName, customEntityTemplatesOnly, includeNonManagedEntities, includeParentClassesOnly, sortBy, sortOrder, true);
-    }
+		return getCustomizedEntities(entityName, customEntityTemplatesOnly, includeNonManagedEntities, includeParentClassesOnly, sortBy, sortOrder, true);
+	}
     
-	public List<CustomizedEntity> getCustomizedEntities(String entityName, Long cecId, final String sortBy,
-			final String sortOrder) {
-		List<CustomizedEntity> entities = new ArrayList<>();
-		entities.addAll(searchCustomEntityTemplates(entityName, cecId));
-		Collections.sort(entities, sortEntitiesBy(sortBy, sortOrder));
-		return entities;
+	/**
+	 * Get a list of customized/customizable entities optionally filtering by a name
+	 * and custom entities only and whether to include non-managed entities.
+	 * Non-managed Entities are entities that will not be shown in the Entity
+	 * Customization list page.
+	 * 
+	 * @deprecated use the method that uses the {@linkplain CustomizedEntityFilter} parameter.
+	 * 
+	 * @param entityName                Optional filter by a name
+	 * @param customEntityTemplatesOnly Return custom entity templates only
+	 * @param includeNonManagedEntities If true, entities that are not managed
+	 *                                  through the Entity Customization list page
+	 *                                  will be included - that is those that
+	 *                                  have @CustomFieldEntity(isManualyManaged=true)
+	 * @param sortBy                    Sort by. Valid values are: "description" or
+	 *                                  null to sort by entity name
+	 * @param sortOrder                 Sort order. Valid values are "DESCENDING" or
+	 *                                  "ASCENDING". By default will sort in
+	 *                                  Ascending order.
+	 * @param includeParentClassesOnly  true if including parent classes.
+	 * @return A list of customized/customizable entities
+	 */
+    @Deprecated
+	public List<CustomizedEntity> getCustomizedEntities(String entityName, boolean customEntityTemplatesOnly, boolean includeNonManagedEntities, boolean includeParentClassesOnly,
+			final String sortBy, final String sortOrder, boolean includeRelationships) {
+
+		CustomizedEntityFilter filter = new CustomizedEntityFilter();
+		filter.setEntityName(entityName);
+		filter.setCustomEntityTemplatesOnly(customEntityTemplatesOnly);
+		filter.setIncludeNonManagedEntities(includeNonManagedEntities);
+		filter.setIncludeParentClassesOnly(includeParentClassesOnly);
+		filter.setSortBy(sortBy);
+		filter.setSortOrder(sortOrder);
+		filter.setIncludeRelationships(includeRelationships);
+		filter.setPrimitiveEntity("0");
+
+		return getCustomizedEntities(filter);
+	}
+    
+	/**
+	 * @deprecated use method getCustomizedEntities with
+	 *             {@link CustomizedEntityFilter} parameter.
+	 * @param entityName
+	 * @param cecId
+	 * @param sortBy
+	 * @param sortOrder
+	 * @return
+	 */
+	public List<CustomizedEntity> getCustomizedEntities(String entityName, Long cecId, final String sortBy, final String sortOrder) {
+
+		CustomizedEntityFilter filter = new CustomizedEntityFilter();
+		filter.setEntityName(entityName);
+		filter.setCecId(cecId);
+		filter.setSortBy(sortBy);
+		filter.setSortOrder(sortOrder);
+		filter.setPrimitiveEntity("0");
+
+		return getCustomizedEntities(filter);
+	}
+    
+	/**
+	 * Get a list of customized/customizable entities optionally filtering by a name
+	 * and custom entities only and whether to include non-managed entities.
+	 * Non-managed Entities are entities that will not be shown in the Entity
+	 * Customization list page.
+	 * 
+	 * @param filter set of filter to be applied to the list of CETs.
+	 * @return filtered list of {@link CustomizedEntity}
+	 */
+	public List<CustomizedEntity> getCustomizedEntities(CustomizedEntityFilter filter) {
+
+		if (filter.getCecId() != null) {
+			List<CustomizedEntity> entities = new ArrayList<>();
+			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getCecId()));
+			Collections.sort(entities, sortEntitiesBy(filter.getSortBy(), filter.getSortOrder()));
+
+			return entities;
+
+		} else {
+			List<CustomizedEntity> entities = new ArrayList<>();
+
+			if (filter.getEntityName() != null) {
+				filter.setEntityName(filter.getEntityName().toLowerCase());
+			}
+
+			if (!filter.isCustomEntityTemplatesOnly()) {
+				entities.addAll(searchAllCustomFieldEntities(filter.getEntityName(), filter.isIncludeNonManagedEntities(), filter.isIncludeParentClassesOnly()));
+				entities.addAll(searchJobs(filter.getEntityName()));
+			}
+
+			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getPrimitiveEntity()));
+
+			if (filter.isIncludeRelationships()) {
+				entities.addAll(searchCustomRelationshipTemplates(filter.getEntityName()));
+			}
+
+			Collections.sort(entities, sortEntitiesBy(filter.getSortBy(), filter.getSortOrder()));
+
+			return entities;
+		}
 	}
 
-    /**
-     * Searches all custom field entities.
-     *
-     * @param entityName Optional filter by a name
-     * @param includeNonManagedEntities If true, will include all entries including those set not to appear in the Custom Entities list.
-     * @param includeParentClassesOnly Include only those classes that have @CustomFieldEntity annotation directly on them. E.g. Will not include all AccountOperation subclasses.
-     * @return A list of customized/customizable entities.
-     */
+	/**
+	 * Searches all custom field entities.
+	 *
+	 * @param entityName                Optional filter by a name
+	 * @param includeNonManagedEntities If true, will include all entries including
+	 *                                  those set not to appear in the Custom
+	 *                                  Entities list.
+	 * @param includeParentClassesOnly  Include only those classes that
+	 *                                  have @CustomFieldEntity annotation directly
+	 *                                  on them. E.g. Will not include all
+	 *                                  AccountOperation subclasses.
+	 * @return A list of customized/customizable entities.
+	 */
     private List<CustomizedEntity> searchAllCustomFieldEntities(final String entityName, final boolean includeNonManagedEntities, boolean includeParentClassesOnly) {
         List<CustomizedEntity> entities = new ArrayList<>();
         Reflections reflections = new Reflections("org.meveo.model");
@@ -104,6 +188,7 @@ public class CustomizedEntityService implements Serializable {
 
             if (includeParentClassesOnly) {
                 annotation = cfClass.getDeclaredAnnotation(CustomFieldEntity.class);
+                
             } else {
                 annotation = cfClass.getAnnotation(CustomFieldEntity.class);
             }
@@ -121,31 +206,55 @@ public class CustomizedEntityService implements Serializable {
         return entities;
     }
 
-    /**
-     * Searches all custom entity templates.
-     *
-     * @param entityName Optional filter by a name
-     * 
-     * @return A list of custom entity templates.
-     */
-    private List<CustomizedEntity> searchCustomEntityTemplates(String entityName) {
-        List<CustomizedEntity> entities = new ArrayList<>();
-        List<CustomEntityTemplate> customEntityTemplates = null;
-        if (entityName == null || CustomEntityTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
-            customEntityTemplates = customEntityTemplateService.list();
-        } else if (entityName != null) {
-            customEntityTemplates = customEntityTemplateService.findByCodeLike(entityName);
-        }
+	/**
+	 * Searches all custom entity templates.
+	 *
+	 * @param entityName      Optional filter by a name
+	 * @param primitiveEntity if 1, only primitive entities will be displayed
+	 *                        (entities that are store in Neo4J with
+	 *                        "primitiveEntity=true"), 2 otherwise only non
+	 *                        primitive entities will be displayed (neo4jStorage =
+	 *                        null or primitiveEntity= false), 0 is default
+	 * 
+	 * @return A list of custom entity templates.
+	 */
+	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, String primitiveEntity) {
+
+		List<CustomizedEntity> entities = new ArrayList<>();
+		List<CustomEntityTemplate> customEntityTemplates;
+
+		PaginationConfiguration paginationConfig = new PaginationConfiguration();
+		Map<String, Object> filters = new HashMap<>();
+
+		// 0 is default = no filter
+		if (primitiveEntity.equals("1")) {
+			// Neo4J in availableStorages with primitiveEntity=true
+			filters.put("neo4JStorageConfiguration", PersistenceService.SEARCH_IS_NOT_NULL);
+			filters.put("neo4JStorageConfiguration.primitiveEntity", true);
+
+		} else if (primitiveEntity.equals("2")) {
+			// non primitive entities will be displayed (neo4jStorage=null or
+			// primitiveEntity=false)
+			filters.put(PersistenceService.SEARCH_SQL, "(a.neo4JStorageConfiguration IS NULL OR a.neo4JStorageConfiguration.primitiveEntity=false)");
+		}
+
+		if (!(entityName == null || CustomEntityTemplate.class.getSimpleName().toLowerCase().contains(entityName))) {
+			filters.put(PersistenceService.SEARCH_WILDCARD_OR.concat(" code"), entityName);
+		}
+
+		paginationConfig.setFilters(filters);
+		
+		customEntityTemplates = customEntityTemplateService.list(paginationConfig);
 
 		CustomEntityCategory cec = null;
 		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
 			cec = customEntityTemplate.getCustomEntityCategory();
-			entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class,
-					customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
+			entities.add(
+					new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
 		}
-      
-        return entities;
-    }
+
+		return entities;
+	}
     
 	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, Long cecId) {
 		List<CustomizedEntity> entities = new ArrayList<>();

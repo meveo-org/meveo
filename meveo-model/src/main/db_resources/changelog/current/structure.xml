@@ -1292,4 +1292,5 @@
             <column name="samples" type="text" defaultValue="[]"/>
         </addColumn>
     </changeSet>
+
 </databaseChangeLog>

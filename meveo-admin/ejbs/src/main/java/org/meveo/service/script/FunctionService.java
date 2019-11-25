@@ -29,12 +29,14 @@ import org.meveo.model.IEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.job.JobInstanceService;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @param <T> Type of function (service, script ...)
@@ -44,6 +46,8 @@ import java.util.*;
 public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
 
+    private static final Map<CacheKeyStr, List<String>> ALL_LOGS = new ConcurrentHashMap<>();
+
     public static final String FUNCTION_TEST_JOB = "FunctionTestJob";
 
     @Inject
@@ -52,10 +56,6 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Inject
     private JobInstanceService jobInstanceService;
 
-    private Map<CacheKeyStr, List<String>> allLogs = new HashMap<>();
-
-    private Map<CacheKeyStr, E> cachedExecutionEngines = new HashMap<>();
-
     /**
      * Parse parameters encoded in URL like style param=value&amp;param=value.
      *
@@ -63,7 +63,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return A map of parameter keys and values
      */
     public static Map<String, Object> parseParameters(String encodedParameters) {
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
         if (!StringUtils.isBlank(encodedParameters)) {
             StringTokenizer tokenizer = new StringTokenizer(encodedParameters, "&");
             while (tokenizer.hasMoreElements()) {
@@ -92,13 +92,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     /**
-     * Clear from cache and logs the execution engine corresponding to the given code
+     * Clear from logs the execution engine corresponding to the given code
      *
      * @param code Code of the execution engine
      */
     protected void clear(String code) {
-        cachedExecutionEngines.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
-        allLogs.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
+        ALL_LOGS.remove(new CacheKeyStr(currentUser.getProviderCode(), code));
     }
 
     /**
@@ -182,11 +181,11 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param scriptCode code of script.
      */
     public void addLog(String message, String scriptCode) {
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode),
-                    new ArrayList<String>());
+        if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+            ALL_LOGS.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode),
+                    new ArrayList<>());
         }
-        allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
+        ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).add(message);
     }
 
     /**
@@ -197,10 +196,10 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public List<String> getLogs(String scriptCode) {
 
-        if (!allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            return new ArrayList<String>();
+        if (!ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+            return new ArrayList<>();
         }
-        return allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        return ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
 
     /**
@@ -209,8 +208,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param scriptCode script's code
      */
     public void clearLogs(String scriptCode) {
-        if (allLogs.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
-            allLogs.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
+        if (ALL_LOGS.containsKey(new CacheKeyStr(currentUser.getProviderCode(), scriptCode))) {
+            ALL_LOGS.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode)).clear();
         }
     }
     
@@ -224,7 +223,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
         if (context == null) {
-            context = new HashMap<String, Object>();
+            context = new HashMap<>();
         }
         engine.init(context);
         engine.execute(context);
@@ -281,7 +280,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     public Map<String, Object> execute(IEntity entity, String scriptCode, Map<String, Object> context) throws BusinessException {
         if (context == null) {
-            context = new HashMap<String, Object>();
+            context = new HashMap<>();
         }
         context.put(Script.CONTEXT_ENTITY, entity);
         return execute(scriptCode, context);
@@ -304,5 +303,41 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
-    
+
+	public List<Sample> getSamples(String functioncode) {
+        T f = findByCode(functioncode);
+        if (f != null) {
+            return getSamples(f);
+        }
+
+        return new ArrayList<>();
+    }
+
+	public List<Sample> getSamples(T script) {
+        try {
+            if (script.getGenerateOutputs()) {
+                for (Sample sample : script.getSamples()) {
+                    if (sample.getOutputs() == null) {
+                        HashMap<String, Object> copyOfInput = new HashMap<>(sample.getInputs());
+                        Map<String, Object> output = execute(script.getCode(), copyOfInput);
+                        // Keep only keys that were modified
+                        new HashMap<>(output).forEach((s, o) -> {
+                            if (sample.getInputs().get(s) == o) {
+                                output.remove(s);
+                            }
+                        });
+                        sample.setOutputs(output);
+                    }
+                }
+
+                this.update(script);
+            }
+
+        } catch (Exception e) {
+            log.warn("Cannot generate outputs of script {}", script.getCode(), e);
+        }
+
+        return script.getSamples();
+    }
+
 }
