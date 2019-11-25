@@ -1,0 +1,125 @@
+= Meveo - User guide
+:nofooter:
+:source-highlighter: pygments
+
+[[scripts]]
+== Scripts
+In Meveo, you can create Java and Javascript scripts. The code of these scripts are stored in the link:<<git>[Meveo git repository]. You can either create them from the user interface under `/pages/admin/storages/scriptInstances/scriptInstances.jsf` or using the REST Api.
+
+A script can be executed from the REST Api using the default endpoint, by a Notification, a Job or an Endpoint.
+
+To ease the communication with other components of Meveo, the user can define named inputs and outputs.
+
+=== Java scripts
+All java scripts should be classes that implements the org.meveo.script.ScriptInterface interface. The code of the script is deduced from full name (package name + class name) of the java class.
+
+The parameters can either be taken from the map or be defined through setters. The parameters taken from setters will automatically be added to the list of user defined inputs.
+
+The output can either be added to the map (which is read after the script execution) or defined in a getter.The outputs taken from getters will automatically be added to the list of user defined outputs.
+
+[source,java]
+----
+package org.meveo.test;
+
+import org.meveo.service.script.Script;
+import java.util.Map; 
+import org.meveo.admin.exception.BusinessException; 
+
+public class TestSetterAndGetters extends Script { 
+
+    private String field1;
+
+    @Override
+    public void execute(Map<String, Object> methodContext) throws BusinessException { 
+        String fieldFromMap = methodContext.get("fieldFromMap");
+        methodContext.put("output2", "output2");
+    }
+
+    /**
+    * @param fieldValue Value of the field.
+    * Just a test.
+    */
+    public void setField1(String fieldValue){
+        this.field1 = fieldValue;
+    }
+
+    /**
+    * @return The field previously set
+    */
+    public String getOutput1(){
+        return this.field1 + "increased";
+    }
+}
+----
+
+=== Javascript scripts
+The javascript scripts should just be simple scripts that will be evaluated in a java context by the GraalJS library.
+
+The parameters are injected as variables in the script context, so we can access them directly. We can also access them using the `methodContext` object.
+
+The outputs of the script must be added in the `methodContext` map.
+
+[source,javascipt]
+----
+var inputA = methodContext.get('input'); 
+methodContext.put('result', inputA * 2); 
+var declaredVar = input * 3;
+methodContext.put('result2', declaredVar);
+----
+
+[[git]]
+== Git
+
+[[git_server]]
+=== Git server
+
+You can access the git server like in any other git hosting provider. The remote origin will be accessible at `\https://{host}(:{port})/{context-root}/git/{repository-code}`.
+
+You must authenticate using your Meveo login / password
+
+[[git_repository]]
+=== Git repository
+A git repository entity reflect a git repository hosted by the Meveo instance. It is defined by a code, a description, a optional remote origin (with optional username and password), reading roles and writing roles. You can access the mangament page at `/pages/admin/storages/repositories/gitRepositories.jsf`.
+
+==== Definition
+===== Remote origin
+When a git repository has a remote origin, the user can push / pull to / from the remote origin. Default credentials can be defined, but we can also specify them at execution of the action.
+
+===== Reading roles
+If reading roles are provided, only user with one of these roles will be able to pull and clone the concerned repository.
+
+===== Writing roles
+If writing roles are provided, only user with one of these roles will be able to push to the concerned repository.
+
+==== Operations
+===== Commit [API]
+When committing a repository, you should provide a commit message and a pattern of the commited files (can be a regex). This operation is only available from API at the moment.
+
+===== Push & Pull
+When pushing or pulling a repository, you can specify credentials different from the default credentials. The Meveo instance will behave in the same way when he receives commits from a pull as when he receives a commit from a git client.
+
+===== Import a repository
+A zip file can be imported from the file system. If the repository already exist, it will be overriden. This operation is only available for repositories that have no remote origin.
+
+===== Export a repository
+The content of a repository can be exported as a zip file. The branch to export can be specified, default branch will be the current branch of the repository.
+
+===== Managing branches [API]
+We can checkout, create and delete branches of a git repository. This operation is only available from API at the moment
+
+[[git_how_to]]
+=== How to use Git in Meveo ?
+
+Currently, the ontology elements and the scripts are stored in a dedicated git repository hosted by the running Meveo instance, called "Meveo" repository and accessible at `\https://{host}(:{port})/{context-root}/git/Meveo`.
+
+[[git_script]]
+==== Scripts
+If you clone the Meveo repository, then make some changes to a script, and finally push it, the concerned script will be re-compiled by Meveo and updated. If you create or delete scripts, the action will be reflected on the Meveo instance.
+
+[[git_onto]]
+==== Ontology
+The ontology elements are serialized under an extended JSON Schema specification. The same rules than for script applies, so if you create, modify or delete a json file, it will be reflected on the Meveo instance you pushed to.
+
+[[git_endpoint]]
+==== Endpoints
+When updating, creating, or deleting an endpoint, a javascript file will be created. This file contains a default function exported that make a fetch call to the corresponding endpoint. It takes into account the method (GET / POST), the path parameters and the body / query parameters. The return value of this function is a Response object that must be handled.
