@@ -55,7 +55,6 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -82,6 +81,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.reflections.Reflections;
 
 /**
  * @author Clément Bareth
@@ -93,27 +93,9 @@ import org.meveo.util.EntityCustomizationUtils;
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
-    private static final ConcurrentHashMap<String, Class<? extends BusinessEntity>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
-
-    static {
-        String property = ParamBean.getInstance().getProperty("module.items.packages", null);
-        String[] additionalPackages = new String[0];
-
-        if(property != null) {
-            additionalPackages = property.split(",");
-        }
-
-        final Set<Class<? extends BusinessEntity>> moduleItemClasses = ReflectionUtils.getClassesAnnotatedWith(
-                ModuleItem.class,
-                BusinessEntity.class,
-                "org.meveo.model", additionalPackages
-        );
-
-        for(Class<? extends BusinessEntity> aClass : moduleItemClasses){
-            String type = aClass.getAnnotation(ModuleItem.class).value();
-            MODULE_ITEM_TYPES.put(type, aClass);
-        }
-    }
+    private static final ConcurrentHashMap<String, Class<?>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
+    
+    private static boolean initalized = false;
 
     @Inject
     private MeveoModuleService meveoModuleService;
@@ -141,6 +123,21 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
     public MeveoModuleApi() {
     	super(MeveoModule.class, MeveoModuleDto.class);
+    	if(!initalized) {
+    		registerModulePackage("org.meveo.model");
+    		initalized = true;
+    	}
+    }
+    
+    public void registerModulePackage(String packageName) {
+    	Reflections reflections = new Reflections(packageName);
+    	Set<Class<?>> moduleItemClasses = reflections.getTypesAnnotatedWith(ModuleItem.class);
+
+        for(Class<?> aClass : moduleItemClasses){
+            String type = aClass.getAnnotation(ModuleItem.class).value();
+            MODULE_ITEM_TYPES.put(type, aClass);
+            log.debug("Registering module item type {} from class {}", type, aClass);
+        }
     }
 
     public MeveoModule create(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {
@@ -290,7 +287,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
     public List<String> listCodesOnly(MeveoModuleFilters filters) {
         if(filters.getItemType() != null){
-            filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        	try {
+        		filters.setItemClass(MODULE_ITEM_TYPES.get(filters.getItemType()).getName());
+        	} catch(NullPointerException e) {
+        		log.error("{} is not a module item type", filters.getItemType());
+        	}
         }
 
         return meveoModuleService.listCodesOnly(filters);

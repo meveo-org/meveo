@@ -26,10 +26,10 @@ import org.meveo.commons.utils.ParamBean;
 import org.slf4j.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
 
 @Startup
 @Singleton
@@ -40,13 +40,20 @@ public class CachesInitializer {
     @Inject
     protected Logger log;
 
-    @Resource(lookup = "java:jboss/infinispan/container/meveo")
+//    @Resource(lookup = "java:jboss/infinispan/container/meveo")
     private EmbeddedCacheManager cacheContainer;
 
     private ParamBean paramBean = ParamBean.getInstance();
 
     @PostConstruct
     protected void init() {
+    	try {
+			InitialContext initialContext = new InitialContext();
+			cacheContainer = (EmbeddedCacheManager) initialContext.lookup("java:jboss/infinispan/container/meveo");
+		} catch (Exception e) {
+			log.error("Cannot instantiate cache container", e);
+		}
+    	
         log.info("Initializing ontology caches");
 
         SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder().persistence()
