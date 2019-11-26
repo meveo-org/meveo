@@ -17,17 +17,30 @@
 			</f:facet>
 			<h:form id="mavenConfigurationForm">
 				<p:messages />
-				<hftl:decorateFormField fieldId="mavenRepositories"
-					label="#{messages['maven.configuration.mavenRepositories']}">
-					<p:inputTextarea id="mavenRepositories" rows="10" cols="50"
-						required="false"
-						value="#{mavenConfigurationBean.mavenRepositories}" />
-				</hftl:decorateFormField>
+					<hftl:decorateFormField fieldId="mavenRepositories"
+						label="#{messages['maven.configuration.mavenRepositories']}">
+						<p:inputTextarea id="mavenRepositories" rows="10" cols="50"
+							required="false"
+							value="#{mavenConfigurationBean.mavenRepositories}" />
+					</hftl:decorateFormField>
+				<p:panelGrid columns="1">
+					<p:commandButton id="uploadAnArtifact" value="#{messages['maven.configuration.uploadAnArtifact']}" process="@form" type="submit"
+									 onclick="PF('uploadDialog').show()"/>
+				</p:panelGrid>
 
 				<h:panelGroup layout="block" styleClass="form-panel-actions">
 					<p:commandButton action="#{mavenConfigurationBean.save}"
 						update="mavenConfigurationForm" value="#{messages['action.save']}" />
 				</h:panelGroup>
+			</h:form>
+
+			<h:form>
+				<p:dialog header="#{messages['maven.configuration.uploadAnArtifact']}" id="uploadDialog" widgetVar="uploadDialog"
+						  modal="true" closeOnEscape="true">
+					<p:fileUpload accept=".jar" fileUploadListener="#{mavenConfigurationBean.uploadAnArtifact}" mode="advanced" process="@this"
+								  dragDropSupport="true" allowTypes="/(\.|\/)(jar)$/" update="@form :mavenConfigurationForm" styleClass="TexAlCenter">
+					</p:fileUpload>
+				</p:dialog>
 			</h:form>
 		</p:panel>
 	</ui:define>
