@@ -12,7 +12,6 @@ public class MavenConfigurationDto implements Serializable {
 	private static final long serialVersionUID = -7629326572073747356L;
 
 	private String mavenExecutablePath;
-	private String m2FolderPath;
 	private List<String> mavenRepositories;
 
 	public String getMavenExecutablePath() {
@@ -21,14 +20,6 @@ public class MavenConfigurationDto implements Serializable {
 
 	public void setMavenExecutablePath(String mavenExecutablePath) {
 		this.mavenExecutablePath = mavenExecutablePath;
-	}
-
-	public String getM2FolderPath() {
-		return m2FolderPath;
-	}
-
-	public void setM2FolderPath(String m2FolderPath) {
-		this.m2FolderPath = m2FolderPath;
 	}
 
 	public List<String> getMavenRepositories() {

@@ -45,7 +45,6 @@ public class MavenConfigurationRs extends BaseRs {
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
 		try {
-			mavenConfigurationService.setM2FolderPath(postData.getM2FolderPath());
 			mavenConfigurationService.setMavenRepositories(postData.getMavenRepositories());
 			mavenConfigurationService.saveConfiguration();
 
@@ -61,7 +60,6 @@ public class MavenConfigurationRs extends BaseRs {
 	public MavenConfigurationResponseDto getConfiguration() {
 
 		MavenConfigurationResponseDto result = new MavenConfigurationResponseDto();
-		result.getMavenConfiguration().setM2FolderPath(mavenConfigurationService.getM2FolderPath());
 		result.getMavenConfiguration().setMavenRepositories(mavenConfigurationService.getMavenRepositories());
 		
 		return result;

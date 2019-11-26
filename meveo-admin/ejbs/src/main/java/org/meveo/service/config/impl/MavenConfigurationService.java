@@ -13,7 +13,11 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 
+import javax.inject.Inject;
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +38,28 @@ public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
 
-	public String getM2FolderPath() {
-		return ParamBean.getInstance().getProperty("maven.path.m2", null);
+	private final static String M2_DIR = "/.m2";
+
+	@Inject
+	@CurrentUser
+	protected MeveoUser currentUser;
+
+	/**
+	 * @param currentUser Logged user
+	 * @return the maven directory relative to the file explorer directory for the user's provider
+	 */
+	public static String getM2Directory(MeveoUser currentUser) {
+		String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
+		String m2 = rootDir + M2_DIR;
+		File m2Folder = new File(m2);
+		if (!m2Folder.exists()) {
+			m2Folder.mkdir();
+		}
+		return m2;
 	}
 
-	public void setM2FolderPath(String m2FolderPath) {
-		ParamBean.getInstance().setProperty("maven.path.m2", m2FolderPath);
+	public String getM2FolderPath() {
+		return MavenConfigurationService.getM2Directory(currentUser);
 	}
 
 	public List<String> getMavenRepositories() {
@@ -55,17 +75,13 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public void saveConfiguration(MavenConfigurationDto mavenConfiguration) {
-
-		setM2FolderPath(mavenConfiguration.getM2FolderPath());
 		setMavenRepositories(mavenConfiguration.getMavenRepositories());
-
 		saveConfiguration();
 	}
 
 	public MavenConfigurationDto loadConfig() {
 
 		MavenConfigurationDto result = new MavenConfigurationDto();
-		result.setM2FolderPath(getM2FolderPath());
 		result.setMavenRepositories(getMavenRepositories());
 
 		return result;
