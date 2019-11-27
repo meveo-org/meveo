@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.persistence.sql.SqlStorageConfigurationDto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @version 6.6.0
  */
 
 @XmlRootElement(name = "CustomEntityTemplate")
@@ -76,7 +76,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     private Neo4JStorageConfigurationDto neo4jStorageConfiguration;
 
     @XmlElement()
-    private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
+    private SqlStorageConfigurationDto sqlStorageConfiguration = new SqlStorageConfigurationDto();
     
     private List<String> samples = new ArrayList<>();
 
@@ -96,11 +96,11 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 		this.neo4jStorageConfiguration = neo4jStorageConfiguration;
 	}
 
-	public SQLStorageConfiguration getSqlStorageConfiguration() {
+	public SqlStorageConfigurationDto getSqlStorageConfiguration() {
 		return sqlStorageConfiguration;
     }
 
-    public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
+    public void setSqlStorageConfiguration(SqlStorageConfigurationDto sqlStorageConfiguration) {
         this.sqlStorageConfiguration = sqlStorageConfiguration;
     }
 

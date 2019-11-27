@@ -97,7 +97,7 @@ public class SQLConnectionProvider {
 			}
 
 		} catch (Exception e) {
-			log.warn("Can't connect to {} ({})", sqlConfigurationCode, sqlConfiguration.getUrl());
+			log.warn("Can't connect to sql configuration with code={}, url={}, error={}", sqlConfigurationCode, sqlConfiguration.getUrl(), e.getCause());
 			return null;
 		}
 	}
@@ -111,7 +111,9 @@ public class SQLConnectionProvider {
 		config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
 		config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
 		config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
-		config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());
+		if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
+			config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());
+		}
 
 		return config.buildSessionFactory();
 	}

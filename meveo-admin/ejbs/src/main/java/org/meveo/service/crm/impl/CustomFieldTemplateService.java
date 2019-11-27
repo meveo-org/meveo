@@ -239,7 +239,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom entity template {} was not found", entityCode);
 			
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+				customTableCreatorService.addField(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
 		// CF Applies to a CRT
@@ -248,7 +248,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             if (crt == null) {
                 log.warn("Custom relationship template {} was not found", entityCode);
             } else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-                customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+                customTableCreatorService.addField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
             }
         }
 
@@ -295,9 +295,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
+	            customTableCreatorService.updateField(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), cft);
 			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStorages() != null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+				customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
 			// Move files from / to file explorer if isSaveOnExplorer attribute has changed
@@ -321,9 +321,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(crt), cft);
+	            customTableCreatorService.updateField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
 			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
+				customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
 
@@ -346,7 +346,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+	            customTableCreatorService.removeField(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
 			if(cft.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
@@ -363,7 +363,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(crt), cft);
+	            customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
 		

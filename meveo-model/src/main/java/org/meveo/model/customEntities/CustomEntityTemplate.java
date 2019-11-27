@@ -40,7 +40,7 @@ import java.util.List;
 /**
  * @author Clément Bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
  */
 @Entity
 @ModuleItem("CustomEntityTemplate")
@@ -251,6 +251,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 			descendance.addAll(this.getSuperTemplate().ascendance());
 		}
 		return descendance;
+	}
+
+	public String getSqlConfigurationCode() {
+		
+		return sqlStorageConfiguration == null ? null : sqlStorageConfiguration.getSqlConfigurationCode();
 	}
 
 

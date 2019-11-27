@@ -61,12 +61,12 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
@@ -76,7 +76,7 @@ import org.meveo.util.MeveoParamBean;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
  */
 public class NativePersistenceService extends BaseService {
 
@@ -115,6 +115,9 @@ public class NativePersistenceService extends BaseService {
 	@Inject
 	@Removed
 	private Event<CustomTableRecord> customTableRecordRemoved;
+	
+	@Inject
+	private SQLConnectionProvider sqlConnectionProvider;
 
 	/**
 	 * Find record by its identifier
@@ -125,8 +128,8 @@ public class NativePersistenceService extends BaseService {
 	 *         value
 	 */
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> findById(String tableName, String uuid) {
-		return findById(tableName, uuid, null);
+	public Map<String, Object> findById(String sqlConnectionCode, String tableName, String uuid) {
+		return findById(sqlConnectionCode, tableName, uuid, null);
 	}
 
 	/**
@@ -143,11 +146,11 @@ public class NativePersistenceService extends BaseService {
 	 */
 	@SuppressWarnings("unchecked")
 	@Deprecated
-	public Map<String, Object> findById(String tableName, String uuid, List<String> selectFields) {
+	public Map<String, Object> findById(String sqlConnectionCode, String tableName, String uuid, List<String> selectFields) {
 
 		try {
 
-			Session session = getEntityManager().unwrap(Session.class);
+			Session session = getEntityManager(sqlConnectionCode).unwrap(Session.class);
 
 			StringBuilder selectQuery = new StringBuilder("SELECT ");
 
@@ -238,7 +241,8 @@ public class NativePersistenceService extends BaseService {
 	protected String create(CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) throws BusinessException {
 
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		return create(cei.getTableName(), values, returnId);
+		String sqlConnectionCode = cei.getCet() != null ? cei.getCet().getSqlConfigurationCode() : null;
+		return create(sqlConnectionCode, cei.getTableName(), values, returnId);
 	}
 
 	/**
@@ -249,15 +253,16 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException failed to insert the records
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createInNewTx(String tableName, Map<String, Object> values) throws BusinessException {
+	public void createInNewTx(String sqlConnectionCode, String tableName, Map<String, Object> values) throws BusinessException {
 
-		create(tableName, values, false);
+		create(sqlConnectionCode, tableName, values, false);
 	}
 
 	/**
 	 * Insert a new record into a table. If returnId=True values parameter will be
 	 * updated with 'uuid' field value.
 	 *
+	 * @param sqlConnectionCode code of the SQL connection, if valid the data will be save in this data source
 	 * @param tableName Table name to update
 	 * @param values    Values
 	 * @param returnId  Should identifier be returned - does a lookup in DB by
@@ -265,7 +270,7 @@ public class NativePersistenceService extends BaseService {
 	 *                  'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
-	protected String create(String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
 
 		if (tableName == null) {
 			throw new BusinessException("Table name must not be null");
@@ -313,7 +318,7 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			Query query = getEntityManager().createNativeQuery(sql.toString());
+			Query query = getEntityManager(sqlConnectionCode).createNativeQuery(sql.toString());
 			for (String fieldName : values.keySet()) {
 				Object fieldValue = values.get(fieldName);
 				if (fieldValue == null) {
@@ -339,7 +344,7 @@ public class NativePersistenceService extends BaseService {
 					return (String) uuid;
 				}
 
-				query = getEntityManager().createNativeQuery("select uuid from " + tableName + " where " + findIdFields).setMaxResults(1);
+				query = getEntityManager(sqlConnectionCode).createNativeQuery("select uuid from " + tableName + " where " + findIdFields).setMaxResults(1);
 
 				for (String fieldName : values.keySet()) {
 					Object fieldValue = values.get(fieldName);
@@ -385,7 +390,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param ceis list of {@link CustomEntityInstance}
 	 * @throws BusinessException General exception
 	 */
-	public void create(String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
+	public void create(String sqlConnectionCode, String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
 
 		List<Map<String, Object>> values = ceis.stream().map(e -> e.getCfValuesAsValues()).collect(Collectors.toList());
 
@@ -416,7 +421,7 @@ public class NativePersistenceService extends BaseService {
 
 		sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-		Session hibernateSession = getEntityManager().unwrap(Session.class);
+		Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
 
 		hibernateSession.doWork(new org.hibernate.jdbc.Work() {
 
@@ -498,6 +503,7 @@ public class NativePersistenceService extends BaseService {
 	public void update(CustomEntityInstance cei, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) throws BusinessException {
 
 		String tableName = cei.getTableName();
+		String sqlConnectionCode = cei.getCet() != null ? cei.getCet().getSqlConfigurationCode() : null;
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 
 		if (values.get(FIELD_ID) == null) {
@@ -530,7 +536,7 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" where uuid=:uuid");
 
-			Query query = getEntityManager().createNativeQuery(sql.toString());
+			Query query = getEntityManager(sqlConnectionCode).createNativeQuery(sql.toString());
 			for (String fieldName : values.keySet()) {
 				Object fieldValue = values.get(fieldName);
 				if (fieldValue != null) {
@@ -569,7 +575,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param value     New value
 	 * @throws BusinessException General exception
 	 */
-	public void updateValue(String tableName, String uuid, String fieldName, Object value) throws BusinessException {
+	public void updateValue(String sqlConnectionCode, String tableName, String uuid, String fieldName, Object value) throws BusinessException {
 		// Serialize collections
 		if (value instanceof Collection) {
 			value = JacksonUtil.toString(value);
@@ -577,9 +583,9 @@ public class NativePersistenceService extends BaseService {
 
 		try {
 			if (value == null) {
-				getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid).executeUpdate();
+				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid).executeUpdate();
 			} else {
-				getEntityManager().createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid").setParameter(fieldName, value)
+				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid").setParameter(fieldName, value)
 						.setParameter("uuid", uuid).executeUpdate();
 			}
 
@@ -601,9 +607,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param uuid      Record identifier
 	 * @throws BusinessException General exception
 	 */
-	public void disable(String tableName, String uuid) throws BusinessException {
+	public void disable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
 	}
 
 	/**
@@ -613,9 +619,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids       A list of record identifiers
 	 * @throws BusinessException General exception
 	 */
-	public void disable(String tableName, Set<String> ids) throws BusinessException {
+	public void disable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
 
-		getEntityManager().createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
 	/**
@@ -625,9 +631,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param uuid      Record identifier
 	 * @throws BusinessException General exception
 	 */
-	public void enable(String tableName, String uuid) throws BusinessException {
+	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where uuid=" + uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid=" + uuid).executeUpdate();
 	}
 
 	/**
@@ -637,9 +643,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids       A list of record identifiers
 	 * @throws BusinessException General exception
 	 */
-	public void enable(String tableName, Set<String> ids) throws BusinessException {
+	public void enable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
 
-		getEntityManager().createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
 	/**
@@ -649,9 +655,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param uuid      Record identifier
 	 * @throws BusinessException General exception
 	 */
-	public void remove(String tableName, String uuid) throws BusinessException {
+	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager().createNativeQuery("delete from " + tableName + " where uuid= :uuid").setParameter("uuid", uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= :uuid").setParameter("uuid", uuid).executeUpdate();
 
 		CustomTableRecord record = new CustomTableRecord();
 		record.setCetCode(tableName);
@@ -666,8 +672,8 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids       A set of record identifiers
 	 * @throws BusinessException General exception
 	 */
-	public void remove(String tableName, Set<String> ids) throws BusinessException {
-		getEntityManager().createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
+	public void remove(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
 		for (String id : ids) {
 			CustomTableRecord record = new CustomTableRecord();
@@ -683,8 +689,8 @@ public class NativePersistenceService extends BaseService {
 	 * @param tableName Table name to update
 	 * @throws BusinessException General exception
 	 */
-	public void remove(String tableName) throws BusinessException {
-		getEntityManager().createNativeQuery("delete from " + tableName).executeUpdate();
+	public void remove(String sqlConnectionCode, String tableName) throws BusinessException {
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName).executeUpdate();
 
 	}
 
@@ -695,9 +701,9 @@ public class NativePersistenceService extends BaseService {
 	 * @return A list of map of values with field name as map's key and field value
 	 *         as map's value
 	 */
-	public List<Map<String, Object>> list(String tableName) {
+	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName) {
 
-		return list(tableName, null);
+		return list(sqlConnectionCode, tableName, null);
 	}
 
 	/**
@@ -707,11 +713,11 @@ public class NativePersistenceService extends BaseService {
 	 * @return A list of map of values with field name as map's key and field value
 	 *         as map's value
 	 */
-	public List<Map<String, Object>> listActive(String tableName) {
+	public List<Map<String, Object>> listActive(String sqlConnectionCode, String tableName) {
 
 		Map<String, Object> filters = new HashMap<>();
 		filters.put("disabled", 0);
-		return list(tableName, new PaginationConfiguration(filters));
+		return list(sqlConnectionCode, tableName, new PaginationConfiguration(filters));
 	}
 
 	/**
@@ -1061,10 +1067,10 @@ public class NativePersistenceService extends BaseService {
 	 * @return A list of map of values for each record
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Map<String, Object>> list(String tableName, PaginationConfiguration config) {
+	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(), true);
+		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
 		return query.list();
 	}
 
@@ -1075,7 +1081,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param queryValues Values used to filter the result
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
-	public String findIdByValues(String tableName, Map<String, Object> queryValues) {
+	public String findIdByValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues) {
 		QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
 		queryValues.forEach((key, value) -> {
         	if (!(value instanceof Collection) && !(value instanceof File) &&!(value instanceof Map)) {
@@ -1083,7 +1089,7 @@ public class NativePersistenceService extends BaseService {
 			}
 		});
 
-		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(), true);
+		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
 		try {
 			Map<String, Object> singleResult = query.getSingleResult();
 			return (String) singleResult.get("uuid");
@@ -1105,10 +1111,10 @@ public class NativePersistenceService extends BaseService {
 	 * @return A list of Object[] values for each record
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Object[]> listAsObjets(String tableName, PaginationConfiguration config) {
+	public List<Object[]> listAsObjets(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(), false);
+		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), false);
 		return query.list();
 	}
 
@@ -1119,9 +1125,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param config    Data filtering, sorting and pagination criteria
 	 * @return Number of entities.
 	 */
-	public long count(String tableName, PaginationConfiguration config) {
+	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		Query query = queryBuilder.getNativeCountQuery(getEntityManager());
+		Query query = queryBuilder.getNativeCountQuery(getEntityManager(sqlConnectionCode));
 		Object count = query.getSingleResult();
 		if (count instanceof Long) {
 			return (Long) count;
@@ -1133,14 +1139,24 @@ public class NativePersistenceService extends BaseService {
 			return Long.valueOf(count.toString());
 		}
 	}
+	
+//	public EntityManager getEntityManager() {
+//		return getEntityManager(null);
+//	}
 
 	/**
 	 * Return an entity manager for a current provider
 	 *
 	 * @return Entity manager
 	 */
-	public EntityManager getEntityManager() {
-		return emWrapper.getEntityManager();
+	public EntityManager getEntityManager(String sqlConfigurationCode) {
+		
+		if (StringUtils.isBlank(sqlConfigurationCode)) {
+			return emWrapper.getEntityManager();
+
+		} else {
+			return sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+		}
 	}
 
 	/**

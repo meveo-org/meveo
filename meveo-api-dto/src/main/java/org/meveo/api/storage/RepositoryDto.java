@@ -6,7 +6,7 @@ import org.meveo.model.storage.Repository;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
  */
 public class RepositoryDto extends BusinessEntityDto {
 
@@ -15,6 +15,7 @@ public class RepositoryDto extends BusinessEntityDto {
 	private String parentCode;
 	private String binaryStorageConfigurationCode;
 	private String neo4jConfigurationCode;
+	private String sqlConfigurationCode;
 	private DataSeparationTypeEnum dataSeparationType;
 	private String path;
 	private Boolean forceDelete;
@@ -33,6 +34,9 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		if (e.getNeo4jConfiguration() != null) {
 			neo4jConfigurationCode = e.getNeo4jConfiguration().getCode();
+		}
+		if (e.getSqlConfiguration() != null) {
+			sqlConfigurationCode = e.getSqlConfiguration().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
@@ -84,5 +88,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setForceDelete(Boolean forceDelete) {
 		this.forceDelete = forceDelete;
+	}
+
+	public String getSqlConfigurationCode() {
+		return sqlConfigurationCode;
+	}
+
+	public void setSqlConfigurationCode(String sqlConfigurationCode) {
+		this.sqlConfigurationCode = sqlConfigurationCode;
 	}
 }

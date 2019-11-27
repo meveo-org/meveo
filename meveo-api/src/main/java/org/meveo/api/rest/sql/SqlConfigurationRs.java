@@ -17,6 +17,8 @@ import org.meveo.api.dto.sql.SqlConfigurationDto;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ * @since 6.6.0
  */
 @Path("/sql/configurations")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

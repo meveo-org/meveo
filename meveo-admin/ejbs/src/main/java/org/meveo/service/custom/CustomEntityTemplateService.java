@@ -67,7 +67,7 @@ import com.google.common.collect.Lists;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @lastModifiedVersion 6.6.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -113,7 +113,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet));
+            customTableCreatorService.createTable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet));
         }
 
         elasticClient.createCETMapping(cet);
@@ -239,7 +239,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+            customTableCreatorService.removeTable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet));
+        
         } else if(cet.getSqlStorageConfiguration() != null) {
             customEntityInstanceService.removeByCet(cet.getCode());
         }

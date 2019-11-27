@@ -21,7 +21,8 @@ import org.meveo.model.sql.SqlConfiguration;
  * Storage for logical repository separation.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
+ * @since 6.3.0
  */
 @Entity
 @Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))

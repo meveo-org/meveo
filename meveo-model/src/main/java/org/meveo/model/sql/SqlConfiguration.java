@@ -12,6 +12,8 @@ import org.meveo.model.BusinessEntity;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ * @since 6.6.0
  */
 @Entity
 @Table(name = "sql_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))

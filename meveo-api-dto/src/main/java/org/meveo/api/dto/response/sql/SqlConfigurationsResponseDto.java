@@ -7,6 +7,8 @@ import org.meveo.api.dto.sql.SqlConfigurationDto;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ * @since 6.6.0
  */
 public class SqlConfigurationsResponseDto extends BaseResponse {
 

@@ -39,7 +39,10 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.persistence.sql.SqlStorageConfigurationDto;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -52,9 +55,9 @@ import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @author Clement Bareth
- * @lastModifiedVersion 6.0.15
+ * @version 6.6.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -86,6 +89,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private CustomTableCreatorService customTableCreatorService;
+    
+    @Inject
+    private SqlConfigurationService sqlConfigurationService;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -100,35 +106,38 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         handleMissingParameters();
 
-        boolean storeAsTable = dto.getSqlStorageConfiguration().isStoreAsTable();
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
         
-        // Validate field types for custom table
-        if (storeAsTable && dto.getFields() != null) {
-            int pos = 0;
-            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+        boolean storeAsTable = false;
+		if (dto.getSqlStorageConfiguration() != null) {
+			storeAsTable = dto.getSqlStorageConfiguration().isStoreAsTable();
+			// Validate field types for custom table
+			if (storeAsTable && dto.getFields() != null) {
+				int pos = 0;
+				for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 
-                // Default to 'Index but not analyze storage', 'single' storage type and sequential field position for custom tables
-                if (cftDto.getIndexType() == null) {
-                    cftDto.setIndexType(CustomFieldIndexTypeEnum.INDEX_NOT_ANALYZE);
-                }
-                if (cftDto.getStorageType() == null) {
-                    cftDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
-                }
-                if (cftDto.getGuiPosition() == null) {
-                    cftDto.setGuiPosition("tab:" + dto.getName() + ":0;field:" + pos);
-                    pos++;
-                }
+					// Default to 'Index but not analyze storage', 'single' storage type and
+					// sequential field position for custom tables
+					if (cftDto.getIndexType() == null) {
+						cftDto.setIndexType(CustomFieldIndexTypeEnum.INDEX_NOT_ANALYZE);
+					}
+					if (cftDto.getStorageType() == null) {
+						cftDto.setStorageType(CustomFieldStorageTypeEnum.SINGLE);
+					}
+					if (cftDto.getGuiPosition() == null) {
+						cftDto.setGuiPosition("tab:" + dto.getName() + ":0;field:" + pos);
+						pos++;
+					}
 
-                if (cftDto.isVersionable() != null && cftDto.isVersionable()) {
-                    throw new InvalidParameterException("Custom table supports only unversioned data");
-                }
-            }
-        }
-
+					if (cftDto.isVersionable() != null && cftDto.isVersionable()) {
+						throw new InvalidParameterException("Custom table supports only unversioned data");
+					}
+				}
+			}
+		}
 
         CustomEntityTemplate cet = fromDTO(dto, null);
 
@@ -154,7 +163,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	// Delete created table if CET creation failed
         	if(storeAsTable) {
         		log.error("{} creation failed, removing table", cet);
-        		customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        		customTableCreatorService.removeTable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet));
         	}
         	
         	throw e;
@@ -188,7 +197,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
         }
         
-     // Validate field types for custom table
+        // Validate field types for custom table
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && dto.getFields() != null) {
             int pos = 0;
             for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -529,8 +538,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
-        cet.setSqlStorageConfiguration(dto.getSqlStorageConfiguration());
 
+        // sql configuration
+		if (dto.getSqlStorageConfiguration() != null) {
+			cet.getSqlStorageConfiguration().setStoreAsTable(dto.getSqlStorageConfiguration().isStoreAsTable());
+			cet.getSqlStorageConfiguration().setSqlConfigurationCode(dto.getSqlStorageConfiguration().getSqlConfigurationCode());
+		}
+        
         // Neo4J configuration if defined
         if(dto.getNeo4jStorageConfiguration() != null) {
 
@@ -642,7 +656,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setAvailableStorages(cet.getAvailableStorages());
-        dto.setSqlStorageConfiguration(cet.getSqlStorageConfiguration());
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
@@ -663,6 +676,11 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             }
             dto.setActions(actions);
         }
+        
+        // Sql configuration
+		if (cet.getSqlStorageConfiguration() != null) {
+			dto.setSqlStorageConfiguration(new SqlStorageConfigurationDto(cet.getSqlStorageConfiguration()));
+		}
 
         // Neo4J configuration if defined
         if(cet.getNeo4JStorageConfiguration() != null) {

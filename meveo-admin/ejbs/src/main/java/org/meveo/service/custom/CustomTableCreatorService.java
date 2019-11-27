@@ -15,6 +15,7 @@ import javax.persistence.Query;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -23,6 +24,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.slf4j.Logger;
 
 import liquibase.Contexts;
@@ -62,6 +64,10 @@ import liquibase.precondition.core.TableExistsPrecondition;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.statement.DatabaseFunction;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ */
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
 public class CustomTableCreatorService implements Serializable {
@@ -78,6 +84,19 @@ public class CustomTableCreatorService implements Serializable {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private SQLConnectionProvider sqlConnectionProvider;
+    
+    public EntityManager getEntityManager(String sqlConfigurationCode) {
+		
+		if (StringUtils.isBlank(sqlConfigurationCode)) {
+			 return entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+
+		} else {
+			return sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+		}
+	}
     
     /**
      * Create a table with two columns referencing source and target custom tables
@@ -172,7 +191,7 @@ public class CustomTableCreatorService implements Serializable {
         
         dbLog.addChangeSet(changeset);
         
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        EntityManager em = getEntityManager(null);
 
         Session hibernateSession = em.unwrap(Session.class);
         
@@ -209,7 +228,7 @@ public class CustomTableCreatorService implements Serializable {
      * 
      * @param dbTableName DB table name
      */
-    public void createTable(String dbTableName) {
+    public void createTable(String sqlConnectionCode, String dbTableName) {
     	
     	if(PostgresReserverdKeywords.isReserved(dbTableName)) {
     		throw new IllegalArgumentException("Table name '" + dbTableName + "' is a PostgresQL reserved keyword");
@@ -256,7 +275,7 @@ public class CustomTableCreatorService implements Serializable {
         mysqlChangeSet.addChange(createMsTableChange);
         dbLog.addChangeSet(mysqlChangeSet);
 
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        EntityManager em = getEntityManager(sqlConnectionCode);
 
         Session hibernateSession = em.unwrap(Session.class);
 
@@ -283,7 +302,7 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName DB Table name
      * @param cft Field definition
      */
-    public void addField(String dbTableName, CustomFieldTemplate cft) {
+    public void addField(String sqlConnectionCode, String dbTableName, CustomFieldTemplate cft) {
 
         // Don't add field if not stored in sql
         if(!cft.getStorages().contains(DBStorageType.SQL)){
@@ -350,7 +369,7 @@ public class CustomTableCreatorService implements Serializable {
         	
             dbLog.addChangeSet(changeSet);
 
-            EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+            EntityManager em = getEntityManager(sqlConnectionCode);
 
             Session hibernateSession = em.unwrap(Session.class);
 
@@ -376,11 +395,11 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName DB Table name
      * @param cft Field definition
      */
-    public void updateField(String dbTableName, CustomFieldTemplate cft) {
+    public void updateField(String sqlConnectionCode, String dbTableName, CustomFieldTemplate cft) {
 
         String dbFieldname = cft.getDbFieldname();
         
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        EntityManager em = getEntityManager(sqlConnectionCode);
         
         String columnExistsQueryStr = 
         		"SELECT EXISTS(\n" + 
@@ -396,7 +415,7 @@ public class CustomTableCreatorService implements Serializable {
         boolean columnExists = (boolean) columnExistsQuery.getSingleResult();
         
         if(!columnExists) {
-        	addField(dbTableName, cft);
+        	addField(sqlConnectionCode, dbTableName, cft);
         	return;
         }
 
@@ -567,7 +586,7 @@ public class CustomTableCreatorService implements Serializable {
      * @param dbTableName Db table name to remove from
      * @param cft Field definition
      */
-    public void removeField(String dbTableName, CustomFieldTemplate cft) {
+    public void removeField(String sqlConnectionCode, String dbTableName, CustomFieldTemplate cft) {
 
         String dbFieldname = cft.getDbFieldname();
 
@@ -592,7 +611,7 @@ public class CustomTableCreatorService implements Serializable {
         changeSet.addChange(dropColumnChange);
         dbLog.addChangeSet(changeSet);
 
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        EntityManager em = getEntityManager(sqlConnectionCode);
 
         Session hibernateSession = em.unwrap(Session.class);
 
@@ -617,7 +636,7 @@ public class CustomTableCreatorService implements Serializable {
      * 
      * @param dbTableName Db table name to remove from
      */
-    public void removeTable(String dbTableName) {
+    public void removeTable(String sqlConnectionCode, String dbTableName) {
         log.info("Removing table {}", dbTableName);
 
         DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
@@ -655,7 +674,7 @@ public class CustomTableCreatorService implements Serializable {
 
         dbLog.addChangeSet(pgChangeSet);
 
-        EntityManager em = entityManagerProvider.getEntityManagerWoutJoinedTransactions();
+        EntityManager em = getEntityManager(sqlConnectionCode);
 
         Session hibernateSession = em.unwrap(Session.class);
 

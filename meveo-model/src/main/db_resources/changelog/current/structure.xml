@@ -1335,11 +1335,15 @@
 		</addColumn>
 
 		<addForeignKeyConstraint
-			constraintName="sql_configuration_fk"
+			constraintName="storage_repository_sql_configuration_fk"
 			referencedTableName="sql_configuration"
 			baseColumnNames="sql_configuration_id"
 			baseTableName="storage_repository" referencedColumnNames="id" />
 		<createSequence sequenceName="sql_configuration_seq" />
+		
+		<addColumn tableName="cust_cet">
+			<column name="sql_configuration_code" type="varchar(255)"></column>
+		</addColumn>
 	</changeSet>
 
 	<changeSet id="#3607 - Add sql configuration table Mysql" author="EdwardLegaspi"

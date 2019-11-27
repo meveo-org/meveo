@@ -16,6 +16,8 @@
 
 package org.meveo.model.persistence.sql;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
@@ -25,18 +27,26 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
-import java.io.Serializable;
-
+/**
+ * @author Clément Bareth
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ */
 @Embeddable
 public class SQLStorageConfiguration implements Serializable {
 
-    /**
+	private static final long serialVersionUID = -6244221059173563142L;
+
+	/**
      * Should data be stored in a separate table
      */
     @Type(type = "numeric_boolean")
     @Column(name = "store_as_table", nullable = false)
     @NotNull
     private boolean storeAsTable = false;
+    
+    @Column(name="sql_configuration_code")
+    private String sqlConfigurationCode;
 
     /**
      * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
@@ -75,4 +85,12 @@ public class SQLStorageConfiguration implements Serializable {
     public void setStoreAsTable(boolean storeAsTable) {
         this.storeAsTable = storeAsTable;
     }
+
+	public String getSqlConfigurationCode() {
+		return sqlConfigurationCode;
+	}
+
+	public void setSqlConfigurationCode(String sqlConfigurationCode) {
+		this.sqlConfigurationCode = sqlConfigurationCode;
+	}
 }
