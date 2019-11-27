@@ -13,6 +13,7 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
@@ -102,5 +103,42 @@ public class MavenConfigurationService implements Serializable {
 		session.setLocalRepositoryManager(system.newLocalRepositoryManager( session, localRepo ) );
 
 		return session;
+	}
+
+
+	public String createDirectory(String groupId, String artifactId, String version, String classifier) {
+		String m2Folder = getM2FolderPath();
+		if (!m2Folder.endsWith(File.separator)) {
+			m2Folder = m2Folder + File.separator;
+		}
+		if (!StringUtils.isBlank(groupId)) {
+			m2Folder = m2Folder + groupId;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		if (!StringUtils.isBlank(artifactId)) {
+			m2Folder = m2Folder + File.separator + artifactId;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		if (!StringUtils.isBlank(version)) {
+			m2Folder = m2Folder + File.separator + version;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		if (!StringUtils.isBlank(classifier)) {
+			m2Folder = m2Folder + File.separator + classifier;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		return m2Folder;
 	}
 }
