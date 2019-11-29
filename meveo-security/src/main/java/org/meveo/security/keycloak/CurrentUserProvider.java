@@ -1,13 +1,16 @@
 package org.meveo.security.keycloak;
 
-import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -19,8 +22,10 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+
 import org.keycloak.KeycloakPrincipal;
 import org.meveo.model.admin.User;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
@@ -48,8 +53,7 @@ public class CurrentUserProvider {
     
     @Inject 
     private BeanManager beanManager;
-
-
+    
     /**
      * Contains a current tenant
      */
@@ -160,12 +164,21 @@ public class CurrentUserProvider {
 
         MeveoUser user;
 
+        List<Role> userRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p "
+        		+ "where not r.name like 'CET%' and not r.name like 'CRT%'", Role.class)
+        		.getResultList();
+
         // User was forced authenticated, so need to lookup the rest of user information
         if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
-            user = new MeveoUserKeyCloakImpl(ctx, getForcedUsername(), getCurrentTenant(), getAdditionalRoles(username, em), getRoleToPermissionMapping(providerCode, em));
+            user = new MeveoUserKeyCloakImpl(ctx, 
+            		getForcedUsername(), 
+            		getCurrentTenant(), 
+            		getAdditionalRoles(username, em), 
+            		getRoleToPermissionMapping(providerCode, em, userRoles)
+        		);
 
         } else {
-            user = new MeveoUserKeyCloakImpl(ctx, null, null, getAdditionalRoles(username, em), getRoleToPermissionMapping(providerCode, em));
+            user = new MeveoUserKeyCloakImpl(ctx, null, null, getAdditionalRoles(username, em), getRoleToPermissionMapping(providerCode, em, userRoles));
         }
 
         if(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
@@ -176,6 +189,35 @@ public class CurrentUserProvider {
         }
 
         supplementOrCreateUserInApp(user, em);
+        
+        // Aggregate whitelists and blacklists
+        Map<String, List<String>> whiteList = new HashMap<>();
+        Map<String, List<String>> blackList = new HashMap<>();
+        
+        try {
+        	userRoles.forEach(role -> {
+        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT")) {
+        			
+	        		Map<String, List<String>> roleWhiteList = getWhiteList(em, role);
+	        		Map<String, List<String>> roleBlacklist = getBlackList(em, role);
+	        		
+	        		roleWhiteList.forEach((permission, ids) -> {
+	        			whiteList.computeIfAbsent(permission, p -> new ArrayList<>()).addAll(ids);
+	        		});
+	        		
+	        		roleBlacklist.forEach((permission, ids) -> {
+	        			blackList.computeIfAbsent(permission, p -> new ArrayList<>()).addAll(ids);
+	        		});
+        		}
+
+        	});
+        	
+    	user.setBlackList(blackList);
+    	user.setWhiteList(whiteList);
+        	
+        } catch(Exception e) {
+        	log.error("Error retrieve black and white list of user {}", user, e);
+        }
 
         log.trace("Current user is {}", user);
         return user;
@@ -253,14 +295,13 @@ public class CurrentUserProvider {
      * 
      * @return A mapping between roles and permissions
      */
-    private Map<String, Set<String>> getRoleToPermissionMapping(String providerCode, EntityManager em) {
+    private Map<String, Set<String>> getRoleToPermissionMapping(String providerCode, EntityManager em, List<Role> userRoles) {
 
         synchronized (this) {
             if (CurrentUserProvider.roleToPermissionMapping == null || roleToPermissionMapping.get(providerCode) == null) {
                 CurrentUserProvider.roleToPermissionMapping = new HashMap<>();
 
                 try {
-                    List<Role> userRoles = em.createNamedQuery("Role.getAllRoles", Role.class).getResultList();
                     Map<String, Set<String>> roleToPermissionMappingForProvider = new HashMap<>();
 
                     for (Role role : userRoles) {
@@ -319,6 +360,50 @@ public class CurrentUserProvider {
             log.error("Failed to retrieve additional roles for a user {}", username, e);
             return null;
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+	public Map<String, List<String>> getBlackList(EntityManager em, Role role) {
+    	//TODO: Check sub-roles recursively
+    	
+    	String query = "SELECT ep.permission, cast(json_agg(ep.entity_id) as text) FROM entity_permission ep\r\n" + 
+    			"WHERE ep.role_id = :role " + 
+    			"AND ep.type = 'BLACK' " +
+    			"GROUP BY ep.permission";
+    	
+    	Stream<Object[]> resultStream = (Stream<Object[]>) em.createNativeQuery(query)
+    			.setParameter("role", role.getId())
+    			.getResultStream();
+    	
+    	return resultStream.collect(
+    				Collectors.toMap(
+    						r -> (String) r[0], 
+    						r -> (List<String>) JacksonUtil.fromString((String) r[1], List.class)
+						)
+				);
+    }
+    
+    @SuppressWarnings("unchecked")
+	public Map<String, List<String>> getWhiteList(EntityManager em, Role role) {
+    	//TODO: Check sub-roles recursively
+    	
+    	String query = "SELECT ep.permission, cast(json_agg(ep.entity_id) as text) FROM entity_permission ep " + 
+    			"WHERE ep.role_id = :role " + 
+    			"AND ep.type = 'WHITE' " +
+    			"GROUP BY ep.permission";
+    	
+    	Stream<Object[]> resultStream = (Stream<Object[]>) em.createNativeQuery(query)
+    			.setParameter("role", role.getId())
+    			.getResultStream();
+    	
+    	return resultStream.collect(
+    				Collectors.toMap(
+    						r -> (String) r[0], 
+    						r -> {
+								return (List<String>) JacksonUtil.fromString((String) r[1], List.class);
+							}
+						)
+				);
     }
 
     /**

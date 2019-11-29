@@ -16,10 +16,31 @@
 
 package org.meveo.service.git;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.AddCommand;
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.RmCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -42,21 +63,13 @@ import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.security.permission.RequirePermission;
+import org.meveo.security.permission.Whitelist;
 import org.meveo.synchronization.KeyLock;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Git client class to manipulate repositories
@@ -131,12 +144,9 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be cloned or initiated
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
-    protected void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
+    @RequirePermission(DefaultPermission.GIT_WRITE)
+    protected void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
-        if (!GitHelper.hasWriteRole(user, gitRepository)) {
-            throw new UserNotAuthorizedException(user.getUserName());
-        }
-
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
         if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());

@@ -29,6 +29,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
+import org.meveo.model.security.WhiteListEntry;
 import org.meveo.service.base.PersistenceService;
 
 /**
@@ -94,6 +95,15 @@ public class PermissionService extends PersistenceService<Permission> {
         }
 
         return permissionEntity;
+    }
+    
+    public void addToWhiteList(Role role, Permission permission, String id) {
+    	WhiteListEntry whiteListEntry = new WhiteListEntry();
+    	whiteListEntry.setEntityId(id);
+    	whiteListEntry.setRole(role);
+    	whiteListEntry.setPermission(permission);
+    	
+    	this.getEntityManager().persist(whiteListEntry);
     }
 
 }

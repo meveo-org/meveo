@@ -1,18 +1,23 @@
 package org.meveo.model.security;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKey;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.QueryHint;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -22,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.ExportIdentifier;
@@ -32,8 +38,11 @@ import org.meveo.model.ExportIdentifier;
 @Table(name = "adm_role")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_role_seq"), })
-@NamedQueries({ @NamedQuery(name = "Role.getAllRoles", query = "select r from org.meveo.model.security.Role r LEFT JOIN r.permissions p", hints = {
-        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
+@NamedQueries({ 
+			@NamedQuery(name = "Role.getAllRoles", query = "select r from org.meveo.model.security.Role r LEFT JOIN r.permissions p", hints = {
+	        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) 
+		})
+
 public class Role extends BaseEntity {
 
     private static final long serialVersionUID = -2309961042891712685L;
@@ -41,6 +50,7 @@ public class Role extends BaseEntity {
     @Column(name = "role_name", nullable = false, length = 255)
     @Size(max = 255)
     @NotNull
+    @NaturalId
     private String name;
 
     @Column(name = "role_description", nullable = false, length = 255)
@@ -57,11 +67,34 @@ public class Role extends BaseEntity {
     @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinTable(name = "adm_role_role", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "child_role_id"))
     private Set<Role> roles = new HashSet<Role>();
+    
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private List<WhiteListEntry> whiteList;
+    
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private List<BlackListEntry> blackList;
 
     public Role() {
     }
 
-    public String getName() {
+
+	public List<WhiteListEntry> getWhiteList() {
+		return whiteList;
+	}
+
+	public void setWhiteList(List<WhiteListEntry> whiteList) {
+		this.whiteList = whiteList;
+	}
+
+	public List<BlackListEntry> getBlackList() {
+		return blackList;
+	}
+
+	public void setBlackList(List<BlackListEntry> blackList) {
+		this.blackList = blackList;
+	}
+
+	public String getName() {
         return name;
     }
 

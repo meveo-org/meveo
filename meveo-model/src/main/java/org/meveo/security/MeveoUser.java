@@ -2,6 +2,8 @@ package org.meveo.security;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -60,6 +62,10 @@ public abstract class MeveoUser implements Serializable {
     protected String sshPrivateKey;
 
     protected String sshPublicKey;
+    
+    private Map<String, List<String>> whiteList;
+    
+    private Map<String, List<String>> blackList;
 
 
     public MeveoUser() {
@@ -80,7 +86,23 @@ public abstract class MeveoUser implements Serializable {
         this.providerCode = providerCode;
     }
 
-    public String getSshPrivateKey() {
+    public Map<String, List<String>> getWhiteList() {
+		return whiteList;
+	}
+
+	public void setWhiteList(Map<String, List<String>> whiteList) {
+		this.whiteList = whiteList;
+	}
+
+	public Map<String, List<String>> getBlackList() {
+		return blackList;
+	}
+
+	public void setBlackList(Map<String, List<String>> blackList) {
+		this.blackList = blackList;
+	}
+
+	public String getSshPrivateKey() {
         return sshPrivateKey;
     }
 
