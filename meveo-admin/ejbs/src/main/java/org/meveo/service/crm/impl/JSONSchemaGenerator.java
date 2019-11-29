@@ -279,7 +279,7 @@ public class JSONSchemaGenerator {
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
 				.storages(buildDBStorageType(field.getStorages()))
-				.indexType(field.getIndexType().getLabel())
+				.indexType(field.getIndexType().name())
 				.schemaLocation(schemaLocation);
 		return result;
 	}
