@@ -7,7 +7,6 @@ import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.FileDependencyDto;
 import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.ScriptInstanceDto;
@@ -20,7 +19,6 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.scripts.FileDependency;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
@@ -99,7 +97,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
 		scriptInstance.getMavenDependencies().clear();
-		scriptInstance.getFileDependencies().clear();
 		scriptInstanceService.flush();
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
@@ -245,16 +242,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			}
 			scriptInstance.getSourcingRoles().add(role);
 		}
-
-        Set<FileDependency> fileDependencyList = new HashSet<>();
-        for (FileDependencyDto fileDependencyDto : dto.getFileDependencies()) {
-            FileDependency fileDependency = new FileDependency();
-            fileDependency.setPath(fileDependencyDto.getPath());
-            fileDependency.setScript(scriptInstance);
-            fileDependencyList.add(fileDependency);
-        }
-        scriptInstance.getFileDependencies().clear();
-        scriptInstance.getFileDependencies().addAll(fileDependencyList);
 
         Set<MavenDependency> mavenDependencyList = new HashSet<>();
         for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
