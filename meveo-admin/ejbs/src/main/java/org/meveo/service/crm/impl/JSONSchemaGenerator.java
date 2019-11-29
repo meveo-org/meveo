@@ -271,12 +271,15 @@ public class JSONSchemaGenerator {
 		result
 				.readOnly(!field.isAllowEdit())
 				.nullable(!field.isValueRequired())
+				.versionable(field.isVersionable())
+
 		;
 		result
 				.id(field.getAppliesTo() + '_' + field.getCode())
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
 				.storages(buildDBStorageType(field.getStorages()))
+				.indexType(field.getIndexType().getLabel())
 				.schemaLocation(schemaLocation);
 		return result;
 	}
