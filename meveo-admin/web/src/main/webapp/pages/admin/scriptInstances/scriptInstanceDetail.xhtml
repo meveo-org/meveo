@@ -121,11 +121,19 @@
                 </h:panelGrid>
             </h:panelGroup>
             <h:panelGrid columns="2">
-            <hftl:formField label="#{messages['scriptInstance.executionRoles']}" field="executionRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.execRolesDM}"
-                valueLabelField="name" componentWidth="50" />
-            <hftl:formField label="#{messages['scriptInstance.sourcingRoles']}" field="sourcingRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.sourcRolesDM}"
-                valueLabelField="name" componentWidth="50" />
-            </h:panelGrid>
+				<hftl:decorateFormField fieldId="executionRoles" label="#{messages['scriptInstance.executionRoles']}" newLine="true">
+					<p:pickList converter="rolePickListConverter" id="executionRoles"
+								value="#{scriptInstanceBean.execRolesDM}" var="item" itemLabel="#{item.name}"
+								itemValue="#{item}">
+					</p:pickList>
+				</hftl:decorateFormField>
+				<hftl:decorateFormField fieldId="sourcingRoles" label="#{messages['scriptInstance.sourcingRoles']}" newLine="true">
+					<p:pickList converter="rolePickListConverter" id="sourcingRoles"
+								value="#{scriptInstanceBean.sourcRolesDM}" var="item" itemLabel="#{item.name}"
+								itemValue="#{item}">
+					</p:pickList>
+				</hftl:decorateFormField>
+			</h:panelGrid>
 			<h:panelGrid columns="1">
 				<hftl:decorateFormField componentWidth="50%" label="#{messages['scriptInstance.mavenDependencies']}">
 					<p:dataTable id="mavenDependenciesPanel" var="mavenDependency" value="#{scriptInstanceBean.mavenDependencies}" resizableColumns="true">

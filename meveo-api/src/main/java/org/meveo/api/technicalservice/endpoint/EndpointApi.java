@@ -15,7 +15,15 @@
  */
 package org.meveo.api.technicalservice.endpoint;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -29,13 +37,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
@@ -107,6 +114,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
+		}
+		
+		if(!isUserAuthorized(endpoint)) {
+			throw new UserNotAuthorizedException();
 		}
 
 		return ESGenerator.generate(endpoint);
@@ -479,6 +490,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			return Response.noContent().build();
+		}
+		
+		if(!isUserAuthorized(endpoint)) {
+			return Response.status(403).entity("You are not authorized to access this endpoint").build();
 		}
 
 		Info info = new Info();

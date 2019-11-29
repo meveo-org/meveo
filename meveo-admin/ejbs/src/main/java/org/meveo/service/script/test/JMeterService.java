@@ -16,6 +16,23 @@
 
 package org.meveo.service.script.test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.SecurityContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
 import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
@@ -24,24 +41,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-@Stateless
+@ApplicationScoped 
 public class JMeterService {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger(JMeterService.class);
+    private static final XPath XPATH = XPathFactory.newInstance().newXPath();
+	private static final Logger LOG = LoggerFactory.getLogger(JMeterService.class);
     private static final String JMETER_BIN_FOLDER = ParamBean.getInstance().getProperty("jmeter", null);
 
     private String realm = System.getProperty("meveo.keycloak.realm");
@@ -58,6 +66,9 @@ public class JMeterService {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+    
+    @Context
+    private SecurityContext sc;
 
     private Keycloak keycloak;
 
@@ -70,11 +81,11 @@ public class JMeterService {
         } else if (hostName == null || protocol == null || portNumber == null) {
             LOG.warn("Jmeter test server is not set, function test functionnality will therefore not be available.");
         }
+        
         keycloak = Keycloak.getInstance(serverUrl, realm, userName, password, clientId, clientSecret);
-
     }
 
-    public List<SampleResult> executeTest(String functionCode) throws IOException {
+    public TestResult executeTest(String functionCode) throws IOException {
         if (JMETER_BIN_FOLDER == null) {
             throw new IllegalArgumentException("JMeter binary path is not set.");
         }
@@ -86,7 +97,7 @@ public class JMeterService {
         if (hostName == null || protocol == null || portNumber == null) {
             throw new IllegalArgumentException("Jmeter test server is not set.");
         }
-
+        
         // Temp log file
         File logFile = File.createTempFile(functionCode, ".log");
 
@@ -107,9 +118,13 @@ public class JMeterService {
         FileWriter writer = new FileWriter(jmxFile);
         writer.write(testSuiteString);
         writer.close();
-
+        
         final String accessTokenString = keycloak.tokenManager().getAccessTokenString();
 
+        if(accessTokenString == null) {
+        	throw new NullPointerException("Cannot obtain access token for user " + userName);
+        }
+        
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
@@ -133,6 +148,7 @@ public class JMeterService {
         }
 
         final List<SampleResult> sampleResults = new ArrayList<>();
+        String responeData = null;
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 
@@ -151,8 +167,19 @@ public class JMeterService {
                 if(failureMessageNodes != null && failureMessageNodes.getLength() > 0) {
                     failureMessage = failureMessageNodes.item(0).getTextContent();
                 }
+                
+                SampleResult sampleResult = new SampleResult(success, name, failureMessage);
+                
+				if(responeData == null) {
+					Node sampleNode = failureMessageNodes.item(0).getParentNode().getParentNode();
+					Node node = (Node) XPATH.compile("//responseData").evaluate(sampleNode, XPathConstants.NODE);
+					if(node != null) {
+						responeData = node.getTextContent();
+					}
+				}
+				
+				sampleResults.add(sampleResult);
 
-                sampleResults.add(new SampleResult(success, name, failureMessage));
             }
 
         } catch (Exception e) {
@@ -163,7 +190,7 @@ public class JMeterService {
         jtlFile.delete();
         jmxFile.delete();
 
-        return sampleResults;
+        return new TestResult(responeData, sampleResults);
 
     }
 

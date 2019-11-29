@@ -77,8 +77,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
-    private List<FileDependency> fileDependencies = new ArrayList<>();
-    private List<MavenDependency> mavenDependencies = new ArrayList<>();
+    private List<FileDependency> fileDependencies;
+    private List<MavenDependency> mavenDependencies;
 
     private FileDependency fileDependency = new FileDependency();
     private MavenDependency mavenDependency = new MavenDependency();
@@ -238,6 +238,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
             getEntity().getFileDependencies().clear();
             getEntity().getFileDependencies().addAll(scriptFiles);
+        } else {
+            getEntity().getFileDependencies().clear();
         }
 
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
@@ -249,6 +251,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
             getEntity().getMavenDependencies().clear();
             getEntity().getMavenDependencies().addAll(scriptMavens);
+        } else {
+            getEntity().getMavenDependencies().clear();
         }
         super.saveOrUpdate(false);
 
@@ -498,7 +502,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public List<FileDependency> getFileDependencies() {
-        if (CollectionUtils.isEmpty(fileDependencies)) {
+        if (fileDependencies == null) {
             if (entity.getFileDependencies() != null) {
                 fileDependencies = new ArrayList<>(entity.getFileDependencies());
                 return fileDependencies;
@@ -528,7 +532,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public List<MavenDependency> getMavenDependencies() {
-        if (CollectionUtils.isEmpty(mavenDependencies)) {
+        if (mavenDependencies == null) {
             if (entity.getMavenDependencies() != null) {
                 mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
                 return mavenDependencies;
