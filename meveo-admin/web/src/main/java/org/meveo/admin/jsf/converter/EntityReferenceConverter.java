@@ -1,7 +1,6 @@
 package org.meveo.admin.jsf.converter;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,9 @@ import javax.inject.Named;
 
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 
 import com.google.common.cache.CacheBuilder;
@@ -25,6 +26,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 @Named("entityReferenceConverter")
 @ApplicationScoped
 public class EntityReferenceConverter implements Converter<Object>, Serializable {
@@ -32,72 +37,68 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 	private static final long serialVersionUID = 2297474050618191644L;
 
 	@Inject
-    private CustomTableService customTableService;
+	private CustomTableService customTableService;
 
-    @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
-    private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
-    private volatile Map<String, Map<String, Object>> valuesMap = new HashMap<>();
+	private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
-    @Override
-    public Object getAsObject(FacesContext context, UIComponent component, String value) {
-    	System.out.println(value);
-        return null;
-    }
+	private volatile Map<String, Map<String, Object>> valuesMap = new HashMap<>();
 
-    @Override
-    public String getAsString(FacesContext context, UIComponent component, Object uuid) {
-        CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
-    	
-        // This converter only applies on entity references
-    	if(uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
-    		return null;
-    	}
-    	
-    	String stringUuid = (String) uuid;
-    	
-        LoadingCache<String, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
-        	return CacheBuilder.newBuilder()
-                    .expireAfterWrite(5, TimeUnit.MINUTES)
-                    .removalListener((RemovalListener<String, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
-                    .build(new FieldRepresentationLoader(cetCode));
-        });
+	@Override
+	public Object getAsObject(FacesContext context, UIComponent component, String value) {
+		System.out.println(value);
+		return null;
+	}
 
-        return cetCache.getUnchecked(stringUuid);
-    }
+	@Override
+	public String getAsString(FacesContext context, UIComponent component, Object uuid) {
+		CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
 
-    private class FieldRepresentationLoader extends CacheLoader<String, String>{
+		// This converter only applies on entity references
+		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
+			return null;
+		}
 
-        String cetCode;
+		String stringUuid = (String) uuid;
 
-        public FieldRepresentationLoader(String cetCode) {
-            this.cetCode = cetCode;
-        }
+		LoadingCache<String, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
+			return CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES)
+					.removalListener((RemovalListener<String, String>) notification -> valuesMap.get(cetCode).remove(notification.getKey()))
+					.build(new FieldRepresentationLoader(cetCode));
+		});
 
-        @Override
-        public String load(String uuid) {
-            final Map<String, CustomFieldTemplate> referencedEntityFields = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
-            final List<String> summaryFields = referencedEntityFields.values()
-                    .stream()
-                    .filter(f -> f.isSummary())
-                    .map(CustomFieldTemplate::getDbFieldname)
-                    .collect(Collectors.toList());
+		return cetCache.getUnchecked(stringUuid);
+	}
 
-            final Map<String, Object> values = customTableService.findById(cetCode, uuid);
+	private class FieldRepresentationLoader extends CacheLoader<String, String> {
 
-            valuesMap.computeIfAbsent(cetCode, (k) -> new HashMap<>())
-                    .put(uuid, values);
+		String cetCode;
 
-            Map<String, Object> summaryValues = values.entrySet()
-            	.stream()
-            	.filter(e -> e.getValue() != null)
-            	.filter(e -> summaryFields.contains(e.getKey()))
-                .collect(Collectors.toMap(e->e.getKey(),e->e.getValue()));
+		public FieldRepresentationLoader(String cetCode) {
+			this.cetCode = cetCode;
+		}
 
-            return summaryValues.toString();
-        }
-    }
+		@Override
+		public String load(String uuid) {
+			final Map<String, CustomFieldTemplate> referencedEntityFields = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
+			final List<String> summaryFields = referencedEntityFields.values().stream().filter(f -> f.isSummary()).map(CustomFieldTemplate::getDbFieldname)
+					.collect(Collectors.toList());
+
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+			final Map<String, Object> values = customTableService.findById(cet.getSqlConfigurationCode(), cetCode, uuid);
+
+			valuesMap.computeIfAbsent(cetCode, (k) -> new HashMap<>()).put(uuid, values);
+
+			Map<String, Object> summaryValues = values.entrySet().stream().filter(e -> e.getValue() != null).filter(e -> summaryFields.contains(e.getKey()))
+					.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+			return summaryValues.toString();
+		}
+	}
 
 }

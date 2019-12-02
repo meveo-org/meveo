@@ -55,7 +55,7 @@ import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
  * @version 6.6.0
  */
@@ -540,7 +540,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setAvailableStorages(dto.getAvailableStorages());
 
         // sql configuration
-		if (dto.getSqlStorageConfiguration() != null) {
+		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {
 			cet.getSqlStorageConfiguration().setStoreAsTable(dto.getSqlStorageConfiguration().isStoreAsTable());
 			cet.getSqlStorageConfiguration().setSqlConfigurationCode(dto.getSqlStorageConfiguration().getSqlConfigurationCode());
 		}

@@ -115,7 +115,7 @@ public class NativePersistenceService extends BaseService {
 	@Inject
 	@Removed
 	private Event<CustomTableRecord> customTableRecordRemoved;
-	
+
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
 
@@ -181,6 +181,7 @@ public class NativePersistenceService extends BaseService {
 
 	/**
 	 * Insert values into a table.
+	 * 
 	 * @param cei the {@link CustomEntityInstance}
 	 * @return the uuid of the created entity
 	 * @throws BusinessException failed to insert the entity
@@ -217,10 +218,10 @@ public class NativePersistenceService extends BaseService {
 	 * Insert a new record into a table. If returnId=True values parameter will be
 	 * updated with 'uuid' field value.
 	 *
-	 * @param cei the {@link CustomEntityInstance}
-	 * @param returnId  Should identifier be returned - does a lookup in DB by
-	 *                  matching same values. If True values will be updated with
-	 *                  'uuid' field value.
+	 * @param cei      the {@link CustomEntityInstance}
+	 * @param returnId Should identifier be returned - does a lookup in DB by
+	 *                 matching same values. If True values will be updated with
+	 *                 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
 	protected String create(CustomEntityInstance cei, boolean returnId) throws BusinessException {
@@ -230,15 +231,17 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Insert a new record into a table.
 	 *
-	 * @param cei the {@link CustomEntityInstance}
-	 * @param returnId if true values parameter will be updated with 'uuid' field value.
-	 * @param isFiltered if true process only the values that is stored in SQL
-	 * @param cfts collection of {@link CustomFieldTemplate}
+	 * @param cei              the {@link CustomEntityInstance}
+	 * @param returnId         if true values parameter will be updated with 'uuid'
+	 *                         field value.
+	 * @param isFiltered       if true process only the values that is stored in SQL
+	 * @param cfts             collection of {@link CustomFieldTemplate}
 	 * @param removeNullValues whether to remove the null values from the map
 	 * @return the uuid of the newly created entity
 	 * @throws BusinessException failed to insert the records
 	 */
-	protected String create(CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) throws BusinessException {
+	protected String create(CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues)
+			throws BusinessException {
 
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		String sqlConnectionCode = cei.getCet() != null ? cei.getCet().getSqlConfigurationCode() : null;
@@ -249,7 +252,7 @@ public class NativePersistenceService extends BaseService {
 	 * Insert a new record into a table using a new transaction.
 	 *
 	 * @param tableName the name of the SQL table
-	 * @param values {@link Map} of values
+	 * @param values    {@link Map} of values
 	 * @throws BusinessException failed to insert the records
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -262,12 +265,13 @@ public class NativePersistenceService extends BaseService {
 	 * Insert a new record into a table. If returnId=True values parameter will be
 	 * updated with 'uuid' field value.
 	 *
-	 * @param sqlConnectionCode code of the SQL connection, if valid the data will be save in this data source
-	 * @param tableName Table name to update
-	 * @param values    Values
-	 * @param returnId  Should identifier be returned - does a lookup in DB by
-	 *                  matching same values. If True values will be updated with
-	 *                  'uuid' field value.
+	 * @param sqlConnectionCode code of the SQL connection, if valid the data will
+	 *                          be save in this data source
+	 * @param tableName         Table name to update
+	 * @param values            Values
+	 * @param returnId          Should identifier be returned - does a lookup in DB
+	 *                          by matching same values. If True values will be
+	 *                          updated with 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
@@ -309,34 +313,47 @@ public class NativePersistenceService extends BaseService {
 				if (values.get(fieldName) == null) {
 					fieldValues.append("NULL");
 					findIdFields.append(fieldName).append(" IS NULL");
+
 				} else {
-					fieldValues.append(":").append(fieldName);
-					findIdFields.append(fieldName).append("=:").append(fieldName);
+					fieldValues.append(" ? ");
+					findIdFields.append(fieldName).append(" ? ");
 				}
 				first = false;
 			}
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			Query query = getEntityManager(sqlConnectionCode).createNativeQuery(sql.toString());
-			for (String fieldName : values.keySet()) {
-				Object fieldValue = values.get(fieldName);
-				if (fieldValue == null) {
-					continue;
-				}
+			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
 
-				// Serialize list values
-				if (fieldValue instanceof Collection) {
-					fieldValue = JacksonUtil.toString(fieldValue);
-				}
+			hibernateSession.doWork(connection -> {
 
-				if(fieldValue instanceof File) {
-					fieldValue = ((File) fieldValue).getAbsolutePath();
-				}
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
-				query.setParameter(fieldName, fieldValue);
-			}
-			query.executeUpdate();
+					int parameterIndex = 1;
+					for (String fieldName : values.keySet()) {
+						Object fieldValue = values.get(fieldName);
+						if (fieldValue == null) {
+							continue;
+						}
+
+						// Serialize list values
+						if (fieldValue instanceof Collection) {
+							fieldValue = JacksonUtil.toString(fieldValue);
+						}
+
+						if (fieldValue instanceof File) {
+							fieldValue = ((File) fieldValue).getAbsolutePath();
+						}
+
+						setParameterValue(ps, parameterIndex++, fieldValue);
+					}
+
+					ps.executeUpdate();
+					if (!StringUtils.isBlank(sqlConnectionCode)) {
+						connection.commit();
+					}
+				}
+			});
 
 			// Find the identifier of the last inserted record
 			if (returnId) {
@@ -344,7 +361,7 @@ public class NativePersistenceService extends BaseService {
 					return (String) uuid;
 				}
 
-				query = getEntityManager(sqlConnectionCode).createNativeQuery("select uuid from " + tableName + " where " + findIdFields).setMaxResults(1);
+				Query query = getEntityManager(sqlConnectionCode).createNativeQuery("select uuid from " + tableName + " where " + findIdFields).setMaxResults(1);
 
 				for (String fieldName : values.keySet()) {
 					Object fieldValue = values.get(fieldName);
@@ -357,7 +374,7 @@ public class NativePersistenceService extends BaseService {
 						fieldValue = JacksonUtil.toString(fieldValue);
 					}
 
-					if(fieldValue instanceof File) {
+					if (fieldValue instanceof File) {
 						fieldValue = ((File) fieldValue).getAbsolutePath();
 					}
 
@@ -380,6 +397,34 @@ public class NativePersistenceService extends BaseService {
 	}
 
 	/**
+	 * Sets the parameter of the given index in {@link PreparedStatement}.
+	 * 
+	 * @param ps             the {@link PreparedStatement} class
+	 * @param parameterIndex parameter index, starts with 1
+	 * @param value          the value of the parameter
+	 * @throws SQLException error assigning the parameter value
+	 */
+	public void setParameterValue(PreparedStatement ps, int parameterIndex, Object value) throws SQLException {
+
+		if (value instanceof String) {
+			ps.setString(parameterIndex, (String) value);
+
+		} else if (value instanceof Date) {
+			Date date = (Date) value;
+			ps.setDate(parameterIndex, new java.sql.Date(date.getTime()));
+
+		} else if (value instanceof Long) {
+			ps.setLong(parameterIndex, (Long) value);
+
+		} else if (value instanceof Double) {
+			ps.setDouble(parameterIndex, (Double) value);
+
+		} else if (value instanceof Boolean) {
+			ps.setBoolean(parameterIndex, (Boolean) value);
+		}
+	}
+
+	/**
 	 * Insert multiple values into table. Uses a prepared statement.
 	 * <p>
 	 * NOTE: The sql statement is determined by the fields passed in the first
@@ -387,7 +432,7 @@ public class NativePersistenceService extends BaseService {
 	 * does not matter), or first value has the maximum number of fields
 	 *
 	 * @param tableName Table name to insert values to
-	 * @param ceis list of {@link CustomEntityInstance}
+	 * @param ceis      list of {@link CustomEntityInstance}
 	 * @throws BusinessException General exception
 	 */
 	public void create(String sqlConnectionCode, String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
@@ -473,6 +518,9 @@ public class NativePersistenceService extends BaseService {
 						itemsProcessed++;
 					}
 					preparedStatement.executeBatch();
+					if (!StringUtils.isBlank(sqlConnectionCode)) {
+						connection.commit();
+					}
 
 				} catch (SQLException e) {
 					log.error("Failed to bulk insert with sql {}\n", sql, e);
@@ -485,7 +533,8 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Updates a {@linkplain CustomEntityInstance} in the database given a uuid.
 	 *
-	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the field uuid.
+	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the
+	 *            field uuid.
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(CustomEntityInstance cei) throws BusinessException {
@@ -495,8 +544,9 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Update a record in a table. Record is identified by an "uuid" field value.
 	 *
-	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the field uuid.
-	 * @param isFiltered if true process only the fields with storage=SQL
+	 * @param cei              the {@link CustomEntityInstance}. The cf values must
+	 *                         contain the field uuid.
+	 * @param isFiltered       if true process only the fields with storage=SQL
 	 * @param removeNullValues if true, remove the null values
 	 * @throws BusinessException General exception
 	 */
@@ -516,7 +566,7 @@ public class NativePersistenceService extends BaseService {
 
 		StringBuffer sql = new StringBuffer();
 		try {
-			sql.append("update ").append(tableName).append(" set ");
+			sql.append("UPDATE ").append(tableName).append(" SET ");
 			boolean first = true;
 			for (String fieldName : values.keySet()) {
 				if (fieldName.equals(FIELD_ID)) {
@@ -527,32 +577,43 @@ public class NativePersistenceService extends BaseService {
 					sql.append(",");
 				}
 				if (values.get(fieldName) == null) {
-					sql.append(fieldName).append("=NULL");
+					sql.append(fieldName).append(" IS NULL");
+					
 				} else {
-					sql.append(fieldName).append("=:").append(fieldName);
+					sql.append(fieldName).append(" = ? ");
 				}
 				first = false;
 			}
 
-			sql.append(" where uuid=:uuid");
+			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
 
-			Query query = getEntityManager(sqlConnectionCode).createNativeQuery(sql.toString());
-			for (String fieldName : values.keySet()) {
-				Object fieldValue = values.get(fieldName);
-				if (fieldValue != null) {
-					// Serialize list values
-					if (fieldValue instanceof Collection) {
-						fieldValue = JacksonUtil.toString(fieldValue);
+			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+
+			hibernateSession.doWork(connection -> {
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+					int parameterIndex = 1;
+					for (String fieldName : values.keySet()) {
+						Object fieldValue = values.get(fieldName);
+						if (fieldValue != null && fieldName != "uuid") {
+							// Serialize list values
+							if (fieldValue instanceof Collection) {
+								fieldValue = JacksonUtil.toString(fieldValue);
+							}
+
+							if (fieldValue instanceof File) {
+								fieldValue = ((File) fieldValue).getAbsolutePath();
+							}
+
+							setParameterValue(ps, parameterIndex++, fieldValue);
+						}
 					}
 
-					if(fieldValue instanceof File) {
-						fieldValue = ((File) fieldValue).getAbsolutePath();
+					ps.executeUpdate();
+					if (!StringUtils.isBlank(sqlConnectionCode)) {
+						connection.commit();
 					}
-
-					query.setParameter(fieldName, fieldValue);
 				}
-			}
-			query.executeUpdate();
+			});
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
@@ -583,10 +644,11 @@ public class NativePersistenceService extends BaseService {
 
 		try {
 			if (value == null) {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid).executeUpdate();
+				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid)
+						.executeUpdate();
 			} else {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid").setParameter(fieldName, value)
-						.setParameter("uuid", uuid).executeUpdate();
+				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+						.setParameter(fieldName, value).setParameter("uuid", uuid).executeUpdate();
 			}
 
 			CustomTableRecord record = new CustomTableRecord();
@@ -1084,7 +1146,7 @@ public class NativePersistenceService extends BaseService {
 	public String findIdByValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues) {
 		QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
 		queryValues.forEach((key, value) -> {
-        	if (!(value instanceof Collection) && !(value instanceof File) &&!(value instanceof Map)) {
+			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
 				queryBuilder.addCriterion(key, "=", value, false);
 			}
 		});
@@ -1139,10 +1201,6 @@ public class NativePersistenceService extends BaseService {
 			return Long.valueOf(count.toString());
 		}
 	}
-	
-//	public EntityManager getEntityManager() {
-//		return getEntityManager(null);
-//	}
 
 	/**
 	 * Return an entity manager for a current provider
@@ -1150,13 +1208,18 @@ public class NativePersistenceService extends BaseService {
 	 * @return Entity manager
 	 */
 	public EntityManager getEntityManager(String sqlConfigurationCode) {
-		
-		if (StringUtils.isBlank(sqlConfigurationCode)) {
-			return emWrapper.getEntityManager();
 
+		EntityManager em;
+		if (StringUtils.isBlank(sqlConfigurationCode)) {
+			em = emWrapper.getEntityManager();
+			em.joinTransaction();
+			
 		} else {
-			return sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+			em = sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+			
 		}
+
+		return em;
 	}
 
 	/**

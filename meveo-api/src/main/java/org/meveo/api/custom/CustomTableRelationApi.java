@@ -49,7 +49,8 @@ import org.primefaces.model.SortOrder;
 
 /**
  * @author Clément Bareth
- * @lastModifiedVersion 6.0.15
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  **/
 @Stateless
 public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<CustomTableDataRelationDto> {
@@ -160,7 +161,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
         PaginationConfiguration paginationConfig = toPaginationConfiguration(null, SortOrder.ASCENDING, null, pagingAndFiltering, null);
         
         String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-		long totalCount = customTableService.count(dbTablename, paginationConfig);
+		long totalCount = customTableService.count(null, dbTablename, paginationConfig);
 
         CustomTableDataResponseDto result = new CustomTableDataResponseDto();
 
@@ -168,7 +169,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
         result.getPaging().setTotalNumberOfRecords((int) totalCount);
         result.getCustomTableData().setCustomTableCode(customTableCode);
 
-        result.getCustomTableData().setValuesFromListofMap(customTableService.list(dbTablename, paginationConfig));
+        result.getCustomTableData().setValuesFromListofMap(customTableService.list(null, dbTablename, paginationConfig));
 
         return result;
 	}

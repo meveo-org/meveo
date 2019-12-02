@@ -59,8 +59,8 @@ import org.primefaces.model.UploadedFile;
 
 /**
  * @author Clement Bareth
- * @author Edward P. Legaspi
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Named
 @ViewScoped
@@ -230,6 +230,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 				@Override
 				protected CustomEntityTemplate getCet() {
 					return entity;
+				}
+				
+				@Override
+				protected String getSqlConnectionCode() {
+					return entity.getSqlConfigurationCode();
 				}
             };
         }
@@ -409,7 +414,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         try {
         	if(!appendImportedData) {
                 // Delete current data first if in override mode
-    			customTableService.remove(SQLStorageConfiguration.getDbTablename(entity));
+    			customTableService.remove(entity.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(entity));
         	}
         	
             importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
@@ -485,7 +490,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
         }
 
-        customTableService.remove(customTableName, ids);
+        customTableService.remove(entity.getSqlConfigurationCode(), customTableName, ids);
         customTableBasedDataModel = null;
         messages.info(new BundleKey("messages", "delete.entitities.successful"));
     }
