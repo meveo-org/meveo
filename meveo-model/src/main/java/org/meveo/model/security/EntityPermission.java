@@ -13,6 +13,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.meveo.model.security.EntityPermission.EntityPermissionId;
 
@@ -34,10 +35,12 @@ public class EntityPermission {
 	private Permission permission;
 	
 	@Column(name = "permission")
+	@NotNull
 	private String permissionCode;
 	
 	@Id
 	@Column(name = "entity_id", nullable = false)
+	@NotNull
 	private String entityId;
 	
 	public Role getRole() {

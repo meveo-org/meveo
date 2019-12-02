@@ -144,8 +144,7 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be cloned or initiated
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
-    @RequirePermission(DefaultPermission.GIT_WRITE)
-    protected void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
+    protected void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
         if (repoDir.exists() && failIfExist) {

@@ -44,14 +44,16 @@
             </h:panelGrid>
 
             <h:panelGrid columns="1">
-                <h:panelGroup id="readingRole">
-                    <hftl:formField label="#{messages['gitRepositories.readingRoles']}"
-                                    field="readingRoles" textArea="true" rows="3" maxlength="200000"/>
-                </h:panelGroup>
-                <h:panelGroup id="writingRole">
-                    <hftl:formField label="#{messages['gitRepositories.writingRoles']}"
-                                    field="writingRoles" textArea="true" rows="3" maxlength="200000"/>
-                </h:panelGroup>
+<!--                 <h:panelGroup id="readingRole"> -->
+<!--                     <hftl:formField label="#{messages['gitRepositories.readingRoles']}" -->
+<!--                                     field="readingRoles" textArea="true" rows="3" maxlength="200000"/> -->
+<!--                 </h:panelGroup> -->
+<!--                 <h:panelGroup id="writingRole"> -->
+<!--                     <hftl:formField label="#{messages['gitRepositories.writingRoles']}" -->
+<!--                                     field="writingRoles" textArea="true" rows="3" maxlength="200000"/> -->
+<!--                 </h:panelGroup> -->
+				<hftl:entityPermissions permission="git-write" entityId="#{gitRepositoryBean.entity.id}"/>
+
             </h:panelGrid>
 
             <h:panelGrid id="actions" columns="2">
