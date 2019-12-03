@@ -69,6 +69,11 @@ public class MavenConfigurationRs extends BaseRs {
 		return result;
 	}
 
+	/**
+	 * Upload a new artifact in the maven configuration.
+	 *
+	 * @param uploadForm maven configuration upload values
+	 */
 	@POST
 	@Path("/upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)

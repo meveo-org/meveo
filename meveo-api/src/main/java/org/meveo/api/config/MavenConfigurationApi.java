@@ -15,6 +15,16 @@ public class MavenConfigurationApi extends BaseApi {
     @Inject
     private MavenConfigurationService mavenConfigurationService;
 
+    /**
+     * Upload an artifact in the maven configuration
+     *
+     * @param inputStream  JAR file
+     * @param groupId      GroupId
+     * @param artifactId   ArtifactId
+     * @param version      Version
+     * @param classifier   Classifier
+     * @param filename     Name of the jar file
+     */
     public void uploadAnArtifact(InputStream inputStream, String groupId, String artifactId, String version, String classifier, String filename) throws BusinessApiException {
         String filePath = mavenConfigurationService.createDirectory(groupId, artifactId, version, classifier);
         filePath = filePath + File.separator + filename;
