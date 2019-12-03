@@ -151,10 +151,16 @@ public class EndpointBean extends BaseBean<Endpoint> {
     /**
      * When function changes, reset returned variable name list, returned variable name and serialize result fields.
      */
-    public void onFunctionChange(Object value) {
-    	returnedVariableNames = null;
-    	entity.setReturnedVariableName(null);
-    	entity.setSerializeResult(false);
+    public void onFunctionChange() {
+        List<FunctionIO> functionIOList = entity.getService().getOutputs();
+    	if (CollectionUtils.isNotEmpty(functionIOList)) {
+    	    for (FunctionIO functionIO : functionIOList) {
+    	        if (entity.getReturnedVariableName() != null && entity.getReturnedVariableName().equals(functionIO.getName())
+                        && functionIO.getType().startsWith("Map")) {
+                    entity.setSerializeResult(true);
+                }
+            }
+        }
     }
 
     public String getEndpointUrl() {
