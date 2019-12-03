@@ -21,18 +21,17 @@ package org.meveo.service.admin.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
+import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.security.BlackListEntry;
-import org.meveo.model.security.EntityPermission;
+import org.meveo.model.security.EntityPermission.EntityPermissionId;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 import org.meveo.model.security.WhiteListEntry;
@@ -116,12 +115,19 @@ public class PermissionService extends PersistenceService<Permission> {
     		permission = this.getEntityManager().getReference(Permission.class, permission.getId());
     	}
     	
-    	WhiteListEntry whiteListEntry = new WhiteListEntry();
+    	EntityPermissionId idEntry = new EntityPermissionId(role.getId(), permission.getId(), id);
+    	Session session = this.getEntityManager().unwrap(Session.class);
+    	WhiteListEntry whiteListEntry = session.find(WhiteListEntry.class, idEntry);
+    	
+    	if(whiteListEntry == null) {
+    		whiteListEntry = new WhiteListEntry();
+    	}
+    	
     	whiteListEntry.setEntityId(id);
     	whiteListEntry.setRole(role);
     	whiteListEntry.setPermission(permission);
     	
-    	this.getEntityManager().merge(whiteListEntry);
+    	session.saveOrUpdate(whiteListEntry);
     }
     
     public void addToBlackList(Role role, Permission permission, String id) {
@@ -137,24 +143,41 @@ public class PermissionService extends PersistenceService<Permission> {
     		permission = this.getEntityManager().getReference(Permission.class, permission.getId());
     	}
     	
-    	BlackListEntry blackListEntry = new BlackListEntry();
+    	EntityPermissionId idEntry = new EntityPermissionId(role.getId(), permission.getId(), id);
+    	Session session = this.getEntityManager().unwrap(Session.class);
+    	BlackListEntry blackListEntry = session.find(BlackListEntry.class, idEntry);
+    	
+    	if(blackListEntry == null) {
+    		blackListEntry = new BlackListEntry();
+    	}
+    	
     	blackListEntry.setEntityId(id);
     	blackListEntry.setRole(role);
     	blackListEntry.setPermission(permission);
     	
-    	this.getEntityManager().merge(blackListEntry);
+    	session.saveOrUpdate(blackListEntry);
     }
     
     public void removeFromBlackList(Role role, Permission permission, String id) {
-    	this.getEntityManager().createQuery("DELETE FROM BlackListEntry WHERE permissionCode = :permissionCode AND entityId = :entityId AND role = :role")
-			.setParameter("permission", permission)
+    	removeFromBlackList(role, permission.getPermission(), id);
+    }
+
+	public void removeFromBlackList(Role role, String permission, String id) {
+		this.getEntityManager().createQuery("DELETE FROM BlackListEntry "
+				+ "WHERE permissionCode = :permissionCode "
+				+ "AND entityId = :entityId AND role = :role")
+			.setParameter("permissionCode", permission)
 			.setParameter("entityId", id)
 			.setParameter("role", role)
 			.executeUpdate();
-    }
+	}
     
     public void removeFromWhiteList(Role role, Permission permission, String id) {
-    	this.getEntityManager().createQuery("DELETE FROM WhiteListEntry WHERE permissionCode = :permissionCode AND entityId = :entityId role = :role")
+    	removeFromWhiteList(role, permission.getPermission(), id);
+    }
+    
+    public void removeFromWhiteList(Role role, String permission, String id) {
+    	this.getEntityManager().createQuery("DELETE FROM WhiteListEntry WHERE permissionCode = :permissionCode AND entityId = :entityId AND role = :role")
 			.setParameter("permissionCode", permission)
 			.setParameter("entityId", id)
 			.setParameter("role", role)
@@ -162,14 +185,18 @@ public class PermissionService extends PersistenceService<Permission> {
     }
     
     public void removeFromEntityPermissions(String permission, String id) {
-    	this.getEntityManager().createQuery("DELETE FROM EntityPermission WHERE permissionCode = :permissionCode AND entityId = :entityId")
+    	this.getEntityManager().createQuery("DELETE FROM EntityPermission "
+    			+ "WHERE permissionCode = :permissionCode "
+    			+ "AND entityId = :entityId")
     		.setParameter("permissionCode", permission)
     		.setParameter("entityId", id)
     		.executeUpdate();
     }
     
     public List<Role> getWhiteListedRoles(Permission permission, String id) {
-    	return this.getEntityManager().createQuery("SELECT role FROM WhiteListEntry WHERE permissionCode = :permissionCode AND entityId = :entityId", Role.class)
+    	return this.getEntityManager().createQuery("SELECT role FROM WhiteListEntry "
+    			+ "WHERE permissionCode = :permissionCode "
+    			+ "AND entityId = :entityId", Role.class)
 			.setParameter("permissionCode", permission.getPermission())
 			.setParameter("entityId", id)
 			.getResultList();
@@ -197,7 +224,9 @@ public class PermissionService extends PersistenceService<Permission> {
 				"    END\r\n" + 
 				"FROM Role r\r\n" + 
 				"    LEFT JOIN r.whiteList w WITH w.permissionCode = :permissionCode AND w.entityId = :entityId \r\n" + 
-				"    LEFT JOIN r.blackList b WITH b.permissionCode = :permissionCode AND b.entityId = :entityId\r\n";
+				"    LEFT JOIN r.blackList b WITH b.permissionCode = :permissionCode AND b.entityId = :entityId\r\n" + 
+				"    INNER JOIN r.permissions p WITH p.permission = :permissionCode \r\n" +
+				"WHERE NOT r.name like 'CET%' AND NOT r.name like 'CRT%'";
     	
     	Map<Role, String> collect = this.getEntityManager().createQuery(query, Object[].class)
 			.setParameter("permissionCode", permissionName)
@@ -205,7 +234,6 @@ public class PermissionService extends PersistenceService<Permission> {
 			.getResultStream()
 			.collect(Collectors.toMap(r -> (Role) r[0], r -> (String) r[1]));
     	
-    	System.out.println(collect);
 		return collect;
     }
 

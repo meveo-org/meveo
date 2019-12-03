@@ -164,9 +164,12 @@ public class CurrentUserProvider {
 
         MeveoUser user;
 
-        List<Role> userRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p "
+        long start = System.currentTimeMillis();
+        List<Role> availableRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p "
         		+ "where not r.name like 'CET%' and not r.name like 'CRT%'", Role.class)
         		.getResultList();
+        
+        System.out.println("Duration : " + (System.currentTimeMillis() - start));
 
         // User was forced authenticated, so need to lookup the rest of user information
         if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
@@ -174,15 +177,20 @@ public class CurrentUserProvider {
             		getForcedUsername(), 
             		getCurrentTenant(), 
             		getAdditionalRoles(username, em), 
-            		getRoleToPermissionMapping(providerCode, em, userRoles)
+            		getRoleToPermissionMapping(providerCode, em, availableRoles)
         		);
 
         } else {
-            user = new MeveoUserKeyCloakImpl(ctx, null, null, getAdditionalRoles(username, em), getRoleToPermissionMapping(providerCode, em, userRoles));
+            user = new MeveoUserKeyCloakImpl(ctx, 
+            		null, 
+            		null, 
+            		getAdditionalRoles(username, em), 
+            		getRoleToPermissionMapping(providerCode, em, availableRoles)
+        		);
         }
 
         if(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
-            KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+            KeycloakPrincipal<?> keycloakPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
             final String email = keycloakPrincipal.getKeycloakSecurityContext().getToken().getEmail();
             user.setMail(email != null ? email : "no-mail@meveo.com");
             user.setToken(keycloakPrincipal.getKeycloakSecurityContext().getTokenString());
@@ -195,8 +203,8 @@ public class CurrentUserProvider {
         Map<String, List<String>> blackList = new HashMap<>();
         
         try {
-        	userRoles.forEach(role -> {
-        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT")) {
+        	availableRoles.forEach(role -> {
+        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT") && user.hasRole(role.getName())) {
         			
 	        		Map<String, List<String>> roleWhiteList = getWhiteList(em, role);
 	        		Map<String, List<String>> roleBlacklist = getBlackList(em, role);
@@ -295,7 +303,7 @@ public class CurrentUserProvider {
      * 
      * @return A mapping between roles and permissions
      */
-    private Map<String, Set<String>> getRoleToPermissionMapping(String providerCode, EntityManager em, List<Role> userRoles) {
+    private Map<String, Set<String>> getRoleToPermissionMapping(String providerCode, EntityManager em, List<Role> availableRoles) {
 
         synchronized (this) {
             if (CurrentUserProvider.roleToPermissionMapping == null || roleToPermissionMapping.get(providerCode) == null) {
@@ -304,7 +312,7 @@ public class CurrentUserProvider {
                 try {
                     Map<String, Set<String>> roleToPermissionMappingForProvider = new HashMap<>();
 
-                    for (Role role : userRoles) {
+                    for (Role role : availableRoles) {
                         Set<String> rolePermissions = new HashSet<>();
                         for (Permission permission : role.getAllPermissions()) {
                             rolePermissions.add(permission.getPermission());
@@ -343,7 +351,9 @@ public class CurrentUserProvider {
         }
 
         try {
-            User user = em.createNamedQuery("User.getByUsername", User.class).setParameter("username", username.toLowerCase()).getSingleResult();
+            User user = em.createNamedQuery("User.getByUsername", User.class)
+            		.setParameter("username", username.toLowerCase())
+            		.getSingleResult();
 
             Set<String> additionalRoles = new HashSet<>();
 
@@ -364,11 +374,14 @@ public class CurrentUserProvider {
     
     @SuppressWarnings("unchecked")
 	public Map<String, List<String>> getBlackList(EntityManager em, Role role) {
-    	//TODO: Check sub-roles recursively
-    	
     	String query = "SELECT ep.permission, cast(json_agg(ep.entity_id) as text) FROM entity_permission ep\r\n" + 
-    			"WHERE ep.role_id = :role " + 
-    			"AND ep.type = 'BLACK' " +
+    			"WHERE (ep.role_id = :role \r\n" + 
+    			"	   OR EXISTS (SELECT 1 \r\n" + 
+    			"				  FROM adm_role_role arr \r\n" + 
+    			"				  WHERE arr.role_id = :role \r\n" + 
+    			"				  AND ep.role_id = arr.child_role_id)\r\n" + 
+    			"	  )\r\n" + 
+    			"AND ep.type = 'BLACK'\r\n" + 
     			"GROUP BY ep.permission";
     	
     	Stream<Object[]> resultStream = (Stream<Object[]>) em.createNativeQuery(query)
@@ -385,11 +398,15 @@ public class CurrentUserProvider {
     
     @SuppressWarnings("unchecked")
 	public Map<String, List<String>> getWhiteList(EntityManager em, Role role) {
-    	//TODO: Check sub-roles recursively
     	
-    	String query = "SELECT ep.permission, cast(json_agg(ep.entity_id) as text) FROM entity_permission ep " + 
-    			"WHERE ep.role_id = :role " + 
-    			"AND ep.type = 'WHITE' " +
+    	String query = "SELECT ep.permission, cast(json_agg(ep.entity_id) as text) FROM entity_permission ep\r\n" + 
+    			"WHERE (ep.role_id = :role \r\n" + 
+    			"	   OR EXISTS (SELECT 1 \r\n" + 
+    			"				  FROM adm_role_role arr \r\n" + 
+    			"				  WHERE arr.role_id = :role \r\n" + 
+    			"				  AND ep.role_id = arr.child_role_id)\r\n" + 
+    			"	  )\r\n" + 
+    			"AND ep.type = 'WHITE'\r\n" + 
     			"GROUP BY ep.permission";
     	
     	Stream<Object[]> resultStream = (Stream<Object[]>) em.createNativeQuery(query)

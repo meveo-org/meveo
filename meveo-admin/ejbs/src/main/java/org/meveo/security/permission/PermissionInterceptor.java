@@ -174,9 +174,11 @@ public class PermissionInterceptor {
 	 * @throws UserNotAuthorizedException
 	 */
 	public void checkWhiteAndBlackLists(String id, List<String> permissions, MeveoUser user) throws UserNotAuthorizedException {
-		permissions.stream().filter(p -> {
-			return isInWhiteList(p, id, user.getWhiteList()) && isNotInBlackList(p, id, user.getBlackList());
-		}).findFirst().orElseThrow(() -> new UserNotAuthorizedException());
+		for(String p : permissions) {
+			if(!isInWhiteList(p, id, user.getWhiteList()) || !isNotInBlackList(p, id, user.getBlackList())) {
+				throw new UserNotAuthorizedException();
+			}
+		}
 	}
 	
 	public List<String> checkAuthorization(String permission, String[] oneOf, String[] allOf, MeveoUser user, String id) throws UserNotAuthorizedException {
@@ -230,8 +232,8 @@ public class PermissionInterceptor {
 		return whiteList.get(permission) == null ? true : whiteList.get(permission).contains(id);
 	}
 	
-	private boolean isNotInBlackList(String permission, String id, Map<String, List<String>> whiteList) {
-		return whiteList.get(permission) == null ? true : !whiteList.get(permission).contains(id);
+	private boolean isNotInBlackList(String permission, String id, Map<String, List<String>> blacklist) {
+		return blacklist.get(permission) == null ? true : !blacklist.get(permission).contains(id);
 	}
 	
 }

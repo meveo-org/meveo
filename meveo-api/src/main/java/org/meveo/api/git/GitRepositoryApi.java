@@ -182,7 +182,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     public boolean exists(GitRepositoryDto dto) {
         try {
             return find(dto.getCode()) != null;
-        } catch (Exception e) {
+        } catch (MeveoApiException | EntityDoesNotExistsException e) {
             return false;
         }
     }

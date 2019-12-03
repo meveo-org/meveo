@@ -109,8 +109,8 @@ public class UserRoleBean extends BaseBean<Role> {
         getEntity().getPermissions().addAll(permissionService.refreshOrRetrieve(permissionsDM.getTarget()));
 
         // Update roles
-        getEntity().getRoles().clear();
-        getEntity().getRoles().addAll(userRoleService.refreshOrRetrieve(rolesDM.getTarget()));
+//        getEntity().getRoles().clear();
+//        getEntity().getRoles().addAll(userRoleService.refreshOrRetrieve(rolesDM.getTarget()));
 
         return super.saveOrUpdate(killConversation);
     }
