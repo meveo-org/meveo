@@ -5,11 +5,13 @@ import javax.inject.Named;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ * @since 6.6.0
  */
 @Named
 @ConversationScoped
-public class BinaryStorageConfigurationListBean extends BinaryStorageConfigurationBean {
+public class SqlConfigurationListBean extends SqlConfigurationBean {
 
-	private static final long serialVersionUID = -5448865562157798013L;
+	private static final long serialVersionUID = 1L;
 
 }
