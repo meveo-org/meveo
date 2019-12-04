@@ -110,4 +110,8 @@
                                  constraintName="fk_maven_dependency_sc_id" referencedTableName="meveo_script_instance"
                                  referencedColumnNames="id" />
     </changeSet>
+    
+    <changeSet id="remove not null constraint on endpoint param default value" author="Clément Bareh">
+    	<dropNotNullConstraint tableName="service_parameter_mapping" columnName="default_value"/>
+    </changeSet>
 </databaseChangeLog>
