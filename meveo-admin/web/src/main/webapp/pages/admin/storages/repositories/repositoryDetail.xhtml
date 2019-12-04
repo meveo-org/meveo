@@ -57,26 +57,12 @@
             
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
-				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" onclick="PF('deleteDialog').show();">
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
+								 action="#{repositoryBean.deleteAndNavigate()}" immediate="true" update="@form">
+					<p:confirm header="#{messages['commons.confirmationHeader']}"
+							   message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
 				</p:commandButton>
 			</ui:define>
         </hftl:formPanel>
-        
-        <p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="150" width="250">
-			<h:form id="deleteDialogForm">
-				<h:panelGrid columns="1">
-					#{messages['commons.confirmDelete']}
-				    <hftl:decorateFormField label="#{messages['repository.forceDelete']}" fieldId="forceDelete">
-						<p:selectBooleanCheckbox id="forceDelete" value="#{repositoryBean.entity.forceDelete}">
-							<p:ajax event="change" update="deleteDialogForm" />
-						</p:selectBooleanCheckbox>
-					</hftl:decorateFormField>
-				</h:panelGrid>
-				<h:panelGroup layout="block" styleClass="form-panel-actions">
-					<p:commandButton action="#{repositoryBean.deleteAndNavigate()}" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="pi pi-check" ajax="false" oncomplete="PF('deleteDialog').hide();" />
-	        		<p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" onclick="PF('deleteDialog').hide();" />
-	        	</h:panelGroup>
-        	</h:form>
-		</p:dialog>
     </ui:define>
 </ui:composition>
