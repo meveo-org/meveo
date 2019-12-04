@@ -158,6 +158,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
     	        if (entity.getReturnedVariableName() != null && entity.getReturnedVariableName().equals(functionIO.getName())
                         && functionIO.getType().startsWith("Map")) {
                     entity.setSerializeResult(true);
+                    break;
                 }
             }
         }
