@@ -165,8 +165,9 @@ public class CurrentUserProvider {
         MeveoUser user;
 
         long start = System.currentTimeMillis();
-        List<Role> availableRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p "
-        		+ "where not r.name like 'CET%' and not r.name like 'CRT%'", Role.class)
+        List<Role> availableRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p ",
+//        		+ "where not r.name like 'CET%' and not r.name like 'CRT%'", 
+        		Role.class)
         		.getResultList();
         
         System.out.println("Duration : " + (System.currentTimeMillis() - start));
