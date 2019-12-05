@@ -170,17 +170,14 @@ public class JMeterService {
                 
                 SampleResult sampleResult = new SampleResult(success, name, failureMessage);
                 
-				if(responeData == null) {
-					Node sampleNode = failureMessageNodes.item(0).getParentNode().getParentNode();
-					Node node = (Node) XPATH.compile("//responseData").evaluate(sampleNode, XPathConstants.NODE);
-					if(node != null) {
-						responeData = node.getTextContent();
-					}
-				}
-				
 				sampleResults.add(sampleResult);
 
             }
+            
+			Node node = (Node) XPATH.compile("(//responseData)[last()]").evaluate(doc, XPathConstants.NODE);
+			if(node != null) {
+				responeData = node.getTextContent();
+			}
 
         } catch (Exception e) {
             throw new RuntimeException(e);
