@@ -49,10 +49,12 @@ public class RootObjectSchema extends ObjectSchema {
     			.id(other.getId())
     			.nullable(other.isNullable())
     			.readOnly(other.isReadOnly())
+				.versionable(other.isVersionable())
     			.schemaLocation(other.getSchemaLocation())
     			.title(other.getTitle())
     			.writeOnly(other.isWriteOnly())
 				.storages(other.getStorages())
+				.indexType(other.getIndexType())
         		;
         }
 
@@ -179,6 +181,18 @@ public class RootObjectSchema extends ObjectSchema {
 		@Override
 		public Builder storages(List<String> storages) {
 			super.storages(storages);
+			return this;
+		}
+
+		@Override
+		public Builder versionable(Boolean versionable) {
+			super.versionable(versionable);
+			return this;
+		}
+
+		@Override
+		public Builder indexType(String indexType) {
+			super.indexType(indexType);
 			return this;
 		}
 	}
