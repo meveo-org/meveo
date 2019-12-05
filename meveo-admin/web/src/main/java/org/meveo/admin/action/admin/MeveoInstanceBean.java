@@ -80,6 +80,8 @@ public class MeveoInstanceBean extends BaseBean<MeveoInstance> {
 			MavenConfigurationResponseDto result = response.readEntity(MavenConfigurationResponseDto.class);
 			mavenConfigurationService.updateRepository(result.getMavenConfiguration().getMavenRepositories());
 
+			messages.info(new BundleKey("messages", "meveoInstance.remoteRepository.synch.ok"));
+
 		} catch (BusinessException e) {
 			messages.error(new BundleKey("messages", "meveoInstance.remoteRepository.synch.ko"));
 		}

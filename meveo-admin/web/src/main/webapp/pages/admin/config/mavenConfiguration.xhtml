@@ -1,67 +1,79 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-				xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-				xmlns:f="http://xmlns.jcp.org/jsf/core"
-				xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
-				xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 	<ui:define name="metadata">
 		<f:metadata>
 			<f:event type="preRenderView"
-					 listener="#{mavenConfigurationBean.preRenderView()}"/>
+				listener="#{mavenConfigurationBean.preRenderView()}" />
 		</f:metadata>
 	</ui:define>
 
 	<ui:define name="body">
 		<p:panel>
 			<f:facet name="header">
-				<h:outputText value="#{messages['maven.configuration']}"/>
+				<h:outputText value="#{messages['maven.configuration']}" />
 			</f:facet>
 			<h:form id="mavenConfigurationForm">
-				<p:messages/>
+				<p:messages id="messages" />
 				<h:panelGrid columns="1">
 					<hftl:decorateFormField fieldId="mavenRepositories"
-											label="#{messages['maven.configuration.mavenRepositories']}">
+						label="#{messages['maven.configuration.mavenRepositories']}">
 						<p:inputTextarea id="mavenRepositories" rows="10" cols="50"
-										 required="false"
-										 value="#{mavenConfigurationBean.mavenRepositories}"/>
+							required="false"
+							value="#{mavenConfigurationBean.mavenRepositories}" />
 					</hftl:decorateFormField>
 					<h:panelGrid columns="4">
-						<hftl:decorateFormField fieldId="groupId" label="#{messages['maven.configuration.groupId']}">
-							<p:inputText id="groupId" value="#{mavenConfigurationBean.groupId}" size="30" required="true"/>
+						<hftl:decorateFormField fieldId="groupId"
+							label="#{messages['maven.configuration.groupId']}">
+							<p:inputText id="groupId"
+								value="#{mavenConfigurationBean.groupId}" size="30"
+								required="true" />
 						</hftl:decorateFormField>
 						<hftl:decorateFormField fieldId="artifactId"
-												label="#{messages['maven.configuration.artifactId']}">
-							<p:inputText id="artifactId" value="#{mavenConfigurationBean.artifactId}" size="30" required="true"/>
+							label="#{messages['maven.configuration.artifactId']}">
+							<p:inputText id="artifactId"
+								value="#{mavenConfigurationBean.artifactId}" size="30"
+								required="true" />
 						</hftl:decorateFormField>
-						<hftl:decorateFormField fieldId="version" label="#{messages['maven.configuration.version']}">
-							<p:inputText id="version" value="#{mavenConfigurationBean.version}" size="30" required="true"/>
+						<hftl:decorateFormField fieldId="version"
+							label="#{messages['maven.configuration.version']}">
+							<p:inputText id="version"
+								value="#{mavenConfigurationBean.version}" size="30"
+								required="true" />
 						</hftl:decorateFormField>
 						<hftl:decorateFormField fieldId="classifier"
-												label="#{messages['maven.configuration.classifier']}">
-							<p:inputText id="classifier" value="#{mavenConfigurationBean.classifier}" size="30"/>
+							label="#{messages['maven.configuration.classifier']}">
+							<p:inputText id="classifier"
+								value="#{mavenConfigurationBean.classifier}" size="30" />
 						</hftl:decorateFormField>
 					</h:panelGrid>
 					<h:panelGrid columns="1">
 						<p:commandButton id="uploadAnArtifact"
-										 value="#{messages['maven.configuration.uploadAnArtifact']}"
-										 process="@form" type="submit" update="mavenConfigurationForm"
-										 onclick="PF('uploadDialog').show()"/>
+							value="#{messages['maven.configuration.uploadAnArtifact']}"
+							process="@form" type="submit" update="mavenConfigurationForm"
+							onclick="PF('uploadDialog').show()" />
 					</h:panelGrid>
 				</h:panelGrid>
 
 				<h:panelGroup layout="block" styleClass="form-panel-actions">
-					<p:commandButton action="#{mavenConfigurationBean.save}" immediate="false" process="@this mavenRepositories"
-									 update="mavenConfigurationForm" value="#{messages['action.save']}"/>
+					<p:commandButton action="#{mavenConfigurationBean.save}"
+						process="@this mavenRepositories messages"
+						update="mavenConfigurationForm" value="#{messages['action.save']}" />
 				</h:panelGroup>
 			</h:form>
 
 			<h:form>
-				<p:dialog header="#{messages['maven.configuration.uploadAnArtifact']}" id="uploadDialog"
-						  widgetVar="uploadDialog"
-						  modal="true" closeOnEscape="true">
-					<p:fileUpload accept=".jar" fileUploadListener="#{mavenConfigurationBean.uploadAnArtifact}"
-								  mode="advanced" process="@this"
-								  dragDropSupport="true" allowTypes="/(\.|\/)(jar)$/"
-								  update="@form :mavenConfigurationForm" styleClass="TexAlCenter">
+				<p:dialog
+					header="#{messages['maven.configuration.uploadAnArtifact']}"
+					id="uploadDialog" widgetVar="uploadDialog" modal="true"
+					closeOnEscape="true">
+					<p:fileUpload accept=".jar"
+						fileUploadListener="#{mavenConfigurationBean.uploadAnArtifact}"
+						mode="advanced" process="@this" dragDropSupport="true"
+						allowTypes="/(\.|\/)(jar)$/"
+						update="@form :mavenConfigurationForm" styleClass="TexAlCenter">
 					</p:fileUpload>
 				</p:dialog>
 			</h:form>
