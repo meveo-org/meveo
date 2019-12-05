@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
+import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.persistence.DBStorageType;
@@ -108,6 +109,7 @@ public class JSONSchemaIntoTemplateParser {
             customFieldTemplateDto.setDescription((String)values.get("description"));
             customFieldTemplateDto.setAllowEdit(!(Boolean) values.get("readOnly"));
             customFieldTemplateDto.setValueRequired(!(Boolean)values.get("nullable"));
+            customFieldTemplateDto.setVersionable((Boolean)values.get("versionable"));
             if (values.containsKey("storages")) {
                 List<String> storages = (List<String>) values.get("storages");
                 List<DBStorageType> storageList = new ArrayList<>();
@@ -156,6 +158,9 @@ public class JSONSchemaIntoTemplateParser {
             }
             if (values.get("maxLength") != null) {
                 customFieldTemplateDto.setMaxValue(Long.valueOf(values.get("maxLength").toString()));
+            }
+            if (values.get("indexType") != null) {
+                customFieldTemplateDto.setIndexType(CustomFieldIndexTypeEnum.valueOf((String) values.get("indexType")));
             }
             customFieldTemplateDtos.add(customFieldTemplateDto);
         }
@@ -274,6 +279,7 @@ public class JSONSchemaIntoTemplateParser {
             customFieldTemplateDto.setDescription((String)values.get("description"));
             customFieldTemplateDto.setAllowEdit(!(Boolean) values.get("readOnly"));
             customFieldTemplateDto.setValueRequired(!(Boolean)values.get("nullable"));
+            customFieldTemplateDto.setVersionable((Boolean)values.get("versionable"));
             if (values.containsKey("storages")) {
                 List<String> storages = (List<String>) values.get("storages");
                 List<DBStorageType> storageList = new ArrayList<>();
@@ -322,6 +328,9 @@ public class JSONSchemaIntoTemplateParser {
             }
             if (values.get("maxLength") != null) {
                 customFieldTemplateDto.setMaxValue(Long.valueOf(values.get("maxLength").toString()));
+            }
+            if (values.get("indexType") != null) {
+                customFieldTemplateDto.setIndexType(CustomFieldIndexTypeEnum.valueOf((String) values.get("indexType")));
             }
             customFieldTemplateDtos.add(customFieldTemplateDto);
         }

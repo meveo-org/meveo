@@ -38,6 +38,10 @@ public abstract class Schema {
 
         private Boolean writeOnly = null;
 
+        private Boolean versionable = null;
+
+        private String indexType;
+
         private List<String> storages;
 
         public Builder<S> title(String title) {
@@ -85,6 +89,16 @@ public abstract class Schema {
             return this;
         }
 
+        public Builder<S> versionable(Boolean versionable) {
+            this.versionable = versionable;
+            return this;
+        }
+
+        public Builder<S> indexType(String indexType) {
+            this.indexType = indexType;
+            return this;
+        }
+
         public abstract S build();
 
     }
@@ -107,6 +121,10 @@ public abstract class Schema {
 
     private final Boolean writeOnly;
 
+    private final Boolean versionable;
+
+    private String indexType;
+
     /**
      * Constructor.
      *
@@ -123,6 +141,8 @@ public abstract class Schema {
         this.nullable = builder.nullable;
         this.readOnly = builder.readOnly;
         this.writeOnly = builder.writeOnly;
+        this.versionable = builder.versionable;
+        this.indexType = builder.indexType;
     }
 
     /**
@@ -199,7 +219,9 @@ public abstract class Schema {
                     Objects.equals(storages, schema.storages) &&
                     Objects.equals(nullable, schema.nullable) &&
                     Objects.equals(readOnly, schema.readOnly) &&
-                    Objects.equals(writeOnly, schema.writeOnly);
+                    Objects.equals(writeOnly, schema.writeOnly) &&
+                    Objects.equals(versionable, schema.versionable) &&
+                    Objects.equals(indexType, schema.indexType);
         } else {
             return false;
         }
@@ -207,7 +229,7 @@ public abstract class Schema {
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, description, id, storages, defaultValue, nullable, readOnly, writeOnly);
+        return Objects.hash(title, description, id, storages, defaultValue, nullable, readOnly, writeOnly, versionable, indexType);
     }
 
     public String getTitle() {
@@ -250,6 +272,10 @@ public abstract class Schema {
         return writeOnly;
     }
 
+    public Boolean isVersionable() { return versionable; }
+
+    public String getIndexType() { return indexType; }
+
     /**
      * Describes the instance as a JSONObject to {@code writer}.
      * <p>
@@ -271,6 +297,8 @@ public abstract class Schema {
         writer.ifPresent("nullable", nullable);
         writer.ifPresent("readOnly", readOnly);
         writer.ifPresent("writeOnly", writeOnly);
+        writer.ifPresent("versionable", versionable);
+        writer.ifPresent("indexType", indexType);
         describePropertiesTo(writer);
         writer.endObject();
     }
