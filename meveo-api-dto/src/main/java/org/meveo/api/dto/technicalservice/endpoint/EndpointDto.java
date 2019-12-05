@@ -28,6 +28,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Configuration of an endpoint allowing to use a technical service.
@@ -46,57 +47,67 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
      * Code of the technical service to update or create
      */
     @JsonProperty(required = true) @NotNull
+    @ApiModelProperty(required = true, value = "Code of the technical service")
     private String serviceCode;
 
     /**
      * Whether the endpoint should be synchronous
      */
     @JsonProperty(required = true) @NotNull
+    @ApiModelProperty(required = true, value = "synchronous")
     private boolean synchronous;
 
     /**
      * Method to use to access the endpoint
      */
     @JsonProperty(required = true) @NotNull
+    @ApiModelProperty(required = true, value = "Http method of the endpoint")
     private EndpointHttpMethod method;
 
     /**
      * Mapping for the technical service parameters that are not defined as path parameter
      */
     @JsonProperty(required = true) @NotNull
+    @ApiModelProperty(required = true, value = "Parameter mappings information")
     private List<TSParameterMappingDto> parameterMappings;
 
     /**
      * Ordered list of parameters that will construct endpoint path
      */
     @JsonProperty
+    @ApiModelProperty("List of endpoint path parameters")
     private List<String> pathParameters = new ArrayList<>();
 
     @JsonProperty
+    @ApiModelProperty("Roles")
     private List<String> roles = new ArrayList<>();
 
     /**
      * JSONata query used to transform the result
      */
     @JsonProperty
+    @ApiModelProperty("Transform the JSONata query")
     private String jsonataTransformer;
     
     /**
      * Context variable to be returned by the endpoint
      */
     @JsonProperty
+    @ApiModelProperty("Return context variable")
     private String returnedVariableName;
 
     /**
      * Whether to serialize the result of the endpoint if a returned variable has been specified
      */
     @JsonProperty
+    @ApiModelProperty("The serialize result of the endpoint")
     private boolean serializeResult;
     
     /**
      * Content type of the response
      */
     @JsonProperty
+    @ApiModelProperty("Content type")
     private String contentType;
     
     public String getContentType() {
