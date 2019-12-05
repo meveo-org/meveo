@@ -18,10 +18,10 @@ import org.meveo.api.dto.response.communication.MeveoInstancesResponseDto;
 import org.meveo.api.rest.IBaseRs;
 
 /**
- * 
- * @author Tyshan　Shi(tyshan@manaty.net)
+ * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  * @since Jun 4, 2016 4:05:47 AM
- *
  */
 @Path("/communication/meveoInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -31,61 +31,70 @@ public interface MeveoInstanceRs extends IBaseRs {
 
 	/**
 	 * Create a meveoInstance by dto.
-     *
+	 *
 	 * @param meveoInstanceDto meveo instance
 	 * @return action status
 	 */
 	@POST
-    @Path("/")
-    ActionStatus create(MeveoInstanceDto meveoInstanceDto);
+	@Path("/")
+	ActionStatus create(MeveoInstanceDto meveoInstanceDto);
 
 	/**
 	 * Update a meveoInstance by dto
-     *
+	 *
 	 * @param meveoInstanceDto
 	 * @return
 	 */
-    @PUT
-    @Path("/")
-    ActionStatus update(MeveoInstanceDto meveoInstanceDto);
+	@PUT
+	@Path("/")
+	ActionStatus update(MeveoInstanceDto meveoInstanceDto);
 
-    /**
-     * Find a meveoInstance by code
-     *
-     * @param code
-     * @return
-     */
-    @GET
-    @Path("/")
-    MeveoInstanceResponseDto find(@QueryParam("code") String code);
+	/**
+	 * Find a meveoInstance by code
+	 *
+	 * @param code
+	 * @return
+	 */
+	@GET
+	@Path("/")
+	MeveoInstanceResponseDto find(@QueryParam("code") String code);
 
-    /**
-     * Remove a meveoInstance by code
-     *
-     * @param code
-     * @return
-     */
-    @DELETE
-    @Path("/{code}")
-    ActionStatus remove(@PathParam("code") String code);
+	/**
+	 * Remove a meveoInstance by code
+	 *
+	 * @param code
+	 * @return
+	 */
+	@DELETE
+	@Path("/{code}")
+	ActionStatus remove(@PathParam("code") String code);
 
-    /**
-     * List meveoInstances
-     *
-     * @return
-     */
-    @GET
-    @Path("/list")
-    MeveoInstancesResponseDto list();
+	/**
+	 * List meveoInstances
+	 *
+	 * @return
+	 */
+	@GET
+	@Path("/list")
+	MeveoInstancesResponseDto list();
 
-    /**
-     * CreateOrUpdate a meveoInstance by dto
-     *
-     * @param meveoInstanceDto
-     * @return
-     */
-    @POST
-    @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(MeveoInstanceDto meveoInstanceDto);
+	/**
+	 * CreateOrUpdate a meveoInstance by dto
+	 *
+	 * @param meveoInstanceDto
+	 * @return
+	 */
+	@POST
+	@Path("/createOrUpdate")
+	ActionStatus createOrUpdate(MeveoInstanceDto meveoInstanceDto);
+
+	/**
+	 * Copy the remote maven repositories to this local meveo instance.
+	 * 
+	 * @param code code of the meveo instance
+	 * @return status of the response
+	 */
+	@PUT
+	@Path("/{code}/syncRepositories")
+	ActionStatus syncRepositories(@PathParam("code") String code);
 }
-

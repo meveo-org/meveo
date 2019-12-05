@@ -1,5 +1,14 @@
 package org.meveo.service.config.impl;
 
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -17,12 +26,6 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Manage the maven configuration.
  * 
@@ -32,8 +35,9 @@ import java.util.List;
  * mavenRepositories - list of maven repositories
  * </pre>
  * 
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ * @since 6.5.0
  */
 public class MavenConfigurationService implements Serializable {
 
@@ -47,7 +51,8 @@ public class MavenConfigurationService implements Serializable {
 
 	/**
 	 * @param currentUser Logged user
-	 * @return the maven directory relative to the file explorer directory for the user's provider
+	 * @return the maven directory relative to the file explorer directory for the
+	 *         user's provider
 	 */
 	public static String getM2Directory(MeveoUser currentUser) {
 		String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
@@ -90,21 +95,20 @@ public class MavenConfigurationService implements Serializable {
 
 	public RepositorySystem newRepositorySystem() {
 		DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-		locator.addService( RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class );
-		locator.addService( TransporterFactory.class, FileTransporterFactory.class );
-		locator.addService( TransporterFactory.class, HttpTransporterFactory.class );
-		return locator.getService( RepositorySystem.class );
+		locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
+		locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+		locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+		return locator.getService(RepositorySystem.class);
 	}
 
 	public RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
 		DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
-		LocalRepository localRepo = new LocalRepository( getM2FolderPath() );
-		session.setLocalRepositoryManager(system.newLocalRepositoryManager( session, localRepo ) );
+		LocalRepository localRepo = new LocalRepository(getM2FolderPath());
+		session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
 
 		return session;
 	}
-
 
 	public String createDirectory(String groupId, String artifactId, String version, String classifier) {
 		String m2Folder = getM2FolderPath();
@@ -140,5 +144,17 @@ public class MavenConfigurationService implements Serializable {
 			}
 		}
 		return m2Folder;
+	}
+
+	/**
+	 * Updates the list of local maven repositories.
+	 * 
+	 * @param remoteRepositories remote repositories to add
+	 */
+	public void updateRepository(List<String> remoteRepositories) {
+
+		Set<String> localRepos = new HashSet<>(getMavenRepositories());
+		localRepos.addAll(remoteRepositories);
+		setMavenRepositories(new ArrayList<>(localRepos));
 	}
 }
