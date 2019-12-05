@@ -154,13 +154,19 @@ public class EndpointBean extends BaseBean<Endpoint> {
     public void onFunctionChange() {
         List<FunctionIO> functionIOList = entity.getService().getOutputs();
     	if (CollectionUtils.isNotEmpty(functionIOList)) {
-    	    for (FunctionIO functionIO : functionIOList) {
-    	        if (entity.getReturnedVariableName() != null && entity.getReturnedVariableName().equals(functionIO.getName())
-                        && functionIO.getType().startsWith("Map")) {
-                    entity.setSerializeResult(true);
-                    break;
-                }
-            }
+    		if(entity.getReturnedVariableName() != null) {
+	    	    for (FunctionIO functionIO : functionIOList) {
+	    	        if (entity.getReturnedVariableName().equals(functionIO.getName())) {
+	    	        	if(functionIO.getType().startsWith("Map")) {
+	    	        		entity.setSerializeResult(true);
+	    	        	} else {
+	    	        		entity.setSerializeResult(false);
+	    	        	}
+	    	        	
+	                    break;
+	                }
+	            }
+    		}
         }
     }
 
