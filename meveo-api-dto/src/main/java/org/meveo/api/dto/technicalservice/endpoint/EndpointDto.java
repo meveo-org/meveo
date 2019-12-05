@@ -86,28 +86,28 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
      * JSONata query used to transform the result
      */
     @JsonProperty
-    @ApiModelProperty("Transform the JSONata query")
+    @ApiModelProperty("JSONata query to transform the serialized result")
     private String jsonataTransformer;
     
     /**
      * Context variable to be returned by the endpoint
      */
     @JsonProperty
-    @ApiModelProperty("Return context variable")
+    @ApiModelProperty("Name of the returned context variable")
     private String returnedVariableName;
 
     /**
      * Whether to serialize the result of the endpoint if a returned variable has been specified
      */
     @JsonProperty
-    @ApiModelProperty("The serialize result of the endpoint")
+    @ApiModelProperty("Whether to serialize the result of the endpoint")
     private boolean serializeResult;
     
     /**
      * Content type of the response
      */
     @JsonProperty
-    @ApiModelProperty("Content type")
+    @ApiModelProperty("Content type of the response")
     private String contentType;
     
     public String getContentType() {
