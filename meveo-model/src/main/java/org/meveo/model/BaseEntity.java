@@ -47,7 +47,7 @@ import org.meveo.model.persistence.JsonStringType;
         @TypeDef(name = "jsonList", typeClass = JsonListType.class)
 })
 @MappedSuperclass
-public abstract class BaseEntity implements Serializable, IEntity, IJPAVersionedEntity {
+public abstract class BaseEntity implements Serializable, IEntity<Long>, IJPAVersionedEntity {
     private static final long serialVersionUID = 1L;
 
     public static final int NB_PRECISION = 23;

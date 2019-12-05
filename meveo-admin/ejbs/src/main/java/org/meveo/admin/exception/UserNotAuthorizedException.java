@@ -28,5 +28,9 @@ public class UserNotAuthorizedException extends RuntimeException {
 	public UserNotAuthorizedException(String username) {
 		super("User with username '" + username + "' does not have access to this resource.");
 	}
+	
+	public UserNotAuthorizedException() {
+		super("User is not allowed to access this ressource.");
+	}
 
 }

@@ -9,7 +9,7 @@ import org.meveo.model.IEntity;
  * 
  * @author andrius
  */
-abstract class BaseDataModelDto extends BusinessEntityDto implements IEntity {
+abstract class BaseDataModelDto extends BusinessEntityDto implements IEntity<Long> {
 
     /**
      * Instantiates a new base data model dto.

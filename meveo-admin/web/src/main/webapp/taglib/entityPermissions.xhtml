@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:p="http://primefaces.org/ui" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:o="http://omnifaces.org/ui" xmlns:hftl="http://hftl.org"
+    xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions">
+
+<ui:composition>
+
+	<p:dataTable id="entityPermission_#{permission}" editMode="cell" editable="true" var="item" filterDelay="0" scrollable="true" scrollHeight="150" value="#{entityPermissionBean.getPermissionsByRole(permission, entityId)}">
+		<f:facet name="header">
+			<h:outputText style="display: block; margin: 0 auto" value="Roles with #{permission} permission"/>
+		</f:facet>
+	    <p:column headerText="Role name" filterBy="#{item.role.name}" filterMatchMode="contains">
+	    	<h:outputText value="#{item.role.name}"/>
+    	</p:column>
+	    <p:column headerText="Access to entity">
+	    	<p:cellEditor>
+	    		<f:facet name="input">
+	    			<p:triStateCheckbox value="#{item.state}"/>
+    			</f:facet>
+	    		<f:facet name="output">
+	    			<p:triStateCheckbox value="#{item.state}" disabled="true"/>
+    			</f:facet>
+	    	</p:cellEditor>
+    	</p:column>
+	</p:dataTable>
+
+</ui:composition>
+</html>

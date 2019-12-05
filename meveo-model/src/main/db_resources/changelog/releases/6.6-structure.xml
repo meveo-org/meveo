@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+  ~ even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+  ~ not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+  ~ General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+    <changeSet id="3966" author="Clément Bareth">
+        <createTable tableName="adm_permission_category">
+            <column name="id" type="varchar(255)" >
+                <constraints nullable="false" primaryKey="true" primaryKeyName="adm_permission_category_pk"/>
+            </column>
+        </createTable>
+        
+        <addColumn tableName="adm_permission">
+        	<column name="category" type="varchar(255)">
+        		<constraints referencedTableName="adm_permission_category" referencedColumnNames="id" foreignKeyName="adm_permission_category_fk"/>
+        	</column>
+        </addColumn>
+    </changeSet>
+    
+     <changeSet id="3966 - EntityPermission" author="Clément Bareth">
+     
+     	<!--  
+     		  As permission name was not unique previously, we should remove duplicated data that is linked to nothin
+    		  If even after this, some duplicated permission remains, you will need to repair the data by hand in the database before runnning this patch
+     	 -->
+     	<sql>
+     		DELETE FROM adm_permission p1
+			WHERE (SELECT COUNT(p2.permission) FROM adm_permission p2 WHERE p1.permission = p2.permission) > 1
+			AND NOT EXISTS (SElECT 1 FROM adm_role_permission arp WHERE arp.permission_id = p1.id)
+		</sql>
+     
+     	<addUniqueConstraint columnNames="permission" tableName="adm_permission"/>
+        <createTable tableName="entity_permission">
+            <column name="role_id" type="bigint" >
+                <constraints nullable="false" foreignKeyName="entity_permission_role_fk" referencedColumnNames="id" referencedTableName="adm_role"/>
+            </column>
+            <column name="permission" type="varchar(255)">
+            	<constraints nullable="false" foreignKeyName="entity_permission_permission_fk" referencedColumnNames="permission" referencedTableName="adm_permission"/>
+            </column>
+            <column name="entity_id" type="varchar(255)">
+            	<constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addPrimaryKey tableName="entity_permission" columnNames="role_id,permission,entity_id"/>
+    </changeSet>
+    
+    <changeSet id="3966 - EntityPermission - Add type column" author="Clément Bareth">
+     
+     	<addColumn tableName="entity_permission">
+     		<column name="type" type="varchar(255)" defaultValue="BLACK">
+     			<constraints nullable="false"/>
+     		</column>
+     	</addColumn>
+     	
+    </changeSet>
+    
+    <changeSet id="3966 - Add gitAdmin role and set role name unique" author="Clément Bareth">
+     	<addUniqueConstraint columnNames="role_name" tableName="adm_role" constraintName="adm_role_name_uk"/>
+     	
+ 	    <insert tableName="adm_role">
+            <column name="id" valueNumeric="-7" />
+            <column name="version" valueNumeric="0" />
+            <column name="role_description" value="Git administrator" />
+            <column name="role_name" value="gitAdmin" />
+        </insert>
+        
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+            <column name="child_role_id" value="-1" />
+        </insert>
+        
+        <insert tableName="adm_permission_category">
+            <column name="id" value="GIT" />
+        </insert>
+        
+        <insert tableName="adm_permission">
+            <column name="id" valueNumeric="-31" />
+            <column name="name" value="Git write" />
+            <column name="permission" value="git-write" />
+            <column name="category" value="GIT" />
+        </insert>
+        
+       	<insert tableName="adm_permission">
+            <column name="id" valueNumeric="-32" />
+            <column name="name" value="Git read" />
+            <column name="permission" value="git-read" />
+            <column name="category" value="GIT" />
+        </insert>
+        
+         <insert tableName="adm_role_permission">
+            <column name="role_id" valueNumeric="-7" />
+            <column name="permission_id" valueNumeric="-31" />
+        </insert>
+        
+        <insert tableName="adm_role_permission">
+            <column name="role_id" valueNumeric="-7" />
+            <column name="permission_id" valueNumeric="-32" />
+        </insert>
+     	
+    </changeSet>
+    
+    <changeSet id = "#3966 - Fix stackoverflow" author="Clément Bareth">
+    	<delete tableName="adm_role_role">
+    		<where>
+    			<column name="role_id" valueNumeric="-1" />
+            	<column name="child_role_id" value="-1" />
+    		</where>
+    	</delete>
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+          	<column name="child_role_id" value="-7" />
+        </insert>
+    </changeSet>
+    
+    <changeSet id = "#3966 - Add permission_id column to entity permision" author="Clément Bareth">
+		<addColumn tableName="entity_permission">
+     		<column name="permission_id" type="bigint">
+     			<constraints nullable="false" foreignKeyName="entity_permission_permission_id_fk" referencedColumnNames="id" referencedTableName="adm_permission"/>
+     		</column>
+     	</addColumn>
+     	
+    </changeSet>
+    
+</databaseChangeLog>

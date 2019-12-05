@@ -6,7 +6,7 @@ import java.util.Map;
 import org.meveo.model.IEntity;
 import org.meveo.model.ISearchable;
 
-public class CustomTableRecord implements Serializable, IEntity, ISearchable {
+public class CustomTableRecord implements Serializable, IEntity<Long>, ISearchable {
 
     private static final long serialVersionUID = 6342962203104643392L;
 
