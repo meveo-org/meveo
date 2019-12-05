@@ -316,7 +316,7 @@ public class NativePersistenceService extends BaseService {
 
 				} else {
 					fieldValues.append(" ? ");
-					findIdFields.append(fieldName).append(" ? ");
+					findIdFields.append(fieldName).append(" = :").append(fieldName);
 				}
 				first = false;
 			}

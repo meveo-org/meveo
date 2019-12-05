@@ -48,8 +48,8 @@
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
             <hftl:formField id="parentRepositoryId" label="#{messages['repository.parentRepository']}" field="parentRepository" 
             	valueLabelField="code" popup="true" popupId="parentRepositoryPopup" />
-           	<hftl:formField label="#{messages['repository.neo4jConfiguration']}" field="neo4jConfiguration" 
-            	valueField="id" valueLabelField="code" popup="false" listBean="#{neo4jConfigurationBean}" />
+           	<hftl:formField label="#{messages['repository.neo4jConfiguration']}" field="neo4jConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{neo4jConfigurationBean}" />
+            <hftl:formField label="#{messages['repository.sqlConfiguration']}" field="sqlConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{sqlConfigurationBean}" />
             <hftl:formField label="#{messages['repository.path']}" field="path" disabled="true" required="false" />
            	<hftl:formField id="binaryStorageConfigurationId" label="#{messages['binaryStorageConfiguration.title']}" field="binaryStorageConfiguration" 
             	valueLabelField="code" popup="true" popupId="binaryStorageConfigurationPopup" />
