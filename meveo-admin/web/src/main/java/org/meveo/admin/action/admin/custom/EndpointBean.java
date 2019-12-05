@@ -5,6 +5,7 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -244,10 +245,11 @@ public class EndpointBean extends BaseBean<Endpoint> {
         boolean isError = false;
         if (parameterMappings != null) {
             for (TSParameterMapping param : parameterMappings) {
-                if (param.getDefaultValue() == null) {
-                    messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
-
-                    isError = true;
+                if (StringUtils.isBlank(param.getParameterName())) {
+                    if (param.getDefaultValue() == null) {
+                        messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
+                        isError = true;
+                    }
                 }
             }
         }
