@@ -48,7 +48,7 @@ public class MavenConfigurationBean implements Serializable {
 	private MavenConfigurationService mavenConfigurationService;
 
 	private MavenConfigurationDto mavenConfiguration;
-
+	
 	private String groupId;
 	private String artifactId;
 	private String version;

@@ -49,7 +49,7 @@
 				</h:panelGrid>
 
 				<h:panelGroup layout="block" styleClass="form-panel-actions">
-					<p:commandButton action="#{mavenConfigurationBean.save}" immediate="true"
+					<p:commandButton action="#{mavenConfigurationBean.save}" immediate="false" process="@this mavenRepositories"
 									 update="mavenConfigurationForm" value="#{messages['action.save']}"/>
 				</h:panelGroup>
 			</h:form>
