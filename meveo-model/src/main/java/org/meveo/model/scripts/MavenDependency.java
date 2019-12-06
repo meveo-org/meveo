@@ -4,14 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import org.meveo.commons.utils.StringUtils;
@@ -24,6 +17,7 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 @Entity
 @Table(name = "maven_dependency")
 @IdClass(MavenDependencyPk.class)
+@EntityListeners(JPAtoCDIListener.class)
 public class MavenDependency implements Serializable {
 
 	private static final long serialVersionUID = 4010437441199195133L;

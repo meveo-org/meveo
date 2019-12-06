@@ -46,7 +46,7 @@ public class GitHelper {
      * @return the git directory relative to the file explorer directory for the user's provider
      */
     public static String getGitDirectory(MeveoUser currentUser) {
-        String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
+        String rootDir = ParamBean.getInstance().getChrootDir(currentUser != null ? currentUser.getProviderCode() : null);
         return rootDir + GIT_DIR;
     }
 
