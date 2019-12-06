@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.RepositoriesResponseDto;
 import org.meveo.api.dto.response.storage.RepositoryResponseDto;
@@ -34,7 +35,7 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/")
-	ActionStatus create(RepositoryDto postData);
+	ActionStatus create(@ApiParam("Repository information") RepositoryDto postData);
 
 	/**
 	 * Update an existing repository
@@ -44,7 +45,7 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 */
 	@PUT
 	@Path("/")
-	ActionStatus update(RepositoryDto postData);
+	ActionStatus update(@ApiParam("Repository information") RepositoryDto postData);
 
 	/**
 	 * Create new or update an existing repository
@@ -54,14 +55,14 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
-	ActionStatus createOrUpdate(RepositoryDto postData);
+	ActionStatus createOrUpdate(@ApiParam("Repository information") RepositoryDto postData);
 
 	/**
 	 * Search for repository with a given code
 	 */
 	@GET
 	@Path("/{code}")
-	RepositoryResponseDto find(@PathParam("code") String code);
+	RepositoryResponseDto find(@PathParam("code") @ApiParam("Code of the repository") String code);
 
 	/**
 	 * List repository
@@ -81,6 +82,6 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code, @QueryParam("forceDelete") Boolean forceDelete);
+	public ActionStatus remove(@PathParam("code") @ApiParam("Code of the repository") String code, @QueryParam("forceDelete") @ApiParam("Whether to delete the children of the repository") Boolean forceDelete);
 	
 }

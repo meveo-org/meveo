@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CalendarDto;
 import org.meveo.api.dto.response.GetCalendarResponse;
@@ -33,7 +34,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @POST
-    ActionStatus create(CalendarDto postData);
+    ActionStatus create(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
      * Update calendar.
@@ -43,7 +44,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @PUT
-    ActionStatus update(CalendarDto postData);
+    ActionStatus update(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
      * Search for calendar with a given code.
@@ -53,7 +54,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @GET
-    GetCalendarResponse find(@QueryParam("calendarCode") String calendarCode);
+    GetCalendarResponse find(@QueryParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
      * Retrieve a list of all calendars.
@@ -70,7 +71,7 @@ public interface CalendarRs extends IBaseRs {
      * @return action result
      */
     @Path("/{calendarCode}")
-    @DELETE ActionStatus remove(@PathParam("calendarCode") String calendarCode);
+    @DELETE ActionStatus remove(@PathParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
      * Create new or update an existing calendar with a given code.
@@ -79,6 +80,6 @@ public interface CalendarRs extends IBaseRs {
      * @return Request processing status
      */
     @Path("/createOrUpdate")
-    @POST ActionStatus createOrUpdate(CalendarDto postData);
+    @POST ActionStatus createOrUpdate(@ApiParam("Calendar information") CalendarDto postData);
 
 }

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CurrencyIsoDto;
 import org.meveo.api.dto.response.GetCurrenciesIsoResponse;
@@ -34,7 +35,7 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @POST
-    @Path("/") ActionStatus create(CurrencyIsoDto currencyIsoDto);
+    @Path("/") ActionStatus create(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * Search currency with a given currency code.
@@ -43,7 +44,7 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return currency iso if found.
      */
     @GET
-    @Path("/") GetCurrencyIsoResponse find(@QueryParam("currencyCode") String currencyCode);
+    @Path("/") GetCurrencyIsoResponse find(@QueryParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
      * Remove currency with a given currency code.
@@ -52,7 +53,7 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @DELETE
-    @Path("/{currencyCode}") ActionStatus remove(@PathParam("currencyCode") String currencyCode);
+    @Path("/{currencyCode}") ActionStatus remove(@PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
      * Modify a tradingCurrency. Same input parameter as create. The currency and tradingCurrency are created if they don't exists. The operation fails if the tradingCurrency is
@@ -62,14 +63,14 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @PUT
-    @Path("/") ActionStatus update(CurrencyIsoDto currencyIsoDto);
+    @Path("/") ActionStatus update(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * @param currencyIsoDto currency iso to create or update
      * @return action status.
      */
     @POST
-    @Path("/createOrUpdate") ActionStatus createOrUpdate(CurrencyIsoDto currencyIsoDto);
+    @Path("/createOrUpdate") ActionStatus createOrUpdate(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * List all currencies.

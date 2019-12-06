@@ -9,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.finance.ReportExtractDto;
 import org.meveo.api.dto.response.finance.ReportExtractResponseDto;
@@ -29,19 +30,19 @@ public interface ReportExtractRs extends IBaseRs {
 
     @POST
     @Path("/")
-    ActionStatus create(ReportExtractDto postData);
+    ActionStatus create(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/")
-    ActionStatus update(ReportExtractDto postData);
+    ActionStatus update(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(ReportExtractDto postData);
+    ActionStatus createOrUpdate(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @DELETE
     @Path("/")
-    ActionStatus remove(String reportExtractCode);
+    ActionStatus remove(@ApiParam("Code of the report extract") String reportExtractCode);
 
     @GET
     @Path("/list")
@@ -49,10 +50,10 @@ public interface ReportExtractRs extends IBaseRs {
 
     @GET
     @Path("/")
-    ReportExtractResponseDto find(@QueryParam("reportExtractCode") String reportExtractCode);
+    ReportExtractResponseDto find(@QueryParam("reportExtractCode") @ApiParam("Code of the report extract") String reportExtractCode);
 
     @POST
     @Path("/run")
-    ActionStatus runReport(RunReportExtractDto postData);
+    ActionStatus runReport(@ApiParam("Run report extract information") RunReportExtractDto postData);
 
 }

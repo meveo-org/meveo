@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.JobTriggerDto;
 import org.meveo.api.dto.response.notification.GetJobTriggerResponseDto;
@@ -33,7 +34,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(JobTriggerDto postData);
+    ActionStatus create(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
      * Update an existing job trigger
@@ -43,7 +44,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(JobTriggerDto postData);
+    ActionStatus update(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
      * Find a job trigger with a given code 
@@ -53,7 +54,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetJobTriggerResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    GetJobTriggerResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
      * Remove an existing job trigger with a given code 
@@ -63,7 +64,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
      * Create new or update an existing job trigger with a given code
@@ -73,5 +74,5 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(JobTriggerDto postData);
+    ActionStatus createOrUpdate(@ApiParam("Job trigger information") JobTriggerDto postData);
 }

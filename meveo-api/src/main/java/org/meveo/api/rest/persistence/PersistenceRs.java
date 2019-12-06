@@ -32,6 +32,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -112,7 +113,7 @@ public class PersistenceRs {
     @Path("/{cetCode}/list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
+    public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
@@ -134,7 +135,7 @@ public class PersistenceRs {
 
     @DELETE
     @Path("/{cetCode}/{uuid}")
-    public Response delete(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws BusinessException {
+    public Response delete(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
@@ -153,7 +154,7 @@ public class PersistenceRs {
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> get(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
+    public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException();
@@ -169,7 +170,7 @@ public class PersistenceRs {
 
     @PUT
     @Path("/{cetCode}/{uuid}")
-    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
+    public void update(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid, @ApiParam("Map of body") Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException();
@@ -477,7 +478,7 @@ public class PersistenceRs {
     @Path("/{cetCode}/examples")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+    public List<Map<String, String>> listExamples(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @ApiParam("Pagination configuration") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
         List<Map<String, String>> listExamples = customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
         Collections.shuffle(listExamples);
         return listExamples;

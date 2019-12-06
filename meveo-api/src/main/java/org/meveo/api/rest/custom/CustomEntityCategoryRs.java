@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomEntityCategoryDto;
 import org.meveo.api.dto.response.CustomEntityCategoriesResponseDto;
@@ -34,7 +35,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/entity")
-	ActionStatus create(CustomEntityCategoryDto postData);
+	ActionStatus create(@ApiParam("Custom entity category information") CustomEntityCategoryDto postData);
 
 	/**
 	 * Update an existing {@linkplain CustomEntityCategory}
@@ -44,7 +45,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
 	 */
 	@PUT
 	@Path("/entity")
-	ActionStatus update(CustomEntityCategoryDto postData);
+	ActionStatus update(@ApiParam("Custom entity category information") CustomEntityCategoryDto postData);
 	
     /**
      * Define new or update existing custom entity category definition
@@ -54,14 +55,14 @@ public interface CustomEntityCategoryRs extends IBaseRs {
      */
     @POST
     @Path("/entity/createOrUpdate")
-    public ActionStatus createOrUpdateEntityCategory(CustomEntityCategoryDto dto);
+    public ActionStatus createOrUpdateEntityCategory(@ApiParam("Custom entity category information") CustomEntityCategoryDto dto);
 
     /**
 	 * Search for {@linkplain CustomEntityCategory} with a given code
 	 */
 	@GET
 	@Path("/entity/{code}")
-	CustomEntityCategoryResponseDto find(@PathParam("code") String code);
+	CustomEntityCategoryResponseDto find(@PathParam("code") @ApiParam("Code of the custom entity category") String code);
 
 	/**
 	 * List {@linkplain CustomEntityCategory}
@@ -70,7 +71,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/entity/list")
-	CustomEntityCategoriesResponseDto list(PagingAndFiltering pagingAndFiltering);
+	CustomEntityCategoriesResponseDto list(@ApiParam("Paging and filtering information") PagingAndFiltering pagingAndFiltering);
     
 	/**
      * Remove custom entity category definition given its code
@@ -80,7 +81,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
      */
     @DELETE
     @Path("/entity/{customEntityCategoryCode}")
-    public ActionStatus removeEntityCategory(@PathParam("customEntityCategoryCode") String customEntityCategoryCode, @DefaultValue("false") @QueryParam("deleteRelatedTemplates") boolean deleteRelatedTemplates);
+    public ActionStatus removeEntityCategory(@PathParam("customEntityCategoryCode") @ApiParam("Code of the custom entity category") String customEntityCategoryCode, @DefaultValue("false") @QueryParam("deleteRelatedTemplates") @ApiParam("Whether to delete the related templates") boolean deleteRelatedTemplates);
 
 }
 

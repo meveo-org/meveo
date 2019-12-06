@@ -10,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.job.JobInstanceDto;
 import org.meveo.api.dto.response.job.JobInstanceResponseDto;
@@ -34,7 +35,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/create")
     @POST
-    ActionStatus create(JobInstanceDto postData);
+    ActionStatus create(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
      * Update an existing job instance
@@ -44,7 +45,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/update")
     @POST
-    ActionStatus update(JobInstanceDto postData);
+    ActionStatus update(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
      * Create new or update an existing job instance with a given code
@@ -54,7 +55,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/createOrUpdate")
     @POST
-    ActionStatus createOrUpdate(JobInstanceDto postData);
+    ActionStatus createOrUpdate(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
      * Find a job instance with a given code 
@@ -64,7 +65,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/")
     @GET
-    JobInstanceResponseDto find(@QueryParam("jobInstanceCode") String jobInstanceCode);
+    JobInstanceResponseDto find(@QueryParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
     /**
      * Remove an existing job instance with a given code 
@@ -74,6 +75,6 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/{jobInstanceCode}")
     @DELETE
-    ActionStatus remove(@PathParam("jobInstanceCode") String jobInstanceCode);
+    ActionStatus remove(@PathParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
 }

@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.admin.GetFilesResponseDto;
@@ -28,35 +29,35 @@ public interface FilesRs extends IBaseRs {
 
 	@GET
 	@Path("/")
-	GetFilesResponseDto listFiles(@QueryParam("dir") String dir);
+	GetFilesResponseDto listFiles(@QueryParam("dir") @ApiParam("Whether to directory the file") String dir);
 
 	@POST
 	@Path("/createDir")
-	ActionStatus createDir(String dir);
+	ActionStatus createDir(@ApiParam("Whether to directory the file") String dir);
 
 	@POST
 	@Path("/zipFile")
-	ActionStatus zipFile(String file);
+	ActionStatus zipFile(@ApiParam("File to be zipped") String file);
 
 	@POST
 	@Path("/zipDirectory")
-	ActionStatus zipDir(String dir);
+	ActionStatus zipDir(@ApiParam("Directory to be zipped") String dir);
 
 	@POST
 	@Path("/suppressFile")
-	ActionStatus suppressFile(String file);
+	ActionStatus suppressFile(@ApiParam("File to be suppressed") String file);
 
 	@POST
 	@Path("/suppressDirectory")
-	ActionStatus suppressDir(String dir);
+	ActionStatus suppressDir(@ApiParam("Directory to be suppressed") String dir);
 	
 	@POST
 	@Path("/upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	ActionStatus uploadFile(@MultipartForm FileUploadForm form);
+	ActionStatus uploadFile(@MultipartForm @ApiParam("Upload form") FileUploadForm form);
 	
 	@GET
 	@Path("/downloadFile")
-	ActionStatus downloadFile(@QueryParam("file") String file);
+	ActionStatus downloadFile(@QueryParam("file") @ApiParam("File to be downloaded") String file);
 
 }

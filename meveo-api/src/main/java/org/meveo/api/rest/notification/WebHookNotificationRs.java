@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.WebHookDto;
 import org.meveo.api.dto.response.notification.GetWebHookNotificationResponseDto;
@@ -33,7 +34,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(WebHookDto postData);
+    ActionStatus create(@ApiParam("Web hook information") WebHookDto postData);
 
     /**
      * Update an existing web hook notification
@@ -43,7 +44,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(WebHookDto postData);
+    ActionStatus update(@ApiParam("Web hook information") WebHookDto postData);
 
     /**
      * Find a web hook notification with a given code 
@@ -53,7 +54,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetWebHookNotificationResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    GetWebHookNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the web hook") String notificationCode);
 
     /**
      * Remove an existing web hook notification with a given code 
@@ -63,7 +64,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the web hook") String notificationCode);
 
     /**
      * Create new or update an existing web hook notification with a given code
@@ -73,5 +74,5 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(WebHookDto postData);
+    ActionStatus createOrUpdate(@ApiParam("Web hook information") WebHookDto postData);
 }

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.response.GetScriptInstanceResponseDto;
@@ -33,7 +34,7 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ScriptInstanceReponseDto create(ScriptInstanceDto postData);
+    ScriptInstanceReponseDto create(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 
     /**
      * Update an existing script instance.
@@ -43,7 +44,7 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ScriptInstanceReponseDto update(ScriptInstanceDto postData);
+    ScriptInstanceReponseDto update(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 
     /**
      * Remove an existing script instance with a given code .
@@ -53,7 +54,7 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @DELETE
     @Path("/{scriptInstanceCode}")
-    ActionStatus remove(@PathParam("scriptInstanceCode") String scriptInstanceCode);
+    ActionStatus remove(@PathParam("scriptInstanceCode") @ApiParam("Code of the script instance") String scriptInstanceCode);
 
     /**
      * Find a script instance with a given code.
@@ -63,7 +64,7 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetScriptInstanceResponseDto find(@QueryParam("scriptInstanceCode") String scriptInstanceCode);
+    GetScriptInstanceResponseDto find(@QueryParam("scriptInstanceCode") @ApiParam("Code of the script instance") String scriptInstanceCode);
 
     /**
      * Create new or update an existing script instance with a given code.
@@ -73,5 +74,5 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ScriptInstanceReponseDto createOrUpdate(ScriptInstanceDto postData);
+    ScriptInstanceReponseDto createOrUpdate(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 }

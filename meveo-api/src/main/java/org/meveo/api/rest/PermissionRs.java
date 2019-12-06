@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.response.PermissionResponseDto;
 
 @Path("/permission")
@@ -28,17 +29,17 @@ public interface PermissionRs extends IBaseRs {
     
     @Path("/whitelist")
     @PUT
-    void addToWhiteList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    void addToWhiteList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id, @FormParam("role") @ApiParam("Role") String role);
     
     @Path("/blacklist")
     @PUT
-    void addToBlackList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    void addToBlackList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id, @FormParam("role") @ApiParam("Role") String role);
     
     @Path("/whitelist")
     @DELETE
-    void removeFromWhiteList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    void removeFromWhiteList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id, @FormParam("role") @ApiParam("Role") String role);
     
     @Path("/blacklist")
     @DELETE
-    void removeFromBlackList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    void removeFromBlackList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id, @FormParam("role") @ApiParam("Role") String role);
 }

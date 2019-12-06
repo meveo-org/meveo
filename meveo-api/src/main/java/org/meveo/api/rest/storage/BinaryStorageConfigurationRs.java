@@ -10,6 +10,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationsResponseDto;
@@ -29,7 +30,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/")
-	ActionStatus create(BinaryStorageConfigurationDto postData);
+	ActionStatus create(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
 	 * Update an existing binary storage
@@ -39,7 +40,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@PUT
 	@Path("/")
-	ActionStatus update(BinaryStorageConfigurationDto postData);
+	ActionStatus update(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
 	 * Create new or update an existing binary storage
@@ -49,14 +50,14 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
-	ActionStatus createOrUpdate(BinaryStorageConfigurationDto postData);
+	ActionStatus createOrUpdate(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
 	 * Search for binary storage with a given code
 	 */
 	@GET
 	@Path("/{code}")
-	BinaryStorageConfigurationResponseDto find(@PathParam("code") String code);
+	BinaryStorageConfigurationResponseDto find(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 	/**
 	 * List binary storage
@@ -75,6 +76,6 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code);
+	public ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 }

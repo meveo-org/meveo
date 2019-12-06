@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.dwh.GetListMeasurableQuantityResponse;
 import org.meveo.api.dto.dwh.GetMeasurableQuantityResponse;
@@ -34,7 +35,7 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(MeasurableQuantityDto postData);
+    ActionStatus create(@ApiParam("Measurable quantity information") MeasurableQuantityDto postData);
 
     /**
      * Update Measurable quantity from mesearable quantities.
@@ -44,7 +45,7 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(MeasurableQuantityDto postData);
+    ActionStatus update(@ApiParam("Measurable quantity information") MeasurableQuantityDto postData);
 
     /**
      * Get Measurable quantity from a given code.
@@ -54,7 +55,7 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetMeasurableQuantityResponse find(@QueryParam("code") String code);
+    GetMeasurableQuantityResponse find(@QueryParam("code") @ApiParam("Code of the measureable quantity") String code);
 
     /**
      * 
@@ -67,8 +68,8 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @GET
     @Path("/findMVByDateAndPeriod")
-    Response findMVByDateAndPeriod(@QueryParam("code") String code, @QueryParam("fromDate") @RestDateParam Date fromDate, @QueryParam("toDate") @RestDateParam Date toDate,
-            @QueryParam("period") MeasurementPeriodEnum period, @QueryParam("mqCode") String mqCode);
+    Response findMVByDateAndPeriod(@QueryParam("code") @ApiParam("Code of mesurable value") String code, @QueryParam("fromDate") @ApiParam("From date") @RestDateParam Date fromDate, @QueryParam("toDate") @ApiParam("To date") @RestDateParam Date toDate,
+            @QueryParam("period") @ApiParam("Period in which mesurable value is calculated") MeasurementPeriodEnum period, @QueryParam("mqCode") @ApiParam("Code of the measureable quantity") String mqCode);
 
     /**
      * Remove Measurable quantity with a given code.
@@ -78,7 +79,7 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @Path("/{code}")
     @DELETE
-    ActionStatus remove(@PathParam("code") String code);
+    ActionStatus remove(@PathParam("code") @ApiParam("Code of the measurable quantity") String code);
 
     /**
      * List Measurable quantity with a given code.

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.communication.MeveoInstanceDto;
 import org.meveo.api.dto.response.communication.MeveoInstanceResponseDto;
@@ -37,7 +38,7 @@ public interface MeveoInstanceRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
-    ActionStatus create(MeveoInstanceDto meveoInstanceDto);
+    ActionStatus create(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 
 	/**
 	 * Update a meveoInstance by dto
@@ -47,7 +48,7 @@ public interface MeveoInstanceRs extends IBaseRs {
 	 */
     @PUT
     @Path("/")
-    ActionStatus update(MeveoInstanceDto meveoInstanceDto);
+    ActionStatus update(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 
     /**
      * Find a meveoInstance by code
@@ -57,7 +58,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    MeveoInstanceResponseDto find(@QueryParam("code") String code);
+    MeveoInstanceResponseDto find(@QueryParam("code") @ApiParam("Code of the meveo instance") String code);
 
     /**
      * Remove a meveoInstance by code
@@ -67,7 +68,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("code") String code);
+    ActionStatus remove(@PathParam("code") @ApiParam("Code of the meveo instance") String code);
 
     /**
      * List meveoInstances
@@ -86,6 +87,6 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(MeveoInstanceDto meveoInstanceDto);
+    ActionStatus createOrUpdate(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 }
 

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.payment.WorkflowDto;
 import org.meveo.api.dto.wf.WorkflowHistoryResponseDto;
@@ -32,7 +33,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(WorkflowDto workflowDto);
+    ActionStatus create(@ApiParam("Workflow information") WorkflowDto workflowDto);
     
     /**
      * Update an existing workflow
@@ -42,7 +43,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(WorkflowDto workflowDto);
+    ActionStatus update(@ApiParam("Workflow information") WorkflowDto workflowDto);
 
     /**
      * Find a workflow with a given code 
@@ -52,7 +53,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    WorkflowResponseDto find(@QueryParam("code") String code);
+    WorkflowResponseDto find(@QueryParam("code") @ApiParam("Code of the workflow") String code);
 
     /**
      * Remove an existing workflow with a given code 
@@ -62,7 +63,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("code") String code);
+    ActionStatus remove(@PathParam("code") @ApiParam("Code of the workflow") String code);
 
     /**
      * List of workflows.
@@ -81,7 +82,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(WorkflowDto workflowDto);
+    ActionStatus createOrUpdate(@ApiParam("Workflow information") WorkflowDto workflowDto);
     
     /**
      * Execute a workflow
@@ -93,7 +94,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @POST
     @Path("/execute")
-    ActionStatus execute(@QueryParam("baseEntityName") String baseEntityName, @QueryParam("entityInstanceCode") String entityInstanceCode,@QueryParam("workflowCode") String workflowCode);
+    ActionStatus execute(@QueryParam("baseEntityName") @ApiParam("Name of the base entity") String baseEntityName, @QueryParam("entityInstanceCode") @ApiParam("Code of the entity instance") String entityInstanceCode,@QueryParam("workflowCode") @ApiParam("Code of the workflow") String workflowCode);
     
     /**
      * Find a workflow by entity
@@ -103,7 +104,7 @@ public interface WorkflowRs extends IBaseRs {
      */
     @GET
     @Path("/findByEntity")
-    WorkflowsResponseDto findByEntity(@QueryParam("baseEntityName") String baseEntityName);
+    WorkflowsResponseDto findByEntity(@QueryParam("baseEntityName") @ApiParam("Name of the base entity") String baseEntityName);
     
     /**
      * Find workflow history
@@ -116,8 +117,8 @@ public interface WorkflowRs extends IBaseRs {
      */
     @GET
     @Path("/history")
-    WorkflowHistoryResponseDto findHistory(@QueryParam("entityInstanceCode") String entityInstanceCode,@QueryParam("workflowCode") String workflowCode,
-    		@QueryParam("fromStatus") String fromStatus,@QueryParam("toStatus") String toStatus);
+    WorkflowHistoryResponseDto findHistory(@QueryParam("entityInstanceCode") @ApiParam("Code of the entity instance") String entityInstanceCode,@QueryParam("workflowCode") @ApiParam("Code of the workflow") String workflowCode,
+    		@QueryParam("fromStatus") @ApiParam("From status") String fromStatus,@QueryParam("toStatus") @ApiParam("To status") String toStatus);
 
     
 }

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.communication.EmailTemplateDto;
 import org.meveo.api.dto.response.communication.EmailTemplateResponseDto;
@@ -37,7 +38,7 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
-    ActionStatus create(EmailTemplateDto emailTemplateDto);
+    ActionStatus create(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
 	/**
 	 * update an emailTemplate by dto
@@ -47,7 +48,7 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
     @PUT
     @Path("/")
-    ActionStatus update(EmailTemplateDto emailTemplateDto);
+    ActionStatus update(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
     /**
      * Find an email template with a given code
@@ -57,7 +58,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    EmailTemplateResponseDto find(@QueryParam("code") String code);
+    EmailTemplateResponseDto find(@QueryParam("code") @ApiParam("Code of the email template") String code);
 
     /**
      * remove an emailTemplate by code
@@ -67,7 +68,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("code") String code);
+    ActionStatus remove(@PathParam("code") @ApiParam("Code of the email template") String code);
 
     /**
      * List email templates
@@ -86,6 +87,6 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(EmailTemplateDto emailTemplateDto);
+    ActionStatus createOrUpdate(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 }
 

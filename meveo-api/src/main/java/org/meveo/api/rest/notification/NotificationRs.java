@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.NotificationDto;
 import org.meveo.api.dto.response.notification.GetNotificationResponseDto;
@@ -35,7 +36,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(NotificationDto postData);
+    ActionStatus create(@ApiParam("Notification information") NotificationDto postData);
 
     /**
      * Update an existing notification
@@ -45,7 +46,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(NotificationDto postData);
+    ActionStatus update(@ApiParam("Notification information") NotificationDto postData);
 
     /**
      * Find a notification with a given code 
@@ -55,7 +56,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetNotificationResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    GetNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
 
     /**
      * Remove an existing notification with a given code 
@@ -65,7 +66,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
     
     /**
      * List the notification history
@@ -93,5 +94,5 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(NotificationDto postData);
+    ActionStatus createOrUpdate(@ApiParam("Notification information") NotificationDto postData);
 }

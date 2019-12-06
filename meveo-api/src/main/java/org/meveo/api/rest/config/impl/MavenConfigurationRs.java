@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.config.MavenConfigurationDto;
@@ -40,7 +41,7 @@ public class MavenConfigurationRs extends BaseRs {
 	 */
 	@POST
 	@Path("/")
-	public ActionStatus createOrUpdate(MavenConfigurationDto postData) {
+	public ActionStatus createOrUpdate(@ApiParam("Maven configuration information") MavenConfigurationDto postData) {
 
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 

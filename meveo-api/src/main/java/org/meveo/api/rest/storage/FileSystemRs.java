@@ -12,6 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.exceptions.EntityDoesNotExistsException;
@@ -37,9 +38,9 @@ public interface FileSystemRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
-    Response findBinary(@QueryParam(BinaryStorageUtils.INDEX) Integer index,
-						@PathParam("repositoryCode") String repositoryCode,
-						@PathParam("cetCode") String cetCode,
-						@PathParam("uuid") String uuid,
-						@PathParam("cftCode") String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException, org.meveo.api.exception.EntityDoesNotExistsException;
+    Response findBinary(@QueryParam(BinaryStorageUtils.INDEX) @ApiParam("Index") Integer index,
+						@PathParam("repositoryCode") @ApiParam("Code of the repository") String repositoryCode,
+						@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
+						@PathParam("uuid") @ApiParam("uuid") String uuid,
+						@PathParam("cftCode") @ApiParam("Code of the custom field template") String cftCode) throws IOException, EntityDoesNotExistsException, BusinessApiException, org.meveo.api.exception.EntityDoesNotExistsException;
 }

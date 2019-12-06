@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelDto;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelsDto;
@@ -37,7 +38,7 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(UserHierarchyLevelDto postData);
+    ActionStatus create(@ApiParam("User hierarchy level information") UserHierarchyLevelDto postData);
 
     /**
      * Update an existing user hierarchy level
@@ -47,7 +48,7 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(UserHierarchyLevelDto postData);
+    ActionStatus update(@ApiParam("User hierarchy level information") UserHierarchyLevelDto postData);
 
     /**
      * Search for a user group level with a given code.
@@ -57,7 +58,7 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    UserHierarchyLevelResponseDto find(@QueryParam("hierarchyLevelCode") String hierarchyLevelCode);
+    UserHierarchyLevelResponseDto find(@QueryParam("hierarchyLevelCode") @ApiParam("Code of the user hierarchy level") String hierarchyLevelCode);
 
     /**
      * Remove an existing hierarchy level with a given code
@@ -67,7 +68,7 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @DELETE
     @Path("/{hierarchyLevelCode}")
-    ActionStatus remove(@PathParam("hierarchyLevelCode") String hierarchyLevelCode);
+    ActionStatus remove(@PathParam("hierarchyLevelCode") @ApiParam("Code of the user hierarchy level") String hierarchyLevelCode);
 
     /**
      * Create new or update an existing user hierarchy level with a given code
@@ -77,7 +78,7 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(UserHierarchyLevelDto postData);
+    ActionStatus createOrUpdate(@ApiParam("User hierarchy level information") UserHierarchyLevelDto postData);
 
     /**
      * List user hierarchy levels matching a given criteria
@@ -92,8 +93,8 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @GET
     @Path("/list")
-    public UserHierarchyLevelsDto listGet(@QueryParam("query") String query, @QueryParam("fields") String fields, @QueryParam("offset") Integer offset,
-            @QueryParam("limit") Integer limit, @DefaultValue("code") @QueryParam("sortBy") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") SortOrder sortOrder);
+    public UserHierarchyLevelsDto listGet(@QueryParam("query") @ApiParam("Query to search criteria") String query, @QueryParam("fields") @ApiParam("Data retrieval options/fieldnames") String fields, @QueryParam("offset") @ApiParam("Offset from record number") Integer offset,
+            @QueryParam("limit") @ApiParam("Number of records to retrieve") Integer limit, @DefaultValue("code") @QueryParam("sortBy") @ApiParam("Sort by a field") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") @ApiParam("Sort order") SortOrder sortOrder);
 
     /**
      * List user hierarchy levels matching a given criteria
@@ -103,6 +104,6 @@ public interface UserHierarchyLevelRs extends IBaseRs {
      */
     @POST
     @Path("/list")
-    public UserHierarchyLevelsDto listPost(PagingAndFiltering pagingAndFiltering);
+    public UserHierarchyLevelsDto listPost(@ApiParam("Pagination and filtering criteria") PagingAndFiltering pagingAndFiltering);
 
 }

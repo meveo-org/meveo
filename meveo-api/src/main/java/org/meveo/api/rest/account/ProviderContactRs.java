@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.account.ProviderContactDto;
 import org.meveo.api.dto.response.account.ProviderContactResponseDto;
@@ -40,7 +41,7 @@ public interface ProviderContactRs extends IBaseRs {
 	 */
     @POST
     @Path("/")
-    ActionStatus create(ProviderContactDto providerContactDto);
+    ActionStatus create(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
      * Update an existing provider contact
@@ -50,7 +51,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(ProviderContactDto providerContactDto);
+    ActionStatus update(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
      * Search for a provider contact with a given code 
@@ -59,7 +60,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    ProviderContactResponseDto find(@QueryParam("providerContactCode") String providerContactCode);
+    ProviderContactResponseDto find(@QueryParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
      * Remove an existing provider contact with a given code 
@@ -69,7 +70,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("providerContactCode") String providerContactCode);
+    ActionStatus remove(@PathParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
      * List of provider contacts
@@ -88,6 +89,6 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(ProviderContactDto providerContactDto);
+    ActionStatus createOrUpdate(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 }
 

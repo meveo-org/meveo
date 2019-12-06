@@ -13,6 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiParam;
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.neo4j.GraphQLRequest;
@@ -48,7 +49,7 @@ public class GraphQLRs {
   @GET
   @Path("/")
   @Produces({ MediaType.APPLICATION_JSON })
-  public Response executeGraphQLQueryInGet(@QueryParam("query") String query){
+  public Response executeGraphQLQueryInGet(@QueryParam("query") @ApiParam("Query of graphql") String query){
     Map<String, Object> result = graphQLService.executeGraphQLRequest(query, neo4jConfiguration);
     return Response.ok(result).build();
   }
@@ -57,7 +58,7 @@ public class GraphQLRs {
   @Path("/")
   @Consumes("application/graphql")
   @Produces({ MediaType.APPLICATION_JSON })
-  public Response executeGraphQLQueryInPost(String query){
+  public Response executeGraphQLQueryInPost(@ApiParam("Query of graphql") String query){
     Map<String, Object> result = graphQLService.executeGraphQLRequest(query, neo4jConfiguration);
     return Response.ok(result).build();
   }
@@ -66,7 +67,7 @@ public class GraphQLRs {
   @Path("/")
   @Consumes({ MediaType.APPLICATION_JSON })
   @Produces({ MediaType.APPLICATION_JSON })
-  public Response executeGraphQLRequest(GraphQLRequest graphQLRequest){
+  public Response executeGraphQLRequest(@ApiParam("GraphQL request information") GraphQLRequest graphQLRequest){
     Map<String, Object> result = graphQLService.executeGraphQLRequest(graphQLRequest, neo4jConfiguration);
     return Response.ok(result).build();
   }

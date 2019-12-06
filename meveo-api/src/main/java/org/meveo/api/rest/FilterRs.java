@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.FilterDto;
 import org.meveo.api.dto.response.GetFilterResponseDto;
@@ -30,7 +31,7 @@ public interface FilterRs extends IBaseRs {
      */
     @Path("/createOrUpdate")
     @POST
-    public ActionStatus createOrUpdate(FilterDto postData);
+    public ActionStatus createOrUpdate(@ApiParam("Filter information") FilterDto postData);
 
     /**
      * Find a filter with a given code
@@ -40,5 +41,5 @@ public interface FilterRs extends IBaseRs {
      */
     @Path("/")
     @GET
-    public GetFilterResponseDto find(@QueryParam("filterCode") String filterCode);
+    public GetFilterResponseDto find(@QueryParam("filterCode") @ApiParam("Code of the filter") String filterCode);
 }

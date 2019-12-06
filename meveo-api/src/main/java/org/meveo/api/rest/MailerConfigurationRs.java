@@ -1,5 +1,6 @@
 package org.meveo.api.rest;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.MailerConfigurationDto;
 
@@ -23,5 +24,5 @@ public interface MailerConfigurationRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus createOrUpdate(MailerConfigurationDto mailerConfigurationDto);
+    ActionStatus createOrUpdate(@ApiParam("Mailer configuration information") MailerConfigurationDto mailerConfigurationDto);
 }

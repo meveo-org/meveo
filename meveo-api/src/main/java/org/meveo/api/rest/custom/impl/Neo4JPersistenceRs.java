@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.ApiParam;
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
@@ -52,7 +53,7 @@ public class Neo4JPersistenceRs {
     private String neo4jConfiguration;
 
     @DELETE
-    public Response delete(Collection<PersistenceDto> dtos) throws BusinessException {
+    public Response delete(@ApiParam("Collection of persistences information") Collection<PersistenceDto> dtos) throws BusinessException {
 
         for (PersistenceDto persistenceDto : dtos) {
             if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
@@ -65,7 +66,7 @@ public class Neo4JPersistenceRs {
 
     @POST
     @Path("/entities")
-    public Response persistEntities(Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
+    public Response persistEntities(@ApiParam("Collection of persistences information") Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CountryIsoDto;
 import org.meveo.api.dto.response.GetCountriesIsoResponse;
@@ -35,7 +36,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(CountryIsoDto countryIsoDto);
+    ActionStatus create(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
 
     /**
      * Search country with a given country code.
@@ -44,7 +45,7 @@ public interface CountryIsoRs extends IBaseRs {
      * @return {@link org.meveo.api.dto.response.GetCountryIsoResponse}.
      */
     @GET
-    @Path("/") GetCountryIsoResponse find(@QueryParam("countryCode") String countryCode);
+    @Path("/") GetCountryIsoResponse find(@QueryParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
      * Does not delete a country but the tradingCountry associated to it.
@@ -54,7 +55,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @DELETE
     @Path("/{countryCode}")
-    ActionStatus remove(@PathParam("countryCode") String countryCode);
+    ActionStatus remove(@PathParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
      * Modify a country. Same input parameter as create. The country and tradingCountry are created if they don't exists. The operation fails if the tradingCountry is null.
@@ -64,7 +65,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(CountryIsoDto countryIsoDto);
+    ActionStatus update(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
 
     /**
      * @param countryIsoDto country iso
@@ -72,7 +73,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(CountryIsoDto countryIsoDto);
+    ActionStatus createOrUpdate(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
     
     /**
      * List all countries.

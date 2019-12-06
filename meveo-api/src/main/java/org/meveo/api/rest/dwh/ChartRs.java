@@ -10,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.dwh.BarChartDto;
 import org.meveo.api.dto.dwh.ChartDto;
@@ -32,7 +33,7 @@ public interface ChartRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(ChartDto postData);
+    ActionStatus create(@ApiParam("Chart information") ChartDto postData);
 
     /**
      * Create a new bar chart
@@ -42,7 +43,7 @@ public interface ChartRs extends IBaseRs {
      */
     @POST
     @Path("/bar")
-    ActionStatus createBarChart(BarChartDto postData);
+    ActionStatus createBarChart(@ApiParam("Bar chart information") BarChartDto postData);
 
     /**
      * Update an existing bar chart
@@ -52,7 +53,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/bar")
-    ActionStatus updateBarChart(BarChartDto postData);
+    ActionStatus updateBarChart(@ApiParam("Bar chart information") BarChartDto postData);
 
     /**
      * Create a new pie chart
@@ -62,7 +63,7 @@ public interface ChartRs extends IBaseRs {
      */
     @POST
     @Path("/pie")
-    ActionStatus createPieChart(PieChartDto postData);
+    ActionStatus createPieChart(@ApiParam("Pie chart information") PieChartDto postData);
 
     /**
      * Update an existing pie chart
@@ -72,7 +73,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/pie")
-    ActionStatus updatePieChart(PieChartDto postData);
+    ActionStatus updatePieChart(@ApiParam("Pie chart information") PieChartDto postData);
 
     /**
      * Create a new line chart
@@ -82,7 +83,7 @@ public interface ChartRs extends IBaseRs {
      */
     @POST
     @Path("/line")
-    ActionStatus createLineChart(LineChartDto postData);
+    ActionStatus createLineChart(@ApiParam("Line chart information") LineChartDto postData);
 
     /**
      * Update an existing line chart
@@ -92,7 +93,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/line")
-    ActionStatus updateLineChart(LineChartDto postData);
+    ActionStatus updateLineChart(@ApiParam("Line chart information") LineChartDto postData);
 
     /**
      * Update an existing chart
@@ -102,7 +103,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(ChartDto postData);
+    ActionStatus update(@ApiParam("Chart information") ChartDto postData);
 
 
     /**
@@ -113,7 +114,7 @@ public interface ChartRs extends IBaseRs {
      */
     @DELETE
     @Path("/")
-    ActionStatus remove(@QueryParam("chartCode") String chartCode);
+    ActionStatus remove(@QueryParam("chartCode") @ApiParam("Code of the chart") String chartCode);
 
     /**
      * Find a chart with a given code 
@@ -123,17 +124,17 @@ public interface ChartRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetChartResponse find(@QueryParam("chartCode") String chartCode);
-
-    @POST
-    @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(ChartDto postData);
-
-}
+    GetChartResponse find(@QueryParam("chartCode") @ApiParam("Code of the chart") String chartCode);
 
     /**
      * Create new or update an existing chart with a given code
-     * 
+     *
      * @param postData The chart's data
      * @return Request processing status
      */
+    @POST
+    @Path("/createOrUpdate")
+    ActionStatus createOrUpdate(@ApiParam("Chart information") ChartDto postData);
+
+}
+

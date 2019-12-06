@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CountryDto;
 import org.meveo.api.dto.response.GetCountryResponse;
@@ -36,7 +37,7 @@ public interface CountryRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(CountryDto countryDto); 
+    ActionStatus create(@ApiParam("Country information") CountryDto countryDto);
 
     /**
      * Search country with a given country code.
@@ -46,7 +47,7 @@ public interface CountryRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetCountryResponse find(@QueryParam("countryCode") String countryCode);
+    GetCountryResponse find(@QueryParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
      * Does not delete a country but the tradingCountry associated to it.
@@ -57,7 +58,7 @@ public interface CountryRs extends IBaseRs {
      */
     @DELETE
     @Path("/{countryCode}/{currencyCode}")
-    ActionStatus remove(@PathParam("countryCode") String countryCode, @PathParam("currencyCode") String currencyCode);
+    ActionStatus remove(@PathParam("countryCode") @ApiParam("Code of the country") String countryCode, @PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
      * Modify a country. Same input parameter as create. The country and tradingCountry are created if they don't exists. The operation fails if the tradingCountry is null.
@@ -67,7 +68,7 @@ public interface CountryRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(CountryDto countryDto);
+    ActionStatus update(@ApiParam("Country information") CountryDto countryDto);
 
     /**
      * @param countryDto country
@@ -75,6 +76,6 @@ public interface CountryRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(CountryDto countryDto);
+    ActionStatus createOrUpdate(@ApiParam("Country information") CountryDto countryDto);
 
 }

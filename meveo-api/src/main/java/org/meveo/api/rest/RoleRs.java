@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.RolesDto;
@@ -32,7 +33,7 @@ public interface RoleRs extends IBaseRs {
      * @return action status
      */
     @POST
-    @Path("/") ActionStatus create(RoleDto postData);
+    @Path("/") ActionStatus create(@ApiParam("Role information") RoleDto postData);
 
     /**
      * Update role.
@@ -41,7 +42,7 @@ public interface RoleRs extends IBaseRs {
      * @return action status.
      */
     @PUT
-    @Path("/") ActionStatus update(RoleDto postData);
+    @Path("/") ActionStatus update(@ApiParam("Role information") RoleDto postData);
 
     /**
      * Remove role.
@@ -50,7 +51,7 @@ public interface RoleRs extends IBaseRs {
      * @return action status.
      */
     @DELETE
-    @Path("/{roleName}/{provider}") ActionStatus remove(@PathParam("roleName") String roleName);
+    @Path("/{roleName}/{provider}") ActionStatus remove(@PathParam("roleName") @ApiParam("Name of the role") String roleName);
 
     /**
      * Search role.
@@ -59,7 +60,7 @@ public interface RoleRs extends IBaseRs {
      * @return found role
      */
     @GET
-    @Path("/") GetRoleResponse find(@QueryParam("roleName") String roleName);
+    @Path("/") GetRoleResponse find(@QueryParam("roleName") @ApiParam("Name of the role") String roleName);
 
     /**
      * Create or update role.
@@ -68,7 +69,7 @@ public interface RoleRs extends IBaseRs {
      * @return action status
      */
     @POST
-    @Path("/createOrUpdate") ActionStatus createOrUpdate(RoleDto postData);
+    @Path("/createOrUpdate") ActionStatus createOrUpdate(@ApiParam("Role information") RoleDto postData);
 
     /**
      * List roles matching a given criteria.
@@ -83,8 +84,8 @@ public interface RoleRs extends IBaseRs {
      */
     @GET
     @Path("/list")
-    RolesDto listGet(@QueryParam("query") String query, @QueryParam("fields") String fields, @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit,
-            @DefaultValue("name") @QueryParam("sortBy") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") SortOrder sortOrder);
+    RolesDto listGet(@QueryParam("query") @ApiParam("Query to search criteria") String query, @QueryParam("fields") @ApiParam("Data retrieval options/fieldnames")  String fields, @QueryParam("offset") @ApiParam("Offset from record number") Integer offset, @QueryParam("limit") @ApiParam("Number of records to retrieve") Integer limit,
+            @DefaultValue("name") @QueryParam("sortBy") @ApiParam("Sort by a field") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") @ApiParam("Sort order") SortOrder sortOrder);
 
     /**
      * List roles matching a given criteria.
@@ -93,7 +94,7 @@ public interface RoleRs extends IBaseRs {
      * @return A list of roles
      */
     @POST
-    @Path("/list") RolesDto listPost(PagingAndFiltering pagingAndFiltering);
+    @Path("/list") RolesDto listPost(@ApiParam("Pagination and filtering criteria") PagingAndFiltering pagingAndFiltering);
     
     /**
      * List external roles.
