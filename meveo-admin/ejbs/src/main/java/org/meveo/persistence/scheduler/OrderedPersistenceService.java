@@ -42,7 +42,7 @@ import org.meveo.service.storage.RepositoryService;
  * @lastModifiedVersion 6.4.0
  * @param <T> implementing service
  */
-public abstract class ScheduledPersistenceService<T extends CustomPersistenceService> {
+public abstract class OrderedPersistenceService<T extends CustomPersistenceService> {
 
     @Inject 
     private RepositoryService repositoryService;

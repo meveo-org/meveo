@@ -27,7 +27,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
+import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 
 /**
@@ -43,7 +43,7 @@ public class Neo4JPersistenceRs {
     protected SchedulingService schedulingService;
 
     @Inject
-    protected ScheduledPersistenceService<Neo4jService> scheduledPersistenceService;
+    protected OrderedPersistenceService<Neo4jService> scheduledPersistenceService;
 
     @Inject
     protected Neo4jService neo4jService;

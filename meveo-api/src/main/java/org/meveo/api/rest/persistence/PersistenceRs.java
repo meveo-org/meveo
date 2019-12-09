@@ -58,7 +58,7 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.PersistedItem;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
+import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -83,7 +83,7 @@ public class PersistenceRs {
     private SchedulingService schedulingService;
 
     @Inject
-    private ScheduledPersistenceService<CrossStorageService> scheduledPersistenceService;
+    private OrderedPersistenceService<CrossStorageService> scheduledPersistenceService;
 
     @Inject
     private CrossStorageService crossStorageService;
