@@ -120,7 +120,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throw new UserNotAuthorizedException();
 		}
 
-		return ESGenerator.generate(endpoint);
+		return ESGenerator.generateFile(endpoint);
 	}
 
 	/**
