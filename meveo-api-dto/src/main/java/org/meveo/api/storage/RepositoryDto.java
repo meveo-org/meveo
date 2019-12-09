@@ -1,5 +1,6 @@
 package org.meveo.api.storage;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.storage.DataSeparationTypeEnum;
 import org.meveo.model.storage.Repository;
@@ -12,11 +13,22 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	private static final long serialVersionUID = 57566827213462626L;
 
+	@ApiModelProperty("Code of the parent")
 	private String parentCode;
+
+	@ApiModelProperty("Code of the binary storage configuration")
 	private String binaryStorageConfigurationCode;
+
+	@ApiModelProperty("Code of the neo4j configuration")
 	private String neo4jConfigurationCode;
+
+	@ApiModelProperty("Data separation type")
 	private DataSeparationTypeEnum dataSeparationType;
+
+	@ApiModelProperty("Path")
 	private String path;
+
+	@ApiModelProperty("Whether to delete the children of the repository")
 	private Boolean forceDelete;
 
 	public RepositoryDto() {

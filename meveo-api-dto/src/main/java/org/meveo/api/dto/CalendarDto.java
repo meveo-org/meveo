@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarDateInterval;
@@ -35,33 +36,43 @@ public class CalendarDto extends BusinessEntityDto {
 
     /** Calendar type. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Calendar type")
     private CalendarTypeEnum calendarType;
 
     /** Days. */
+    @ApiModelProperty("List of days in year")
     private List<DayInYearDto> days;
 
     /** Hours. */
+    @ApiModelProperty("List of hours in day")
     private List<HourInDayDto> hours;
 
     /** Period length. */
+    @ApiModelProperty("Period length")
     private Integer periodLength;
 
     /** Period measurement unit. */
+    @ApiModelProperty("Period measurement unit")
     private CalendarPeriodUnitEnum periodUnit;
 
     /** Number of periods. */
+    @ApiModelProperty("Number of periods")
     private Integer nbPeriods;
 
     /** Code of the first calendar to intersect/union. */
+    @ApiModelProperty("Code of the first calendar to intersect/union")
     private String joinCalendar1Code;
 
     /** Code of the second calendar to intersect/union. */
+    @ApiModelProperty("Code of the second calendar to intersect/union")
     private String joinCalendar2Code;
 
     /** Interval type. */
+    @ApiModelProperty("Calendar interval type")
     private CalendarIntervalTypeEnum intervalType;
 
     /** List of intervals. */
+    @ApiModelProperty("List of intervals")
     private List<CalendarDateIntervalDto> intervals;
 
     /**

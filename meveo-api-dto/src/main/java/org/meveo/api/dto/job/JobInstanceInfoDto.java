@@ -1,5 +1,7 @@
 package org.meveo.api.dto.job;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -24,22 +26,28 @@ public class JobInstanceInfoDto implements Serializable {
     /** The timer name. */
     @Deprecated
     @XmlElement(required = false)
+    @ApiModelProperty(required = false, value = "The timer name")
     private String timerName;
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of job instance info")
     private String code;
 
     /** The last transaction date. */
+    @ApiModelProperty("The last transaction date")
     private Date lastTransactionDate;
 
     /** The invoice date. */
+    @ApiModelProperty("The invoice date")
     private Date invoiceDate;
 
     /** The billing cycle. */
+    @ApiModelProperty("The billing cycle")
     private String billingCycle;
 
     /** Ignore a check if job is currently running and launch it anyway. */
+    @ApiModelProperty("Ignore a check if job is currently running and launch it anyway")
     private boolean forceExecution;
 
     /**

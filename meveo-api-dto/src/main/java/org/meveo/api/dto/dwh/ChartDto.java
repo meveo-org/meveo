@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.dwh.Chart;
 
@@ -20,24 +21,31 @@ public class ChartDto extends BusinessEntityDto {
     private static final long serialVersionUID = 2573963792647472501L;
 
     /** The measurable quantity. */
+    @ApiModelProperty("Measurable quantity information")
     private MeasurableQuantityDto measurableQuantity;
     
     /** The width. */
+    @ApiModelProperty("The width")
     private String width = "500px";
     
     /** The height. */
+    @ApiModelProperty("The height")
     private String height = "300px";
     
     /** The style. */
+    @ApiModelProperty("The style")
     private String style;
     
     /** The style class. */
+    @ApiModelProperty("The style class")
     private String styleClass;
     
     /** The extender. */
+    @ApiModelProperty("The extender")
     private String extender;
     
     /** The visible. */
+    @ApiModelProperty("Whether to visible")
     private Boolean visible = false;
 
     /**

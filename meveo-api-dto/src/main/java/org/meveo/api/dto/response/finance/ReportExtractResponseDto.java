@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.finance.ReportExtractDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -23,6 +24,7 @@ public class ReportExtractResponseDto extends BaseResponse {
     private static final long serialVersionUID = -3067032223816612298L;
 
     /** The report extract. */
+    @ApiModelProperty("Report extract information")
     private ReportExtractDto reportExtract;
 
     /**

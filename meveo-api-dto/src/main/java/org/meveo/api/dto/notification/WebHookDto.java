@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.HttpProtocol;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.WebHook;
@@ -27,36 +28,45 @@ public class WebHookDto extends NotificationDto {
     private static final long serialVersionUID = -24934196712758476L;
 
     /** The http protocol. */
+    @ApiModelProperty("The http protocol")
     private HttpProtocol httpProtocol;
     
     /** The host. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The host")
     private String host;
     
     /** The port. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The port")
     private Integer port;
 
     /** The page. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The page")
     private String page;
 
     /**
      * Valid values: HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE.
      */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Http method")
     private WebHookMethodEnum httpMethod;
 
     /** The username. */
+    @ApiModelProperty("The username")
     private String username;
     
     /** The password. */
+    @ApiModelProperty("The password")
     private String password;
     
     /** The headers. */
+    @ApiModelProperty("Map of headers")
     private Map<String, String> headers = new HashMap<String, String>();
     
     /** The params. */
+    @ApiModelProperty("Map of params")
     private Map<String, String> params = new HashMap<String, String>();
 
     /**

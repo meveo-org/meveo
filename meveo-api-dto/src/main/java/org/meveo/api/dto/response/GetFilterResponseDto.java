@@ -3,6 +3,8 @@ package org.meveo.api.dto.response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.FilterDto;
 
 /**
@@ -19,6 +21,7 @@ public class GetFilterResponseDto extends BaseResponse {
     private static final long serialVersionUID = 1L;
 
     /** The filter. */
+    @ApiModelProperty("Filter information")
     private FilterDto filter;
 
     /**

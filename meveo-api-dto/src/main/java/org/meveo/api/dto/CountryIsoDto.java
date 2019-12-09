@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.billing.Country;
 
 
@@ -26,25 +27,31 @@ public class CountryIsoDto extends BaseEntityDto {
 
     /** The country code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the country")
     private String countryCode;
 
     /** The description. */
     @XmlAttribute()
+    @ApiModelProperty("Description of the country")
     private String description;
 
     /** The nationality. */
     @XmlAttribute()
+    @ApiModelProperty("The nationality")
     private String nationality;
 
     /** The language descriptions. */
+    @ApiModelProperty("List of language descriptions information")
     private List<LanguageDescriptionDto> languageDescriptions;
 
     /** The currency code. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Code of the currency")
     private String currencyCode;
 
     /** The language code. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Code of the language")
     private String languageCode;
 
     /**

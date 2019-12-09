@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.crm.ProviderContact;
 
@@ -22,34 +23,44 @@ public class ProviderContactDto extends BaseEntityDto {
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the provider contact")
     private String code;
     
     /** The description. */
     @XmlAttribute
+    @ApiModelProperty("Description of the provider contact")
     private String description;
     
     /** The first name. */
+    @ApiModelProperty("First name of the provider")
     private String firstName;
     
     /** The last name. */
+    @ApiModelProperty("Last name of the provider")
     private String lastName;
     
     /** The email. */
+    @ApiModelProperty("Email of the provider")
     private String email;
     
     /** The phone. */
+    @ApiModelProperty("Phone of the provider")
     private String phone;
     
     /** The mobile. */
+    @ApiModelProperty("Mobile of the provider")
     private String mobile;
     
     /** The fax. */
+    @ApiModelProperty("Fax of the provider")
     private String fax;
     
     /** The generic mail. */
+    @ApiModelProperty("Generic mail of the provider")
     private String genericMail;
 
     /** The address dto. */
+    @ApiModelProperty("Address information")
     private AddressDto addressDto;
 
     /**

@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.response.BaseResponse;
@@ -25,18 +26,23 @@ public class ImportExportResponseDto extends BaseResponse {
     private static final long serialVersionUID = 1L;
 
     /** The execution id. */
+    @ApiModelProperty("The execution id")
     private String executionId;
 
     /** Summary of entities imported/exported per entity class. */
+    @ApiModelProperty("Summary of entities imported/exported per entity class")
     private Map<String, Integer> summary = null;
 
     /** Stores a list of field names that were not imported because of differences between original and current model - fields do not exist in current model. */
+    @ApiModelProperty("Stores a list of field names that were not imported because of differences between original and current model")
     private Map<String, FieldsNotImportedStringCollectionDto> fieldsNotImported = null;
 
     /** Occurred exception. */
+    @ApiModelProperty("Occurred exception message")
     private String exceptionMessage;
 
     /** Occurred error message key. */
+    @ApiModelProperty("Occurred error message key")
     private String errorMessageKey;
 
     /**

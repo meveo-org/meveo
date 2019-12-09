@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
@@ -25,28 +26,36 @@ public class ReportExtractDto extends BusinessEntityDto {
 
     /** The script type. */
     @NotNull
+    @ApiModelProperty("The script type")
     private ReportExtractScriptTypeEnum scriptType;
 
     /** The filename format. */
     @NotNull
+    @ApiModelProperty("The filename format")
     private String filenameFormat;
 
     /** The category. */
+    @ApiModelProperty("The category")
     private String category;
 
     /** The script instance code. */
+    @ApiModelProperty("Code of the script instance")
     private String scriptInstanceCode;
     
     /** The sql query. */
+    @ApiModelProperty("The sql query")
     private String sqlQuery;
     
     /** The params. */
+    @ApiModelProperty("Map of params")
     private Map<String, String> params = new HashMap<>();
     
     /** The start date. */
+    @ApiModelProperty("The start date")
     private Date startDate;
     
     /** The end date. */
+    @ApiModelProperty("The end date")
     private Date endDate;
 
     /**

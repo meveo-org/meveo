@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.ScriptInstanceDto;
 
 /**
@@ -19,6 +20,7 @@ public class GetScriptInstanceResponseDto extends BaseResponse {
     private static final long serialVersionUID = 962231443399621051L;
 
     /** The script instance. */
+    @ApiModelProperty("Script instance information")
     private ScriptInstanceDto scriptInstance;
 
     /**

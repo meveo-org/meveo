@@ -1,5 +1,6 @@
 package org.meveo.api.dto.config;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.BaseResponse;
 
 /**
@@ -9,6 +10,8 @@ import org.meveo.api.dto.response.BaseResponse;
 public class MavenConfigurationResponseDto extends BaseResponse {
 
 	private static final long serialVersionUID = 4285496436832972796L;
+
+	@ApiModelProperty("Maven configuration information")
 	private MavenConfigurationDto mavenConfiguration;
 
 	public MavenConfigurationDto getMavenConfiguration() {

@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.ProviderDto;
 
 /**
@@ -20,6 +21,7 @@ public class GetProviderResponse extends BaseResponse {
     private static final long serialVersionUID = -7308813550235264178L;
 
     /** The provider. */
+    @ApiModelProperty("Provider information")
     private ProviderDto provider;
 
     /**

@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 
 /**
@@ -19,6 +20,7 @@ public class CustomEntityInstanceResponseDto extends BaseResponse {
     private static final long serialVersionUID = 7328605270701696329L;
 
     /** The custom entity instance. */
+    @ApiModelProperty("Custom entity instance information")
     private CustomEntityInstanceDto customEntityInstance;
 
     /**

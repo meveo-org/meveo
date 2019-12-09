@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CurrencyDto;
 
 /**
@@ -21,6 +22,7 @@ public class GetCurrencyResponse extends BaseResponse {
     private static final long serialVersionUID = -5595545533673878857L;
 
     /** The currency. */
+    @ApiModelProperty("Currency information")
     private CurrencyDto currency;
 
     /**

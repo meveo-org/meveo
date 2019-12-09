@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.job.JobExecutionResultDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -20,6 +21,7 @@ public class JobExecutionResultResponseDto extends BaseResponse {
     private static final long serialVersionUID = -3392399387123725437L;
 
     /** Contains job execution result information. */
+    @ApiModelProperty("Contains job execution result information")
     private JobExecutionResultDto jobExecutionResultDto;
 
     /**

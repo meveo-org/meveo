@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.notification.InboundRequestsDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -20,6 +21,7 @@ public class InboundRequestsResponseDto extends BaseResponse {
     private static final long serialVersionUID = -1515932369680879496L;
 
     /** The inbound requests. */
+    @ApiModelProperty("Inbound requests information")
     private InboundRequestsDto inboundRequests = new InboundRequestsDto();
 
     /**

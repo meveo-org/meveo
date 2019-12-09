@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.RoleDto;
 
 /**
@@ -17,6 +18,7 @@ public class GetRoleResponse extends BaseResponse {
     private static final long serialVersionUID = 1L;
 
     /** The role dto. */
+    @ApiModelProperty("Role information")
     private RoleDto roleDto;
 
     /**

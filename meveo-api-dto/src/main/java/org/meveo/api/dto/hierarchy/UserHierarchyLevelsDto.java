@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.SearchResponse;
 
 /**
@@ -26,6 +27,7 @@ public class UserHierarchyLevelsDto extends SearchResponse {
     /** The user hierarchy levels. */
     @XmlElementWrapper(name = "userHierarchyLevels")
     @XmlElement(name = "userHierarchyLevel")
+    @ApiModelProperty("List of user hierarchy levels information")
     private List<UserHierarchyLevelDto> userHierarchyLevels = new ArrayList<>();
 
     /**

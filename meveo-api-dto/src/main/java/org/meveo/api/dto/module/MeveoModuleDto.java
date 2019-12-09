@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.ScriptInstanceDto;
@@ -31,18 +32,23 @@ public class MeveoModuleDto extends BaseDataModelDto {
 
     /** The license. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The license type")
     private ModuleLicenseEnum license;
 
     /** The logo picture. */
+    @ApiModelProperty("The logo picture")
     private String logoPicture;
     
     /** The logo picture file. */
+    @ApiModelProperty("The logo picture file")
     private byte[] logoPictureFile;
 
     /** The script. */
+    @ApiModelProperty("Script instance information")
     private ScriptInstanceDto script;
 
     /** The module items. */
+    @ApiModelProperty("List of module items information")
     private List<MeveoModuleItemDto> moduleItems;
 
     /**
