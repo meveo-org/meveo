@@ -1,6 +1,11 @@
 package org.meveo.admin.action.config;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,8 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ * @since 6.5.0
  */
 @Named
 @ConversationScoped
@@ -48,7 +54,7 @@ public class MavenConfigurationBean implements Serializable {
 	private MavenConfigurationService mavenConfigurationService;
 
 	private MavenConfigurationDto mavenConfiguration;
-	
+
 	private String groupId;
 	private String artifactId;
 	private String version;
@@ -64,7 +70,7 @@ public class MavenConfigurationBean implements Serializable {
 	}
 
 	public void beginConversation() {
-		
+
 		if (conversation.isTransient()) {
 			conversation.begin();
 		}
@@ -88,7 +94,7 @@ public class MavenConfigurationBean implements Serializable {
 	}
 
 	public void setMavenRepositories(String mavenRepositories) {
-		
+
 		if (!StringUtils.isBlank(mavenRepositories)) {
 			mavenConfiguration.setMavenRepositories(Arrays.asList(mavenRepositories.split("\r\n")));
 		}
@@ -105,11 +111,20 @@ public class MavenConfigurationBean implements Serializable {
 				throw new BusinessApiException("Invalid URL format : " + url);
 			}
 		}
-		
+
 		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
 
 		mavenConfigurationService.saveConfiguration(mavenConfiguration);
+	}
+
+	public String buildArtifactName() {
+		if (StringUtils.isBlank(classifier)) {
+			return artifactId + "-" + version + ".jar";
+
+		} else {
+			return artifactId + "-" + version + "-" + classifier + ".jar";
+		}
 	}
 
 	public void uploadAnArtifact(FileUploadEvent event) {
@@ -119,29 +134,29 @@ public class MavenConfigurationBean implements Serializable {
 			// write the inputStream to a FileOutputStream
 			InputStream inputStream = file.getInputstream();
 			String filePath = mavenConfigurationService.createDirectory(this.groupId, this.artifactId, this.version, this.classifier);
-			filePath = filePath + File.separator + fileName;
-			OutputStream out = new FileOutputStream(new File(filePath));
-			int read = 0;
-			byte[] bytes = new byte[1024];
+			filePath = filePath + File.separator + buildArtifactName();
+			try (OutputStream out = new FileOutputStream(new File(filePath))) {
+				int read = 0;
+				byte[] bytes = new byte[1024];
 
-			while ((read = inputStream.read(bytes)) != -1) {
-				out.write(bytes, 0, read);
+				while ((read = inputStream.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}
 			}
 
-			inputStream.close();
-			out.flush();
-			out.close();
-
 			log.debug("New file created!");
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("maven.configuration.upload.successful", fileName), bundle.getString("maven.configuration.upload.successful", fileName));
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("maven.configuration.upload.successful", fileName),
+					bundle.getString("maven.configuration.upload.successful", fileName));
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 			groupId = null;
 			artifactId = null;
 			version = null;
 			classifier = null;
+
 		} catch (IOException e) {
 			log.error("Failed saving file. ", e);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, bundle.getString("message.upload.fail", e.getMessage()), bundle.getString("message.upload.fail", e.getMessage()));
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, bundle.getString("message.upload.fail", e.getMessage()),
+					bundle.getString("message.upload.fail", e.getMessage()));
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		}
 	}

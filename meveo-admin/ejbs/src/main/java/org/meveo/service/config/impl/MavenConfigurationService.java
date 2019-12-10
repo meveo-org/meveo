@@ -115,12 +115,14 @@ public class MavenConfigurationService implements Serializable {
 		if (!m2Folder.endsWith(File.separator)) {
 			m2Folder = m2Folder + File.separator;
 		}
+
 		if (!StringUtils.isBlank(groupId)) {
-			m2Folder = m2Folder + groupId;
-			File fileDir = new File(m2Folder);
-			if (!fileDir.exists()) {
-				fileDir.mkdir();
+			String[] groupDirs = groupId.split("\\.");
+			for (String groupDir : groupDirs) {
+				m2Folder = m2Folder + File.separator + groupDir;
 			}
+			File f = new File(m2Folder);
+			f.mkdirs();
 		}
 		if (!StringUtils.isBlank(artifactId)) {
 			m2Folder = m2Folder + File.separator + artifactId;
@@ -131,13 +133,6 @@ public class MavenConfigurationService implements Serializable {
 		}
 		if (!StringUtils.isBlank(version)) {
 			m2Folder = m2Folder + File.separator + version;
-			File fileDir = new File(m2Folder);
-			if (!fileDir.exists()) {
-				fileDir.mkdir();
-			}
-		}
-		if (!StringUtils.isBlank(classifier)) {
-			m2Folder = m2Folder + File.separator + classifier;
 			File fileDir = new File(m2Folder);
 			if (!fileDir.exists()) {
 				fileDir.mkdir();
