@@ -118,15 +118,6 @@ public class MavenConfigurationBean implements Serializable {
 		mavenConfigurationService.saveConfiguration(mavenConfiguration);
 	}
 
-	public String buildArtifactName() {
-		if (StringUtils.isBlank(classifier)) {
-			return artifactId + "-" + version + ".jar";
-
-		} else {
-			return artifactId + "-" + version + "-" + classifier + ".jar";
-		}
-	}
-
 	public void uploadAnArtifact(FileUploadEvent event) {
 		UploadedFile file = event.getFile();
 		String fileName = file.getFileName();
@@ -134,7 +125,7 @@ public class MavenConfigurationBean implements Serializable {
 			// write the inputStream to a FileOutputStream
 			InputStream inputStream = file.getInputstream();
 			String filePath = mavenConfigurationService.createDirectory(this.groupId, this.artifactId, this.version, this.classifier);
-			filePath = filePath + File.separator + buildArtifactName();
+			filePath = filePath + File.separator + mavenConfigurationService.buildArtifactName(this.artifactId, this.version, this.classifier);
 			try (OutputStream out = new FileOutputStream(new File(filePath))) {
 				int read = 0;
 				byte[] bytes = new byte[1024];

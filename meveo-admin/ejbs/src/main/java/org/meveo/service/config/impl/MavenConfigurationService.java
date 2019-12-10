@@ -141,6 +141,15 @@ public class MavenConfigurationService implements Serializable {
 		return m2Folder;
 	}
 
+	public String buildArtifactName(String artifactId, String version, String classifier) {
+		if (StringUtils.isBlank(classifier)) {
+			return artifactId + "-" + version + ".jar";
+
+		} else {
+			return artifactId + "-" + version + "-" + classifier + ".jar";
+		}
+	}
+
 	/**
 	 * Updates the list of local maven repositories.
 	 * 
