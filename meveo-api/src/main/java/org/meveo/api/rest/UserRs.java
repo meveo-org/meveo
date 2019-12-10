@@ -44,7 +44,7 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(@ApiParam("Use information") UserDto postData);
+    ActionStatus create(@ApiParam("User information") UserDto postData);
 
     /**
      * Update user.
@@ -54,7 +54,7 @@ public interface UserRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(@ApiParam("Use information") UserDto postData);
+    ActionStatus update(@ApiParam("User information") UserDto postData);
 
     /**
      * Remove user with a given username.
@@ -84,7 +84,7 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(@ApiParam("Use information") UserDto postData);
+    ActionStatus createOrUpdate(@ApiParam("User information") UserDto postData);
     
     /**
      * Creates a user in keycloak and core.
@@ -93,7 +93,7 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/external")
-    ActionStatus createExternalUser(@ApiParam("Use information") UserDto postData);
+    ActionStatus createExternalUser(@ApiParam("User information") UserDto postData);
 
     /**
      * Updates a user in keycloak and core given a username.
@@ -102,7 +102,7 @@ public interface UserRs extends IBaseRs {
      */
     @PUT
     @Path("/external/")
-    ActionStatus updateExternalUser(@ApiParam("Use information") UserDto postData);
+    ActionStatus updateExternalUser(@ApiParam("User information") UserDto postData);
 
     /**
      * Deletes a user in keycloak and core given a username.
