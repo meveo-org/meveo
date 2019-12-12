@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.JobTriggerDto;
@@ -23,7 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification/jobTrigger")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Job trigger")
 public interface JobTriggerRs extends IBaseRs {
 
     /**
@@ -34,6 +36,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create job trigger")
     ActionStatus create(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
@@ -44,6 +47,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update job trigger")
     ActionStatus update(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
@@ -54,6 +58,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find job trigger by code")
     GetJobTriggerResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
@@ -64,6 +69,7 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
+    @ApiOperation(value = "Remove job trigger by code")
     ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
@@ -74,5 +80,6 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update job trigger")
     ActionStatus createOrUpdate(@ApiParam("Job trigger information") JobTriggerDto postData);
 }

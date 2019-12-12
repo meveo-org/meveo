@@ -10,6 +10,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.neo4j.Neo4jConfigurationDto;
@@ -23,6 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/neo4j/configurations")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Neo4j configuration")
 public interface Neo4jConfigurationRs extends IBaseRs {
 
 	/**
@@ -30,6 +33,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/")
+	@ApiOperation(value = "Create neo4j configuration")
 	ActionStatus create(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
@@ -40,6 +44,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@PUT
 	@Path("/")
+	@ApiOperation(value = "Update neo4j configuration")
 	ActionStatus update(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
@@ -50,6 +55,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
+	@ApiOperation(value = "Create or update neo4j configuration")
 	ActionStatus createOrUpdate(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
@@ -57,6 +63,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/{code}")
+	@ApiOperation(value = "Find neo4j configuration by code")
 	Neo4jConfigurationResponseDto find(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 	/**
@@ -76,5 +83,6 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
+	@ApiOperation(value = "Remove neo4j configuration by code")
+	ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 }

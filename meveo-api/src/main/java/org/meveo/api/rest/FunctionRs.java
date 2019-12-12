@@ -31,6 +31,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.ScriptInstanceApi;
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 @Stateless
 @Path("/function")
+@Api("Function")
 public class FunctionRs extends BaseRs {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FunctionRs.class);
@@ -65,6 +68,7 @@ public class FunctionRs extends BaseRs {
 
 	@Path("/{code}/test")
 	@PATCH
+	@ApiOperation(value = "Update function ")
 	public void updateTest(@PathParam("code") @ApiParam("Code of the function") String code, @ApiParam("Test suite file") File testSuite) throws IOException, BusinessException {
 
 		functionApi.updateTest(code, testSuite);
@@ -82,6 +86,7 @@ public class FunctionRs extends BaseRs {
 	@Path("/{code}/test")
 	@POST
 	@Produces("application/json; charset=UTF-8")
+	@ApiOperation(value = "Test function")
 	public Map<String, Object> test(@PathParam("code") @ApiParam("Code of the function") String code, @ApiParam("Parameters to execute the function with") Map<String, Object> params) throws BusinessException {
 		if (params == null) {
 			params = new HashMap<>();
@@ -101,6 +106,7 @@ public class FunctionRs extends BaseRs {
 	 */
 	@Path("/{code}/job/start")
 	@POST
+	@ApiOperation(value = "Start function by code")
 	public void startJob(@PathParam("code") @ApiParam("Code of the function") String code) throws BusinessException {
 		functionApi.startJob(code);
 	}
@@ -114,6 +120,7 @@ public class FunctionRs extends BaseRs {
 	@GET
 	@Path("/sample/code/{code}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get samples function by code")
 	public List<Sample> getSamples(@PathParam("code") @ApiParam("Code of the function") String code) throws BusinessException {
 
 		return functionApi.getSamples(code);

@@ -15,6 +15,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
@@ -36,6 +38,7 @@ import org.meveo.persistence.scheduler.SchedulingService;
  * @lastModifiedVersion 6.4.0
  */
 @Path("/neo4j/persist")
+@Api("Neo4j persistence")
 public class Neo4JPersistenceRs {
 
     protected static final Logger LOGGER = Logger.getLogger(Neo4JPersistenceRs.class);
@@ -53,6 +56,7 @@ public class Neo4JPersistenceRs {
     private String neo4jConfiguration;
 
     @DELETE
+    @ApiOperation(value="Delete data to be persisted")
     public Response delete(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws BusinessException {
 
         for (PersistenceDto persistenceDto : dtos) {
@@ -66,6 +70,7 @@ public class Neo4JPersistenceRs {
 
     @POST
     @Path("/entities")
+    @ApiOperation(value="Persist entity data to be persisted")
     public Response persistEntities(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
 
         /* Extract the entities */

@@ -10,6 +10,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
@@ -23,6 +25,7 @@ import org.meveo.api.storage.BinaryStorageConfigurationDto;
 @Path("/storages/binaries")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv" })
+@Api("Binary storage configuration")
 public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 
 	/**
@@ -30,6 +33,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/")
+	@ApiOperation(value = "Create binary storage")
 	ActionStatus create(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
@@ -40,6 +44,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@PUT
 	@Path("/")
+	@ApiOperation(value = "Update binary storage")
 	ActionStatus update(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
@@ -50,6 +55,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
+	@ApiOperation(value = "Create or update binary storage")
 	ActionStatus createOrUpdate(@ApiParam("Binary storage information") BinaryStorageConfigurationDto postData);
 
 	/**
@@ -57,6 +63,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@GET
 	@Path("/{code}")
+	@ApiOperation(value = "Find binary storage by code")
 	BinaryStorageConfigurationResponseDto find(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 	/**
@@ -76,6 +83,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
+	@ApiOperation(value = "Remove binary storage by code")
+	ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 }

@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.WebHookDto;
@@ -23,7 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification/webhook")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Web hook notification")
 public interface WebHookNotificationRs extends IBaseRs {
 
     /**
@@ -34,6 +36,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create web hook notification")
     ActionStatus create(@ApiParam("Web hook information") WebHookDto postData);
 
     /**
@@ -44,6 +47,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update web hook notification")
     ActionStatus update(@ApiParam("Web hook information") WebHookDto postData);
 
     /**
@@ -54,6 +58,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find web hook notification by code")
     GetWebHookNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the web hook") String notificationCode);
 
     /**
@@ -64,6 +69,7 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
+    @ApiOperation(value = "Remove web hook notification by code")
     ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the web hook") String notificationCode);
 
     /**
@@ -74,5 +80,6 @@ public interface WebHookNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update web hook notification")
     ActionStatus createOrUpdate(@ApiParam("Web hook information") WebHookDto postData);
 }

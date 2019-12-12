@@ -9,6 +9,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.custom.CustomTableDataDto;
@@ -25,6 +27,7 @@ import org.meveo.api.rest.PATCH;
  **/
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Custom table")
 public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs {
 
     /**
@@ -35,6 +38,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Append custom table data")
     void append(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**
@@ -45,6 +49,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @PATCH
     @Path("/")
+    @ApiOperation(value = "Update custom table data")
     void update(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**
@@ -55,6 +60,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @DELETE
     @Path("/")
+    @ApiOperation(value = "Remove custom table data")
     void remove(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**
@@ -66,6 +72,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @POST
     @Path("/list/{customTableCode}")
+    @ApiOperation(value = "List of custom table")
     CustomTableDataResponseDto list(@PathParam("customTableCode") @ApiParam("Code of the custom table") String customTableCode, @ApiParam("Paging and search criteria") PagingAndFiltering pagingAndFiltering) throws MeveoApiException, BusinessException;
 
     /**
@@ -76,6 +83,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Create or update custom table data")
     void createOrUpdate(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
 }

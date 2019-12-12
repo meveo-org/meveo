@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.LanguageIsoDto;
@@ -25,7 +27,7 @@ import org.meveo.api.dto.response.GetLanguagesIsoResponse;
 @Path("/languageIso")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Language iso")
 public interface LanguageIsoRs extends IBaseRs {
 
     /**
@@ -36,6 +38,7 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create language iso")
     ActionStatus create(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**
@@ -46,6 +49,7 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find language iso by code")
     GetLanguageIsoResponse find(@QueryParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
@@ -56,6 +60,7 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @DELETE
     @Path("/{languageCode}")
+    @ApiOperation(value ="Remove language iso by code")
     ActionStatus remove(@PathParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
@@ -66,6 +71,7 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update language iso")
     ActionStatus update(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**
@@ -76,6 +82,7 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update language iso")
     ActionStatus createOrUpdate(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**

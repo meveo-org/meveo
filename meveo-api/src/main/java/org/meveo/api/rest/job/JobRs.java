@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.job.JobInstanceDto;
@@ -28,7 +30,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/job")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Job")
 public interface JobRs extends IBaseRs {
 
     /**
@@ -39,6 +41,7 @@ public interface JobRs extends IBaseRs {
      */
     @POST
     @Path("/execute")
+    @ApiOperation(value="Execute job")
     JobExecutionResultResponseDto execute(@ApiParam("Job instance info information") JobInstanceInfoDto postData);
     
     /**
@@ -49,6 +52,7 @@ public interface JobRs extends IBaseRs {
      */
     @POST
     @Path("/stop")
+    @ApiOperation(value="Stop job")
     ActionStatus stop(@PathParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
     /**
      * Create a new job instance
@@ -58,6 +62,7 @@ public interface JobRs extends IBaseRs {
      */
     @Path("/create")
     @POST
+    @ApiOperation(value="Create job")
     ActionStatus create(@ApiParam("Job instance info information") JobInstanceDto postData);
 
     /**
@@ -68,6 +73,7 @@ public interface JobRs extends IBaseRs {
      */
     @Path("/")
     @PUT
+    @ApiOperation(value="Update job")
     ActionStatus update(@ApiParam("Job instance info information") JobInstanceDto postData);
 
     /**
@@ -78,6 +84,7 @@ public interface JobRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value="Create or update job")
     ActionStatus createOrUpdate(@ApiParam("Job instance info information") JobInstanceDto postData);
 
     /**
@@ -88,6 +95,7 @@ public interface JobRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value="Find job by code")
     JobInstanceResponseDto find(@QueryParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
     /**
@@ -98,6 +106,7 @@ public interface JobRs extends IBaseRs {
      */
     @DELETE
     @Path("/{jobInstanceCode}")
+    @ApiOperation(value="Remove job by code")
     ActionStatus remove(@PathParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
     // timer
@@ -110,6 +119,7 @@ public interface JobRs extends IBaseRs {
      */
     @Path("/timer/")
     @POST
+    @ApiOperation(value="Create timer entity")
     ActionStatus createTimer(@ApiParam("Timer entity information") TimerEntityDto postData);
 
     /**
@@ -120,6 +130,7 @@ public interface JobRs extends IBaseRs {
      */
     @Path("/timer/")
     @PUT
+    @ApiOperation(value="Update timer entity")
     ActionStatus updateTimer(@ApiParam("Timer entity information") TimerEntityDto postData);
 
     /**
@@ -130,6 +141,7 @@ public interface JobRs extends IBaseRs {
      */
     @Path("/timer/createOrUpdate/")
     @POST
+    @ApiOperation(value="Create or update timer entity")
     ActionStatus createOrUpdateTimer(@ApiParam("Timer entity information") TimerEntityDto postData);
 
     /**
@@ -140,6 +152,7 @@ public interface JobRs extends IBaseRs {
      */
     @GET
     @Path("/timer/")
+    @ApiOperation(value="Find timer entity by code")
     TimerEntityResponseDto findTimer(@QueryParam("timerCode") @ApiParam("Code of the time") String timerCode);
 
     /**
@@ -150,6 +163,7 @@ public interface JobRs extends IBaseRs {
      */
     @DELETE
     @Path("/timer/{timerCode}")
+    @ApiOperation(value="Remove timer entity by code")
     ActionStatus removeTimer(@PathParam("timerCode") @ApiParam("Code of the time") String timerCode);
     
     /**
@@ -161,6 +175,7 @@ public interface JobRs extends IBaseRs {
      */
     @GET
     @Path("/jobReport")
+    @ApiOperation(value="Find job execution result by code")
     JobExecutionResultResponseDto findJobExecutionResult(@QueryParam("code") @ApiParam("Code of the job instance to match") String code, @QueryParam("id") @ApiParam("A job execution result id") Long jobExecutionResultId);
     
 }

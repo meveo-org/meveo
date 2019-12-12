@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.NotificationDto;
@@ -25,7 +27,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Notification")
 public interface NotificationRs extends IBaseRs {
 
     /**
@@ -36,6 +38,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create notification")
     ActionStatus create(@ApiParam("Notification information") NotificationDto postData);
 
     /**
@@ -46,6 +49,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update notification")
     ActionStatus update(@ApiParam("Notification information") NotificationDto postData);
 
     /**
@@ -56,6 +60,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find notification by code")
     GetNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
 
     /**
@@ -66,6 +71,7 @@ public interface NotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
+    @ApiOperation(value = "Remove notification by code")
     ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
     
     /**
@@ -94,5 +100,6 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update notification")
     ActionStatus createOrUpdate(@ApiParam("Notification information") NotificationDto postData);
 }

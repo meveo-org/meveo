@@ -1,5 +1,6 @@
 package org.meveo.api.rest;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.api.rest.impl.BaseRs;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/ontology")
 @Produces({MediaType.APPLICATION_JSON})
+@Api("Ontology")
 public class OntologyRs extends BaseRs {
 
     @Inject

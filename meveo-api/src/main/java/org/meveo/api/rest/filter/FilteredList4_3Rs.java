@@ -11,6 +11,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.filter.FilteredListDto;
 import org.meveo.api.rest.IBaseRs;
@@ -18,16 +20,18 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/filteredList4_3")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Filter list 4-3")
 public interface FilteredList4_3Rs extends IBaseRs {
 
 	@Path("/")
     @GET
-    public Response list(@QueryParam("filter") @ApiParam("Filter") String filter, @QueryParam("firstRow") @ApiParam("Number of first row") Integer firstRow, @QueryParam("numberOfRows") @ApiParam("Number of rows") Integer numberOfRows);
+    @ApiOperation(value = "List filter")
+    Response list(@QueryParam("filter") @ApiParam("Filter") String filter, @QueryParam("firstRow") @ApiParam("Number of first row") Integer firstRow, @QueryParam("numberOfRows") @ApiParam("Number of rows") Integer numberOfRows);
 
     @Path("/xmlInput")
     @POST
-    public Response listByXmlInput(@ApiParam("Filtered List information") FilteredListDto postData);
+    @ApiOperation(value="List filter by xml input")
+    Response listByXmlInput(@ApiParam("Filtered List information") FilteredListDto postData);
 
     /**
      * Execute a search in Elastic Search on all fields (_all field)
@@ -40,7 +44,8 @@ public interface FilteredList4_3Rs extends IBaseRs {
      */
     @Path("/search")
     @GET
-    public Response search(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("query") @ApiParam("Query") String query, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size);
+    @ApiOperation(value = "Search filte by classnames or cet code")
+    Response search(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("query") @ApiParam("Query") String query, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size);
 
     /**
      * Execute a search in Elastic Search on given fields for given values. Query values by field are passed in extra query parameters in a form of fieldName=valueToMatch
@@ -53,5 +58,6 @@ public interface FilteredList4_3Rs extends IBaseRs {
      */
     @Path("/searchByField")
     @GET
-    public Response searchByField(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size, @Context @ApiParam("Request URI information") UriInfo info);
+    @ApiOperation(value = "Search filter by field")
+    Response searchByField(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size, @Context @ApiParam("Request URI information") UriInfo info);
 }

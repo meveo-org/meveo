@@ -21,6 +21,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
@@ -38,6 +40,7 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 @Path("/module")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Module")
 public interface ModuleRs extends IBaseRs {
 
     /**
@@ -48,6 +51,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create meveo module")
     ActionStatus create(@ApiParam("Meveo module information") MeveoModuleDto moduleDto, @QueryParam("development") @ApiParam("Whether to development meveo module") @DefaultValue("false") boolean development);
 
     /**
@@ -58,6 +62,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update meveo module")
     ActionStatus update(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
     /**
@@ -68,6 +73,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update meveo module")
     ActionStatus createOrUpdate(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
     /**
@@ -78,6 +84,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
+    @ApiOperation(value = "Remove meveo module by code")
     ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code);
 
     /**
@@ -87,6 +94,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List meveo module")
     Response list(@QueryParam("codesOnly") @ApiParam("Whether to codes only for list of modules") boolean codesOnly, @BeanParam @ApiParam("Meveo module filters information") MeveoModuleFilters filters);
 
     /**
@@ -96,6 +104,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @PUT
     @Path("/install")
+    @ApiOperation(value = "Instance meveo module")
     ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
     /**
@@ -105,6 +114,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Get meveo module by code")
     MeveoModuleDtoResponse get(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
     /**
@@ -116,6 +126,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @GET
     @Path("/uninstall")
+    @ApiOperation(value = "Uninstall meveo module")
     ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code, @QueryParam("remove") @ApiParam("Whether to remove elements") @DefaultValue("false") boolean remove);
 
     /**
@@ -126,6 +137,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @GET
     @Path("/enable")
+    @ApiOperation(value = "Enable meveo module")
     ActionStatus enable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
     /**
@@ -136,6 +148,7 @@ public interface ModuleRs extends IBaseRs {
      */
     @GET
     @Path("/disable")
+    @ApiOperation(value = "Disable meveo module")
     ActionStatus disable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
     /**
@@ -149,6 +162,7 @@ public interface ModuleRs extends IBaseRs {
     @POST()
     @Path("/{code}/items/add")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @ApiOperation(value = "Add to module")
     MeveoModuleDto addToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode, @FormParam("itemCode") @ApiParam("Code of the item to add") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to add") String itemType) throws EntityDoesNotExistsException, BusinessException;
 
     /**
@@ -162,6 +176,7 @@ public interface ModuleRs extends IBaseRs {
     @POST()
     @Path("/{code}/items/remove")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @ApiOperation(value = "Remove from module")
     MeveoModuleDto removeFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode, @FormParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to remove") String itemType) throws EntityDoesNotExistsException, BusinessException;
 
 	/**
@@ -171,5 +186,6 @@ public interface ModuleRs extends IBaseRs {
 	 */
 	@PUT
 	@Path("/fork/{code}")
+    @ApiOperation(value = "Fork meveo module by code")
 	ActionStatus fork(@PathParam("code") @ApiParam("Code of the module") String moduleCode);
 }

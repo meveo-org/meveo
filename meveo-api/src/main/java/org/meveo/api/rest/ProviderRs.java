@@ -1,5 +1,7 @@
 package org.meveo.api.rest;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ProviderDto;
@@ -17,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/provider")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Provider")
 public interface ProviderRs extends IBaseRs {
 
     /**
@@ -28,6 +30,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create provider")
     ActionStatus create(@ApiParam("Provider information") ProviderDto postData);
 
     /**
@@ -38,6 +41,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find provider by code")
     GetProviderResponse find(@QueryParam("providerCode") @ApiParam("Code of the provider") String providerCode);
 
     /**
@@ -48,6 +52,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update provider")
     ActionStatus update(@ApiParam("Provider information") ProviderDto postData);
 
 
@@ -59,6 +64,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update provider")
     ActionStatus createOrUpdate(@ApiParam("Provider information") ProviderDto postData);
 
     /**
@@ -67,6 +73,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @PUT
     @Path("/updateProviderCF")
+    @ApiOperation(value="Update provider cf")
     ActionStatus updateProviderCF(@ApiParam("Provider information") ProviderDto postData);
 
     /**
@@ -75,6 +82,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @GET
     @Path("/findProviderCF")
+    @ApiOperation(value="Find provider cf by code")
     GetProviderResponse findProviderCF(@QueryParam("providerCode") @ApiParam("Code of the provider") String providerCode);
 
     /**
@@ -85,7 +93,8 @@ public interface ProviderRs extends IBaseRs {
      */
     @POST
     @Path("/createTenant")
-    public ActionStatus createTenant(@ApiParam("Provider information") ProviderDto postData);
+    @ApiOperation(value = "Create tenant provider")
+    ActionStatus createTenant(@ApiParam("Provider information") ProviderDto postData);
 
     /**
      * List tenants
@@ -94,7 +103,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @GET
     @Path("/listTenants")
-    public ProvidersDto listTenants();
+    ProvidersDto listTenants();
 
     /**
      * Remove a tenant
@@ -104,5 +113,6 @@ public interface ProviderRs extends IBaseRs {
      */
     @DELETE
     @Path("/{providerCode}")
-    public ActionStatus removeTenant(@PathParam("providerCode") @ApiParam("Code of the provider") String providerCode);
+    @ApiOperation(value = "Remove tenant provider by code")
+    ActionStatus removeTenant(@PathParam("providerCode") @ApiParam("Code of the provider") String providerCode);
 }

@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.EmailNotificationDto;
@@ -23,7 +24,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification/email")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@ApiOperation("Email notification")
 public interface EmailNotificationRs extends IBaseRs {
 
     /**
@@ -34,6 +35,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create email notification")
     ActionStatus create(@ApiParam("Email notification information") EmailNotificationDto postData);
 
     /**
@@ -44,6 +46,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update email notification")
     ActionStatus update(@ApiParam("Email notification information") EmailNotificationDto postData);
 
     /**
@@ -54,6 +57,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find email notification by code")
     GetEmailNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the email notification") String notificationCode);
 
     /**
@@ -64,6 +68,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
+    @ApiOperation(value = "Remove email notification by code")
     ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the email notification") String notificationCode);
 
     /**
@@ -74,6 +79,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update email notification")
     ActionStatus createOrUpdate(@ApiParam("Email notification information") EmailNotificationDto postData);
 
 }

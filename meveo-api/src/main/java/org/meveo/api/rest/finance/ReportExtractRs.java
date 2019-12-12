@@ -9,6 +9,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.finance.ReportExtractDto;
@@ -26,22 +28,27 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/finance/reportExtracts")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Report extract")
 public interface ReportExtractRs extends IBaseRs {
 
     @POST
     @Path("/")
+    @ApiOperation(value = "Create report extract")
     ActionStatus create(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/")
+    @ApiOperation(value = "Update report extract")
     ActionStatus update(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update report extract")
     ActionStatus createOrUpdate(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @DELETE
     @Path("/")
+    @ApiOperation(value = "Remove report extract by code")
     ActionStatus remove(@ApiParam("Code of the report extract") String reportExtractCode);
 
     @GET
@@ -50,10 +57,12 @@ public interface ReportExtractRs extends IBaseRs {
 
     @GET
     @Path("/")
+    @ApiOperation(value = "Find report extract by code")
     ReportExtractResponseDto find(@QueryParam("reportExtractCode") @ApiParam("Code of the report extract") String reportExtractCode);
 
     @POST
     @Path("/run")
+    @ApiOperation(value = "Run report extract")
     ActionStatus runReport(@ApiParam("Run report extract information") RunReportExtractDto postData);
 
 }

@@ -3,6 +3,8 @@ package org.meveo.api.rest.job;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.job.TimerEntityDto;
@@ -19,7 +21,7 @@ import java.util.List;
 @Path("/timerEntity")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Timer entity")
 public interface TimerEntityRs extends IBaseRs {
 
     /**
@@ -30,6 +32,7 @@ public interface TimerEntityRs extends IBaseRs {
      */
     @Path("/create")
     @POST
+    @ApiOperation(value = "Create time entity")
     ActionStatus create(@ApiParam("Time entity information") TimerEntityDto postData);
 
     /**
@@ -40,6 +43,7 @@ public interface TimerEntityRs extends IBaseRs {
      */
     @Path("/update")
     @POST
+    @ApiOperation(value = "Update time entity")
     ActionStatus update(@ApiParam("Time entity information") TimerEntityDto postData);
 
     /**
@@ -50,6 +54,7 @@ public interface TimerEntityRs extends IBaseRs {
      */
     @Path("/createOrUpdate")
     @POST
+    @ApiOperation(value = "Create or update time entity")
     ActionStatus createOrUpdate(@ApiParam("Time entity information") TimerEntityDto postData);
 
     /**
@@ -60,6 +65,7 @@ public interface TimerEntityRs extends IBaseRs {
      */
     @Path("/{timerEntityCode}")
     @GET
+    @ApiOperation(value = "Find time entity by code")
     GetTimerEntityResponseDto find(@PathParam("timerEntityCode") @ApiParam("Code of the timer entity") String timerEntityCode);
 
     @GET

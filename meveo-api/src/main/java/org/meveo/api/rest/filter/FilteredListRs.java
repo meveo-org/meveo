@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.elasticsearch.search.sort.SortOrder;
 import org.meveo.api.dto.FilterDto;
@@ -28,7 +29,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/filteredList")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Filter list")
 public interface FilteredListRs extends IBaseRs {
 
     /**
@@ -41,7 +42,8 @@ public interface FilteredListRs extends IBaseRs {
      */
     @Path("/listByFilter")
     @POST
-    public Response listByFilter(@ApiParam("Filter information") FilterDto filter, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size);
+    @ApiOperation(value = "List filter")
+    Response listByFilter(@ApiParam("Filter information") FilterDto filter, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size);
 
     /**
      * Execute a search in Elastic Search on all fields (_all field)
@@ -56,7 +58,8 @@ public interface FilteredListRs extends IBaseRs {
      */
     @Path("/search")
     @GET
-    public Response search(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("query") @ApiParam("Query") String query, @QueryParam("from") @ApiParam("Starting record") Integer from,
+    @ApiOperation(value = "Search filter by classnames or cet code")
+    Response search(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("query") @ApiParam("Query") String query, @QueryParam("from") @ApiParam("Starting record") Integer from,
                            @QueryParam("size") @ApiParam("Number of records per page") Integer size, @QueryParam("sortField") @ApiParam("Sort the results of field") String sortField, @QueryParam("sortOrder") @ApiParam("Sort ASC or DESC order of the results") SortOrder sortOrder);
 
     /**
@@ -72,7 +75,8 @@ public interface FilteredListRs extends IBaseRs {
      */
     @Path("/searchByField")
     @GET
-    public Response searchByField(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size,
+    @ApiOperation(value = "Search filter by field")
+    Response searchByField(@QueryParam("classnamesOrCetCodes") @ApiParam("Entity classes to match") String[] classnamesOrCetCodes, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size,
             @QueryParam("sortField") @ApiParam("Sort the results of field") String sortField, @QueryParam("sortOrder") @ApiParam("Sort ASC or DESC order of the results") SortOrder sortOrder, @Context @ApiParam("Request URI information") UriInfo info);
 
     /**
@@ -82,7 +86,7 @@ public interface FilteredListRs extends IBaseRs {
      */
     @Path("/reindex")
     @GET
-    public Response reindex();
+    Response reindex();
 
     /**
      * Execute a search in Elastic Search on all fields (_all field) and all entity types
@@ -101,6 +105,7 @@ public interface FilteredListRs extends IBaseRs {
     @Path("/fullSearch")
     @GET
     @Deprecated
-    public Response fullSearch(@QueryParam("query") @ApiParam("Query") String query, @QueryParam("category") @ApiParam("Search by category") String category, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size,
+    @ApiOperation("Search filter")
+    Response fullSearch(@QueryParam("query") @ApiParam("Query") String query, @QueryParam("category") @ApiParam("Search by category") String category, @QueryParam("from") @ApiParam("Starting record") Integer from, @QueryParam("size") @ApiParam("Number of records per page") Integer size,
             @QueryParam("sortField") @ApiParam("Sort the results of field") String sortField, @QueryParam("sortOrder") @ApiParam("Sort ASC or DESC order of the results") SortOrder sortOrder);
 }

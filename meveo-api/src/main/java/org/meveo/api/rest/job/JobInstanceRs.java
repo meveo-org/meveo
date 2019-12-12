@@ -10,6 +10,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.job.JobInstanceDto;
@@ -24,7 +26,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/jobInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Job instance")
 public interface JobInstanceRs extends IBaseRs {
 
     /**
@@ -35,6 +37,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/create")
     @POST
+    @ApiOperation(value = "Create job instance")
     ActionStatus create(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
@@ -45,6 +48,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/update")
     @POST
+    @ApiOperation(value="Update job instance")
     ActionStatus update(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
@@ -55,6 +59,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/createOrUpdate")
     @POST
+    @ApiOperation(value="Create or update job instance")
     ActionStatus createOrUpdate(@ApiParam("Job instance information") JobInstanceDto postData);
 
     /**
@@ -65,6 +70,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/")
     @GET
+    @ApiOperation(value="Find job instance by code")
     JobInstanceResponseDto find(@QueryParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
     /**
@@ -75,6 +81,7 @@ public interface JobInstanceRs extends IBaseRs {
      */
     @Path("/{jobInstanceCode}")
     @DELETE
+    @ApiOperation(value="Remove job instance by code")
     ActionStatus remove(@PathParam("jobInstanceCode") @ApiParam("Code of the job instance") String jobInstanceCode);
 
 }

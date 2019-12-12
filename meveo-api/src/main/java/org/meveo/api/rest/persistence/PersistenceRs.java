@@ -32,6 +32,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
@@ -76,6 +77,7 @@ import io.swagger.annotations.ApiOperation;
  * @lastModifiedVersion 6.5.0
  */
 @Path("/{repository}/persistence")
+@Api("Persistence")
 public class PersistenceRs {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(PersistenceRs.class);
@@ -135,6 +137,7 @@ public class PersistenceRs {
 
     @DELETE
     @Path("/{cetCode}/{uuid}")
+    @ApiOperation(value = "Delete persistence by cet code")
     public Response delete(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
@@ -154,6 +157,7 @@ public class PersistenceRs {
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Get persistence")
     public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
@@ -170,6 +174,7 @@ public class PersistenceRs {
 
     @PUT
     @Path("/{cetCode}/{uuid}")
+    @ApiOperation(value = "Update persistence")
     public void update(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid, @ApiParam("Map of body") Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
@@ -190,6 +195,7 @@ public class PersistenceRs {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "List persistence")
     public List<PersistedItem> persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
 
         Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
@@ -281,6 +287,7 @@ public class PersistenceRs {
     @SuppressWarnings("unchecked")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "List post persistence")
     public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException {
 
         // Deserialize binaries

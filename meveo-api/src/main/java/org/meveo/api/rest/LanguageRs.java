@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.LanguageDto;
@@ -26,7 +28,7 @@ import org.meveo.api.dto.response.GetLanguageResponse;
 @Path("/language")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Language")
 public interface LanguageRs extends IBaseRs {
 
     /**
@@ -37,6 +39,7 @@ public interface LanguageRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create language")
     ActionStatus create(@ApiParam("Language information") LanguageDto postData);
 
     /**
@@ -47,6 +50,7 @@ public interface LanguageRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value="Find language by code")
     GetLanguageResponse find(@QueryParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
@@ -57,6 +61,7 @@ public interface LanguageRs extends IBaseRs {
      */
     @DELETE
     @Path("/{languageCode}")
+    @ApiOperation(value="Remove language by code")
     ActionStatus remove(@PathParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
@@ -67,6 +72,7 @@ public interface LanguageRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update language")
     ActionStatus update(@ApiParam("Language information") LanguageDto postData);
 
     /**
@@ -77,5 +83,6 @@ public interface LanguageRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update language")
     ActionStatus createOrUpdate(@ApiParam("Language information") LanguageDto postData);
 }
