@@ -53,7 +53,7 @@ public class Neo4JPersistenceRs {
     private String neo4jConfiguration;
 
     @DELETE
-    public Response delete(@ApiParam("Collection of persistences information") Collection<PersistenceDto> dtos) throws BusinessException {
+    public Response delete(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws BusinessException {
 
         for (PersistenceDto persistenceDto : dtos) {
             if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
@@ -66,7 +66,7 @@ public class Neo4JPersistenceRs {
 
     @POST
     @Path("/entities")
-    public Response persistEntities(@ApiParam("Collection of persistences information") Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
+    public Response persistEntities(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()

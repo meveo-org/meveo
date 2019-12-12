@@ -29,11 +29,11 @@ public interface FilesRs extends IBaseRs {
 
 	@GET
 	@Path("/")
-	GetFilesResponseDto listFiles(@QueryParam("dir") @ApiParam("Whether to directory the file") String dir);
+	GetFilesResponseDto listFiles(@QueryParam("dir") @ApiParam("Directory from where to list files") String dir);
 
 	@POST
 	@Path("/createDir")
-	ActionStatus createDir(@ApiParam("Whether to directory the file") String dir);
+	ActionStatus createDir(@ApiParam("Directory from where to list files") String dir);
 
 	@POST
 	@Path("/zipFile")
