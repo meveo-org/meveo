@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.communication.MeveoInstanceDto;
@@ -27,7 +29,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/communication/meveoInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Meveo instance")
 public interface MeveoInstanceRs extends IBaseRs {
 
 	/**
@@ -38,6 +40,7 @@ public interface MeveoInstanceRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
+    @ApiOperation(value = "Create meveo instance information")
     ActionStatus create(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 
 	/**
@@ -48,6 +51,7 @@ public interface MeveoInstanceRs extends IBaseRs {
 	 */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update meveo instance information")
     ActionStatus update(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 
     /**
@@ -58,6 +62,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find meveo instance information")
     MeveoInstanceResponseDto find(@QueryParam("code") @ApiParam("Code of the meveo instance") String code);
 
     /**
@@ -68,6 +73,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
+    @ApiOperation(value = "Remove meveo instance information")
     ActionStatus remove(@PathParam("code") @ApiParam("Code of the meveo instance") String code);
 
     /**
@@ -87,6 +93,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update meveo instance information")
     ActionStatus createOrUpdate(@ApiParam("Meveo instance information") MeveoInstanceDto meveoInstanceDto);
 }
 

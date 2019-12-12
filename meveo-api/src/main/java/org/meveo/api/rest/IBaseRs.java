@@ -3,7 +3,7 @@ package org.meveo.api.rest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.;
 import org.meveo.api.dto.ActionStatus;
 
 /**

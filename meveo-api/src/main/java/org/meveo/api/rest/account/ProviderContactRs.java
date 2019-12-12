@@ -15,6 +15,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.account.ProviderContactDto;
@@ -31,7 +33,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/account/providerContact")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("ProviderContact")
 public interface ProviderContactRs extends IBaseRs {
 
 	/**
@@ -41,6 +43,7 @@ public interface ProviderContactRs extends IBaseRs {
 	 */
     @POST
     @Path("/")
+    @ApiOperation(value="Create provider contact information")
     ActionStatus create(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
@@ -51,6 +54,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value="Update provider contact information")
     ActionStatus update(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
@@ -60,6 +64,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value="Find provider contact information")
     ProviderContactResponseDto find(@QueryParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
@@ -70,6 +75,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
+    @ApiOperation(value="Remove provider contact information")
     ActionStatus remove(@PathParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**

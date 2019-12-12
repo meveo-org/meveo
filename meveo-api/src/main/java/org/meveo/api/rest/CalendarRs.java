@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CalendarDto;
@@ -23,7 +25,7 @@ import org.meveo.api.dto.response.ListCalendarResponse;
 @Path("/calendar")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Calendar")
 public interface CalendarRs extends IBaseRs {
 
     /**
@@ -34,6 +36,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @POST
+    @ApiOperation(value = "Create calendar information")
     ActionStatus create(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
@@ -44,6 +47,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @PUT
+    @ApiOperation(value = "Update calendar information")
     ActionStatus update(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
@@ -54,6 +58,7 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @GET
+    @ApiOperation(value = "Find calendar information")
     GetCalendarResponse find(@QueryParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
@@ -71,7 +76,9 @@ public interface CalendarRs extends IBaseRs {
      * @return action result
      */
     @Path("/{calendarCode}")
-    @DELETE ActionStatus remove(@PathParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
+    @DELETE
+    @ApiOperation(value = "Remove calendar information")
+    ActionStatus remove(@PathParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
      * Create new or update an existing calendar with a given code.
@@ -80,6 +87,8 @@ public interface CalendarRs extends IBaseRs {
      * @return Request processing status
      */
     @Path("/createOrUpdate")
-    @POST ActionStatus createOrUpdate(@ApiParam("Calendar information") CalendarDto postData);
+    @POST
+    @ApiOperation(value = "Create or update calendar information")
+    ActionStatus createOrUpdate(@ApiParam("Calendar information") CalendarDto postData);
 
 }

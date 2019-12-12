@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CurrencyIsoDto;
@@ -25,7 +27,7 @@ import org.meveo.api.dto.response.GetCurrencyIsoResponse;
 @Path("/currencyIso")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Currency iso")
 public interface CurrencyIsoRs extends IBaseRs {
 
     /**
@@ -35,7 +37,9 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @POST
-    @Path("/") ActionStatus create(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
+    @Path("/")
+    @ApiOperation(value = "Create currency iso information")
+    ActionStatus create(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * Search currency with a given currency code.
@@ -44,7 +48,9 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return currency iso if found.
      */
     @GET
-    @Path("/") GetCurrencyIsoResponse find(@QueryParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
+    @Path("/")
+    @ApiOperation(value = "Find currency iso information")
+    GetCurrencyIsoResponse find(@QueryParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
      * Remove currency with a given currency code.
@@ -53,7 +59,9 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @DELETE
-    @Path("/{currencyCode}") ActionStatus remove(@PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
+    @Path("/{currencyCode}")
+    @ApiOperation(value = "Remove currency iso information")
+    ActionStatus remove(@PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
      * Modify a tradingCurrency. Same input parameter as create. The currency and tradingCurrency are created if they don't exists. The operation fails if the tradingCurrency is
@@ -63,14 +71,18 @@ public interface CurrencyIsoRs extends IBaseRs {
      * @return action status.
      */
     @PUT
-    @Path("/") ActionStatus update(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
+    @Path("/")
+    @ApiOperation(value = "Update currency iso information")
+    ActionStatus update(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * @param currencyIsoDto currency iso to create or update
      * @return action status.
      */
     @POST
-    @Path("/createOrUpdate") ActionStatus createOrUpdate(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
+    @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update currency iso information")
+    ActionStatus createOrUpdate(@ApiParam("Currency iso information") CurrencyIsoDto currencyIsoDto);
 
     /**
      * List all currencies.

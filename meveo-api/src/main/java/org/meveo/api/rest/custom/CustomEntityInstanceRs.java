@@ -10,6 +10,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomEntityInstanceDto;
@@ -23,7 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/customEntityInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Custom entity instance")
 public interface CustomEntityInstanceRs extends IBaseRs {
 
     /**
@@ -35,6 +37,7 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/{customEntityTemplateCode}")
+    @ApiOperation(value = "Create code of the custom entity template")
     ActionStatus create(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @ApiParam("Custom entity instance information") CustomEntityInstanceDto dto);
 
     /**
@@ -46,6 +49,7 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @PUT
     @Path("/{customEntityTemplateCode}")
+    @ApiOperation(value = "Update code of the custom entity template")
     ActionStatus update(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @ApiParam("Custom entity instance information") CustomEntityInstanceDto dto);
 
     /**
@@ -57,6 +61,7 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @DELETE
     @Path("/{customEntityTemplateCode}/{code}")
+    @ApiOperation(value = "Delete custom entity template by code")
     ActionStatus remove(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @PathParam("code") @ApiParam("Code of the custom entity instance") String code);
 
     /**
@@ -68,6 +73,7 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/{customEntityTemplateCode}/{code}")
+    @ApiOperation(value = "Find custom entity template by code")
     CustomEntityInstanceResponseDto find(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @PathParam("code") @ApiParam("Code of the custom entity instance") String code);
 
     /**
@@ -78,6 +84,7 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/list/{customEntityTemplateCode}")
+    @ApiOperation(value = "List custom entity template")
     CustomEntityInstancesResponseDto list(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity instance") String customEntityTemplateCode);
 
     /**
@@ -89,5 +96,6 @@ public interface CustomEntityInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/{customEntityTemplateCode}/createOrUpdate")
+    @ApiOperation(value = "Create or update code of the custom entity template")
     ActionStatus createOrUpdate(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @ApiParam("Custom entity instance information") CustomEntityInstanceDto dto);
 }

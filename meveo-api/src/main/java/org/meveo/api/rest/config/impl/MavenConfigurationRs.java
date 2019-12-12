@@ -10,6 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -28,6 +30,7 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Path("/mavenConfiguration")
+@Api("Maven configuration")
 public class MavenConfigurationRs extends BaseRs {
 
 	@Inject
@@ -41,6 +44,7 @@ public class MavenConfigurationRs extends BaseRs {
 	 */
 	@POST
 	@Path("/")
+	@ApiOperation(value = "Create or update maven configuration")
 	public ActionStatus createOrUpdate(@ApiParam("Maven configuration information") MavenConfigurationDto postData) {
 
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");

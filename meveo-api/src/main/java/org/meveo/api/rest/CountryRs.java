@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CountryDto;
@@ -26,7 +28,7 @@ import org.meveo.api.dto.response.GetCountryResponse;
 @Path("/country")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Country")
 public interface CountryRs extends IBaseRs {
 
     /**
@@ -37,6 +39,7 @@ public interface CountryRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create country information")
     ActionStatus create(@ApiParam("Country information") CountryDto countryDto);
 
     /**
@@ -47,6 +50,7 @@ public interface CountryRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find country information")
     GetCountryResponse find(@QueryParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
@@ -58,6 +62,7 @@ public interface CountryRs extends IBaseRs {
      */
     @DELETE
     @Path("/{countryCode}/{currencyCode}")
+    @ApiOperation(value = "Remove country information")
     ActionStatus remove(@PathParam("countryCode") @ApiParam("Code of the country") String countryCode, @PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
@@ -68,6 +73,7 @@ public interface CountryRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update country information")
     ActionStatus update(@ApiParam("Country information") CountryDto countryDto);
 
     /**
@@ -76,6 +82,7 @@ public interface CountryRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update country information")
     ActionStatus createOrUpdate(@ApiParam("Country information") CountryDto countryDto);
 
 }

@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -23,7 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/customFieldTemplate")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Custom field template")
 public interface CustomFieldTemplateRs extends IBaseRs {
 
     /**
@@ -34,6 +36,7 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create custom field template information")
     ActionStatus create(@ApiParam("Custom field template information") CustomFieldTemplateDto postData);
 
     /**
@@ -44,6 +47,7 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update custom field template information")
     ActionStatus update(@ApiParam("Custom field template information") CustomFieldTemplateDto postData);
 
     /**
@@ -55,6 +59,7 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/{customFieldTemplateCode}/{appliesTo}")
+    @ApiOperation(value = "Remove custom field template information")
     ActionStatus remove(@PathParam("customFieldTemplateCode") @ApiParam("Code of the custom field template") String customFieldTemplateCode, @PathParam("appliesTo") @ApiParam("applies to") String appliesTo);
 
     /**
@@ -66,6 +71,7 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find custom field template information")
     GetCustomFieldTemplateReponseDto find(@QueryParam("customFieldTemplateCode") @ApiParam("Code of the custom field template") String customFieldTemplateCode, @QueryParam("appliesTo") @ApiParam("applies to") String appliesTo);
 
     /**
@@ -76,5 +82,6 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update custom field template information")
     ActionStatus createOrUpdate(@ApiParam("Custom field template information") CustomFieldTemplateDto postData);
 }

@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.TitleDto;
@@ -21,7 +23,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/account/title")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Title")
 public interface TitleRs extends IBaseRs {
 
     /**
@@ -32,6 +34,7 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value="Create title information")
     ActionStatus create(@ApiParam("Title information") TitleDto postData);
 
     /**
@@ -42,6 +45,7 @@ public interface TitleRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value="Find title information")
     TitleResponseDto find(@QueryParam("titleCode") @ApiParam("Code of the title") String titleCode);
 
     /**
@@ -61,6 +65,7 @@ public interface TitleRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value="Update title information")
     ActionStatus update(@ApiParam("Title information") TitleDto postData);
 
     /**
@@ -71,7 +76,8 @@ public interface TitleRs extends IBaseRs {
      */
     @DELETE
     @Path("/{titleCode}")
-    public ActionStatus remove(@PathParam("titleCode") @ApiParam("Code of the title") String titleCode);
+    @ApiOperation(value="Remove title information")
+    ActionStatus remove(@PathParam("titleCode") @ApiParam("Code of the title") String titleCode);
 
     /**
      * Create new or update an existing title
@@ -81,5 +87,6 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value="Create and update title information")
     ActionStatus createOrUpdate(@ApiParam("Title information") TitleDto postData);
 }

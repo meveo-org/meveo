@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.communication.EmailTemplateDto;
@@ -27,7 +29,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/communication/emailTemplate")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Email template")
 public interface EmailTemplateRs extends IBaseRs {
 
 	/**
@@ -38,6 +40,7 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
+    @ApiOperation(value = "Create email template information")
     ActionStatus create(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
 	/**
@@ -48,6 +51,7 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update email template information")
     ActionStatus update(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
     /**
@@ -58,6 +62,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find email template information")
     EmailTemplateResponseDto find(@QueryParam("code") @ApiParam("Code of the email template") String code);
 
     /**
@@ -68,6 +73,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
+    @ApiOperation(value = "Remove email template information")
     ActionStatus remove(@PathParam("code") @ApiParam("Code of the email template") String code);
 
     /**
@@ -87,6 +93,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update email template information")
     ActionStatus createOrUpdate(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 }
 

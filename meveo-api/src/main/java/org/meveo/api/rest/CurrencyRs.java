@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CurrencyDto;
@@ -25,7 +27,7 @@ import org.meveo.api.dto.response.GetCurrencyResponse;
 @Path("/currency")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Currency")
 public interface CurrencyRs extends IBaseRs {
 
     /**
@@ -36,6 +38,7 @@ public interface CurrencyRs extends IBaseRs {
      */
     @POST
     @Path("/")
+    @ApiOperation(value = "Create currency information")
     ActionStatus create(@ApiParam("Currency information") CurrencyDto postData);
 
     /**
@@ -46,6 +49,7 @@ public interface CurrencyRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "Find currency information")
     GetCurrencyResponse find(@QueryParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
@@ -56,6 +60,7 @@ public interface CurrencyRs extends IBaseRs {
      */
     @DELETE
     @Path("/{currencyCode}")
+    @ApiOperation(value = "Remove currency information")
     ActionStatus remove(@PathParam("currencyCode") @ApiParam("Code of the currency") String currencyCode);
 
     /**
@@ -67,6 +72,7 @@ public interface CurrencyRs extends IBaseRs {
      */
     @PUT
     @Path("/")
+    @ApiOperation(value = "Update currency information")
     ActionStatus update(@ApiParam("Currency information") CurrencyDto postData);
 
     /**
@@ -75,6 +81,7 @@ public interface CurrencyRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update currency information")
     ActionStatus createOrUpdate(@ApiParam("Currency information") CurrencyDto postData);
 
 }
