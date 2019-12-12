@@ -1,30 +1,53 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	template="/layout/template.xhtml">
 
-    <ui:define name="metadata">
-        <f:metadata>
-            <f:viewParam name="objectId" value="#{sqlConfigurationBean.objectId}" />
-        </f:metadata>
-    </ui:define>
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId" value="#{sqlConfigurationBean.objectId}" />
+		</f:metadata>
+	</ui:define>
 
-    <ui:define name="body">
-        <h:form id="crumbmenuForm">
-            <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
 				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
-                <p:menuitem outcome="sqlConfigurations" value="#{messages['repository.sqlConfiguration']}" />
-                <p:menuitem value="#{messages['commons.new']} #{messages['repository.sqlConfiguration']}" disabled="true" rendered="#{sqlConfigurationBean.entity.transient}" />
-                <p:menuitem value="#{messages['repository.sqlConfiguration']} - #{sqlConfigurationBean.entity.code}" disabled="true" rendered="#{!sqlConfigurationBean.entity.transient}" />
-            </p:breadCrumb>
-        </h:form>
+				<p:menuitem outcome="sqlConfigurations"
+					value="#{messages['repository.sqlConfiguration']}" />
+				<p:menuitem
+					value="#{messages['commons.new']} #{messages['repository.sqlConfiguration']}"
+					disabled="true" rendered="#{sqlConfigurationBean.entity.transient}" />
+				<p:menuitem
+					value="#{messages['repository.sqlConfiguration']} - #{sqlConfigurationBean.entity.code}"
+					disabled="true"
+					rendered="#{!sqlConfigurationBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
 
-        <hftl:formPanel label="#{messages['repository.sqlConfiguration']}" backingBean="#{sqlConfigurationBean}">
-            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
-            <hftl:formField label="#{messages['sqlConfiguration.url']}" field="url" required="true" />
-            <hftl:formField label="#{messages['sqlConfiguration.username']}" field="username" required="true" />
-            <hftl:formField label="#{messages['sqlConfiguration.password']}" field="password" required="true" />
-            <hftl:formField label="#{messages['sqlConfiguration.driverClass']}" field="driverClass" required="true" />
-            <hftl:formField label="#{messages['sqlConfiguration.dialect']}" field="dialect" required="false" />
-        </hftl:formPanel>
-    </ui:define>
+		<hftl:formPanel label="#{messages['repository.sqlConfiguration']}"
+			backingBean="#{sqlConfigurationBean}">
+			<hftl:formField label="#{messages['businessEntity.code']}"
+				field="code" required="true" validateUnique="true" />
+			<hftl:formField label="#{messages['sqlConfiguration.url']}"
+				field="url" required="true" />
+			<hftl:formField label="#{messages['sqlConfiguration.username']}"
+				field="username" required="true" />
+			<hftl:formField label="#{messages['sqlConfiguration.password']}"
+				field="password" required="true" />
+			<hftl:formField label="#{messages['sqlConfiguration.driverClass']}"
+				field="driverClass" required="true" />
+			<hftl:formField label="#{messages['sqlConfiguration.dialect']}"
+				field="dialect" required="false" />
+			<ui:param name="buttons" value="true" />
+			<ui:define name="buttons">
+				<p:commandButton process="@this"
+					value="#{messages['sqlConfiguration.testConnection']}"
+					action="#{sqlConfigurationBean.testConnection()}" update="messages"></p:commandButton>
+			</ui:define>
+		</hftl:formPanel>
+	</ui:define>
 </ui:composition>

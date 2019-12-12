@@ -18,13 +18,13 @@ public class Neo4jConfigurationService extends BusinessService<Neo4JConfiguratio
 
 	@Inject
 	@Updated
-	private Event<Neo4JConfiguration> neo4jConfigurationCreatedEvent;
+	private Event<Neo4JConfiguration> neo4jConfigurationUpdatedEvent;
 
 	@Override
 	public Neo4JConfiguration update(Neo4JConfiguration entity) throws BusinessException {
 
 		entity = super.update(entity);
-		neo4jConfigurationCreatedEvent.fire(entity);
+		neo4jConfigurationUpdatedEvent.fire(entity);
 		
 		return entity;
 	}

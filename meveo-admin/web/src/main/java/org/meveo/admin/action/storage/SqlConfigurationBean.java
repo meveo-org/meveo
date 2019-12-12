@@ -4,6 +4,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.sql.SqlConfigurationDto;
@@ -43,4 +44,13 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 		return sqlConfigurationService;
 	}
 
+	public void testConnection() {
+
+		if (sqlConfigurationService.testConnection(entity.getCode())) {
+			messages.info(new BundleKey("messages", "sqlConfiguration.connection.ok"));
+
+		} else {
+			messages.error(new BundleKey("messages", "sqlConfiguration.connection.ko"));
+		}
+	}
 }

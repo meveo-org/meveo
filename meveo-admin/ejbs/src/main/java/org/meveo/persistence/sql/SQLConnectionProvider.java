@@ -135,9 +135,10 @@ public class SQLConnectionProvider {
 		configurationMap.put(entity.getCode(), entity);
 
 		SessionFactory oldSessionFactory = SESSION_FACTORY_MAP.get(entity.getCode());
-		if (oldSessionFactory != null) {
+		if (oldSessionFactory != null && oldSessionFactory.isOpen()) {
 			oldSessionFactory.close();
 		}
+		
 		SESSION_FACTORY_MAP.put(entity.getCode(), buildSessionFactory(entity.getCode()));
 	}
 
