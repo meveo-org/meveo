@@ -274,14 +274,14 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
         scriptInstance.getMavenDependencies().clear();
         scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
 
-		if (CollectionUtils.isNotEmpty(mavenDependencyList)) {
+		if (mavenDependencyList != null) {
 			Integer line = 1;
 			Map<String, Integer> map = new HashMap<>();
 			for (MavenDependency maven : mavenDependencyList) {
 				String key = maven.getGroupId() + maven.getArtifactId();
 				if (map.containsKey(key)) {
 					Integer position = map.get(key);
-					throw new BusinessException("GroupId and artifactId of" + line + "and" + position + "are duplicated");
+					throw new BusinessException("GroupId and artifactId of maven dependency " + line + " and " + position + " are duplicated");
 				} else {
 					map.put(key, line);
 				}
@@ -290,7 +290,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			line = 1;
 			for (MavenDependency maven : mavenDependencyList) {
 				if (!mavenDependencyService.validateUniqueFields(scriptInstance.getId(), maven.getGroupId(), maven.getArtifactId())) {
-                  throw new BusinessException("GroupId and artifactId of" + line + "must be unique");
+                  throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
 				}
 				line++;
 			}

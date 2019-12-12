@@ -22,7 +22,7 @@ public class MavenDependencyService {
                     groupId.toLowerCase().replaceAll("'", "''"),
                     artifactId.toLowerCase().replaceAll("'", "''"));
         } else {
-            queryString = String.format("select count(*) from MavenDependency where lower(groupId)='%s' and lower(artifactId)='%s' and script.id = %d",
+            queryString = String.format("select count(*) from MavenDependency where lower(groupId)='%s' and lower(artifactId)='%s' and script.id <> %d",
                     groupId.toLowerCase().replaceAll("'", "''"),
                     artifactId.toLowerCase().replaceAll("'", "''"), id);
         }
