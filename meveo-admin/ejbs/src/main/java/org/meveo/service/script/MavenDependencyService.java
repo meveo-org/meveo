@@ -18,15 +18,14 @@ public class MavenDependencyService {
 
         String queryString = null;
         if (id == null) {
-            queryString = String.format("select count(*) from MavenDependency where lower(groupId)='%s' and lower(artifactId)='%s'",
-                    groupId.toLowerCase().replaceAll("'", "''"),
-                    artifactId.toLowerCase().replaceAll("'", "''"));
+            queryString = "select count(*) from MavenDependency where lower(groupId)=:groupId and lower(artifactId)=:artifactId";
         } else {
-            queryString = String.format("select count(*) from MavenDependency where lower(groupId)='%s' and lower(artifactId)='%s' and script.id <> %d",
-                    groupId.toLowerCase().replaceAll("'", "''"),
-                    artifactId.toLowerCase().replaceAll("'", "''"), id);
+            queryString = "select count(*) from MavenDependency where lower(groupId)=:groupId and lower(artifactId)=:artifactId and script.id <>:id";
         }
-        Query query = emWrapper.getEntityManager().createQuery(queryString);
+        Query query = emWrapper.getEntityManager().createQuery(queryString).setParameter("groupId", groupId.toLowerCase()).setParameter("artifactId", artifactId.toLowerCase());
+        if (id != null) {
+            query.setParameter("id", id);
+        }
         long count = (Long) query.getSingleResult();
         return count == 0L;
     }
