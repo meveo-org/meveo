@@ -78,30 +78,16 @@ public class ESGeneratorTest {
     @Test
     public void testGenerate() {
         String postGenerated = ESGenerator.generate(postEndpoint);
-        String postExpected = "async function testPost(first, bodyParam1, bodyParam2) {\n" +
-                "\treturn fetch(`../rest/testPost/${first}`, {\n" +
-                "\t\tmethod: POST,\n" +
-                "\t\tbody: `{\n" +
-                "\t\t\t\"bodyParam1\" : ${bodyParam1},\n" +
-                "\t\t\t\"bodyParam2\" : ${bodyParam2}\n" +
-                "\t\t}`\n" +
-                "\t});\n" +
-                "}\n" +
-                "\n" +
-                "export default testPost;";
-
-        assertEquals(postExpected, postGenerated);
+        System.out.println(postGenerated);
 
         String getGenerated = ESGenerator.generate(getEndpoint);
-        String getExpected = "async function testGet(first, bodyParam1) {\n" +
-                "\treturn fetch(`../rest/testGet/${first}?bodyParam1=${bodyParam1}`, {\n" +
-                "\t\tmethod: GET\n" +
-                "\t});\n" +
-                "}\n" +
-                "\n" +
-                "export default testGet;";
+        System.out.println(getGenerated);
+    }
 
-        assertEquals(getExpected, getGenerated);
+    @Test
+    public void testGenerateForm() {
+        String postGenerated = ESGenerator.generateHtmlForm(postEndpoint);
+        System.out.println(postGenerated);
     }
 
 }

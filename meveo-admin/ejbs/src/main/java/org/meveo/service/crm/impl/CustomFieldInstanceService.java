@@ -2315,7 +2315,7 @@ public class CustomFieldInstanceService extends BaseService {
 		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
 
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
-			Object value = values.getOrDefault(cetField.getKey(), null);
+			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
             setCFValue(entity, cetField.getKey(), value);
 		}
 	}

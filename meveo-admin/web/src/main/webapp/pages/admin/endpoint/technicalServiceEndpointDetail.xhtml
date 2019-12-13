@@ -101,7 +101,7 @@
 	                        <p:selectOneMenu id="returnedValueName" value="#{endpointBean.entity.returnedVariableName}" style="width:150px;" >
 	                            <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
 	                            <f:selectItems value="#{endpointBean.returnedVariableNames}" var="returnedVariableName" itemValue="#{returnedVariableName}" itemLabel="#{returnedVariableName}" />
-	                            <p:ajax update="serializeResult jsonataTransformerId" event="change" />
+	                            <p:ajax listener="#{endpointBean.onFunctionChange}" update="serializeResult jsonataTransformerId" event="change" />
 <!-- 	                            <p:ajax update="jsonataTransformerId" event="change" /> -->
 	                        </p:selectOneMenu>
 	                    </hftl:decorateFormField>

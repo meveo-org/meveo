@@ -44,10 +44,8 @@ import liquibase.change.core.DropForeignKeyConstraintChange;
 import liquibase.change.core.DropNotNullConstraintChange;
 import liquibase.change.core.DropSequenceChange;
 import liquibase.change.core.DropTableChange;
-import liquibase.change.core.DropUniqueConstraintChange;
 import liquibase.change.core.ModifyDataTypeChange;
 import liquibase.change.core.RawSQLChange;
-import liquibase.change.core.SQLFileChange;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
@@ -334,6 +332,10 @@ public class CustomTableCreatorService implements Serializable {
 
             // Only add foreign key constraint if referenced entity is stored as table
             final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+            if(referenceCet == null) {
+            	throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet "  + cft.getEntityClazzCetCode() + " does not exists");
+            }
+            
             if(referenceCet.getSqlStorageConfiguration() != null && referenceCet.getSqlStorageConfiguration().isStoreAsTable()){
                 AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
                 foreignKeyConstraint.setBaseColumnNames(dbFieldname);

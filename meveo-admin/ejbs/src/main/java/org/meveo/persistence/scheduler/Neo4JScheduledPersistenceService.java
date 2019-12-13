@@ -20,7 +20,7 @@ import org.meveo.persistence.neo4j.service.Neo4jService;
 
 import javax.inject.Inject;
 
-public class Neo4JScheduledPersistenceService extends ScheduledPersistenceService<Neo4jService>{
+public class Neo4JScheduledPersistenceService extends OrderedPersistenceService<Neo4jService>{
 
     @Inject
     private Neo4jService service;

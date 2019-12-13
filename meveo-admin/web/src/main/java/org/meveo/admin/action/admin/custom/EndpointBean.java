@@ -1,8 +1,11 @@
 package org.meveo.admin.action.admin.custom;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.jboss.seam.international.status.Messages;
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -33,6 +36,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    protected Messages messages;
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
@@ -151,10 +157,23 @@ public class EndpointBean extends BaseBean<Endpoint> {
     /**
      * When function changes, reset returned variable name list, returned variable name and serialize result fields.
      */
-    public void onFunctionChange(Object value) {
-    	returnedVariableNames = null;
-    	entity.setReturnedVariableName(null);
-    	entity.setSerializeResult(false);
+    public void onFunctionChange() {
+        List<FunctionIO> functionIOList = entity.getService().getOutputs();
+    	if (CollectionUtils.isNotEmpty(functionIOList)) {
+    		if(entity.getReturnedVariableName() != null) {
+	    	    for (FunctionIO functionIO : functionIOList) {
+	    	        if (entity.getReturnedVariableName().equals(functionIO.getName())) {
+	    	        	if(functionIO.getType().startsWith("Map")) {
+	    	        		entity.setSerializeResult(true);
+	    	        	} else {
+	    	        		entity.setSerializeResult(false);
+	    	        	}
+	    	        	
+	                    break;
+	                }
+	            }
+    		}
+        }
     }
 
     public String getEndpointUrl() {
@@ -234,6 +253,21 @@ public class EndpointBean extends BaseBean<Endpoint> {
             getEntity().getRoles().addAll(rolesDM.getTarget());
         } else {
             getEntity().setRoles(rolesDM.getTarget());
+        }
+
+        boolean isError = false;
+        if (parameterMappings != null) {
+            for (TSParameterMapping param : parameterMappings) {
+                if (StringUtils.isBlank(param.getParameterName())) {
+                    if (param.getDefaultValue() == null) {
+                        messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
+                        isError = true;
+                    }
+                }
+            }
+        }
+        if (isError) {
+            return null;
         }
         return super.saveOrUpdate(killConversation);
     }

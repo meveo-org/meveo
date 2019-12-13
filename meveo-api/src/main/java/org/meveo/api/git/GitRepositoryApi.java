@@ -141,7 +141,9 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     public void remove(String code) throws BusinessException {
         final GitRepository repository = gitRepositoryService.findByCode(code);
-        gitRepositoryService.remove(repository);
+        if(repository != null) {
+            gitRepositoryService.remove(repository);
+        }
     }
 
     @Override
@@ -180,7 +182,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     public boolean exists(GitRepositoryDto dto) {
         try {
             return find(dto.getCode()) != null;
-        } catch (Exception e) {
+        } catch (MeveoApiException | EntityDoesNotExistsException e) {
             return false;
         }
     }
@@ -188,6 +190,10 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     @Override
     public GitRepositoryDto find(String code) throws MeveoApiException, EntityDoesNotExistsException {
         final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        if(repository == null) {
+        	throw new EntityDoesNotExistsException(GitRepository.class, code);
+        }
+        
         return toDto(repository);
     }
 
