@@ -137,5 +137,9 @@
      	</addColumn>
      	
     </changeSet>
+
+    <changeSet id="#3955 - Turn meveo into a maven repository" author="Hien Bach">
+        <dropTable tableName="file_dependency" />
+    </changeSet>
     
 </databaseChangeLog>
