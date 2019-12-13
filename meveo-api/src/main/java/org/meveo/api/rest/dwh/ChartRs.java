@@ -46,7 +46,7 @@ public interface ChartRs extends IBaseRs {
      */
     @POST
     @Path("/bar")
-    @ApiOperation("Create bar chart")
+    @ApiOperation("Create a new bar chart")
     ActionStatus createBarChart(@ApiParam("Bar chart information") BarChartDto postData);
 
     /**
@@ -57,7 +57,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/bar")
-    @ApiOperation("Create bar chart")
+    @ApiOperation("Update an existing bar chart")
     ActionStatus updateBarChart(@ApiParam("Bar chart information") BarChartDto postData);
 
     /**
@@ -79,7 +79,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/pie")
-    @ApiOperation("Update pie chart")
+    @ApiOperation("Update an existing pie chart")
     ActionStatus updatePieChart(@ApiParam("Pie chart information") PieChartDto postData);
 
     /**
@@ -101,7 +101,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/line")
-    @ApiOperation("Update line chart")
+    @ApiOperation("Update an existing line chart")
     ActionStatus updateLineChart(@ApiParam("Line chart information") LineChartDto postData);
 
     /**
@@ -112,7 +112,7 @@ public interface ChartRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    @ApiOperation("Update chart")
+    @ApiOperation("Update an existing chart")
     ActionStatus update(@ApiParam("Chart information") ChartDto postData);
 
 

@@ -89,6 +89,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List all countries")
     GetCountriesIsoResponse list();
 
 }

@@ -38,7 +38,7 @@ public interface CustomEntityCategoryRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/entity")
-	@ApiOperation(value = "Create custom entity category information ")
+	@ApiOperation(value = "Create a new custom entity category")
 	ActionStatus create(@ApiParam("Custom entity category information") CustomEntityCategoryDto postData);
 
 	/**

@@ -78,6 +78,7 @@ public interface RepositoryRs extends IBaseBaseCrudRs {
 	 */
 	@GET
 	@Path("/")
+	@ApiOperation(value = "List of repositorys")
 	RepositoriesResponseDto list();
 
 	/**

@@ -53,6 +53,7 @@ public interface ReportExtractRs extends IBaseRs {
 
     @GET
     @Path("/list")
+    @ApiOperation(value = "List of report extracts")
     ReportExtractsResponseDto list();
 
     @GET

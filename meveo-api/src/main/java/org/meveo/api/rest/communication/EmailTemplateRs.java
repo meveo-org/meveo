@@ -40,7 +40,7 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
-    @ApiOperation(value = "Create email template information")
+    @ApiOperation(value = "Create an email template")
     ActionStatus create(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
 	/**
@@ -62,7 +62,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    @ApiOperation(value = "Find email template information")
+    @ApiOperation(value = "Find an email template")
     EmailTemplateResponseDto find(@QueryParam("code") @ApiParam("Code of the email template") String code);
 
     /**
@@ -73,7 +73,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    @ApiOperation(value = "Remove email template information")
+    @ApiOperation(value = "Remove an email template")
     ActionStatus remove(@PathParam("code") @ApiParam("Code of the email template") String code);
 
     /**
@@ -83,6 +83,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List email templates")
     EmailTemplatesResponseDto list();
 
     /**
@@ -93,7 +94,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    @ApiOperation(value = "Create or update email template information")
+    @ApiOperation(value = "Create new or update an existing email template")
     ActionStatus createOrUpdate(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 }
 

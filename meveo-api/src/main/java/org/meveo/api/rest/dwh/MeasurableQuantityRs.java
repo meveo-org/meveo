@@ -95,6 +95,7 @@ public interface MeasurableQuantityRs extends IBaseRs {
      */
     @Path("/list")
     @GET
+    @ApiOperation(value = "List measurable quantity")
     GetListMeasurableQuantityResponse list();
 
 }

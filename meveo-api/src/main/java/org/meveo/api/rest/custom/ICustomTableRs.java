@@ -38,7 +38,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @POST
     @Path("/")
-    @ApiOperation(value = "Append custom table data")
+    @ApiOperation(value = "Append data to a custom table")
     void append(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**
@@ -49,7 +49,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @PATCH
     @Path("/")
-    @ApiOperation(value = "Update custom table data")
+    @ApiOperation(value = "Update existing data in a custom table")
     void update(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**
@@ -60,7 +60,7 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      */
     @DELETE
     @Path("/")
-    @ApiOperation(value = "Remove custom table data")
+    @ApiOperation(value = "Remove an existing data from a custom table")
     void remove(@ApiParam("Custom table data") T dto) throws MeveoApiException, BusinessException;
 
     /**

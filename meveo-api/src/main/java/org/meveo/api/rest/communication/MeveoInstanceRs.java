@@ -83,6 +83,7 @@ public interface MeveoInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List meveoInstances")
     MeveoInstancesResponseDto list();
 
     /**

@@ -103,6 +103,7 @@ public interface ProviderRs extends IBaseRs {
      */
     @GET
     @Path("/listTenants")
+    @ApiOperation(value = "List tenants")
     ProvidersDto listTenants();
 
     /**

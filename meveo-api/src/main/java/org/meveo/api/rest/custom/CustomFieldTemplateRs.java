@@ -47,7 +47,7 @@ public interface CustomFieldTemplateRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    @ApiOperation(value = "Update custom field template information")
+    @ApiOperation(value = "Update existing custom field definition")
     ActionStatus update(@ApiParam("Custom field template information") CustomFieldTemplateDto postData);
 
     /**

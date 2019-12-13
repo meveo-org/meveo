@@ -86,6 +86,7 @@ public interface FilteredListRs extends IBaseRs {
      */
     @Path("/reindex")
     @GET
+    @ApiOperation(value = "Clean and reindex Elastic Search repository")
     Response reindex();
 
     /**

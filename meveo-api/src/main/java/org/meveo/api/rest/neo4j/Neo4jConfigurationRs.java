@@ -73,6 +73,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/")
+	@ApiOperation(value = "list of binary storages")
 	Neo4jConfigurationsResponseDto list();
 
 	/**

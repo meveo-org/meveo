@@ -43,7 +43,7 @@ public interface ProviderContactRs extends IBaseRs {
 	 */
     @POST
     @Path("/")
-    @ApiOperation(value="Create provider contact information")
+    @ApiOperation(value="Create a provider contact")
     ActionStatus create(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
@@ -54,7 +54,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    @ApiOperation(value="Update provider contact information")
+    @ApiOperation(value="Update an existing provider contact")
     ActionStatus update(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
@@ -75,7 +75,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    @ApiOperation(value="Remove provider contact information")
+    @ApiOperation(value="Remove an existing provider contact")
     ActionStatus remove(@PathParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
@@ -85,6 +85,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List of provider contacts")
     ProviderContactsResponseDto list();
     
     /**
@@ -95,6 +96,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
+    @ApiOperation(value = "Create new or update an existing provider contact")
     ActionStatus createOrUpdate(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 }
 

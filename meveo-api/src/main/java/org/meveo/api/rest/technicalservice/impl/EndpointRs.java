@@ -16,6 +16,8 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.admin.exception.BusinessException;
@@ -49,6 +51,7 @@ import java.util.List;
 @Path("/endpoint")
 @DeclareRoles({ "endpointManagement" })
 @RolesAllowed({ "endpointManagement" })
+@Api("Endpoint")
 public class EndpointRs extends BaseRs {
 
 	@EJB
@@ -96,6 +99,7 @@ public class EndpointRs extends BaseRs {
 	 */
 	@DELETE
 	@Path("/{code}")
+	@ApiOperation(value = "Delete endpoint")
 	public Response delete(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) throws BusinessException, EntityDoesNotExistsException {
 		endpointApi.delete(code);
 		return Response.noContent().build();
@@ -110,6 +114,7 @@ public class EndpointRs extends BaseRs {
 	@Path("/{code}.js")
     @Cache(maxAge = 86400)
 	@Produces("application/javascript")
+	@ApiOperation(value = " Get script of the endpoint")
 	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code) throws EntityDoesNotExistsException, IOException {
 		return endpointApi.getEndpointScript(code);
 	}
@@ -122,6 +127,7 @@ public class EndpointRs extends BaseRs {
 	@GET
 	@Path("/{code}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find endpoint by code")
 	public Response find(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 		final EndpointDto endpointDto = endpointApi.findByCode(code);
 		if (endpointDto != null) {
@@ -137,6 +143,7 @@ public class EndpointRs extends BaseRs {
 	 */
 	@HEAD
 	@Path("/{code}")
+	@ApiOperation(value = "Check exist an endpoint")
 	public Response exists(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 		final EndpointDto endpointDto = endpointApi.findByCode(code);
 		if (endpointDto != null) {
@@ -152,6 +159,7 @@ public class EndpointRs extends BaseRs {
 	 */
 	@GET
 	@Path("/openApi/{code}")
+	@ApiOperation(value = "Generate open api json of the endpoint")
 	public Response generateOpenApiJson(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 
 		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);

@@ -155,6 +155,7 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/list/names")
     @GET
+    @ApiOperation(value = "Retrieves the names of all technical services")
     Response names();
 
     /**

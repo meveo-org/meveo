@@ -34,7 +34,7 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    @ApiOperation(value="Create title information")
+    @ApiOperation(value="Create a new title")
     ActionStatus create(@ApiParam("Title information") TitleDto postData);
 
     /**
@@ -55,6 +55,7 @@ public interface TitleRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List titles")
     TitlesResponseDto list();
 
     /**
@@ -65,7 +66,7 @@ public interface TitleRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    @ApiOperation(value="Update title information")
+    @ApiOperation(value="Update an existing title")
     ActionStatus update(@ApiParam("Title information") TitleDto postData);
 
     /**
@@ -76,7 +77,7 @@ public interface TitleRs extends IBaseRs {
      */
     @DELETE
     @Path("/{titleCode}")
-    @ApiOperation(value="Remove title information")
+    @ApiOperation(value="Remove an existing title")
     ActionStatus remove(@PathParam("titleCode") @ApiParam("Code of the title") String titleCode);
 
     /**
@@ -87,6 +88,6 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    @ApiOperation(value="Create and update title information")
+    @ApiOperation(value="Create new or update an existing title")
     ActionStatus createOrUpdate(@ApiParam("Title information") TitleDto postData);
 }

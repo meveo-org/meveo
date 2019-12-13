@@ -90,6 +90,7 @@ public interface CurrencyIsoRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "List all currencies")
     GetCurrenciesIsoResponse list();
     
 }

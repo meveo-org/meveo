@@ -67,6 +67,7 @@ public interface CalendarRs extends IBaseRs {
      * @return list of all calendars
      */
     @Path("/list")
+    @ApiOperation(value = "Retrieve a list of all calendars")
     @GET ListCalendarResponse list();
 
     /**

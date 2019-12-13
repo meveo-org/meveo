@@ -114,6 +114,8 @@ public interface RoleRs extends IBaseRs {
      * @return list of external roles
      */
     @GET
-    @Path("/external") RolesDto listExternalRoles();
+    @Path("/external")
+    @ApiOperation(value = "List external roles")
+    RolesDto listExternalRoles();
 
 }

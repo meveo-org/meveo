@@ -92,5 +92,6 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "List all languages")
     GetLanguagesIsoResponse list();
 }

@@ -73,6 +73,7 @@ public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 	 */
 	@GET
 	@Path("/")
+	@ApiOperation(value = "List of binary storages")
 	BinaryStorageConfigurationsResponseDto list();
 
 	/**

@@ -63,6 +63,7 @@ public class MavenConfigurationRs extends BaseRs {
 
 	@GET
 	@Path("/")
+	@ApiOperation(value = "Get maven configuration")
 	public MavenConfigurationResponseDto getConfiguration() {
 
 		MavenConfigurationResponseDto result = new MavenConfigurationResponseDto();

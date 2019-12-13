@@ -27,6 +27,7 @@ public interface PermissionRs extends IBaseRs {
      */
     @Path("/list")
     @GET
+    @ApiOperation(value = "List of permissions")
     PermissionResponseDto list();
     
     @Path("/whitelist")

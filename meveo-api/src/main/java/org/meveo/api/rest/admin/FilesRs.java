@@ -28,6 +28,7 @@ public interface FilesRs extends IBaseRs {
 
 	@GET
 	@Path("/all")
+	@ApiOperation(value = "List of files")
 	GetFilesResponseDto listFiles();
 
 	@GET
