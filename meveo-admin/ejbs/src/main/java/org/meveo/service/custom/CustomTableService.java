@@ -758,7 +758,7 @@ public class CustomTableService extends NativePersistenceService {
     private ObjectReader getCSVReader(Collection<CustomFieldTemplate> fields) {
         CsvSchema.Builder builder = CsvSchema.builder();
 
-        builder.addColumn(NativePersistenceService.FIELD_ID, ColumnType.NUMBER);
+        builder.addColumn(NativePersistenceService.FIELD_ID, ColumnType.STRING);
 
         for (CustomFieldTemplate cft : fields) {
             builder.addColumn(cft.getDbFieldname(),
@@ -766,6 +766,7 @@ public class CustomTableService extends NativePersistenceService {
         }
 
         CsvSchema schema = builder.setUseHeader(true).setStrictHeaders(true).setReorderColumns(true).build();
+
         CsvMapper mapper = new CsvMapper();
         return mapper.readerFor(Map.class).with(schema);
     }
@@ -1017,7 +1018,7 @@ public class CustomTableService extends NativePersistenceService {
 
                     Optional<CustomFieldTemplate> customFieldTemplateOpt = fields.values()
                     		.stream()
-                    		.filter(f -> f.getDbFieldname().equals(fieldName))
+                    		.filter(f -> f.getDbFieldname().equals(fieldName) || f.getCode().equals(fieldName))
                     		.findFirst();
 
                     if(!customFieldTemplateOpt.isPresent()){

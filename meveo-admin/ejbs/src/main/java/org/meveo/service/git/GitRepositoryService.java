@@ -22,8 +22,13 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.security.permission.RequirePermission;
+import org.meveo.security.permission.SecuredEntity;
+import org.meveo.security.permission.Whitelist;
 import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
 
@@ -98,6 +103,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     @Override
+	@RequirePermission(DefaultPermission.GIT_READ)
     public GitRepository findByCode(String code) {
         final GitRepository repository = super.findByCode(code);
 
@@ -110,15 +116,15 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     @Override
-	public GitRepository findById(Long id) {
+    @RequirePermission(DefaultPermission.GIT_READ)
+	public GitRepository findById(@SecuredEntity Long id) {
 		GitRepository repo = super.findById(id);
 		setBranchInformation(repo);
 		return repo;
 	}
 
-
-
 	@Override
+	@RequirePermission(DefaultPermission.GIT_READ)
 	public GitRepository findByCode(String code, List<String> fetchFields) {
 		GitRepository repo = super.findByCode(code, fetchFields);
 		setBranchInformation(repo);
@@ -126,6 +132,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 	}
 
 	@Override
+	@RequirePermission(DefaultPermission.GIT_READ)
 	protected GitRepository findByCode(String code, List<String> fetchFields, String additionalSql, Object... additionalParameters) {
 		GitRepository repo = super.findByCode(code, fetchFields, additionalSql, additionalParameters);
 		setBranchInformation(repo);
@@ -133,6 +140,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 	}
 
 	@Override
+	@RequirePermission(DefaultPermission.GIT_READ)
 	public BusinessEntity findByEntityClassAndCode(Class<?> clazz, String code) {
 		GitRepository repo = (GitRepository) super.findByEntityClassAndCode(clazz, code);
 		setBranchInformation(repo);
@@ -140,27 +148,31 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 	}
 
 	@Override
-	public GitRepository findById(Long id, boolean refresh) {
+	@RequirePermission(DefaultPermission.GIT_READ)
+	public GitRepository findById(@SecuredEntity Long id, boolean refresh) {
 		GitRepository repo = super.findById(id, refresh);
 		setBranchInformation(repo);
 		return repo;
 	}
 
 	@Override
-	public GitRepository findById(Long id, List<String> fetchFields) {
+	@RequirePermission(DefaultPermission.GIT_READ)
+	public GitRepository findById(@SecuredEntity Long id, List<String> fetchFields) {
 		GitRepository repo = super.findById(id, fetchFields);
 		setBranchInformation(repo);
 		return repo;
 	}
 
 	@Override
-	public GitRepository findById(Long id, List<String> fetchFields, boolean refresh) {
+	@RequirePermission(DefaultPermission.GIT_READ)
+	public GitRepository findById(@SecuredEntity Long id, List<String> fetchFields, boolean refresh) {
 		GitRepository repo =  super.findById(id, fetchFields, refresh);
 		setBranchInformation(repo);
 		return repo;
 	}
 
 	@Override
+	@RequirePermission(DefaultPermission.GIT_READ)
 	public List<GitRepository> findByCodeLike(String wildcode) {
 		List<GitRepository> repositories = super.findByCodeLike(wildcode);
 		return repositories.stream()
@@ -170,6 +182,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 	}
 
 	@Override
+	@RequirePermission(DefaultPermission.GIT_READ)
     public List<GitRepository> list() {
         final List<GitRepository> repositories = super.list();
         return repositories.stream()
@@ -184,7 +197,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
      * @param entity Repository to remove
      */
     @Override
-    public void remove(GitRepository entity) throws BusinessException {
+    @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ })
+    public void remove(@SecuredEntity(remove = true) GitRepository entity) throws BusinessException {
         super.remove(entity);
         gitClient.remove(entity);
     }
@@ -195,12 +209,14 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
      * @param entity Repository to create
      */
     @Override
-    public void create(GitRepository entity) throws BusinessException {
+    @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ })
+    public void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity) throws BusinessException {
         gitClient.create(entity, true, null, null);
         super.create(entity);
     }
 
-    public void create(GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
+    @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ })
+    public void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
         gitClient.create(entity, failIfExist, username, password);
         super.create(entity);
     }

@@ -48,8 +48,8 @@
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
             <hftl:formField id="parentRepositoryId" label="#{messages['repository.parentRepository']}" field="parentRepository" 
             	valueLabelField="code" popup="true" popupId="parentRepositoryPopup" />
-           	<hftl:formField label="#{messages['repository.neo4jConfiguration']}" field="neo4jConfiguration" 
-            	valueField="id" valueLabelField="code" popup="false" listBean="#{neo4jConfigurationBean}" />
+           	<hftl:formField label="#{messages['repository.neo4jConfiguration']}" field="neo4jConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{neo4jConfigurationBean}" />
+            <hftl:formField label="#{messages['repository.sqlConfiguration']}" field="sqlConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{sqlConfigurationBean}" />
             <hftl:formField label="#{messages['repository.path']}" field="path" disabled="true" required="false" />
            	<hftl:formField id="binaryStorageConfigurationId" label="#{messages['binaryStorageConfiguration.title']}" field="binaryStorageConfiguration" 
             	valueLabelField="code" popup="true" popupId="binaryStorageConfigurationPopup" />
@@ -61,20 +61,20 @@
 				</p:commandButton>
 			</ui:define>
         </hftl:formPanel>
-        
+
         <p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="150" width="250">
 			<h:form id="deleteDialogForm">
 				<h:panelGrid columns="1">
 					#{messages['commons.confirmDelete']}
 				    <hftl:decorateFormField label="#{messages['repository.forceDelete']}" fieldId="forceDelete">
-						<p:selectBooleanCheckbox id="forceDelete" value="#{repositoryBean.entity.forceDelete}">
+						<p:selectBooleanCheckbox id="forceDelete" value="#{repositoryBean.forceDelete}">
 							<p:ajax event="change" update="deleteDialogForm" />
 						</p:selectBooleanCheckbox>
 					</hftl:decorateFormField>
 				</h:panelGrid>
 				<h:panelGroup layout="block" styleClass="form-panel-actions">
-					<p:commandButton action="#{repositoryBean.deleteAndNavigate()}" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="pi pi-check" ajax="false" oncomplete="PF('deleteDialog').hide();" />
-	        		<p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" onclick="PF('deleteDialog').hide();" />
+					<p:commandButton action="#{repositoryBean.deleteAndNavigate()}" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" ajax="false" oncomplete="PF('deleteDialog').hide();" />
+	        		<p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" onclick="PF('deleteDialog').hide();" />
 	        	</h:panelGroup>
         	</h:form>
 		</p:dialog>

@@ -214,14 +214,4 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
         return scriptInterfaces;
     }
-
-    @Override
-    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
-        ScriptInstance scriptInstance = findById(executable.getId(), Arrays.asList("executionRoles", "sourcingRoles"));
-        scriptInstance.getFileDependencies().clear();
-        scriptInstance.getMavenDependencies().clear();
-        flush();
-        super.update(executable);
-        return scriptInstance;
-    }
 }

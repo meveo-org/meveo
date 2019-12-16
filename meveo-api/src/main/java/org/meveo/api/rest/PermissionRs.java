@@ -1,7 +1,10 @@
 package org.meveo.api.rest;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -22,4 +25,20 @@ public interface PermissionRs extends IBaseRs {
     @Path("/list")
     @GET
     PermissionResponseDto list();
+    
+    @Path("/whitelist")
+    @PUT
+    void addToWhiteList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    
+    @Path("/blacklist")
+    @PUT
+    void addToBlackList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    
+    @Path("/whitelist")
+    @DELETE
+    void removeFromWhiteList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
+    
+    @Path("/blacklist")
+    @DELETE
+    void removeFromBlackList(@FormParam("permission") String permission, @FormParam("id") String id, @FormParam("role") String role);
 }

@@ -484,22 +484,31 @@ public class PersistenceRs {
     }
 
     @PostConstruct
-    private void init() throws IOException {
-        tempDir = Files.createTempDirectory("dataUpload");
+    private void init() {
+    	try {
+    		tempDir = Files.createTempDirectory("dataUpload");
+    	} catch(Exception e) {
+    		throw new RuntimeException(e);
+    	}
     }
 
     @PreDestroy
-    private void onDestroy() throws IOException {
-        Files.list(tempDir).forEach(path -> {
-            try {
-                Files.delete(path);
-            } catch (IOException e) {
-                LOGGER.warn("{} cannot be deleted", path.toString(), e);
-            }
-        });
+    private void onDestroy() {
+        try {
 
-        if (Files.list(tempDir).count() == 0) {
-            Files.delete(tempDir);
+	        Files.list(tempDir).forEach(path -> {
+	            try {
+	                Files.delete(path);
+	            } catch (IOException e) {
+	                LOGGER.warn("{} cannot be deleted", path.toString(), e);
+	            }
+	        });
+
+	        if (Files.list(tempDir).count() == 0) {
+	            Files.delete(tempDir);
+	        }
+        } catch(Exception e) {
+        	LOGGER.error("Error destroying PeristenceRs instance", e);
         }
     }
 

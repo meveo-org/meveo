@@ -163,7 +163,18 @@ public class RelationSchema extends ObjectSchema {
 			super.writeOnly(writeOnly);
 			return this;
 		}
-        
+
+		@Override
+		public Builder versionable(Boolean versionable) {
+			super.versionable(versionable);
+			return this;
+		}
+
+		@Override
+		public Builder indexType(String indexType) {
+			super.indexType(indexType);
+			return this;
+		}
 	}
 	
     public static Builder builder() {

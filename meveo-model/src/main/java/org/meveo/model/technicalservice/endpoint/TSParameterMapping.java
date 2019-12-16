@@ -47,7 +47,7 @@ public class TSParameterMapping {
     /**
      * Default value of the parameter
      */
-    @Column(name = "default_value", nullable = false)
+    @Column(name = "default_value")
     private String defaultValue;
 
     public EndpointParameter getEndpointParameter() {

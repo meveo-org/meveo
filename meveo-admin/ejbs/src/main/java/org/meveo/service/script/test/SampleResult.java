@@ -27,7 +27,7 @@ public class SampleResult {
         this.failureMessage = failureMessage;
         this.name = name;
     }
-
+    
     public boolean isSuccess() {
         return success;
     }

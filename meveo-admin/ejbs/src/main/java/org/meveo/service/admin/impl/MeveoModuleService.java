@@ -194,9 +194,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean remove) throws BusinessException {
 
-        if (!module.isInstalled()) {
-            throw new BusinessException("Module is not installed");
-        }
+//        if (!module.isInstalled()) {
+//            throw new BusinessException("Module is not installed");
+//        }
 
         ModuleScriptInterface moduleScript = null;
         if (module.getScript() != null) {
