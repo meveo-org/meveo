@@ -268,6 +268,9 @@ public class JSONSchemaGenerator {
 			default:
 				throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
 		}
+		if (field.getIndexType() != null) {
+			result.indexType(field.getIndexType().name());
+		}
 		result
 				.readOnly(!field.isAllowEdit())
 				.nullable(!field.isValueRequired())
@@ -279,7 +282,6 @@ public class JSONSchemaGenerator {
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
 				.storages(buildDBStorageType(field.getStorages()))
-				.indexType(field.getIndexType().name())
 				.schemaLocation(schemaLocation);
 		return result;
 	}
