@@ -271,6 +271,13 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		return scriptInstance;
 	}
+	
+	public String getScriptCodesAsJSON() {
+		return (String) scriptInstanceService.getEntityManager()
+			.createNativeQuery("SELECT cast(json_agg(code) as text) FROM meveo_script_instance " + 
+					"INNER JOIN meveo_function ON meveo_function.id = meveo_script_instance.id")
+			.getSingleResult();
+	}
 
     @Override
 	public ScriptInstanceDto toDto(ScriptInstance entity) {
