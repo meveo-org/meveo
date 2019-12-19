@@ -21,12 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.MapKey;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToMany;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
 
@@ -42,19 +42,20 @@ public class TechnicalService extends Function {
     private String name;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
-    private List<Description> descriptions;
+    @MapKey(name = "name")
+    private Map<String, Description> descriptions;
 
     /**
      * Description of the inputs and outputs of the connector
      */
-    public List<Description> getDescriptions() {
+    public Map<String, Description> getDescriptions() {
         return descriptions;
     }
 
     /**
      * @param descriptions Description of the inputs and outputs of the connector
      */
-    public void setDescriptions(List<Description> descriptions) {
+    public void setDescriptions(Map<String, Description> descriptions) {
         this.descriptions = descriptions;
     }
 
@@ -83,7 +84,7 @@ public class TechnicalService extends Function {
 	@Override
 	public List<FunctionIO> getInputs() {
 		List<FunctionIO> inputs = new ArrayList<>();
-		descriptions.stream()
+		descriptions.values().stream()
 			.filter(Description::isInput)
 			.forEach(d -> {
 				d.getInputProperties().forEach(prop -> {
@@ -100,7 +101,7 @@ public class TechnicalService extends Function {
     @Override
     public List<FunctionIO> getOutputs() {
         List<FunctionIO> inputs = new ArrayList<>();
-        descriptions.stream()
+        descriptions.values().stream()
                 .filter(Description::isInput)
                 .forEach(d -> {
                     d.getOutputProperties().forEach(prop -> {
@@ -116,12 +117,12 @@ public class TechnicalService extends Function {
 
 	@Override
 	public boolean hasInputs() {
-		return descriptions.stream().anyMatch(d -> d.isInput() && !d.getInputProperties().isEmpty());
+		return descriptions.values().stream().anyMatch(d -> d.isInput() && !d.getInputProperties().isEmpty());
 	}
 
     @Override
     public boolean hasOutputs() {
-        return descriptions.stream().anyMatch(d -> d.isOutput() && !d.getInputProperties().isEmpty());
+        return descriptions.values().stream().anyMatch(d -> d.isOutput() && !d.getInputProperties().isEmpty());
     }
 
     @Override
