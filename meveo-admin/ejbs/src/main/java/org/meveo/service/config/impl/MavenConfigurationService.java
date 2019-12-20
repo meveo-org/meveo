@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import javax.annotation.Resource;
 import javax.ejb.NoSuchObjectLocalException;
@@ -42,6 +40,7 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
@@ -76,26 +75,27 @@ import org.slf4j.Logger;
 public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
+    private final static String M2_DIR = "/.m2";
 
 	private static List<MavenDependency> createdBuffer = new ArrayList<>();
 	private static List<MavenDependency> updatedBuffer = new ArrayList<>();
 	private static List<MavenDependency> deletedBuffer = new ArrayList<>();
-	
+
 	@Resource
 	private UserTransaction transaction;
 
 	@Inject
 	@MeveoRepository
 	private Instance<GitRepository> meveoRepository;
-	
+
 	@Inject
 	@CurrentUser
 	private Instance<MeveoUser> currentUser;
-	
+
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper emWrapper;
-	
+
     @PersistenceContext(unitName = "MeveoAdmin", type = PersistenceContextType.TRANSACTION)
     private EntityManager entityManager;
 
@@ -104,12 +104,27 @@ public class MavenConfigurationService implements Serializable {
 
 	@Inject
 	private Logger log;
-	
+
 	@Resource
 	private TimerService timerService;
-	
+
 	private javax.ejb.Timer ejbTimer;
-	
+
+    /**
+     * @param currentUser Logged user
+     * @return the maven directory relative to the file explorer directory for the
+     *         user's provider
+     */
+    public static String getM2Directory(MeveoUser currentUser) {
+        String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
+        String m2 = rootDir + M2_DIR;
+        File m2Folder = new File(m2);
+        if (!m2Folder.exists()) {
+            m2Folder.mkdir();
+        }
+        return m2;
+    }
+
 	public void onDependencyCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created MavenDependency d) {
 		createdBuffer.add(d);
 		schedulePomGeneration();
@@ -121,7 +136,7 @@ public class MavenConfigurationService implements Serializable {
 		}
 		schedulePomGeneration();
 	}
-	
+
 	public void onDependencyRemoved(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Removed MavenDependency d) {
 		createdBuffer.remove(d);
 		updatedBuffer.remove(d);
@@ -130,7 +145,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	private void schedulePomGeneration() {
-		
+
 		if(ejbTimer != null) {
 			try {
 				ejbTimer.cancel();
@@ -138,18 +153,18 @@ public class MavenConfigurationService implements Serializable {
 				// Timer has expired
 			}
 		}
-		
+
 		TimerConfig timeconfig = new TimerConfig();
-		
+
 		MeveoUser meveoUser = currentUser.get();
 		String serializedUser = JacksonUtil.toString(meveoUser.unProxy());
 
 		timeconfig.setInfo(serializedUser);
 		timeconfig.setPersistent(true);
 		ejbTimer = timerService.createSingleActionTimer(100, timeconfig);
-		
+
 	}
-	
+
 	@Timeout
 	public void generatePom(javax.ejb.Timer t) {
 		if(t.getInfo() instanceof String) {
@@ -161,15 +176,15 @@ public class MavenConfigurationService implements Serializable {
 				log.debug("Can't parse string to MeveoUser", e);
 				return;
 			}
-			
+
 			List<String> lines = new ArrayList<>();
-	
+
 			createdBuffer.forEach(d -> lines.add("Add dependency " + d.getCoordinates()));
 			updatedBuffer.forEach(d -> lines.add("Update dependency " + d.getCoordinates()));
 			deletedBuffer.forEach(d -> lines.add("Delete dependency " + d.getCoordinates()));
-	
+
 			StringBuilder message = new StringBuilder();
-	
+
 			// If commit will only contain one change on dependencies, this change will be the header of the commit.
 			// If commit will contains many changes on dependencies, then the header is generic and all changes are detailed in the body.
 			if(lines.size() == 1) {
@@ -178,17 +193,17 @@ public class MavenConfigurationService implements Serializable {
 				message.append("Update pom.xml (").append(lines.size()).append(" modifications) \n");
 				lines.forEach(l -> message.append("\n").append(l));
 			}
-	
+
 			createdBuffer.clear();
 			updatedBuffer.clear();
 			deletedBuffer.clear();
-			
+
 			log.info("User passed to the timer : " + user);
-			
+
 			MeveoUser meveoUser = currentUser.get();
 			log.info("User in timer : " + meveoUser);
 			meveoUser.loadUser(user);
-			
+
 			log.info("User in timer (2) : " + currentUser.get());
 			generatePom(message.toString(), meveoRepository.get());
 		}
@@ -196,7 +211,7 @@ public class MavenConfigurationService implements Serializable {
 
 	private void generatePom(String message, GitRepository repository) {
 		log.debug("Generating pom.xml file");
-		
+
 		Model model = new Model();
 		model.setGroupId("org.meveo");
 		model.setArtifactId("meveo-application");
@@ -210,7 +225,7 @@ public class MavenConfigurationService implements Serializable {
 		model.addDependency(meveoDependency);
 
 		try {
-			
+
 			transaction.begin();
 			entityManager.createQuery("SELECT d FROM MavenDependency d", MavenDependency.class)
 					.getResultStream()
@@ -223,7 +238,7 @@ public class MavenConfigurationService implements Serializable {
 						model.addDependency(dependency);
 					});
 			transaction.commit();
-			
+
 		} catch (Exception e) {
 			log.error("Error retrieving maven dependencies", e);
 		}
@@ -247,11 +262,8 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public String getM2FolderPath() {
-		return ParamBean.getInstance().getProperty("maven.path.m2", null);
-	}
-
-	public void setM2FolderPath(String m2FolderPath) {
-		ParamBean.getInstance().setProperty("maven.path.m2", m2FolderPath);
+		MeveoUser meveoUser = currentUser.get();
+		return MavenConfigurationService.getM2Directory(meveoUser);
 	}
 
 	public List<String> getMavenRepositories() {
@@ -267,17 +279,13 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public void saveConfiguration(MavenConfigurationDto mavenConfiguration) {
-
-		setM2FolderPath(mavenConfiguration.getM2FolderPath());
 		setMavenRepositories(mavenConfiguration.getMavenRepositories());
-
 		saveConfiguration();
 	}
 
 	public MavenConfigurationDto loadConfig() {
 
 		MavenConfigurationDto result = new MavenConfigurationDto();
-		result.setM2FolderPath(getM2FolderPath());
 		result.setMavenRepositories(getMavenRepositories());
 
 		return result;
@@ -285,18 +293,70 @@ public class MavenConfigurationService implements Serializable {
 
 	public RepositorySystem newRepositorySystem() {
 		DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-		locator.addService( RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class );
-		locator.addService( TransporterFactory.class, FileTransporterFactory.class );
-		locator.addService( TransporterFactory.class, HttpTransporterFactory.class );
-		return locator.getService( RepositorySystem.class );
+		locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
+		locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+		locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+		return locator.getService(RepositorySystem.class);
 	}
 
 	public RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
 		DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
-		LocalRepository localRepo = new LocalRepository( getM2FolderPath() );
-		session.setLocalRepositoryManager(system.newLocalRepositoryManager( session, localRepo ) );
+		LocalRepository localRepo = new LocalRepository(getM2FolderPath());
+		session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
 
 		return session;
+	}
+
+	public String createDirectory(String groupId, String artifactId, String version, String classifier) {
+		String m2Folder = getM2FolderPath();
+		if (!m2Folder.endsWith(File.separator)) {
+			m2Folder = m2Folder + File.separator;
+		}
+
+		if (!StringUtils.isBlank(groupId)) {
+			String[] groupDirs = groupId.split("\\.");
+			for (String groupDir : groupDirs) {
+				m2Folder = m2Folder + File.separator + groupDir;
+			}
+			File f = new File(m2Folder);
+			f.mkdirs();
+		}
+		if (!StringUtils.isBlank(artifactId)) {
+			m2Folder = m2Folder + File.separator + artifactId;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		if (!StringUtils.isBlank(version)) {
+			m2Folder = m2Folder + File.separator + version;
+			File fileDir = new File(m2Folder);
+			if (!fileDir.exists()) {
+				fileDir.mkdir();
+			}
+		}
+		return m2Folder;
+	}
+
+	public String buildArtifactName(String artifactId, String version, String classifier) {
+		if (StringUtils.isBlank(classifier)) {
+			return artifactId + "-" + version + ".jar";
+
+		} else {
+			return artifactId + "-" + version + "-" + classifier + ".jar";
+		}
+	}
+
+	/**
+	 * Updates the list of local maven repositories.
+	 *
+	 * @param remoteRepositories remote repositories to add
+	 */
+	public void updateRepository(List<String> remoteRepositories) {
+
+		Set<String> localRepos = new HashSet<>(getMavenRepositories());
+		localRepos.addAll(remoteRepositories);
+		setMavenRepositories(new ArrayList<>(localRepos));
 	}
 }

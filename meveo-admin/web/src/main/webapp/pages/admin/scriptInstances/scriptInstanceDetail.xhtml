@@ -169,20 +169,6 @@
 						</f:facet>
 					</p:dataTable>
 				</hftl:decorateFormField>
-				<hftl:decorateFormField componentWidth="50%" label="#{messages['scriptInstance.fileDependencies']}">
-					<p:dataTable id="fileDependenciesPanel" var="fileDependency" value="#{scriptInstanceBean.fileDependencies}" resizableColumns="true">
-						<p:column headerText="#{messages['fileDependencies.path']}">
-							<h:inputText value="#{fileDependency.path}" size="50" required="true"/>
-						</p:column>
-						<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
-							<p:commandButton action="#{scriptInstanceBean.removeFileDependency(fileDependency)}" icon="ui-icon-trash" update="fileDependenciesPanel" immediate="true" />
-						</p:column>
-						<f:facet name="footer">
-							<p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this fileDependenciesPanel" update="fileDependenciesPanel"
-											 actionListener="#{scriptInstanceBean.addNewFileDependency()}"/>
-						</f:facet>
-					</p:dataTable>
-				</hftl:decorateFormField>
 			</h:panelGrid>
             <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!scriptInstanceBean.entity.transient and scriptInstanceBean.getPartOfModules() != null and scriptInstanceBean.getPartOfModules() != ''}">
                 <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />

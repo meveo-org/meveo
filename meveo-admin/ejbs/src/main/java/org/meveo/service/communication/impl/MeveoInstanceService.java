@@ -37,19 +37,18 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.communication.CommunicationRequestDto;
-import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.event.communication.InboundCommunicationEvent;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.service.base.BusinessService;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-
 /**
  * MeveoInstance service implementation.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Stateless
 public class MeveoInstanceService extends BusinessService<MeveoInstance> {
@@ -58,24 +57,21 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 	private Event<InboundCommunicationEvent> event;
 
 	public ResteasyClient getRestEasyClient() {
-        try {
-            SSLContext sslContext = SSLContextBuilder
-                    .create()
-                    .loadTrustMaterial(new TrustSelfSignedStrategy())
-                    .build();
+		try {
+			SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
 
-            return new ResteasyClientBuilder().sslContext(sslContext).build();
+			return new ResteasyClientBuilder().sslContext(sslContext).build();
 
-        } catch (Exception e){
-            return null;
-        }
-    }
+		} catch (Exception e) {
+			return null;
+		}
+	}
 
 	@Override
-    public MeveoInstance findByCode(String meveoInstanceCode) {
+	public MeveoInstance findByCode(String meveoInstanceCode) {
 		QueryBuilder qb = new QueryBuilder(MeveoInstance.class, "c");
 		qb.addCriterion("code", "=", meveoInstanceCode, true);
-		
+
 		try {
 			return (MeveoInstance) qb.getQuery(getEntityManager()).getSingleResult();
 		} catch (NoResultException e) {
@@ -89,79 +85,116 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 		inboundCommunicationEvent.setCommunicationRequestDto(communicationRequestDto);
 		event.fire(inboundCommunicationEvent);
 	}
-	
-    /**
-     * export module dto to remote meveo instance.
-     * 
-     * @param url url
-     * @param meveoInstance meveo instance
-     * @param dto base data transfer object
-     * @return reponses
-     * @throws BusinessException business exception.
-     */
-    public Response publishDto2MeveoInstance(String url, MeveoInstance meveoInstance, BaseEntityDto dto) throws BusinessException {
-        String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
-        String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
-        String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
-        try {
-            ResteasyClient client = new ResteasyClientBuilder().build();
-            ResteasyWebTarget target = client.target(baseurl + url);
-            BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
-            target.register(basicAuthentication);
 
-            Response response = target.request().post(Entity.entity(dto, MediaType.APPLICATION_XML));
-            if (response.getStatus() != HttpURLConnection.HTTP_OK) {
-                if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-                    throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
-                } else {
-                    throw new BusinessException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
-                }
-            }
-            return response;
-        } catch (Exception e) {
-            log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
-            throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
-        }
-    }
+	/**
+	 * export module dto to remote meveo instance.
+	 * 
+	 * @param url           url
+	 * @param meveoInstance meveo instance
+	 * @param dto           base data transfer object
+	 * @return reponses
+	 * @throws BusinessException business exception.
+	 */
+	public Response publishDto2MeveoInstance(String url, MeveoInstance meveoInstance, BaseEntityDto dto) throws BusinessException {
+		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
+		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
+		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		try {
+			ResteasyClient client = new ResteasyClientBuilder().build();
+			ResteasyWebTarget target = client.target(baseurl + url);
+			BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
+			target.register(basicAuthentication);
 
-    /**
-     * call String rest service to remote meveo instance.
-     * 
-     * @param url url
-     * @param meveoInstanceCode meveo instance
-     * @param body body of content to be sent.
-     * @return reponse
-     * @throws BusinessException business exception.
-     */
-  public Response callTextServiceMeveoInstance(String url, String meveoInstanceCode, String body) throws BusinessException {
-	  MeveoInstance meveoInstance = findByCode(meveoInstanceCode);
-	  return callTextServiceMeveoInstance(url,meveoInstance,body);
-  }
-  
-  public Response callTextServiceMeveoInstance(String url, MeveoInstance meveoInstance, String body) throws BusinessException {
-     String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
-     String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
-     String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
-     try {
-         ResteasyClient client = new ResteasyClientBuilder().build();
-         ResteasyWebTarget target = client.target(baseurl + url);
-         log.debug("call {} with body:{}",baseurl + url,body);
-         BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
-         target.register(basicAuthentication);
+			Response response = target.request().post(Entity.entity(dto, MediaType.APPLICATION_XML));
+			if (response.getStatus() != HttpURLConnection.HTTP_OK) {
+				if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+					throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+				} else {
+					throw new BusinessException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+				}
+			}
+			return response;
+		} catch (Exception e) {
+			log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+			throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
+		}
+	}
 
-         Response response = target.request().post(Entity.entity(body, MediaType.APPLICATION_JSON));
-         if (response.getStatus() != HttpURLConnection.HTTP_OK) {
-             if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
-                 throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
-             } else {
-                 throw new BusinessException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
-             }
-         }
-         return response;
-     } catch (Exception e) {
-         log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
-         throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
-     }
- }
+	/**
+	 * call String rest service to remote meveo instance.
+	 * 
+	 * @param url               url
+	 * @param meveoInstanceCode meveo instance
+	 * @param body              body of content to be sent.
+	 * @return reponse
+	 * @throws BusinessException business exception.
+	 */
+	public Response callTextServiceMeveoInstance(String url, String meveoInstanceCode, String body) throws BusinessException {
+		MeveoInstance meveoInstance = findByCode(meveoInstanceCode);
+		return callTextServiceMeveoInstance(url, meveoInstance, body);
+	}
+
+	public Response callTextServiceMeveoInstance(String url, MeveoInstance meveoInstance, String body) throws BusinessException {
+		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
+		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
+		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		try {
+			ResteasyClient client = new ResteasyClientBuilder().build();
+			ResteasyWebTarget target = client.target(baseurl + url);
+			log.debug("call {} with body:{}", baseurl + url, body);
+			BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
+			target.register(basicAuthentication);
+
+			Response response = target.request().post(Entity.entity(body, MediaType.APPLICATION_JSON));
+			if (response.getStatus() != HttpURLConnection.HTTP_OK) {
+				if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+					throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+				} else {
+					throw new BusinessException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+				}
+			}
+			return response;
+		} catch (Exception e) {
+			log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+			throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Retrieves the {@link MavenConfigurationDto} from the remote repository.
+	 * 
+	 * @param url           api endpoint
+	 * @param meveoInstance remote meveo configuration
+	 * @return maven configuration
+	 * @throws BusinessException when the remote server is down
+	 */
+	public Response getRemoteRepositories(String url, MeveoInstance meveoInstance) throws BusinessException {
+
+		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
+		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
+		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		try {
+			ResteasyClient client = new ResteasyClientBuilder().build();
+			ResteasyWebTarget target = client.target(baseurl + url);
+			BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
+			target.register(basicAuthentication);
+
+			Response response = target.request().get();
+			if (response.getStatus() != HttpURLConnection.HTTP_OK) {
+				if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
+					throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+
+				} else {
+					throw new BusinessException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());
+				}
+			}
+
+			return response;
+
+		} catch (Exception e) {
+			log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+			throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
+		}
+	}
 
 }

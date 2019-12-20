@@ -472,35 +472,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             ScriptInstance scriptInstance = (ScriptInstance) script;
 
             Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
-            Set<FileDependency> fileDependencies = scriptInstance.getFileDependencies();
-
-            if (fileDependencies != null) {
-                Set<String> fileDependencyPaths = fileDependencies.stream().flatMap(e -> {
-
-                    File f = new File(e.getPath());
-                    if (f.isDirectory()) {
-                        Collection<File> subFiles = org.apache.commons.io.FileUtils.listFiles(f, new String[]{"jar"}, true);
-                        return subFiles.stream().map(t -> {
-                            try {
-                                return t.getCanonicalPath();
-
-                            } catch (IOException e1) {
-                                return null;
-                            }
-                        });
-
-                    } else {
-                        try {
-                            return new HashSet<String>(Arrays.asList(f.getCanonicalPath())).stream();
-
-                        } catch (IOException e1) {
-                            return null;
-                        }
-                    }
-                }).filter(Objects::nonNull).filter(e -> !e.isEmpty()).collect(Collectors.toSet());
-
-                mavenDependencies.addAll(fileDependencyPaths);
-            }
 
             synchronized (CLASSPATH_REFERENCE) {
                 mavenDependencies.stream().forEach(location -> {

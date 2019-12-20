@@ -8,7 +8,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.script.CustomScriptDto;
-import org.meveo.model.scripts.FileDependency;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
@@ -34,9 +33,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
     private Boolean error;
-
-    /** The file dependencies. */
-    private List<FileDependencyDto> fileDependencies = new ArrayList<>();
 
     /** The maven dependencies. */
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
@@ -71,12 +67,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
         if (scriptInstance.getSourcingRoles() != null) {
             for (Role role : scriptInstance.getSourcingRoles()) {
                 sourcingRoles.add(new RoleDto(role, true, true));
-            }
-        }
-
-        if (scriptInstance.getFileDependencies() != null) {
-            for (FileDependency file : scriptInstance.getFileDependencies() ) {
-                fileDependencies.add(new FileDependencyDto(file));
             }
         }
 
@@ -128,14 +118,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public void setSourcingRoles(List<RoleDto> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
-    }
-
-    public List<FileDependencyDto> getFileDependencies() {
-        return fileDependencies;
-    }
-
-    public void setFileDependencies(List<FileDependencyDto> fileDependencies) {
-        this.fileDependencies = fileDependencies;
     }
 
     public List<MavenDependencyDto> getMavenDependencies() {

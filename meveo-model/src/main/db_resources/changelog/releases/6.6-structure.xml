@@ -141,4 +141,8 @@
         <addUniqueConstraint columnNames="group_id, artifact_id" constraintName="maven_dependency_uk" deferrable="false" disabled="false" initiallyDeferred="false" tableName="maven_dependency" />
     </changeSet>
 
+    <changeSet id="#3955 - Turn meveo into a maven repository" author="Hien Bach">
+        <dropTable tableName="file_dependency" />
+    </changeSet>
+
 </databaseChangeLog>
