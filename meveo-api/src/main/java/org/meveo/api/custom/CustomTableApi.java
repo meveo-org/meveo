@@ -27,6 +27,7 @@ import javax.ejb.Stateless;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
+import javax.transaction.NotSupportedException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -88,6 +89,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
 			missingParameters.add("values");
 		}
+		if (StringUtils.isBlank(dto.getSqlConnectionCode())) {
+			missingParameters.add("sqlConnectionCode");
+		}
 
 		handleMissingParameters();
 
@@ -109,7 +113,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 			values.add(cei);
 		}
 
-		customTableService.importData(cet.getSqlConfigurationCode(), cet, values, !dto.getOverwrite());
+		customTableService.importData(dto.getSqlConnectionCode(), cet, values, !dto.getOverwrite());
 
 	}
 
@@ -129,6 +133,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		}
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
 			missingParameters.add("values");
+		}
+		if (StringUtils.isBlank(dto.getSqlConnectionCode())) {
+			missingParameters.add("sqlConnectionCode");
 		}
 
 		handleMissingParameters();
@@ -151,7 +158,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 			if (importedLines >= 500) {
 
 				values = customTableService.convertValues(values, cfts, false);
-				customTableService.update(cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
+				customTableService.update(dto.getSqlConnectionCode(), cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
 
 				values.clear();
 				importedLines = 0;
@@ -163,7 +170,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 
 		// Update remaining records
 		values = customTableService.convertValues(values, cfts, false);
-		customTableService.update(cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
+		customTableService.update(dto.getSqlConnectionCode(), cet, convertListOfMapToCei(dto.getCustomTableCode(), values));
 	}
 
 	/**
@@ -183,6 +190,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
 			missingParameters.add("values");
 		}
+		if (StringUtils.isBlank(dto.getSqlConnectionCode())) {
+			missingParameters.add("sqlConnectionCode");
+		}
 
 		handleMissingParameters();
 
@@ -201,10 +211,10 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 			customFieldInstanceService.setCfValues(cei, cei.getCetCode(), customTableService.convertValue(record.getValues(), cfts, false, null));
 
 			if (record.getValues().containsKey(NativePersistenceService.FIELD_ID)) {
-				customTableService.update(cet, cei);
+				customTableService.update(dto.getSqlConnectionCode(), cet, cei);
 
 			} else {
-				customTableService.create(cet, cei);
+				customTableService.create(dto.getSqlConnectionCode(), cet, cei);
 			}
 		}
 	}
@@ -220,11 +230,15 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 	 * @throws InvalidParameterException    Invalid parameters passed
 	 */
 	@Override
-	public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering)
+	public CustomTableDataResponseDto list(String sqlConnectionCode, String customTableCode, PagingAndFiltering pagingAndFiltering)
 			throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException {
 
 		if (StringUtils.isBlank(customTableCode)) {
 			missingParameters.add("customTableCode");
+		}
+
+		if (StringUtils.isBlank(sqlConnectionCode)) {
+			missingParameters.add("sqlConnectionCode");
 		}
 		handleMissingParameters();
 
@@ -246,7 +260,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 
 		PaginationConfiguration paginationConfig = toPaginationConfiguration("id", SortOrder.ASCENDING, null, pagingAndFiltering, null);
 
-		long totalCount = customTableService.count(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), paginationConfig);
+		long totalCount = customTableService.count(null, SQLStorageConfiguration.getDbTablename(cet), paginationConfig);
 
 		CustomTableDataResponseDto result = new CustomTableDataResponseDto();
 
@@ -254,7 +268,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		result.getPaging().setTotalNumberOfRecords((int) totalCount);
 		result.getCustomTableData().setCustomTableCode(customTableCode);
 
-		result.getCustomTableData().setValuesFromListofMap(customTableService.list(cet, paginationConfig));
+		result.getCustomTableData().setValuesFromListofMap(customTableService.list(sqlConnectionCode, cet, paginationConfig));
 
 		return result;
 	}
@@ -273,6 +287,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		if (StringUtils.isBlank(dto.getCustomTableCode())) {
 			missingParameters.add("customTableCode");
 		}
+		if (StringUtils.isBlank(dto.getSqlConnectionCode())) {
+			missingParameters.add("sqlConnectionCode");
+		}
 
 		handleMissingParameters();
 
@@ -282,7 +299,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		}
 
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
-			customTableService.remove(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet));
+			customTableService.remove(null, SQLStorageConfiguration.getDbTablename(cet));
 
 		} else {
 			Set<String> ids = new HashSet<>();
@@ -296,7 +313,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 					throw new InvalidParameterException("Not all values have an 'id' field specified");
 				}
 			}
-			customTableService.remove(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), ids);
+			customTableService.remove(null, SQLStorageConfiguration.getDbTablename(cet), ids);
 		}
 	}
 
@@ -317,6 +334,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		}
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
 			missingParameters.add("values");
+		}
+		if (StringUtils.isBlank(dto.getSqlConnectionCode())) {
+			missingParameters.add("sqlConnectionCode");
 		}
 
 		handleMissingParameters();
@@ -344,9 +364,9 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 			}
 		}
 		if (enable) {
-			customTableService.enable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), ids);
+			customTableService.enable(null, SQLStorageConfiguration.getDbTablename(cet), ids);
 		} else {
-			customTableService.disable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), ids);
+			customTableService.disable(null, SQLStorageConfiguration.getDbTablename(cet), ids);
 		}
 	}
 
@@ -367,6 +387,12 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 			customFieldInstanceService.setCfValues(cei, cei.getCetCode(), value);
 		}
 		return ceis;
+	}
+
+	@Override
+	public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering)
+			throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException {
+		throw new NotSupportedException();
 	}
 
 }

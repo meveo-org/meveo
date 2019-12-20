@@ -28,7 +28,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.slf4j.Logger;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  * @since 6.6.0
  */
@@ -102,9 +102,28 @@ public class SQLConnectionProvider {
 		}
 	}
 
-	private synchronized SessionFactory buildSessionFactory(String sqlConfigurationCode) {
+	public org.hibernate.Session testSession(SqlConfiguration sqlConfiguration) {
+
+		try {
+			SessionFactory sessionFactory = buildSessionFactory(sqlConfiguration);
+			synchronized (this) {
+				return sessionFactory.openSession();
+			}
+
+		} catch (Exception e) {
+			log.warn("Can't connect to sql configuration with code={}, url={}, error={}", sqlConfiguration.getCode(), sqlConfiguration.getUrl(), e.getCause());
+			return null;
+		}
+	}
+
+	public synchronized SessionFactory buildSessionFactory(String sqlConfigurationCode) {
 
 		SqlConfiguration sqlConfiguration = getSqlConfiguration(sqlConfigurationCode);
+
+		return buildSessionFactory(sqlConfiguration);
+	}
+
+	public synchronized SessionFactory buildSessionFactory(SqlConfiguration sqlConfiguration) {
 
 		Configuration config = new Configuration();
 		config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
@@ -130,7 +149,7 @@ public class SQLConnectionProvider {
 		return entityManager.createQuery(query).getSingleResult();
 	}
 
-	public void onSqlConnectionCreated(@Observes @Updated SqlConfiguration entity) {
+	public void onSqlConnectionUpdated(@Observes @Updated SqlConfiguration entity) {
 
 		configurationMap.put(entity.getCode(), entity);
 
@@ -138,8 +157,12 @@ public class SQLConnectionProvider {
 		if (oldSessionFactory != null && oldSessionFactory.isOpen()) {
 			oldSessionFactory.close();
 		}
-		
-		SESSION_FACTORY_MAP.put(entity.getCode(), buildSessionFactory(entity.getCode()));
+
+		// SESSION_FACTORY_MAP.put(entity.getCode(),
+		// buildSessionFactory(entity.getCode()));
+		// so that the session factory will get reinitialize the next time a new session
+		// is requested
+		SESSION_FACTORY_MAP.remove(entity.getCode());
 	}
 
 	public String getDriverClass() {

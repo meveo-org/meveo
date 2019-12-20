@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
+import javax.transaction.NotSupportedException;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -184,5 +185,12 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
     		customTableRelationService.removeRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
+	}
+
+	@Override
+	public CustomTableDataResponseDto list(String sqlConnectionCode, String customTableCode, PagingAndFiltering pagingAndFiltering)
+			throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException {
+		
+		throw new NotSupportedException();
 	}
 }

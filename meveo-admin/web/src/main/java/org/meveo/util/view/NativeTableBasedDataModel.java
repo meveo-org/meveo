@@ -130,7 +130,7 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	 * @return A list of entities matching search criteria
 	 */
 	protected List<Map<String, Object>> loadData(PaginationConfiguration paginationConfig) {
-		return getPersistenceServiceImpl().list(getCet(), paginationConfig);
+		return getPersistenceServiceImpl().list(getSqlConnectionCode(), getCet(), paginationConfig);
 	}
 
 	/**
@@ -226,4 +226,5 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	public Integer size() {
 		return rowCount;
 	}
+
 }

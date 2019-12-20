@@ -111,7 +111,7 @@
 	
 												<f:converter binding="#{entityReferenceConverter}" />
 												<f:attribute name="field" value="#{fieldCf}" />
-	
+												<f:attribute name="repository" value="#{repository}" />
 											</h:outputText>
 	
 											<f:setPropertyActionListener
@@ -277,7 +277,7 @@
 									</p:panel>
 								</c:when>
 								<c:when test="#{cft.storageType eq CustomFieldStorageTypeEnum.LIST}">
-									<hftl:listCustomFieldValue cft="#{cft}" field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" popup="detailReferences"/>
+									<hftl:listCustomFieldValue cft="#{cft}" field="#{customTableRowDetailBean.values.getCfValue(cft.dbFieldname)}" popup="detailReferences" repository="#{repository}" />
 								</c:when>
 								<c:otherwise>
 									<hftl:customFieldValueField

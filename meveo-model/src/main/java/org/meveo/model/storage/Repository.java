@@ -43,7 +43,7 @@ public class Repository extends BusinessEntity {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "neo4j_configuration_id")
 	private Neo4JConfiguration neo4jConfiguration;
-	
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "sql_configuration_id")
 	private SqlConfiguration sqlConfiguration;
@@ -55,7 +55,7 @@ public class Repository extends BusinessEntity {
 	@NotNull
 	@Column(name = "path", length = 255)
 	private String path;
-	
+
 	public Repository getParentRepository() {
 		return parentRepository;
 	}
@@ -102,6 +102,11 @@ public class Repository extends BusinessEntity {
 
 	public void setSqlConfiguration(SqlConfiguration sqlConfiguration) {
 		this.sqlConfiguration = sqlConfiguration;
+	}
+
+	public String getSqlConfigurationCode() {
+
+		return sqlConfiguration == null ? null : sqlConfiguration.getCode();
 	}
 
 }

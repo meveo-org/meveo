@@ -26,21 +26,28 @@
 	<ui:define name="body">
 
 		<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
-		
-  	    <ui:include src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
-  	    	<ui:param name="prefix" value="listing"/>
-  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
-  	    	<ui:param name="bean" value="#{customTableBean}"/>
-    	</ui:include>
-    	
-	    <ui:include src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
- 		    <ui:param name="prefix" value="listing"/>
-  	    	<ui:param name="update" value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})"/>
-  	    	<ui:param name="bean" value="#{customTableBean}"/>
-	    </ui:include>
-	    
-  	    <ui:include src="/pages/admin/customEntities/customTables/customTableRowDetail.xhtml"/>
-		
+
+		<ui:include
+			src="/pages/admin/customEntities/customTables/customTablePopup.xhtml">
+			<ui:param name="prefix" value="listing" />
+			<ui:param name="update"
+				value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})" />
+			<ui:param name="bean" value="#{customTableBean}" />
+		</ui:include>
+
+		<ui:include
+			src="/pages/admin/customEntities/customTables/childEntityPopup.xhtml">
+			<ui:param name="prefix" value="listing" />
+			<ui:param name="update"
+				value=":ctForm:ctSearchResults:@row(#{customTableBean.selectedRowIndex})" />
+			<ui:param name="bean" value="#{customTableBean}" />
+		</ui:include>
+
+		<ui:include
+			src="/pages/admin/customEntities/customTables/customTableRowDetail.xhtml">
+			<ui:param name="repository" value="#{customTableBean.repository}" />
+		</ui:include>
+
 		<o:importConstants
 			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
 
@@ -166,7 +173,24 @@
 			</h:form>
 		</h:panelGroup>
 
-		<o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+		<o:importConstants
+			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+
+		<h:form>
+			<p:panel styleClass="form-panel">
+				<hftl:decorateFormField fieldId="repository"
+					label="#{messages['binary.repository']}">
+					<p:selectOneMenu id="repository"
+						value="#{customTableBean.repository}">
+						<f:selectItem itemLabel="" itemValue="#{null}" />
+						<f:selectItems var="e" itemValue="#{e}" itemLabel="#{e.code}"
+							value="#{repositoryBean.listWithSqlConnection()}"></f:selectItems>
+						<hftl:objectConverter />
+						<p:ajax update="contentBody"></p:ajax>
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+			</p:panel>
+		</h:form>
 
 		<hftl:searchPanel backingBean="#{customTableBean}"
 			renderNewButton="false" ajaxUpdateIds=":ctForm:ctSearchResults">
@@ -219,56 +243,58 @@
 			</c:forEach>
 		</hftl:searchPanel>
 
-		<p:panel width="100">
-			<!--  Datatable -->
+		<p:outputPanel id="contentBody">
+			<p:panel width="100" rendered="#{customTableBean.repository != null and customTableBean.repository.sqlConfiguration != null}">
+				<!--  Datatable -->
 
-			<ui:include
-				src="/pages/admin/customEntities/customTables/customTableDatatable.xhtml">
-				<ui:param name="popupMode" value="false" />
-				<ui:param name="bean" value="#{customTableBean}" />
-			</ui:include>
+				<ui:include
+					src="/pages/admin/customEntities/customTables/customTableDatatable.xhtml">
+					<ui:param name="popupMode" value="false" />
+					<ui:param name="bean" value="#{customTableBean}" />
+				</ui:include>
 
-			<p:dialog modal="true" closeOnEscape="true" widgetVar="importDialog"
-				header="#{messages['customTable.importFile.header']}"
-				draggable="false" closable="true" resizable="false" width="1000px">
+				<p:dialog modal="true" closeOnEscape="true" widgetVar="importDialog"
+					header="#{messages['customTable.importFile.header']}"
+					draggable="false" closable="true" resizable="false" width="1000px">
 
-				<hftl:decorateFormPanel formId="importForm">
-					<ui:define name="fields">
-						<hftl:decorateFormField fieldId="appendImportedData"
-							label="#{messages['customTable.appendImportedData']}"
-							componentWidth="50" displayOneLine="true" labelWidth="60">
-							<p:selectBooleanCheckbox id="appendImportedData"
-								value="#{customTableBean.appendImportedData}">
-								<p:ajax event="change" process="@this" />
-							</p:selectBooleanCheckbox>
-						</hftl:decorateFormField>
+					<hftl:decorateFormPanel formId="importForm">
+						<ui:define name="fields">
+							<hftl:decorateFormField fieldId="appendImportedData"
+								label="#{messages['customTable.appendImportedData']}"
+								componentWidth="50" displayOneLine="true" labelWidth="60">
+								<p:selectBooleanCheckbox id="appendImportedData"
+									value="#{customTableBean.appendImportedData}">
+									<p:ajax event="change" process="@this" />
+								</p:selectBooleanCheckbox>
+							</hftl:decorateFormField>
 
-						<hftl:decorateFormField fieldId="csvFileFormat"
-							label="#{messages['customTable.csvFileFormat']}"
-							componentWidth="100" newLine="true">
-							<h:outputText id="csvFileFormat"
-								value="#{customTableBean.csvFileFormat }"
-								styleClass="field-value" />
-						</hftl:decorateFormField>
+							<hftl:decorateFormField fieldId="csvFileFormat"
+								label="#{messages['customTable.csvFileFormat']}"
+								componentWidth="100" newLine="true">
+								<h:outputText id="csvFileFormat"
+									value="#{customTableBean.csvFileFormat }"
+									styleClass="field-value" />
+							</hftl:decorateFormField>
 
-						<hftl:decorateFormField label="" componentWidth="100"
-							newLine="true">
-							<p:fileUpload id="import_file" widgetVar="fileUploadWidget"
-								fileUploadListener="#{customTableBean.handleFileUpload}"
-								allowTypes="/(\.|\/)(csv)$/" auto="false"
-								label="#{messages['customTable.importFile.selectFile']}"
-								uploadLabel="#{messages['export.importFile.upload']}"
-								fileLimitMessage="#{messages['customFieldTemplate.importFile.fileLimitMessage']}"
-								multiple="false" update=":growl :importSummary @this"
-								onstart="PF('importDialog').hide()"
-								oncomplete="PF('fileUploadWidget').reset(); PF('fileUploadWidget').reset();"
-								rendered="#{customTableBean.importFuture ==null or customTableBean.importFuture.isDone()}" />
+							<hftl:decorateFormField label="" componentWidth="100"
+								newLine="true">
+								<p:fileUpload id="import_file" widgetVar="fileUploadWidget"
+									fileUploadListener="#{customTableBean.handleFileUpload}"
+									allowTypes="/(\.|\/)(csv)$/" auto="false"
+									label="#{messages['customTable.importFile.selectFile']}"
+									uploadLabel="#{messages['export.importFile.upload']}"
+									fileLimitMessage="#{messages['customFieldTemplate.importFile.fileLimitMessage']}"
+									multiple="false" update=":growl :importSummary @this"
+									onstart="PF('importDialog').hide()"
+									oncomplete="PF('fileUploadWidget').reset(); PF('fileUploadWidget').reset();"
+									rendered="#{customTableBean.importFuture ==null or customTableBean.importFuture.isDone()}" />
 
-						</hftl:decorateFormField>
-					</ui:define>
-				</hftl:decorateFormPanel>
-			</p:dialog>
-		</p:panel>
+							</hftl:decorateFormField>
+						</ui:define>
+					</hftl:decorateFormPanel>
+				</p:dialog>
+			</p:panel>
+		</p:outputPanel>
 	</ui:define>
 
 </ui:composition>

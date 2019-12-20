@@ -17,6 +17,7 @@ import javax.inject.Named;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -49,6 +50,8 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 
 	private volatile Map<String, Map<String, Object>> valuesMap = new HashMap<>();
 
+	private Repository repository;
+
 	@Override
 	public Object getAsObject(FacesContext context, UIComponent component, String value) {
 		System.out.println(value);
@@ -58,6 +61,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 	@Override
 	public String getAsString(FacesContext context, UIComponent component, Object uuid) {
 		CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
+		repository = (Repository) component.getAttributes().get("repository");
 
 		// This converter only applies on entity references
 		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
@@ -89,8 +93,9 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 			final List<String> summaryFields = referencedEntityFields.values().stream().filter(f -> f.isSummary()).map(CustomFieldTemplate::getDbFieldname)
 					.collect(Collectors.toList());
 
+			String sqlConfigurationCode = repository != null ? repository.getSqlConfigurationCode() : null;
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-			final Map<String, Object> values = customTableService.findById(cet.getSqlConfigurationCode(), cetCode, uuid);
+			final Map<String, Object> values = customTableService.findById(sqlConfigurationCode, cetCode, uuid);
 
 			valuesMap.computeIfAbsent(cetCode, (k) -> new HashMap<>()).put(uuid, values);
 
@@ -99,6 +104,14 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 
 			return summaryValues.toString();
 		}
+	}
+
+	public Repository getRepository() {
+		return repository;
+	}
+
+	public void setRepository(Repository repository) {
+		this.repository = repository;
 	}
 
 }

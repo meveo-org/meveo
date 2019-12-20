@@ -41,8 +41,6 @@ import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.persistence.sql.SqlStorageConfigurationDto;
 import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.sql.SqlConfiguration;
-import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -89,9 +87,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private CustomTableCreatorService customTableCreatorService;
-    
-    @Inject
-    private SqlConfigurationService sqlConfigurationService;
 
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -163,7 +158,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	// Delete created table if CET creation failed
         	if(storeAsTable) {
         		log.error("{} creation failed, removing table", cet);
-        		customTableCreatorService.removeTable(cet.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet));
+        		customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
         	}
         	
         	throw e;
@@ -542,7 +537,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         // sql configuration
 		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {
 			cet.getSqlStorageConfiguration().setStoreAsTable(dto.getSqlStorageConfiguration().isStoreAsTable());
-			cet.getSqlStorageConfiguration().setSqlConfigurationCode(dto.getSqlStorageConfiguration().getSqlConfigurationCode());
 		}
         
         // Neo4J configuration if defined

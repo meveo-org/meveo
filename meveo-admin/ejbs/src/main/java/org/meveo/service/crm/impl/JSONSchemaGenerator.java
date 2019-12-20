@@ -24,6 +24,10 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 @Stateless
 public class JSONSchemaGenerator {
 
@@ -274,13 +278,17 @@ public class JSONSchemaGenerator {
 				.versionable(field.isVersionable())
 
 		;
-		result
+		result = result
 				.id(field.getAppliesTo() + '_' + field.getCode())
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
 				.storages(buildDBStorageType(field.getStorages()))
-				.indexType(field.getIndexType().name())
 				.schemaLocation(schemaLocation);
+		
+		if (field.getIndexType() != null) {
+			result = result.indexType(field.getIndexType().name());
+		}
+		
 		return result;
 	}
 

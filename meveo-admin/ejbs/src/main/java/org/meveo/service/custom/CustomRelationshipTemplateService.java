@@ -50,7 +50,7 @@ import org.meveo.util.EntityCustomizationUtils;
 /**
  * Class used for persisting CustomRelationshipTemplate entities
  * @author Clément Bareth
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  */
 @Stateless
@@ -107,7 +107,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         	// Create the custom fields for the table if the table has been created
         	if(created) {
         		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(crt.getAppliesTo()).values()) {
-    				customTableCreatorService.addField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
+    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
         		}
         	}
         }else {

@@ -29,7 +29,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 /**
  * @author Clément Bareth
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  */
 @Embeddable
@@ -38,59 +38,52 @@ public class SQLStorageConfiguration implements Serializable {
 	private static final long serialVersionUID = -6244221059173563142L;
 
 	/**
-     * Should data be stored in a separate table
-     */
-    @Type(type = "numeric_boolean")
-    @Column(name = "store_as_table", nullable = false)
-    @NotNull
-    private boolean storeAsTable = false;
-    
-    @Column(name="sql_configuration_code")
-    private String sqlConfigurationCode;
+	 * Should data be stored in a separate table
+	 */
+	@Type(type = "numeric_boolean")
+	@Column(name = "store_as_table", nullable = false)
+	@NotNull
+	private boolean storeAsTable = false;
 
-    /**
-     * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
-     *
-     * @param code Field code
-     * @return Database field name
-     */
-    public static String getCetDbTablename(String code) {
-        return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
-    }
-    
-    /**
-     * Get a database field name derived from a code value. Lowercase and spaces replaced by "_".
-     *
-     * @param cet Custom entity template to retrieve code
-     * @return Database field name
-     */
-    public static String getDbTablename(CustomEntityTemplate cet) {
-        return BaseEntity.cleanUpAndLowercaseCodeOrId(cet.getCode());
-    }
-    
-    /**
-     * Get a database field name derived from code, start cet code and end cet code. Lowercase and spaces replaced by "_".
-     *
-     * @param crt {@link CustomRelationshipTemplate} to retrieve code
-     * @return Database table name
-     */
-    public static String getDbTablename(CustomRelationshipTemplate crt) {
-        return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
-    }
-
-    public boolean isStoreAsTable() {
-        return storeAsTable;
-    }
-
-    public void setStoreAsTable(boolean storeAsTable) {
-        this.storeAsTable = storeAsTable;
-    }
-
-	public String getSqlConfigurationCode() {
-		return sqlConfigurationCode;
+	/**
+	 * Get a database field name derived from a code value. Lowercase and spaces
+	 * replaced by "_".
+	 *
+	 * @param code Field code
+	 * @return Database field name
+	 */
+	public static String getCetDbTablename(String code) {
+		return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
 	}
 
-	public void setSqlConfigurationCode(String sqlConfigurationCode) {
-		this.sqlConfigurationCode = sqlConfigurationCode;
+	/**
+	 * Get a database field name derived from a code value. Lowercase and spaces
+	 * replaced by "_".
+	 *
+	 * @param cet Custom entity template to retrieve code
+	 * @return Database field name
+	 */
+	public static String getDbTablename(CustomEntityTemplate cet) {
+		return BaseEntity.cleanUpAndLowercaseCodeOrId(cet.getCode());
 	}
+
+	/**
+	 * Get a database field name derived from code, start cet code and end cet code.
+	 * Lowercase and spaces replaced by "_".
+	 *
+	 * @param crt {@link CustomRelationshipTemplate} to retrieve code
+	 * @return Database table name
+	 */
+	public static String getDbTablename(CustomRelationshipTemplate crt) {
+		return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
+	}
+
+	public boolean isStoreAsTable() {
+		return storeAsTable;
+	}
+
+	public void setStoreAsTable(boolean storeAsTable) {
+		this.storeAsTable = storeAsTable;
+	}
+
 }

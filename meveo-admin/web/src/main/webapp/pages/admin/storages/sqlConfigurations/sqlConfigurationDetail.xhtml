@@ -44,7 +44,7 @@
 				field="dialect" required="false" />
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
-				<p:commandButton process="@this"
+				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.transient}"
 					value="#{messages['sqlConfiguration.testConnection']}"
 					action="#{sqlConfigurationBean.testConnection()}" update="messages"></p:commandButton>
 			</ui:define>

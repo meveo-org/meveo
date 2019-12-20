@@ -6,15 +6,17 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.sql.SqlConfigurationDto;
 import org.meveo.api.sql.SqlConfigurationApi;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.local.IPersistenceService;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  * @since 6.6.0
  */
@@ -44,13 +46,26 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 		return sqlConfigurationService;
 	}
 
-	public void testConnection() {
+	@Override
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+
+		if (testConnection()) {
+			return super.saveOrUpdate(killConversation);
+		}
+
+		return null;
+	}
+
+	public boolean testConnection() {
 
 		if (sqlConfigurationService.testConnection(entity.getCode())) {
 			messages.info(new BundleKey("messages", "sqlConfiguration.connection.ok"));
 
 		} else {
 			messages.error(new BundleKey("messages", "sqlConfiguration.connection.ko"));
+			return false;
 		}
+
+		return true;
 	}
 }

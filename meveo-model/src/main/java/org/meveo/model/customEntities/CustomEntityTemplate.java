@@ -274,9 +274,4 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return descendance;
 	}
 
-	public String getSqlConfigurationCode() {
-
-		return sqlStorageConfiguration == null ? null : sqlStorageConfiguration.getSqlConfigurationCode();
-	}
-
 }
