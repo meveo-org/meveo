@@ -4,11 +4,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.api.config.MavenConfigurationApi;
 import org.meveo.api.dto.ActionStatus;
@@ -18,6 +20,10 @@ import org.meveo.api.dto.config.MavenConfigurationResponseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.service.config.impl.MavenConfigurationService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
