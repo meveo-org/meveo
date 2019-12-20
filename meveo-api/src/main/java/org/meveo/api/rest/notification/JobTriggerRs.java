@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.JobTriggerDto;
 import org.meveo.api.dto.response.notification.GetJobTriggerResponseDto;
@@ -22,7 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification/jobTrigger")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Job trigger")
 public interface JobTriggerRs extends IBaseRs {
 
     /**
@@ -33,7 +36,8 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(JobTriggerDto postData);
+    @ApiOperation(value = "Create job trigger")
+    ActionStatus create(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
      * Update an existing job trigger
@@ -43,7 +47,8 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(JobTriggerDto postData);
+    @ApiOperation(value = "Update job trigger")
+    ActionStatus update(@ApiParam("Job trigger information") JobTriggerDto postData);
 
     /**
      * Find a job trigger with a given code 
@@ -53,7 +58,8 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetJobTriggerResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Find job trigger by code")
+    GetJobTriggerResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
      * Remove an existing job trigger with a given code 
@@ -63,7 +69,8 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Remove job trigger by code")
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the job trigger") String notificationCode);
 
     /**
      * Create new or update an existing job trigger with a given code
@@ -73,5 +80,6 @@ public interface JobTriggerRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(JobTriggerDto postData);
+    @ApiOperation(value = "Create or update job trigger")
+    ActionStatus createOrUpdate(@ApiParam("Job trigger information") JobTriggerDto postData);
 }

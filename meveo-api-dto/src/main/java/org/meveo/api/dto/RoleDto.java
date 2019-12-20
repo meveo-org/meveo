@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 
@@ -30,20 +31,24 @@ public class RoleDto extends BaseEntityDto {
 
     /** The name. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Name of the role")
     private String name;
 
     /** The description. */
     @XmlAttribute
+    @ApiModelProperty("Description of the role")
     private String description;
 
     /** The permission. */
     @XmlElementWrapper(name = "permissions")
     @XmlElement(name = "permission")
+    @ApiModelProperty("List of permissions information")
     private List<PermissionDto> permission = new ArrayList<PermissionDto>();
 
     /** The roles. */
     @XmlElementWrapper(name = "roles")
     @XmlElement(name = "role")
+    @ApiModelProperty("List of roles information")
     private List<RoleDto> roles = new ArrayList<RoleDto>();
 
     /**

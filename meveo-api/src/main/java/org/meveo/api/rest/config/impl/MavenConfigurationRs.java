@@ -28,6 +28,7 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Path("/mavenConfiguration")
+@Api("Maven configuration")
 public class MavenConfigurationRs extends BaseRs {
 
 	@Inject
@@ -44,7 +45,8 @@ public class MavenConfigurationRs extends BaseRs {
 	 */
 	@POST
 	@Path("/")
-	public ActionStatus createOrUpdate(MavenConfigurationDto postData) {
+	@ApiOperation(value = "Create or update maven configuration")
+	public ActionStatus createOrUpdate(@ApiParam("Maven configuration information") MavenConfigurationDto postData) {
 
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
@@ -61,6 +63,7 @@ public class MavenConfigurationRs extends BaseRs {
 
 	@GET
 	@Path("/")
+	@ApiOperation(value = "Get maven configuration")
 	public MavenConfigurationResponseDto getConfiguration() {
 
 		MavenConfigurationResponseDto result = new MavenConfigurationResponseDto();

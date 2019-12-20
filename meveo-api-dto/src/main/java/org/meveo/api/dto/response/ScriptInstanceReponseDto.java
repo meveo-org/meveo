@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.ScriptInstanceErrorDto;
 
 /**
@@ -22,6 +23,7 @@ public class ScriptInstanceReponseDto extends BaseResponse {
     private static final long serialVersionUID = 1L;
     
     /** The compilation errors. */
+    @ApiModelProperty("The compilation errors")
     List<ScriptInstanceErrorDto> compilationErrors = new ArrayList<ScriptInstanceErrorDto>();
 
     /**

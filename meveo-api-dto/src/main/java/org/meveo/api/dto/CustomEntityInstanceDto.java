@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
 
@@ -24,20 +25,25 @@ public class CustomEntityInstanceDto extends BaseEntityDto implements Serializab
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the custom entity instance")
     private String code;
 
     /** The description. */
     @XmlAttribute()
+    @ApiModelProperty("Description of the custom entity instance")
     private String description;
 
     /** The cet code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the custom entity template")
     private String cetCode;
 
     /** The disabled. */
+    @ApiModelProperty("Whether to disable")
     private boolean disabled;
 
     /** The custom fields. */
+    @ApiModelProperty("Custom fields information")
     private CustomFieldsDto customFields;
 
     /**

@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.NotificationDto;
 import org.meveo.api.dto.response.notification.GetNotificationResponseDto;
@@ -24,7 +27,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Notification")
 public interface NotificationRs extends IBaseRs {
 
     /**
@@ -35,7 +38,8 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(NotificationDto postData);
+    @ApiOperation(value = "Create notification")
+    ActionStatus create(@ApiParam("Notification information") NotificationDto postData);
 
     /**
      * Update an existing notification
@@ -45,7 +49,8 @@ public interface NotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(NotificationDto postData);
+    @ApiOperation(value = "Update notification")
+    ActionStatus update(@ApiParam("Notification information") NotificationDto postData);
 
     /**
      * Find a notification with a given code 
@@ -55,7 +60,8 @@ public interface NotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetNotificationResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Find notification by code")
+    GetNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
 
     /**
      * Remove an existing notification with a given code 
@@ -65,7 +71,8 @@ public interface NotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Remove notification by code")
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the notification") String notificationCode);
     
     /**
      * List the notification history
@@ -93,5 +100,6 @@ public interface NotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(NotificationDto postData);
+    @ApiOperation(value = "Create or update notification")
+    ActionStatus createOrUpdate(@ApiParam("Notification information") NotificationDto postData);
 }

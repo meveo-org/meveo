@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -29,35 +30,45 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     private static final long serialVersionUID = -6633504145323452803L;
 
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the custom relationship template")
     private String code;
 
     @XmlAttribute()
+    @ApiModelProperty("Name of the custom relationship template")
     private String name;
 
     @XmlAttribute()
+    @ApiModelProperty("Whether to unique value")
     private boolean isUnique = false;
 
     @XmlAttribute()
+    @ApiModelProperty("Description of the custom relationship template")
     private String description;
 
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
     @JsonProperty("fields")
+    @ApiModelProperty("List of custom fields information")
     private List<CustomFieldTemplateDto> fields = new ArrayList<>();
 
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Start node code")
     private String startNodeCode;
 
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "End node code")
     private String endNodeCode;
 
     @XmlAttribute()
+    @ApiModelProperty("Relationship direction type")
     private RelationshipDirectionEnum direction;
 
     @XmlAttribute()
+    @ApiModelProperty("List of start node keys")
     private List<String> startNodeKeys = new ArrayList<>();
 
     @XmlAttribute()
+    @ApiModelProperty("List of end node keys")
     private List<String> endNodeKeys = new ArrayList<>();
     
     /**
@@ -65,18 +76,21 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
      * If SQL is included, will create a dedicated table
      */
     @XmlAttribute()
+    @ApiModelProperty("List of available storages where the custom relationship instances should be stored")
     private List<DBStorageType> availableStorages = new ArrayList<>();
 
     /**
      * Name of the field that will be added to the source entity to refer the most recent target entity
      */
     @XmlAttribute
+    @ApiModelProperty("Name of the field that will be added to the source entity to refer the most recent target entity")
     private String sourceNameSingular;
 
     /**
      * Name of the field that will be added to the source entity to refer every target entities
      */
     @XmlAttribute
+    @ApiModelProperty("Name of the field that will be added to the source entity to refer every target entities")
     private String sourceNamePlural;
 
 
@@ -84,15 +98,18 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
      * Name of the field that will be added to the target entity to refer the most recent source entity
      */
     @XmlAttribute
+    @ApiModelProperty("Name of the field that will be added to the target entity to refer the most recent source entity")
     private String targetNameSingular;
 
     /**
      * Name of the field that will be added to the target entity to refer every source entities
      */
     @XmlAttribute
+    @ApiModelProperty("Name of the field that will be added to the target entity to refer every source entities")
     private String targetNamePlural;
 
     @XmlAttribute
+    @ApiModelProperty("Name of graphQl type")
     private String graphQlTypeName;
 
 

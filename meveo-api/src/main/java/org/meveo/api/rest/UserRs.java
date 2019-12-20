@@ -12,6 +12,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
@@ -32,7 +35,7 @@ import java.security.KeyPair;
 @Path("/user")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("User")
 public interface UserRs extends IBaseRs {
 
     /**
@@ -43,7 +46,8 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(UserDto postData);
+    @ApiOperation(value = "Create user")
+    ActionStatus create(@ApiParam("User information") UserDto postData);
 
     /**
      * Update user.
@@ -53,7 +57,8 @@ public interface UserRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(UserDto postData);
+    @ApiOperation(value = "Update user")
+    ActionStatus update(@ApiParam("User information") UserDto postData);
 
     /**
      * Remove user with a given username.
@@ -63,7 +68,8 @@ public interface UserRs extends IBaseRs {
      */
     @DELETE
     @Path("/{username}")
-    ActionStatus remove(@PathParam("username") String username);
+    @ApiOperation(value = "Remove user by username")
+    ActionStatus remove(@PathParam("username") @ApiParam("The name of user") String username);
 
     /**
      * Search user with a given username.
@@ -73,7 +79,8 @@ public interface UserRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetUserResponse find(@QueryParam("username") String username);
+    @ApiOperation(value = "Find user by username")
+    GetUserResponse find(@QueryParam("username") @ApiParam("The name of user") String username);
 
     /**
      * Create or update user based on the username.
@@ -83,7 +90,8 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(UserDto postData);
+    @ApiOperation(value = "Create or update user")
+    ActionStatus createOrUpdate(@ApiParam("User information") UserDto postData);
     
     /**
      * Creates a user in keycloak and core.
@@ -92,7 +100,8 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/external")
-    ActionStatus createExternalUser(UserDto postData);
+    @ApiOperation(value = "Create external user")
+    ActionStatus createExternalUser(@ApiParam("User information") UserDto postData);
 
     /**
      * Updates a user in keycloak and core given a username.
@@ -101,7 +110,8 @@ public interface UserRs extends IBaseRs {
      */
     @PUT
     @Path("/external/")
-    ActionStatus updateExternalUser(UserDto postData);
+    @ApiOperation(value = "Update external user")
+    ActionStatus updateExternalUser(@ApiParam("User information") UserDto postData);
 
     /**
      * Deletes a user in keycloak and core given a username.
@@ -110,7 +120,8 @@ public interface UserRs extends IBaseRs {
      */
     @DELETE
     @Path("/external/{username}")
-    ActionStatus deleteExternalUser(@PathParam("username") String username);
+    @ApiOperation(value = "Remove external user by username")
+    ActionStatus deleteExternalUser(@PathParam("username") @ApiParam("The name of user") String username);
 
     /**
      * List users matching a given criteria.
@@ -125,8 +136,9 @@ public interface UserRs extends IBaseRs {
      */
     @GET
     @Path("/list")
-    UsersDto listGet(@QueryParam("query") String query, @QueryParam("fields") String fields, @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit,
-            @DefaultValue("userName") @QueryParam("sortBy") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") SortOrder sortOrder);
+    @ApiOperation(value = "List get user")
+    UsersDto listGet(@QueryParam("query") @ApiParam("Query to search criteria") String query, @QueryParam("fields") @ApiParam("Data retrieval options/fieldnames") String fields, @QueryParam("offset") @ApiParam("Offset from record number") Integer offset, @QueryParam("limit") @ApiParam("Number of records to retrieve") Integer limit,
+            @DefaultValue("userName") @QueryParam("sortBy") @ApiParam("Sort by a field") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") @ApiParam("Sort order") SortOrder sortOrder);
 
     /**
      * List users matching a given criteria.
@@ -136,7 +148,8 @@ public interface UserRs extends IBaseRs {
      */
     @POST
     @Path("/list")
-    UsersDto listPost(PagingAndFiltering pagingAndFiltering);
+    @ApiOperation(value = "List post user")
+    UsersDto listPost(@ApiParam("Pagination and filtering criteria") PagingAndFiltering pagingAndFiltering);
 
     /**
      * Generate and set ssh keys for a user.
@@ -147,6 +160,7 @@ public interface UserRs extends IBaseRs {
     @POST
     @Path("/ssh/generate")
     @Consumes(MediaType.TEXT_PLAIN)
-    RSAKeyPair generateShKey(@QueryParam("username") String username, String passphrase) throws BusinessException;
+    @ApiOperation(value = "Generate SH key by username")
+    RSAKeyPair generateShKey(@QueryParam("username") @ApiParam("Username to connect") String username,@ApiParam("Pass phrase") String passphrase) throws BusinessException;
 
 }

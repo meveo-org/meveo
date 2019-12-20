@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.jobs.TimerEntity;
@@ -23,30 +24,37 @@ public class TimerEntityDto extends BusinessEntityDto {
 
     /** The hour. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The hour")
     private String hour = "*";
 
     /** The minute. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The minute")
     private String minute = "0";
 
     /** The second. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The second")
     private String second = "0";
 
     /** The year. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The year")
     private String year = "*";
 
     /** The month. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The month")
     private String month = "*";
 
     /** The day of month. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The day of month")
     private String dayOfMonth = "*";
 
     /** The day of week. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The day of week")
     private String dayOfWeek = "*";
 
     /**

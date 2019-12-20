@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.communication.EmailTemplateDto;
 import org.meveo.api.dto.response.communication.EmailTemplateResponseDto;
@@ -26,7 +29,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/communication/emailTemplate")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Email template")
 public interface EmailTemplateRs extends IBaseRs {
 
 	/**
@@ -37,7 +40,8 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
 	@POST
     @Path("/")
-    ActionStatus create(EmailTemplateDto emailTemplateDto);
+    @ApiOperation(value = "Create an email template")
+    ActionStatus create(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
 	/**
 	 * update an emailTemplate by dto
@@ -47,7 +51,8 @@ public interface EmailTemplateRs extends IBaseRs {
 	 */
     @PUT
     @Path("/")
-    ActionStatus update(EmailTemplateDto emailTemplateDto);
+    @ApiOperation(value = "Update email template information")
+    ActionStatus update(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 
     /**
      * Find an email template with a given code
@@ -57,7 +62,8 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    EmailTemplateResponseDto find(@QueryParam("code") String code);
+    @ApiOperation(value = "Find an email template")
+    EmailTemplateResponseDto find(@QueryParam("code") @ApiParam("Code of the email template") String code);
 
     /**
      * remove an emailTemplate by code
@@ -67,7 +73,8 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("code") String code);
+    @ApiOperation(value = "Remove an email template")
+    ActionStatus remove(@PathParam("code") @ApiParam("Code of the email template") String code);
 
     /**
      * List email templates
@@ -76,6 +83,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List email templates")
     EmailTemplatesResponseDto list();
 
     /**
@@ -86,6 +94,7 @@ public interface EmailTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(EmailTemplateDto emailTemplateDto);
+    @ApiOperation(value = "Create new or update an existing email template")
+    ActionStatus createOrUpdate(@ApiParam("Email template information") EmailTemplateDto emailTemplateDto);
 }
 

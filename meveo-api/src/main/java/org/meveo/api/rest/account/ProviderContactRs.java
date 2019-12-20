@@ -15,6 +15,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.account.ProviderContactDto;
 import org.meveo.api.dto.response.account.ProviderContactResponseDto;
@@ -30,7 +33,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/account/providerContact")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("ProviderContact")
 public interface ProviderContactRs extends IBaseRs {
 
 	/**
@@ -40,7 +43,8 @@ public interface ProviderContactRs extends IBaseRs {
 	 */
     @POST
     @Path("/")
-    ActionStatus create(ProviderContactDto providerContactDto);
+    @ApiOperation(value="Create a provider contact")
+    ActionStatus create(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
      * Update an existing provider contact
@@ -50,7 +54,8 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(ProviderContactDto providerContactDto);
+    @ApiOperation(value="Update an existing provider contact")
+    ActionStatus update(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 
     /**
      * Search for a provider contact with a given code 
@@ -59,7 +64,8 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    ProviderContactResponseDto find(@QueryParam("providerContactCode") String providerContactCode);
+    @ApiOperation(value="Find provider contact information")
+    ProviderContactResponseDto find(@QueryParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
      * Remove an existing provider contact with a given code 
@@ -69,7 +75,8 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @DELETE
     @Path("/{code}")
-    ActionStatus remove(@PathParam("providerContactCode") String providerContactCode);
+    @ApiOperation(value="Remove an existing provider contact")
+    ActionStatus remove(@PathParam("providerContactCode") @ApiParam("The provider contact's code") String providerContactCode);
 
     /**
      * List of provider contacts
@@ -78,6 +85,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List of provider contacts")
     ProviderContactsResponseDto list();
     
     /**
@@ -88,6 +96,7 @@ public interface ProviderContactRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(ProviderContactDto providerContactDto);
+    @ApiOperation(value = "Create new or update an existing provider contact")
+    ActionStatus createOrUpdate(@ApiParam("Provider contact information") ProviderContactDto providerContactDto);
 }
 

@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CountryIsoDto;
 
 /**
@@ -22,6 +23,7 @@ public class GetCountriesIsoResponse extends BaseResponse {
     private static final long serialVersionUID = -8391118981393102116L;
 
     /** The countries. */
+    @ApiModelProperty("List of countries information")
     private List<CountryIsoDto> countries;
 
     /**

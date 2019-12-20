@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.custom.EntityCustomAction;
 
 /**
@@ -24,28 +25,35 @@ public class EntityCustomActionDto extends BaseEntityDto {
 
     /** Code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of entity custom action")
     private String code;
 
     /** Description. */
     @XmlAttribute()
+    @ApiModelProperty("Description of entity custom action")
     private String description;
 
     /** Entity action applies to. */
     @XmlAttribute(required = false)
+    @ApiModelProperty(required = false, value = "Entity action applies to")
     protected String appliesTo;
 
     /** EL expression when action button should be visible. */
     @XmlElement(required = false)
+    @ApiModelProperty(required = false, value = "EL expression when action button should be visible.")
     private String applicableOnEl;
 
     /** Button label. */
     @XmlElement(required = false)
+    @ApiModelProperty(required = false, value = "Button label")
     private String label;
 
     /** Button label translations. */
+    @ApiModelProperty("Button label translations")
     protected List<LanguageDescriptionDto> labelsTranslated;
 
     /** Script to execute. */
+    @ApiModelProperty("Script instance information")
     private ScriptInstanceDto script;
 
     /**
@@ -57,6 +65,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
      * e.g. tab:Tab default title|FRA=Title in french|ENG=Title in english:0;fieldGroup:Field group default label|FRA=Field group label in french|ENG=Field group label in
      * english:0;action:0 OR tab:Second tab:1;action:1
      */
+    @ApiModelProperty("Gui position")
     private String guiPosition;
 
     /**

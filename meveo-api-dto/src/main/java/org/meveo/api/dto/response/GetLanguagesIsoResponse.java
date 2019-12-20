@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.LanguageIsoDto;
 
 /**
@@ -22,6 +23,7 @@ public class GetLanguagesIsoResponse extends BaseResponse {
     private static final long serialVersionUID = -1697478352703038101L;
 
     /** The languages. */
+    @ApiModelProperty("List of languages information")
     private List<LanguageIsoDto> languages;
 
     /**

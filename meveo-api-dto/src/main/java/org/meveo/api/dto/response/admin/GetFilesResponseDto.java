@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.admin.FileDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -26,6 +27,7 @@ public class GetFilesResponseDto extends BaseResponse {
     /** The files. */
     @XmlElementWrapper(name = "files")
     @XmlElement(name = "file")
+    @ApiModelProperty("List of files information")
     private List<FileDto> files;
 
     /**

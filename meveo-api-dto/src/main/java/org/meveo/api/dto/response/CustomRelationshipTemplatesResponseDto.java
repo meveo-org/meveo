@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 
 /**
@@ -22,6 +23,7 @@ public class CustomRelationshipTemplatesResponseDto extends BaseResponse {
 
     @XmlElementWrapper(name = "customRelationshipTemplates")
     @XmlElement(name = "customRelationshipTemplate")
+	@ApiModelProperty("List of custom relationship templates information")
     private List<CustomRelationshipTemplateDto> customRelationshipTemplates = new ArrayList<CustomRelationshipTemplateDto>();
 
 	public List<CustomRelationshipTemplateDto> getCustomRelationshipTemplates() {

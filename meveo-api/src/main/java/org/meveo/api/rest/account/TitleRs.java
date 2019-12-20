@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.TitleDto;
 import org.meveo.api.dto.response.account.TitleResponseDto;
@@ -20,7 +23,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/account/title")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Title")
 public interface TitleRs extends IBaseRs {
 
     /**
@@ -31,7 +34,8 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(TitleDto postData);
+    @ApiOperation(value="Create a new title")
+    ActionStatus create(@ApiParam("Title information") TitleDto postData);
 
     /**
      * Search for a title with a given code 
@@ -41,7 +45,8 @@ public interface TitleRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    TitleResponseDto find(@QueryParam("titleCode") String titleCode);
+    @ApiOperation(value="Find title information")
+    TitleResponseDto find(@QueryParam("titleCode") @ApiParam("Code of the title") String titleCode);
 
     /**
      * List titles 
@@ -50,6 +55,7 @@ public interface TitleRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List titles")
     TitlesResponseDto list();
 
     /**
@@ -60,7 +66,8 @@ public interface TitleRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(TitleDto postData);
+    @ApiOperation(value="Update an existing title")
+    ActionStatus update(@ApiParam("Title information") TitleDto postData);
 
     /**
      * Remove an existing title with a given code 
@@ -70,7 +77,8 @@ public interface TitleRs extends IBaseRs {
      */
     @DELETE
     @Path("/{titleCode}")
-    public ActionStatus remove(@PathParam("titleCode") String titleCode);
+    @ApiOperation(value="Remove an existing title")
+    ActionStatus remove(@PathParam("titleCode") @ApiParam("Code of the title") String titleCode);
 
     /**
      * Create new or update an existing title
@@ -80,5 +88,6 @@ public interface TitleRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(TitleDto postData);
+    @ApiOperation(value="Create new or update an existing title")
+    ActionStatus createOrUpdate(@ApiParam("Title information") TitleDto postData);
 }

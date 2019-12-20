@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 
@@ -31,16 +32,19 @@ public class EntityCustomizationDto extends BaseEntityDto {
 
     /** The classname. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The classname")
     private String classname;
 
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
+    @ApiModelProperty("List of custom field templates information")
     private List<CustomFieldTemplateDto> fields;
 
     /** The actions. */
     @XmlElementWrapper(name = "actions")
     @XmlElement(name = "action")
+    @ApiModelProperty("List of entity custom actions information")
     private List<EntityCustomActionDto> actions;
 
     /**

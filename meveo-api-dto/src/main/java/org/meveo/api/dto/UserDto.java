@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.admin.SecuredEntity;
 import org.meveo.model.admin.User;
@@ -53,55 +54,69 @@ public class UserDto extends BaseEntityDto {
 
     /** The username. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The username")
     private String username;
 
     /**
      * Used when creating keycloak user.
      */
     @XmlElement()
+    @ApiModelProperty("Password used when creating keycloak user")
     private String password;
 
     /** The email. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The email")
     private String email;
 
     /** The first name. */
+    @ApiModelProperty("The first name")
     private String firstName;
 
     /** The last name. */
+    @ApiModelProperty("The last name")
     private String lastName;
 
     /** The roles. */
     @XmlElementWrapper(name = "userRoles")
     @XmlElement(name = "userRole")
+    @ApiModelProperty("List of roles")
     private List<String> roles;
 
     /** The external roles. */
     @XmlElementWrapper(name = "externalRoles")
     @XmlElement(name = "externalRole")
+    @ApiModelProperty("The external roles")
     private List<RoleDto> externalRoles;
 
     /** The secured entities. */
     @XmlElementWrapper(name = "accessibleEntities")
     @XmlElement(name = "accessibleEntity")
+    @ApiModelProperty("The secured entities")
     private List<SecuredEntityDto> securedEntities;
 
     /** The role. */
     @Deprecated // use roles field
+    @ApiModelProperty("The role")
     private String role;
 
     /** The user level. */
     @XmlElement()
+    @ApiModelProperty("The user level")
     private String userLevel;
 
     /** The created at. */
+    @ApiModelProperty("The created at")
     private Date createdAt;
 
     /** The last login date. */
+    @ApiModelProperty("The last login date")
     private Date lastLoginDate;
 
+    @ApiModelProperty("Ssh private key")
     private String sshPrivateKey;
 
+    @ApiModelProperty("Ssh public key")
     private String sshPublicKey;
 
     /**

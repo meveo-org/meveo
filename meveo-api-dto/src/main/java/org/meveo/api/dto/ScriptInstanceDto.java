@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
@@ -27,14 +28,18 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private static final long serialVersionUID = 4555037251902559699L;
 
     /** The execution roles. */
+    @ApiModelProperty("The execution roles.")
     private List<RoleDto> executionRoles = new ArrayList<RoleDto>();
     
     /** The sourcing roles. */
+    @ApiModelProperty("The sourcing roles")
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
+    @ApiModelProperty("Whether to error")
     private Boolean error;
 
     /** The maven dependencies. */
+    @ApiModelProperty("The maven dependencies")
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
 
     /**

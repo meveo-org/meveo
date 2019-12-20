@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.JobTrigger;
 import org.meveo.model.notification.Notification;
 
@@ -24,10 +25,12 @@ public class JobTriggerDto extends NotificationDto {
     private static final long serialVersionUID = 1L;
 
     /** The job params. */
+    @ApiModelProperty("Map of job params")
     private Map<String, String> jobParams = new HashMap<String, String>();
 
     /** The job instance. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The job instance")
     private String jobInstance;
 
     /**

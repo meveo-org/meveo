@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -20,6 +21,7 @@ public class MeveoModuleDtoResponse extends BaseResponse {
     private static final long serialVersionUID = 1L;
     
     /** The module. */
+    @ApiModelProperty("Module information")
     private MeveoModuleDto module;
 
     /**

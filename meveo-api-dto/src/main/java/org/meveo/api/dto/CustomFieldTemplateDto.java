@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -36,22 +37,27 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
     /** Field code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the custom field template")
     protected String code;
 
     /** Field label. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Description of the custom field template")
     protected String description;
 
     /** The language descriptions. */
+    @ApiModelProperty("List of language descriptions information")
     private List<LanguageDescriptionDto> languageDescriptions;
 
     /** Value type. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Value type")
     protected CustomFieldTypeEnum fieldType;
 
     /** The account level. */
     @XmlElement(required = false)
     @Deprecated
+    @ApiModelProperty(required = false, value = "The account level")
     protected String accountLevel;
 
     /**
@@ -60,34 +66,42 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * instance.
      */
     @XmlElement(required = false)
+    @ApiModelProperty(required = false, value = "Applies to")
     protected String appliesTo;
 
     /** Default value. */
     @XmlElement
+    @ApiModelProperty("Default value")
     protected String defaultValue;
 
     /** Shall inherited value be used as default value instead if available. */
     @XmlElement
+    @ApiModelProperty("Whether to inherit value be used as default value instead if available")
     protected Boolean useInheritedAsDefaultValue;
 
     /** Value storage type. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Value storage type")
     protected CustomFieldStorageTypeEnum storageType;
 
     /** Is value required. */
     @XmlElement
+    @ApiModelProperty("Whether to require value")
     protected Boolean valueRequired;
 
     /** Is value versionable. */
     @XmlElement
+    @ApiModelProperty("Whether to versionable value")
     protected Boolean versionable;
 
     /** Should Period end event be fired when value period is over. */
     @XmlElement
+    @ApiModelProperty("Whether to fire Period end event when value period is over")
     protected Boolean triggerEndPeriodEvent;
 
     /** Calendar associated to value versioning periods. */
     @XmlElement
+    @ApiModelProperty("Calendar associated to value versioning periods")
     protected String calendar;
 
     /**
@@ -95,36 +109,44 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     @XmlElement
     @Deprecated
+    @ApiModelProperty("Cache value time period")
     protected Integer cacheValueTimeperiod;
 
     /** Entity class and CET code for a reference to entity or child entity type fields. */
     @XmlElement
+    @ApiModelProperty("Entity class and CET code for a reference to entity or child entity type fields")
     protected String entityClazz;
 
     /** List of values for LIST type field. */
     @XmlElement
+    @ApiModelProperty("List of values for LIST type field")
     protected Map<String, String> listValues;
 
     /** Can value be changed when editing a previously saved entity. */
     @XmlElement
+    @ApiModelProperty("Whether to change value when editing a previously saved entity")
     protected Boolean allowEdit = true;
 
     /** Do not show/apply field on new entity creation. */
     @XmlElement
+    @ApiModelProperty("Whether to do not show/apply field on new entity creation")
     protected Boolean hideOnNew;
 
     /** Maximum value to validate long and double values OR maximum length of string value. */
     @XmlElement
+    @ApiModelProperty("Maximum value to validate long and double values")
     protected Long maxValue;
 
     /** Minimum value to validate long and double values. */
     @XmlElement
+    @ApiModelProperty("Minimum value to validate long and double values")
     protected Long minValue;
 
     /**
      * Regular expression to validate string values.
      */
     @XmlElement
+    @ApiModelProperty("Regular expression to validate string values")
     protected String regExp;
 
     /**
@@ -132,20 +154,26 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     @XmlElement
     @Deprecated
+    @ApiModelProperty("Whether to cache value")
     protected Boolean cacheValue;
 
     @XmlElement
+    @ApiModelProperty("List of content types")
     protected List<String> contentTypes = new ArrayList<String>();
 
     @XmlElement
+    @ApiModelProperty("List of file extensions")
     protected List<String> fileExtensions = new ArrayList<String>();
 
     @XmlElement
+    @ApiModelProperty("Max files size allowed in kb")
     protected Long maxFileSizeAllowedInKb;
 
     @XmlElement
+    @ApiModelProperty("File path")
     protected String filePath;
 
+    @ApiModelProperty("Whether to save on explorer")
     protected boolean saveOnExplorer;
 
     /**
@@ -159,37 +187,45 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * english:0;field:0 OR tab:Second tab:1;field:1
      */
     @XmlElement
+    @ApiModelProperty("Gui position")
     protected String guiPosition;
     
     @XmlElement
+    @ApiModelProperty("Whether to unique")
     protected boolean isUnique;
     
     @XmlElement
+    @ApiModelProperty("Whether to filter")
     protected boolean isFilter;
     
     @XmlElement
+    @ApiModelProperty("Name of relationship")
     private String relationshipName;
     
     
     @XmlElement
+    @ApiModelProperty("Expression separator")
     protected String expressionSeparator;
 
     /**
      * Whether we can use this field as the identifier of the entity
      */
     @XmlElement
+    @ApiModelProperty("Whether we can use this field as the identifier of the entity")
     private boolean identifier;
 
     /**
      * Key format of a map for map type fields.
      */
     @XmlElement()
+    @ApiModelProperty("Key format of a map for map type fields")
     protected CustomFieldMapKeyEnum mapKeyType;
 
     /**
      * EL expression (including #{}) to evaluate when field is applicable.
      */
     @XmlElement()
+    @ApiModelProperty("EL expression to evaluate when field is applicable")
     protected String applicableOnEl;
 
     /**
@@ -197,6 +233,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     @XmlElementWrapper(name = "matrixColumns")
     @XmlElement(name = "matrixColumn")
+    @ApiModelProperty("A list of columns matrix consists of")
     private List<CustomFieldMatrixColumnDto> matrixColumns;
 
     /**
@@ -204,28 +241,35 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     @XmlElementWrapper(name = "childEntityFieldsForSummary")
     @XmlElement(name = "fieldCode")
+    @ApiModelProperty("A list of child entity fields to be displayed in a summary table of child entities")
     private List<String> childEntityFieldsForSummary;
 
     @XmlElement()
+    @ApiModelProperty("List of storage types")
     private List<DBStorageType> storages;
 
     @XmlElement
+    @ApiModelProperty("List of samples")
     private List<String> samples;
 
     @XmlElement
+    @ApiModelProperty("Whether to summary")
     private boolean summary;
 
     /**
      * If and how custom field values should be indexed in Elastic Search.
      */
+    @ApiModelProperty("If and how custom field values should be indexed in Elastic Search")
     private CustomFieldIndexTypeEnum indexType;
 
     /**
      * Tags assigned to custom field template.
      */
+    @ApiModelProperty("Tags assigned to custom field template")
     private String tags;
 
     @XmlElement()
+    @ApiModelProperty("Display format")
     private String displayFormat;
 
     /**

@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CountryIsoDto;
 import org.meveo.api.dto.response.GetCountriesIsoResponse;
@@ -24,7 +27,7 @@ import org.meveo.api.dto.response.GetCountryIsoResponse;
 @Path("/countryIso")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Country iso")
 public interface CountryIsoRs extends IBaseRs {
 
     /**
@@ -35,7 +38,8 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(CountryIsoDto countryIsoDto);
+    @ApiOperation(value = "Create country iso information")
+    ActionStatus create(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
 
     /**
      * Search country with a given country code.
@@ -44,7 +48,9 @@ public interface CountryIsoRs extends IBaseRs {
      * @return {@link org.meveo.api.dto.response.GetCountryIsoResponse}.
      */
     @GET
-    @Path("/") GetCountryIsoResponse find(@QueryParam("countryCode") String countryCode);
+    @Path("/")
+    @ApiOperation(value = "Find country iso information")
+    GetCountryIsoResponse find(@QueryParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
      * Does not delete a country but the tradingCountry associated to it.
@@ -54,7 +60,8 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @DELETE
     @Path("/{countryCode}")
-    ActionStatus remove(@PathParam("countryCode") String countryCode);
+    @ApiOperation(value = "Remove country iso information")
+    ActionStatus remove(@PathParam("countryCode") @ApiParam("Code of the country") String countryCode);
 
     /**
      * Modify a country. Same input parameter as create. The country and tradingCountry are created if they don't exists. The operation fails if the tradingCountry is null.
@@ -64,7 +71,8 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(CountryIsoDto countryIsoDto);
+    @ApiOperation(value = "Update country iso information")
+    ActionStatus update(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
 
     /**
      * @param countryIsoDto country iso
@@ -72,7 +80,8 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(CountryIsoDto countryIsoDto);
+    @ApiOperation(value = "Create or update country iso information")
+    ActionStatus createOrUpdate(@ApiParam("Country iso information") CountryIsoDto countryIsoDto);
     
     /**
      * List all countries.
@@ -80,6 +89,7 @@ public interface CountryIsoRs extends IBaseRs {
      */
     @GET
     @Path("/list")
+    @ApiOperation(value = "List all countries")
     GetCountriesIsoResponse list();
 
 }

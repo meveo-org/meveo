@@ -1,5 +1,7 @@
 package org.meveo.api.dto.response;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +23,7 @@ public class PagingAndFiltering implements Serializable {
     /**
      * Full text search filter. Mutually exclusive with filters attribute. fullTextFilter has priority
      */
+    @ApiModelProperty("Full text search filter")
     private String fullTextFilter;
 
     /**
@@ -93,36 +96,43 @@ public class PagingAndFiltering implements Serializable {
      * NOTE: Filters passed as string in Rest GET type method are in the following format: filterKey1:filterValue1|filterKey2:filterValue2
      * 
      */
+    @ApiModelProperty("Search filters")
     private Map<String, Object> filters;
 
     /**
      * Data retrieval options/fieldnames separated by a comma.
      */
+    @ApiModelProperty("Data retrieval options/fieldnames separated by a comma")
     private String fields;
 
     /**
      * Pagination - from record number.
      */
+    @ApiModelProperty("Offset from record number")
     private Integer offset;
 
     /**
      * Pagination - number of items to retrieve.
      */
+    @ApiModelProperty("Number of items to retrieve")
     private Integer limit = 100;
 
     /**
      * Sorting - field to sort by - a field from a main entity being searched. See Data model for a list of fields.
      */
+    @ApiModelProperty("Sort by a field")
     private String sortBy;
 
     /**
      * Sorting - sort order.
      */
+    @ApiModelProperty("Sort order")
     private SortOrder sortOrder;
 
     /**
      * Total number of records. Note - filled on response only.
      */
+    @ApiModelProperty("Total number of records")
     private Integer totalNumberOfRecords;
 
     /**

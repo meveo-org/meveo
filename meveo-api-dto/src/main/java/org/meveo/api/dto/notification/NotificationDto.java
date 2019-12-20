@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
@@ -28,25 +29,32 @@ public class NotificationDto extends BusinessEntityDto {
 
     /** The class name filter. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The class name filter")
     private String classNameFilter;
 
     /** Valid values: CREATED, UPDATED, REMOVED, TERMINATED, DISABLED, PROCESSED, REJECTED, REJECTED_CDR, LOGGED_IN, INBOUND_REQ, ENABLED. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Notification event type")
     private NotificationEventTypeEnum eventTypeFilter;
 
     /** The el filter. */
+    @ApiModelProperty("The el filter")
     private String elFilter;
     
     /** The script instance code. */
+    @ApiModelProperty("Code of the script instance")
     private String scriptInstanceCode;
     
     /** The script params. */
+    @ApiModelProperty("Map of script params")
     private Map<String, String> scriptParams = new HashMap<String, String>();
     
     /** The counter template. */
+    @ApiModelProperty("The counter template")
     private String counterTemplate;
     
     /** The priority. */
+    @ApiModelProperty("The priority")
     private int priority;
     
     /**
