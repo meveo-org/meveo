@@ -10,7 +10,7 @@
     </ui:define>
 
     <ui:define name="body">
-    	<p:growl id="growl" showDetail="false" sticky="false" autoUpdate="true" />
+    	<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
         <p:panel>
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -191,9 +191,9 @@
             <hf:formButtons backingBean="#{scriptInstanceBean}" 
            					edit="#{scriptInstanceBean.edit}" 
            					ajaxSubmit="true"
-           					submitUpdate="@form:scriptErrors"
-                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}" 
-                			executeLabel="#{messages['action.execute']}" showAddModuleButton="true"/>
+           					submitUpdate="@form:scriptErrors :growl"
+                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}"
+                			executeLabel="#{messages['action.execute']}" showAddModuleButton="true" killConversationOnSave="false"/>
         </hftl:formPanel>
         <p:dataTable var="log" value="#{scriptInstanceBean.getLogs()}" rendered="#{!empty(scriptInstanceBean.getLogs())}">
             <p:column headerText="Logs">
