@@ -15,7 +15,7 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
  * @lastModifiedVersion 6.5.0
  */
 @Entity
-@Table(name = "maven_dependency")
+@Table(name = "maven_dependency", uniqueConstraints={@UniqueConstraint(columnNames ={"group_id","artifact_id"})})
 @IdClass(MavenDependencyPk.class)
 @EntityListeners(JPAtoCDIListener.class)
 public class MavenDependency implements Serializable {

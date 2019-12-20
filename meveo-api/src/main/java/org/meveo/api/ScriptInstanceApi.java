@@ -6,6 +6,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
@@ -27,6 +28,7 @@ import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
@@ -41,6 +43,9 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
     @Inject
     private RoleService roleService;
+
+    @Inject
+	private MavenDependencyService mavenDependencyService;
 
     public ScriptInstanceApi() {
     	super(ScriptInstance.class, ScriptInstanceDto.class);
@@ -210,7 +215,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 * @return A new or updated ScriptInstance object
 	 * @throws EntityDoesNotExistsException entity does not exist exception.
 	 */
-	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException {
+	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException, BusinessException {
 
 		ScriptInstance scriptInstance = new ScriptInstance();
 		if (scriptInstanceToUpdate != null) {
@@ -256,7 +261,36 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
         scriptInstance.getMavenDependencies().clear();
         scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
 
+		if (mavenDependencyList != null) {
+			Integer line = 1;
+			Map<String, Integer> map = new HashMap<>();
+			for (MavenDependency maven : mavenDependencyList) {
+				String key = maven.getGroupId() + maven.getArtifactId();
+				if (map.containsKey(key)) {
+					Integer position = map.get(key);
+					throw new BusinessException("GroupId and artifactId of maven dependency " + line + " and " + position + " are duplicated");
+				} else {
+					map.put(key, line);
+				}
+				line++;
+			}
+			line = 1;
+			for (MavenDependency maven : mavenDependencyList) {
+				if (!mavenDependencyService.validateUniqueFields(scriptInstance.getId(), maven.getGroupId(), maven.getArtifactId())) {
+                  throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
+				}
+				line++;
+			}
+		}
+
 		return scriptInstance;
+	}
+	
+	public String getScriptCodesAsJSON() {
+		return (String) scriptInstanceService.getEntityManager()
+			.createNativeQuery("SELECT cast(json_agg(code) as text) FROM meveo_script_instance " + 
+					"INNER JOIN meveo_function ON meveo_function.id = meveo_script_instance.id")
+			.getSingleResult();
 	}
 
     @Override

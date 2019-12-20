@@ -156,6 +156,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         Root<T> root = query.from(getEntityClass());
         query.select(root.get("name"));
         query.distinct(true);
+        query.where(cb.equal(root.type(), getEntityClass()));
         return getEntityManager().createQuery(query).getResultList();
     }
 

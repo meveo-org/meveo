@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class DescriptionApi {
      * @return The list of descriptions dtos
      */
     public List<InputOutputDescription> fromDescriptions(TechnicalService technicalService) {
-        return InputOutputDescription.fromDescriptions(technicalService.getDescriptions());
+        return InputOutputDescription.fromDescriptions(technicalService.getDescriptions().values());
     }
 
     /**
@@ -171,10 +172,10 @@ public class DescriptionApi {
      * @return the list of descriptions created
      * @throws EntityDoesNotExistsException if a CET associated to one of a description dto is not found
      */
-    public List<Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
-        List<Description> descriptions = new ArrayList<>();
-        for (InputOutputDescription descDto : postData.getDescriptions()) {
-            descriptions.add(toDescription(service, descDto));
+    public Map<String, Description> fromDescriptionsDto(TechnicalService service, TechnicalServiceDto postData) throws EntityDoesNotExistsException {
+        Map<String, Description> descriptions = new HashMap<>();
+        for (InputOutputDescription descDto : postData.getDescriptions().values()) {
+            descriptions.put(descDto.getName(), toDescription(service, descDto));
         }
         return descriptions;
     }
@@ -187,10 +188,10 @@ public class DescriptionApi {
      * @return the list of descriptions created
      * @throws EntityDoesNotExistsException if a CET associated to one of a description dto is not found
      */
-    public List<Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException {
-        List<Description> descriptions = new ArrayList<>();
+    public Map<String, Description> fromDescriptionsDto(TechnicalService service, List<InputOutputDescription> dtos) throws EntityDoesNotExistsException {
+        Map<String, Description> descriptions = new HashMap<>();
         for (InputOutputDescription descDto : dtos) {
-            descriptions.add(toDescription(service, descDto));
+            descriptions.put(descDto.getName(), toDescription(service, descDto));
         }
         return descriptions;
     }
