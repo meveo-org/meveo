@@ -100,6 +100,11 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setType("Map<String, String>");
                         } else if (values.get("type").equals("number")) {
                             vd.setType("Long");
+                        } else if ((values.get("format")!= null )) {
+                            if (values.get("format").equals("date-time")) {
+                                compilationUnit.addImport("java.util.Date");
+                                vd.setType("Date");
+                            }
                         } else {
                             String type = (String) values.get("type");
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);
@@ -118,7 +123,7 @@ public class JSONSchemaIntoJavaClassParser {
             for (FieldDeclaration fieldDeclaration : fds) {
                 if (fieldDeclaration != null) {
                     if (fieldDeclaration.toString().startsWith("private DBStorageType")) {
-                        MethodDeclaration methodDeclaration = classDeclaration.addMethod("getStorages", Modifier.Keyword.STATIC);
+                        MethodDeclaration methodDeclaration = classDeclaration.addMethod("getStorages", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC);
                         BlockStmt blockStmt = new BlockStmt();
                         ReturnStmt returnStmt = new ReturnStmt();
                         NameExpr returnNameExpr = new NameExpr();

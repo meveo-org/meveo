@@ -341,15 +341,28 @@ public class OntologyObserver {
             }
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
                 final String templateSchema = getTemplateSchema(cet);
-
                 FileUtils.write(schemaFile, templateSchema);
+
+                if (javaFile.exists()) {
+                    javaFile.delete();
+                    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+                    FileUtils.write(javaFile, compilationUnit.toString());
+                }
+
                 gitClient.commitFiles(
                         meveoRepository,
                         Collections.singletonList(schemaFile),
+                        "Add property " + cft.getCode() + " to CET " + cet.getCode()
+                );
+
+                gitClient.commitFiles(
+                        meveoRepository,
+                        Collections.singletonList(javaFile),
                         "Add property " + cft.getCode() + " to CET " + cet.getCode()
                 );
             }
@@ -400,15 +413,28 @@ public class OntologyObserver {
             }
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
                 final String templateSchema = getTemplateSchema(cet);
-
                 FileUtils.write(schemaFile, templateSchema);
+
+                if (javaFile.exists()) {
+                    javaFile.delete();
+                    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+                    FileUtils.write(javaFile, compilationUnit.toString());
+                }
+
                 gitClient.commitFiles(
                         meveoRepository,
                         Collections.singletonList(schemaFile),
+                        "Update property " + cft.getCode() + " of CET " + cet.getCode()
+                );
+
+                gitClient.commitFiles(
+                        meveoRepository,
+                        Collections.singletonList(javaFile),
                         "Update property " + cft.getCode() + " of CET " + cet.getCode()
                 );
             }
@@ -461,13 +487,24 @@ public class OntologyObserver {
             }
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
 
+                if (javaFile.exists()) {
+                    javaFile.delete();
+                }
+
                 gitClient.commitFiles(
                         meveoRepository,
                         Collections.singletonList(schemaFile),
+                        "Remove property " + cft.getCode() + " of CET " + cet.getCode()
+                );
+
+                gitClient.commitFiles(
+                        meveoRepository,
+                        Collections.singletonList(javaFile),
                         "Remove property " + cft.getCode() + " of CET " + cet.getCode()
                 );
             }
