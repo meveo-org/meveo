@@ -64,10 +64,6 @@ public class ScriptInstance extends CustomScript {
 
     @NotFound(action = NotFoundAction.IGNORE)
     @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private Set<FileDependency> fileDependencies = new HashSet<>();
-
-    @NotFound(action = NotFoundAction.IGNORE)
-    @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<MavenDependency> mavenDependencies = new HashSet<>();
 
     /**
@@ -89,14 +85,6 @@ public class ScriptInstance extends CustomScript {
      */
     public Set<Role> getSourcingRoles() {
         return sourcingRoles;
-    }
-
-    public Set<FileDependency> getFileDependencies() {
-        return fileDependencies;
-    }
-
-    public void setFileDependencies(Set<FileDependency> fileDependencies) {
-        this.fileDependencies = fileDependencies;
     }
 
     public Set<MavenDependency> getMavenDependencies() {

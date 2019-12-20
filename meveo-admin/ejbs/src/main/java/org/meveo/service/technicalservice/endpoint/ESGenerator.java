@@ -18,15 +18,68 @@ package org.meveo.service.technicalservice.endpoint;
 
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 public class ESGenerator {
 
+    public static String generateHtmlForm(Endpoint endpoint) {
+        String code = endpoint.getCode();
+        String formId = code + "-form";
+
+        StringBuilder buffer = new StringBuilder("const ").append(code).append("Form = (container) => {\n")
+                .append("\tconst html = `<form id='").append(formId).append("'>");
+
+        List<String> params = new ArrayList<>();
+
+        for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+            String parameter = pathParameter.getEndpointParameter().getParameter();
+            appendFormField(code, buffer, parameter);
+            params.add(parameter);
+        }
+
+        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+            String parameter = tsParameterMapping.getParameterName();
+            appendFormField(code, buffer, parameter);
+            params.add(parameter);
+        }
+
+        buffer.append("\n\t\t<button type='button'>Test</button>")
+                .append("\n\t</form>`;\n")
+                .append("\n\tcontainer.insertAdjacentHTML('beforeend', html)\n\n");
+
+        for(String param : params) {
+            buffer.append("\tconst ").append(param).append(" = container.querySelector('#")
+                    .append(code).append("-").append(param).append("-param');\n");
+        }
+
+        buffer.append("\n\tcontainer.querySelector('#").append(formId).append(" button').onclick = () => {\n")
+                .append("\t\tconst params = {\n");
+
+        String prefix = "";
+        for(String param : params) {
+        	String paramValue = param + ".value";
+            buffer.append(prefix).append("\t\t\t").append(param).append(" : ").append(paramValue).append(" !== \"\" ? ").append(paramValue).append( " : undefined");
+            prefix = ",\n";
+        }
+        buffer.append("\n\t\t};");
+
+        buffer.append("\n\n\t\t").append(code).append("(params).then(r => r.text().then(\n\t\t\t\tt => alert(t)\n\t\t\t));");
+
+        buffer.append("\n\t};");
+
+        buffer.append("\n}");
+        return buffer.toString();
+    }
+
     public static String generate(Endpoint endpoint) {
-        StringBuilder buffer = new StringBuilder("async function ")
+        StringBuilder buffer = new StringBuilder("const ")
                 .append(endpoint.getCode())
-                .append("(parameters)");
+                .append(" = async (parameters) => ");
 
         // Path parameters
         StringJoiner pathParamJoiner = new StringJoiner("/", "/", "`, baseUrl);");
@@ -82,9 +135,23 @@ public class ESGenerator {
 
         // Export the function
         return buffer.append("\n\t});\n}")
-                .append("\n\nexport default ")
-                .append(endpoint.getCode())
-                .append(";")
                 .toString();
+
+    }
+
+    public static String generateFile(Endpoint endpoint) {
+        return new StringBuilder()
+                .append(generate(endpoint))
+                .append("\n\n")
+                .append(generateHtmlForm(endpoint))
+                .append("\n\nexport { ").append(endpoint.getCode()).append(", ").append(endpoint.getCode()).append("Form }").append(";")
+                .toString();
+    }
+
+    private static void appendFormField(String code, StringBuilder buffer, String parameter) {
+        buffer.append("\n\t\t<div id='").append(code).append("-").append(parameter).append("-form-field'>\n")
+                .append("\t\t\t<label for='").append(parameter).append("'>").append(parameter).append("</label>\n")
+                .append("\t\t\t<input type='text' id='").append(code).append("-").append(parameter).append("-param'").append(" name='").append(parameter).append("'/>\n")
+                .append("\t\t</div>");
     }
 }

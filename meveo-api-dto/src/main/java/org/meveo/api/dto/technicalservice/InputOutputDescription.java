@@ -28,6 +28,7 @@ import org.meveo.model.technicalservice.RelationDescription;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -204,8 +205,8 @@ public abstract class InputOutputDescription implements TechnicalServiceDescript
         return descriptionDto;
     }
 
-    public static List<InputOutputDescription> fromDescriptions(List<Description> descriptions) {
-        return descriptions
+    public static List<InputOutputDescription> fromDescriptions(Collection<Description> collection) {
+        return collection
                 .stream()
                 .map(InputOutputDescription::fromDescription)
                 .collect(Collectors.toList());

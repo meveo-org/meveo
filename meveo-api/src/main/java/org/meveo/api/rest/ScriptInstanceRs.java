@@ -21,12 +21,24 @@ import org.meveo.api.dto.response.ScriptInstanceReponseDto;
 
 /**
  * @author Edward P. Legaspi
- **/
+ * @author clement.bareth
+ * @version 6.6.0
+ */
 @Path("/scriptInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Api("Script instance")
 public interface ScriptInstanceRs extends IBaseRs {
+	
+	/**
+	 * @author clement.bareth
+	 * @since 6.6.0
+	 * @return the serialized codes of all existing scripts in database
+	 */
+	@GET
+	@Path("/codes")
+	@Produces(MediaType.APPLICATION_JSON)
+	String getCodes();
 
     /**
      * Create a new script instance.

@@ -6,8 +6,9 @@
 .idea
 /.project
 /.vscode
-**/.settings
+**/.settings/
 **/.factorypath
 **/.project
 **/.classpath
 **/target/
+/bin/

@@ -30,14 +30,6 @@ public class MavenConfigurationDto implements Serializable {
 		this.mavenExecutablePath = mavenExecutablePath;
 	}
 
-	public String getM2FolderPath() {
-		return m2FolderPath;
-	}
-
-	public void setM2FolderPath(String m2FolderPath) {
-		this.m2FolderPath = m2FolderPath;
-	}
-
 	public List<String> getMavenRepositories() {
 		return mavenRepositories;
 	}

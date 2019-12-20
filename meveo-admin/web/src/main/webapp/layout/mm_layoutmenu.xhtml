@@ -12,12 +12,6 @@
                 <p:menuitem id="mmProductTemplates" outcome="mm_productTemplates" value="#{messages['menu.marketingManager.productList']}" />
             </p:submenu>
 
-            <p:submenu label="#{messages['menu.myCompany']}">
-                <p:menuitem id="users" value="#{messages['menu.users']}" outcome="users" />
-                <p:menuitem id="mmUserGroups" outcome="userGroupHierarchy" value="#{messages['menu.userGroupHierarchy']}">
-                </p:menuitem>
-            </p:submenu>
-
             <p:menuitem action="#{authenticationProvider.logout}" value="#{messages['menutop.logout']}" rendered="#{currentUser.authenticated}" immediate="true"/>
         </hftl:menu>
     </h:form>

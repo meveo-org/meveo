@@ -24,7 +24,9 @@
                     <f:converter converterId="enumConverter" />
                 </p:selectOneMenu>
             </hftl:decorateFormField>
+            <hftl:searchField label="#{messages['jobInstance.name']}" field="code" />
         </hftl:searchPanel>
+
 
         <h:panelGroup id="resultsDatatable">
             <hftl:dataList backingBean="#{jobInstanceListBean}" resultsId="timersBean_results" addToModule="true" sortBy="code">

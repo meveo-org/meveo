@@ -23,12 +23,22 @@ import java.sql.BatchUpdateException;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.core.Response;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.dto.config.MavenConfigurationResponseDto;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
+import org.meveo.service.config.impl.MavenConfigurationService;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ */
 @Named
 @ViewScoped
 public class MeveoInstanceBean extends BaseBean<MeveoInstance> {
@@ -37,6 +47,9 @@ public class MeveoInstanceBean extends BaseBean<MeveoInstance> {
 
 	@Inject
 	private MeveoInstanceService meveoInstanceService;
+
+	@Inject
+	private MavenConfigurationService mavenConfigurationService;
 
 	public MeveoInstanceBean() {
 		super(MeveoInstance.class);
@@ -59,4 +72,18 @@ public class MeveoInstanceBean extends BaseBean<MeveoInstance> {
 		return "creationDate";
 	}
 
+	@ActionMethod
+	public void synchRemoteRepositories() {
+
+		try {
+			Response response = meveoInstanceService.getRemoteRepositories("api/rest/mavenConfiguration", entity);
+			MavenConfigurationResponseDto result = response.readEntity(MavenConfigurationResponseDto.class);
+			mavenConfigurationService.updateRepository(result.getMavenConfiguration().getMavenRepositories());
+
+			messages.info(new BundleKey("messages", "meveoInstance.remoteRepository.synch.ok"));
+
+		} catch (BusinessException e) {
+			messages.error(new BundleKey("messages", "meveoInstance.remoteRepository.synch.ko"));
+		}
+	}
 }
