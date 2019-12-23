@@ -184,7 +184,7 @@
 						value="#{customTableBean.repository}">
 						<f:selectItem itemLabel="" itemValue="#{null}" />
 						<f:selectItems var="e" itemValue="#{e}" itemLabel="#{e.code}"
-							value="#{repositoryBean.listWithSqlConnection()}"></f:selectItems>
+							value="#{repositoryBean.listAll()}"></f:selectItems>
 						<hftl:objectConverter />
 						<p:ajax update="contentBody"></p:ajax>
 					</p:selectOneMenu>
@@ -244,7 +244,7 @@
 		</hftl:searchPanel>
 
 		<p:outputPanel id="contentBody">
-			<p:panel width="100" rendered="#{customTableBean.repository != null and customTableBean.repository.sqlConfiguration != null}">
+			<p:panel width="100" rendered="#{customTableBean.repository != null}">
 				<!--  Datatable -->
 
 				<ui:include

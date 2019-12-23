@@ -68,4 +68,8 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 
 		return true;
 	}
+	
+	public void initializeSchema() {
+		sqlConfigurationService.initializeCet(entity);
+	}
 }

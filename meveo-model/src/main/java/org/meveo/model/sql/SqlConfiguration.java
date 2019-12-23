@@ -6,8 +6,10 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 
 /**
@@ -41,6 +43,11 @@ public class SqlConfiguration extends BusinessEntity {
 
 	@Column(name = "dialect")
 	private String dialect;
+
+	@Type(type = "numeric_boolean")
+	@ColumnDefault("0")
+	@Column(name = "initialized")
+	private boolean initialized = false;
 
 	public String getDriverClass() {
 		return driverClass;
@@ -80,6 +87,14 @@ public class SqlConfiguration extends BusinessEntity {
 
 	public void setDialect(String dialect) {
 		this.dialect = dialect;
+	}
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	public void setInitialized(boolean initialized) {
+		this.initialized = initialized;
 	}
 
 }

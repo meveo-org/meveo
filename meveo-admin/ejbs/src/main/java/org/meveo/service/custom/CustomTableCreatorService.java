@@ -1,6 +1,7 @@
 package org.meveo.service.custom;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +43,6 @@ import liquibase.change.core.AddForeignKeyConstraintChange;
 import liquibase.change.core.AddNotNullConstraintChange;
 import liquibase.change.core.AddPrimaryKeyChange;
 import liquibase.change.core.AddUniqueConstraintChange;
-import liquibase.change.core.CreateSequenceChange;
 import liquibase.change.core.CreateTableChange;
 import liquibase.change.core.DropColumnChange;
 import liquibase.change.core.DropDefaultValueChange;
@@ -768,70 +768,92 @@ public class CustomTableCreatorService implements Serializable {
 	}
 
 	/**
-	 * Create table in all Sql datasource.
+	 * Create table in all active and initialized Sql datasource.
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
 	public void createTable(String dbTablename) {
 
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActive();
+		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> createTable(e.getCode(), dbTablename));
 
 		createTable(null, dbTablename);
 	}
 
 	/**
-	 * Adds a field in all sql datasource.
+	 * Adds a field in all active and initialized sql datasource.
 	 * 
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
 	public void addField(String dbTablename, CustomFieldTemplate cft) {
 
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActive();
+		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> addField(e.getCode(), dbTablename, cft));
 
 		addField(null, dbTablename, cft);
 	}
 
 	/**
-	 * Updates a field in all sql datasource.
+	 * Updates a field in all active and initialized sql datasource.
 	 * 
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
 	public void updateField(String dbTablename, CustomFieldTemplate cft) {
 
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActive();
+		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> updateField(e.getCode(), dbTablename, cft));
 
 		updateField(null, dbTablename, cft);
 	}
 
 	/**
-	 * Removes a table in all Sql datasource
+	 * Removes a table in all active and initialized Sql datasource
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
 	public void removeTable(String dbTablename) {
 
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActive();
+		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> removeTable(e.getCode(), dbTablename));
 
 		removeTable(null, dbTablename);
 	}
 
 	/**
-	 * Removes a field in all Sql datasource
+	 * Removes a field in all active and initialized Sql datasource
 	 * 
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
 	public void removeField(String dbTablename, CustomFieldTemplate cft) {
 
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActive();
+		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> removeField(e.getCode(), dbTablename, cft));
 
 		removeField(null, dbTablename, cft);
+	}
+
+	/**
+	 * Adds uuid-ossp extension to the PostgreSQL database.
+	 * 
+	 * @param sqlConfigurationCode the sql configuration
+	 */
+	public void executePostgreSqlExtension(String sqlConfigurationCode) {
+
+		String uuidExtension = "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"";
+
+		EntityManager em = getEntityManager(sqlConfigurationCode);
+		Session hibernateSession = em.unwrap(Session.class);
+
+		hibernateSession.doWork(connection -> {
+			try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
+				ps.executeUpdate();
+				if (!StringUtils.isBlank(sqlConfigurationCode)) {
+					connection.commit();
+				}
+			}
+		});
 	}
 }

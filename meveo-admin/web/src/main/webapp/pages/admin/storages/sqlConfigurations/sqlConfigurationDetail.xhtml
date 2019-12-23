@@ -42,11 +42,16 @@
 				field="driverClass" required="true" />
 			<hftl:formField label="#{messages['sqlConfiguration.dialect']}"
 				field="dialect" required="false" />
+			<hftl:formField label="#{messages['sqlConfiguration.initialized']}"
+				field="initialized" required="false" edit="false" />
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
 				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.transient}"
 					value="#{messages['sqlConfiguration.testConnection']}"
 					action="#{sqlConfigurationBean.testConnection()}" update="messages"></p:commandButton>
+				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.initialized}"
+					value="#{messages['sqlConfiguration.initializeSchema']}"
+					action="#{sqlConfigurationBean.initializeSchema()}" update="messages"></p:commandButton>
 			</ui:define>
 		</hftl:formPanel>
 	</ui:define>

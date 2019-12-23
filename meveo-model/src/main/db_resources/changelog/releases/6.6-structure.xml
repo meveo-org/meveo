@@ -173,6 +173,7 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="dialect" type="varchar(255)" />
+			<column name="initialized" type="${type.boolean}" defaultValueNumeric="0" />
 		</createTable>
 
 		<addColumn tableName="storage_repository">
@@ -189,6 +190,22 @@
 		<addColumn tableName="cust_cet">
 			<column name="sql_configuration_code" type="varchar(255)"></column>
 		</addColumn>
+		
+		<dropIndex tableName="adm_title" indexName="adm_title_index" />
+		<dropIndex tableName="billing_service_instance" indexName="billing_service_instance_code_index" />
+		<dropIndex tableName="cat_service_template" indexName="cat_service_template_code_index" />
+		<dropIndex tableName="crm_customer_brand" indexName="crm_customer_brand_index" />
+		<dropIndex tableName="crm_customer_category" indexName="crm_customer_category_index" />
+		
+		<createIndex tableName="adm_title" indexName="adm_title_index">
+			<column name="code"></column>
+		</createIndex>
+		<createIndex tableName="billing_service_instance" indexName="billing_service_instance_code_index">
+			<column name="code"></column>
+		</createIndex>
+		<createIndex tableName="cat_service_template" indexName="cat_service_template_code_index">
+			<column name="code"></column>
+		</createIndex>
 	</changeSet>
 
 	<changeSet id="#3607 - Add sql configuration table Mysql" author="EdwardLegaspi"
