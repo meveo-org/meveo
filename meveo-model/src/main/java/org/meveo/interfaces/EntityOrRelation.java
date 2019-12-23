@@ -11,11 +11,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 /**
  * @author clement.bareth
@@ -35,11 +40,14 @@ public abstract class EntityOrRelation implements Serializable {
     
     protected String type;
 	protected String name;
+	
 	protected Map<String, PropertyInstance> properties = new HashMap<>();
+	
 	protected int index = 0;
 	private boolean drop;
 	private Map<String, Object> metaData = new HashMap<>();
 	
+	@JsonIdentityInfo(property = "uid", generator = ObjectIdGenerators.PropertyGenerator.class, scope = String.class)
 	public String getUID() {
 		return getNameIndexed();
 	}
@@ -110,6 +118,7 @@ public abstract class EntityOrRelation implements Serializable {
 		return this.properties;
 	}
 
+	@JsonGetter("properties")
 	public Map<String, Object> getProperties() {
 		return this.properties.entrySet()
 				.stream()

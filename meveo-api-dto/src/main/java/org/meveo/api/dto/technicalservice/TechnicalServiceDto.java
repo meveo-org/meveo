@@ -85,12 +85,20 @@ public class TechnicalServiceDto extends BusinessEntityDto {
     public Map<String, InputOutputDescription> getDescriptions() {
         return descriptions;
     }
+    
+    @JsonSetter
+    private void setDescriptions(Object descriptions) {
+    	if(descriptions instanceof Map) {
+    		setDescriptions((Map<String, InputOutputDescription>) descriptions);
+    	} else {
+    		setDescriptions((List<InputOutputDescription>) descriptions);
+    	}
+    }
 
     public void setDescriptions(Map<String, InputOutputDescription> dto) {
         this.descriptions = dto;
     }
     
-    @JsonSetter("descriptions")
     public void setDescriptions(List<InputOutputDescription> dto) {
         dto.forEach(d -> this.descriptions.put(d.getName(), d));
     }

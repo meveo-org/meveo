@@ -16,9 +16,19 @@
 
 package org.meveo.service.script;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
+import org.meveo.model.scripts.Accessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.Modifier.Keyword;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.github.javaparser.javadoc.JavadocBlockTag.Type;
 
 public class ScriptUtils {
 
@@ -157,4 +167,51 @@ public class ScriptUtils {
             this.clazz = setterClass;
         }
     }
+
+	/**
+	 * @param methods
+	 * @return
+	 */
+	public static List<Accessor> getGetters(final List<MethodDeclaration> methods) {
+		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.GET) || e.getNameAsString().startsWith(Accessor.IS))
+	            .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().isEmpty())
+	            .map(methodDeclaration -> {
+	                Accessor getter = new Accessor();
+	                String accessorFieldName;
+	                if (methodDeclaration.getNameAsString().startsWith(Accessor.GET)) {
+	                    accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+	                } else {
+	                    accessorFieldName = methodDeclaration.getNameAsString().substring(2);
+	                }
+	                getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+	                getter.setMethodName(methodDeclaration.getNameAsString());
+	                getter.setType(methodDeclaration.getTypeAsString());
+	                methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+	                    javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.RETURN).findFirst()
+	                            .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
+	                }));
+	                return getter;
+	            }).collect(Collectors.toList());
+	}
+
+	/**
+	 * @param methods
+	 * @return
+	 */
+	public static List<Accessor> getSetters(final List<MethodDeclaration> methods) {
+		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.SET))
+	            .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().size() == 1)
+	            .map(methodDeclaration -> {
+	                Accessor setter = new Accessor();
+	                String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+	                setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+	                setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
+	                setter.setMethodName(methodDeclaration.getNameAsString());
+	                methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+	                    javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.PARAM).findFirst()
+	                            .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
+	                }));
+	                return setter;
+	            }).collect(Collectors.toList());
+	}
 }

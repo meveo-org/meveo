@@ -16,14 +16,7 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import org.infinispan.Cache;
-import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.Updated;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -32,15 +25,23 @@ import javax.ejb.Startup;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+
+import org.infinispan.Cache;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 @Singleton
 @Startup
 public class EndpointCacheContainer {
 
     @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, Future<EndpointResult>> pendingExecutions;
+    private Cache<String, PendingResult> pendingExecutions;
 
     @Inject
     private EndpointService endpointService;
@@ -59,7 +60,7 @@ public class EndpointCacheContainer {
                 });
     }
 
-    public Future<EndpointResult> getPendingExecution(String key) {
+    public PendingResult getPendingExecution(String key) {
         return pendingExecutions.get(key);
     }
 
@@ -67,7 +68,7 @@ public class EndpointCacheContainer {
         pendingExecutions.remove(key);
     }
 
-    public void put(String key, Future<EndpointResult> value){
+    public void put(String key, PendingResult value){
         pendingExecutions.put(key, value);
     }
 
