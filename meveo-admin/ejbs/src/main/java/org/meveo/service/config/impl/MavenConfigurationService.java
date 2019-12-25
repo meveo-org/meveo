@@ -23,8 +23,10 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.transaction.UserTransaction;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -216,6 +218,24 @@ public class MavenConfigurationService implements Serializable {
 		model.setGroupId("org.meveo");
 		model.setArtifactId("meveo-application");
 		model.setVersion("1.0.0");
+
+		List<String> repositories = getMavenRepositories();
+		if (CollectionUtils.isNotEmpty(repositories)) {
+			int index = 0;
+			for (String repo : repositories) {
+				Repository repositoryMaven = new Repository();
+				repositoryMaven.setId("jboss-repo" + index);
+				repositoryMaven.setUrl(repo);
+				model.addRepository(repositoryMaven);
+				index++;
+			}
+		}
+
+		Repository ownInstance = new Repository();
+		String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
+		ownInstance.setId("meveo-repo");
+		ownInstance.setUrl("http://localhost:8080/"+ contextRoot +"/maven");
+		model.addRepository(ownInstance);
 
 		Dependency meveoDependency = new Dependency();
 		meveoDependency.setGroupId("org.meveo");
