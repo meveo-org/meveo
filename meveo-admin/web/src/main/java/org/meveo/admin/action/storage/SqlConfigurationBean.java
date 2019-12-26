@@ -12,6 +12,7 @@ import org.meveo.api.dto.sql.SqlConfigurationDto;
 import org.meveo.api.sql.SqlConfigurationApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.local.IPersistenceService;
 
@@ -31,6 +32,9 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private SQLConnectionProvider provider;
 
 	public SqlConfigurationBean() {
 		super(SqlConfiguration.class);
@@ -58,7 +62,7 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 
 	public boolean testConnection() {
 
-		if (sqlConfigurationService.testConnection(entity.getCode())) {
+		if (provider.testSession(entity) != null) {
 			messages.info(new BundleKey("messages", "sqlConfiguration.connection.ok"));
 
 		} else {
