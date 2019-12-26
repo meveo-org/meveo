@@ -416,7 +416,7 @@ public class CustomTableService extends NativePersistenceService {
                     			if(field.getDbFieldname().equals(entry.getKey()) && field.getFieldType() == CustomFieldTypeEnum.ENTITY) {
                     				String referencedEntity = entityReferencesCache
                     						.computeIfAbsent((String) entry.getValue(), k -> new HashMap<>())
-                    						.computeIfAbsent(field.getDbFieldname(), fieldName -> fetchField(entry.getValue(), field, fieldName));
+                    						.computeIfAbsent(field.getDbFieldname(), fieldName -> fetchField(sqlConnectionCode, entry.getValue(), field, fieldName));
 
                     				map.put(entry.getKey(), referencedEntity);
                     			}
@@ -443,15 +443,15 @@ public class CustomTableService extends NativePersistenceService {
         }
     }
 
-	/**
-	 * @param id
-	 * @param field
-	 * @param tableName
-	 * @return
-	 */
-	public String fetchField(Object id, CustomFieldTemplate field, String tableName) {
+    public String fetchField(String sqlConnectionCode, Object id, CustomFieldTemplate field, String tableName) {
 		log.info("Fetching {} with uuid {}", field.getCode(), id);
-		Map<String, Object> entityRefValues = findById(tableName, (String) id);
+		CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(field.getEntityClazzCetCode());
+		Map<String, Object> entityRefValues;
+		try {
+			entityRefValues = findById(sqlConnectionCode, cet, (String) id);
+		} catch (EntityDoesNotExistsException e) {
+			return null;
+		}
 		entityRefValues.remove("uuid");				// We don't want to save the uuid
 		return JacksonUtil.toString(entityRefValues);
 	}

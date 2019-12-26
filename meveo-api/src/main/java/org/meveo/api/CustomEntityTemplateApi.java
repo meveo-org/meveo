@@ -673,7 +673,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         // Sql configuration
 		if (cet.getSqlStorageConfiguration() != null) {
-			dto.setSqlStorageConfiguration(new SqlStorageConfigurationDto(cet.getSqlStorageConfiguration()));
+			dto.setSqlStorageConfiguration(cet.getSqlStorageConfiguration());
 		}
 
         // Neo4J configuration if defined
