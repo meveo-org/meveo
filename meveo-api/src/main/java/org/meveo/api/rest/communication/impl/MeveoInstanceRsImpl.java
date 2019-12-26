@@ -12,89 +12,102 @@ import org.meveo.api.rest.communication.MeveoInstanceRs;
 import org.meveo.api.rest.impl.BaseRs;
 
 /**
- * 
  * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  * @since Jun 4, 2016 4:08:58 AM
- *
  */
 public class MeveoInstanceRsImpl extends BaseRs implements MeveoInstanceRs {
 
-    @Inject
-    private MeveoInstanceApi meveoInstanceApi;
+	@Inject
+	private MeveoInstanceApi meveoInstanceApi;
 
-    @Override
-    public ActionStatus create(MeveoInstanceDto meveoInstanceDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+	@Override
+	public ActionStatus create(MeveoInstanceDto meveoInstanceDto) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
-        try {
-            meveoInstanceApi.create(meveoInstanceDto);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-        return result;
-    }
+		try {
+			meveoInstanceApi.create(meveoInstanceDto);
+		} catch (Exception e) {
+			processException(e, result);
+		}
+		return result;
+	}
 
-    @Override
-    public ActionStatus update(MeveoInstanceDto meveoInstanceDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+	@Override
+	public ActionStatus update(MeveoInstanceDto meveoInstanceDto) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
-        try {
-            meveoInstanceApi.update(meveoInstanceDto);
-        } catch (Exception e) {
-            processException(e, result);
-        }
+		try {
+			meveoInstanceApi.update(meveoInstanceDto);
+		} catch (Exception e) {
+			processException(e, result);
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public MeveoInstanceResponseDto find(String code) {
-        MeveoInstanceResponseDto result = new MeveoInstanceResponseDto();
-        try {
-            result.setMeveoInstance(meveoInstanceApi.find(code));
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
+	@Override
+	public MeveoInstanceResponseDto find(String code) {
+		MeveoInstanceResponseDto result = new MeveoInstanceResponseDto();
+		try {
+			result.setMeveoInstance(meveoInstanceApi.find(code));
+		} catch (Exception e) {
+			processException(e, result.getActionStatus());
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public ActionStatus remove(String code) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+	@Override
+	public ActionStatus remove(String code) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
-        try {
-            meveoInstanceApi.remove(code);
-        } catch (Exception e) {
-            processException(e, result);
-        }
+		try {
+			meveoInstanceApi.remove(code);
+		} catch (Exception e) {
+			processException(e, result);
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public MeveoInstancesResponseDto list() {
-        MeveoInstancesResponseDto result = new MeveoInstancesResponseDto();
+	@Override
+	public MeveoInstancesResponseDto list() {
+		MeveoInstancesResponseDto result = new MeveoInstancesResponseDto();
 
-        try {
-            result.setMeveoInstances(meveoInstanceApi.list());
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
+		try {
+			result.setMeveoInstances(meveoInstanceApi.list());
+		} catch (Exception e) {
+			processException(e, result.getActionStatus());
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public ActionStatus createOrUpdate(MeveoInstanceDto meveoInstanceDto) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+	@Override
+	public ActionStatus createOrUpdate(MeveoInstanceDto meveoInstanceDto) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
-        try {
-            meveoInstanceApi.createOrUpdate(meveoInstanceDto);
-        } catch (Exception e) {
-            processException(e, result);
-        }
+		try {
+			meveoInstanceApi.createOrUpdate(meveoInstanceDto);
+		} catch (Exception e) {
+			processException(e, result);
+		}
 
-        return result;
-    }
+		return result;
+	}
+
+	@Override
+	public ActionStatus syncRepositories(String code) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+
+		try {
+			meveoInstanceApi.syncRepositories(code);
+		} catch (Exception e) {
+			processException(e, result);
+		}
+
+		return result;		
+	}
 }

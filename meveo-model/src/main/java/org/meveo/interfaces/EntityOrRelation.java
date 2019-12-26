@@ -1,15 +1,26 @@
 package org.meveo.interfaces;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import java.io.Serializable;
-import java.util.*;
-
 import static org.meveo.interfaces.EntityOrRelation.ENTITY;
 import static org.meveo.interfaces.EntityOrRelation.RELATION;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 /**
  * @author clement.bareth
@@ -23,13 +34,31 @@ import static org.meveo.interfaces.EntityOrRelation.RELATION;
 public abstract class EntityOrRelation implements Serializable {
 
     private static final long serialVersionUID = 5259238864845049449L;
+    
     public static final String ENTITY = "entity";
     public static final String RELATION = "relation";
+    
     protected String type;
 	protected String name;
-	protected Map<String, Object> properties;
+	
+	protected Map<String, PropertyInstance> properties = new HashMap<>();
+	
 	protected int index = 0;
 	private boolean drop;
+	private Map<String, Object> metaData = new HashMap<>();
+	
+	@JsonIdentityInfo(property = "uid", generator = ObjectIdGenerators.PropertyGenerator.class, scope = String.class)
+	public String getUID() {
+		return getNameIndexed();
+	}
+
+	public Map<String, Object> getMetaData() {
+		return metaData;
+	}
+
+	public void setMetaData(Map<String, Object> metaData) {
+		this.metaData = metaData;
+	}
 
 	public String getType() {
 		return this.type;
@@ -51,8 +80,15 @@ public abstract class EntityOrRelation implements Serializable {
         this.name = name;
     }
 
+    @JsonSetter("properties")
     public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
+    	properties.forEach((name, value) -> {
+    		PropertyInstance property = new PropertyInstance();
+    		property.setEntityOrRelation(this);
+    		property.setName(name);
+    		property.setValue(value);
+    		this.properties.put(name, property);
+    	});
     }
 
     public void setIndex(int index) {
@@ -76,18 +112,34 @@ public abstract class EntityOrRelation implements Serializable {
 		}
 		return this.name;
 	}
-
-	public Map<String, Object> getProperties() {
+	
+	@JsonIgnore
+	public Map<String, PropertyInstance> getPropertiesInstances() {
 		return this.properties;
+	}
+
+	@JsonGetter("properties")
+	public Map<String, Object> getProperties() {
+		return this.properties.entrySet()
+				.stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getValue()));
 	}
 
 	@SuppressWarnings("unchecked")
 	public void addProperty(String name, Object value, boolean multivalued){
+		PropertyInstance propertyInstance = this.properties.computeIfAbsent(name, s -> {
+			PropertyInstance property = new PropertyInstance();
+    		property.setEntityOrRelation(this);
+    		property.setName(name);
+    		property.setValue(value);
+    		return property;
+		});
+		
 		if(multivalued){
-			Set<Object> values = (Set<Object>) this.properties.computeIfAbsent(name, s -> new HashSet<>());
+			Set<Object> values = (Set<Object>) propertyInstance.getValue();
 			values.addAll((Collection<?>) value);
 		}else{
-			this.properties.put(name, value);
+			propertyInstance.setValue(value);
 		}
 	}
 
@@ -122,7 +174,7 @@ public abstract class EntityOrRelation implements Serializable {
 	}
 
 	public Map<String, Map<String, Object>> toMap(){
-		return Collections.singletonMap(getCompoundName(), properties);
+		return Collections.singletonMap(getCompoundName(), getProperties());
 	}
 
 	@Override

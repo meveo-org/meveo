@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.dwh.BarChart;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.OrientationEnum;
@@ -21,61 +22,79 @@ public class BarChartDto extends ChartDto {
     private static final long serialVersionUID = -3708601896002824344L;
 
     /** The legend position. */
+    @ApiModelProperty("The legend position")
     private LegendPositionEnum legendPosition;
 
     /** The bar padding. */
+    @ApiModelProperty("The bar padding")
     private int barPadding = 8;
 
     /** The bar margin. */
+    @ApiModelProperty("The bar margin")
     private int barMargin = 10;
 
     /** The orientation. */
+    @ApiModelProperty("The orientation")
     private OrientationEnum orientation;
 
     /** Enables stacked display of bars. */
+    @ApiModelProperty("Enables stacked display of bars")
     private boolean stacked;
 
     /** Minimum boundary value. */
+    @ApiModelProperty("Minimum boundary value")
     private Double min;
 
-    /** Minimum boundary value. */
+    /** Maximum boundary value. */
+    @ApiModelProperty("Maximum boundary value")
     private Double max;
 
     /**
      * Whether line segments should be broken at null value, fall will join point on either side of line.
      */
+    @ApiModelProperty("Whether line segments should be broken at null value")
     boolean breakOnNull;
 
     /** The xaxis label. */
+    @ApiModelProperty("The xaxis label")
     private String xaxisLabel;
 
     /** The yaxis label. */
+    @ApiModelProperty("The yaxis label")
     private String yaxisLabel;
 
     /** Angle of the x-axis ticks. */
+    @ApiModelProperty("Angle of the x-axis ticks")
     private Integer xaxisAngle;
 
     /** The yaxis angle. */
+    @ApiModelProperty("The yaxis angle")
     private Integer yaxisAngle;
 
     /** The legend cols. */
+    @ApiModelProperty("The legend cols")
     private int legendCols;
 
     /** The legend rows. */
+    @ApiModelProperty("The legend rows")
     private int legendRows;
 
     /** Enables plot zooming. */
+    @ApiModelProperty("Enables plot zooming")
     private boolean zoom;
 
     /** Enables animation on plot rendering. */
+    @ApiModelProperty("Enables animation on plot rendering")
     private boolean animate;
 
     /** Defines visibility of datatip. */
+    @ApiModelProperty("Defines visibility of datatip")
     private boolean showDataTip = true;
 
     /**
      * Template string for datatips.
      */
+    @ApiModelProperty("Template string for datatips")
     private String datatipFormat;
 
     /**

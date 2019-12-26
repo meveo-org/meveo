@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.SearchResponse;
 
 /**
@@ -26,6 +27,7 @@ public class RolesDto extends SearchResponse {
     /** The roles. */
     @XmlElementWrapper(name = "roles")
     @XmlElement(name = "role")
+    @ApiModelProperty("List of roles information")
     private List<RoleDto> roles = new ArrayList<>();
 
     /**

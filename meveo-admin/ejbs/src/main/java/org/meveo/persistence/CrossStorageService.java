@@ -1045,7 +1045,7 @@ public class CrossStorageService implements CustomPersistenceService {
                     entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
                 } else if (fieldValue instanceof Map) {
                     entitiesToCreate.add(fieldValue);
-                } else if (referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+                } else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                     entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
                 }
 

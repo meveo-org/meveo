@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -63,6 +64,19 @@ public class ReflectionUtils {
      */
     @SuppressWarnings("rawtypes")
     private static Map<Class, Map<Class, List<Field>>> classReferences = new HashMap<>();
+    
+    /**
+     * @param clazz Class to apply reflection to
+     * @param methodName Name of the setter
+     * @param simpleClassName Simple classname of the setter's parameter
+     * @return the matched setter if found
+     */
+    public static Optional<Method> getSetterByNameAndSimpleClassName(Class<?> clazz, String methodName, String simpleClassName) {
+    	return Arrays.stream(clazz.getMethods())
+        		.filter(m -> m.getName().equals(methodName))
+        		.filter(m -> m.getParameters()[0].getType().getSimpleName().equals(simpleClassName))
+        		.findFirst();
+    }
 
     /**
      * Creates instance from class name.

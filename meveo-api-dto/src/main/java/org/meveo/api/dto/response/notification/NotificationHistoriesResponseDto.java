@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.notification.NotificationHistoriesDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -20,6 +21,7 @@ public class NotificationHistoriesResponseDto extends BaseResponse {
     private static final long serialVersionUID = 715247134470556196L;
 
     /** The notification histories. */
+    @ApiModelProperty("Notification histories information")
     private NotificationHistoriesDto notificationHistories = new NotificationHistoriesDto();
 
     /**

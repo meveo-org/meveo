@@ -17,6 +17,9 @@
  */
 package org.meveo.api.rest.technicalservice;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.annotations.Form;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
@@ -39,6 +42,7 @@ import java.util.Date;
  * @author Clément Bareth
  */
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Api("Technical service")
 public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBaseRs {
 
     /**
@@ -50,7 +54,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}")
     @HEAD
-    Response exists(@PathParam("name") String name, @QueryParam("version") Integer version);
+    @ApiOperation(value = "Check exist technical service")
+    Response exists(@PathParam("name") @ApiParam("Name of service to check") String name, @QueryParam("version") @ApiParam("Version of service to check") Integer version);
 
     /**
      * Count the number of hits corresponding to the query
@@ -60,7 +65,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/count")
     @GET
-    Response count(@Form TechnicalServiceFilters filters);
+    @ApiOperation(value = "Count technical service")
+    Response count(@Form @ApiParam("Filters used to restrict results") TechnicalServiceFilters filters);
 
     /**
      * Retrieve the description of a technical service
@@ -71,7 +77,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}/description")
     @GET
-    Response description(@PathParam("name") String name, @QueryParam("version") Integer version);
+    @ApiOperation(value = "Description technical service")
+    Response description(@PathParam("name") @ApiParam("Name of the technical service") String name, @QueryParam("version") @ApiParam("Version of the technical service") Integer version);
 
     /**
      * Updat the description of a technical service
@@ -83,7 +90,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}/description")
     @PUT
-    Response updateDescription(@PathParam("name") String name, @QueryParam("version") Integer version, ProcessDescriptionsDto dtos);
+    @ApiOperation(value = "Update description technical service")
+    Response updateDescription(@PathParam("name") @ApiParam("Name of the technical service") String name, @QueryParam("version") @ApiParam("Version of the technical service") Integer version, @ApiParam("Process descriptions information") ProcessDescriptionsDto dtos);
 
     /**
      * Create a new technical service.
@@ -93,7 +101,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Path("/")
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus create(D postData);
+    @ApiOperation(value = "Create technical service")
+    ActionStatus create(@ApiParam("Technical service information") D postData);
 
     /**
      * Update a technical service.
@@ -103,7 +112,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Path("/")
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus update(D postData);
+    @ApiOperation(value = "Update technical service")
+    ActionStatus update(@ApiParam("Technical service information") D postData);
 
     /**
      * Create new or update an existing technical service.
@@ -114,7 +124,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Path("/createOrUpdate")
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    ActionStatus createOrUpdate(D postData);
+    @ApiOperation(value = "Create or update technical service")
+    ActionStatus createOrUpdate(@ApiParam("Technical service information") D postData);
 
     /**
      * Search for technical service with a given name.
@@ -124,7 +135,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}")
     @GET
-    TechnicalServiceResponse findByNameAndVersionOrLatest(@PathParam("name") String name, @QueryParam("version") Integer version);
+    @ApiOperation(value = "Find technical service by name and version or latest")
+    TechnicalServiceResponse findByNameAndVersionOrLatest(@PathParam("name") @ApiParam("Name of the technical service") String name, @QueryParam("version") @ApiParam("Version of the technical service") Integer version);
 
     /**
      * Retrieve a list of all technical services.
@@ -133,7 +145,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/")
     @GET
-    Response list(@Form TechnicalServiceFilters filters, @HeaderParam("If-Modified-Since") Date sinceDate);
+    @ApiOperation(value = "List technical service")
+    Response list(@Form @ApiParam("Technical service filters information") TechnicalServiceFilters filters, @HeaderParam("If-Modified-Since") @ApiParam("Since date") Date sinceDate);
 
     /**
      * Retrieves the names of all technical services
@@ -142,6 +155,7 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/list/names")
     @GET
+    @ApiOperation(value = "Retrieves the names of all technical services")
     Response names();
 
     /**
@@ -152,7 +166,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}/versions")
     @GET
-    Response versions(@PathParam("name") String name);
+    @ApiOperation(value = "Version technical service")
+    Response versions(@PathParam("name") @ApiParam("Name of the technical service") String name);
 
     /**
      * Retrieve a list of all versions of the technical service with the given name.
@@ -161,7 +176,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}/all")
     @GET
-    ListTechnicalServiceResponse listByName(@PathParam("name") String name);
+    @ApiOperation(value = "List technical service by name")
+    ListTechnicalServiceResponse listByName(@PathParam("name") @ApiParam("Name of the technical service") String name);
 
     /**
      * Remove a technical service with a given name.
@@ -172,7 +188,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
      */
     @Path("/{name}")
     @DELETE
-    ActionStatus remove(@PathParam("name") String name, @QueryParam("version") Integer version);
+    @ApiOperation(value = "Remove technical service by name")
+    ActionStatus remove(@PathParam("name") @ApiParam("Name of the technical service") String name, @QueryParam("version") @ApiParam("Version of the technical service") Integer version);
 
     /**
      * Update the name of a technical service
@@ -184,7 +201,8 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Path("/rename")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    ActionStatus rename(@FormParam("oldName") String oldName, @FormParam("newName") String newName);
+    @ApiOperation(value = "Update name technical service")
+    ActionStatus rename(@FormParam("oldName") @ApiParam("Service name to update") String oldName, @FormParam("newName") @ApiParam("New name of the service") String newName);
 
     /**
      * Re-number the specified version
@@ -197,13 +215,16 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
     @Path("/renameVersion/{name}")
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    ActionStatus renameVersion(@PathParam("name") String name, @FormParam("oldVersion") Integer oldVersion, @FormParam("newVersion") Integer newVersion);
+    @ApiOperation(value = "Update version technical service")
+    ActionStatus renameVersion(@PathParam("name") @ApiParam("Name of the technical service to update") String name, @FormParam("oldVersion") @ApiParam("Version number to update") Integer oldVersion, @FormParam("newVersion") @ApiParam("New version number to give") Integer newVersion);
 
     @Path("/{name}/{version}/disable")
     @POST
-    void disable(@PathParam("name") String name, @PathParam("version") Integer version) throws EntityDoesNotExistsException, BusinessException;
+    @ApiOperation(value = "Disable technical service")
+    void disable(@PathParam("name") @ApiParam("Name of the technical service") String name, @PathParam("version") @ApiParam("Version of the technical service") Integer version) throws EntityDoesNotExistsException, BusinessException;
 
     @Path("/{name}/{version}/disable")
     @POST
-    void enable(@PathParam("name") String name, @PathParam("version") Integer version) throws EntityDoesNotExistsException, BusinessException;
+    @ApiOperation(value = "Enable technical service")
+    void enable(@PathParam("name") @ApiParam("Name of the technical service") String name, @ApiParam("Version of the technical service") @PathParam("version") Integer version) throws EntityDoesNotExistsException, BusinessException;
 }

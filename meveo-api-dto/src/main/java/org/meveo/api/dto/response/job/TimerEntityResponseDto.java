@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -20,6 +21,7 @@ public class TimerEntityResponseDto extends BaseResponse {
     private static final long serialVersionUID = -6709030583427915931L;
 
     /** The timer entity. */
+    @ApiModelProperty("Timer entity information")
     private TimerEntityDto timerEntity;
 
     /**

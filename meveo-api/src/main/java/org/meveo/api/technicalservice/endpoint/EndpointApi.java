@@ -45,6 +45,8 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
+import org.meveo.api.utils.JSONata;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
@@ -62,7 +64,9 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.ESGenerator;
+import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
 
@@ -120,9 +124,32 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throw new UserNotAuthorizedException();
 		}
 
-		return ESGenerator.generate(endpoint);
+		return ESGenerator.generateFile(endpoint);
 	}
-
+	
+	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {
+		Function service = endpoint.getService();
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
+		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService, parameterMap);
+		
+        CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
+            try {
+        		Map<String, Object> result = execute(endpointExecution, functionService, parameterMap, executionEngine);
+                String data = transformData(endpoint, result);
+                return new EndpointResult(data, endpoint.getContentType());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        
+		PendingResult pendingResult = new PendingResult();
+		pendingResult.setEngine(executionEngine);
+		pendingResult.setResult(future);
+		
+		return pendingResult;
+	}
+	
 	/**
 	 * Execute the technical service associated to the endpoint
 	 *
@@ -134,12 +161,57 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	@SuppressWarnings("rawtypes")
 	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
-		System.out.println(execution.getRequest().getRemainingPath());
-
-		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
-
 		Function service = endpoint.getService();
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
+
+		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
+
+		return execute(execution, functionService, parameterMap, executionEngine);
+
+	}
+
+	/**
+	 * @param execution
+	 * @param functionService
+	 * @param parameterMap
+	 * @param executionEngine
+	 * @return
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws BusinessException
+	 */
+	public Map<String, Object> execute(EndpointExecution execution, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap, final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
+		// Start endpoint script with timeout if one was set
+		if (execution.getDelayValue() != null) {
+			try {
+				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
+					try {
+						return functionService.execute(executionEngine, parameterMap);
+					} catch (BusinessException e) {
+						throw new RuntimeException(e);
+					}
+				});
+				return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+			} catch (TimeoutException e) {
+				return executionEngine.cancel();
+			}
+		} else {
+			return functionService.execute(executionEngine, parameterMap);
+		}
+	}
+
+	/**
+	 * @param endpoint
+	 * @param execution
+	 * @param service
+	 * @param functionService
+	 * @param parameterMap
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) throws IllegalArgumentException {
+		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
 		// Set budget variables
 		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
@@ -182,7 +254,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			parameterMap.put(paramName, parameterValue);
 		}
 
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+
 		final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 
 		if (executionEngine instanceof EndpointScript) {
@@ -198,25 +270,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				parameterMap.put("response", execution.getResponse());
 			}
 		}
-
-		// Start endpoint script with timeout if one was set
-		if (execution.getDelayValue() != null) {
-			try {
-				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
-					try {
-						return functionService.execute(executionEngine, parameterMap);
-					} catch (BusinessException e) {
-						throw new RuntimeException(e);
-					}
-				});
-				return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
-			} catch (TimeoutException e) {
-				return executionEngine.cancel();
-			}
-		} else {
-			return functionService.execute(executionEngine, parameterMap);
-		}
-
+		return executionEngine;
 	}
 
 	/**
@@ -581,5 +635,45 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		swagger.setResponses(responses);
 
 		return Response.ok(Json.pretty(swagger)).build();
+	}
+
+	/**
+	 * Extract variable pointed by returned variable name and apply JSONata query if defined
+	 * If endpoint is not configured to serialize the result and that returned variable name is set, do not serialize result. Otherwise serialize it.
+	 *
+	 * @param endpoint Endpoint endpoxecuted
+	 * @param result Result of the endpoint execution
+	 * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
+	 */
+	public String transformData(Endpoint endpoint, Map<String, Object> result){
+	    final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
+	    boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
+	
+		Object returnValue = result;
+		if(returnedVarNameDefined) {
+			Object extractedValue = result.get(endpoint.getReturnedVariableName());
+			if(extractedValue != null){
+				returnValue = extractedValue;
+			}else {
+				log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(), endpoint.getReturnedVariableName());
+			}
+		}
+	
+	    if (!shouldSerialize) {
+	        return returnValue.toString();
+	    }
+	
+	    if(returnValue instanceof Map){
+	    	((Map<?, ?>) returnValue).remove("response");
+	    	((Map<?, ?>) returnValue).remove("request");
+	    }
+	    
+	    final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
+	    if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
+	        return serializedResult;
+	    }
+	
+	    return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
+	
 	}
 }

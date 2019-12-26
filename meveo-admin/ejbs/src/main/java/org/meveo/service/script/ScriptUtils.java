@@ -16,8 +16,19 @@
 
 package org.meveo.service.script;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.meveo.model.scripts.Accessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.Modifier.Keyword;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.javadoc.JavadocBlockTag;
+import com.github.javaparser.javadoc.JavadocBlockTag.Type;
 
 public class ScriptUtils {
 
@@ -30,43 +41,95 @@ public class ScriptUtils {
         switch (type) {
             case "int":
                 classAndValue.setClass(int.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0);
+                	break;
+                }
             case "Integer":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Integer.parseInt(value));
                 break;
 
             case "double":
                 classAndValue.setClass(double.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0.0);
+                	break;
+                }
             case "Double":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Double.parseDouble(value));
                 break;
 
             case "long":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0L);
+                	break;
+                }
                 classAndValue.setClass(long.class);
             case "Long":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Long.parseLong(value));
                 break;
 
             case "byte":
                 classAndValue.setClass(byte.class);
             case "Byte":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Byte.parseByte(value));
                 break;
 
             case "short":
                 classAndValue.setClass(short.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0);
+                	break;
+                }
             case "Short":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Short.parseShort(value));
                 break;
 
             case "float":
                 classAndValue.setClass(float.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0.0f);
+                	break;
+                }
             case "Float":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Float.parseFloat(value));
                 break;
 
             case "boolean":
                 classAndValue.setClass(boolean.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(false);
+                	break;
+                }
             case "Boolean":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Boolean.parseBoolean(value));
                 break;
 
@@ -104,4 +167,51 @@ public class ScriptUtils {
             this.clazz = setterClass;
         }
     }
+
+	/**
+	 * @param methods
+	 * @return
+	 */
+	public static List<Accessor> getGetters(final List<MethodDeclaration> methods) {
+		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.GET) || e.getNameAsString().startsWith(Accessor.IS))
+	            .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().isEmpty())
+	            .map(methodDeclaration -> {
+	                Accessor getter = new Accessor();
+	                String accessorFieldName;
+	                if (methodDeclaration.getNameAsString().startsWith(Accessor.GET)) {
+	                    accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+	                } else {
+	                    accessorFieldName = methodDeclaration.getNameAsString().substring(2);
+	                }
+	                getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+	                getter.setMethodName(methodDeclaration.getNameAsString());
+	                getter.setType(methodDeclaration.getTypeAsString());
+	                methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+	                    javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.RETURN).findFirst()
+	                            .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
+	                }));
+	                return getter;
+	            }).collect(Collectors.toList());
+	}
+
+	/**
+	 * @param methods
+	 * @return
+	 */
+	public static List<Accessor> getSetters(final List<MethodDeclaration> methods) {
+		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.SET))
+	            .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().size() == 1)
+	            .map(methodDeclaration -> {
+	                Accessor setter = new Accessor();
+	                String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
+	                setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
+	                setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
+	                setter.setMethodName(methodDeclaration.getNameAsString());
+	                methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
+	                    javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.PARAM).findFirst()
+	                            .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
+	                }));
+	                return setter;
+	            }).collect(Collectors.toList());
+	}
 }

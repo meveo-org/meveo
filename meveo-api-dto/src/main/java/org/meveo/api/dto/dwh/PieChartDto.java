@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.PieChart;
 
@@ -20,30 +21,39 @@ public class PieChartDto extends ChartDto {
     private static final long serialVersionUID = -5954424187693917178L;
 
     /** The filled. */
+    @ApiModelProperty("The filled")
     private boolean filled;
     
     /** The legend position. */
+    @ApiModelProperty("The legend position")
     private LegendPositionEnum legendPosition;
     
     /** The series colors. */
+    @ApiModelProperty("The series colors")
     private String seriesColors = "1b788f";
     
     /** The diameter. */
+    @ApiModelProperty("The diameter")
     private Integer diameter;
     
     /** The slice margin. */
+    @ApiModelProperty("The slice margin")
     private int sliceMargin;
     
     /** The shadow. */
+    @ApiModelProperty("The shadow")
     private boolean shadow = true;
     
     /** The show data labels. */
+    @ApiModelProperty("The show data labels")
     private boolean showDataLabels;
     
     /** The legend cols. */
+    @ApiModelProperty("The legend cols")
     private int legendCols;
     
     /** The legend rows. */
+    @ApiModelProperty("The legend rows")
     private int legendRows;
 
     /**

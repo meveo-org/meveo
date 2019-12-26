@@ -6,7 +6,7 @@
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.6.0-SNAPSHOT</version>
+		<version>6.7.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>meveo-admin-web</artifactId>
 	<name>Meveo Admin Web Application - Web Module</name>
@@ -346,9 +346,9 @@
 			</activation>
 		</profile>
 		<profile>
-			<!-- An optional Arquillian testing profile that executes tests in your 
+			<!-- An optional Arquillian testing profile that executes tests in your
 				JBoss AS instance -->
-			<!-- This profile will start a new JBoss AS instance, and execute the 
+			<!-- This profile will start a new JBoss AS instance, and execute the
 				test, shutting it down when done -->
 			<!-- Run with: mvn clean test -Parq-jbossas-managed -->
 			<id>arq-jbossas-managed</id>

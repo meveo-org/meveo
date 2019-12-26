@@ -20,7 +20,7 @@ import org.meveo.persistence.CrossStorageService;
 
 import javax.inject.Inject;
 
-public class CrossStorageScheduledPersistenceService extends ScheduledPersistenceService<CrossStorageService>{
+public class CrossStorageScheduledPersistenceService extends OrderedPersistenceService<CrossStorageService>{
 
     @Inject
     private CrossStorageService service;

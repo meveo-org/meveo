@@ -41,6 +41,7 @@ import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
@@ -71,16 +72,16 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     @Inject
     private ScriptInstanceApi scriptInstanceApi;
 
+    @Inject
+    private MavenDependencyService mavenDependencyService;
+
     private DualListModel<Role> execRolesDM;
     private DualListModel<Role> sourcRolesDM;
 
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
 
-    private List<FileDependency> fileDependencies;
     private List<MavenDependency> mavenDependencies;
-
-    private FileDependency fileDependency = new FileDependency();
     private MavenDependency mavenDependency = new MavenDependency();
 
     private TreeNode rootNode;
@@ -229,19 +230,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(fileDependencies)) {
-            Set<FileDependency> scriptFiles = new HashSet<>();
-            for (FileDependency fileDependency : fileDependencies) {
-                if (fileDependency != null) {
-                    scriptFiles.add(fileDependency);
-                }
-            }
-            getEntity().getFileDependencies().clear();
-            getEntity().getFileDependencies().addAll(scriptFiles);
-        } else {
-            getEntity().getFileDependencies().clear();
-        }
-
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
             Set<MavenDependency> scriptMavens = new HashSet<>();
             for (MavenDependency mavenDependency : mavenDependencies) {
@@ -253,6 +241,35 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             getEntity().getMavenDependencies().addAll(scriptMavens);
         } else {
             getEntity().getMavenDependencies().clear();
+        }
+
+        boolean isUnique = false;
+        if (mavenDependencies != null) {
+            Integer line = 1;
+            Map<String, Integer> map = new HashMap<>();
+            for (MavenDependency maven : mavenDependencies) {
+                String key = maven.getGroupId() + maven.getArtifactId();
+                if (map.containsKey(key)) {
+                    Integer position = map.get(key);
+                    messages.error(new BundleKey("messages", "scriptInstance.error.duplicate"), line, position);
+                    isUnique = true;
+                } else {
+                    map.put(key, line);
+                }
+                line++;
+            }
+            line = 1;
+            for (MavenDependency maven : mavenDependencies) {
+                if (!mavenDependencyService.validateUniqueFields(entity.getId(), maven.getGroupId(), maven.getArtifactId())) {
+                    messages.error(new BundleKey("messages", "scriptInstance.error.unique"), line);
+                    isUnique = true;
+                }
+                line++;
+            }
+        }
+
+        if (isUnique) {
+            return null;
         }
         super.saveOrUpdate(false);
 
@@ -499,36 +516,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
         return foundNode;
-    }
-
-    public List<FileDependency> getFileDependencies() {
-        if (fileDependencies == null) {
-            if (entity.getFileDependencies() != null) {
-                fileDependencies = new ArrayList<>(entity.getFileDependencies());
-                return fileDependencies;
-            } else {
-                return new ArrayList<>();
-            }
-        }
-        return fileDependencies;
-    }
-
-    public void setFileDependencies(List<FileDependency> fileDependencies) {
-        this.fileDependencies = fileDependencies;
-    }
-
-    public FileDependency getFileDependency() {
-        return fileDependency;
-    }
-
-    public void addNewFileDependency() {
-        FileDependency fileDependency = new FileDependency();
-        fileDependency.setScript(entity);
-        fileDependencies.add(fileDependency);
-    }
-
-    public void removeFileDependency(FileDependency selectedFileDependency) {
-        fileDependencies.remove(selectedFileDependency);
     }
 
     public List<MavenDependency> getMavenDependencies() {

@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.communication.email.EmailTemplate;
 
 /**
@@ -22,12 +23,15 @@ public class EmailTemplateDto extends MessageTemplateDto {
     
     /** The subject. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Subject of the email")
     private String subject;
     
     /** The html content. */
+    @ApiModelProperty("Html content of the email")
     private String htmlContent;
     
     /** The text content. */
+    @ApiModelProperty("Text content of the email")
     private String textContent;
 
     /**

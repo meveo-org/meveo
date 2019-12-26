@@ -1,5 +1,7 @@
 package org.meveo.api.dto.filter;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -16,15 +18,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class FilteredListDto {
 
     /** The xml input. */
+    @ApiModelProperty("The xml input")
     private String xmlInput;
     
     /** The parameters. */
+    @ApiModelProperty("Map of parameters")
     private Map<String, String> parameters;
     
     /** The first row. */
+    @ApiModelProperty("The first row")
     private int firstRow;
     
     /** The number of rows. */
+    @ApiModelProperty("The number of rows")
     private int numberOfRows;
 
     /**

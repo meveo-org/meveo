@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.finance.ReportExtractDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -29,6 +30,7 @@ public class ReportExtractsResponseDto extends BaseResponse {
     /** The report extracts. */
     @XmlElementWrapper(name = "reportExtracts")
     @XmlElement(name = "reportExtract")
+    @ApiModelProperty("List of report extracts information")
     private List<ReportExtractDto> reportExtracts;
 
     /**

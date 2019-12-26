@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.billing.Language;
 
 /**
@@ -21,9 +22,11 @@ public class LanguageIsoDto extends BaseEntityDto {
 
 	/** The code. */
 	@XmlAttribute(required = true)
+	@ApiModelProperty(required = true, value = "Code of the language")
 	private String code;
 	
 	/** The description. */
+	@ApiModelProperty("Description of the language")
 	private String description;
 
 	/**

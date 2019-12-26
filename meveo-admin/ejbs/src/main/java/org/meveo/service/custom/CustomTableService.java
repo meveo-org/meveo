@@ -194,7 +194,7 @@ public class CustomTableService extends NativePersistenceService {
 			create(sqlConnectionCode, cet, cei);
 		}
 	}
-    
+
 	/**
 	 * Inserts an instance of {@linkplain CustomEntityInstance} into the database
 	 * using a new transaction.
@@ -409,26 +409,20 @@ public class CustomTableService extends NativePersistenceService {
                     List<Map<String, Object>> values = query.list();
 
                     /* Fetch entity references */
-                    Map<Integer, Object[]> fetchedEntityReferences = new HashMap<>();			// Map used to replace data with as key the index of the value to replace and as value the actual (key, value) pair to replace
                     Map<String, Map<String, String>> entityReferencesCache = new HashMap<>();	// Cache used to avoid fetching multiple time the same data
-                    values.forEach(map -> map.forEach((key, value) -> fields.stream()
-                            .filter(f -> f.getDbFieldname().equals(key)).findFirst()
-                            .ifPresent(customFieldTemplate -> {
-                                if(customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-                                    String referencedEntity = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
-                                        .computeIfAbsent(
-                                            customFieldTemplate.getDbFieldname(),
-                                            k -> {
-                                                log.info("Fetching {} with uuid {}", customFieldTemplate.getCode(), value);
-                                                Map<String, Object> entityRefValues = findById(sqlConnectionCode, k, (String) value);
-                                                entityRefValues.remove("uuid");				// We don't want to save the uuid
-                                                return JacksonUtil.toString(entityRefValues);
-                                            }
-                                    );
-                                    fetchedEntityReferences.put(values.indexOf(map), new Object[]{key, referencedEntity});
-                                }
-                            })));
-                    fetchedEntityReferences.forEach((index, array) -> values.get(index).put((String) array[0], array[1])); 
+                    for(Map<String, Object> map : values) {
+                    	for(Entry<String, Object> entry : new HashMap<>(map).entrySet()) {
+                    		for(CustomFieldTemplate field : fields) {
+                    			if(field.getDbFieldname().equals(entry.getKey()) && field.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+                    				String referencedEntity = entityReferencesCache
+                    						.computeIfAbsent((String) entry.getValue(), k -> new HashMap<>())
+                    						.computeIfAbsent(field.getDbFieldname(), fieldName -> fetchField(entry.getValue(), field, fieldName));
+
+                    				map.put(entry.getKey(), referencedEntity);
+                    			}
+                    		}
+                    	}
+                    }
                     
                     nrItemsFound = values.size();
                     firstRow = firstRow + 500;
@@ -448,7 +442,20 @@ public class CustomTableService extends NativePersistenceService {
             return new AsyncResult<>(new DataImportExportStatistics(e));
         }
     }
-    
+
+	/**
+	 * @param id
+	 * @param field
+	 * @param tableName
+	 * @return
+	 */
+	public String fetchField(Object id, CustomFieldTemplate field, String tableName) {
+		log.info("Fetching {} with uuid {}", field.getCode(), id);
+		Map<String, Object> entityRefValues = findById(tableName, (String) id);
+		entityRefValues.remove("uuid");				// We don't want to save the uuid
+		return JacksonUtil.toString(entityRefValues);
+	}
+
     /**
      * Import data into custom table
      * 
@@ -573,7 +580,7 @@ public class CustomTableService extends NativePersistenceService {
 
     /**
      * Import data into custom table
-     * 
+     *
      * @param customModelObject Custom table definition
      * @param values A list of records to import. Each record is a map of values with field name as a map key and field value as a value.
      * @param append True if data should be appended to the existing data
@@ -648,7 +655,7 @@ public class CustomTableService extends NativePersistenceService {
 
     /**
      * Import data into custom table in asynchronous mode
-     * 
+     *
      * @param customEntityTemplate Custom table definition
      * @param inputStream Data stream
      * @param append True if data should be appended to the existing data

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.communication.MeveoInstanceStatusEnum;
@@ -25,88 +26,116 @@ public class MeveoInstanceDto extends BusinessEntityDto {
     private static final long serialVersionUID = -4747242987390520289L;
 
     /** The product name. */
+    @ApiModelProperty("The product name")
     private String productName;
     
     /** The product version. */
+    @ApiModelProperty("The product version")
     private String productVersion;
     
     /** The owner. */
+    @ApiModelProperty("The owner")
     private String owner;
     
     /** The md 5. */
+    @ApiModelProperty("The md 5")
     private String md5;
     
     /** The status. */
+    @ApiModelProperty("The status")
     private MeveoInstanceStatusEnum status;
     
     /** The creation date. */
+    @ApiModelProperty("The creation date")
     private Date creationDate;
     
     /** The update date. */
+    @ApiModelProperty("The update date")
     private Date updateDate;
     
     /** The key entreprise. */
+    @ApiModelProperty("The key entreprise")
     private String keyEntreprise;
     
     /** The mac address. */
+    @ApiModelProperty("The mac address")
     private String macAddress;
     
     /** The machine vendor. */
+    @ApiModelProperty("The machine vendor")
     private String machineVendor;
     
     /** The installation mode. */
+    @ApiModelProperty("The installation mode")
     private String installationMode;
     
     /** The nb cores. */
+    @ApiModelProperty("The nb cores")
     private String nbCores;
     
     /** The memory. */
+    @ApiModelProperty("The memory")
     private String memory;
     
     /** The hd size. */
+    @ApiModelProperty("The hd size")
     private String hdSize;
     
     /** The os name. */
+    @ApiModelProperty("The os name")
     private String osName;
     
     /** The os version. */
+    @ApiModelProperty("The os version")
     private String osVersion;
     
     /** The os arch. */
+    @ApiModelProperty("The os arch")
     private String osArch;
     
     /** The java vm version. */
+    @ApiModelProperty("The java vm version")
     private String javaVmVersion;
     
     /** The java vm name. */
+    @ApiModelProperty("The java vm name")
     private String javaVmName;
     
     /** The java vendor. */
+    @ApiModelProperty("The java vendor")
     private String javaVendor;
     
     /** The java version. */
+    @ApiModelProperty("The java version")
     private String javaVersion;
     
     /** The as vendor. */
+    @ApiModelProperty("The as vendor")
     private String asVendor;
     
     /** The as version. */
+    @ApiModelProperty("The as version")
     private String asVersion;
     
     /** The url. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The url")
     private String url;
     
     /** The auth username. */
+    @ApiModelProperty("The auth username")
     private String authUsername;
     
     /** The auth password. */
+    @ApiModelProperty("The auth password")
     private String authPassword;
 
     /** The user. */
+    @ApiModelProperty("The user")
     private String user;
     
     /** The customer. */
+    @ApiModelProperty("The customer")
     private String customer;
 
     /**

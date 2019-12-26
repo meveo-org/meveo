@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.StringUtils;
 
@@ -22,29 +23,37 @@ public class CommunicationRequestDto extends BaseEntityDto {
 
     /** The meveo instance code. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Code of the meveo instance")
     private String meveoInstanceCode;
 
     /** The mac address. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Mac address of the meveo instance")
     private String macAddress;
 
     /** The subject. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Subject of the meveo instance")
     private String subject;
 
     /** The body. */
+    @ApiModelProperty("Body of the meveo instance")
     private String body;
 
     /** The additionnal info 1. */
+    @ApiModelProperty("Additionnal info 1")
     private String additionnalInfo1;
 
     /** The additionnal info 2. */
+    @ApiModelProperty("Additionnal info 2")
     private String additionnalInfo2;
 
     /** The additionnal info 3. */
+    @ApiModelProperty("Additionnal info 3")
     private String additionnalInfo3;
 
     /** The additionnal info 4. */
+    @ApiModelProperty("Additionnal info 4")
     private String additionnalInfo4;
 
     /**

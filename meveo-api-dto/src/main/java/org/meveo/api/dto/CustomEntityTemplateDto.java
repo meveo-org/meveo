@@ -12,9 +12,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.SqlStorageConfigurationDto;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModelProperty;
 
 
 /**
@@ -22,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @version 6.6.0
+ * @lastModifiedVersion 6.5.0
  */
 
 @XmlRootElement(name = "CustomEntityTemplate")
@@ -34,50 +36,62 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of custom entity template")
     private String code;
 
     @XmlElement()
+    @ApiModelProperty("Super template")
 	private String superTemplate;
 
     /** The name. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Name of custom entity template")
     private String name;
 
     /** The description. */
     @XmlAttribute()
+    @ApiModelProperty("Description of custom entity template")
     private String description;
 
     /** The fields. */
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
     @JsonProperty("fields")
+    @ApiModelProperty("List of custom field templates information")
     private List<CustomFieldTemplateDto> fields;
 
     /** The actions. */
     @XmlElementWrapper(name = "actions")
     @XmlElement(name = "action")
+    @ApiModelProperty("List of entity custom actions information")
     private List<EntityCustomActionDto> actions;
     
     /** The pre-persist script instance code. */
     @XmlAttribute()
+    @ApiModelProperty("Code of the pre-persist script instance")
     private String prePersistScripCode;
 
     /** Category the CET belgongs to */
     @XmlAttribute()
+    @ApiModelProperty("Code of the custom entity category")
     private String customEntityCategoryCode;
 
     /**
      * Storage where cfts can be stored
      */
     @XmlElement()
+    @ApiModelProperty("List of storages where cfts can be stored")
     private List<DBStorageType> availableStorages;
     
     @XmlElement
+    @ApiModelProperty("Neo4J storage configuration information")
     private Neo4JStorageConfigurationDto neo4jStorageConfiguration;
 
     @XmlElement()
-    private SqlStorageConfigurationDto sqlStorageConfiguration = new SqlStorageConfigurationDto();
+    @ApiModelProperty("SQL storage configuration")
+    private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
     
+    @ApiModelProperty("List of samples")
     private List<String> samples = new ArrayList<>();
 
     public List<DBStorageType> getAvailableStorages() {
@@ -96,11 +110,11 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 		this.neo4jStorageConfiguration = neo4jStorageConfiguration;
 	}
 
-	public SqlStorageConfigurationDto getSqlStorageConfiguration() {
+	public SQLStorageConfiguration getSqlStorageConfiguration() {
 		return sqlStorageConfiguration;
     }
 
-    public void setSqlStorageConfiguration(SqlStorageConfigurationDto sqlStorageConfiguration) {
+    public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
         this.sqlStorageConfiguration = sqlStorageConfiguration;
     }
 

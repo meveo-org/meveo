@@ -6,7 +6,7 @@
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>6.6.0-SNAPSHOT</version>
+    <version>6.7.0-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<env>dev</env>
@@ -451,7 +451,7 @@
 					<artifactId>jboss-as-maven-plugin</artifactId>
 					<version>7.5.Final</version>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -582,7 +582,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line: 
+				<!-- Properties for liquibase plugin. Can be passed from a command line:
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.mariadb.jdbc.Driver</db.driver>
 				<db.url>jdbc:mariadb://localhost:3306/meveo</db.url>
@@ -607,7 +607,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line: 
+				<!-- Properties for liquibase plugin. Can be passed from a command line:
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.postgresql.Driver</db.driver>
 				<db.url>jdbc:postgresql://localhost/integrmeveo</db.url>
@@ -645,7 +645,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line: 
+				<!-- Properties for liquibase plugin. Can be passed from a command line:
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.postgresql.Driver </db.driver>
 				<db.url>jdbc:postgresql://localhost/meveo</db.url>

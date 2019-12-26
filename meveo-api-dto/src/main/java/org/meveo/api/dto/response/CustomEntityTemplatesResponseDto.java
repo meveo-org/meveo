@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 
 /**
@@ -26,6 +27,7 @@ public class CustomEntityTemplatesResponseDto extends BaseResponse {
     /** The custom entity templates. */
     @XmlElementWrapper(name = "customEntityTemplates")
     @XmlElement(name = "customEntityTemplate")
+    @ApiModelProperty("List of custom entity templates")
     private List<CustomEntityTemplateDto> customEntityTemplates = new ArrayList<CustomEntityTemplateDto>();
 
     /**

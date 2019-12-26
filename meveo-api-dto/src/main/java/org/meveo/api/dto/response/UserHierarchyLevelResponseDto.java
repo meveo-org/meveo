@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.hierarchy.UserHierarchyLevelDto;
 
 /**
@@ -19,6 +20,7 @@ public class UserHierarchyLevelResponseDto extends BaseResponse {
     private static final long serialVersionUID = -1125948385137327401L;
 
     /** The user hierarchy level. */
+    @ApiModelProperty("User hierarchy level information")
     private UserHierarchyLevelDto userHierarchyLevel;
 
     /**

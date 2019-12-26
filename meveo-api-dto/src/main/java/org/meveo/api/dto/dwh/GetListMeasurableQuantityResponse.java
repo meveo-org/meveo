@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.BaseResponse;
 
 /**
@@ -26,6 +27,7 @@ public class GetListMeasurableQuantityResponse extends BaseResponse {
     /** The list measurable quantity dto. */
     @XmlElementWrapper(name = "listMeasurableQuantity")
     @XmlElement(name = "measurableQuantity")
+    @ApiModelProperty("List of measurable quantities information")
     private List<MeasurableQuantityDto> listMeasurableQuantityDto = new ArrayList<MeasurableQuantityDto>();
 
     /**

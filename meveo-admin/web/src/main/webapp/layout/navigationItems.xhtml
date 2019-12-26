@@ -93,13 +93,6 @@
         </c:if>
     </c:forEach>
 
-    <p:submenu label="#{messages['menu.myCompany']}"
-               rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
-        <p:menuitem id="mm_users" value="#{messages['menu.users']}"
-                    outcome="users" />
-        <p:menuitem id="mmUserGroups" outcome="userGroupHierarchy"
-                    value="#{messages['menu.userGroupHierarchy']}" />
-    </p:submenu>
 
     <p:submenu id="automation" label="#{messages['menu.admin']}"
                rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">

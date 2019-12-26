@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.EmailNotificationDto;
 import org.meveo.api.dto.response.notification.GetEmailNotificationResponseDto;
@@ -22,7 +24,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/notification/email")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@ApiOperation("Email notification")
 public interface EmailNotificationRs extends IBaseRs {
 
     /**
@@ -33,7 +35,8 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(EmailNotificationDto postData);
+    @ApiOperation(value = "Create email notification")
+    ActionStatus create(@ApiParam("Email notification information") EmailNotificationDto postData);
 
     /**
      * Update an existing email notification
@@ -43,7 +46,8 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(EmailNotificationDto postData);
+    @ApiOperation(value = "Update email notification")
+    ActionStatus update(@ApiParam("Email notification information") EmailNotificationDto postData);
 
     /**
      * Find a email notification with a given code 
@@ -53,7 +57,8 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetEmailNotificationResponseDto find(@QueryParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Find email notification by code")
+    GetEmailNotificationResponseDto find(@QueryParam("notificationCode") @ApiParam("Code of the email notification") String notificationCode);
 
     /**
      * Remove an existing email notification with a given code 
@@ -63,7 +68,8 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @DELETE
     @Path("/{notificationCode}")
-    ActionStatus remove(@PathParam("notificationCode") String notificationCode);
+    @ApiOperation(value = "Remove email notification by code")
+    ActionStatus remove(@PathParam("notificationCode") @ApiParam("Code of the email notification") String notificationCode);
 
     /**
      * Create new or update an existing email notification with a given code
@@ -73,6 +79,7 @@ public interface EmailNotificationRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(EmailNotificationDto postData);
+    @ApiOperation(value = "Create or update email notification")
+    ActionStatus createOrUpdate(@ApiParam("Email notification information") EmailNotificationDto postData);
 
 }

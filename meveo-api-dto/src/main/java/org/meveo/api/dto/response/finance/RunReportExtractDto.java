@@ -1,5 +1,7 @@
 package org.meveo.api.dto.response.finance;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,9 +19,11 @@ public class RunReportExtractDto {
 
     /** The code. */
     @NotNull
+    @ApiModelProperty("The code")
     private String code;
     
     /** The params. */
+    @ApiModelProperty("Map of params")
     private Map<String, String> params = new HashMap<>();
 
     /**

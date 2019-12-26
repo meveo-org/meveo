@@ -12,6 +12,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.RolesDto;
@@ -22,7 +25,7 @@ import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
 @Path("/role")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Role")
 public interface RoleRs extends IBaseRs {
 
     /**
@@ -32,7 +35,8 @@ public interface RoleRs extends IBaseRs {
      * @return action status
      */
     @POST
-    @Path("/") ActionStatus create(RoleDto postData);
+    @ApiOperation(value = "Create role")
+    @Path("/") ActionStatus create(@ApiParam("Role information") RoleDto postData);
 
     /**
      * Update role.
@@ -41,7 +45,8 @@ public interface RoleRs extends IBaseRs {
      * @return action status.
      */
     @PUT
-    @Path("/") ActionStatus update(RoleDto postData);
+    @ApiOperation(value = "Update role")
+    @Path("/") ActionStatus update(@ApiParam("Role information") RoleDto postData);
 
     /**
      * Remove role.
@@ -50,7 +55,9 @@ public interface RoleRs extends IBaseRs {
      * @return action status.
      */
     @DELETE
-    @Path("/{roleName}/{provider}") ActionStatus remove(@PathParam("roleName") String roleName);
+    @Path("/{roleName}/{provider}")
+    @ApiOperation(value = "Remove role by roleName")
+    ActionStatus remove(@PathParam("roleName") @ApiParam("Name of the role") String roleName);
 
     /**
      * Search role.
@@ -59,7 +66,9 @@ public interface RoleRs extends IBaseRs {
      * @return found role
      */
     @GET
-    @Path("/") GetRoleResponse find(@QueryParam("roleName") String roleName);
+    @Path("/")
+    @ApiOperation(value = "Find role by roleName")
+    GetRoleResponse find(@QueryParam("roleName") @ApiParam("Name of the role") String roleName);
 
     /**
      * Create or update role.
@@ -68,7 +77,9 @@ public interface RoleRs extends IBaseRs {
      * @return action status
      */
     @POST
-    @Path("/createOrUpdate") ActionStatus createOrUpdate(RoleDto postData);
+    @Path("/createOrUpdate")
+    @ApiOperation(value = "Create or update role")
+    ActionStatus createOrUpdate(@ApiParam("Role information") RoleDto postData);
 
     /**
      * List roles matching a given criteria.
@@ -83,8 +94,9 @@ public interface RoleRs extends IBaseRs {
      */
     @GET
     @Path("/list")
-    RolesDto listGet(@QueryParam("query") String query, @QueryParam("fields") String fields, @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit,
-            @DefaultValue("name") @QueryParam("sortBy") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") SortOrder sortOrder);
+    @ApiOperation(value = "List get role")
+    RolesDto listGet(@QueryParam("query") @ApiParam("Query to search criteria") String query, @QueryParam("fields") @ApiParam("Data retrieval options/fieldnames")  String fields, @QueryParam("offset") @ApiParam("Offset from record number") Integer offset, @QueryParam("limit") @ApiParam("Number of records to retrieve") Integer limit,
+            @DefaultValue("name") @QueryParam("sortBy") @ApiParam("Sort by a field") String sortBy, @DefaultValue("ASCENDING") @QueryParam("sortOrder") @ApiParam("Sort order") SortOrder sortOrder);
 
     /**
      * List roles matching a given criteria.
@@ -93,13 +105,17 @@ public interface RoleRs extends IBaseRs {
      * @return A list of roles
      */
     @POST
-    @Path("/list") RolesDto listPost(PagingAndFiltering pagingAndFiltering);
+    @Path("/list")
+    @ApiOperation(value = "List post role")
+    RolesDto listPost(@ApiParam("Pagination and filtering criteria") PagingAndFiltering pagingAndFiltering);
     
     /**
      * List external roles.
      * @return list of external roles
      */
     @GET
-    @Path("/external") RolesDto listExternalRoles();
+    @Path("/external")
+    @ApiOperation(value = "List external roles")
+    RolesDto listExternalRoles();
 
 }

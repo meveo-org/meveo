@@ -1,5 +1,7 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -16,22 +18,27 @@ public class MailerConfigurationDto {
 
     /** The host */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The host")
     private String host;
 
     /** The port */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The port")
     private Integer port;
 
     /** The userName */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The user name")
     private String userName;
 
     /** The password */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The password")
     private String password;
 
     /** The tls */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The tls")
     private boolean tls;
 
     public MailerConfigurationDto(){

@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.script.CustomScriptDto;
-import org.meveo.model.scripts.FileDependency;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
@@ -28,17 +28,18 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private static final long serialVersionUID = 4555037251902559699L;
 
     /** The execution roles. */
+    @ApiModelProperty("The execution roles.")
     private List<RoleDto> executionRoles = new ArrayList<RoleDto>();
     
     /** The sourcing roles. */
+    @ApiModelProperty("The sourcing roles")
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
+    @ApiModelProperty("Whether to error")
     private Boolean error;
 
-    /** The file dependencies. */
-    private List<FileDependencyDto> fileDependencies = new ArrayList<>();
-
     /** The maven dependencies. */
+    @ApiModelProperty("The maven dependencies")
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
 
     /**
@@ -71,12 +72,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
         if (scriptInstance.getSourcingRoles() != null) {
             for (Role role : scriptInstance.getSourcingRoles()) {
                 sourcingRoles.add(new RoleDto(role, true, true));
-            }
-        }
-
-        if (scriptInstance.getFileDependencies() != null) {
-            for (FileDependency file : scriptInstance.getFileDependencies() ) {
-                fileDependencies.add(new FileDependencyDto(file));
             }
         }
 
@@ -128,14 +123,6 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public void setSourcingRoles(List<RoleDto> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
-    }
-
-    public List<FileDependencyDto> getFileDependencies() {
-        return fileDependencies;
-    }
-
-    public void setFileDependencies(List<FileDependencyDto> fileDependencies) {
-        this.fileDependencies = fileDependencies;
     }
 
     public List<MavenDependencyDto> getMavenDependencies() {

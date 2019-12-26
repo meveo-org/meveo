@@ -1,8 +1,11 @@
 package org.meveo.admin.action.admin.custom;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.jboss.seam.international.status.Messages;
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -33,6 +36,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    protected Messages messages;
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
@@ -247,6 +253,21 @@ public class EndpointBean extends BaseBean<Endpoint> {
             getEntity().getRoles().addAll(rolesDM.getTarget());
         } else {
             getEntity().setRoles(rolesDM.getTarget());
+        }
+
+        boolean isError = false;
+        if (parameterMappings != null) {
+            for (TSParameterMapping param : parameterMappings) {
+                if (StringUtils.isBlank(param.getParameterName())) {
+                    if (param.getDefaultValue() == null) {
+                        messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
+                        isError = true;
+                    }
+                }
+            }
+        }
+        if (isError) {
+            return null;
         }
         return super.saveOrUpdate(killConversation);
     }

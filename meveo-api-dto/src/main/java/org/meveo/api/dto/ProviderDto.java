@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.Provider;
 
 import javax.xml.bind.annotation.*;
@@ -19,42 +20,55 @@ public class ProviderDto extends BaseEntityDto {
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Code of the provider")
     private String code;
 
     /** The description. */
+    @ApiModelProperty("The description")
     private String description;
     
     /** The currency. */
+    @ApiModelProperty("The currency")
     private String currency;
     
     /** The country. */
+    @ApiModelProperty("The country")
     private String country;
     
     /** The language. */
+    @ApiModelProperty("The country")
     private String language;
     
     /** The multi currency. */
+    @ApiModelProperty("The multi currency")
     private Boolean multiCurrency;
     
     /** The multi country. */
+    @ApiModelProperty("The multi country")
     private Boolean multiCountry;
     
     /** The multi language. */
+    @ApiModelProperty("The multi language")
     private Boolean multiLanguage;
     
     /** The user account. */
+    @ApiModelProperty("The user account")
     private String userAccount;
 
     /** The enterprise. */
+    @ApiModelProperty("The enterprise")
     private Boolean enterprise;
     
     /** The level duplication. */
+    @ApiModelProperty("The level duplication")
     private Boolean levelDuplication;
     
     /** The rounding. */
+    @ApiModelProperty("The rounding")
     private Integer rounding;
     
     /** The prepaid reservation expiration delayin millisec. */
+    @ApiModelProperty("The prepaid reservation expiration delayin millisec")
     private Long prepaidReservationExpirationDelayinMillisec;
     
     /**
@@ -63,16 +77,20 @@ public class ProviderDto extends BaseEntityDto {
      * @deprecated Not used.
      */
     @Deprecated
+    @ApiModelProperty("Code of the discount accounting")
     private String discountAccountingCode;
     
     /** The email. */
+    @ApiModelProperty("The email")
     private String email;
     
     /** The recognize revenue. */
+    @ApiModelProperty("The recognize revenue")
     private Boolean recognizeRevenue;
     
     /** The custom fields. */
     @XmlElement(required = false)
+    @ApiModelProperty("Custom fields information")
     private CustomFieldsDto customFields;
 
     /**

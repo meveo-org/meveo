@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomFieldsDto;
 import org.meveo.model.jobs.JobCategoryEnum;
@@ -24,33 +25,41 @@ public class JobInstanceDto extends BusinessEntityDto {
 
     /** Job category. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "Job category type")
     private JobCategoryEnum jobCategory;
 
     /** Job template. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "Job template")
     private String jobTemplate;
 
     /** Following job to execute. */
+    @ApiModelProperty("Following job to execute")
     private String followingJob;
 
     /** Parameter to job execution. */
+    @ApiModelProperty("Parameter to job execution")
     private String parameter;
 
     /** Custom fields. */
+    @ApiModelProperty("Custom fields information")
     private CustomFieldsDto customFields;
 
     /** Job scheduling timer code. */
     @XmlAttribute(required = false)
+    @ApiModelProperty(required = false, value = "Job scheduling timer code")
     private String timerCode;
 
     /**
      * What cluster nodes job could/should run on. A comma separated list of custer nodes. A job can/will be run on any node if value is null.
      */
+    @ApiModelProperty("What cluster nodes job could/should run on")
     private String runOnNodes;
 
     /**
      * Can job be run in parallel on several cluster nodes. Value of True indicates that job can be run on a single node at a time.
      */
+    @ApiModelProperty("Limit to single node")
     private Boolean limitToSingleNode;
 
     /**

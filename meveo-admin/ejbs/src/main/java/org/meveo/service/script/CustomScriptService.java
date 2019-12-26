@@ -19,12 +19,38 @@
  */
 package org.meveo.service.script;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.javadoc.JavadocBlockTag;
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -45,12 +71,20 @@ import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.MeveoFileUtils;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.scripts.*;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -60,27 +94,12 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * @param <T>
@@ -91,10 +110,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
     private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
-
-    private static final String SET = "set";
-    private static final String GET = "get";
-    private static final String IS = "is";
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -231,7 +246,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             classAndValue.setClass(setterValue.getClass());
                         }
 
-                        scriptInstance.getClass().getMethod(setter.getMethodName(), classAndValue.getTypeClass()).invoke(scriptInstance, classAndValue.getValue());
+                        Method method = ReflectionUtils.getSetterByNameAndSimpleClassName(scriptInstance.getClass(), setter.getMethodName(), setter.getType())
+                        		.orElse(null);
+                        
+                        if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
+                        	// If value is a map, convert the map into target class
+                        	if(classAndValue.getValue() instanceof Map) {
+                        		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
+                            	method.invoke(scriptInstance, convertedValue);
+                        	}
+                        	
+                        } else {
+                        	method.invoke(scriptInstance, classAndValue.getValue());
+                        }
+                        
+                       // , classAndValue.getTypeClass()).invoke(scriptInstance, classAndValue.getValue());
                     }
                 }
             }
@@ -472,35 +501,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             ScriptInstance scriptInstance = (ScriptInstance) script;
 
             Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
-            Set<FileDependency> fileDependencies = scriptInstance.getFileDependencies();
-
-            if (fileDependencies != null) {
-                Set<String> fileDependencyPaths = fileDependencies.stream().flatMap(e -> {
-
-                    File f = new File(e.getPath());
-                    if (f.isDirectory()) {
-                        Collection<File> subFiles = org.apache.commons.io.FileUtils.listFiles(f, new String[]{"jar"}, true);
-                        return subFiles.stream().map(t -> {
-                            try {
-                                return t.getCanonicalPath();
-
-                            } catch (IOException e1) {
-                                return null;
-                            }
-                        });
-
-                    } else {
-                        try {
-                            return new HashSet<String>(Arrays.asList(f.getCanonicalPath())).stream();
-
-                        } catch (IOException e1) {
-                            return null;
-                        }
-                    }
-                }).filter(Objects::nonNull).filter(e -> !e.isEmpty()).collect(Collectors.toSet());
-
-                mavenDependencies.addAll(fileDependencyPaths);
-            }
 
             synchronized (CLASSPATH_REFERENCE) {
                 mavenDependencies.stream().forEach(location -> {
@@ -595,40 +595,40 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers().stream().filter(e -> e instanceof MethodDeclaration).map(e -> (MethodDeclaration) e)
                 .collect(Collectors.toList());
 
-        final List<Accessor> setters = methods.stream().filter(e -> e.getNameAsString().startsWith(SET))
-                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().size() == 1)
-                .map(methodDeclaration -> {
-                    Accessor setter = new Accessor();
-                    String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                    setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                    setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
-                    setter.setMethodName(methodDeclaration.getNameAsString());
-                    methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                        javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.PARAM).findFirst()
-                                .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
-                    }));
-                    return setter;
-                }).collect(Collectors.toList());
+        final List<Accessor> setters = ScriptUtils.getSetters(methods);
 
-        final List<Accessor> getters = methods.stream().filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
-                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().isEmpty())
-                .map(methodDeclaration -> {
-                    Accessor getter = new Accessor();
-                    String accessorFieldName;
-                    if (methodDeclaration.getNameAsString().startsWith(GET)) {
-                        accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                    } else {
-                        accessorFieldName = methodDeclaration.getNameAsString().substring(2);
-                    }
-                    getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                    getter.setMethodName(methodDeclaration.getNameAsString());
-                    getter.setType(methodDeclaration.getTypeAsString());
-                    methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                        javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.RETURN).findFirst()
-                                .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
-                    }));
-                    return getter;
-                }).collect(Collectors.toList());
+        final List<Accessor> getters = ScriptUtils.getGetters(methods);
+        
+        // Find getter and setter defined in super types
+        for(ClassOrInterfaceType type : classOrInterfaceDeclaration.getExtendedTypes()) {
+        	String className = compilationUnit.getImports().stream()
+        		.filter(importEntry -> importEntry.getNameAsString().contains(type.getNameAsString()))
+        		.map(ImportDeclaration::getNameAsString)
+        		.findFirst()
+        		.orElse(type.getNameAsString());
+        	
+        	try {
+				Class<?> typeClass = Class.forName(className);
+				
+				// Build getters and setter of extended types
+				Arrays.stream(typeClass.getMethods())
+						.filter(m -> m.getName().startsWith(Accessor.SET))
+						.filter(m -> m.getParameterCount() == 1)
+						.filter(m -> m.getReturnType() == void.class)
+						.map(Accessor::new)
+						.forEach(setters::add);
+				
+				Arrays.stream(typeClass.getMethods())
+						.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
+						.filter(m -> m.getParameterCount() == 0)
+						.filter(m -> m.getReturnType() != void.class)
+						.map(Accessor::new)
+						.forEach(getters::add);
+				
+			} catch (ClassNotFoundException e1) {
+				throw new RuntimeException(e1);
+			}
+        }
 
         checkEndpoints(script, setters);
 
@@ -636,7 +636,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         script.setSetters(setters);
     }
 
-    /**
+	/**
      * Compile script. DOES NOT update script entity status. Successfully compiled
      * script is added to a compiled script cache if active and not in test
      * compilation mode.
@@ -749,8 +749,15 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             String className = matcher.group(1);
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                    Class clazz = classLoader.loadClass(className);
+                	Class clazz;
+                	
+                	try {
+	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+	                    clazz = classLoader.loadClass(className);
+                	} catch(ClassNotFoundException e) {
+                		clazz = Class.forName(className);
+                	}
+                	
                     try {
                         String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
                         if (location.startsWith("file:")) {
@@ -769,11 +776,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         }
 
                     } catch (Exception e) {
-                        log.warn("Failed to find location for class {}", className);
+                        log.warn("Failed to find location for class {}", className, e);
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to find location for class {}", className);
+                log.warn("Failed to find location for class {}", className, e);
             }
         }
 
