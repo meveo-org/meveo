@@ -1420,6 +1420,26 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>sqlConfigurations</from-outcome>
+            <to-view-id>/pages/admin/storages/sqlConfigurations/sqlConfigurations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>sqlConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/sqlConfigurations/sqlConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>neo4jConfigurations</from-outcome>
+            <to-view-id>/pages/admin/storages/neo4jConfigurations/neo4jConfigurations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>neo4jConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/neo4jConfigurations/neo4jConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>repositories</from-outcome>
             <to-view-id>/pages/admin/storages/repositories/repositories.xhtml</to-view-id>
             <redirect/>

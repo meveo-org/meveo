@@ -8,7 +8,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
@@ -16,12 +15,14 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 
 /**
  * Storage for logical repository separation.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
+ * @since 6.3.0
  */
 @Entity
 @Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -43,6 +44,10 @@ public class Repository extends BusinessEntity {
 	@JoinColumn(name = "neo4j_configuration_id")
 	private Neo4JConfiguration neo4jConfiguration;
 
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "sql_configuration_id")
+	private SqlConfiguration sqlConfiguration;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "data_separation_type", length = 25)
 	private DataSeparationTypeEnum dataSeparationType = DataSeparationTypeEnum.PHYSICAL;
@@ -50,7 +55,7 @@ public class Repository extends BusinessEntity {
 	@NotNull
 	@Column(name = "path", length = 255)
 	private String path;
-	
+
 	public Repository getParentRepository() {
 		return parentRepository;
 	}
@@ -89,6 +94,19 @@ public class Repository extends BusinessEntity {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	public SqlConfiguration getSqlConfiguration() {
+		return sqlConfiguration;
+	}
+
+	public void setSqlConfiguration(SqlConfiguration sqlConfiguration) {
+		this.sqlConfiguration = sqlConfiguration;
+	}
+
+	public String getSqlConfigurationCode() {
+
+		return sqlConfiguration == null ? null : sqlConfiguration.getCode();
 	}
 
 }

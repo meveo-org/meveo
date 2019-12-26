@@ -3,7 +3,6 @@ package org.meveo.api.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ws.rs.POST;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -11,12 +10,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModelProperty;
 
 
 /**
@@ -90,7 +90,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     @XmlElement()
     @ApiModelProperty("SQL storage configuration")
     private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
-
+    
     @ApiModelProperty("List of samples")
     private List<String> samples = new ArrayList<>();
 

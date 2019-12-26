@@ -58,7 +58,6 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
-import org.primefaces.model.charts.axes.cartesian.CartesianAxes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -66,8 +65,8 @@ import com.google.common.collect.Lists;
 /**
  * @author Clément Bareth
  * @author Wassim Drira
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.6.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -240,6 +239,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        
         } else if(cet.getSqlStorageConfiguration() != null) {
             customEntityInstanceService.removeByCet(cet.getCode());
         }

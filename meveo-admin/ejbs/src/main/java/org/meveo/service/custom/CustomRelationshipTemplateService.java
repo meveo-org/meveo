@@ -50,7 +50,8 @@ import org.meveo.util.EntityCustomizationUtils;
 /**
  * Class used for persisting CustomRelationshipTemplate entities
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
@@ -112,7 +113,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         }else {
             // Remove table if storage previously contained SQL
             if(customFieldsCache.getCustomRelationshipTemplate(crt.getCode()).getAvailableStorages().contains(DBStorageType.SQL)) {
-                customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(crt));
+                customTableCreatorService.removeTable(null, SQLStorageConfiguration.getDbTablename(crt));
             }
         }
 
@@ -148,7 +149,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         }
 
         if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(crt));
+            customTableCreatorService.removeTable(null, SQLStorageConfiguration.getDbTablename(crt));
         }
 
         customFieldsCache.removeCustomRelationshipTemplate(crt);

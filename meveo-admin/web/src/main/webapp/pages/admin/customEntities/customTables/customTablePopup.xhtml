@@ -125,6 +125,7 @@
 						value="#{entity[field.dbFieldname]}" styleClass="field-value">
 						<f:converter binding="#{entityReferenceConverter}" />
 						<f:attribute name="field" value="#{field}" />
+						<f:attribute name="repository" value="#{bean.repository}" />
 					</h:outputText>
 
 				</p:columns>

@@ -1,5 +1,7 @@
 package org.meveo.admin.action.storage;
 
+import java.util.List;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,8 +19,9 @@ import org.meveo.service.storage.RepositoryService;
 /**
  * Controller for managing {@link Repository} CRUD operations.
  * 
- * @author Edward P. Legaspi
- */
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 @Named
 @ViewScoped
 public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
@@ -82,6 +85,10 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 	public String deleteAndNavigate() throws BusinessException {
 		repositoryService.remove(entity);
 		return getListViewName();
+	}
+	
+	public List<Repository> listWithSqlConnection() {
+		return repositoryService.listWithSqlConnection();
 	}
 	
 }

@@ -41,6 +41,8 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -49,6 +51,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.DataImportExportStatistics;
 import org.meveo.util.view.NativeTableBasedDataModel;
+import org.omnifaces.cdi.Cookie;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.FileUploadEvent;
@@ -59,8 +62,8 @@ import org.primefaces.model.UploadedFile;
 
 /**
  * @author Clement Bareth
- * @author Edward P. Legaspi
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Named
 @ViewScoped
@@ -82,6 +85,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
+    
+    @Inject
+    private SqlConfigurationService sqlConfigurationService;
 
     /**
      * Custom table name. Determined from customEntityTemplate.code value.
@@ -120,38 +126,38 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     private CustomFieldTemplate selectedRowField;
     
     private int listSize = 0;
+    
+    @Cookie
+    private Repository repository;
 
     public CustomTableBean() {
         super(CustomEntityTemplate.class);
     }
 
-    @Override
-    public CustomEntityTemplate initEntity() {
-    	
-    	if(cet != null) {
-            entity = customEntityTemplateService.findByCode(cet);
-    	}else if(getObjectId() != null) {
-    		entity = customEntityTemplateService.findById(getObjectId());
-    	} else {
-    		return null;
-    	}
+	@Override
+	public CustomEntityTemplate initEntity() {
 
-        customTableName = SQLStorageConfiguration.getDbTablename(entity);
+		if (cet != null) {
+			entity = customEntityTemplateService.findByCode(cet);
+		} else if (getObjectId() != null) {
+			entity = customEntityTemplateService.findById(getObjectId());
+		} else {
+			return null;
+		}
 
-        // Get fields and sort them by GUI order
-        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
-        if (cfts != null) {
-            fields = cfts;
-            summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
-            filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
-            quickAddFields = Stream.concat(
-            		summaryFields.stream(),
-            		fields.values().stream().filter(CustomFieldTemplate::isValueRequired)
-        		).collect(Collectors.toSet());
-        }
+		customTableName = SQLStorageConfiguration.getDbTablename(entity);
+		
+		// Get fields and sort them by GUI order
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
+		if (cfts != null) {
+			fields = cfts;
+			summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
+			filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
+			quickAddFields = Stream.concat(summaryFields.stream(), fields.values().stream().filter(CustomFieldTemplate::isValueRequired)).collect(Collectors.toSet());
+		}
 
-        return entity;
-    }
+		return entity;
+	}
     
     
     public int getSelectedRowIndex() {
@@ -178,11 +184,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		this.selectedRow = selectedRow;
 	}
 
-	public List<Map<String, Object>> list(){
-		List<Map<String, Object>> list = customTableService.list(entity);
+	public List<Map<String, Object>> list() {
+		List<Map<String, Object>> list = customTableService.list(getSqlConnectionCode(), entity);
 		listSize = list.size();
 		return list;
-    }
+	}
 
     /**
      * DataModel for primefaces lazy loading datatable component.
@@ -230,6 +236,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 				@Override
 				protected CustomEntityTemplate getCet() {
 					return entity;
+				}
+				
+				@Override
+				protected String getSqlConnectionCode() {
+					return CustomTableBean.this.getSqlConnectionCode();
 				}
             };
         }
@@ -305,50 +316,50 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      */
     @SuppressWarnings("unchecked")
     @ActionMethod
-    public void onCellEdit(CellEditEvent event) throws BusinessException {
-        DataTable o = (DataTable) event.getSource();
-        Map<String, Object> mapValue = (Map<String, Object>) o.getRowData();
-        
-        CustomEntityInstance cei = new CustomEntityInstance();
-        cei.setCet(entity);
-        cei.setCetCode(entity.getCode());
-        cei.setUuid((String) mapValue.get("uuid"));
-        customFieldInstanceService.setCfValues(cei, entity.getCode(), mapValue);
-        
-        customTableService.update(entity, cei);
-        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
-    }
+	public void onCellEdit(CellEditEvent event) throws BusinessException {
+		DataTable o = (DataTable) event.getSource();
+		Map<String, Object> mapValue = (Map<String, Object>) o.getRowData();
+
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(entity);
+		cei.setCetCode(entity.getCode());
+		cei.setUuid((String) mapValue.get("uuid"));
+		customFieldInstanceService.setCfValues(cei, entity.getCode(), mapValue);
+
+		customTableService.update(getSqlConnectionCode(), entity, cei);
+		messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+	}
     
 	@SuppressWarnings("unchecked")
     @ActionMethod
-    public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
-		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
-    	Object newId = selectedEntityInPopup.get("uuid");
-    	selectedRow.put(selectedRowField.getDbFieldname(), newId);
-    	
-        CustomEntityInstance cei = new CustomEntityInstance();
-        cei.setCet(entity);
-        cei.setCetCode(entity.getCode());
-        cei.setUuid((String) selectedRow.get("uuid"));
-        customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
-        
-        customTableService.update(entity, cei);
-        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
-    }
+	public void onEntityReferenceSelected(SelectEvent event) throws BusinessException {
+		Map<String, Object> selectedEntityInPopup = (Map<String, Object>) event.getObject();
+		Object newId = selectedEntityInPopup.get("uuid");
+		selectedRow.put(selectedRowField.getDbFieldname(), newId);
+
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(entity);
+		cei.setCetCode(entity.getCode());
+		cei.setUuid((String) selectedRow.get("uuid"));
+		customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
+
+		customTableService.update(getSqlConnectionCode(), entity, cei);
+		messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+	}
     
-    public void onChildEntityUpdated(CustomFieldValues cfValues) throws BusinessException {
-    	String serializedValues = JacksonUtil.toString(cfValues.getValues());
-    	selectedRow.put(selectedRowField.getDbFieldname(), serializedValues);
-    	
-        CustomEntityInstance cei = new CustomEntityInstance();
-        cei.setCet(entity);
-        cei.setCetCode(entity.getCode());
-        cei.setUuid((String) selectedRow.get("uuid"));
-        customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
-        
-        customTableService.update(entity, cei);
-        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
-    }
+	public void onChildEntityUpdated(CustomFieldValues cfValues) throws BusinessException {
+		String serializedValues = JacksonUtil.toString(cfValues.getValues());
+		selectedRow.put(selectedRowField.getDbFieldname(), serializedValues);
+
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(entity);
+		cei.setCetCode(entity.getCode());
+		cei.setUuid((String) selectedRow.get("uuid"));
+		customFieldInstanceService.setCfValues(cei, entity.getCode(), selectedRow);
+
+		customTableService.update(getSqlConnectionCode(), entity, cei);
+		messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+	}
 
     public Map<String, Object> getNewValues() {
         return newValues;
@@ -363,21 +374,21 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * 
      * @throws BusinessException General exception
      */
-    @ActionMethod
-    public void addNewValues() throws BusinessException {
+	@ActionMethod
+	public void addNewValues() throws BusinessException {
 
-        Map<String, Object> convertedValues = customTableService.convertValue(newValues, fields, false, null);
-        CustomEntityInstance cei = new CustomEntityInstance();
-        cei.setCet(entity);
-        cei.setCetCode(entity.getCode());
-        cei.setUuid((String) convertedValues.get("uuid"));
-        customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
+		Map<String, Object> convertedValues = customTableService.convertValue(newValues, fields, false, null);
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(entity);
+		cei.setCetCode(entity.getCode());
+		cei.setUuid((String) convertedValues.get("uuid"));
+		customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
 
-        customTableService.create(entity, cei);
-        messages.info(new BundleKey("messages", "customTable.valuesSaved"));
-        newValues = new HashMap<>();
-        customTableBasedDataModel = null;
-    }
+		customTableService.create(getSqlConnectionCode(), entity, cei);
+		messages.info(new BundleKey("messages", "customTable.valuesSaved"));
+		newValues = new HashMap<>();
+		customTableBasedDataModel = null;
+	}
     
     @ActionMethod
     public void update(Map<String, Object> values) throws BusinessException {
@@ -388,7 +399,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         cei.setUuid((String) convertedValues.get("uuid"));
         customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
         
-    	customTableService.update(entity, cei);
+    	customTableService.update(getSqlConnectionCode(), entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));
     }
     
@@ -397,30 +408,29 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      * 
      * @param event File upload event
      */
-    @ActionMethod
-    public void handleFileUpload(FileUploadEvent event) {
-        UploadedFile file = event.getFile();
+	@ActionMethod
+	public void handleFileUpload(FileUploadEvent event) {
+		UploadedFile file = event.getFile();
 
-        if (file == null) {
-            messages.warn(new BundleKey("messages", "customTable.importFile.fileRequired"));
-            return;
-        }
+		if (file == null) {
+			messages.warn(new BundleKey("messages", "customTable.importFile.fileRequired"));
+			return;
+		}
 
-        try {
-        	if(!appendImportedData) {
-                // Delete current data first if in override mode
-    			customTableService.remove(SQLStorageConfiguration.getDbTablename(entity));
-        	}
-        	
-            importFuture = customTableService.importDataAsync(entity, file.getInputstream(), appendImportedData);
-            messages.info(new BundleKey("messages", "customTable.importFile.started"));
+		try {
+			if (!appendImportedData) {
+				// Delete current data first if in override mode
+				customTableService.remove(null, SQLStorageConfiguration.getDbTablename(entity));
+			}
 
-        } catch (Exception e) {
-            log.error("Failed to initialize custom table data import", e);
-            messages.info(new BundleKey("messages", "customTable.importFile.startFailed"), e.getMessage());
-        }
+			importFuture = customTableService.importDataAsync(getSqlConnectionCode(), entity, file.getInputstream(), appendImportedData);
+			messages.info(new BundleKey("messages", "customTable.importFile.started"));
 
-    }
+		} catch (Exception e) {
+			log.error("Failed to initialize custom table data import", e);
+			messages.info(new BundleKey("messages", "customTable.importFile.startFailed"), e.getMessage());
+		}
+	}
 
     public boolean isAppendImportedData() {
         return appendImportedData;
@@ -485,26 +495,26 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
         }
 
-        customTableService.remove(customTableName, ids);
+        customTableService.remove(null, customTableName, ids);
         customTableBasedDataModel = null;
         messages.info(new BundleKey("messages", "delete.entitities.successful"));
     }
 
-    @ActionMethod
-    public void exportData() {
-        exportFuture = null;
+	@ActionMethod
+	public void exportData() {
+		exportFuture = null;
 
-        PaginationConfiguration config = new PaginationConfiguration(filters, "uuid", SortOrder.ASCENDING);
+		PaginationConfiguration config = new PaginationConfiguration(filters, "uuid", SortOrder.ASCENDING);
 
-        try {
-            exportFuture = customTableService.exportData(entity, config);
-            messages.info(new BundleKey("messages", "customTable.exportFile.started"));
+		try {
+			exportFuture = customTableService.exportData(getSqlConnectionCode(), entity, config);
+			messages.info(new BundleKey("messages", "customTable.exportFile.started"));
 
-        } catch (Exception e) {
-            log.error("Failed to initialize custom table data export", e);
-            messages.info(new BundleKey("messages", "customTable.exportFile.startFailed"), e.getMessage());
-        }
-    }
+		} catch (Exception e) {
+			log.error("Failed to initialize custom table data export", e);
+			messages.info(new BundleKey("messages", "customTable.exportFile.startFailed"), e.getMessage());
+		}
+	}
 
     public Future<DataImportExportStatistics> getExportFuture() {
         return exportFuture;
@@ -530,4 +540,15 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		this.cet = cet;
 	}
 
+	public Repository getRepository() {
+		return repository;
+	}
+
+	public void setRepository(Repository repository) {
+		this.repository = repository;
+	}
+
+	public String getSqlConnectionCode() {
+		return repository == null ? null : repository.getSqlConfigurationCode();
+	}
 }

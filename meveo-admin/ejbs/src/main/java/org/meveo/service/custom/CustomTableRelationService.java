@@ -36,6 +36,10 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
+/**
+ * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @version 6.6.0
+ */
 @Stateless
 public class CustomTableRelationService extends NativePersistenceService {
 
@@ -66,7 +70,7 @@ public class CustomTableRelationService extends NativePersistenceService {
     		values.putAll(fieldValues);
     	}
     	
-    	return super.create(SQLStorageConfiguration.getDbTablename(crt), values, false);
+    	return super.create(null, SQLStorageConfiguration.getDbTablename(crt), values, false);
     }
 
 	/**
@@ -102,7 +106,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 			Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
 
 			// Set source and target uuids
-			Query updateQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
+			Query updateQuery = getEntityManager(null).createNativeQuery(queryBuilder.toString())
 					.setParameter("startColumn", startUuid)
 					.setParameter("endColumn", endUuid);
 
@@ -137,7 +141,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 
 		Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
 
-		Query deleteQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
+		Query deleteQuery = getEntityManager(null).createNativeQuery(queryBuilder.toString())
 			.setParameter("startColumn", startUuid)
 			.setParameter("endColumn", endUuid);
 
@@ -172,7 +176,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 
 		queryBuilder.append(");");
 		
-		Query existQuery = getEntityManager().createNativeQuery(queryBuilder.toString())
+		Query existQuery = getEntityManager(null).createNativeQuery(queryBuilder.toString())
 			.setParameter("startColumn", startUuid)
 			.setParameter("endColumn", endUuid);
 
@@ -201,7 +205,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 				.append("SELECT uuid FROM ").append(tableName).append("\n")
 				.append("WHERE ").append(targetField).append(" = :targetUuid ;");
 
-		Query query = getEntityManager().createNativeQuery(queryBuilder.toString())
+		Query query = getEntityManager(null).createNativeQuery(queryBuilder.toString())
 				.setParameter("targetUuid", targetUuid);
 
 		try {
@@ -228,7 +232,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 				.append("SELECT ").append(sourceField).append(" FROM ").append(tableName).append("\n")
 				.append("WHERE uuid = :relationUuid ;");
 
-		Query query = getEntityManager().createNativeQuery(queryBuilder.toString())
+		Query query = getEntityManager(null).createNativeQuery(queryBuilder.toString())
 				.setParameter("relationUuid", relationUuid);
 
 		return (String) query.getSingleResult();
