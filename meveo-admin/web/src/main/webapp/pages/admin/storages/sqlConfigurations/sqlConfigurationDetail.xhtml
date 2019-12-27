@@ -1,7 +1,7 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui"
-	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	template="/layout/template.xhtml">
 
@@ -29,7 +29,7 @@
 		</h:form>
 
 		<hftl:formPanel label="#{messages['repository.sqlConfiguration']}"
-			backingBean="#{sqlConfigurationBean}">
+			backingBean="#{sqlConfigurationBean}" showFormButtons="false">
 			<hftl:formField label="#{messages['businessEntity.code']}"
 				field="code" required="true" validateUnique="true" />
 			<hftl:formField label="#{messages['sqlConfiguration.url']}"
@@ -46,6 +46,16 @@
 				field="initialized" required="false" edit="false" />
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
+				<p:commandButton id="saveButton" value="#{messages['action.save']}" onclick="delayDisable(this);"
+								 oncomplete="this.disabled=false;" action="#{sqlConfigurationBean.saveOrUpdate(true)}"
+								 icon="ui-icon-check" update="@form" rendered="#{!(sqlConfigurationBean.entity.code eq 'default')}">
+					<f:param name="edit" value="true"/>
+				</p:commandButton>
+				<hf:clearButton label="#{messages['action.reset']}" edit="#{sqlConfigurationBean.edit}" rendered="#{sqlConfigurationBean.canUserUpdateEntity()}" resetAction="#{sqlConfigurationBean.resetFormEntity()}"/>
+				<p:button id="backButton" value="#{messages['action.back']}" outcome="#{sqlConfigurationBean.back()}"/>
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" action="#{sqlConfigurationBean.deleteWithBack}" rendered="#{!(sqlConfigurationBean.entity.code eq 'default')}">
+					<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
+				</p:commandButton>
 				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.transient}"
 					value="#{messages['sqlConfiguration.testConnection']}"
 					action="#{sqlConfigurationBean.testConnection()}" update="messages"></p:commandButton>
