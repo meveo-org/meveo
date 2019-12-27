@@ -19,7 +19,16 @@
 package org.meveo.admin.action.catalog;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
@@ -28,6 +37,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
@@ -35,8 +46,16 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.*;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptIO;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptInstanceNode;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -47,6 +66,10 @@ import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
+import org.reflections.Reflections;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
 
 /**
  * Standard backing bean for {@link ScriptInstance} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -87,6 +110,89 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private TreeNode rootNode;
 
     private TreeNode selectedNode;
+    
+    public void organizeImports() {
+    	// Don't need to re-compile if compilation already has errors
+    	if(entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
+    		scriptInstanceService.compileScript(entity, true);
+    	}
+    	
+    	if(entity.getScriptErrors() == null) {
+    		return;
+    	}
+    	
+    	List<Class<?>> classesToImport = new ArrayList<>();
+    	List<ScriptInstanceError> resolvedErrors = new ArrayList<>();
+    	
+        for(ScriptInstanceError error : entity.getScriptErrors()) {
+        	Pattern shouldMatch = Pattern.compile("cannot find symbol.*class.*", Pattern.DOTALL);
+        	Pattern pattern = Pattern.compile("symbol.*class (.*)");
+        	Matcher matcher = pattern.matcher(error.getMessage());
+        	if(shouldMatch.matcher(error.getMessage()).matches() && matcher.find()) {
+        		String className = matcher.group(1);
+        		try {
+					ReflectionUtils.getClasses("")
+						.stream()
+		        		.filter(e -> e.getSimpleName().equals(className)).findFirst()
+	        			.ifPresent(e -> {
+	        	        	resolvedErrors.add(error);
+	        	        	classesToImport.add(e);
+	        			});
+					
+				} catch (ClassNotFoundException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+
+        	}
+        }
+        
+        String sourceCode = entity.getScript();
+        Matcher matcher = Pattern.compile("package.*;").matcher(sourceCode);
+        if(matcher.find() && !classesToImport.isEmpty()) {
+        	String packageLine = matcher.group(0);
+        	String body = sourceCode.replace(packageLine, "");
+        	sourceCode = packageLine + "\n\n";
+        	for(Class<?> classToImport : classesToImport) {
+        		sourceCode = "\n" + sourceCode + "import " + classToImport.getName() + ";";
+        	}
+        	sourceCode = sourceCode + body;
+        }
+        
+        entity.setScript(sourceCode);
+        resolvedErrors.forEach(entity.getScriptErrors()::remove);
+    }
+    
+    public void formatSourceCode() {
+    	String sourceCode = entity.getScript();
+        CompilationUnit compilationUnit;
+        
+        try {
+            compilationUnit = JavaParser.parse(sourceCode);
+            entity.setScript(compilationUnit.toString());
+        } catch (Exception e) {
+            // Skip getter and setters parsing. We don't need to log errors as they will be
+            // logged later in code.
+            return;
+        }
+    }
+    
+    public String getSourceCode() throws IOException {
+    	if(!StringUtils.isBlank(entity.getScript())) {
+    		return entity.getScript();
+    	}
+    	
+    	if(entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+    		return IOUtils.toString(this.getClass().getResourceAsStream("/templates/DefaultScript.java"));
+    	}
+    	
+    	return null;
+    }
+    
+    public void setSourceCode(String sourceCode) {
+    	this.getEntity().setScript(sourceCode);
+    }
 
     public void initCompilationErrors() {
         if (FacesContext.getCurrentInstance().getPartialViewContext().isAjaxRequest()) {
