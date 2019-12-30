@@ -233,8 +233,12 @@ public class MavenConfigurationService implements Serializable {
 
 		Repository ownInstance = new Repository();
 		String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
+		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
 		ownInstance.setId("meveo-repo");
-		ownInstance.setUrl("http://localhost:8080/"+ contextRoot +"/maven");
+		if (!baseUrl.endsWith("/")) {
+			baseUrl = baseUrl + "/";
+		}
+		ownInstance.setUrl(baseUrl + contextRoot + "/maven");
 		model.addRepository(ownInstance);
 
 		Dependency meveoDependency = new Dependency();
