@@ -16,12 +16,7 @@
 
 package org.meveo.admin.action.admin.custom;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,6 +25,8 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import io.reactivex.internal.operators.observable.ObservableJoin;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
@@ -150,6 +147,18 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		// Get fields and sort them by GUI order
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 		if (cfts != null) {
+		    GroupedCustomField groupedCFTAndActions = new GroupedCustomField(cfts.values(), "Custom fields", true);
+            List<GroupedCustomField> groupedCustomFields = groupedCFTAndActions.getChildren();
+            if (groupedCustomFields != null) {
+                int i = 0;
+                for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
+                    if (groupedCustomField != null) {
+                        CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
+                        cfts.put("value", cft);
+                    }
+                    i++;
+                }
+            }
 			fields = cfts;
 			summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
 			filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
