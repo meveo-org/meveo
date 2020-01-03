@@ -96,11 +96,13 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      */
     private Map<String, CustomFieldTemplate> fields;
     
-    private Set<CustomFieldTemplate> quickAddFields;
+    private List<CustomFieldTemplate> quickAddFields;
 
     private List<CustomFieldTemplate> summaryFields;
 
     private List<CustomFieldTemplate> filterFields;
+
+    private List<CustomFieldTemplate> customFieldTemplateList = new ArrayList<>();
 
     private LazyDataModel<Map<String, Object>> customTableBasedDataModel;
 
@@ -152,17 +154,19 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
             if (groupedCustomFields != null) {
                 int i = 0;
                 for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
+                    List<CustomFieldTemplate> list = new ArrayList<>();
                     if (groupedCustomField != null) {
                         CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
-                        cfts.put("value", cft);
+                        list.add(cft);
                     }
                     i++;
+                    customFieldTemplateList.addAll(list);
                 }
             }
 			fields = cfts;
-			summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
-			filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
-			quickAddFields = Stream.concat(summaryFields.stream(), fields.values().stream().filter(CustomFieldTemplate::isValueRequired)).collect(Collectors.toSet());
+			summaryFields = customFieldTemplateList;
+			filterFields = customFieldTemplateList;
+			quickAddFields = customFieldTemplateList;
 		}
 
 		return entity;
@@ -264,7 +268,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         return summaryFields;
     }
     
-    public Set<CustomFieldTemplate> getQuickAddFields() {
+    public List<CustomFieldTemplate> getQuickAddFields() {
         if (entity == null) {
             initEntity();
         }
@@ -311,7 +315,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         if (entity == null) {
             initEntity();
         }
-        return fields.values();
+        return customFieldTemplateList;
     }
 
     @Override
