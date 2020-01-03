@@ -611,8 +611,16 @@
 							<hftl:formField
 								label="#{messages['customFieldTemplate.defaultValue']}"
 								field="defaultValue" componentWidth="60" size="55"
-								rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.DATE and customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.ENTITY and customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY and customFieldTemplateBean.entity.storageType == 'SINGLE'}"
+								rendered="#{customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.DATE and customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.ENTITY and customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.BOOLEAN and customFieldTemplateBean.entity.fieldType != CustomFieldTypeEnum.CHILD_ENTITY and customFieldTemplateBean.entity.storageType == 'SINGLE'}"
 								newLine="true" />
+							<hftl:decorateFormField label="#{messages['customFieldTemplate.defaultValue']}" field="defaultValue" componentWidth="60" size="55"
+													rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BOOLEAN}">
+								<p:selectOneMenu id="defaultValue" value="#{customFieldTemplateBean.entity.defaultValue}">
+									<f:selectItem itemLabel=" " itemValue="#{null}"/>
+									<f:selectItem itemLabel="#{messages['customFieldTemplate.defaultValue.true']}" itemValue="1" />
+									<f:selectItem itemLabel="#{messages['customFieldTemplate.defaultValue.false']}" itemValue="0" />
+								</p:selectOneMenu>
+							</hftl:decorateFormField>
 							<hftl:formField
 								label="#{messages['customFieldTemplate.useInheritedAsDefaultValue']}"
 								field="useInheritedAsDefaultValue" componentWidth="40"
