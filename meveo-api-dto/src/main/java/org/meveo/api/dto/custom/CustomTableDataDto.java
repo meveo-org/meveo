@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.model.sql.SqlConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -19,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Represents data in custom table - custom entity data stored in a separate table
  * 
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @XmlRootElement(name = "CustomTableData")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -26,6 +29,11 @@ public class CustomTableDataDto extends BaseEntityDto {
 
     private static final long serialVersionUID = -1209601309024979414L;
 
+    /**
+     * The {@link SqlConfiguration} code.
+     */
+    private String sqlConnectionCode;
+    
     /**
      * Custom table/custom entity (or relation) template code
      */
@@ -100,4 +108,12 @@ public class CustomTableDataDto extends BaseEntityDto {
             values.add(new CustomTableRecordDto(item));
         }
     }
+
+	public String getSqlConnectionCode() {
+		return sqlConnectionCode;
+	}
+
+	public void setSqlConnectionCode(String sqlConnectionCode) {
+		this.sqlConnectionCode = sqlConnectionCode;
+	}
 }

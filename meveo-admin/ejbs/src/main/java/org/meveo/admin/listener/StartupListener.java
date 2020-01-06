@@ -31,30 +31,30 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @version 6.5.0
  */
 @Startup
 @Singleton
 public class StartupListener {
 
-    @Inject
-    private ApplicationInitializer applicationInitializer;
+	@Inject
+	private ApplicationInitializer applicationInitializer;
 
-    @Inject
-    private Logger log;
+	@Inject
+	private Logger log;
 
-    @Inject
-    @MeveoJpa
-    private EntityManagerWrapper entityManagerWrapper;
+	@Inject
+	@MeveoJpa
+	private EntityManagerWrapper entityManagerWrapper;
 
-    @PostConstruct
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void init() {
-        entityManagerWrapper.getEntityManager().joinTransaction();
-        Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
-        session.doWork(connection -> {
-            applicationInitializer.init();
-            log.info("Thank you for running Meveo Community code.");
-        });
-    }
+	@PostConstruct
+	@Transactional(Transactional.TxType.REQUIRES_NEW)
+	public void init() {
+		entityManagerWrapper.getEntityManager().joinTransaction();
+		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
+		session.doWork(connection -> {
+			applicationInitializer.init();
+			log.info("Thank you for running Meveo Community code.");
+		});
+	}
 }

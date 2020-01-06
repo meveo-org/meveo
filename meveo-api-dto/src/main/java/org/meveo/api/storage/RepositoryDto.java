@@ -7,11 +7,13 @@ import org.meveo.model.storage.Repository;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
  */
 public class RepositoryDto extends BusinessEntityDto {
 
 	private static final long serialVersionUID = 57566827213462626L;
+
+	private String sqlConfigurationCode;
 
 	@ApiModelProperty("Code of the parent")
 	private String parentCode;
@@ -45,6 +47,9 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		if (e.getNeo4jConfiguration() != null) {
 			neo4jConfigurationCode = e.getNeo4jConfiguration().getCode();
+		}
+		if (e.getSqlConfiguration() != null) {
+			sqlConfigurationCode = e.getSqlConfiguration().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
@@ -96,5 +101,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setForceDelete(Boolean forceDelete) {
 		this.forceDelete = forceDelete;
+	}
+
+	public String getSqlConfigurationCode() {
+		return sqlConfigurationCode;
+	}
+
+	public void setSqlConfigurationCode(String sqlConfigurationCode) {
+		this.sqlConfigurationCode = sqlConfigurationCode;
 	}
 }

@@ -626,7 +626,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 						.forEach(getters::add);
 				
 			} catch (ClassNotFoundException e1) {
-				throw new RuntimeException(e1);
+				log.warn("Can't find class {}", className);
 			}
         }
 

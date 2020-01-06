@@ -1,5 +1,7 @@
 package org.meveo.api.custom;
 
+import javax.transaction.NotSupportedException;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.api.dto.custom.CustomTableDataDto;
@@ -9,7 +11,12 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.model.sql.SqlConfiguration;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 public interface ICustomTableApi<T extends CustomTableDataDto> {
 
 	/**
@@ -48,9 +55,25 @@ public interface ICustomTableApi<T extends CustomTableDataDto> {
 	 * @throws MissingParameterException Missing parameters
 	 * @throws EntityDoesNotExistsException Custom table was not matched
 	 * @throws InvalidParameterException Invalid parameters passed
+	 * @throws NotSupportedException 
 	 */
-	CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException;
+	CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException;
 
+	/**
+	 * Retrieve custom table data based on a search criteria
+	 * 
+	 * @param sqlConnectionCode the code of {@link SqlConfiguration}
+	 * @param customTableCode Custom table/custom entity template code
+	 * @param pagingAndFiltering Search and pagination criteria
+	 * @return Values and pagination information
+	 * @throws MissingParameterException Missing parameters
+	 * @throws EntityDoesNotExistsException Custom table was not matched
+	 * @throws InvalidParameterException Invalid parameters passed
+	 * @throws NotSupportedException 
+	 */
+	CustomTableDataResponseDto list(String sqlConnectionCode, String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException;
+
+	
 	/**
 	 * Remove records, identified by 'id' value, from a custom table. If no 'id' values are passed, will delete all the records in a table.
 	 * 

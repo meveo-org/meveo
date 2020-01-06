@@ -15,8 +15,10 @@ import org.meveo.api.utils.DtoUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
@@ -24,7 +26,7 @@ import org.meveo.service.storage.RepositoryService;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.6.0
  */
 @Stateless
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
@@ -42,6 +44,9 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	@Inject
 	private Neo4jConfigurationService neo4jConfigurationService;
 
+	@Inject
+	private SqlConfigurationService sqlConfigurationService;
+
 	@Override
 	public RepositoryDto toDto(Repository entity) {
 		return new RepositoryDto(entity);
@@ -58,6 +63,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	}
 
 	public Repository toRepository(RepositoryDto source, Repository target) throws EntityDoesNotExistsException {
+		
 		if (target == null) {
 			target = new Repository();
 		}
@@ -73,6 +79,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 				} else {
 					throw new EntityDoesNotExistsException(Repository.class, source.getParentCode());
 				}
+				
 			} else {
 				target.setParentRepository(null);
 			}
@@ -87,6 +94,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 				} else {
 					throw new EntityDoesNotExistsException(BinaryStorageConfiguration.class, source.getBinaryStorageConfigurationCode());
 				}
+				
 			} else {
 				target.setBinaryStorageConfiguration(null);
 			}
@@ -101,8 +109,24 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 				} else {
 					throw new EntityDoesNotExistsException(Neo4JConfiguration.class, source.getNeo4jConfigurationCode());
 				}
+				
 			} else {
 				target.setNeo4jConfiguration(null);
+			}
+		}
+
+		if (source.getSqlConfigurationCode() != null) {
+			if (!StringUtils.isBlank(source.getSqlConfigurationCode())) {
+				SqlConfiguration sqlConfiguration = sqlConfigurationService.findByCode(source.getSqlConfigurationCode());
+				if (sqlConfiguration != null) {
+					target.setSqlConfiguration(sqlConfiguration);
+
+				} else {
+					throw new EntityDoesNotExistsException(SqlConfiguration.class, source.getSqlConfigurationCode());
+				}
+				
+			} else {
+				target.setSqlConfiguration(null);
 			}
 		}
 
@@ -122,7 +146,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 		Repository entity = toRepository(postData, null);
 		repositoryService.create(entity);
-		
+
 		return entity;
 	}
 
@@ -167,7 +191,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 	public void remove(String code, Boolean forceDelete) throws BusinessException {
 		Repository entity = repositoryService.findByCode(code);
-		
+
 		if (entity == null) {
 			throw new EntityDoesNotExistsException(Repository.class, code);
 		}

@@ -3,6 +3,7 @@ package org.meveo.api.rest.custom.impl;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.transaction.NotSupportedException;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -18,6 +19,10 @@ import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.ICustomTableRs;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 //@RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
 public abstract class AbstractCustomTableRsImpl <T extends CustomTableDataDto> implements ICustomTableRs<T> {
@@ -37,7 +42,11 @@ public abstract class AbstractCustomTableRsImpl <T extends CustomTableDataDto> i
         customTableApi.remove(dto);
     }
 
-    public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException {
+    public CustomTableDataResponseDto list(String sqlConnectionCode, String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException {
+        return customTableApi.list(sqlConnectionCode, customTableCode, pagingAndFiltering);
+    }
+    
+    public CustomTableDataResponseDto list(String customTableCode, PagingAndFiltering pagingAndFiltering) throws MissingParameterException, EntityDoesNotExistsException, InvalidParameterException, ValidationException, NotSupportedException {
         return customTableApi.list(customTableCode, pagingAndFiltering);
     }
 

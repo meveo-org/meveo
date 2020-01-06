@@ -20,6 +20,7 @@
 				<c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
 					<f:converter binding="#{entityReferenceConverter}" />
 					<f:attribute name="field" value="#{cft}" />
+					<f:attribute name="repository" value="#{repository}" />
 				</c:if>
 				<c:if test="#{cft.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY}">
 					<f:converter converterId="jsonConverter" />

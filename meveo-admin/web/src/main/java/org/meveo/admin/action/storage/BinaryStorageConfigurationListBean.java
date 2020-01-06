@@ -4,7 +4,7 @@ import javax.enterprise.context.ConversationScoped;
 import javax.inject.Named;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  */
 @Named
 @ConversationScoped
