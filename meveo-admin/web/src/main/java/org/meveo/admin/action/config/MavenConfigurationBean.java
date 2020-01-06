@@ -13,18 +13,24 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.inject.Any;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.storage.RemoteRepository;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.storage.RemoteRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
@@ -53,7 +59,13 @@ public class MavenConfigurationBean implements Serializable {
 	@Inject
 	private MavenConfigurationService mavenConfigurationService;
 
+	@Inject
+	private RemoteRepositoryService remoteRepositoryService;
+
 	private MavenConfigurationDto mavenConfiguration;
+
+	private List<RemoteRepository> remoteRepositories;
+	private RemoteRepository remoteRepository;
 
 	private String groupId;
 	private String artifactId;
@@ -112,6 +124,17 @@ public class MavenConfigurationBean implements Serializable {
 			}
 		}
 
+		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
+			List<RemoteRepository> repos = new ArrayList<>();
+			for (RemoteRepository remote : remoteRepositories) {
+				if (remote != null) {
+					repos.add(remote);
+				}
+				getRemoteRepositories().clear();
+				getRemoteRepositories().addAll(repos);
+			}
+		}
+
 		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
 
@@ -152,6 +175,43 @@ public class MavenConfigurationBean implements Serializable {
 		}
 	}
 
+	public List<RemoteRepository> getRemoteRepositories() {
+		if (remoteRepositories == null) {
+			if (remoteRepositoryService.list() != null) {
+				remoteRepositories = new ArrayList<>(remoteRepositoryService.list());
+				return remoteRepositories;
+			} else {
+				return new ArrayList<>();
+			}
+		}
+		return remoteRepositories;
+	}
+
+	public void setRemoteRepositories(List<RemoteRepository> remoteRepositories) {
+		this.remoteRepositories = remoteRepositories;
+	}
+
+	public void saveRemoteRepository() throws BusinessException {
+		if (CollectionUtils.isEmpty(remoteRepositories)) {
+			remoteRepositoryService.create(remoteRepository);
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		} else {
+			remoteRepositoryService.update(remoteRepository);
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		}
+	}
+
+	public void removeMavenRepository(RemoteRepository selectRemoteRepository) throws BusinessException {
+		remoteRepositories.remove(selectRemoteRepository);
+	}
+
+	public void addMavenRepository() {
+		remoteRepository = new RemoteRepository();
+		remoteRepositories.add(remoteRepository);
+	}
+
 	public String getGroupId() {
 		return groupId;
 	}
@@ -184,4 +244,11 @@ public class MavenConfigurationBean implements Serializable {
 		this.classifier = classifier;
 	}
 
+	public RemoteRepository getRemoteRepository() {
+		return remoteRepository;
+	}
+
+	public void setRemoteRepository(RemoteRepository remoteRepository) {
+		this.remoteRepository = remoteRepository;
+	}
 }
