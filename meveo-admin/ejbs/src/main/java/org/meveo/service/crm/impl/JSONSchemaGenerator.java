@@ -272,6 +272,9 @@ public class JSONSchemaGenerator {
 			default:
 				throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
 		}
+		if (field.getIndexType() != null) {
+			result.indexType(field.getIndexType().name());
+		}
 		result
 				.readOnly(!field.isAllowEdit())
 				.nullable(!field.isValueRequired())

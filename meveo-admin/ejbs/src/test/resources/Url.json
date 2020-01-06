@@ -1,0 +1,79 @@
+{
+  "title": "Url",
+  "id": "Url",
+  "storages": [],
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "code": {
+      "title": "Url.code",
+      "description": "code",
+      "id": "CE_Url_code",
+      "storages": [],
+      "nullable": false,
+      "readOnly": false,
+      "versionable": false,
+      "type": "string",
+      "maxLength": 255
+    },
+    "type": {
+      "title": "Url.type",
+      "description": "type",
+      "id": "CE_Url_type",
+      "storages": [],
+      "nullable": false,
+      "readOnly": false,
+      "versionable": false,
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "title": "Url.type Element",
+          "id": "CE_Url_type_$element",
+          "type": "string"
+        }
+      }
+    },
+    "value": {
+      "title": "Url.value",
+      "description": "value",
+      "id": "CE_Url_value",
+      "storages": [],
+      "nullable": true,
+      "readOnly": false,
+      "versionable": false,
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "title": "Url.value Element",
+        "id": "CE_Url_value_$element",
+        "type": "number"
+      }
+    },
+    "description": {
+      "title": "Url.description",
+      "description": "description",
+      "id": "CE_Url_description",
+      "storages": [],
+      "nullable": true,
+      "readOnly": false,
+      "versionable": false,
+      "type": "integer"
+    },
+    "link": {
+      "title": "Url.link",
+      "description": "link",
+      "id": "CE_Url_link",
+      "storages": [],
+      "nullable": true,
+      "readOnly": false,
+      "versionable": false,
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "title": "Url.link Element",
+        "id": "CE_Url_link_$element",
+        "$ref": "./Link"
+      }
+    }
+  }
+}

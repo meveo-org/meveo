@@ -24,6 +24,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
@@ -65,14 +66,14 @@ public class EntityManagerProvider {
     private Cache<String, EntityManagerFactory> entityManagerFactories;
 
     private static boolean isMultiTenancyEnabled = ParamBean.isMultitenancyEnabled();
-
+    
     /**
      * Instantiates an Entity manager for use in GUI exclusively. Will consider a tenant that currently connected user belongs to
      * 
      * @return Entity manager
      */
     @Produces
-    @RequestScoped
+//    @RequestScoped
     @MeveoJpa
     public EntityManagerWrapper getEntityManager() {
         String providerCode = currentUserProvider.getCurrentUserProviderCode();
