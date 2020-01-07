@@ -38,7 +38,8 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.5.0
+ * @author Clément Bareth
+ * @version 6.7.0
  */
 @Startup
 @Singleton
@@ -67,45 +68,48 @@ public class StartupListener {
 		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
 		session.doWork(connection -> {
 			applicationInitializer.init();
+			
+			// A default Repository and SQL Configuration should be genarated/updated at Meveo first initialization
+			try {
+				SqlConfiguration defaultSqlConfiguration;
+				Repository defaultRepository;
+				defaultSqlConfiguration = sqlConfigurationService.findByCode("default");
+				if (defaultSqlConfiguration == null) {
+					defaultSqlConfiguration = new SqlConfiguration();
+					defaultSqlConfiguration.setCode("default");
+					setSqlConfiguration(defaultSqlConfiguration);
+					sqlConfigurationService.create(defaultSqlConfiguration);
+				} else {
+					setSqlConfiguration(defaultSqlConfiguration);
+					sqlConfigurationService.update(defaultSqlConfiguration);
+				}
+				defaultRepository = repositoryService.findByCode("default");
+				if (defaultRepository == null) {
+					defaultRepository = new Repository();
+					defaultRepository.setCode("default");
+					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
+					repositoryService.create(defaultRepository);
+				}
+			} catch (BusinessException e) {
+				log.error("Cannot create default repository", e);
+			}
+			
+			log.info("Created default repository");
+			
 			log.info("Thank you for running Meveo Community code.");
 		});
-
-		// A default Repository and SQL Configuration should be genarated/updated at Meveo first initialization
-		try {
-			SqlConfiguration defaultSqlConfiguration;
-			Repository defaultRepository;
-			defaultSqlConfiguration = sqlConfigurationService.findByCode("default");
-			if (defaultSqlConfiguration == null) {
-				defaultSqlConfiguration = new SqlConfiguration();
-				defaultSqlConfiguration.setCode("default");
-				setSqlConfiguration(defaultSqlConfiguration);
-				sqlConfigurationService.create(defaultSqlConfiguration);
-			} else {
-				setSqlConfiguration(defaultSqlConfiguration);
-				sqlConfigurationService.update(defaultSqlConfiguration);
-			}
-			defaultRepository = repositoryService.findByCode("default");
-			if (defaultRepository == null) {
-				defaultRepository = new Repository();
-				defaultRepository.setCode("default");
-				defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
-				repositoryService.create(defaultRepository);
-			}
-		} catch (BusinessException e) {}
+		
+		session.flush();	
 	}
 
 	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {
-		String driverClass = ParamBean.getInstance().getProperty("sql.driverClass", "org.postgresql.Driver");
-		String url = ParamBean.getInstance().getProperty("sql.url", "jdbc:postgresql://localhost/meveo");
-		String username = ParamBean.getInstance().getProperty("sql.username", "meveo");
-		String password = ParamBean.getInstance().getProperty("sql.password", "meveo");
-		String dialect = ParamBean.getInstance().getProperty("sql.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-
-		sqlConfiguration.setDriverClass(driverClass);
-		sqlConfiguration.setUrl(url);
-		sqlConfiguration.setUsername(username);
-		sqlConfiguration.setPassword(password);
-		sqlConfiguration.setDialect(dialect);
+		sqlConfiguration.setDriverClass("MeveoAdmin driver class");
+		sqlConfiguration.setUrl("MeveoAdmin jdbc url");
+		sqlConfiguration.setUsername("MeveoAdmin username");
+		sqlConfiguration.setPassword("MeveoAdmin password");
+		sqlConfiguration.setDialect("MeveoAdmin dialect");
+		sqlConfiguration.setInitialized(true);
+		
 		return sqlConfiguration;
 	}
 

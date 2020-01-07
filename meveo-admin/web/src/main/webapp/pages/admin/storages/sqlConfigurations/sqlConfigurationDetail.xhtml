@@ -3,11 +3,13 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	template="/layout/template.xhtml">
 
 	<ui:define name="metadata">
 		<f:metadata>
 			<f:viewParam name="objectId" value="#{sqlConfigurationBean.objectId}" />
+			<f:viewParam name="edit" value="#{sqlConfigurationBean.edit}"/>
 		</f:metadata>
 	</ui:define>
 
@@ -31,20 +33,24 @@
 		<hftl:formPanel label="#{messages['repository.sqlConfiguration']}"
 			backingBean="#{sqlConfigurationBean}" showFormButtons="false">
 			<hftl:formField label="#{messages['businessEntity.code']}"
-				field="code" required="true" validateUnique="true" />
-			<hftl:formField label="#{messages['sqlConfiguration.url']}"
-				field="url" required="true" />
-			<hftl:formField label="#{messages['sqlConfiguration.username']}"
-				field="username" required="true" />
-			<hftl:formField label="#{messages['sqlConfiguration.password']}"
-				field="password" required="true" />
-			<hftl:formField label="#{messages['sqlConfiguration.driverClass']}"
-				field="driverClass" required="true" />
-			<hftl:formField label="#{messages['sqlConfiguration.dialect']}"
-				field="dialect" required="false" />
-			<hftl:formField label="#{messages['sqlConfiguration.initialized']}"
-				field="initialized" required="false" edit="false" />
-			<ui:param name="buttons" value="true" />
+				field="code" required="true" validateUnique="true" allowEdit="false" />
+				
+			<c:if test="#{sqlConfigurationBean.entity.code != 'default'}">
+				<hftl:formField label="#{messages['sqlConfiguration.url']}"
+					field="url" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.username']}"
+					field="username" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.password']}"
+					field="password" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.driverClass']}"
+					field="driverClass" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.dialect']}"
+					field="dialect" required="false" />
+				<hftl:formField label="#{messages['sqlConfiguration.initialized']}"
+					field="initialized" required="false" edit="false" />
+				<ui:param name="buttons" value="true" />
+			</c:if>
+			
 			<ui:define name="buttons">
 				<p:commandButton id="saveButton" value="#{messages['action.save']}" onclick="delayDisable(this);"
 								 oncomplete="this.disabled=false;" action="#{sqlConfigurationBean.saveOrUpdate(true)}"
@@ -63,6 +69,7 @@
 					value="#{messages['sqlConfiguration.initializeSchema']}"
 					action="#{sqlConfigurationBean.initializeSchema()}" update="messages"></p:commandButton>
 			</ui:define>
+			
 		</hftl:formPanel>
 	</ui:define>
 </ui:composition>
