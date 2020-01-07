@@ -9,7 +9,7 @@
     <properties>
         <env>dev</env>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.keycloak>4.8.3.Final</version.keycloak>
+        <version.keycloak>8.0.1</version.keycloak>
         <dbtype>generic</dbtype>
         <releaseOption />
         <jackson.version>2.9.5</jackson.version>
