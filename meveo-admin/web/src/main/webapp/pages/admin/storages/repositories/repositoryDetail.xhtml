@@ -1,5 +1,5 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core"
-    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" template="/layout/template.xhtml">
+    xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" template="/layout/template.xhtml">
 
     <ui:define name="metadata">
         <f:metadata>
@@ -43,7 +43,7 @@
             </p:breadCrumb>
         </h:form>
 
-        <hftl:formPanel formId="formRepository" label="#{messages['repository.title']}" backingBean="#{repositoryBean}" showDeleteButton="false">
+        <hftl:formPanel formId="formRepository" label="#{messages['repository.title']}" backingBean="#{repositoryBean}" showFormButtons="false" >
             <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
             <hftl:formField id="parentRepositoryId" label="#{messages['repository.parentRepository']}" field="parentRepository" 
@@ -57,7 +57,14 @@
             
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
-				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" onclick="PF('deleteDialog').show();">
+				<p:commandButton id="saveButton" value="#{messages['action.save']}" onclick="delayDisable(this);"
+								 oncomplete="this.disabled=false;" action="#{repositoryBean.saveOrUpdate}"
+								 icon="ui-icon-check" update="@form" rendered="#{!(repositoryBean.entity.code eq 'default')}">
+					<f:param name="edit" value="true"/>
+				</p:commandButton>
+				<hf:clearButton label="#{messages['action.reset']}" edit="#{repositoryBean.edit}" rendered="#{repositoryBean.canUserUpdateEntity()}" resetAction="#{repositoryBean.resetFormEntity()}"/>
+				<p:button id="backButton" value="#{messages['action.back']}" outcome="#{repositoryBean.back()}"/>
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" onclick="PF('deleteDialog').show();" rendered="#{!(repositoryBean.entity.code eq 'default')}">
 				</p:commandButton>
 			</ui:define>
         </hftl:formPanel>

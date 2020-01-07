@@ -31,7 +31,7 @@
 			<hftl:column label="#{messages['sqlConfiguration.driverClass']}" field="driverClass" />
 			<hftl:column label="#{messages['sqlConfiguration.initialized']}" field="initialized" />
 
-			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
+			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderDeleteLink="#{!(entity.code eq'default')}"/>
 		</hftl:dataList>
 
 	</ui:define>

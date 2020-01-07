@@ -32,7 +32,7 @@
 
 			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" renderDeleteLink="false">
 				<ui:define name="actionButtons">
-					<p:commandButton icon="ui-icon-trash" immediate="true" onclick="PF('deleteDialog').show();">
+					<p:commandButton icon="ui-icon-trash" immediate="true" onclick="PF('deleteDialog').show();" rendered="#{!(entity.code eq'default')}">
 						<f:setPropertyActionListener target="#{repositoryBean.entity}" value="#{entity}" />
 					</p:commandButton>
 				</ui:define>
