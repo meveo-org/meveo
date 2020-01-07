@@ -29,30 +29,21 @@
                         <p:dataTable id="mavenConfigurationPanel" var="remoteRepository"
                                      value="#{mavenConfigurationBean.remoteRepositories}" resizableColumns="true">
                             <p:column headerText="#{messages['maven.configuration.code']}" width="30%">
-                                <h:inputText value="#{remoteRepository.code}" size="50">
-                                    <p:ajax update="mavenConfigurationPanel" event="change"/>
-                                </h:inputText>
+                                <h:outputText value="#{remoteRepository.code}" size="50"/>
                             </p:column>
                             <p:column headerText="#{messages['maven.configuration.url']}" width="90%">
-                                <h:inputText value="#{remoteRepository.url}" size="50">
-                                    <p:ajax update="mavenConfigurationPanel" event="change"/>
-                                </h:inputText>
+                                <h:outputText value="#{remoteRepository.url}" size="50"/>
                             </p:column>
                             <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"
                                       width="40">
                                 <p:commandButton
-                                        action="#{mavenConfigurationBean.removeMavenRepository(remoteRepository)}"
-                                        icon="ui-icon-trash" update="mavenConfigurationPanel" immediate="true"/>
+                                        action="#{mavenConfigurationBean.removeRemoteRepository(remoteRepository)}"
+                                        icon="ui-icon-trash" update=":mavenConfigurationForm:mavenConfigurationPanel" immediate="true">
+                                    <f:ajax render="@all"/>
+                                </p:commandButton>
                             </p:column>
                             <f:facet name="footer">
-                                <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true"
-                                                 process="@this mavenConfigurationPanel"
-                                                 update="mavenConfigurationPanel"
-                                                 actionListener="#{mavenConfigurationBean.addMavenRepository()}"/>
-                                <p:commandButton value="#{messages['action.save']}"
-                                                 process="@this mavenConfigurationPanel"
-                                                 update="mavenConfigurationPanel"
-                                                 actionListener="#{mavenConfigurationBean.saveRemoteRepository()}"/>
+                                <p:commandButton action="#{mavenConfigurationBean.addRemoteRepository}" value="#{messages['commons.addNew']}" oncomplete="PF('remoteDialog').show()" immediate="true"  update=":remoteForm"></p:commandButton>
                             </f:facet>
                         </p:dataTable>
                     </hftl:decorateFormField>
@@ -110,5 +101,30 @@
                 </p:dialog>
             </h:form>
         </p:panel>
+
+        <p:dialog id="remoteDialog" header="#{messages['maven.configuration.remoteRepository']}" widgetVar="remoteDialog" modal="true"
+                  closeOnEscape="true" width="60%" closable="true" appendTo="@(body)">
+            <hftl:decorateFormPanel formId="remoteForm">
+                <ui:define name="fields">
+                    <h:panelGrid columns="2">
+                        <hftl:decorateFormField fieldId="code" label="#{messages['maven.configuration.code']}">
+                            <p:inputText id="code" value="#{mavenConfigurationBean.remoteRepository.code}" size="53" maxlength="100"/>
+                        </hftl:decorateFormField>
+                        <hftl:decorateFormField fieldId="url" label="#{messages['maven.configuration.url']}">
+                            <p:inputText id="url" value="#{mavenConfigurationBean.remoteRepository.url}" size="53" maxlength="100"/>
+                        </hftl:decorateFormField>
+                    </h:panelGrid>
+                </ui:define>
+                <ui:define name="buttons">
+                    <p:commandButton value="#{messages['action.save']}"
+                                     action="#{mavenConfigurationBean.saveRemoteRepository()}"
+                                     update=":mavenConfigurationForm:messages :mavenConfigurationForm:mavenConfigurationPanel"
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed){PF('remoteDialog').hide();}"
+                                     ajax="true"/>
+                    <p:button value="#{messages['action.cancel']}"
+                              onclick="PF('remoteDialog').hide(); return false;"/>
+                </ui:define>
+            </hftl:decorateFormPanel>
+        </p:dialog>
     </ui:define>
 </ui:composition>

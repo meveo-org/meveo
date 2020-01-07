@@ -124,17 +124,6 @@ public class MavenConfigurationBean implements Serializable {
 			}
 		}
 
-		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
-			List<RemoteRepository> repos = new ArrayList<>();
-			for (RemoteRepository remote : remoteRepositories) {
-				if (remote != null) {
-					repos.add(remote);
-				}
-				getRemoteRepositories().clear();
-				getRemoteRepositories().addAll(repos);
-			}
-		}
-
 		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
 
@@ -191,25 +180,34 @@ public class MavenConfigurationBean implements Serializable {
 		this.remoteRepositories = remoteRepositories;
 	}
 
+	@ActionMethod
 	public void saveRemoteRepository() throws BusinessException {
-		if (CollectionUtils.isEmpty(remoteRepositories)) {
-			remoteRepositoryService.create(remoteRepository);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
-			FacesContext.getCurrentInstance().addMessage(null, msg);
-		} else {
-			remoteRepositoryService.update(remoteRepository);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
-			FacesContext.getCurrentInstance().addMessage(null, msg);
+		if (remoteRepositories != null) {
+			if (!remoteRepositoryService.validateUniqueCode(remoteRepository.getCode())) {
+				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, bundle.getString("remoteRepository.uniqueField.code"), bundle.getString("remoteRepository.uniqueField.code"));
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
 		}
-	}
-
-	public void removeMavenRepository(RemoteRepository selectRemoteRepository) throws BusinessException {
-		remoteRepositories.remove(selectRemoteRepository);
-	}
-
-	public void addMavenRepository() {
-		remoteRepository = new RemoteRepository();
+		remoteRepositoryService.create(remoteRepository);
 		remoteRepositories.add(remoteRepository);
+		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void removeRemoteRepository(RemoteRepository selectRemoteRepository) throws BusinessException {
+		for (RemoteRepository remoteRepository : remoteRepositories) {
+			if (remoteRepository != null && remoteRepository.getCode().equals(selectRemoteRepository.getCode())) {
+				remoteRepositoryService.remove(selectRemoteRepository);
+				break;
+			}
+		}
+		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("delete.successful"), bundle.getString("delete.successful"));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void addRemoteRepository() {
+		remoteRepository = new RemoteRepository();
 	}
 
 	public String getGroupId() {
