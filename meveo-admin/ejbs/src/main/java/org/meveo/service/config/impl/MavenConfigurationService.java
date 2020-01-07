@@ -19,6 +19,7 @@ import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.transaction.UserTransaction;
@@ -42,6 +43,7 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -51,6 +53,7 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.storage.RemoteRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
@@ -111,6 +114,20 @@ public class MavenConfigurationService implements Serializable {
 	private TimerService timerService;
 
 	private javax.ejb.Timer ejbTimer;
+
+	public RemoteRepository findByCode(String code) {
+		if (code == null) {
+			return null;
+		}
+		QueryBuilder qb = new QueryBuilder(RemoteRepository.class, "c");
+		qb.addCriterion("code", "=", code, false);
+
+		try {
+			return (RemoteRepository) qb.getQuery(entityManager).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 
     /**
      * @param currentUser Logged user
@@ -233,7 +250,7 @@ public class MavenConfigurationService implements Serializable {
 
 		Repository ownInstance = new Repository();
 		String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
-		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
+		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", findByCode(repository.getCode()).getUrl());
 		ownInstance.setId("meveo-repo");
 		if (!baseUrl.endsWith("/")) {
 			baseUrl = baseUrl + "/";
