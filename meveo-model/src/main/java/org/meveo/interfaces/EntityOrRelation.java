@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -136,7 +137,7 @@ public abstract class EntityOrRelation implements Serializable {
 		});
 		
 		if(multivalued){
-			Set<Object> values = (Set<Object>) propertyInstance.getValue();
+			Set<Object> values = new HashSet<>((Collection<Object>) propertyInstance.getValue());
 			values.addAll((Collection<?>) value);
 		}else{
 			propertyInstance.setValue(value);
