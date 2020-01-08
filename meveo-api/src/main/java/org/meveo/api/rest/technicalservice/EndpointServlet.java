@@ -159,9 +159,7 @@ public class EndpointServlet extends HttpServlet {
             	
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     EndpointResult endpointResult = execResult.get();
-                    endpointExecution.getResp().setStatus(200);
-					endpointExecution.getResp().setContentType(endpointResult.getContentType());
-                    endpointExecution.getResp().getWriter().print(endpointResult.getResult());
+                    setReponse(endpointResult.getResult(), endpointExecution);
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         endpointCacheContainer.remove(endpointExecution.getFirstUriPart());
