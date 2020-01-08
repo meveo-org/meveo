@@ -60,6 +60,7 @@ import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
 
@@ -110,24 +111,13 @@ public class MavenConfigurationService implements Serializable {
 	@Inject
 	private Logger log;
 
+	@Inject
+	private RemoteRepositoryService remoteRepositoryService;
+
 	@Resource
 	private TimerService timerService;
 
 	private javax.ejb.Timer ejbTimer;
-
-	public RemoteRepository findByCode(String code) {
-		if (code == null) {
-			return null;
-		}
-		QueryBuilder qb = new QueryBuilder(RemoteRepository.class, "c");
-		qb.addCriterion("code", "=", code, false);
-
-		try {
-			return (RemoteRepository) qb.getQuery(entityManager).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
 
     /**
      * @param currentUser Logged user
@@ -236,21 +226,19 @@ public class MavenConfigurationService implements Serializable {
 		model.setArtifactId("meveo-application");
 		model.setVersion("1.0.0");
 
-		List<String> repositories = getMavenRepositories();
-		if (CollectionUtils.isNotEmpty(repositories)) {
-			int index = 0;
-			for (String repo : repositories) {
+		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
+		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
+			for (RemoteRepository remoteRepository : remoteRepositories) {
 				Repository repositoryMaven = new Repository();
-				repositoryMaven.setId("jboss-repo" + index);
-				repositoryMaven.setUrl(repo);
+				repositoryMaven.setId(remoteRepository.getCode());
+				repositoryMaven.setUrl(remoteRepository.getUrl());
 				model.addRepository(repositoryMaven);
-				index++;
 			}
 		}
 
 		Repository ownInstance = new Repository();
 		String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
-		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", findByCode(repository.getCode()).getUrl());
+		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
 		ownInstance.setId("meveo-repo");
 		if (!baseUrl.endsWith("/")) {
 			baseUrl = baseUrl + "/";
@@ -308,7 +296,14 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public List<String> getMavenRepositories() {
-		return ParamBean.getInstance().getListProperty("maven.path.repositories", new ArrayList<String>());
+    	List<String> mavenRemoteRepositories = new ArrayList<>();
+    	List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
+    	if (CollectionUtils.isNotEmpty(remoteRepositories)) {
+    		for (RemoteRepository remoteRepository : remoteRepositories) {
+				mavenRemoteRepositories.add(remoteRepository.getUrl());
+			}
+		}
+		return mavenRemoteRepositories;
 	}
 
 	public void setMavenRepositories(List<String> mavenRepositories) {

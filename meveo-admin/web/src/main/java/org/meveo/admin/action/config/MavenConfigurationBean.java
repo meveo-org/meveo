@@ -112,24 +112,6 @@ public class MavenConfigurationBean implements Serializable {
 		}
 	}
 
-	@ActionMethod
-	public void save() throws BusinessApiException {
-
-		UrlValidator urlValidator = new UrlValidator();
-		List<String> urls = new ArrayList<>(mavenConfiguration.getMavenRepositories());
-		urls.removeIf(StringUtils::isBlank);
-		for (String url : urls) {
-			if (!urlValidator.isValid(url)) {
-				throw new BusinessApiException("Invalid URL format : " + url);
-			}
-		}
-
-		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
-		FacesContext.getCurrentInstance().addMessage(null, msg);
-
-		mavenConfigurationService.saveConfiguration(mavenConfiguration);
-	}
-
 	public void uploadAnArtifact(FileUploadEvent event) {
 		UploadedFile file = event.getFile();
 		String fileName = file.getFileName();
@@ -165,13 +147,9 @@ public class MavenConfigurationBean implements Serializable {
 	}
 
 	public List<RemoteRepository> getRemoteRepositories() {
+		remoteRepositories = remoteRepositoryService.list();
 		if (remoteRepositories == null) {
-			if (remoteRepositoryService.list() != null) {
-				remoteRepositories = new ArrayList<>(remoteRepositoryService.list());
-				return remoteRepositories;
-			} else {
-				return new ArrayList<>();
-			}
+			remoteRepositories = new ArrayList<>();
 		}
 		return remoteRepositories;
 	}

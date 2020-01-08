@@ -38,8 +38,7 @@
                                       width="40">
                                 <p:commandButton
                                         action="#{mavenConfigurationBean.removeRemoteRepository(remoteRepository)}"
-                                        icon="ui-icon-trash" update=":mavenConfigurationForm:mavenConfigurationPanel" immediate="true">
-                                    <f:ajax render="@all"/>
+                                        icon="ui-icon-trash" update="@form :mavenConfigurationForm:mavenConfigurationPanel" immediate="true">
                                 </p:commandButton>
                             </p:column>
                             <f:facet name="footer">
@@ -80,11 +79,11 @@
                     </h:panelGrid>
                 </h:panelGrid>
 
-                <h:panelGroup layout="block" styleClass="form-panel-actions">
-                    <p:commandButton action="#{mavenConfigurationBean.save}"
-                                     process="@this messages"
-                                     update="mavenConfigurationForm" value="#{messages['action.save']}"/>
-                </h:panelGroup>
+                <!--<h:panelGroup layout="block" styleClass="form-panel-actions">-->
+                    <!--<p:commandButton action="#{mavenConfigurationBean.save}"-->
+                                     <!--process="@this messages"-->
+                                     <!--update="mavenConfigurationForm" value="#{messages['action.save']}"/>-->
+                <!--</h:panelGroup>-->
             </h:form>
 
             <h:form>
