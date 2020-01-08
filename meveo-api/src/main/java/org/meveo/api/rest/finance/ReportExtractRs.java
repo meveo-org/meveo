@@ -9,6 +9,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.finance.ReportExtractDto;
 import org.meveo.api.dto.response.finance.ReportExtractResponseDto;
@@ -25,34 +28,42 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/finance/reportExtracts")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Report extract")
 public interface ReportExtractRs extends IBaseRs {
 
     @POST
     @Path("/")
-    ActionStatus create(ReportExtractDto postData);
+    @ApiOperation(value = "Create report extract")
+    ActionStatus create(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/")
-    ActionStatus update(ReportExtractDto postData);
+    @ApiOperation(value = "Update report extract")
+    ActionStatus update(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(ReportExtractDto postData);
+    @ApiOperation(value = "Create or update report extract")
+    ActionStatus createOrUpdate(@ApiParam("Report extract information") ReportExtractDto postData);
 
     @DELETE
     @Path("/")
-    ActionStatus remove(String reportExtractCode);
+    @ApiOperation(value = "Remove report extract by code")
+    ActionStatus remove(@ApiParam("Code of the report extract") String reportExtractCode);
 
     @GET
     @Path("/list")
+    @ApiOperation(value = "List of report extracts")
     ReportExtractsResponseDto list();
 
     @GET
     @Path("/")
-    ReportExtractResponseDto find(@QueryParam("reportExtractCode") String reportExtractCode);
+    @ApiOperation(value = "Find report extract by code")
+    ReportExtractResponseDto find(@QueryParam("reportExtractCode") @ApiParam("Code of the report extract") String reportExtractCode);
 
     @POST
     @Path("/run")
-    ActionStatus runReport(RunReportExtractDto postData);
+    @ApiOperation(value = "Run report extract")
+    ActionStatus runReport(@ApiParam("Run report extract information") RunReportExtractDto postData);
 
 }

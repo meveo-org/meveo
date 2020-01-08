@@ -18,13 +18,8 @@
  */
 package org.meveo.admin.action.catalog;
 
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.faces.context.FacesContext;
@@ -41,16 +36,12 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.scripts.Accessor;
-import org.meveo.model.scripts.CustomScript;
-import org.meveo.model.scripts.ScriptIO;
-import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.scripts.ScriptInstanceNode;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.*;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
@@ -77,15 +68,21 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Inject
     private RoleService roleService;
-    
+
     @Inject
     private ScriptInstanceApi scriptInstanceApi;
+
+    @Inject
+    private MavenDependencyService mavenDependencyService;
 
     private DualListModel<Role> execRolesDM;
     private DualListModel<Role> sourcRolesDM;
 
     private List<ScriptIO> inputs = new ArrayList<>();
     private List<ScriptIO> outputs = new ArrayList<>();
+
+    private List<MavenDependency> mavenDependencies;
+    private MavenDependency mavenDependency = new MavenDependency();
 
     private TreeNode rootNode;
 
@@ -233,6 +230,47 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             }
         }
 
+        if (CollectionUtils.isNotEmpty(mavenDependencies)) {
+            Set<MavenDependency> scriptMavens = new HashSet<>();
+            for (MavenDependency mavenDependency : mavenDependencies) {
+                if (mavenDependency != null) {
+                    scriptMavens.add(mavenDependency);
+                }
+            }
+            getEntity().getMavenDependencies().clear();
+            getEntity().getMavenDependencies().addAll(scriptMavens);
+        } else {
+            getEntity().getMavenDependencies().clear();
+        }
+
+        boolean isUnique = false;
+        if (mavenDependencies != null) {
+            Integer line = 1;
+            Map<String, Integer> map = new HashMap<>();
+            for (MavenDependency maven : mavenDependencies) {
+                String key = maven.getGroupId() + maven.getArtifactId();
+                if (map.containsKey(key)) {
+                    Integer position = map.get(key);
+                    messages.error(new BundleKey("messages", "scriptInstance.error.duplicate"), line, position);
+                    isUnique = true;
+                } else {
+                    map.put(key, line);
+                }
+                line++;
+            }
+            line = 1;
+            for (MavenDependency maven : mavenDependencies) {
+                if (!mavenDependencyService.validateUniqueFields(entity.getId(), maven.getGroupId(), maven.getArtifactId())) {
+                    messages.error(new BundleKey("messages", "scriptInstance.error.unique"), line);
+                    isUnique = true;
+                }
+                line++;
+            }
+        }
+
+        if (isUnique) {
+            return null;
+        }
         super.saveOrUpdate(false);
 
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
@@ -479,5 +517,34 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         return foundNode;
     }
-    
+
+    public List<MavenDependency> getMavenDependencies() {
+        if (mavenDependencies == null) {
+            if (entity.getMavenDependencies() != null) {
+                mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
+                return mavenDependencies;
+            } else {
+                return new ArrayList<>();
+            }
+        }
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependency> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
+    }
+
+    public MavenDependency getMavenDependency() {
+        return mavenDependency;
+    }
+
+    public void removeMavenDependency(MavenDependency selectedMavenDependency) {
+       mavenDependencies.remove(selectedMavenDependency);
+    }
+
+    public void addMavenDependency() {
+        mavenDependency = new MavenDependency();
+        mavenDependency.setScript(entity);
+        mavenDependencies.add(mavenDependency);
+    }
 }

@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.Notification;
 
@@ -25,23 +26,29 @@ public class EmailNotificationDto extends NotificationDto {
 
     /** The email from. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The email from")
     private String emailFrom;
     
     /** The email to el. */
+    @ApiModelProperty("The email to el")
     private String emailToEl;
 
     /** The subject. */
     @XmlElement(required = true)
+    @ApiModelProperty(required = true, value = "The subject")
     private String subject;
 
     /** The body. */
+    @ApiModelProperty("The body")
     private String body;
     
     /** The html body. */
+    @ApiModelProperty("The html body")
     private String htmlBody;
 
     /** The send to mail. */
     @XmlElement(name = "sendToMail")
+    @ApiModelProperty("List of the send to mail")
     private List<String> sendToMail = new ArrayList<String>();
 
     /**

@@ -15,6 +15,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
@@ -27,7 +30,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
+import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 
 /**
@@ -35,6 +38,7 @@ import org.meveo.persistence.scheduler.SchedulingService;
  * @lastModifiedVersion 6.4.0
  */
 @Path("/neo4j/persist")
+@Api("Neo4j persistence")
 public class Neo4JPersistenceRs {
 
     protected static final Logger LOGGER = Logger.getLogger(Neo4JPersistenceRs.class);
@@ -43,7 +47,7 @@ public class Neo4JPersistenceRs {
     protected SchedulingService schedulingService;
 
     @Inject
-    protected ScheduledPersistenceService<Neo4jService> scheduledPersistenceService;
+    protected OrderedPersistenceService<Neo4jService> scheduledPersistenceService;
 
     @Inject
     protected Neo4jService neo4jService;
@@ -52,7 +56,8 @@ public class Neo4JPersistenceRs {
     private String neo4jConfiguration;
 
     @DELETE
-    public Response delete(Collection<PersistenceDto> dtos) throws BusinessException {
+    @ApiOperation(value="Delete data to be persisted")
+    public Response delete(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws BusinessException {
 
         for (PersistenceDto persistenceDto : dtos) {
             if (persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY)) {
@@ -65,7 +70,8 @@ public class Neo4JPersistenceRs {
 
     @POST
     @Path("/entities")
-    public Response persistEntities(Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
+    @ApiOperation(value="Persist entity data to be persisted")
+    public Response persistEntities(@ApiParam("Data to be persisted") Collection<PersistenceDto> dtos) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()

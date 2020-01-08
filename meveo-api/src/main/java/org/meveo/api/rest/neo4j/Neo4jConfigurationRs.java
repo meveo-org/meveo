@@ -10,6 +10,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.neo4j.Neo4jConfigurationDto;
 import org.meveo.api.dto.response.neo4j.Neo4jConfigurationResponseDto;
@@ -22,6 +25,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/neo4j/configurations")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Neo4j configuration")
 public interface Neo4jConfigurationRs extends IBaseRs {
 
 	/**
@@ -29,7 +33,8 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/")
-	ActionStatus create(Neo4jConfigurationDto postData);
+	@ApiOperation(value = "Create neo4j configuration")
+	ActionStatus create(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
 	 * Update an existing binary storage
@@ -39,7 +44,8 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@PUT
 	@Path("/")
-	ActionStatus update(Neo4jConfigurationDto postData);
+	@ApiOperation(value = "Update neo4j configuration")
+	ActionStatus update(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
 	 * Create new or update an existing binary storage
@@ -49,14 +55,16 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
-	ActionStatus createOrUpdate(Neo4jConfigurationDto postData);
+	@ApiOperation(value = "Create or update neo4j configuration")
+	ActionStatus createOrUpdate(@ApiParam("Binary storage information") Neo4jConfigurationDto postData);
 
 	/**
 	 * Search for binary storage with a given code
 	 */
 	@GET
 	@Path("/{code}")
-	Neo4jConfigurationResponseDto find(@PathParam("code") String code);
+	@ApiOperation(value = "Find neo4j configuration by code")
+	Neo4jConfigurationResponseDto find(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 
 	/**
 	 * List binary storage
@@ -65,6 +73,7 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@GET
 	@Path("/")
+	@ApiOperation(value = "list of binary storages")
 	Neo4jConfigurationsResponseDto list();
 
 	/**
@@ -75,5 +84,6 @@ public interface Neo4jConfigurationRs extends IBaseRs {
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code);
+	@ApiOperation(value = "Remove neo4j configuration by code")
+	ActionStatus remove(@PathParam("code") @ApiParam("Code of the binary storage") String code);
 }

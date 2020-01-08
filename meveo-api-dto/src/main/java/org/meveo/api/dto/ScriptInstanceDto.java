@@ -7,7 +7,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.script.CustomScriptDto;
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
@@ -26,12 +28,19 @@ public class ScriptInstanceDto extends CustomScriptDto {
     private static final long serialVersionUID = 4555037251902559699L;
 
     /** The execution roles. */
+    @ApiModelProperty("The execution roles.")
     private List<RoleDto> executionRoles = new ArrayList<RoleDto>();
     
     /** The sourcing roles. */
+    @ApiModelProperty("The sourcing roles")
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
-    
+
+    @ApiModelProperty("Whether to error")
     private Boolean error;
+
+    /** The maven dependencies. */
+    @ApiModelProperty("The maven dependencies")
+    private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
 
     /**
      * Instantiates a new script instance dto.
@@ -39,7 +48,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     public ScriptInstanceDto() {
         super();
     }
-    
+
     public ScriptInstanceDto(Long id, String code, ScriptSourceTypeEnum type, Boolean error) {
     	this.id = id;
     	this.code = code;
@@ -63,6 +72,12 @@ public class ScriptInstanceDto extends CustomScriptDto {
         if (scriptInstance.getSourcingRoles() != null) {
             for (Role role : scriptInstance.getSourcingRoles()) {
                 sourcingRoles.add(new RoleDto(role, true, true));
+            }
+        }
+
+        if (scriptInstance.getMavenDependencies() != null) {
+            for (MavenDependency maven : scriptInstance.getMavenDependencies() ) {
+                mavenDependencies.add(new MavenDependencyDto(maven));
             }
         }
     }
@@ -109,7 +124,14 @@ public class ScriptInstanceDto extends CustomScriptDto {
     public void setSourcingRoles(List<RoleDto> sourcingRoles) {
         this.sourcingRoles = sourcingRoles;
     }
-    
+
+    public List<MavenDependencyDto> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(List<MavenDependencyDto> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
+    }
 
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
@@ -145,5 +167,5 @@ public class ScriptInstanceDto extends CustomScriptDto {
 	public void setError(Boolean error) {
 		this.error = error;
 	}
-    
+
 }

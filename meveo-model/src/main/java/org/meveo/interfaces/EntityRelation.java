@@ -90,9 +90,9 @@ public class EntityRelation extends EntityOrRelation {
 		this.type = builder.type;
 		this.index = builder.index;
 		this.name = builder.name;
-		this.properties = builder.properties;
 		this.source = builder.source;
 		this.target = builder.target;
+		setProperties(builder.properties);
 	}
 
 	@Override

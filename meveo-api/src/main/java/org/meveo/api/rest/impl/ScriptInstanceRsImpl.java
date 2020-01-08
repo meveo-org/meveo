@@ -88,4 +88,9 @@ public class ScriptInstanceRsImpl extends BaseRs implements ScriptInstanceRs {
         return result;
     }
 
+	@Override
+	public String getCodes() {
+		return scriptInstanceApi.getScriptCodesAsJSON();
+	}
+
 }

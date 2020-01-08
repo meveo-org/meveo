@@ -32,6 +32,8 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +60,7 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.PersistedItem;
-import org.meveo.persistence.scheduler.ScheduledPersistenceService;
+import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -75,6 +77,7 @@ import io.swagger.annotations.ApiOperation;
  * @lastModifiedVersion 6.5.0
  */
 @Path("/{repository}/persistence")
+@Api("Persistence")
 public class PersistenceRs {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(PersistenceRs.class);
@@ -83,7 +86,7 @@ public class PersistenceRs {
     private SchedulingService schedulingService;
 
     @Inject
-    private ScheduledPersistenceService<CrossStorageService> scheduledPersistenceService;
+    private OrderedPersistenceService<CrossStorageService> scheduledPersistenceService;
 
     @Inject
     private CrossStorageService crossStorageService;
@@ -112,7 +115,7 @@ public class PersistenceRs {
     @Path("/{cetCode}/list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
+    public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
@@ -134,7 +137,8 @@ public class PersistenceRs {
 
     @DELETE
     @Path("/{cetCode}/{uuid}")
-    public Response delete(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws BusinessException {
+    @ApiOperation(value = "Delete persistence by cet code")
+    public Response delete(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws BusinessException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
@@ -153,7 +157,8 @@ public class PersistenceRs {
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> get(@HeaderParam("Base64-Encode") boolean base64Encode, @PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
+    @ApiOperation(value = "Get persistence")
+    public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException();
@@ -169,7 +174,8 @@ public class PersistenceRs {
 
     @PUT
     @Path("/{cetCode}/{uuid}")
-    public void update(@PathParam("cetCode") String cetCode, @PathParam("uuid") String uuid, Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
+    @ApiOperation(value = "Update persistence")
+    public void update(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid, @ApiParam("Map of body") Map<String, Object> body) throws BusinessException, BusinessApiException, IOException, EntityDoesNotExistsException {
         final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
             throw new NotFoundException();
@@ -189,6 +195,7 @@ public class PersistenceRs {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "List persistence")
     public List<PersistedItem> persist(MultipartFormDataInput input) throws IOException, CyclicDependencyException {
 
         Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
@@ -280,6 +287,7 @@ public class PersistenceRs {
     @SuppressWarnings("unchecked")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "List post persistence")
     public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException {
 
         // Deserialize binaries
@@ -477,29 +485,38 @@ public class PersistenceRs {
     @Path("/{cetCode}/examples")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation("List data for a given CET")
-    public List<Map<String, String>> listExamples(@PathParam("cetCode") String cetCode, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+    public List<Map<String, String>> listExamples(@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @ApiParam("Pagination configuration") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
         List<Map<String, String>> listExamples = customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
         Collections.shuffle(listExamples);
         return listExamples;
     }
 
     @PostConstruct
-    private void init() throws IOException {
-        tempDir = Files.createTempDirectory("dataUpload");
+    private void init() {
+    	try {
+    		tempDir = Files.createTempDirectory("dataUpload");
+    	} catch(Exception e) {
+    		throw new RuntimeException(e);
+    	}
     }
 
     @PreDestroy
-    private void onDestroy() throws IOException {
-        Files.list(tempDir).forEach(path -> {
-            try {
-                Files.delete(path);
-            } catch (IOException e) {
-                LOGGER.warn("{} cannot be deleted", path.toString(), e);
-            }
-        });
+    private void onDestroy() {
+        try {
 
-        if (Files.list(tempDir).count() == 0) {
-            Files.delete(tempDir);
+	        Files.list(tempDir).forEach(path -> {
+	            try {
+	                Files.delete(path);
+	            } catch (IOException e) {
+	                LOGGER.warn("{} cannot be deleted", path.toString(), e);
+	            }
+	        });
+
+	        if (Files.list(tempDir).count() == 0) {
+	            Files.delete(tempDir);
+	        }
+        } catch(Exception e) {
+        	LOGGER.error("Error destroying PeristenceRs instance", e);
         }
     }
 

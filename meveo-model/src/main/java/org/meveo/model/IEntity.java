@@ -20,11 +20,11 @@ package org.meveo.model;
 
 import java.io.Serializable;
 
-public interface IEntity {
+public interface IEntity<E extends Serializable> {
 
-    public Serializable getId();
+    public E getId();
 
-    public void setId(Long id);
+    public void setId(E id);
 
     public boolean isTransient();
 

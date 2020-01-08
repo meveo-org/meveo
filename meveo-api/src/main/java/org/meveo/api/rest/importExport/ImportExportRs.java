@@ -8,6 +8,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.api.dto.response.utilities.ImportExportResponseDto;
 import org.meveo.api.rest.IBaseRs;
@@ -20,7 +23,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/importExport")
 @Consumes({ MediaType.MULTIPART_FORM_DATA })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Import export")
 public interface ImportExportRs extends IBaseRs {
 
     /**
@@ -33,7 +36,8 @@ public interface ImportExportRs extends IBaseRs {
     @POST
     @Path("/importData")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public ImportExportResponseDto importData(MultipartFormDataInput input);
+    @ApiOperation(value="Import data")
+    ImportExportResponseDto importData(@ApiParam("File containing a list of object for import") MultipartFormDataInput input);
 
     /**
      * Check for execution results for a given execution identifier
@@ -43,5 +47,6 @@ public interface ImportExportRs extends IBaseRs {
      */
     @GET
     @Path("/checkImportDataResult")
-    public ImportExportResponseDto checkImportDataResult(@QueryParam("executionId") String executionId);
+    @ApiOperation(value = "Check export data result")
+    ImportExportResponseDto checkImportDataResult(@QueryParam("executionId") @ApiParam("The execution id") String executionId);
 }

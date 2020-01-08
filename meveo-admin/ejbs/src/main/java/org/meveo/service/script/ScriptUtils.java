@@ -16,6 +16,7 @@
 
 package org.meveo.service.script;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,43 +31,95 @@ public class ScriptUtils {
         switch (type) {
             case "int":
                 classAndValue.setClass(int.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0);
+                	break;
+                }
             case "Integer":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Integer.parseInt(value));
                 break;
 
             case "double":
                 classAndValue.setClass(double.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0.0);
+                	break;
+                }
             case "Double":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Double.parseDouble(value));
                 break;
 
             case "long":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0L);
+                	break;
+                }
                 classAndValue.setClass(long.class);
             case "Long":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Long.parseLong(value));
                 break;
 
             case "byte":
                 classAndValue.setClass(byte.class);
             case "Byte":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Byte.parseByte(value));
                 break;
 
             case "short":
                 classAndValue.setClass(short.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0);
+                	break;
+                }
             case "Short":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Short.parseShort(value));
                 break;
 
             case "float":
                 classAndValue.setClass(float.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(0.0f);
+                	break;
+                }
             case "Float":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Float.parseFloat(value));
                 break;
 
             case "boolean":
                 classAndValue.setClass(boolean.class);
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(false);
+                	break;
+                }
             case "Boolean":
+                if(StringUtils.isBlank(value)) {
+                	classAndValue.setValue(null);
+                	break;
+                }
                 classAndValue.setValue(Boolean.parseBoolean(value));
                 break;
 

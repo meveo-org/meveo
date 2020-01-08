@@ -2,6 +2,8 @@ package org.meveo.security;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -60,6 +62,10 @@ public abstract class MeveoUser implements Serializable {
     protected String sshPrivateKey;
 
     protected String sshPublicKey;
+    
+    private Map<String, List<String>> whiteList;
+    
+    private Map<String, List<String>> blackList;
 
 
     public MeveoUser() {
@@ -73,14 +79,43 @@ public abstract class MeveoUser implements Serializable {
     public MeveoUser(MeveoUser user) {
         this.userName = user.getUserName();
         this.providerCode = user.getProviderCode();
+        this.roles = user.roles;
+        this.whiteList = user.whiteList;
+        this.blackList = user.blackList;
+        this.mail = user.mail;
     }
 
     public MeveoUser(String userName, String providerCode) {
         this.userName = userName;
         this.providerCode = providerCode;
     }
+    
+    public void loadUser(MeveoUser user) {
+    	this.userName = user.getUserName();
+        this.providerCode = user.getProviderCode();
+        this.roles = user.roles;
+        this.whiteList = user.whiteList;
+        this.blackList = user.blackList;
+        this.mail = user.mail;
+    }
 
-    public String getSshPrivateKey() {
+    public Map<String, List<String>> getWhiteList() {
+		return whiteList;
+	}
+
+	public void setWhiteList(Map<String, List<String>> whiteList) {
+		this.whiteList = whiteList;
+	}
+
+	public Map<String, List<String>> getBlackList() {
+		return blackList;
+	}
+
+	public void setBlackList(Map<String, List<String>> blackList) {
+		this.blackList = blackList;
+	}
+
+	public String getSshPrivateKey() {
         return sshPrivateKey;
     }
 
@@ -101,7 +136,7 @@ public abstract class MeveoUser implements Serializable {
     }
 
     public String getUserName() {
-        return userName;
+        return userName != null ? userName : "Meveo";
     }
 
     public String getProviderCode() {
@@ -159,7 +194,7 @@ public abstract class MeveoUser implements Serializable {
     @Override
     public String toString() {
         return "MeveoUser [" + " auth=" + authenticated + ", forced=" + forcedAuthentication + ", sub=" + subject + ", userName=" + userName + ", fullName=" + fullName
-                + ", provider=" + providerCode + ", roles " + roles + "]";
+                + ", provider=" + providerCode + ", roles= " + roles + ", mail=" + mail + "]";
     }
 
     public Object toStringShort() {
@@ -179,7 +214,7 @@ public abstract class MeveoUser implements Serializable {
     }
 
     public String getMail() {
-        return mail;
+        return mail != null ? mail : "meveo@meveo.org";
     }
 
     public void setMail(String mail) {
@@ -221,4 +256,37 @@ public abstract class MeveoUser implements Serializable {
     public void setToken(String token) {
         this.token = token;
     }
+
+	public boolean isForcedAuthentication() {
+		return forcedAuthentication;
+	}
+
+	public void setForcedAuthentication(boolean forcedAuthentication) {
+		this.forcedAuthentication = forcedAuthentication;
+	}
+
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public void setProviderCode(String providerCode) {
+		this.providerCode = providerCode;
+	}
+
+	public void setAuthenticated(boolean authenticated) {
+		this.authenticated = authenticated;
+	}
+
+	public void setRoles(Set<String> roles) {
+		this.roles = roles;
+	}
+
+	public void setLocale(String locale) {
+		this.locale = locale;
+	}
+    
 }

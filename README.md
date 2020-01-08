@@ -1,10 +1,5 @@
-Meveo
-=====
+# FBO
 
-Meveo is a plateforme that allow to develop and execute enterprise back and front applications
-It is intended to be run by Wildfly 15 with full Jakarta EE stack.  
+FBO Stands for Flexible Back Office.
 
-
-licence : AGPLv3.0
-
-You can find documentation at https://manaty.net/meveo/6.3/user-guide
+It aims to fork the Meveo project and add everything that a enterprise back-office could be susceptible to use.

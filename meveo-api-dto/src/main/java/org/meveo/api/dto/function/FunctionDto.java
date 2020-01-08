@@ -52,10 +52,11 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 	}
 
 	public FunctionDto(Function e) {
-
 		super(e);
 		this.description = e.getDescription();
 		this.generateOutputs = e.getGenerateOutputs();
+		this.inputs = e.getInputs();
+		this.outputs = e.getOutputs();
 	}
 
 	public List<FunctionIO> getInputs() {

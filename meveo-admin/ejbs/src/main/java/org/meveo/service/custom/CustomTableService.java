@@ -408,26 +408,20 @@ public class CustomTableService extends NativePersistenceService {
                     List<Map<String, Object>> values = query.list();
 
                     /* Fetch entity references */
-                    Map<Integer, Object[]> fetchedEntityReferences = new HashMap<>();			// Map used to replace data with as key the index of the value to replace and as value the actual (key, value) pair to replace
                     Map<String, Map<String, String>> entityReferencesCache = new HashMap<>();	// Cache used to avoid fetching multiple time the same data
-                    values.forEach(map -> map.forEach((key, value) -> fields.stream()
-                            .filter(f -> f.getDbFieldname().equals(key)).findFirst()
-                            .ifPresent(customFieldTemplate -> {
-                                if(customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-                                    String referencedEntity = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
-                                        .computeIfAbsent(
-                                            customFieldTemplate.getDbFieldname(),
-                                            k -> {
-                                                log.info("Fetching {} with uuid {}", customFieldTemplate.getCode(), value);
-                                                Map<String, Object> entityRefValues = findById(k, (String) value);
-                                                entityRefValues.remove("uuid");				// We don't want to save the uuid
-                                                return JacksonUtil.toString(entityRefValues);
-                                            }
-                                    );
-                                    fetchedEntityReferences.put(values.indexOf(map), new Object[]{key, referencedEntity});
-                                }
-                            })));
-                    fetchedEntityReferences.forEach((index, array) -> values.get(index).put((String) array[0], array[1])); 
+                    for(Map<String, Object> map : values) {
+                    	for(Entry<String, Object> entry : new HashMap<>(map).entrySet()) {
+                    		for(CustomFieldTemplate field : fields) {
+                    			if(field.getDbFieldname().equals(entry.getKey()) && field.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+                    				String referencedEntity = entityReferencesCache
+                    						.computeIfAbsent((String) entry.getValue(), k -> new HashMap<>())
+                    						.computeIfAbsent(field.getDbFieldname(), fieldName -> fetchField(entry.getValue(), field, fieldName));
+                    				
+                    				map.put(entry.getKey(), referencedEntity);
+                    			}
+                    		}
+                    	}
+                    }
                     
                     nrItemsFound = values.size();
                     firstRow = firstRow + 500;
@@ -447,6 +441,19 @@ public class CustomTableService extends NativePersistenceService {
             return new AsyncResult<>(new DataImportExportStatistics(e));
         }
     }
+
+	/**
+	 * @param id
+	 * @param field
+	 * @param tableName
+	 * @return
+	 */
+	public String fetchField(Object id, CustomFieldTemplate field, String tableName) {
+		log.info("Fetching {} with uuid {}", field.getCode(), id);
+		Map<String, Object> entityRefValues = findById(tableName, (String) id);
+		entityRefValues.remove("uuid");				// We don't want to save the uuid
+		return JacksonUtil.toString(entityRefValues);
+	}
 
     /**
      * Import data into custom table
@@ -594,7 +601,7 @@ public class CustomTableService extends NativePersistenceService {
 			customFieldInstanceService.setCfValues(cei, cei.getCetCode(), value);
 			ceis.add(cei);
 		}
-
+		
 		saveBatch(cfts, fields, ceis, entityReferencesCache);
 	}
 
@@ -757,7 +764,7 @@ public class CustomTableService extends NativePersistenceService {
     private ObjectReader getCSVReader(Collection<CustomFieldTemplate> fields) {
         CsvSchema.Builder builder = CsvSchema.builder();
 
-        builder.addColumn(NativePersistenceService.FIELD_ID, ColumnType.NUMBER);
+        builder.addColumn(NativePersistenceService.FIELD_ID, ColumnType.STRING);
 
         for (CustomFieldTemplate cft : fields) {
             builder.addColumn(cft.getDbFieldname(),
@@ -765,6 +772,7 @@ public class CustomTableService extends NativePersistenceService {
         }
 
         CsvSchema schema = builder.setUseHeader(true).setStrictHeaders(true).setReorderColumns(true).build();
+        
         CsvMapper mapper = new CsvMapper();
         return mapper.readerFor(Map.class).with(schema);
     }
@@ -1016,7 +1024,7 @@ public class CustomTableService extends NativePersistenceService {
 
                     Optional<CustomFieldTemplate> customFieldTemplateOpt = fields.values()
                     		.stream()
-                    		.filter(f -> f.getDbFieldname().equals(fieldName))
+                    		.filter(f -> f.getDbFieldname().equals(fieldName) || f.getCode().equals(fieldName))
                     		.findFirst();
 
                     if(!customFieldTemplateOpt.isPresent()){

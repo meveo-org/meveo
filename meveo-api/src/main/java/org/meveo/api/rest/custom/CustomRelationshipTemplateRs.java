@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.dto.response.CustomRelationshipTemplateResponseDto;
@@ -23,6 +26,7 @@ import org.meveo.api.rest.IBaseRs;
 @Path("/customRelationshipTemplate")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("Custom relationship template")
 public interface CustomRelationshipTemplateRs extends IBaseRs {
 
     /**
@@ -31,7 +35,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/relationship/")
-    ActionStatus createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto);
+    @ApiOperation(value="Create custom relationship template information")
+    ActionStatus createCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto);
 
     /**
      * Update custom relationship template definition
@@ -39,7 +44,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @PUT
     @Path("/relationship/")
-    ActionStatus updateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto);
+    @ApiOperation(value="Update custom relationship template information")
+    ActionStatus updateCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto);
 
     /**
      * Remove custom relationship template definition given its code
@@ -47,7 +53,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @DELETE
     @Path("/relationship/{customCustomRelationshipTemplateCode}/{startCustomEntityTemplateCode}/{endCustomEntityTemplateCode}")
-    ActionStatus removeCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode);
+    @ApiOperation(value="Remove custom relationship template information")
+    ActionStatus removeCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") @ApiParam("Code of the custom relationship template") String customCustomRelationshipTemplateCode);
 
     /**
      * Get custom relationship template definition including its fields 
@@ -55,7 +62,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/relationship/{customCustomRelationshipTemplateCode}/{startCustomEntityTemplateCode}/{endCustomEntityTemplateCode}")
-    CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode);
+    @ApiOperation(value="Find custom relationship template information")
+    CustomRelationshipTemplateResponseDto findCustomRelationshipTemplate(@PathParam("customCustomRelationshipTemplateCode") @ApiParam("Code of the custom relationship template") String customCustomRelationshipTemplateCode);
 
     /**
      * List custom relationship templates.
@@ -64,7 +72,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @GET
     @Path("/relationship/list")
-    CustomRelationshipTemplatesResponseDto listCustomRelationshipTemplates(@QueryParam("customCustomRelationshipTemplateCode") String customCustomRelationshipTemplateCode);
+    @ApiOperation(value="List custom relationship template information")
+    CustomRelationshipTemplatesResponseDto listCustomRelationshipTemplates(@QueryParam("customCustomRelationshipTemplateCode") @ApiParam("Code of the custom relationship template") String customCustomRelationshipTemplateCode);
 
     /**
      * Define new or update existing custom relationship template definition
@@ -72,7 +81,8 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
      */
     @POST
     @Path("/crt/createOrUpdate")
-    ActionStatus createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto);
+    @ApiOperation(value="Create or update custom relationship template information")
+    ActionStatus createOrUpdateCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto);
 
 
 }

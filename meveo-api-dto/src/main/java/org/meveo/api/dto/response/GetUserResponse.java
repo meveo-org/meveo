@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.UserDto;
 
 /**
@@ -19,6 +20,7 @@ public class GetUserResponse extends BaseResponse {
     private static final long serialVersionUID = 6212357569361512794L;
 
     /** The user. */
+    @ApiModelProperty("User information")
     public UserDto user;
 
     /**

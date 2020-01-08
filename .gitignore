@@ -1,13 +1,14 @@
+# Created by .ignore support plugin (hsz.mobi)
 *.iml
-**/.idea
+/.idea/
 /libs/
 /.settings/
-.idea/
+.idea
 /.project
 /.vscode
-**/.settings
+**/.settings/
 **/.factorypath
 **/.project
 **/.classpath
 **/target/
-**.idea/**
+/bin/

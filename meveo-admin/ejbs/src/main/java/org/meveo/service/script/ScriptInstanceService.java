@@ -20,10 +20,7 @@
 package org.meveo.service.script;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -87,10 +84,13 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @throws org.meveo.admin.exception.BusinessException Any execution exception
      */
     @Override
-    public Map<String, Object> execute(String scriptCode, Map<String, Object> context)
-            throws BusinessException {
-
+    public Map<String, Object> execute(String scriptCode, Map<String, Object> context) throws BusinessException {
+    	if(scriptCode == null) {
+    		throw new IllegalArgumentException("Script code should not be null");
+    	}
+    	
         ScriptInstance scriptInstance = findByCode(scriptCode);
+        
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
         
@@ -217,5 +217,4 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
         return scriptInterfaces;
     }
-
 }

@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.LanguageIsoDto;
 import org.meveo.api.dto.response.GetLanguageIsoResponse;
@@ -24,7 +27,7 @@ import org.meveo.api.dto.response.GetLanguagesIsoResponse;
 @Path("/languageIso")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Language iso")
 public interface LanguageIsoRs extends IBaseRs {
 
     /**
@@ -35,7 +38,8 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(LanguageIsoDto languageIsoDto);
+    @ApiOperation(value = "Create language iso")
+    ActionStatus create(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**
      * Search language given a code.
@@ -45,7 +49,8 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetLanguageIsoResponse find(@QueryParam("languageCode") String languageCode);
+    @ApiOperation(value = "Find language iso by code")
+    GetLanguageIsoResponse find(@QueryParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
      * Does not delete a language but the tradingLanguage associated to it.
@@ -55,7 +60,8 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @DELETE
     @Path("/{languageCode}")
-    ActionStatus remove(@PathParam("languageCode") String languageCode);
+    @ApiOperation(value ="Remove language iso by code")
+    ActionStatus remove(@PathParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
      * modify a language. Same input parameter as create. The language and trading Language are created if they don't exists. The operation fails if the tradingLanguage is null.
@@ -65,7 +71,8 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(LanguageIsoDto languageIsoDto);
+    @ApiOperation(value = "Update language iso")
+    ActionStatus update(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**
      * Create or update a language if it doesn't exists.
@@ -75,7 +82,8 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(LanguageIsoDto languageIsoDto);
+    @ApiOperation(value = "Create or update language iso")
+    ActionStatus createOrUpdate(@ApiParam("Language iso information") LanguageIsoDto languageIsoDto);
 
     /**
      * List all languages.
@@ -84,5 +92,6 @@ public interface LanguageIsoRs extends IBaseRs {
      */
     @GET
     @Path("/")
+    @ApiOperation(value = "List all languages")
     GetLanguagesIsoResponse list();
 }

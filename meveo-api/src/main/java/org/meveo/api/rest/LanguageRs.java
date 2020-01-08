@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.LanguageDto;
 import org.meveo.api.dto.response.GetLanguageResponse;
@@ -25,7 +28,7 @@ import org.meveo.api.dto.response.GetLanguageResponse;
 @Path("/language")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Language")
 public interface LanguageRs extends IBaseRs {
 
     /**
@@ -36,7 +39,8 @@ public interface LanguageRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ActionStatus create(LanguageDto postData);
+    @ApiOperation(value = "Create language")
+    ActionStatus create(@ApiParam("Language information") LanguageDto postData);
 
     /**
      * Search language given a code.
@@ -46,7 +50,8 @@ public interface LanguageRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetLanguageResponse find(@QueryParam("languageCode") String languageCode);
+    @ApiOperation(value="Find language by code")
+    GetLanguageResponse find(@QueryParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
      * Does not delete a language but the tradingLanguage associated to it.
@@ -56,7 +61,8 @@ public interface LanguageRs extends IBaseRs {
      */
     @DELETE
     @Path("/{languageCode}")
-    ActionStatus remove(@PathParam("languageCode") String languageCode);
+    @ApiOperation(value="Remove language by code")
+    ActionStatus remove(@PathParam("languageCode") @ApiParam("Code of the language") String languageCode);
 
     /**
      * modify a language. Same input parameter as create. The language and trading Language are created if they don't exists. The operation fails if the tradingLanguage is null.
@@ -66,7 +72,8 @@ public interface LanguageRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ActionStatus update(LanguageDto postData);
+    @ApiOperation(value = "Update language")
+    ActionStatus update(@ApiParam("Language information") LanguageDto postData);
 
     /**
      * Create or update a language if it doesn't exists.
@@ -76,5 +83,6 @@ public interface LanguageRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ActionStatus createOrUpdate(LanguageDto postData);
+    @ApiOperation(value = "Create or update language")
+    ActionStatus createOrUpdate(@ApiParam("Language information") LanguageDto postData);
 }

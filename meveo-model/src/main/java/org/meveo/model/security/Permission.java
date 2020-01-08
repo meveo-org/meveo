@@ -1,17 +1,23 @@
 package org.meveo.model.security;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.QueryHint;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -49,7 +55,7 @@ import org.meveo.model.IEntity;
         @Parameter(name = "sequence_name", value = "adm_permission_seq"), })
 @NamedQueries({ @NamedQuery(name = "Permission.getPermission", query = "select p from Permission p where p.permission=:permission", hints = {
         @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
-public class Permission implements IEntity, Serializable {
+public class Permission implements IEntity<Long>, Serializable {
     private static final long serialVersionUID = 2884657784984355718L;
 
     @Id
@@ -58,15 +64,37 @@ public class Permission implements IEntity, Serializable {
     @Access(AccessType.PROPERTY)
     private Long id;
 
+    /**
+     * Permission code
+     */
     @Column(name = "permission", nullable = false, length = 255)
     @Size(max = 255)
     @NotNull
     private String permission;
-
+    
+    /**
+     * Permission label
+     */
     @Column(name = "name", nullable = false, length = 255)
     @Size(max = 255)
     @NotNull
     private String name;
+    
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name = "category")
+    private PermissionCategory category;
+    
+    public PermissionCategory getCategory() {
+    	return category;
+    }
+    
+    public void setCategory(PermissionCategory category) {
+    	this.category = category;
+    }
+    
+    public void setCategory(String category) {
+    	this.category = new PermissionCategory(category);
+    }
 
     public Long getId() {
         return id;

@@ -3,6 +3,7 @@ package org.meveo.api.storage;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 
@@ -15,10 +16,12 @@ public class BinaryStorageConfigurationDto extends BaseEntityDto {
 
 	@NotNull
 	@Size(max = 255)
+	@ApiModelProperty("Code of the binary storage")
 	private String code;
 	
 	@NotNull
 	@Size(max = 255)
+	@ApiModelProperty("Root path")
 	private String rootPath;
 	
 	public BinaryStorageConfigurationDto() {

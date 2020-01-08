@@ -18,6 +18,7 @@ package org.meveo.api.dto.git;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.BusinessEntityDto;
 
@@ -34,39 +35,47 @@ public class GitRepositoryDto extends BusinessEntityDto {
     /**
      * Roles that allows a user to make pull, fetch and clone actions
      */
+    @ApiModelProperty("List of reading roles that allows a user to make pull, fetch and clone actions")
     private List<String> readingRoles = new ArrayList<>();
 
     /**
      * Roles that allows a user to make commit, merge and push actions
      */
+    @ApiModelProperty("List of writing roles that allows a user to make commit, merge and push actions")
     private List<String> writingRoles = new ArrayList<>();
 
     /**
      * (Optional) Remote origin url if the repository is hosted somewhere else than locally
      */
+    @ApiModelProperty("Remote origin url if the repository is hosted somewhere else than locally")
     private String remoteOrigin;
 
     /**
      * (Optional) Remote username to use when making action with distant repository. <br>
      * If not provided, will use current user credentials.
      */
+    @ApiModelProperty("Remote username to use when making action with distant repository")
     private String remoteUsername;
 
     /**
      * (Optional) Remote password to use when making action with distant repository. <br>
      *  If not provided, will use current user credentials.
      */
+    @ApiModelProperty("Remote password to use when making action with distant repository")
     private String remotePassword;
 
     /**
      * Whether the remote repository is hosted in a meveo instance
      */
+    @ApiModelProperty("Whether the remote repository is hosted in a meveo instance")
     private boolean meveoRepository;
 
     @JsonIgnore
+    @ApiModelProperty("Current branch")
     private String currentBranch;
 
     @JsonIgnore
+    @ApiModelProperty("List of branches")
     private List<String> branches;
 
     @JsonProperty

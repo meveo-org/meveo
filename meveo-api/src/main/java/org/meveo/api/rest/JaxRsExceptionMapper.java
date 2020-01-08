@@ -35,14 +35,14 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception e) {
         try {
-            if (!(e instanceof EJBException)) {
-                log.error("REST request failed", e);
-            }
+//            if (!(e instanceof EJBException)) {
+//                log.error("REST request failed", e);
+//            }
 
             if (e instanceof UnrecognizedPropertyException) {
                 return Response.status(Response.Status.BAD_REQUEST).entity(new ActionStatus(ActionStatusEnum.FAIL, MeveoApiErrorCodeEnum.INVALID_PARAMETER, e.getMessage())).build();
 
-            } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException) {
+            } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException || e instanceof org.meveo.exceptions.EntityDoesNotExistsException) {
                 return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
             } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {

@@ -17,17 +17,21 @@
  */
 package org.meveo.api.dto.technicalservice;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.meveo.api.dto.BusinessEntityDto;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.meveo.api.dto.BusinessEntityDto;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 
 /**
@@ -45,7 +49,7 @@ public class TechnicalServiceDto extends BusinessEntityDto {
     /**
      * Description of the inputs and outputs of the technical service
      */
-    private List<InputOutputDescription> descriptions = new ArrayList<>();
+    private Map<String, InputOutputDescription> descriptions = new HashMap<>();
 
     /**
      * Name of the technical service
@@ -78,12 +82,17 @@ public class TechnicalServiceDto extends BusinessEntityDto {
         return name + "." + version;
     }
 
-    public List<InputOutputDescription> getDescriptions() {
+    public Map<String, InputOutputDescription> getDescriptions() {
         return descriptions;
     }
 
-    public void setDescriptions(List<InputOutputDescription> dto) {
+    public void setDescriptions(Map<String, InputOutputDescription> dto) {
         this.descriptions = dto;
+    }
+    
+    @JsonSetter("descriptions")
+    public void setDescriptions(List<InputOutputDescription> dto) {
+        dto.forEach(d -> this.descriptions.put(d.getName(), d));
     }
 
     public String getName() {

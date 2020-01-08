@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.response.GetScriptInstanceResponseDto;
@@ -18,12 +21,24 @@ import org.meveo.api.dto.response.ScriptInstanceReponseDto;
 
 /**
  * @author Edward P. Legaspi
- **/
+ * @author clement.bareth
+ * @version 6.6.0
+ */
 @Path("/scriptInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Script instance")
 public interface ScriptInstanceRs extends IBaseRs {
+	
+	/**
+	 * @author clement.bareth
+	 * @since 6.6.0
+	 * @return the serialized codes of all existing scripts in database
+	 */
+	@GET
+	@Path("/codes")
+	@Produces(MediaType.APPLICATION_JSON)
+	String getCodes();
 
     /**
      * Create a new script instance.
@@ -33,7 +48,8 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/")
-    ScriptInstanceReponseDto create(ScriptInstanceDto postData);
+    @ApiOperation(value = "Create script instance")
+    ScriptInstanceReponseDto create(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 
     /**
      * Update an existing script instance.
@@ -43,7 +59,8 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @PUT
     @Path("/")
-    ScriptInstanceReponseDto update(ScriptInstanceDto postData);
+    @ApiOperation(value = "Update script instance")
+    ScriptInstanceReponseDto update(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 
     /**
      * Remove an existing script instance with a given code .
@@ -53,7 +70,8 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @DELETE
     @Path("/{scriptInstanceCode}")
-    ActionStatus remove(@PathParam("scriptInstanceCode") String scriptInstanceCode);
+    @ApiOperation(value = "Remove script instance by code")
+    ActionStatus remove(@PathParam("scriptInstanceCode") @ApiParam("Code of the script instance") String scriptInstanceCode);
 
     /**
      * Find a script instance with a given code.
@@ -63,7 +81,8 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @GET
     @Path("/")
-    GetScriptInstanceResponseDto find(@QueryParam("scriptInstanceCode") String scriptInstanceCode);
+    @ApiOperation(value = "Find script instance by code")
+    GetScriptInstanceResponseDto find(@QueryParam("scriptInstanceCode") @ApiParam("Code of the script instance") String scriptInstanceCode);
 
     /**
      * Create new or update an existing script instance with a given code.
@@ -73,5 +92,6 @@ public interface ScriptInstanceRs extends IBaseRs {
      */
     @POST
     @Path("/createOrUpdate")
-    ScriptInstanceReponseDto createOrUpdate(ScriptInstanceDto postData);
+    @ApiOperation(value = "Create or update script instance")
+    ScriptInstanceReponseDto createOrUpdate(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
 }

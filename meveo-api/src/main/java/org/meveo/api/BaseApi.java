@@ -721,7 +721,7 @@ public abstract class BaseApi {
                                 // Create or update a full entity DTO passed
                             } else {
 
-                                ApiService apiService = getApiService((BaseEntityDto) dtoValue, true);
+                                ApiService apiService = ApiUtils.getApiService((BaseEntityDto) dtoValue, true);
                                 valueAsEntity = (BusinessEntity) apiService.createOrUpdate((BaseEntityDto) dtoValue);
                             }
 
@@ -732,7 +732,7 @@ public abstract class BaseApi {
                             // full entity DTO passed
                         } else {
 
-                            ApiService apiService = getApiService((BaseEntityDto) dtoValue, true);
+                            ApiService apiService = ApiUtils.getApiService((BaseEntityDto) dtoValue, true);
                             IEntity valueAsEntity = (BusinessEntity) apiService.createOrUpdate((BaseEntityDto) dtoValue);
 
                             // Update field with a new entity
@@ -818,101 +818,7 @@ public abstract class BaseApi {
         return true;
     }
 
-    /**
-     * Get a corresponding API service for a given DTO object. Find API service class first trying with item's classname and then with its super class (a simplified version instead
-     * of trying various classsuper classes)
-     * 
-     * @param dto DTO object
-     * @param throwException Should exception be thrown if API service is not found
-     * @return Api service
-     * @throws MeveoApiException meveo api exception
-     * @throws ClassNotFoundException class not found exception.
-     */
-    @SuppressWarnings("rawtypes")
-    protected ApiService getApiService(BaseEntityDto dto, boolean throwException) throws MeveoApiException, ClassNotFoundException {
-        String entityClassName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
-
-        return getApiService(entityClassName, throwException);
-    }
-
-    /**
-     * Find API service class first trying with JPA entity's classname and then with its super class (a simplified version instead of trying various class superclasses).
-     * 
-     * @param classname JPA entity classname
-     * @param throwException Should exception be thrown if API service is not found
-     * @return Api service
-     * @throws ClassNotFoundException class not found exception.
-     */
-    @SuppressWarnings("rawtypes")
-    protected ApiService getApiService(String classname, boolean throwException) throws ClassNotFoundException {
-
-        Class clazz = Class.forName(classname);
-        return getApiService(clazz, throwException);
-    }
-
-    /**
-     * Find API service class first trying with JPA entity's classname and then with its super class (a simplified version instead of trying various class superclasses).
-     * 
-     * @param entityClass JPA entity class
-     * @param throwException Should exception be thrown if API service is not found
-     * @return Api service
-     * 
-     */
-    @SuppressWarnings("rawtypes")
-    protected ApiService getApiService(Class<?> entityClass, boolean throwException) {
-
-        ApiService apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api");
-        if(apiService == null){
-        	Entity entityAnnot = entityClass.getAnnotation(Entity.class);
-            apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api");
-        }
-
-        if (apiService == null) {
-            apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api");
-        }
-        if (apiService == null && throwException) {
-            throw new RuntimeException("Failed to find implementation of API service for class " + entityClass.getName());
-        }
-
-        return apiService;
-    }
-
-    /**
-     * Find API versioned service class first trying with JPA entity's classname and then with its super class (a simplified version instead of trying various class superclasses).
-     * 
-     * @param classname JPA entity classname
-     * @param throwException Should exception be thrown if API service is not found
-     * @return Api service
-     * @throws ClassNotFoundException class not found exception.
-     */
-    @SuppressWarnings("rawtypes")
-    protected ApiVersionedService getApiVersionedService(String classname, boolean throwException) throws ClassNotFoundException {
-
-        Class clazz = Class.forName(classname);
-        return getApiVersionedService(clazz, throwException);
-    }
-
-    /**
-     * Find API versioned service class first trying with JPA entity's classname and then with its super class (a simplified version instead of trying various class superclasses).
-     * 
-     * @param entityClass JPA entity class
-     * @param throwException Should exception be thrown if API service is not found
-     * @return Api service
-     *
-     */
-    @SuppressWarnings("rawtypes")
-    protected ApiVersionedService getApiVersionedService(Class entityClass, boolean throwException) {
-
-        ApiVersionedService apiService = (ApiVersionedService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api");
-        if (apiService == null) {
-            apiService = (ApiVersionedService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api");
-        }
-        if (apiService == null && throwException) {
-            throw new RuntimeException("Failed to find implementation of API service for class " + entityClass.getName());
-        }
-
-        return apiService;
-    }
+    
 
     /**
      * Find Persistence service class a given DTO object. Find API service class first trying with item's classname and then with its super class (a simplified version instead of

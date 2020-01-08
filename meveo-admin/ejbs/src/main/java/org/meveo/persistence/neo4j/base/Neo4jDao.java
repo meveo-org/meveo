@@ -489,9 +489,13 @@ public class Neo4jDao {
         Set<String> fieldsKeys = new HashSet<>(uniqueFields.keySet());
         Map<String, Object> fieldValues = new HashMap<>();
 
-        if(uuid != null) {
-            fieldsKeys.add("meveo_uuid");
-            fieldValues.put("meveo_uuid", uuid);
+        if (uniqueFields.isEmpty()) {
+            if (uuid != null) {
+                fieldsKeys.add("meveo_uuid");
+                fieldValues.put("meveo_uuid", uuid);
+            } else {
+                throw new IllegalArgumentException("Can't merge nodes without unique fields");
+            }
         }
 
         valuesMap.put(FIELD_KEYS, getFieldsString(fieldsKeys));

@@ -40,6 +40,7 @@ public class MeveoSampler extends AbstractSampler {
     public void setFunction(String code){
         setProperty(new StringProperty(CODE, code));
     }
+    
     public void setArguments(Arguments args) {
         setProperty(new TestElementProperty(ARGUMENTS, args));
     }

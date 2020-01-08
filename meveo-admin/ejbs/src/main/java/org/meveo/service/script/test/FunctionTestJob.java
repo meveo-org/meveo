@@ -17,16 +17,16 @@
 package org.meveo.service.script.test;
 
 
+import java.io.IOException;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.List;
 
 @Stateless
 public class FunctionTestJob extends Job {
@@ -39,11 +39,15 @@ public class FunctionTestJob extends Job {
         final String code = jobInstance.getParametres();
 
         try {
-            final List<SampleResult> sampleResults = jMeterService.executeTest(code);
-            sampleResults.forEach(sampleResult -> registerResult(result, sampleResult));
+            final TestResult sampleResults = jMeterService.executeTest(code);
+            sampleResults.getSampleResults().forEach(sampleResult -> registerResult(result, sampleResult));
+            
+            result.addReport("Response data : \n" + sampleResults.getResponsData());
+
         } catch (IOException e) {
             result.registerError(e.toString());
         }
+        
     }
 
     private void registerResult(JobExecutionResultImpl result, SampleResult sampleResult) {

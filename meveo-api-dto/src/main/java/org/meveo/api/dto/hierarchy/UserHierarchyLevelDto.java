@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.hierarchy.HierarchyLevel;
 
 /**
@@ -26,21 +27,26 @@ public class UserHierarchyLevelDto implements Serializable {
 
     /** The code. */
     @XmlAttribute(required = true)
+    @ApiModelProperty(required = true, value = "The code")
     private String code;
 
     /** The description. */
     @XmlAttribute(required = false)
+    @ApiModelProperty(required = false, value = "The description")
     private String description;
 
     /** The parent level. */
+    @ApiModelProperty("The parent level")
     private String parentLevel;
 
     /** The child levels. */
     @XmlElementWrapper(name = "childLevels")
     @XmlElement(name = "userHierarchyLevel")
+    @ApiModelProperty("List of user hierarchy levels information")
     private List<UserHierarchyLevelDto> childLevels;
 
     /** The order level. */
+    @ApiModelProperty("The order level")
     protected Long orderLevel = 0L;
 
     /**

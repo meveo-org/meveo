@@ -17,13 +17,35 @@
  */
 package org.meveo.cache;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commons.util.CloseableIterator;
-import org.infinispan.configuration.cache.*;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.commons.utils.ParamBean;
@@ -34,7 +56,6 @@ import org.meveo.model.catalog.CalendarYearly;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.persistence.DBStorageType;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.CustomFieldException;
@@ -44,18 +65,6 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.*;
-import javax.inject.Inject;
-import java.io.Serializable;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 /**
  * Provides cache related services (loading, update) for custom field value related operations
@@ -107,7 +116,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     private Cache<CacheKeyStr, CustomRelationshipTemplate> crtsByCode;
 
-    @Resource(lookup = "java:jboss/infinispan/container/meveo")
     private EmbeddedCacheManager cacheContainer;
 
     @Inject
@@ -118,6 +126,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     @PostConstruct
     protected void initCaches() {
+    	try {
+			InitialContext initialContext = new InitialContext();
+			cacheContainer = (EmbeddedCacheManager) initialContext.lookup("java:jboss/infinispan/container/meveo");
+		} catch (Exception e) {
+			log.error("Cannot instantiate cache container", e);
+		}
+    	
         Lock lock = cacheLock.writeLock();
         lock.lock();
 

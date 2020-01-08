@@ -11,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CalendarDto;
 import org.meveo.api.dto.response.GetCalendarResponse;
@@ -22,7 +25,7 @@ import org.meveo.api.dto.response.ListCalendarResponse;
 @Path("/calendar")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-
+@Api("Calendar")
 public interface CalendarRs extends IBaseRs {
 
     /**
@@ -33,7 +36,8 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @POST
-    ActionStatus create(CalendarDto postData);
+    @ApiOperation(value = "Create calendar information")
+    ActionStatus create(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
      * Update calendar.
@@ -43,7 +47,8 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @PUT
-    ActionStatus update(CalendarDto postData);
+    @ApiOperation(value = "Update calendar information")
+    ActionStatus update(@ApiParam("Calendar information") CalendarDto postData);
 
     /**
      * Search for calendar with a given code.
@@ -53,7 +58,8 @@ public interface CalendarRs extends IBaseRs {
      */
     @Path("/")
     @GET
-    GetCalendarResponse find(@QueryParam("calendarCode") String calendarCode);
+    @ApiOperation(value = "Find calendar information")
+    GetCalendarResponse find(@QueryParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
      * Retrieve a list of all calendars.
@@ -61,6 +67,7 @@ public interface CalendarRs extends IBaseRs {
      * @return list of all calendars
      */
     @Path("/list")
+    @ApiOperation(value = "Retrieve a list of all calendars")
     @GET ListCalendarResponse list();
 
     /**
@@ -70,7 +77,9 @@ public interface CalendarRs extends IBaseRs {
      * @return action result
      */
     @Path("/{calendarCode}")
-    @DELETE ActionStatus remove(@PathParam("calendarCode") String calendarCode);
+    @DELETE
+    @ApiOperation(value = "Remove calendar information")
+    ActionStatus remove(@PathParam("calendarCode") @ApiParam("Code of the calendar") String calendarCode);
 
     /**
      * Create new or update an existing calendar with a given code.
@@ -79,6 +88,8 @@ public interface CalendarRs extends IBaseRs {
      * @return Request processing status
      */
     @Path("/createOrUpdate")
-    @POST ActionStatus createOrUpdate(CalendarDto postData);
+    @POST
+    @ApiOperation(value = "Create or update calendar information")
+    ActionStatus createOrUpdate(@ApiParam("Calendar information") CalendarDto postData);
 
 }

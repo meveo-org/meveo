@@ -127,9 +127,8 @@ public class EndpointServlet extends HttpServlet {
             final Future<EndpointResult> execResult = endpointCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET) {
                 if (execResult.isDone() || endpointExecution.isWait()) {
-                    endpointExecution.getResp().setStatus(200);
-                    endpointExecution.getResp().setContentType(execResult.get().getContentType());
-                    endpointExecution.getResp().getWriter().print(execResult.get().getResult());
+                    EndpointResult endpointResult = execResult.get();
+                    setReponse(endpointResult.getResult(), endpointExecution);
                     if (!endpointExecution.isKeep()) {
                         log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
                         endpointCacheContainer.remove(endpointExecution.getFirstUriPart());
@@ -180,7 +179,7 @@ public class EndpointServlet extends HttpServlet {
         	((Map<?, ?>) returnValue).remove("response");
         	((Map<?, ?>) returnValue).remove("request");
         }
-        
+
         final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
         if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
             return serializedResult;

@@ -45,6 +45,6 @@ public class Entity extends EntityOrRelation {
 		this.index = builder.index;
 		this.type = builder.type;
 		this.name = builder.name;
-		this.properties = builder.properties;
+		setProperties(builder.properties);
 	}
 }

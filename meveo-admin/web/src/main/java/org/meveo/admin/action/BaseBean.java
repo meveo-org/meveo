@@ -109,7 +109,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Inject
-    private ResourceBundle resourceMessages;
+    protected ResourceBundle resourceBundle;
 
     @Inject
     protected Messages messages;

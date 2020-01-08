@@ -141,6 +141,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     public List<T> list(TechnicalServiceFilters filters) {
         QueryBuilder qb = filteredQueryBuilder(filters);
         TypedQuery<T> query = qb.getTypedQuery(getEntityManager(), getEntityClass());
+        query.setHint("org.hibernate.readOnly", true);
         return query.getResultList();
     }
 
@@ -155,6 +156,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         Root<T> root = query.from(getEntityClass());
         query.select(root.get("name"));
         query.distinct(true);
+        query.where(cb.equal(root.type(), getEntityClass()));
         return getEntityManager().createQuery(query).getResultList();
     }
 

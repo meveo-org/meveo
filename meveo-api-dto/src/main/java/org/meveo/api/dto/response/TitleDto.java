@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.LanguageDescriptionDto;
 import org.meveo.model.shared.Title;
@@ -23,9 +24,11 @@ public class TitleDto extends BusinessEntityDto {
     private static final long serialVersionUID = -1332916104721562522L;
 
     /** The is company. */
+    @ApiModelProperty("Whether to company")
     private Boolean isCompany = Boolean.FALSE;
 
     /** The language descriptions. */
+    @ApiModelProperty("List of language descriptions information")
     private List<LanguageDescriptionDto> languageDescriptions;
 
     /**

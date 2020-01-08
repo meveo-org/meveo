@@ -23,6 +23,8 @@ import java.util.*;
 import javax.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
@@ -60,6 +62,10 @@ public class ScriptInstance extends CustomScript {
     @JoinTable(name = "adm_script_sourc_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> sourcingRoles = new HashSet<>();
 
+    @NotFound(action = NotFoundAction.IGNORE)
+    @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<MavenDependency> mavenDependencies = new HashSet<>();
+
     /**
      * @return the executionRoles
      */
@@ -79,5 +85,13 @@ public class ScriptInstance extends CustomScript {
      */
     public Set<Role> getSourcingRoles() {
         return sourcingRoles;
+    }
+
+    public Set<MavenDependency> getMavenDependencies() {
+        return mavenDependencies;
+    }
+
+    public void setMavenDependencies(Set<MavenDependency> mavenDependencies) {
+        this.mavenDependencies = mavenDependencies;
     }
 }

@@ -13,6 +13,8 @@ import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Current Meveo user implementation when integrated with Keycloak authentication server
  * 
@@ -30,6 +32,7 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
     /**
      * JAAS security context
      */
+    @JsonIgnore
     private SessionContext securityContext;
 
     Logger log = LoggerFactory.getLogger(getClass());

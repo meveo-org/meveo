@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.CalendarDto;
 
 /**
@@ -19,6 +20,7 @@ public class GetCalendarResponse extends BaseResponse {
     private static final long serialVersionUID = 2550428385118895687L;
 
     /** The calendar. */
+    @ApiModelProperty("Calendar information")
     private CalendarDto calendar;
 
     /**

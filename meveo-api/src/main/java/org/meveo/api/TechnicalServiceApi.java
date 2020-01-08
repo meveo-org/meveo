@@ -18,8 +18,10 @@
 package org.meveo.api;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -91,7 +93,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final T technicalService = newInstance();
         technicalService.setCode(postData.getCode());
         
-        List<Description> descriptions;
+        Map<String, Description> descriptions;
         
 		try {
 			descriptions = descriptionApi.fromDescriptionsDto(technicalService, postData);
@@ -167,14 +169,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     protected T updateService(T service, D data) throws EntityDoesNotExistsException, BusinessException {
-        final List<Description> descriptions = descriptionApi.fromDescriptionsDto(service, data);
-        checkEndpoints(service, descriptions);
+        final Map<String, Description> descriptions = descriptionApi.fromDescriptionsDto(service, data);
+        checkEndpoints(service, descriptions.values());
         service.setDescriptions(descriptions);
         service.setDisabled(data.isDisabled());
         return service;
     }
 
-    private void checkEndpoints(T service, List<Description> descriptions) throws BusinessException {
+    private void checkEndpoints(T service, Collection<Description> descriptions) throws BusinessException {
         // Check if endpoints parameters are not bound to deleted properties
         final List<String> newMevoeoProperties = descriptions
                 .stream()
@@ -183,6 +185,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
                 .collect(Collectors.toList());
 
         final List<String> currentMeveoProperties = service.getDescriptions()
+        		.values()
                 .stream()
                 .flatMap(d -> d.getInputProperties().stream())
                 .map(d -> d.getDescription().getName() + "." + d.getProperty())
@@ -209,8 +212,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      */
     public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(name, version);
-        final List<Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
-        checkEndpoints(technicalService, descriptions);
+        final Map<String, Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
+        checkEndpoints(technicalService, descriptions.values());
         persistenceService.removeDescription(technicalService.getId());
         technicalService.setDescriptions(descriptions);
         persistenceService.update(technicalService);

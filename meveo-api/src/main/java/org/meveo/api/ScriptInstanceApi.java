@@ -1,14 +1,14 @@
 package org.meveo.api;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.ScriptInstanceErrorDto;
@@ -20,6 +20,7 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
@@ -27,6 +28,7 @@ import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
@@ -39,34 +41,37 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
-	@Inject
-	private RoleService roleService;
+    @Inject
+    private RoleService roleService;
 
-	public ScriptInstanceApi() {
-		super(ScriptInstance.class, ScriptInstanceDto.class);
-	}
-	
+    @Inject
+	private MavenDependencyService mavenDependencyService;
+
+    public ScriptInstanceApi() {
+    	super(ScriptInstance.class, ScriptInstanceDto.class);
+    }
+
 	/**
 	 * @param code Optional. Filter on script code
 	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type and error.
 	 */
 	public List<ScriptInstanceDto> getScriptsForTreeView(String code){
 		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
-		
+
 		if(code != null) {
 			query.append(" WHERE upper(s.code) LIKE :code");
 		}
-		
+
 		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager()
 			.createQuery(query.toString(), ScriptInstanceDto.class);
-		
+
 		if(code != null) {
 			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
 		}
-		
+
 		return jpaQuery.getResultList();
 	}
-	
+
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
 			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
 		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
@@ -96,7 +101,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
-
+		scriptInstance.getMavenDependencies().clear();
+		scriptInstanceService.flush();
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
 		} else if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
@@ -209,7 +215,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 * @return A new or updated ScriptInstance object
 	 * @throws EntityDoesNotExistsException entity does not exist exception.
 	 */
-	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException {
+	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException, BusinessException {
 
 		ScriptInstance scriptInstance = new ScriptInstance();
 		if (scriptInstanceToUpdate != null) {
@@ -242,10 +248,52 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
+        Set<MavenDependency> mavenDependencyList = new HashSet<>();
+        for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
+            MavenDependency mavenDependency = new MavenDependency();
+            mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
+            mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
+            mavenDependency.setVersion(mavenDependencyDto.getVersion());
+            mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+            mavenDependency.setScript(scriptInstance);
+            mavenDependencyList.add(mavenDependency);
+        }
+        scriptInstance.getMavenDependencies().clear();
+        scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
+
+		if (mavenDependencyList != null) {
+			Integer line = 1;
+			Map<String, Integer> map = new HashMap<>();
+			for (MavenDependency maven : mavenDependencyList) {
+				String key = maven.getGroupId() + maven.getArtifactId();
+				if (map.containsKey(key)) {
+					Integer position = map.get(key);
+					throw new BusinessException("GroupId and artifactId of maven dependency " + line + " and " + position + " are duplicated");
+				} else {
+					map.put(key, line);
+				}
+				line++;
+			}
+			line = 1;
+			for (MavenDependency maven : mavenDependencyList) {
+				if (!mavenDependencyService.validateUniqueFields(scriptInstance.getId(), maven.getGroupId(), maven.getArtifactId())) {
+                  throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
+				}
+				line++;
+			}
+		}
+
 		return scriptInstance;
 	}
+	
+	public String getScriptCodesAsJSON() {
+		return (String) scriptInstanceService.getEntityManager()
+			.createNativeQuery("SELECT cast(json_agg(code) as text) FROM meveo_script_instance " + 
+					"INNER JOIN meveo_function ON meveo_function.id = meveo_script_instance.id")
+			.getSingleResult();
+	}
 
-	@Override
+    @Override
 	public ScriptInstanceDto toDto(ScriptInstance entity) {
 		// TODO Auto-generated method stub
 		return null;

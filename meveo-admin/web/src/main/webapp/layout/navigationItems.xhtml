@@ -35,6 +35,9 @@
         <p:menuitem id="countries"
                     rendered="#{currentUser.hasRole('superAdminManagement')}"
                     outcome="countries" value="#{messages['menu.countries']}" />
+       	<p:menuitem id="mavenConfiguration"
+                    rendered="#{currentUser.hasRole('superAdminManagement')}"
+                    outcome="mavenConfiguration" value="#{messages['maven.configuration']}" />
     </p:submenu>
     <p:submenu id="trading" label="#{messages['menu.trading']}"
                rendered="#{currentUser.hasRole('administrationVisualization') and !currentUser.hasRole('superAdminManagement')}">
@@ -90,13 +93,6 @@
         </c:if>
     </c:forEach>
 
-    <p:submenu label="#{messages['menu.myCompany']}"
-               rendered="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
-        <p:menuitem id="mm_users" value="#{messages['menu.users']}"
-                    outcome="users" />
-        <p:menuitem id="mmUserGroups" outcome="userGroupHierarchy"
-                    value="#{messages['menu.userGroupHierarchy']}" />
-    </p:submenu>
 
     <p:submenu id="automation" label="#{messages['menu.admin']}"
                rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">

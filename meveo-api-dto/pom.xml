@@ -6,7 +6,7 @@
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.5.3</version>
+		<version>6.6.1</version>
 	</parent>
 	<artifactId>meveo-api-dto</artifactId>
 	<name>Meveo API DTO</name>
@@ -37,6 +37,12 @@
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxrs</artifactId>
         </dependency>
+
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>1.5.23</version>
+		</dependency>
 	</dependencies>
 
 	<build>

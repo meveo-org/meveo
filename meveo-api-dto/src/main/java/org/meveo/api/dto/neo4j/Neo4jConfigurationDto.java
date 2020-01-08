@@ -1,5 +1,6 @@
 package org.meveo.api.dto.neo4j;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 
@@ -9,8 +10,14 @@ import org.meveo.model.neo4j.Neo4JConfiguration;
 public class Neo4jConfigurationDto extends BusinessEntityDto {
 
 	private static final long serialVersionUID = -4634237210669083632L;
+
+	@ApiModelProperty("Neo4j url")
 	private String neo4jUrl;
+
+	@ApiModelProperty("Neo4j login")
 	private String neo4jLogin;
+
+	@ApiModelProperty("Neo4j password")
 	private String neo4jPassword;
 
 	public Neo4jConfigurationDto() {

@@ -8,6 +8,7 @@
     </ui:define>
 
     <ui:define name="body">
+    	<p:messages id="messages" />
         <h:form id="crumbmenuForm">
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
                 <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
@@ -31,6 +32,11 @@
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
             <hftl:formField label="#{messages['meveoInstance.authUsername']}" field="authUsername" size="30" />
             <hftl:formField label="#{messages['meveoInstance.authPassword']}" field="authPassword" size="30" />
+            
+            <ui:param name="buttons" value="true"/>
+	        <ui:define name="buttons">
+	        	<p:commandButton action="#{meveoInstanceBean.synchRemoteRepositories()}" update="messages" value="#{messages['meveoInstance.remoteRepository.synch.action']}"></p:commandButton>
+	        </ui:define>
         </hftl:formPanel>
 
     </ui:define>

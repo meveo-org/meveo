@@ -10,7 +10,7 @@
     </ui:define>
 
     <ui:define name="body">
-    	<p:growl id="growl" showDetail="false" sticky="false" autoUpdate="true" />
+    	<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
         <p:panel>
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -121,21 +121,65 @@
                 </h:panelGrid>
             </h:panelGroup>
             <h:panelGrid columns="2">
-            <hftl:formField label="#{messages['scriptInstance.executionRoles']}" field="executionRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.execRolesDM}"
-                valueLabelField="name" componentWidth="50" />
-            <hftl:formField label="#{messages['scriptInstance.sourcingRoles']}" field="sourcingRoles" listType="pickUpList" dualListModel="#{scriptInstanceBean.sourcRolesDM}"
-                valueLabelField="name" componentWidth="50" />
-            </h:panelGrid>
+				<hftl:decorateFormField fieldId="executionRoles" label="#{messages['scriptInstance.executionRoles']}" newLine="true">
+					<p:pickList converter="rolePickListConverter" id="executionRoles"
+								value="#{scriptInstanceBean.execRolesDM}" var="item" itemLabel="#{item.name}"
+								itemValue="#{item}">
+					</p:pickList>
+				</hftl:decorateFormField>
+				<hftl:decorateFormField fieldId="sourcingRoles" label="#{messages['scriptInstance.sourcingRoles']}" newLine="true">
+					<p:pickList converter="rolePickListConverter" id="sourcingRoles"
+								value="#{scriptInstanceBean.sourcRolesDM}" var="item" itemLabel="#{item.name}"
+								itemValue="#{item}">
+					</p:pickList>
+				</hftl:decorateFormField>
+			</h:panelGrid>
+			<h:panelGrid columns="1">
+				<hftl:decorateFormField componentWidth="50%" label="#{messages['scriptInstance.mavenDependencies']}">
+					<p:dataTable id="mavenDependenciesPanel" var="mavenDependency" value="#{scriptInstanceBean.mavenDependencies}" resizableColumns="true">
+						<p:column headerText="#{messages['mavenDependencies.groupId']}">
+							<h:inputText value="#{mavenDependency.groupId}" size="50" required="true">
+								<p:ajax update="mavenDependenciesPanel" event="change" />
+							</h:inputText>
+						</p:column>
+						<p:column headerText="#{messages['mavenDependencies.artifactId']}">
+							<h:inputText value="#{mavenDependency.artifactId}" size="50" required="true" >
+								<p:ajax update="mavenDependenciesPanel" event="change" />
+							</h:inputText>
+						</p:column>
+						<p:column headerText="#{messages['mavenDependencies.version']}">
+							<h:inputText value="#{mavenDependency.version}" size="50" required="true" >
+								<p:ajax update="mavenDependenciesPanel" event="change" />
+							</h:inputText>
+						</p:column>
+						<p:column headerText="#{messages['mavenDependencies.classifier']}">
+							<h:inputText value="#{mavenDependency.classifier}" size="50">
+								<p:ajax update="mavenDependenciesPanel" event="change" />
+							</h:inputText>
+						</p:column>
+						<p:column headerText="#{messages['mavenDependencies.coordinates']}">
+							<h:outputText value="#{mavenDependency.coordinates}" size="50"/>
+						</p:column>
+						<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
+							<p:commandButton action="#{scriptInstanceBean.removeMavenDependency(mavenDependency)}" icon="ui-icon-trash" update="mavenDependenciesPanel" immediate="true" />
+						</p:column>
+						<f:facet name="footer">
+							<p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this mavenDependenciesPanel" update="mavenDependenciesPanel"
+											 actionListener="#{scriptInstanceBean.addMavenDependency()}"/>
+						</f:facet>
+					</p:dataTable>
+				</hftl:decorateFormField>
+			</h:panelGrid>
             <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!scriptInstanceBean.entity.transient and scriptInstanceBean.getPartOfModules() != null and scriptInstanceBean.getPartOfModules() != ''}">
                 <h:outputText value="#{scriptInstanceBean.getPartOfModules()}" />
             </hftl:decorateFormField>
-            
+
             <hf:formButtons backingBean="#{scriptInstanceBean}" 
            					edit="#{scriptInstanceBean.edit}" 
            					ajaxSubmit="true"
-           					submitUpdate="@form:scriptErrors"
-                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}" 
-                			executeLabel="#{messages['action.execute']}" showAddModuleButton="true"/>
+           					submitUpdate="@form:scriptErrors :growl"
+                			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}"
+                			executeLabel="#{messages['action.execute']}" showAddModuleButton="true" killConversationOnSave="false"/>
         </hftl:formPanel>
         <p:dataTable var="log" value="#{scriptInstanceBean.getLogs()}" rendered="#{!empty(scriptInstanceBean.getLogs())}">
             <p:column headerText="Logs">

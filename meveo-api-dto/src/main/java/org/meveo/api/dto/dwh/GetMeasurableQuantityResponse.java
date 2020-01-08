@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.BaseResponse;
 
 /**
@@ -19,6 +20,7 @@ public class GetMeasurableQuantityResponse extends BaseResponse {
     private static final long serialVersionUID = 1L;
 
     /** The measurable quantity dto. */
+    @ApiModelProperty("Measurable quantity information")
     private MeasurableQuantityDto measurableQuantityDto;
 
     /**

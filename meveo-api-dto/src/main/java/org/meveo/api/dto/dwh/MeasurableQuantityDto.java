@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.CustomDateSerializer;
 import org.meveo.commons.utils.StringUtils;
@@ -27,37 +28,48 @@ public class MeasurableQuantityDto extends BusinessEntityDto {
     private static final long serialVersionUID = 2678416518718451635L;
 
     /** The theme. */
+    @ApiModelProperty("The theme")
     private String theme;
     
     /** The dimension 1. */
+    @ApiModelProperty("The dimension 1")
     private String dimension1;
     
     /** The dimension 2. */
+    @ApiModelProperty("The dimension 2")
     private String dimension2;
     
     /** The dimension 3. */
+    @ApiModelProperty("The dimension 3")
     private String dimension3;
     
     /** The dimension 4. */
+    @ApiModelProperty("The dimension 14")
     private String dimension4;
     
     /** The editable. */
+    @ApiModelProperty("The editable")
     private boolean editable;
     
     /** The additive. */
+    @ApiModelProperty("The additive")
     private boolean additive;
     
     /** The sql query. */
+    @ApiModelProperty("The sql query")
     private String sqlQuery;
     
     /** The cypher query. */
+    @ApiModelProperty("The cypher query")
     private String cypherQuery;
     
     /** The measurement period. */
+    @ApiModelProperty("The measurement period")
     private MeasurementPeriodEnum measurementPeriod;
     
     /** The last measure date. */
     @JsonSerialize(using = CustomDateSerializer.class)
+    @ApiModelProperty("The last measure date")
     private Date lastMeasureDate;
 
     /**
