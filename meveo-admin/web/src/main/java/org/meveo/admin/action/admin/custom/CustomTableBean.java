@@ -164,9 +164,9 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
                 }
             }
 			fields = cfts;
-			summaryFields = customFieldTemplateList;
-			filterFields = customFieldTemplateList;
-			quickAddFields = customFieldTemplateList;
+            summaryFields = customFieldTemplateList.stream().filter(c -> c.isSummary()).collect(Collectors.toList());
+            filterFields = customFieldTemplateList.stream().filter(c -> c.isFilter()).collect(Collectors.toList());
+            quickAddFields = customFieldTemplateList.stream().filter(c -> c.isSummary() && c.isValueRequired()).collect(Collectors.toList());
 		}
 
 		return entity;
