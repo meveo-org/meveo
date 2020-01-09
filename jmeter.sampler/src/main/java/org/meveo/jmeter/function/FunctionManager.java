@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.*;
@@ -70,7 +71,7 @@ public class FunctionManager {
 
     public static final String UPLOAD_URL = JMeterUtils.getProperty("meveo.function.upload");
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Logger LOG = LoggerFactory.getLogger(FunctionManager.class);
 
@@ -96,7 +97,7 @@ public class FunctionManager {
         }
     }
 
-    public static Map<String, Object> test(String functionCode, Arguments arguments) {
+    public static CloseableHttpResponse test(String functionCode, Arguments arguments) {
 
         if(token == null){
             throw new IllegalArgumentException("Authorization token must not be null");
@@ -121,8 +122,25 @@ public class FunctionManager {
                 ((List<String>) argVal).add(arg.getValue());
             }
         });
+        
+        
+        try (CloseableHttpClient client = createAcceptSelfSignedCertificateClient()) {
+        	String serialiazedArgs = OBJECT_MAPPER.writeValueAsString(argsMap);
+            String testUrl = String.format(getHostUri() + UPLOAD_URL, functionCode);
+            HttpPost post = new HttpPost(testUrl);
 
-        return doRequest(() -> {
+            setBearer(post);
+            setContentType(post, "application/json");
+            post.setEntity(new StringEntity(serialiazedArgs));
+            
+            final HttpUriRequest request = post;
+            return client.execute(request);
+        } catch (Exception e) {
+            LOG.error("Error sending request", e);
+            return null;
+        }
+
+        /* return doRequest(() -> {
             String serialiazedArgs = OBJECT_MAPPER.writeValueAsString(argsMap);
             String testUrl = String.format(getHostUri() + UPLOAD_URL, functionCode);
             HttpPost post = new HttpPost(testUrl);
@@ -133,7 +151,10 @@ public class FunctionManager {
 
             return post;
 
-        }, responseData -> OBJECT_MAPPER.readValue(responseData.getContent(), GenericTypeReferences.MAP_STRING_OBJECT), "Cannot execute test");
+        }, responseData -> {
+        	Map<String, Object> results = new HashMap<>(OBJECT_MAPPER.readValue(responseData.getContent(), GenericTypeReferences.MAP_STRING_OBJECT));
+        	return results;
+    	}, "Cannot execute test"); */
 
     }
 
@@ -269,7 +290,7 @@ public class FunctionManager {
         }
     }
 
-    private static String getHostUri() {
+    public static String getHostUri() {
         String hostUri = currentHost.getProtocol() + "://" + currentHost.getHostName();
         if(!StringUtils.isBlank(currentHost.getPortNumber())){
             hostUri += ":" + currentHost.getPortNumber();
@@ -291,7 +312,7 @@ public class FunctionManager {
         refreshTask = scheduler.schedule(task, loginTimeout, TimeUnit.SECONDS);
     }
 
-    private static CloseableHttpClient createAcceptSelfSignedCertificateClient()
+    public static CloseableHttpClient createAcceptSelfSignedCertificateClient()
             throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
 
         // use the TrustSelfSignedStrategy to allow Self Signed Certificates
@@ -337,11 +358,11 @@ public class FunctionManager {
         return defaultValue;
     }
 
-    private static void setContentType(HttpUriRequest request, String type) {
+    public static void setContentType(HttpUriRequest request, String type) {
         request.addHeader("Content-Type", type);
     }
 
-    private static void setBearer(HttpUriRequest request) {
+    public static void setBearer(HttpUriRequest request) {
         request.addHeader("Authorization", "Bearer " + token);
     }
 

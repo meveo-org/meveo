@@ -37,6 +37,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_http</artifactId>
+            <version>5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.meveo</groupId>
             <artifactId>meveo-api-dto</artifactId>
             <version>${project.version}</version>
