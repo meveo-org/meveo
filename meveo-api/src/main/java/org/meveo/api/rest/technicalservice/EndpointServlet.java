@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
@@ -57,26 +58,25 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * Header "Keep-data" indicates we don't want to remove the execution result from cache.<br>
  * Header "Wait-For-Finish" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
  * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
-
  * @author clement.bareth
  */
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
 
-	private static final long serialVersionUID = -8425320629325242067L;
+    private static final long serialVersionUID = -8425320629325242067L;
 
-	@Inject
-	public Logger log;
+    @Inject
+    public Logger log;
 
     @Inject
     private EndpointApi endpointApi;
 
     @Inject
     private EndpointCacheContainer endpointCacheContainer;
-    
+
     @Inject
     private EndpointExecutionFactory endpointExecutionFactory;
-    
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
@@ -97,10 +97,10 @@ public class EndpointServlet extends HttpServlet {
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
 
-        if(!StringUtils.isBlank(requestBody) && contentType != null){
-            if(contentType.startsWith(MediaType.APPLICATION_JSON)){
+        if (!StringUtils.isBlank(requestBody) && contentType != null) {
+            if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
                 parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
-            }else if(contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)){
+            } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
                 XmlMapper xmlMapper = new XmlMapper();
                 parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
             }
@@ -132,7 +132,7 @@ public class EndpointServlet extends HttpServlet {
 
         // If endpoint security is enabled, check if user has right to access that particular endpoint
         boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
-        if(endpointSecurityEnabled && endpoint != null && !endpointApi.isUserAuthorized(endpoint)){
+        if (endpointSecurityEnabled && endpoint != null && !endpointApi.isUserAuthorized(endpoint)) {
             endpointExecution.getResp().setStatus(403);
             endpointExecution.getResp().getWriter().print("You are not authorized to access this endpoint");
             return;
@@ -140,23 +140,23 @@ public class EndpointServlet extends HttpServlet {
 
         try {
             PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
-			final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
+            final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE) {
-            	if(cancel) {
-            		pendingExecution.getEngine().cancel();
-            	}
-            	
-        		// Wait for max delay if defined
-        		long start = System.currentTimeMillis();
-        		if(endpointExecution.getDelayValue() != null) {
-        			while(System.currentTimeMillis() - start < endpointExecution.getDelayUnit().toMillis(endpointExecution.getDelayValue())) {
-        				if(execResult.isDone()) {
-        					break;
-        				}
-        				Thread.sleep(10L);
-        			}
-        		}
-            	
+                if (cancel) {
+                    pendingExecution.getEngine().cancel();
+                }
+
+                // Wait for max delay if defined
+                long start = System.currentTimeMillis();
+                if (endpointExecution.getDelayValue() != null) {
+                    while (System.currentTimeMillis() - start < endpointExecution.getDelayUnit().toMillis(endpointExecution.getDelayValue())) {
+                        if (execResult.isDone()) {
+                            break;
+                        }
+                        Thread.sleep(10L);
+                    }
+                }
+
                 if (execResult.isDone() || endpointExecution.isWait()) {
                     EndpointResult endpointResult = execResult.get();
                     setReponse(endpointResult.getResult(), endpointExecution);
@@ -176,15 +176,17 @@ public class EndpointServlet extends HttpServlet {
             endpointExecution.getResp().setStatus(500);
             endpointExecution.getResp().getWriter().print(e.toString());
         } finally {
-            endpointExecution.getResp().getWriter().flush();
-            endpointExecution.getResp().getWriter().close();
+            if(endpointExecution.getResponse().getOutput() == null) {
+                endpointExecution.getResp().getWriter().flush();
+                endpointExecution.getResp().getWriter().close();
+            }
         }
     }
 
     private void launchEndpoint(EndpointExecution endpointExecution, Endpoint endpoint) throws BusinessException, ExecutionException, InterruptedException, IOException {
         // Endpoint does not exists
-    	if(endpoint == null) {
-        	endpointExecution.getResp().setStatus(404);    // Not found
+        if (endpoint == null) {
+            endpointExecution.getResp().setStatus(404);    // Not found
             try {
                 UUID uuid = UUID.fromString(endpointExecution.getFirstUriPart());
                 endpointExecution.getResp().getWriter().print("No results for execution id " + uuid.toString());
@@ -194,14 +196,14 @@ public class EndpointServlet extends HttpServlet {
             return;
         }
 
-    	// Endpoint is called with wrong method
-    	if (endpoint.getMethod() != endpointExecution.getMethod()) {
-    		endpointExecution.getResp().setStatus(400);
+        // Endpoint is called with wrong method
+        if (endpoint.getMethod() != endpointExecution.getMethod()) {
+            endpointExecution.getResp().setStatus(400);
             endpointExecution.getResp().getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
             return;
-    	}
+        }
 
-		// If endpoint is synchronous, execute the script straight and return the response
+        // If endpoint is synchronous, execute the script straight and return the response
         if (endpoint.isSynchronous()) {
             final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
             String transformedResult = endpointApi.transformData(endpoint, result);
@@ -218,23 +220,23 @@ public class EndpointServlet extends HttpServlet {
         endpointCacheContainer.put(id.toString(), execution);
 
         // Don't wait execution to finish
-        if(!endpointExecution.isWait()) {
-        	// Return the id of the execution so the user can retrieve it later
-        	endpointExecution.getResp().getWriter().println(id.toString().trim());
+        if (!endpointExecution.isWait()) {
+            // Return the id of the execution so the user can retrieve it later
+            endpointExecution.getResp().getWriter().println(id.toString().trim());
             endpointExecution.getResp().setStatus(202);    // Accepted
             return;
         }
 
-		final EndpointResult execResult = execution.getResult().get(); 	// Wait until execution is over
-		endpointExecution.getResp().setStatus(200); // OK
-        if(endpointExecution.isKeep()){
-        	// If user wants to keep the result in cache, return the data along with its id
+        final EndpointResult execResult = execution.getResult().get();    // Wait until execution is over
+        endpointExecution.getResp().setStatus(200); // OK
+        if (endpointExecution.isKeep()) {
+            // If user wants to keep the result in cache, return the data along with its id
             Map<String, Object> returnedValue = new HashMap<>();
             returnedValue.put("id", id.toString());
             returnedValue.put("data", execResult.getResult());
             endpointExecution.getResp().getWriter().println(JacksonUtil.toString(returnedValue));
-        }else{
-        	// If user doesn't want to keep the result in cache, only return the data
+        } else {
+            // If user doesn't want to keep the result in cache, only return the data
             endpointExecution.getResp().setContentType(execResult.getContentType());
             endpointExecution.getResp().getWriter().println(execResult.getResult());
             endpointCacheContainer.remove(id.toString());
@@ -243,35 +245,59 @@ public class EndpointServlet extends HttpServlet {
     }
 
     private void setReponse(String transformedResult, EndpointExecution endpointExecution) throws IOException {
-    	// HTTP Status
-    	if(endpointExecution.getResponse().getStatus() != null) {
-    		endpointExecution.getResp().setStatus(endpointExecution.getResponse().getStatus());
-    	} else {
-    		endpointExecution.getResp().setStatus(200);	// OK
-    	}
+        // HTTP Status
 
-    	// Content type
-    	if(!StringUtils.isBlank(endpointExecution.getResponse().getContentType())) {
-    		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
-    	} else {
-    		endpointExecution.getResp().setContentType(endpointExecution.getResponse().getContentType());
-    	}
+        EndpointResponse response = endpointExecution.getResponse();
+        HttpServletResponse servletResponse = endpointExecution.getResp();
+        Integer status = response.getStatus();
+        if (status != null) {
+            servletResponse.setStatus(status);
+        } else {
+            servletResponse.setStatus(200);    // OK
+        }
 
-    	// Body of the response
-    	if(!StringUtils.isBlank(endpointExecution.getResponse().getErrorMessage())) {	// Priority to error message
-    		endpointExecution.getResp().getWriter().print(endpointExecution.getResponse().getErrorMessage());
-    	} else if(endpointExecution.getResponse().getOutput() != null) {				// Output has been set
-    		ByteArrayInputStream in = new ByteArrayInputStream(endpointExecution.getResponse().getOutput());
-            ServletOutputStream out = endpointExecution.getResp().getOutputStream();
+        // Content type
+        String contentType = response.getContentType();
+        if (!StringUtils.isBlank(contentType)) {
+            servletResponse.setContentType(contentType);
+        }
+
+        // Buffer size
+        Integer bufferSize = response.getBufferSize();
+        if (bufferSize != null) {
+            servletResponse.setBufferSize(bufferSize);
+        }
+
+        // Headers
+        Map<String, String> headers = response.getHeaders();
+        if (headers != null) {
+            headers.forEach(servletResponse::setHeader);
+        }
+
+        // Date Headers
+        Map<String, Long> dateHeaders = response.getDateHeaders();
+        if (dateHeaders != null) {
+            dateHeaders.forEach(servletResponse::setDateHeader);
+        }
+
+        // Body of the response
+        String errorMessage = response.getErrorMessage();
+        byte[] output = response.getOutput();
+        if (!StringUtils.isBlank(errorMessage)) {    // Priority to error message
+            servletResponse.getWriter().print(errorMessage);
+        } else if (output != null) {                // Output has been set
+            ByteArrayInputStream in = new ByteArrayInputStream(output);
+            ServletOutputStream out = servletResponse.getOutputStream();
             byte[] buffer = new byte[1024];
             int len = 0;
             while ((len = in.read(buffer)) != -1) {
                 out.write(buffer, 0, len);
             }
             out.flush();
-    	} else {																		// Use the endpoint script's result
-    		endpointExecution.getResp().getWriter().print(transformedResult);
-    	}
+            out.close();
+        } else {    // Use the endpoint script's result
+            servletResponse.getWriter().print(transformedResult);
+        }
     }
 
 }
