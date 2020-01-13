@@ -2,6 +2,8 @@ package org.meveo.service.custom;
 
 import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -9,11 +11,15 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.BusinessService;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +34,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
     @Inject
     private CustomFieldsCacheContainerProvider cetCache;
+    
+    @Inject
+    private CrossStorageService crossStorageService;
 
     @Override
     public void create(CustomEntityInstance entity) throws BusinessException {
@@ -143,4 +152,12 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
             }
         }
     }
+
+	public void createOrUpdateInCrossStorage(Repository repository, CustomEntityInstance entity) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
+		crossStorageService.createOrUpdate(repository, entity);
+	}
+	
+	public void removeInCrossStorage(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
+		crossStorageService.remove(repository, cet, uuid);
+	}
 }

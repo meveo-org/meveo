@@ -16,7 +16,7 @@ import org.meveo.service.base.BusinessService;
  * Persistence layer for {@link Repository}
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  * @since 6.4.0
  */
 @Stateless
@@ -100,6 +100,10 @@ public class RepositoryService extends BusinessService<Repository> {
 		qb.addSql("r.sqlConfiguration IS NOT NULL");
 
 		return qb.getQuery(getEntityManager()).getResultList();
+	}
+
+	public Repository findDefaultRepository() {
+		return findByCode("default");
 	}
 
 }

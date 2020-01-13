@@ -147,7 +147,7 @@ public class CrossStorageService implements CustomPersistenceService {
                     .collect(Collectors.toList());
         }
 
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J) && repository.getNeo4jConfiguration() != null) {
             List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
             if (!neo4jFields.isEmpty()) {
                 try {
@@ -511,7 +511,6 @@ public class CrossStorageService implements CustomPersistenceService {
             }
 
             customEntityInstanceService.create(cei);
-
 
         } else {
 
