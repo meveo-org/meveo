@@ -461,10 +461,11 @@ public class CrossStorageService implements CustomPersistenceService {
 
         // SQL Storage
         if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, true);
+            Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, false);
             
             if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
                 CustomEntityInstance sqlCei = new CustomEntityInstance();
+                sqlCei.setUuid(cei.getUuid());
                 sqlCei.setCet(cet);
                 sqlCei.setCode(cei.getCode());
                 sqlCei.setCetCode(cei.getCetCode());
@@ -477,10 +478,10 @@ public class CrossStorageService implements CustomPersistenceService {
                         .collect(Collectors.toList());
 
                 if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                    uuid = createOrUpdateSQL(repository, cei, binariesInSql);
+                    uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql);
                     
                 } else {
-                    uuid = createOrUpdateCei(repository, cei, binariesInSql);
+                    uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
                 }
 
                 persistedEntities.add(new EntityRef(uuid, cet.getCode()));
@@ -531,7 +532,8 @@ public class CrossStorageService implements CustomPersistenceService {
     }
 
     private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
-        String uuid = null;
+        
+    	String uuid = null;
         
         CustomEntityInstance neo4jCei = new CustomEntityInstance();
         neo4jCei.setCetCode(cei.getCetCode());
@@ -540,10 +542,12 @@ public class CrossStorageService implements CustomPersistenceService {
 
         if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
-            Map<String, Object> neo4jValues = filterValues(cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, true);
-            customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
+        	Map<String, Object> filteredNeo4jValues = filterValues(cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, true);
             
-            if (!neo4jValues.isEmpty()) {
+            if (!filteredNeo4jValues.isEmpty()) {
+            	Map<String, Object> neo4jValues = filterValues(cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, false);
+                customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
+                
             	PersistenceActionResult persistenceResult = neo4jService.addCetNode(repository.getNeo4jConfiguration().getCode(), neo4jCei);
 				uuid = persistenceResult.getBaseEntityUuid();
             	

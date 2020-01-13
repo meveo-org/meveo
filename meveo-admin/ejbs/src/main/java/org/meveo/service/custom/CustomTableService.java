@@ -1066,6 +1066,7 @@ public class CustomTableService extends NativePersistenceService {
         return list(sqlConnectionCode, cet, null);
     }
 
+    @Override
     public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
