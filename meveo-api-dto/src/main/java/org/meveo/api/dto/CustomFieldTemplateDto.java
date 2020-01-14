@@ -25,8 +25,8 @@ import org.meveo.model.persistence.DBStorageType;
 /**
  * The Class CustomFieldTemplateDto.
  *
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.7.0
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -192,7 +192,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     
     @XmlElement
     @ApiModelProperty("Whether to unique")
-    protected boolean isUnique;
+    protected boolean isUnique = false;
     
     @XmlElement
     @ApiModelProperty("Whether to filter")

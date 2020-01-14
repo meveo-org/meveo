@@ -1,9 +1,7 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,12 +15,8 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.ICustomFieldEntity;
-import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -60,9 +54,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	private CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
-	private transient CrossStorageService crossStorageService;
-
-	@Inject
 	private RepositoryService repositoryService;
 
 	private CustomEntityTemplate customEntityTemplate;
@@ -84,15 +75,23 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		CustomEntityInstance entity = super.initEntity();
 
 		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
-
 		defaultRepository = repositoryService.findDefaultRepository();
-		try {
-			Map<String, Object> cfValues = crossStorageService.find(defaultRepository, customEntityTemplate, entity.getUuid());
-			customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-			entity.setCetCode(customEntityTemplateCode);
 
-		} catch (EntityDoesNotExistsException | BusinessException e) {
-			log.error(e.getMessage());
+		if (entity.isTransient()) {
+			entity.setCetCode(customEntityTemplateCode);
+			entity.setCet(customEntityTemplate);
+
+		} else {
+			try {
+				Map<String, Object> cfValues = customEntityInstanceService.findInCrossStorage(defaultRepository, customEntityTemplate, entity.getUuid());
+				log.debug("Loading cfValues={}", cfValues);
+				if (cfValues != null) {
+					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
+				}
+
+			} catch (EntityDoesNotExistsException | BusinessException e) {
+				log.error(e.getMessage());
+			}
 		}
 
 		return entity;
@@ -117,6 +116,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			return null;
 		}
 
+		String result = getListViewName();
 		// Check for unicity of code
 		CustomEntityInstance ceiSameCode = customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
 		if ((entity.isTransient() && ceiSameCode != null)
@@ -125,28 +125,21 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			return null;
 		}
 
+		boolean isNew = entity.isTransient();
+
 		try {
-			boolean isNew = entity.isTransient();
-	        customFieldDataEntryBean.saveCustomFieldsToEntity((ICustomFieldEntity) entity, isNew);
-	        
-			customEntityInstanceService.createOrUpdateInCrossStorage(defaultRepository, entity);
 
-			ceiSameCode = customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
-			Map<String, Object> fieldValues = new HashMap<>();
-			Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(ceiSameCode);
-			for (Iterator<CustomFieldTemplate> iterator = customFieldTemplates.values().iterator(); iterator.hasNext();) {
-				CustomFieldTemplate cft = iterator.next();
-				if (cft.getFieldType() != CustomFieldTypeEnum.CHILD_ENTITY) {
-					Object value = customFieldInstanceService.getCFValue(ceiSameCode, cft.getCode());
-					log.info("value : {}", value);
-					log.info("Code of cft : {}", cft.getCode());
-					fieldValues.put(cft.getCode(), value);
-				}
+			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
+
+			String message = entity.isTransient() ? "save.successful" : "update.successful";
+
+			customEntityInstanceService.createOrUpdate(defaultRepository, entity, cfValues);
+
+			if (killConversation) {
+				endConversation();
 			}
 
-			if (!fieldValues.isEmpty()) {
-				log.info("fieldValues : {}", fieldValues);
-			}
+			messages.info(new BundleKey("messages", message));
 
 			// Delete old binaries
 			for (String fileToDelete : customFieldDataEntryBean.getFilesToDeleteOnExit()) {
@@ -156,19 +149,19 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 				}
 			}
 
-		} catch (BusinessApiException | EntityDoesNotExistsException | IOException e) {
+		} catch (Exception e) {
 			messages.error(new BundleKey("messages", "customEntityInstance.save.ko"));
 			return null;
 		}
 
-		endConversation();
-		return getListViewName();
+		return result;
 	}
 
 	@Override
 	public void delete() throws BusinessException {
-		
-		customEntityInstanceService.removeInCrossStorage(defaultRepository, entity.getCet(), entity.getUuid());
+
+		String cetCode = org.meveo.commons.utils.StringUtils.isBlank(customEntityTemplateCode) ? entity.getCetCode() : customEntityTemplateCode;
+		customEntityInstanceService.removeInCrossStorage(repositoryService.findDefaultRepository(), customEntityTemplateService.findByCode(cetCode), entity.getUuid());
 		messages.info(new BundleKey("messages", "delete.successful"));
 	}
 
@@ -180,13 +173,17 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		GroupedCustomField groupedCustomFields = customFieldDataEntryBean.groupedFieldTemplates.get(entity.getUuid());
 	}
 
-	public CustomEntityTemplate getCustomEntityTemplate() {
+	public CustomEntityTemplate getCustomEntityTemplateNullSafe() {
 
 		if (customEntityTemplate == null && customEntityTemplateCode != null) {
 			customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
 		}
 		return customEntityTemplate;
 
+	}
+
+	public CustomEntityTemplate getCustomEntityTemplate() {
+		return customEntityTemplate;
 	}
 
 	@Override
