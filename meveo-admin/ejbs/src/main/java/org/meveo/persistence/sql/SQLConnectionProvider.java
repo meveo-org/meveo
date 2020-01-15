@@ -68,7 +68,7 @@ public class SQLConnectionProvider {
 		password = ParamBean.getInstance().getProperty("sql.password", "meveo");
 		dialect = ParamBean.getInstance().getProperty("sql.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
-		defaultSqlConfiguration.setCode("default");
+		defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 		defaultSqlConfiguration.setDriverClass(driverClass);
 		defaultSqlConfiguration.setUrl(url);
 		defaultSqlConfiguration.setUsername(username);
@@ -129,9 +129,9 @@ public class SQLConnectionProvider {
 	}
 
 	public synchronized SessionFactory buildSessionFactory(SqlConfiguration sqlConfiguration) {
-		// Return the SessionFactory initialized by wildfly in case of using default
-		// configuration
-		if (sqlConfiguration.getCode().equals("default")) {
+
+		// Return the SessionFactory initialized by wildfly in case of using default configuration
+		if(sqlConfiguration.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			return (SessionFactory) emf;
 
 		} else {
