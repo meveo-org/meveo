@@ -26,12 +26,10 @@ import javax.transaction.Transactional;
 
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
@@ -73,20 +71,20 @@ public class StartupListener {
 			try {
 				SqlConfiguration defaultSqlConfiguration;
 				Repository defaultRepository;
-				defaultSqlConfiguration = sqlConfigurationService.findByCode("default");
+				defaultSqlConfiguration = sqlConfigurationService.findByCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 				if (defaultSqlConfiguration == null) {
 					defaultSqlConfiguration = new SqlConfiguration();
-					defaultSqlConfiguration.setCode("default");
+					defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.create(defaultSqlConfiguration);
 				} else {
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.update(defaultSqlConfiguration);
 				}
-				defaultRepository = repositoryService.findByCode("default");
+				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
 				if (defaultRepository == null) {
 					defaultRepository = new Repository();
-					defaultRepository.setCode("default");
+					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
 					repositoryService.create(defaultRepository);
 				}

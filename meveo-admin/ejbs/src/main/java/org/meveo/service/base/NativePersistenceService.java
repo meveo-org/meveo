@@ -65,6 +65,7 @@ import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.service.custom.CustomTableService;
@@ -76,7 +77,7 @@ import org.meveo.util.MeveoParamBean;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  */
 public class NativePersistenceService extends BaseService {
 
@@ -127,7 +128,7 @@ public class NativePersistenceService extends BaseService {
 	public EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		EntityManager em;
-		if (StringUtils.isBlank(sqlConfigurationCode) || sqlConfigurationCode.equals("default")) {
+		if (sqlConfigurationCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			em = emWrapper.getEntityManager();
 			em.joinTransaction();
 
@@ -393,7 +394,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 				}
@@ -534,7 +535,7 @@ public class NativePersistenceService extends BaseService {
 						itemsProcessed++;
 					}
 					preparedStatement.executeBatch();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 
@@ -625,7 +626,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 				}

@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  * @since 6.6.0
  */
 @Startup
@@ -68,7 +68,7 @@ public class SQLConnectionProvider {
 		password = ParamBean.getInstance().getProperty("sql.password", "meveo");
 		dialect = ParamBean.getInstance().getProperty("sql.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
-		defaultSqlConfiguration.setCode("default");
+		defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 		defaultSqlConfiguration.setDriverClass(driverClass);
 		defaultSqlConfiguration.setUrl(url);
 		defaultSqlConfiguration.setUsername(username);
@@ -130,7 +130,7 @@ public class SQLConnectionProvider {
 
 	public synchronized SessionFactory buildSessionFactory(SqlConfiguration sqlConfiguration) {
 		// Return the SessionFactory initialized by wildfly in case of using default configuration
-		if(sqlConfiguration.getCode().equals("default")) {
+		if(sqlConfiguration.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			return (SessionFactory) emf;
 			
 		} else {
