@@ -719,7 +719,12 @@ public class CustomTableCreatorService implements Serializable {
 			case LONG:
 			case ENTITY:
 			case BOOLEAN:
-				column.setDefaultValueNumeric(cft.getDefaultValue());
+				boolean value = Boolean.parseBoolean(cft.getDefaultValue());
+				if (value) {
+					column.setDefaultValueNumeric("1");
+				} else {
+					column.setDefaultValueNumeric("0");
+				}
 				break;
 			case STRING:
 			case TEXT_AREA:
