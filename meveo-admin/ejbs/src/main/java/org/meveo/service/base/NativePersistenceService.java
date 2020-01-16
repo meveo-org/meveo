@@ -127,7 +127,7 @@ public class NativePersistenceService extends BaseService {
 	public EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		EntityManager em;
-		if (StringUtils.isBlank(sqlConfigurationCode)) {
+		if (StringUtils.isBlank(sqlConfigurationCode) || sqlConfigurationCode.equals("default")) {
 			em = emWrapper.getEntityManager();
 			em.joinTransaction();
 
@@ -393,7 +393,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!StringUtils.isBlank(sqlConnectionCode) && !"default".equals(sqlConnectionCode)) {
 						connection.commit();
 					}
 				}
