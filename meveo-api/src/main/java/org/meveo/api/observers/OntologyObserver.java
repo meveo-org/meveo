@@ -54,9 +54,12 @@ import javax.inject.Inject;
 import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -183,14 +186,13 @@ public class OntologyObserver {
         FileUtils.write(javaFile, compilationUnit.toString());
         commitFiles.add(javaFile);
 
-        File classFile = new File(classDir, cet.getCode() + ".java");
-        FileUtils.write(classFile, compilationUnit.toString());
+        File classJavaFile = new File(classDir, cet.getCode() + ".java");
+        FileUtils.write(classJavaFile, compilationUnit.toString());
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+        compileClassJava(compilationUnit.toString(), classJavaFile);
 
-        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(classFile));
-        compiler.getTask(null, fileManager, null, null, null, compilationUnits).call();
+        File classFile = new File(classDir, cet.getCode() + ".class");
+        classJavaFile.delete();
 
         synchronized (CLASSPATH_REFERENCE) {
             String path = classFile.getAbsolutePath();
@@ -243,14 +245,13 @@ public class OntologyObserver {
 
         FileUtils.write(javaFile, compilationUnit.toString());
 
-        File classFile = new File(classDir, cet.getCode() + ".java");
-        FileUtils.write(classFile, compilationUnit.toString());
+        File classJavaFile = new File(classDir, cet.getCode() + ".java");
+        FileUtils.write(classJavaFile, compilationUnit.toString());
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+        compileClassJava(compilationUnit.toString(), classJavaFile);
 
-        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(classFile));
-        compiler.getTask(null, fileManager, null, null, null, compilationUnits).call();
+        File classFile = new File(classDir, cet.getCode() + ".class");
+        classJavaFile.delete();
 
         synchronized (CLASSPATH_REFERENCE) {
             String path = classFile.getAbsolutePath();
@@ -272,6 +273,7 @@ public class OntologyObserver {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
         final File cetDir = getCetDir();
+        final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
         final File schemaFile = new File(cetDir, cet.getCode() + ".json");
@@ -284,6 +286,11 @@ public class OntologyObserver {
         if (javaFile.exists()) {
             javaFile.delete();
             fileList.add(javaFile);
+        }
+
+        final File classFile = new File(classDir, cet.getCode() + ".class");
+        if (classFile.exists()) {
+            classFile.delete();
         }
 
         gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
@@ -409,14 +416,14 @@ public class OntologyObserver {
                     CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
                     FileUtils.write(javaFile, compilationUnit.toString());
 
-                    File classFile = new File(classDir, cet.getCode() + ".java");
-                    FileUtils.write(classFile, compilationUnit.toString());
+                    File classJavaFile = new File(classDir, cet.getCode() + ".java");
+                    FileUtils.write(classJavaFile, compilationUnit.toString());
 
-                    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+                    compileClassJava(compilationUnit.toString(), classJavaFile);
 
-                    Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(classFile));
-                    compiler.getTask(null, fileManager, null, null, null, compilationUnits).call();
+                    File classFile = new File(classDir, cet.getCode() + ".class");
+                    classJavaFile.delete();
+
 
                     synchronized (CLASSPATH_REFERENCE) {
                         String path = classFile.getAbsolutePath();
@@ -496,14 +503,13 @@ public class OntologyObserver {
                     FileUtils.write(javaFile, compilationUnit.toString());
                     listFile.add(javaFile);
 
-                    File classFile = new File(classDir, cet.getCode() + ".java");
-                    FileUtils.write(classFile, compilationUnit.toString());
+                    File classJavaFile = new File(classDir, cet.getCode() + ".java");
+                    FileUtils.write(classJavaFile, compilationUnit.toString());
 
-                    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-                    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+                    compileClassJava(compilationUnit.toString(), classJavaFile);
 
-                    Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(classFile));
-                    compiler.getTask(null, fileManager, null, null, null, compilationUnits).call();
+                    File classFile = new File(classDir, cet.getCode() + ".class");
+                    classJavaFile.delete();
 
                     synchronized (CLASSPATH_REFERENCE) {
                         String path = classFile.getAbsolutePath();
@@ -563,6 +569,8 @@ public class OntologyObserver {
 
             final File cetDir = getCetDir();
 
+            final File classDir = getClassDir();
+
             if (!cetDir.exists()) {
                 // Nothing to delete
                 return;
@@ -570,12 +578,17 @@ public class OntologyObserver {
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
+            File classFile = new File(classDir, cet.getCode() + ".class");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
 
                 if (javaFile.exists()) {
                     javaFile.delete();
+                }
+
+                if (classFile.exists()) {
+                    classFile.delete();
                 }
 
                 gitClient.commitFiles(
@@ -671,8 +684,8 @@ public class OntologyObserver {
                     if (customRelationshipTemplate == null) {
                         String absolutePath = crtFile.getAbsolutePath();
                         CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(absolutePath);
-                        if(customRelationshipTemplateDto.getStartNodeCode() != null) {	// Make sure we parsed a valid CRT and not a CET
-                        	customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                        if (customRelationshipTemplateDto.getStartNodeCode() != null) {    // Make sure we parsed a valid CRT and not a CET
+                            customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
                         }
                     } else if (customRelationshipTemplate != null && !crtFile.exists()) {
                         customRelationshipTemplateApi.removeCustomRelationshipTemplate(code);
@@ -683,6 +696,18 @@ public class OntologyObserver {
                 }
             }
         }
+    }
+
+    public void compileClassJava(String compilationUnit, File javaFile) {
+        supplementClassPathWithMissingImports(compilationUnit);
+        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + "D:\\opt\\wildfly\\opencelldata\\manaty\\classes");
+        String classPath = CLASSPATH_REFERENCE.get();
+
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+
+        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(javaFile));
+        compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
     }
 
     public void constructClassPath() throws IOException {
@@ -781,6 +806,46 @@ public class OntologyObserver {
 
                     CLASSPATH_REFERENCE.set(classpath);
                 }
+            }
+        }
+    }
+
+    private void supplementClassPathWithMissingImports(String javaSrc) {
+
+        String regex = "import (.*?);";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(javaSrc);
+        while (matcher.find()) {
+            String className = matcher.group(1);
+            try {
+                Class clazz;
+                try {
+                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                    clazz = classLoader.loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    clazz = Class.forName(className);
+                }
+
+                try {
+                    String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
+                    if (location.startsWith("file:")) {
+                        location = location.substring(5);
+                    }
+                    if (location.endsWith("!/")) {
+                        location = location.substring(0, location.length() - 2);
+                    }
+
+                    if (!CLASSPATH_REFERENCE.get().contains(location)) {
+                        synchronized (CLASSPATH_REFERENCE) {
+                            if (!CLASSPATH_REFERENCE.get().contains(location)) {
+                                CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+                            }
+                        }
+                    }
+
+                } catch (Exception e) {
+                }
+            } catch (Exception e) {
             }
         }
     }
