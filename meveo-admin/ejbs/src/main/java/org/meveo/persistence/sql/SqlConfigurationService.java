@@ -58,12 +58,15 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	@Override
 	public void create(SqlConfiguration entity) throws BusinessException {
 		sqlConfigurationService.createInNewTx(entity);
-		sqlConfigurationService.initializeCet(entity);
+		
+		if(!entity.getCode().equals("default")) {
+			sqlConfigurationService.initializeCet(entity);
+		}
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createInNewTx(SqlConfiguration entity) throws BusinessException {
-		if (testConnection(entity)) {
+		if (entity.getCode().equals("default") || testConnection(entity)) {
 			super.create(entity);
 
 		} else {

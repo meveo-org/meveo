@@ -19,7 +19,7 @@
     <parent>
         <artifactId>meveo</artifactId>
         <groupId>org.meveo</groupId>
-        <version>6.7.0-alpha.1</version>
+        <version>6.7.0-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -33,6 +33,12 @@
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_java</artifactId>
+            <version>5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_http</artifactId>
             <version>5.0</version>
             <scope>provided</scope>
         </dependency>

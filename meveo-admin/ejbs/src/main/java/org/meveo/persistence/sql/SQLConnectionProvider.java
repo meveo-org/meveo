@@ -12,7 +12,9 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceUnit;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -40,6 +42,9 @@ public class SQLConnectionProvider {
 	@Inject
 	@MeveoJpa
 	private Provider<EntityManagerWrapper> emWrapperProvider;
+	
+    @PersistenceUnit(unitName = "MeveoAdmin")
+    private EntityManagerFactory emf;
 
 	@Inject
 	private Logger log;
@@ -124,17 +129,22 @@ public class SQLConnectionProvider {
 	}
 
 	public synchronized SessionFactory buildSessionFactory(SqlConfiguration sqlConfiguration) {
+		// Return the SessionFactory initialized by wildfly in case of using default configuration
+		if(sqlConfiguration.getCode().equals("default")) {
+			return (SessionFactory) emf;
+			
+		} else {
+			Configuration config = new Configuration();
+			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
+			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
+			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
+			config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
+			if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
+				config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());
+			}
 
-		Configuration config = new Configuration();
-		config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
-		config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
-		config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
-		config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
-		if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
-			config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());
+			return config.buildSessionFactory();
 		}
-
-		return config.buildSessionFactory();
 	}
 
 	public SqlConfiguration findByCode(String code) {

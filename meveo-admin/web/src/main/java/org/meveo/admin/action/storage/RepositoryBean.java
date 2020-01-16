@@ -6,6 +6,7 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -67,6 +68,18 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 
 	public void setForceDelete(Boolean forceDelete) {
 		this.forceDelete = forceDelete;
+	}
+
+	@ActionMethod
+	public String saveOrUpdate() throws BusinessException {
+		String message = entity.isTransient() ? "save.successful" : "update.successful";
+		if (entity == null) {
+			repositoryService.create(entity);
+		} else {
+			repositoryService.update(entity);
+		}
+		messages.info(new BundleKey("messages", message));
+		return back();
 	}
 
 	/**

@@ -84,6 +84,7 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	@SuppressWarnings("unchecked")
 	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
 		final Function function = findByCode(executableCode);
+		getEntityManager().detach(function);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
 		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
