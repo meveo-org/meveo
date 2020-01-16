@@ -296,7 +296,7 @@ public class CustomTableCreatorService implements Serializable {
 				liquibase.update(new Contexts(), new LabelExpression());
 
 			} catch (Exception e) {
-				log.error("Failed to create a custom table {}", dbTableName, e);
+				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
 				throw new SQLException(e);
 			}
 
