@@ -189,18 +189,7 @@ public class OntologyObserver {
         File classJavaFile = new File(classDir, cet.getCode() + ".java");
         FileUtils.write(classJavaFile, compilationUnit.toString());
 
-        compileClassJava(compilationUnit.toString(), classJavaFile);
-
-        File classFile = new File(classDir, cet.getCode() + ".class");
-        classJavaFile.delete();
-
-        synchronized (CLASSPATH_REFERENCE) {
-            String path = classFile.getAbsolutePath();
-            if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
-            }
-        }
-
+        compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom entity template " + cet.getCode());
     }
 
@@ -248,18 +237,7 @@ public class OntologyObserver {
         File classJavaFile = new File(classDir, cet.getCode() + ".java");
         FileUtils.write(classJavaFile, compilationUnit.toString());
 
-        compileClassJava(compilationUnit.toString(), classJavaFile);
-
-        File classFile = new File(classDir, cet.getCode() + ".class");
-        classJavaFile.delete();
-
-        synchronized (CLASSPATH_REFERENCE) {
-            String path = classFile.getAbsolutePath();
-            if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
-            }
-        }
-
+        compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
 
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
     }
@@ -419,18 +397,7 @@ public class OntologyObserver {
                     File classJavaFile = new File(classDir, cet.getCode() + ".java");
                     FileUtils.write(classJavaFile, compilationUnit.toString());
 
-                    compileClassJava(compilationUnit.toString(), classJavaFile);
-
-                    File classFile = new File(classDir, cet.getCode() + ".class");
-                    classJavaFile.delete();
-
-
-                    synchronized (CLASSPATH_REFERENCE) {
-                        String path = classFile.getAbsolutePath();
-                        if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                            CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
-                        }
-                    }
+                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
                 }
 
                 gitClient.commitFiles(
@@ -506,17 +473,8 @@ public class OntologyObserver {
                     File classJavaFile = new File(classDir, cet.getCode() + ".java");
                     FileUtils.write(classJavaFile, compilationUnit.toString());
 
-                    compileClassJava(compilationUnit.toString(), classJavaFile);
+                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
 
-                    File classFile = new File(classDir, cet.getCode() + ".class");
-                    classJavaFile.delete();
-
-                    synchronized (CLASSPATH_REFERENCE) {
-                        String path = classFile.getAbsolutePath();
-                        if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                            CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
-                        }
-                    }
                 }
 
                 gitClient.commitFiles(
@@ -698,16 +656,27 @@ public class OntologyObserver {
         }
     }
 
-    public void compileClassJava(String compilationUnit, File javaFile) {
+    public void compileClassJava(File classDir, String fileName, String compilationUnit, File javaFile) {
+
         supplementClassPathWithMissingImports(compilationUnit);
-        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + "D:\\opt\\wildfly\\opencelldata\\manaty\\classes");
         String classPath = CLASSPATH_REFERENCE.get();
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(javaFile));
-        compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+        Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+        if (isOK) {
+            File classFile = new File(classDir, fileName + ".class");
+            javaFile.delete();
+
+            synchronized (CLASSPATH_REFERENCE) {
+                String path = classFile.getAbsolutePath();
+                if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
+                    CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
+                }
+            }
+        }
     }
 
     public void constructClassPath() throws IOException {
@@ -715,7 +684,6 @@ public class OntologyObserver {
             synchronized (CLASSPATH_REFERENCE) {
                 if (CLASSPATH_REFERENCE.get().length() == 0) {
                     String classpath = CLASSPATH_REFERENCE.get();
-
                     // Check if deploying an exploded archive or a compressed file
                     String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
@@ -803,7 +771,6 @@ public class OntologyObserver {
                         classpath = String.join(File.pathSeparator, classPathEntries);
 
                     }
-
                     CLASSPATH_REFERENCE.set(classpath);
                 }
             }
@@ -873,7 +840,7 @@ public class OntologyObserver {
 
     private File getClassDir() {
         final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
-        return classDir;
+        return new File(classDir, "org/meveo/model/customEntities");
     }
 
     private String getFilePath(File jar) {
