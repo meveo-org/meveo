@@ -118,9 +118,9 @@
 		<createSequence sequenceName="remote_repository_seq" />
 	</changeSet>
 	
-	<changeSet author="Clement Bareth" id="add priority to input property description">
+	<changeSet author="Clement Bareth" id="Add a priority to input property description">
 		<addColumn tableName="property_description">
-			<column name="priority" type="float"/>
+			<column name="priority" type="float4"/>
 		</addColumn>
 	</changeSet>
     
