@@ -46,22 +46,20 @@ public class EntityPermissionBean implements Serializable {
 			Permission persistencePermission = permissionService.findByPermission(permission);
 			
 			mapping.forEach(rp -> {
+				this.permissionService.removeEntityPermission(rp.getRole(), permission, entityId);
+
 				switch(rp.getState()) {
 					// Remove from white and black lists
 					case "0" : 
-						this.permissionService.removeFromWhiteList(rp.getRole(), permission, entityId);
-						this.permissionService.removeFromBlackList(rp.getRole(), permission, entityId);
 						break;
 						
 					// Remove from blacklist & add to whitelist
 					case "1" : 
-						this.permissionService.removeFromBlackList(rp.getRole(), permission, entityId);
 						this.permissionService.addToWhiteList(rp.getRole(), persistencePermission, entityId);
 						break;
 						
 					// Remove from whitelist & add to blacklist
 					case "2" : 
-						this.permissionService.removeFromWhiteList(rp.getRole(), permission, entityId);
 						this.permissionService.addToBlackList(rp.getRole(), persistencePermission, entityId);
 						break;
 				}
