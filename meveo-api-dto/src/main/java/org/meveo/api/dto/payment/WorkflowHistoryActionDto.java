@@ -18,86 +18,93 @@
  */
 package org.meveo.api.dto.payment;
 
-import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.model.wf.WorkflowHistoryAction;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.model.wf.WorkflowHistoryAction;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class WorkflowHistoryActionDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("WorkflowHistoryActionDto")
 public class WorkflowHistoryActionDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 8309866046667741458L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 8309866046667741458L;
 
-    /** The action. */
-    private String action;
+	/** The action. */
+	@ApiModelProperty("Action to perform")
+	private String action;
 
-    /** The result. */
-    private String result;
+	/** The result. */
+	@ApiModelProperty("Result of the action")
+	private String result;
 
-    /**
-     * Instantiates a new workflow history action dto.
-     */
-    public WorkflowHistoryActionDto() {
-    }
+	/**
+	 * Instantiates a new workflow history action dto.
+	 */
+	public WorkflowHistoryActionDto() {
+	}
 
-    /**
-     * Instantiates a new workflow history action dto.
-     *
-     * @param workflowHistoryAction the workflow history action
-     */
-    public WorkflowHistoryActionDto(WorkflowHistoryAction workflowHistoryAction) {
-        this.action = workflowHistoryAction.getAction();
-        this.result = workflowHistoryAction.getResult();
-    }
+	/**
+	 * Instantiates a new workflow history action dto.
+	 *
+	 * @param workflowHistoryAction the workflow history action
+	 */
+	public WorkflowHistoryActionDto(WorkflowHistoryAction workflowHistoryAction) {
+		this.action = workflowHistoryAction.getAction();
+		this.result = workflowHistoryAction.getResult();
+	}
 
-    /**
-     * Gets the action.
-     *
-     * @return the action
-     */
-    public String getAction() {
-        return action;
-    }
+	/**
+	 * Gets the action.
+	 *
+	 * @return the action
+	 */
+	public String getAction() {
+		return action;
+	}
 
-    /**
-     * Sets the action.
-     *
-     * @param action the action to set
-     */
-    public void setAction(String action) {
-        this.action = action;
-    }
+	/**
+	 * Sets the action.
+	 *
+	 * @param action the action to set
+	 */
+	public void setAction(String action) {
+		this.action = action;
+	}
 
-    /**
-     * Gets the result.
-     *
-     * @return the result
-     */
-    public String getResult() {
-        return result;
-    }
+	/**
+	 * Gets the result.
+	 *
+	 * @return the result
+	 */
+	public String getResult() {
+		return result;
+	}
 
-    /**
-     * Sets the result.
-     *
-     * @param result the result to set
-     */
-    public void setResult(String result) {
-        this.result = result;
-    }
+	/**
+	 * Sets the result.
+	 *
+	 * @param result the result to set
+	 */
+	public void setResult(String result) {
+		this.result = result;
+	}
 
-
-    @Override
-    public String toString() {
-        return "WorkflowHistoryActionDto [action=" + action + ", result=" + result + "]";
-    }
+	@Override
+	public String toString() {
+		return "WorkflowHistoryActionDto [action=" + action + ", result=" + result + "]";
+	}
 }

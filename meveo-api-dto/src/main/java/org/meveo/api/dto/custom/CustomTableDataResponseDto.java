@@ -7,42 +7,47 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.response.SearchResponse;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * Represents search within custom table results
+ * Represents search within custom table results. Wrapper to custom table
+ * information.
  *
+ * @see CustomTableDataDto
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomTableDataResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CustomTableDataResponseDto extends SearchResponse {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -2044679362279307652L;
-    /**
-     * Search within custom table results
-     */
-    @XmlElement(name = "tableData")
-    private CustomTableDataDto customTableData = new CustomTableDataDto();
+	private static final long serialVersionUID = -2044679362279307652L;
 
-    /**
-     * @return Search within custom table results
-     */
-    public CustomTableDataDto getCustomTableData() {
-        return customTableData;
-    }
+	/**
+	 * Search within custom table results
+	 */
+	@XmlElement(name = "tableData")
+	@ApiModelProperty("Search within custom table results")
+	private CustomTableDataDto customTableData = new CustomTableDataDto();
 
-    /**
-     * @param customTableData Search within custom table results
-     */
-    public void setCustomTableData(CustomTableDataDto customTableData) {
-        this.customTableData = customTableData;
-    }
+	/**
+	 * @return Search within custom table results
+	 */
+	public CustomTableDataDto getCustomTableData() {
+		return customTableData;
+	}
 
-    @Override
-    public String toString() {
-        return "CustomTableDataResponseDto [customTableData=" + customTableData + " " + super.toString() + "]";
-    }
+	/**
+	 * @param customTableData Search within custom table results
+	 */
+	public void setCustomTableData(CustomTableDataDto customTableData) {
+		this.customTableData = customTableData;
+	}
+
+	@Override
+	public String toString() {
+		return "CustomTableDataResponseDto [customTableData=" + customTableData + " " + super.toString() + "]";
+	}
 
 }

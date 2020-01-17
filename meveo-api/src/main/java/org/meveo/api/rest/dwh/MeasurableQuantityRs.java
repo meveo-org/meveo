@@ -15,9 +15,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.meveo.api.dto.ActionStatus;
-import org.meveo.api.dto.dwh.GetListMeasurableQuantityResponse;
-import org.meveo.api.dto.dwh.GetMeasurableQuantityResponse;
 import org.meveo.api.dto.dwh.MeasurableQuantityDto;
+import org.meveo.api.dto.response.dwh.GetListMeasurableQuantityResponse;
+import org.meveo.api.dto.response.dwh.GetMeasurableQuantityResponse;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.api.serialize.RestDateParam;
 import org.meveo.model.dwh.MeasurableQuantity;

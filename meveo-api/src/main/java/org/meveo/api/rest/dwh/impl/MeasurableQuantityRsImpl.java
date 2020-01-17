@@ -11,10 +11,10 @@ import javax.ws.rs.core.Response;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
-import org.meveo.api.dto.dwh.GetListMeasurableQuantityResponse;
-import org.meveo.api.dto.dwh.GetMeasurableQuantityResponse;
 import org.meveo.api.dto.dwh.MeasurableQuantityDto;
 import org.meveo.api.dto.dwh.MeasuredValueDto;
+import org.meveo.api.dto.response.dwh.GetListMeasurableQuantityResponse;
+import org.meveo.api.dto.response.dwh.GetMeasurableQuantityResponse;
 import org.meveo.api.dwh.MeasurableQuantityApi;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;

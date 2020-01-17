@@ -16,141 +16,152 @@
 
 package org.meveo.api.dto.git;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import org.apache.commons.lang3.StringUtils;
-import org.meveo.api.dto.BusinessEntityDto;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+import org.meveo.api.dto.BusinessEntityDto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * DTO representation of {@link org.meveo.model.git.GitRepository} entity
+ * 
  * @author Clement Bareth
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
+@ApiModel("GitRepositoryDto")
 public class GitRepositoryDto extends BusinessEntityDto {
 
-    /**
-     * Roles that allows a user to make pull, fetch and clone actions
-     */
-    @ApiModelProperty("List of reading roles that allows a user to make pull, fetch and clone actions")
-    private List<String> readingRoles = new ArrayList<>();
+	private static final long serialVersionUID = -3630922125856006992L;
 
-    /**
-     * Roles that allows a user to make commit, merge and push actions
-     */
-    @ApiModelProperty("List of writing roles that allows a user to make commit, merge and push actions")
-    private List<String> writingRoles = new ArrayList<>();
+	/**
+	 * Roles that allows a user to make pull, fetch and clone actions
+	 */
+	@ApiModelProperty("List of reading roles that allows a user to make pull, fetch and clone actions")
+	private List<String> readingRoles = new ArrayList<>();
 
-    /**
-     * (Optional) Remote origin url if the repository is hosted somewhere else than locally
-     */
-    @ApiModelProperty("Remote origin url if the repository is hosted somewhere else than locally")
-    private String remoteOrigin;
+	/**
+	 * Roles that allows a user to make commit, merge and push actions
+	 */
+	@ApiModelProperty("List of writing roles that allows a user to make commit, merge and push actions")
+	private List<String> writingRoles = new ArrayList<>();
 
-    /**
-     * (Optional) Remote username to use when making action with distant repository. <br>
-     * If not provided, will use current user credentials.
-     */
-    @ApiModelProperty("Remote username to use when making action with distant repository")
-    private String remoteUsername;
+	/**
+	 * (Optional) Remote origin url if the repository is hosted somewhere else than
+	 * locally
+	 */
+	@ApiModelProperty("Remote origin url if the repository is hosted somewhere else than locally")
+	private String remoteOrigin;
 
-    /**
-     * (Optional) Remote password to use when making action with distant repository. <br>
-     *  If not provided, will use current user credentials.
-     */
-    @ApiModelProperty("Remote password to use when making action with distant repository")
-    private String remotePassword;
+	/**
+	 * (Optional) Remote username to use when making action with distant repository.
+	 * <br>
+	 * If not provided, will use current user credentials.
+	 */
+	@ApiModelProperty("Remote username to use when making action with distant repository")
+	private String remoteUsername;
 
-    /**
-     * Whether the remote repository is hosted in a meveo instance
-     */
-    @ApiModelProperty("Whether the remote repository is hosted in a meveo instance")
-    private boolean meveoRepository;
+	/**
+	 * (Optional) Remote password to use when making action with distant repository.
+	 * <br>
+	 * If not provided, will use current user credentials.
+	 */
+	@ApiModelProperty("Remote password to use when making action with distant repository")
+	private String remotePassword;
 
-    @JsonIgnore
-    @ApiModelProperty("Current branch")
-    private String currentBranch;
+	/**
+	 * Whether the remote repository is hosted in a meveo instance
+	 */
+	@ApiModelProperty("Whether the remote repository is hosted in a meveo instance")
+	private boolean meveoRepository;
 
-    @JsonIgnore
-    @ApiModelProperty("List of branches")
-    private List<String> branches;
+	@JsonIgnore
+	@ApiModelProperty("Current branch")
+	private String currentBranch;
 
-    @JsonProperty
-    public List<String> getBranches() {
-        return branches;
-    }
+	@JsonIgnore
+	@ApiModelProperty("List of branches")
+	private List<String> branches;
 
-    public boolean isMeveoRepository() {
-        return meveoRepository;
-    }
+	@JsonProperty
+	public List<String> getBranches() {
+		return branches;
+	}
 
-    public void setMeveoRepository(boolean meveoRepository) {
-        this.meveoRepository = meveoRepository;
-    }
+	public boolean isMeveoRepository() {
+		return meveoRepository;
+	}
 
-    public List<String> getReadingRoles() {
-        return readingRoles;
-    }
+	public void setMeveoRepository(boolean meveoRepository) {
+		this.meveoRepository = meveoRepository;
+	}
 
-    public void setReadingRoles(List<String> readingRoles) {
-        this.readingRoles = readingRoles;
-    }
+	public List<String> getReadingRoles() {
+		return readingRoles;
+	}
 
-    public List<String> getWritingRoles() {
-        return writingRoles;
-    }
+	public void setReadingRoles(List<String> readingRoles) {
+		this.readingRoles = readingRoles;
+	}
 
-    public void setWritingRoles(List<String> writingRoles) {
-        this.writingRoles = writingRoles;
-    }
+	public List<String> getWritingRoles() {
+		return writingRoles;
+	}
 
-    public String getRemoteOrigin() {
-        return remoteOrigin;
-    }
+	public void setWritingRoles(List<String> writingRoles) {
+		this.writingRoles = writingRoles;
+	}
 
-    public void setRemoteOrigin(String remoteOrigin) {
-        this.remoteOrigin = remoteOrigin;
-    }
+	public String getRemoteOrigin() {
+		return remoteOrigin;
+	}
 
-    public String getRemoteUsername() {
-        return remoteUsername;
-    }
+	public void setRemoteOrigin(String remoteOrigin) {
+		this.remoteOrigin = remoteOrigin;
+	}
 
-    public void setRemoteUsername(String remoteUsername) {
-        this.remoteUsername = remoteUsername;
-    }
+	public String getRemoteUsername() {
+		return remoteUsername;
+	}
 
-    public String getRemotePassword() {
-        return remotePassword;
-    }
+	public void setRemoteUsername(String remoteUsername) {
+		this.remoteUsername = remoteUsername;
+	}
 
-    public void setRemotePassword(String remotePassword) {
-        this.remotePassword = remotePassword;
-    }
+	public String getRemotePassword() {
+		return remotePassword;
+	}
 
-    public boolean isRemote(){
-        return StringUtils.isNotBlank(this.remoteOrigin);
-    }
+	public void setRemotePassword(String remotePassword) {
+		this.remotePassword = remotePassword;
+	}
 
-    @JsonIgnore
-    public void setBranches(List<String> branches) {
-        this.branches = branches;
-    }
+	public boolean isRemote() {
+		return StringUtils.isNotBlank(this.remoteOrigin);
+	}
 
-    @JsonProperty
-    public String getCurrentBranch() {
-        if(currentBranch == null){
-            return "master";
-        }
+	@JsonIgnore
+	public void setBranches(List<String> branches) {
+		this.branches = branches;
+	}
 
-        return currentBranch;
-    }
+	@JsonProperty
+	public String getCurrentBranch() {
+		if (currentBranch == null) {
+			return "master";
+		}
 
-    @JsonIgnore
-    public void setCurrentBranch(String currentBranch) {
-        this.currentBranch = currentBranch;
-    }
+		return currentBranch;
+	}
+
+	@JsonIgnore
+	public void setCurrentBranch(String currentBranch) {
+		this.currentBranch = currentBranch;
+	}
 }
