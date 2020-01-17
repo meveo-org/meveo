@@ -1,8 +1,5 @@
 package org.meveo.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,454 +18,480 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class CustomFieldDto.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomField")
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonInclude(Include.NON_NULL)
+@ApiModel
 public class CustomFieldDto {
 
-    /** The code. */
-    @XmlAttribute(required = true)
-    protected String code;
+	/** The code. */
+	@XmlAttribute(required = true)
+	@ApiModelProperty(value = "Code use as the identity of this entity", required = true)
+	protected String code;
 
-    /** The value date. */
-    @XmlAttribute
-    protected Date valueDate;
+	/** The value date. */
+	@XmlAttribute
+	@ApiModelProperty("The date value")
+	protected Date valueDate;
 
-    /** The value period start date. */
-    @XmlAttribute
-    protected Date valuePeriodStartDate;
+	/** The value period start date. */
+	@XmlAttribute
+	@ApiModelProperty("Period's start date")
+	protected Date valuePeriodStartDate;
 
-    /** The value period end date. */
-    @XmlAttribute
-    protected Date valuePeriodEndDate;
+	/** The value period end date. */
+	@XmlAttribute
+	@ApiModelProperty("Period's end date")
+	protected Date valuePeriodEndDate;
 
-    /** The value period priority. */
-    @XmlAttribute
-    protected Integer valuePeriodPriority;
+	/** The value period priority. */
+	@XmlAttribute
+	@ApiModelProperty("Period's priority")
+	protected Integer valuePeriodPriority;
 
-    /** The string value. */
-    @XmlElement
-    protected String stringValue;
+	/** The string value. */
+	@XmlElement
+	@ApiModelProperty("String value")
+	protected String stringValue;
 
-    /** The date value. */
-    @XmlElement
-    protected Date dateValue;
+	/** The date value. */
+	@XmlElement
+	@ApiModelProperty("Date value")
+	protected Date dateValue;
 
-    /** The long value. */
-    @XmlElement
-    protected Long longValue;
+	/** The long value. */
+	@XmlElement
+	@ApiModelProperty("Long value")
+	protected Long longValue;
 
-    /** The double value. */
-    @XmlElement()
-    protected Double doubleValue;
+	/** The double value. */
+	@XmlElement()
+	@ApiModelProperty("Double value")
+	protected Double doubleValue;
 
-    /** The list value. */
-    @XmlElementWrapper(name = "listValue")
-    @XmlElement(name = "value")
-    protected List<CustomFieldValueDto> listValue;
+	/** The list value. */
+	@XmlElementWrapper(name = "listValue")
+	@XmlElement(name = "value")
+	@ApiModelProperty("List value")
+	protected List<CustomFieldValueDto> listValue;
 
-    /** The map value. */
-    // DO NOT change to Map. Used LinkedHashMap to preserve the item order during read/write
-    @XmlElement
-    protected LinkedHashMap<String, CustomFieldValueDto> mapValue;
+	/** The map value. */
+	// DO NOT change to Map. Used LinkedHashMap to preserve the item order during
+	// read/write
+	@XmlElement
+	@ApiModelProperty("Map value")
+	protected LinkedHashMap<String, CustomFieldValueDto> mapValue;
 
-    /** The entity reference value. */
-    @XmlElement()
-    protected EntityReferenceDto entityReferenceValue;
+	/** The entity reference value. */
+	@XmlElement()
+	@ApiModelProperty("Entity reference value")
+	protected EntityReferenceDto entityReferenceValue;
 
-    /** The value converted. */
-    // A transient object. Contains a converted value from DTO to some object when it is applicable
-    @XmlTransient
-    protected Object valueConverted;
+	/** The value converted. */
+	// A transient object. Contains a converted value from DTO to some object when
+	// it is applicable
+	@XmlTransient
+	@ApiModelProperty("A transient object. Contains a converted value from DTO to some object when it is applicable")
+	protected Object valueConverted;
 
-    /** The index type. */
-    @XmlElement()
-    private CustomFieldIndexTypeEnum indexType;
-    
-    
-    @XmlElement
-    protected Boolean booleanValue;
+	/** The index type. */
+	@XmlElement()
+	@ApiModelProperty("The type of index")
+	private CustomFieldIndexTypeEnum indexType;
 
-    /**
-     * Instantiates a new custom field dto.
-     */
-    public CustomFieldDto() {
-    }
+	@XmlElement
+	@ApiModelProperty("Boolean value")
+	protected Boolean booleanValue;
 
-    /**
-     * Gets the code.
-     *
-     * @return the code
-     */
-    public String getCode() {
-        return code;
-    }
+	/**
+	 * Instantiates a new custom field dto.
+	 */
+	public CustomFieldDto() {
+	}
 
-    /**
-     * Sets the code.
-     *
-     * @param code the new code
-     */
-    public void setCode(String code) {
-        this.code = code;
-    }
+	/**
+	 * Gets the code.
+	 *
+	 * @return the code
+	 */
+	public String getCode() {
+		return code;
+	}
 
-    /**
-     * Gets the string value.
-     *
-     * @return the string value
-     */
-    public String getStringValue() {
-        return stringValue;
-    }
+	/**
+	 * Sets the code.
+	 *
+	 * @param code the new code
+	 */
+	public void setCode(String code) {
+		this.code = code;
+	}
 
-    /**
-     * Sets the string value.
-     *
-     * @param stringValue the new string value
-     */
-    public void setStringValue(String stringValue) {
-        this.stringValue = stringValue;
-    }
+	/**
+	 * Gets the string value.
+	 *
+	 * @return the string value
+	 */
+	public String getStringValue() {
+		return stringValue;
+	}
 
-    /**
-     * Gets the date value.
-     *
-     * @return the date value
-     */
-    public Date getDateValue() {
-        return dateValue;
-    }
+	/**
+	 * Sets the string value.
+	 *
+	 * @param stringValue the new string value
+	 */
+	public void setStringValue(String stringValue) {
+		this.stringValue = stringValue;
+	}
 
-    /**
-     * Sets the date value.
-     *
-     * @param dateValue the new date value
-     */
-    public void setDateValue(Date dateValue) {
-        this.dateValue = dateValue;
-    }
+	/**
+	 * Gets the date value.
+	 *
+	 * @return the date value
+	 */
+	public Date getDateValue() {
+		return dateValue;
+	}
 
-    /**
-     * Gets the long value.
-     *
-     * @return the long value
-     */
-    public Long getLongValue() {
-        return longValue;
-    }
+	/**
+	 * Sets the date value.
+	 *
+	 * @param dateValue the new date value
+	 */
+	public void setDateValue(Date dateValue) {
+		this.dateValue = dateValue;
+	}
 
-    /**
-     * Sets the long value.
-     *
-     * @param longValue the new long value
-     */
-    public void setLongValue(Long longValue) {
-        this.longValue = longValue;
-    }
+	/**
+	 * Gets the long value.
+	 *
+	 * @return the long value
+	 */
+	public Long getLongValue() {
+		return longValue;
+	}
 
-    /**
-     * Gets the double value.
-     *
-     * @return the double value
-     */
-    public Double getDoubleValue() {
-        return doubleValue;
-    }
+	/**
+	 * Sets the long value.
+	 *
+	 * @param longValue the new long value
+	 */
+	public void setLongValue(Long longValue) {
+		this.longValue = longValue;
+	}
 
-    /**
-     * Sets the double value.
-     *
-     * @param doubleValue the new double value
-     */
-    public void setDoubleValue(Double doubleValue) {
-        this.doubleValue = doubleValue;
-    }
+	/**
+	 * Gets the double value.
+	 *
+	 * @return the double value
+	 */
+	public Double getDoubleValue() {
+		return doubleValue;
+	}
 
-    /**
-     * Gets the value date.
-     *
-     * @return the value date
-     */
-    public Date getValueDate() {
-        return valueDate;
-    }
+	/**
+	 * Sets the double value.
+	 *
+	 * @param doubleValue the new double value
+	 */
+	public void setDoubleValue(Double doubleValue) {
+		this.doubleValue = doubleValue;
+	}
 
-    /**
-     * Sets the value date.
-     *
-     * @param valueDate the new value date
-     */
-    public void setValueDate(Date valueDate) {
-        this.valueDate = valueDate;
-    }
+	/**
+	 * Gets the value date.
+	 *
+	 * @return the value date
+	 */
+	public Date getValueDate() {
+		return valueDate;
+	}
 
-    /**
-     * Gets the value period start date.
-     *
-     * @return the value period start date
-     */
-    public Date getValuePeriodStartDate() {
-        return valuePeriodStartDate;
-    }
+	/**
+	 * Sets the value date.
+	 *
+	 * @param valueDate the new value date
+	 */
+	public void setValueDate(Date valueDate) {
+		this.valueDate = valueDate;
+	}
 
-    /**
-     * Sets the value period start date.
-     *
-     * @param valuePeriodStartDate the new value period start date
-     */
-    public void setValuePeriodStartDate(Date valuePeriodStartDate) {
-        this.valuePeriodStartDate = valuePeriodStartDate;
-    }
+	/**
+	 * Gets the value period start date.
+	 *
+	 * @return the value period start date
+	 */
+	public Date getValuePeriodStartDate() {
+		return valuePeriodStartDate;
+	}
 
-    /**
-     * Gets the value period end date.
-     *
-     * @return the value period end date
-     */
-    public Date getValuePeriodEndDate() {
-        return valuePeriodEndDate;
-    }
+	/**
+	 * Sets the value period start date.
+	 *
+	 * @param valuePeriodStartDate the new value period start date
+	 */
+	public void setValuePeriodStartDate(Date valuePeriodStartDate) {
+		this.valuePeriodStartDate = valuePeriodStartDate;
+	}
 
-    /**
-     * Sets the value period end date.
-     *
-     * @param valuePeriodEndDate the new value period end date
-     */
-    public void setValuePeriodEndDate(Date valuePeriodEndDate) {
-        this.valuePeriodEndDate = valuePeriodEndDate;
-    }
+	/**
+	 * Gets the value period end date.
+	 *
+	 * @return the value period end date
+	 */
+	public Date getValuePeriodEndDate() {
+		return valuePeriodEndDate;
+	}
 
-    /**
-     * Sets the value period priority.
-     *
-     * @param valuePeriodPriority the new value period priority
-     */
-    public void setValuePeriodPriority(Integer valuePeriodPriority) {
-        this.valuePeriodPriority = valuePeriodPriority;
-    }
+	/**
+	 * Sets the value period end date.
+	 *
+	 * @param valuePeriodEndDate the new value period end date
+	 */
+	public void setValuePeriodEndDate(Date valuePeriodEndDate) {
+		this.valuePeriodEndDate = valuePeriodEndDate;
+	}
 
-    /**
-     * Gets the value period priority.
-     *
-     * @return the value period priority
-     */
-    public Integer getValuePeriodPriority() {
-        return valuePeriodPriority;
-    }
+	/**
+	 * Sets the value period priority.
+	 *
+	 * @param valuePeriodPriority the new value period priority
+	 */
+	public void setValuePeriodPriority(Integer valuePeriodPriority) {
+		this.valuePeriodPriority = valuePeriodPriority;
+	}
 
-    /**
-     * Gets the list value.
-     *
-     * @return the list value
-     */
-    public List<CustomFieldValueDto> getListValue() {
-        return listValue;
-    }
+	/**
+	 * Gets the value period priority.
+	 *
+	 * @return the value period priority
+	 */
+	public Integer getValuePeriodPriority() {
+		return valuePeriodPriority;
+	}
 
-    /**
-     * Sets the list value.
-     *
-     * @param listValue the new list value
-     */
-    public void setListValue(List<CustomFieldValueDto> listValue) {
-        this.listValue = listValue;
-    }
+	/**
+	 * Gets the list value.
+	 *
+	 * @return the list value
+	 */
+	public List<CustomFieldValueDto> getListValue() {
+		return listValue;
+	}
 
-    /**
-     * Gets the map value.
-     *
-     * @return the map value
-     */
-    public Map<String, CustomFieldValueDto> getMapValue() {
-        return mapValue;
-    }
+	/**
+	 * Sets the list value.
+	 *
+	 * @param listValue the new list value
+	 */
+	public void setListValue(List<CustomFieldValueDto> listValue) {
+		this.listValue = listValue;
+	}
 
-    /**
-     * Sets the map value.
-     *
-     * @param mapValue the map value
-     */
-    public void setMapValue(LinkedHashMap<String, CustomFieldValueDto> mapValue) {
-        this.mapValue = mapValue;
-    }
+	/**
+	 * Gets the map value.
+	 *
+	 * @return the map value
+	 */
+	public Map<String, CustomFieldValueDto> getMapValue() {
+		return mapValue;
+	}
 
-    /**
-     * Gets the entity reference value.
-     *
-     * @return the entity reference value
-     */
-    public EntityReferenceDto getEntityReferenceValue() {
-        return entityReferenceValue;
-    }
+	/**
+	 * Sets the map value.
+	 *
+	 * @param mapValue the map value
+	 */
+	public void setMapValue(LinkedHashMap<String, CustomFieldValueDto> mapValue) {
+		this.mapValue = mapValue;
+	}
 
-    /**
-     * Sets the entity reference value.
-     *
-     * @param entityReferenceValue the new entity reference value
-     */
-    public void setEntityReferenceValue(EntityReferenceDto entityReferenceValue) {
-        this.entityReferenceValue = entityReferenceValue;
-    }
-    
-    public Boolean getBooleanValue() {
-        return booleanValue;
-    }
+	/**
+	 * Gets the entity reference value.
+	 *
+	 * @return the entity reference value
+	 */
+	public EntityReferenceDto getEntityReferenceValue() {
+		return entityReferenceValue;
+	}
 
-    public void setBooleanValue(Boolean booleanValue) {
-        this.booleanValue = booleanValue;
-    }
+	/**
+	 * Sets the entity reference value.
+	 *
+	 * @param entityReferenceValue the new entity reference value
+	 */
+	public void setEntityReferenceValue(EntityReferenceDto entityReferenceValue) {
+		this.entityReferenceValue = entityReferenceValue;
+	}
 
-    /**
-     * Check if value is empty given specific field or storage type.
-     *
-     * @param fieldType Field type to check
-     * @param storageType Storage type to check
-     * @return True if value is empty
-     */
-    public boolean isEmpty(CustomFieldTypeEnum fieldType, CustomFieldStorageTypeEnum storageType) {
-        if (storageType == CustomFieldStorageTypeEnum.MAP || storageType == CustomFieldStorageTypeEnum.MATRIX) {
-            if (mapValue == null || mapValue.isEmpty()) {
-                return true;
-            }
+	public Boolean getBooleanValue() {
+		return booleanValue;
+	}
 
-            for (Entry<String, CustomFieldValueDto> mapItem : mapValue.entrySet()) {
-                if (mapItem.getKey() == null || mapItem.getKey().isEmpty() || mapItem.getValue() == null || mapItem.getValue().isEmpty()) {
-                    return true;
-                }
-            }
+	public void setBooleanValue(Boolean booleanValue) {
+		this.booleanValue = booleanValue;
+	}
 
-        } else if (storageType == CustomFieldStorageTypeEnum.LIST) {
-            if (listValue == null || listValue.isEmpty()) {
-                return true;
-            }
+	/**
+	 * Check if value is empty given specific field or storage type.
+	 *
+	 * @param fieldType   Field type to check
+	 * @param storageType Storage type to check
+	 * @return True if value is empty
+	 */
+	public boolean isEmpty(CustomFieldTypeEnum fieldType, CustomFieldStorageTypeEnum storageType) {
+		if (storageType == CustomFieldStorageTypeEnum.MAP || storageType == CustomFieldStorageTypeEnum.MATRIX) {
+			if (mapValue == null || mapValue.isEmpty()) {
+				return true;
+			}
 
-            for (CustomFieldValueDto listItem : listValue) {
-                if (listItem == null || listItem.isEmpty()) {
-                    return true;
-                }
-            }
+			for (Entry<String, CustomFieldValueDto> mapItem : mapValue.entrySet()) {
+				if (mapItem.getKey() == null || mapItem.getKey().isEmpty() || mapItem.getValue() == null || mapItem.getValue().isEmpty()) {
+					return true;
+				}
+			}
 
-        } else if (storageType == CustomFieldStorageTypeEnum.SINGLE) {
-            switch (fieldType) {
-            case DATE:
-                return dateValue == null;
-            case DOUBLE:
-                return doubleValue == null;
-            case LONG:
-                return longValue == null;
-            case LIST:
-            case STRING:
-            case TEXT_AREA:
-            case EMBEDDED_ENTITY:	
-                return stringValue == null;
-            case ENTITY:
-                return entityReferenceValue == null || entityReferenceValue.isEmpty();
-            case CHILD_ENTITY:
-                return true;
-            case BOOLEAN:
-                return booleanValue == null;     
-            }
-        }
-        return false;
-    }
+		} else if (storageType == CustomFieldStorageTypeEnum.LIST) {
+			if (listValue == null || listValue.isEmpty()) {
+				return true;
+			}
 
-    /**
-     * A generic way to check if value is empty.
-     *
-     * @return True if value is empty
-     */
-    public boolean isEmpty() {
-        if (mapValue != null) {
-            for (Entry<String, CustomFieldValueDto> mapItem : mapValue.entrySet()) {
-                if (mapItem.getKey() != null && !mapItem.getKey().isEmpty() && mapItem.getValue() != null && mapItem.getValue().isEmpty()) {
-                    return false;
-                }
-            }
-        }
-        if (listValue != null) {
-            for (CustomFieldValueDto listItem : listValue) {
-                if (listItem != null && !listItem.isEmpty()) {
-                    return false;
-                }
-            }
-        }
-        if (dateValue != null) {
-            return false;
-        } else if (doubleValue != null) {
-            return false;
-        } else if (doubleValue != null) {
-            return false;
-        } else if (longValue != null) {
-            return false;
-        } else if (stringValue != null && !stringValue.isEmpty()) {
-            return false;
-        } else if (entityReferenceValue != null && !entityReferenceValue.isEmpty()) {
-            return false;
-        }
+			for (CustomFieldValueDto listItem : listValue) {
+				if (listItem == null || listItem.isEmpty()) {
+					return true;
+				}
+			}
 
-        return true;
-    }
+		} else if (storageType == CustomFieldStorageTypeEnum.SINGLE) {
+			switch (fieldType) {
+			case DATE:
+				return dateValue == null;
+			case DOUBLE:
+				return doubleValue == null;
+			case LONG:
+				return longValue == null;
+			case LIST:
+			case STRING:
+			case TEXT_AREA:
+			case EMBEDDED_ENTITY:
+				return stringValue == null;
+			case ENTITY:
+				return entityReferenceValue == null || entityReferenceValue.isEmpty();
+			case CHILD_ENTITY:
+				return true;
+			case BOOLEAN:
+				return booleanValue == null;
+			default:
+				return stringValue == null;
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Gets the value converted.
-     *
-     * @return the value converted
-     */
-    public Object getValueConverted() {
-        return valueConverted;
-    }
+	/**
+	 * A generic way to check if value is empty.
+	 *
+	 * @return True if value is empty
+	 */
+	public boolean isEmpty() {
+		if (mapValue != null) {
+			for (Entry<String, CustomFieldValueDto> mapItem : mapValue.entrySet()) {
+				if (mapItem.getKey() != null && !mapItem.getKey().isEmpty() && mapItem.getValue() != null && mapItem.getValue().isEmpty()) {
+					return false;
+				}
+			}
+		}
+		if (listValue != null) {
+			for (CustomFieldValueDto listItem : listValue) {
+				if (listItem != null && !listItem.isEmpty()) {
+					return false;
+				}
+			}
+		}
+		if (dateValue != null) {
+			return false;
+		} else if (doubleValue != null) {
+			return false;
+		} else if (doubleValue != null) {
+			return false;
+		} else if (longValue != null) {
+			return false;
+		} else if (stringValue != null && !stringValue.isEmpty()) {
+			return false;
+		} else if (entityReferenceValue != null && !entityReferenceValue.isEmpty()) {
+			return false;
+		}
 
-    /**
-     * Sets the value converted.
-     *
-     * @param valueConverted the new value converted
-     */
-    public void setValueConverted(Object valueConverted) {
-        this.valueConverted = valueConverted;
-    }
+		return true;
+	}
 
-    /**
-     * Gets the index type.
-     *
-     * @return the index type
-     */
-    public CustomFieldIndexTypeEnum getIndexType() {
-        return indexType;
-    }
+	/**
+	 * Gets the value converted.
+	 *
+	 * @return the value converted
+	 */
+	public Object getValueConverted() {
+		return valueConverted;
+	}
 
-    /**
-     * Sets the index type.
-     *
-     * @param indexType the new index type
-     */
-    public void setIndexType(CustomFieldIndexTypeEnum indexType) {
-        this.indexType = indexType;
-    }
+	/**
+	 * Sets the value converted.
+	 *
+	 * @param valueConverted the new value converted
+	 */
+	public void setValueConverted(Object valueConverted) {
+		this.valueConverted = valueConverted;
+	}
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("CustomFieldDto{");
-        sb.append("code='").append(code).append('\'');
-        sb.append(", valueDate=").append(valueDate);
-        sb.append(", valuePeriodStartDate=").append(valuePeriodStartDate);
-        sb.append(", valuePeriodEndDate=").append(valuePeriodEndDate);
-        sb.append(", valuePeriodPriority=").append(valuePeriodPriority);
-        sb.append(", stringValue='").append(stringValue).append('\'');
-        sb.append(", dateValue=").append(dateValue);
-        sb.append(", longValue=").append(longValue);
-        sb.append(", doubleValue=").append(doubleValue);
-        sb.append(", listValue=").append(listValue);
-        sb.append(", mapValue=").append(mapValue);
-        sb.append(", entityReferenceValue=").append(entityReferenceValue);
-        sb.append(", valueConverted=").append(valueConverted);
-        sb.append(", indexType=").append(indexType);
-        sb.append('}');
-        return sb.toString();
-    }
+	/**
+	 * Gets the index type.
+	 *
+	 * @return the index type
+	 */
+	public CustomFieldIndexTypeEnum getIndexType() {
+		return indexType;
+	}
+
+	/**
+	 * Sets the index type.
+	 *
+	 * @param indexType the new index type
+	 */
+	public void setIndexType(CustomFieldIndexTypeEnum indexType) {
+		this.indexType = indexType;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("CustomFieldDto{");
+		sb.append("code='").append(code).append('\'');
+		sb.append(", valueDate=").append(valueDate);
+		sb.append(", valuePeriodStartDate=").append(valuePeriodStartDate);
+		sb.append(", valuePeriodEndDate=").append(valuePeriodEndDate);
+		sb.append(", valuePeriodPriority=").append(valuePeriodPriority);
+		sb.append(", stringValue='").append(stringValue).append('\'');
+		sb.append(", dateValue=").append(dateValue);
+		sb.append(", longValue=").append(longValue);
+		sb.append(", doubleValue=").append(doubleValue);
+		sb.append(", listValue=").append(listValue);
+		sb.append(", mapValue=").append(mapValue);
+		sb.append(", entityReferenceValue=").append(entityReferenceValue);
+		sb.append(", valueConverted=").append(valueConverted);
+		sb.append(", indexType=").append(indexType);
+		sb.append('}');
+		return sb.toString();
+	}
 }

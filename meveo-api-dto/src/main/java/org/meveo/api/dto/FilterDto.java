@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.filter.Filter;
 
@@ -11,16 +12,19 @@ import org.meveo.model.filter.Filter;
  * The Class FilterDto.
  *
  * @author Tyshan Shi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Filter")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class FilterDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
 
-    /** The shared. */
-    @ApiModelProperty("The shared")
+    /** Whether this filter is shared. */
+    @ApiModelProperty("Whether this filter is shared")
     private Boolean shared;
 
     /** The input xml. */

@@ -7,15 +7,19 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.meveo.model.BusinessEntity;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The dto for business entities.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @version 6.7.0
  * @since Oct 4, 2013
  **/
 @XmlTransient
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class BusinessEntityDto extends EnableEntityDto {
 
 	/** The Constant serialVersionUID. */
@@ -24,13 +28,16 @@ public class BusinessEntityDto extends EnableEntityDto {
 	/** The code. */
 	// @Pattern(regexp = "^[@A-Za-z0-9_\\.-]+$")
 	@XmlAttribute(required = true)
+	@ApiModelProperty(required = true, value = "Business entity's code")
 	protected String code;
 
 	/** The description. */
 	@XmlAttribute()
+	@ApiModelProperty("Description of the business entity")
 	protected String description;
 
 	/** The updated code. */
+	@ApiModelProperty("Use when updating the code of the business entity")
 	protected String updatedCode;
 
 	/**

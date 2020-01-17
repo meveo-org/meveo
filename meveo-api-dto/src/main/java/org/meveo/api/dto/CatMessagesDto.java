@@ -10,11 +10,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class CatMessagesDto.
+ *
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CatMessages")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CatMessagesDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
@@ -22,6 +29,7 @@ public class CatMessagesDto extends BaseEntityDto {
 
     /** The entity class. */
     @XmlAttribute(required = true)
+    @ApiModelProperty
     private String entityClass;
 
     /** The code. */

@@ -10,22 +10,27 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.neo4j.Neo4jConfigurationDto;
 import org.meveo.api.dto.response.neo4j.Neo4jConfigurationResponseDto;
 import org.meveo.api.dto.response.neo4j.Neo4jConfigurationsResponseDto;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.model.neo4j.Neo4JConfiguration;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * API for managing {@link Neo4JConfiguration}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @Path("/neo4j/configurations")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Neo4j configuration")
+@Api("Neo4jConfigurationRs")
 public interface Neo4jConfigurationRs extends IBaseRs {
 
 	/**

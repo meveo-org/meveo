@@ -25,7 +25,7 @@ import org.meveo.model.storage.Repository;
  * REST API for managing {@link Repository}.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.7.0
  */
 @Path("/storages/repositories")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})

@@ -4,14 +4,28 @@ import org.meveo.model.EnableEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
+@ApiModel
 public class EnableEntityDto extends AuditableEntityDto {
 
 	private static final long serialVersionUID = 3544475652777380893L;
 
+	/**
+	 * Whether this entity is disabled
+	 */
+	@ApiModelProperty("Whether this entity is disabled")
 	private Boolean disabled;
+	
+	/**
+	 * Whether this entity is active
+	 */
+	@ApiModelProperty("Whether this entity is active")
 	private Boolean active;
 
 	public EnableEntityDto() {

@@ -1,71 +1,104 @@
 
 package org.meveo.api.dto;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.*;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
+/**
+ * The Graph dto.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ */
+@ApiModel
 public class GraphDto {
 
-    @SerializedName("id")
-    @Expose
-    private String id;
-    @SerializedName("label")
-    @Expose
-    private String label = null;
-    @SerializedName("properties")
-    @Expose
-    private Map<String, String> properties;
+	/**
+	 * Entity id
+	 */
+	@SerializedName("id")
+	@Expose
+	@ApiModelProperty("Entity id")
+	private String id;
 
-    private Set<GraphDto> subGraphs = new HashSet<>();
+	/**
+	 * Display label
+	 */
+	@SerializedName("label")
+	@Expose
+	@ApiModelProperty("Display label")
+	private String label = null;
 
-    public String getId() {
-        return id;
-    }
+	/**
+	 * Map of properties
+	 */
+	@SerializedName("properties")
+	@Expose
+	@ApiModelProperty("Map of properties")
+	private Map<String, String> properties;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	/**
+	 * Sub graphs
+	 */
+	@ApiModelProperty("Sub graphs")
+	private Set<GraphDto> subGraphs = new HashSet<>();
 
-    public String getLabel() {
-        return label;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public Map<String, String> getProperties() {
-        return properties;
-    }
+	public String getLabel() {
+		return label;
+	}
 
-    public void setProperties(Map<String, String> properties) {
-        this.properties = properties;
-    }
+	public void setLabel(String label) {
+		this.label = label;
+	}
 
-    public Set<GraphDto> getSubGraphs() {
-        return subGraphs;
-    }
+	public Map<String, String> getProperties() {
+		return properties;
+	}
 
-    public void setSubGraphs(Set<GraphDto> subGraphs) {
-        this.subGraphs = subGraphs;
-    }
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GraphDto)) return false;
+	public Set<GraphDto> getSubGraphs() {
+		return subGraphs;
+	}
 
-        GraphDto graphDto = (GraphDto) o;
+	public void setSubGraphs(Set<GraphDto> subGraphs) {
+		this.subGraphs = subGraphs;
+	}
 
-        if (id != null ? !id.equals(graphDto.id) : graphDto.id != null) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof GraphDto))
+			return false;
 
-        return true;
-    }
+		GraphDto graphDto = (GraphDto) o;
 
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
+		if (id != null ? !id.equals(graphDto.id) : graphDto.id != null)
+			return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return id != null ? id.hashCode() : 0;
+	}
 }

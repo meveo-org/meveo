@@ -1,89 +1,104 @@
 package org.meveo.api.dto;
 
-import org.meveo.model.scripts.MavenDependency;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.meveo.model.scripts.MavenDependency;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * Dto for {@link MavenDependency}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ */
 @XmlRootElement(name = "MavenDependency")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class MavenDependencyDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 1L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 1L;
 
-    /** The groupId. */
-    @XmlAttribute()
-    private String groupId;
+	/** The groupId. */
+	@XmlAttribute()
+	@ApiModelProperty("The groupId")
+	private String groupId;
 
-    /** The artifactId. */
-    @XmlAttribute()
-    private String artifactId;
+	/** The artifactId. */
+	@XmlAttribute()
+	@ApiModelProperty("The artifactId")
+	private String artifactId;
 
-    /** The version. */
-    @XmlAttribute()
-    private String version;
+	/** The version. */
+	@XmlAttribute()
+	@ApiModelProperty("The version")
+	private String version;
 
-    /** The classifier. */
-    @XmlAttribute()
-    private String classifier;
+	/** The classifier. */
+	@XmlAttribute()
+	@ApiModelProperty("The classifier")
+	private String classifier;
 
-    /** The coordinates. */
-    private String coordinates;
+	/** The coordinates. */
+	@ApiModelProperty("The coordinates")
+	private String coordinates;
 
-    public String getGroupId() {
-        return groupId;
-    }
+	public String getGroupId() {
+		return groupId;
+	}
 
-    /**
-     * Instantiates a new maven dependency dto.
-     */
-    public MavenDependencyDto() {
+	/**
+	 * Instantiates a new maven dependency dto.
+	 */
+	public MavenDependencyDto() {
 
-    }
+	}
 
-    public MavenDependencyDto(MavenDependency mavenDependency) {
-        this.setGroupId(mavenDependency.getGroupId());
-        this.setArtifactId(mavenDependency.getArtifactId());
-        this.setVersion(mavenDependency.getVersion());
-        this.setCoordinates(mavenDependency.getCoordinates());
-    }
+	public MavenDependencyDto(MavenDependency mavenDependency) {
+		this.setGroupId(mavenDependency.getGroupId());
+		this.setArtifactId(mavenDependency.getArtifactId());
+		this.setVersion(mavenDependency.getVersion());
+		this.setCoordinates(mavenDependency.getCoordinates());
+	}
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
 
-    public String getArtifactId() {
-        return artifactId;
-    }
+	public String getArtifactId() {
+		return artifactId;
+	}
 
-    public void setArtifactId(String artifactId) {
-        this.artifactId = artifactId;
-    }
+	public void setArtifactId(String artifactId) {
+		this.artifactId = artifactId;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public String getClassifier() {
-        return classifier;
-    }
+	public String getClassifier() {
+		return classifier;
+	}
 
-    public void setClassifier(String classifier) {
-        this.classifier = classifier;
-    }
+	public void setClassifier(String classifier) {
+		this.classifier = classifier;
+	}
 
-    public String getCoordinates() {
-        return coordinates;
-    }
+	public String getCoordinates() {
+		return coordinates;
+	}
 
-    public void setCoordinates(String coordinates) {
-        this.coordinates = coordinates;
-    }
+	public void setCoordinates(String coordinates) {
+		this.coordinates = coordinates;
+	}
 }

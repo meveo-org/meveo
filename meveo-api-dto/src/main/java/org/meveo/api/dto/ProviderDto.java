@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.Provider;
 
@@ -8,11 +9,12 @@ import javax.xml.bind.annotation.*;
 /**
  * The Class ProviderDto.
  *
- * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Provider")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class ProviderDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
