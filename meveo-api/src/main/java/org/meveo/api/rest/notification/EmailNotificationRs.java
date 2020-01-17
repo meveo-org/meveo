@@ -17,14 +17,17 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.EmailNotificationDto;
 import org.meveo.api.dto.response.notification.GetEmailNotificationResponseDto;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.model.notification.EmailNotification;
 
 /**
- * @author Edward P. Legaspi
+ * API for managing {@link EmailNotification}.
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  **/
 @Path("/notification/email")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@ApiOperation("Email notification")
+@ApiOperation("EmailNotificationRs")
 public interface EmailNotificationRs extends IBaseRs {
 
     /**

@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/provider")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Provider")
+@Api("ProviderRs")
 public interface ProviderRs extends IBaseRs {
 
     /**

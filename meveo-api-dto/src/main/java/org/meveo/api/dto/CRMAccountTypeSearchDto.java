@@ -8,35 +8,47 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 
 /**
  * The Class CRMAccountTypeSearchDto.
  *
  * @author Tony Alejandro.
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CRMAccountTypeSearchDto implements Serializable {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
 
     /** The search term. */
+    @ApiModelProperty("Term that is being search")
     private String searchTerm;
 
     /** The account type code. */
+    @ApiModelProperty("Account type code")
     private String accountTypeCode;
 
     /** The limit. */
+    @ApiModelProperty("Max no of search records")
     private int limit;
 
     /** The offset. */
+    @ApiModelProperty("Offset when searching")
     private int offset;
 
     /** The order. */
+    @ApiModelProperty("The sort order")
     private SortOrder order;
 
     /** The sort field. */
+    @ApiModelProperty("Field to sort")
     private String sortField;
 
     /**

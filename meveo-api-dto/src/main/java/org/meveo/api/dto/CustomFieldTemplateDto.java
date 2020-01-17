@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
@@ -26,10 +27,11 @@ import org.meveo.model.persistence.DBStorageType;
  * The Class CustomFieldTemplateDto.
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.7.0
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomFieldTemplateDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

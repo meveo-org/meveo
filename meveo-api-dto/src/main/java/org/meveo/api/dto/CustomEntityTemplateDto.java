@@ -16,6 +16,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 
@@ -23,12 +24,12 @@ import io.swagger.annotations.ApiModelProperty;
  * The Class CustomEntityTemplateDto.
  *
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
-
 @XmlRootElement(name = "CustomEntityTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomEntityTemplateDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

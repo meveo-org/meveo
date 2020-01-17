@@ -7,11 +7,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.security.Permission;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class PermissionDto.
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Permission")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class PermissionDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
@@ -19,10 +25,12 @@ public class PermissionDto extends BaseEntityDto {
 
     /** The permission. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("The permission. Should be a very or prefix with a verb.")
     private String permission;
 
     /** The name. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("The name use to identify this permission")
     private String name;
 
     /**

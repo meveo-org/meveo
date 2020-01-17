@@ -1,31 +1,43 @@
 package org.meveo.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.meveo.api.dto.technicalservice.InputOutputDescription;
-import org.meveo.interfaces.technicalservice.description.EntityDescription;
-
 import javax.validation.constraints.NotNull;
 
-public class ProcessEntityDescription extends InputOutputDescription  {
+import org.meveo.api.dto.technicalservice.InputOutputDescription;
 
-    public static final String ENTITY_DESCRIPTION = "EntityDescription";
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    @JsonProperty(required = true)
-    @NotNull
-    private String name;
+import io.swagger.annotations.ApiModelProperty;
 
-    @Override
-    public String getName() {
-        return name;
-    }
+/**
+ * The process entity description dto.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ */
+public class ProcessEntityDescription extends InputOutputDescription {
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
+	public static final String ENTITY_DESCRIPTION = "EntityDescription";
 
-    public String getDescriptionType(){
-        return ENTITY_DESCRIPTION;
-    }
+	/**
+	 * The name of this process entity
+	 */
+	@JsonProperty(required = true)
+	@NotNull
+	@ApiModelProperty(required = true, value = "The name of this process entity")
+	private String name;
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescriptionType() {
+		return ENTITY_DESCRIPTION;
+	}
 
 }

@@ -26,15 +26,18 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * API for managing the maven configuration to which this application will pull
+ * jars that will be use as dependencies when building scripts or functions.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Path("/mavenConfiguration")
-@Api("Maven configuration")
+@Api("MavenConfigurationRs")
 public class MavenConfigurationRs extends BaseRs {
 
 	@Inject
@@ -74,7 +77,7 @@ public class MavenConfigurationRs extends BaseRs {
 
 		MavenConfigurationResponseDto result = new MavenConfigurationResponseDto();
 		result.getMavenConfiguration().setMavenRepositories(mavenConfigurationService.getMavenRepositories());
-		
+
 		return result;
 	}
 
@@ -88,6 +91,7 @@ public class MavenConfigurationRs extends BaseRs {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@ApiOperation("Upload a new artifact")
 	public void uploadAnArtifact(@MultipartForm @ApiParam("Upload form") @NotNull MavenConfigurationUploadForm uploadForm) throws Exception {
-		mavenConfigurationApi.uploadAnArtifact(uploadForm.getData(), uploadForm.getGroupId(), uploadForm.getArtifactId(), uploadForm.getVersion(), uploadForm.getClassifier(),uploadForm.getFilename());
+		mavenConfigurationApi.uploadAnArtifact(uploadForm.getData(), uploadForm.getGroupId(), uploadForm.getArtifactId(), uploadForm.getVersion(), uploadForm.getClassifier(),
+				uploadForm.getFilename());
 	}
 }

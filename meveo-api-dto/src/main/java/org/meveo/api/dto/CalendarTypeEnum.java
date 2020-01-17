@@ -1,9 +1,13 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModel;
 
 /**
  * The Enum CalendarTypeEnum.
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
+@ApiModel
 public enum CalendarTypeEnum {
 
     /**

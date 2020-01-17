@@ -8,19 +8,25 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class CalendarsDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Calendars")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CalendarsDto implements Serializable {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6354285812403951307L;
 
     /** The calendar. */
+    @ApiModelProperty("List of calendar information")
     private List<CalendarDto> calendar;
 
     /**

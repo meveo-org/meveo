@@ -395,7 +395,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!StringUtils.isBlank(sqlConnectionCode) && !"default".equals(sqlConnectionCode)) {
 						connection.commit();
 					}
 				}

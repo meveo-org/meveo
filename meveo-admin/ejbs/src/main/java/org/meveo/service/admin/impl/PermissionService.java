@@ -81,6 +81,7 @@ public class PermissionService extends PersistenceService<Permission> {
             permissionEntity.setName(permission);
             permissionEntity.setPermission(permission);
             this.create(permissionEntity);
+            this.flush();
         }
 
         // Add to a role, creating role first if does not exist yet

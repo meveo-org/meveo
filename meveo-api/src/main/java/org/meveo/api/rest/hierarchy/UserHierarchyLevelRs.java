@@ -22,14 +22,18 @@ import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
 import org.meveo.api.dto.response.UserHierarchyLevelResponseDto;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 
 /**
+ * API for managing {@link UserHierarchyLevel}
  * @author Phu Bach
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  **/
 @Path("/hierarchy/userGroupLevel")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("User hierarchy level")
+@Api("UserHierarchyLevelRs")
 public interface UserHierarchyLevelRs extends IBaseRs {
 
     /**
