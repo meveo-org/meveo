@@ -24,14 +24,14 @@
                     <!--required="false"-->
                     <!--value="#{mavenConfigurationBean.mavenRepositories}" />-->
                     <!--</hftl:decorateFormField>-->
-                    <hftl:decorateFormField componentWidth="30"
+                    <hftl:decorateFormField componentWidth="50"
                                             label="#{messages['maven.configuration.remoteRepository']}">
                         <p:dataTable id="mavenConfigurationPanel" var="remoteRepository"
                                      value="#{mavenConfigurationBean.remoteRepositories}" resizableColumns="true">
-                            <p:column headerText="#{messages['maven.configuration.code']}" width="30%">
+                            <p:column headerText="#{messages['maven.configuration.code']}" width="50%">
                                 <h:outputText value="#{remoteRepository.code}" size="50"/>
                             </p:column>
-                            <p:column headerText="#{messages['maven.configuration.url']}" width="90%">
+                            <p:column headerText="#{messages['maven.configuration.url']}" width="300%">
                                 <h:outputText value="#{remoteRepository.url}" size="50"/>
                             </p:column>
                             <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"
