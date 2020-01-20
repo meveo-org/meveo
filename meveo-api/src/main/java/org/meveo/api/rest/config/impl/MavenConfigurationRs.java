@@ -4,11 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -17,8 +13,10 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.api.dto.config.MavenConfigurationResponseDto;
+import org.meveo.api.dto.response.storage.RemoteRepositoriesRespondseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.api.storage.RemoteRepositoryDto;
 import org.meveo.service.config.impl.MavenConfigurationService;
 
 import io.swagger.annotations.Api;
@@ -89,5 +87,66 @@ public class MavenConfigurationRs extends BaseRs {
 	@ApiOperation("Upload a new artifact")
 	public void uploadAnArtifact(@MultipartForm @ApiParam("Upload form") @NotNull MavenConfigurationUploadForm uploadForm) throws Exception {
 		mavenConfigurationApi.uploadAnArtifact(uploadForm.getData(), uploadForm.getGroupId(), uploadForm.getArtifactId(), uploadForm.getVersion(), uploadForm.getClassifier(),uploadForm.getFilename());
+	}
+
+	/**
+	 * Create or update the remote repository.
+	 *
+	 * @param postData remote repository values
+	 * @return status of the request
+	 */
+	@POST
+	@Path("/remoteRepository")
+	@ApiOperation(value = "Create or update remote repository")
+	public ActionStatus createOrUpdate(@ApiParam("Remote repository information") RemoteRepositoryDto postData) {
+
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+		try {
+			mavenConfigurationApi.createOrUpdate(postData);
+		} catch (Exception e) {
+			processException(e, result);
+		}
+
+		return result;
+	}
+
+	/**
+	 * List remote repositories
+	 *
+	 * @return A list of remote repositories
+	 */
+	@GET
+	@Path("/remoteRepository")
+	@ApiOperation(value = "List of remote repositories")
+	public RemoteRepositoriesRespondseDto list() {
+		RemoteRepositoriesRespondseDto result = new RemoteRepositoriesRespondseDto();
+		try {
+			result.setRemoteRepositories(mavenConfigurationApi.list());
+		} catch (Exception e) {
+			processException(e, result.getActionStatus());
+		}
+
+		return result;
+	}
+
+	/**
+	 * Remove an existing remote repository with a given code
+	 *
+	 * @param code The code of remote repository
+	 * @return Request processing status
+	 */
+	@DELETE
+	@Path("/remoteRepository/{code}")
+	@ApiOperation(value = "Remove remote repository by code")
+	public ActionStatus remove(@PathParam("code") @ApiParam("Code of the remote repository") String code) {
+		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+
+		try {
+			mavenConfigurationApi.remove(code);
+		} catch (Exception e) {
+			processException(e, result);
+		}
+
+		return result;
 	}
 }
