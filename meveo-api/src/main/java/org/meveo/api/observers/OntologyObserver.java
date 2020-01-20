@@ -658,25 +658,27 @@ public class OntologyObserver {
 
     public void compileClassJava(File classDir, String fileName, String compilationUnit, File javaFile) {
 
-        supplementClassPathWithMissingImports(compilationUnit);
-        String classPath = CLASSPATH_REFERENCE.get();
+        try {
+            supplementClassPathWithMissingImports(compilationUnit);
+            String classPath = CLASSPATH_REFERENCE.get();
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(javaFile));
+            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(javaFile));
+            Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            if (isOK) {
+                File classFile = new File(classDir, fileName + ".class");
+                javaFile.delete();
 
-        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(javaFile));
-        Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
-        if (isOK) {
-            File classFile = new File(classDir, fileName + ".class");
-            javaFile.delete();
-
-            synchronized (CLASSPATH_REFERENCE) {
-                String path = classFile.getAbsolutePath();
-                if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                    CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
+                synchronized (CLASSPATH_REFERENCE) {
+                    String path = classFile.getAbsolutePath();
+                    if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
+                        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
+                    }
                 }
             }
-        }
+        } catch (IOException e) {}
     }
 
     public void constructClassPath() throws IOException {
