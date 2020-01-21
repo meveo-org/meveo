@@ -4,17 +4,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.PieChart;
 
 /**
- * The Class PieChartDto.
+ * Part of the graphing classes that represents pie chart information.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "PieChart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("PieChartDto")
 public class PieChartDto extends ChartDto {
 
     /** The Constant serialVersionUID. */

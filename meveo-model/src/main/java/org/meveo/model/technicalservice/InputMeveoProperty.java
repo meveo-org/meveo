@@ -38,8 +38,25 @@ public class InputMeveoProperty extends MeveoPropertyDescription implements Inpu
 
     @Column(name = "default_value")
     private String defaultValue;
+    
+    @Column(name = "priority")
+    private Float priority = 0.5f;
+    
+    /**
+     * @return The priority of the input
+     */
+    public Float getPriority() {
+		return priority;
+	}
 
     /**
+     * Sets the priority of the input
+     */
+	public void setPriority(Float priority) {
+		this.priority = priority;
+	}
+
+	/**
      * Whether the property is mandatory.
      *
      * @return "true" if the property is mandatory.

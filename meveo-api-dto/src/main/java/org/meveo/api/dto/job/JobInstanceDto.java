@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomFieldsDto;
@@ -15,9 +16,12 @@ import org.meveo.model.jobs.JobCategoryEnum;
  * The Class JobInstanceDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "JobInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("JobInstanceDto")
 public class JobInstanceDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */

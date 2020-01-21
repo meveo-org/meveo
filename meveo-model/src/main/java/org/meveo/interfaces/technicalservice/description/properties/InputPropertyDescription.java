@@ -9,4 +9,8 @@ public interface InputPropertyDescription extends PropertyDescription{
      * @return The default value.
      */
     String getDefaultValue();
+    
+    void setPriority(Float f);
+    
+    Float getPriority();
 }

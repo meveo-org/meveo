@@ -11,6 +11,9 @@ import org.meveo.model.communication.MediaEnum;
 import org.meveo.model.communication.MessageTemplate;
 import org.meveo.model.communication.MessageTemplateTypeEnum;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class MessageTemplateDto.
  *
@@ -19,156 +22,163 @@ import org.meveo.model.communication.MessageTemplateTypeEnum;
  */
 @XmlRootElement(name = "MessageTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("MessageTemplateDto")
 public class MessageTemplateDto extends BusinessEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 2370984261457651138L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 2370984261457651138L;
 
-    /** The media. */
-    private MediaEnum media = MediaEnum.EMAIL;
-    
-    /** The tag start delimiter. */
-    private String tagStartDelimiter = "#{";
-    
-    /** The tag end delimiter. */
-    private String tagEndDelimiter = "}";
-    
-    /** The start date. */
-    private Date startDate;
-    
-    /** The end date. */
-    private Date endDate;
-    
-    /** The type. */
-    private MessageTemplateTypeEnum type;
+	/** The media. */
+	@ApiModelProperty("The type of message channel")
+	private MediaEnum media = MediaEnum.EMAIL;
 
-    /**
-     * Instantiates a new message template dto.
-     */
-    public MessageTemplateDto() {
-    }
+	/** The tag start delimiter. */
+	@ApiModelProperty("Use to parse an expression language")
+	private String tagStartDelimiter = "#{";
 
-    /**
-     * Instantiates a new message template dto.
-     *
-     * @param messageTemplate the message template
-     */
-    public MessageTemplateDto(MessageTemplate messageTemplate) {
-        super(messageTemplate);
+	/** The tag end delimiter. */
+	@ApiModelProperty("End of the expression language")
+	private String tagEndDelimiter = "}";
 
-        this.media = messageTemplate.getMedia();
-        this.tagStartDelimiter = messageTemplate.getTagStartDelimiter();
-        this.tagEndDelimiter = messageTemplate.getTagEndDelimiter();
-        this.startDate = messageTemplate.getStartDate();
-        this.endDate = messageTemplate.getEndDate();
-        this.type = messageTemplate.getType();
-    }
+	/** The start date. */
+	@ApiModelProperty("Start date")
+	private Date startDate;
 
-    /**
-     * Gets the media.
-     *
-     * @return the media
-     */
-    public MediaEnum getMedia() {
-        return media;
-    }
+	/** The end date. */
+	@ApiModelProperty("End date")
+	private Date endDate;
 
-    /**
-     * Sets the media.
-     *
-     * @param media the new media
-     */
-    public void setMedia(MediaEnum media) {
-        this.media = media;
-    }
+	/** The type. */
+	@ApiModelProperty("Template for this message")
+	private MessageTemplateTypeEnum type;
 
-    /**
-     * Gets the tag start delimiter.
-     *
-     * @return the tag start delimiter
-     */
-    public String getTagStartDelimiter() {
-        return tagStartDelimiter;
-    }
+	/**
+	 * Instantiates a new message template dto.
+	 */
+	public MessageTemplateDto() {
+	}
 
-    /**
-     * Sets the tag start delimiter.
-     *
-     * @param tagStartDelimiter the new tag start delimiter
-     */
-    public void setTagStartDelimiter(String tagStartDelimiter) {
-        this.tagStartDelimiter = tagStartDelimiter;
-    }
+	/**
+	 * Instantiates a new message template dto.
+	 *
+	 * @param messageTemplate the message template
+	 */
+	public MessageTemplateDto(MessageTemplate messageTemplate) {
+		super(messageTemplate);
 
-    /**
-     * Gets the tag end delimiter.
-     *
-     * @return the tag end delimiter
-     */
-    public String getTagEndDelimiter() {
-        return tagEndDelimiter;
-    }
+		this.media = messageTemplate.getMedia();
+		this.tagStartDelimiter = messageTemplate.getTagStartDelimiter();
+		this.tagEndDelimiter = messageTemplate.getTagEndDelimiter();
+		this.startDate = messageTemplate.getStartDate();
+		this.endDate = messageTemplate.getEndDate();
+		this.type = messageTemplate.getType();
+	}
 
-    /**
-     * Sets the tag end delimiter.
-     *
-     * @param tagEndDelimiter the new tag end delimiter
-     */
-    public void setTagEndDelimiter(String tagEndDelimiter) {
-        this.tagEndDelimiter = tagEndDelimiter;
-    }
+	/**
+	 * Gets the media.
+	 *
+	 * @return the media
+	 */
+	public MediaEnum getMedia() {
+		return media;
+	}
 
-    /**
-     * Gets the start date.
-     *
-     * @return the start date
-     */
-    public Date getStartDate() {
-        return startDate;
-    }
+	/**
+	 * Sets the media.
+	 *
+	 * @param media the new media
+	 */
+	public void setMedia(MediaEnum media) {
+		this.media = media;
+	}
 
-    /**
-     * Sets the start date.
-     *
-     * @param startDate the new start date
-     */
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
+	/**
+	 * Gets the tag start delimiter.
+	 *
+	 * @return the tag start delimiter
+	 */
+	public String getTagStartDelimiter() {
+		return tagStartDelimiter;
+	}
 
-    /**
-     * Gets the end date.
-     *
-     * @return the end date
-     */
-    public Date getEndDate() {
-        return endDate;
-    }
+	/**
+	 * Sets the tag start delimiter.
+	 *
+	 * @param tagStartDelimiter the new tag start delimiter
+	 */
+	public void setTagStartDelimiter(String tagStartDelimiter) {
+		this.tagStartDelimiter = tagStartDelimiter;
+	}
 
-    /**
-     * Sets the end date.
-     *
-     * @param endDate the new end date
-     */
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
+	/**
+	 * Gets the tag end delimiter.
+	 *
+	 * @return the tag end delimiter
+	 */
+	public String getTagEndDelimiter() {
+		return tagEndDelimiter;
+	}
 
-    /**
-     * Gets the type.
-     *
-     * @return the type
-     */
-    public MessageTemplateTypeEnum getType() {
-        return type;
-    }
+	/**
+	 * Sets the tag end delimiter.
+	 *
+	 * @param tagEndDelimiter the new tag end delimiter
+	 */
+	public void setTagEndDelimiter(String tagEndDelimiter) {
+		this.tagEndDelimiter = tagEndDelimiter;
+	}
 
-    /**
-     * Sets the type.
-     *
-     * @param type the new type
-     */
-    public void setType(MessageTemplateTypeEnum type) {
-        this.type = type;
-    }
+	/**
+	 * Gets the start date.
+	 *
+	 * @return the start date
+	 */
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	/**
+	 * Sets the start date.
+	 *
+	 * @param startDate the new start date
+	 */
+	public void setStartDate(Date startDate) {
+		this.startDate = startDate;
+	}
+
+	/**
+	 * Gets the end date.
+	 *
+	 * @return the end date
+	 */
+	public Date getEndDate() {
+		return endDate;
+	}
+
+	/**
+	 * Sets the end date.
+	 *
+	 * @param endDate the new end date
+	 */
+	public void setEndDate(Date endDate) {
+		this.endDate = endDate;
+	}
+
+	/**
+	 * Gets the type.
+	 *
+	 * @return the type
+	 */
+	public MessageTemplateTypeEnum getType() {
+		return type;
+	}
+
+	/**
+	 * Sets the type.
+	 *
+	 * @param type the new type
+	 */
+	public void setType(MessageTemplateTypeEnum type) {
+		this.type = type;
+	}
 }

@@ -7,303 +7,319 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.notification.InboundRequest;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class InboundRequestDto.
+ * Part of the notification package that handles inbound request.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "InboundRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("InboundRequestDto")
 public class InboundRequestDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = -3195747154300291876L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = -3195747154300291876L;
 
-    /** The content length. */
-    private int contentLength;
-    
-    /** The content type. */
-    private String contentType;
-    
-    /** The protocol. */
-    private String protocol;
-    
-    /** The scheme. */
-    private String scheme;
-    
-    /** The remote addr. */
-    private String remoteAddr;
-    
-    /** The remote port. */
-    private int remotePort;
-    
-    /** The method. */
-    private String method;
-    
-    /** The auth type. */
-    private String authType;
-    
-    /** The path info. */
-    private String pathInfo;
-    
-    /** The request URI. */
-    private String requestURI;
-    
-    /** The response content type. */
-    private String responseContentType;
-    
-    /** The response encoding. */
-    private String responseEncoding;
+	/** The content length. */
+	@ApiModelProperty("")
+	private int contentLength;
 
-    /**
-     * Instantiates a new inbound request dto.
-     */
-    public InboundRequestDto() {
+	/** The content type. */
+	@ApiModelProperty("The content type")
+	private String contentType;
 
-    }
+	/** The protocol. */
+	@ApiModelProperty("The protocol")
+	private String protocol;
 
-    /**
-     * Instantiates a new inbound request dto.
-     *
-     * @param inboundRequest the InboundRequest entity
-     */
-    public InboundRequestDto(InboundRequest inboundRequest) {
-        contentLength = inboundRequest.getContentLength();
-        contentType = inboundRequest.getContentType();
-        protocol = inboundRequest.getProtocol();
-        scheme = inboundRequest.getScheme();
-        remoteAddr = inboundRequest.getRemoteAddr();
-        remotePort = inboundRequest.getRemotePort();
-        method = inboundRequest.getMethod();
-        authType = inboundRequest.getAuthType();
-        pathInfo = inboundRequest.getPathInfo();
-        requestURI = inboundRequest.getRequestURI();
-        responseContentType = inboundRequest.getResponseContentType();
-        responseEncoding = inboundRequest.getResponseEncoding();
-    }
+	/** The scheme. */
+	@ApiModelProperty("The scheme")
+	private String scheme;
 
-    /**
-     * Gets the content length.
-     *
-     * @return the content length
-     */
-    public int getContentLength() {
-        return contentLength;
-    }
+	/** The remote addr. */
+	@ApiModelProperty("The remote addr")
+	private String remoteAddr;
 
-    /**
-     * Sets the content length.
-     *
-     * @param contentLength the new content length
-     */
-    public void setContentLength(int contentLength) {
-        this.contentLength = contentLength;
-    }
+	/** The remote port. */
+	@ApiModelProperty("The remote port")
+	private int remotePort;
 
-    /**
-     * Gets the content type.
-     *
-     * @return the content type
-     */
-    public String getContentType() {
-        return contentType;
-    }
+	/** The method. */
+	@ApiModelProperty("The method")
+	private String method;
 
-    /**
-     * Sets the content type.
-     *
-     * @param contentType the new content type
-     */
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+	/** The auth type. */
+	@ApiModelProperty("The auth type")
+	private String authType;
 
-    /**
-     * Gets the protocol.
-     *
-     * @return the protocol
-     */
-    public String getProtocol() {
-        return protocol;
-    }
+	/** The path info. */
+	@ApiModelProperty("The path info")
+	private String pathInfo;
 
-    /**
-     * Sets the protocol.
-     *
-     * @param protocol the new protocol
-     */
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
+	/** The request URI. */
+	@ApiModelProperty("The request URI")
+	private String requestURI;
 
-    /**
-     * Gets the scheme.
-     *
-     * @return the scheme
-     */
-    public String getScheme() {
-        return scheme;
-    }
+	/** The response content type. */
+	@ApiModelProperty("The response content type")
+	private String responseContentType;
 
-    /**
-     * Sets the scheme.
-     *
-     * @param scheme the new scheme
-     */
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
+	/** The response encoding. */
+	@ApiModelProperty("The response encoding")
+	private String responseEncoding;
 
-    /**
-     * Gets the remote addr.
-     *
-     * @return the remote addr
-     */
-    public String getRemoteAddr() {
-        return remoteAddr;
-    }
+	/**
+	 * Instantiates a new inbound request dto.
+	 */
+	public InboundRequestDto() {
 
-    /**
-     * Sets the remote addr.
-     *
-     * @param remoteAddr the new remote addr
-     */
-    public void setRemoteAddr(String remoteAddr) {
-        this.remoteAddr = remoteAddr;
-    }
+	}
 
-    /**
-     * Gets the remote port.
-     *
-     * @return the remote port
-     */
-    public int getRemotePort() {
-        return remotePort;
-    }
+	/**
+	 * Instantiates a new inbound request dto.
+	 *
+	 * @param inboundRequest the InboundRequest entity
+	 */
+	public InboundRequestDto(InboundRequest inboundRequest) {
+		contentLength = inboundRequest.getContentLength();
+		contentType = inboundRequest.getContentType();
+		protocol = inboundRequest.getProtocol();
+		scheme = inboundRequest.getScheme();
+		remoteAddr = inboundRequest.getRemoteAddr();
+		remotePort = inboundRequest.getRemotePort();
+		method = inboundRequest.getMethod();
+		authType = inboundRequest.getAuthType();
+		pathInfo = inboundRequest.getPathInfo();
+		requestURI = inboundRequest.getRequestURI();
+		responseContentType = inboundRequest.getResponseContentType();
+		responseEncoding = inboundRequest.getResponseEncoding();
+	}
 
-    /**
-     * Sets the remote port.
-     *
-     * @param remotePort the new remote port
-     */
-    public void setRemotePort(int remotePort) {
-        this.remotePort = remotePort;
-    }
+	/**
+	 * Gets the content length.
+	 *
+	 * @return the content length
+	 */
+	public int getContentLength() {
+		return contentLength;
+	}
 
-    /**
-     * Gets the method.
-     *
-     * @return the method
-     */
-    public String getMethod() {
-        return method;
-    }
+	/**
+	 * Sets the content length.
+	 *
+	 * @param contentLength the new content length
+	 */
+	public void setContentLength(int contentLength) {
+		this.contentLength = contentLength;
+	}
 
-    /**
-     * Sets the method.
-     *
-     * @param method the new method
-     */
-    public void setMethod(String method) {
-        this.method = method;
-    }
+	/**
+	 * Gets the content type.
+	 *
+	 * @return the content type
+	 */
+	public String getContentType() {
+		return contentType;
+	}
 
-    /**
-     * Gets the auth type.
-     *
-     * @return the auth type
-     */
-    public String getAuthType() {
-        return authType;
-    }
+	/**
+	 * Sets the content type.
+	 *
+	 * @param contentType the new content type
+	 */
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
 
-    /**
-     * Sets the auth type.
-     *
-     * @param authType the new auth type
-     */
-    public void setAuthType(String authType) {
-        this.authType = authType;
-    }
+	/**
+	 * Gets the protocol.
+	 *
+	 * @return the protocol
+	 */
+	public String getProtocol() {
+		return protocol;
+	}
 
-    /**
-     * Gets the path info.
-     *
-     * @return the path info
-     */
-    public String getPathInfo() {
-        return pathInfo;
-    }
+	/**
+	 * Sets the protocol.
+	 *
+	 * @param protocol the new protocol
+	 */
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+	}
 
-    /**
-     * Sets the path info.
-     *
-     * @param pathInfo the new path info
-     */
-    public void setPathInfo(String pathInfo) {
-        this.pathInfo = pathInfo;
-    }
+	/**
+	 * Gets the scheme.
+	 *
+	 * @return the scheme
+	 */
+	public String getScheme() {
+		return scheme;
+	}
 
-    /**
-     * Gets the request URI.
-     *
-     * @return the request URI
-     */
-    public String getRequestURI() {
-        return requestURI;
-    }
+	/**
+	 * Sets the scheme.
+	 *
+	 * @param scheme the new scheme
+	 */
+	public void setScheme(String scheme) {
+		this.scheme = scheme;
+	}
 
-    /**
-     * Sets the request URI.
-     *
-     * @param requestURI the new request URI
-     */
-    public void setRequestURI(String requestURI) {
-        this.requestURI = requestURI;
-    }
+	/**
+	 * Gets the remote addr.
+	 *
+	 * @return the remote addr
+	 */
+	public String getRemoteAddr() {
+		return remoteAddr;
+	}
 
-    /**
-     * Gets the response content type.
-     *
-     * @return the response content type
-     */
-    public String getResponseContentType() {
-        return responseContentType;
-    }
+	/**
+	 * Sets the remote addr.
+	 *
+	 * @param remoteAddr the new remote addr
+	 */
+	public void setRemoteAddr(String remoteAddr) {
+		this.remoteAddr = remoteAddr;
+	}
 
-    /**
-     * Sets the response content type.
-     *
-     * @param responseContentType the new response content type
-     */
-    public void setResponseContentType(String responseContentType) {
-        this.responseContentType = responseContentType;
-    }
+	/**
+	 * Gets the remote port.
+	 *
+	 * @return the remote port
+	 */
+	public int getRemotePort() {
+		return remotePort;
+	}
 
-    /**
-     * Gets the response encoding.
-     *
-     * @return the response encoding
-     */
-    public String getResponseEncoding() {
-        return responseEncoding;
-    }
+	/**
+	 * Sets the remote port.
+	 *
+	 * @param remotePort the new remote port
+	 */
+	public void setRemotePort(int remotePort) {
+		this.remotePort = remotePort;
+	}
 
-    /**
-     * Sets the response encoding.
-     *
-     * @param responseEncoding the new response encoding
-     */
-    public void setResponseEncoding(String responseEncoding) {
-        this.responseEncoding = responseEncoding;
-    }
+	/**
+	 * Gets the method.
+	 *
+	 * @return the method
+	 */
+	public String getMethod() {
+		return method;
+	}
 
+	/**
+	 * Sets the method.
+	 *
+	 * @param method the new method
+	 */
+	public void setMethod(String method) {
+		this.method = method;
+	}
 
-    @Override
-    public String toString() {
-        return "InboundRequestDto [contentLength=" + contentLength + ", contentType=" + contentType + ", protocol=" + protocol + ", scheme=" + scheme + ", remoteAddr=" + remoteAddr
-                + ", remotePort=" + remotePort + ", method=" + method + ", authType=" + authType + ", pathInfo=" + pathInfo + ", requestURI=" + requestURI
-                + ", responseContentType=" + responseContentType + ", responseEncoding=" + responseEncoding + "]";
-    }
+	/**
+	 * Gets the auth type.
+	 *
+	 * @return the auth type
+	 */
+	public String getAuthType() {
+		return authType;
+	}
+
+	/**
+	 * Sets the auth type.
+	 *
+	 * @param authType the new auth type
+	 */
+	public void setAuthType(String authType) {
+		this.authType = authType;
+	}
+
+	/**
+	 * Gets the path info.
+	 *
+	 * @return the path info
+	 */
+	public String getPathInfo() {
+		return pathInfo;
+	}
+
+	/**
+	 * Sets the path info.
+	 *
+	 * @param pathInfo the new path info
+	 */
+	public void setPathInfo(String pathInfo) {
+		this.pathInfo = pathInfo;
+	}
+
+	/**
+	 * Gets the request URI.
+	 *
+	 * @return the request URI
+	 */
+	public String getRequestURI() {
+		return requestURI;
+	}
+
+	/**
+	 * Sets the request URI.
+	 *
+	 * @param requestURI the new request URI
+	 */
+	public void setRequestURI(String requestURI) {
+		this.requestURI = requestURI;
+	}
+
+	/**
+	 * Gets the response content type.
+	 *
+	 * @return the response content type
+	 */
+	public String getResponseContentType() {
+		return responseContentType;
+	}
+
+	/**
+	 * Sets the response content type.
+	 *
+	 * @param responseContentType the new response content type
+	 */
+	public void setResponseContentType(String responseContentType) {
+		this.responseContentType = responseContentType;
+	}
+
+	/**
+	 * Gets the response encoding.
+	 *
+	 * @return the response encoding
+	 */
+	public String getResponseEncoding() {
+		return responseEncoding;
+	}
+
+	/**
+	 * Sets the response encoding.
+	 *
+	 * @param responseEncoding the new response encoding
+	 */
+	public void setResponseEncoding(String responseEncoding) {
+		this.responseEncoding = responseEncoding;
+	}
+
+	@Override
+	public String toString() {
+		return "InboundRequestDto [contentLength=" + contentLength + ", contentType=" + contentType + ", protocol=" + protocol + ", scheme=" + scheme + ", remoteAddr=" + remoteAddr
+				+ ", remotePort=" + remotePort + ", method=" + method + ", authType=" + authType + ", pathInfo=" + pathInfo + ", requestURI=" + requestURI
+				+ ", responseContentType=" + responseContentType + ", responseEncoding=" + responseEncoding + "]";
+	}
 
 }

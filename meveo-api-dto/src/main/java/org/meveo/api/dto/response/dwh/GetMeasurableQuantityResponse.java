@@ -1,10 +1,12 @@
-package org.meveo.api.dto.dwh;
+package org.meveo.api.dto.response.dwh;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModelProperty;
+
+import org.meveo.api.dto.dwh.MeasurableQuantityDto;
 import org.meveo.api.dto.response.BaseResponse;
 
 /**
