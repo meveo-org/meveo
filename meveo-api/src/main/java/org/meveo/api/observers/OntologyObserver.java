@@ -54,7 +54,9 @@ import javax.inject.Inject;
 import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -186,10 +188,7 @@ public class OntologyObserver {
         FileUtils.write(javaFile, compilationUnit.toString());
         commitFiles.add(javaFile);
 
-        File classJavaFile = new File(classDir, cet.getCode() + ".java");
-        FileUtils.write(classJavaFile, compilationUnit.toString());
-
-        compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
+        compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom entity template " + cet.getCode());
     }
 
@@ -234,10 +233,7 @@ public class OntologyObserver {
 
         FileUtils.write(javaFile, compilationUnit.toString());
 
-        File classJavaFile = new File(classDir, cet.getCode() + ".java");
-        FileUtils.write(classJavaFile, compilationUnit.toString());
-
-        compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
+        compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
 
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
     }
@@ -266,7 +262,7 @@ public class OntologyObserver {
             fileList.add(javaFile);
         }
 
-        final File classFile = new File(classDir, cet.getCode() + ".class");
+        final File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
         if (classFile.exists()) {
             classFile.delete();
         }
@@ -394,10 +390,7 @@ public class OntologyObserver {
                     CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
                     FileUtils.write(javaFile, compilationUnit.toString());
 
-                    File classJavaFile = new File(classDir, cet.getCode() + ".java");
-                    FileUtils.write(classJavaFile, compilationUnit.toString());
-
-                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
+                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
                 }
 
                 gitClient.commitFiles(
@@ -470,10 +463,7 @@ public class OntologyObserver {
                     FileUtils.write(javaFile, compilationUnit.toString());
                     listFile.add(javaFile);
 
-                    File classJavaFile = new File(classDir, cet.getCode() + ".java");
-                    FileUtils.write(classJavaFile, compilationUnit.toString());
-
-                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString(), classJavaFile);
+                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
 
                 }
 
@@ -536,7 +526,7 @@ public class OntologyObserver {
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
-            File classFile = new File(classDir, cet.getCode() + ".class");
+            File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
@@ -656,21 +646,27 @@ public class OntologyObserver {
         }
     }
 
-    public void compileClassJava(File classDir, String fileName, String compilationUnit, File javaFile) {
+    public void compileClassJava(File classDir, String fileName, String compilationUnit) {
 
         try {
-            supplementClassPathWithMissingImports(compilationUnit);
+            List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
             String classPath = CLASSPATH_REFERENCE.get();
 
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(javaFile));
-            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(javaFile));
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(classDir));
+            List<JavaFileObject> compilationUnits = new ArrayList<>();
+            for (File file : fileList) {
+                String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                JavaFileObject javaFileObject = new MemoryJavaSourceFileObject(file.getName(), content);
+                compilationUnits.add(javaFileObject);
+            }
+            JavaFileObject javaFileObject = new MemoryJavaSourceFileObject(fileName + ".java", compilationUnit);
+            compilationUnits.add(javaFileObject);
+
             Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
             if (isOK) {
-                File classFile = new File(classDir, fileName + ".class");
-                javaFile.delete();
-
+                File classFile = new File(classDir, "org/meveo/model/customEntities/" + fileName + ".class");
                 synchronized (CLASSPATH_REFERENCE) {
                     String path = classFile.getAbsolutePath();
                     if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
@@ -678,7 +674,8 @@ public class OntologyObserver {
                     }
                 }
             }
-        } catch (IOException e) {}
+        } catch (IOException e) {} {
+        }
     }
 
     public void constructClassPath() throws IOException {
@@ -779,13 +776,21 @@ public class OntologyObserver {
         }
     }
 
-    private void supplementClassPathWithMissingImports(String javaSrc) {
+    private List<File> supplementClassPathWithMissingImports(String javaSrc, String pathJava) {
+
+        List<File> files = new ArrayList<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(pathJava, fileName + ".java");
+                files.add(file);
+                continue;
+            }
             try {
                 Class clazz;
                 try {
@@ -817,6 +822,7 @@ public class OntologyObserver {
             } catch (Exception e) {
             }
         }
+        return files;
     }
 
     private File getCetDir() {
@@ -842,7 +848,7 @@ public class OntologyObserver {
 
     private File getClassDir() {
         final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
-        return new File(classDir, "org/meveo/model/customEntities");
+        return classDir;
     }
 
     private String getFilePath(File jar) {
@@ -853,4 +859,34 @@ public class OntologyObserver {
         }
     }
 
+    /**
+     * In-memory representation of a source JavaFileObject
+     */
+    private static final class MemoryJavaSourceFileObject extends
+            SimpleJavaFileObject
+    {
+        /**
+         * The source code of the class
+         */
+        private final String code;
+
+        /**
+         * Creates a new in-memory representation of a Java file
+         *
+         * @param fileName The file name
+         * @param code The source code of the file
+         */
+        private MemoryJavaSourceFileObject(String fileName, String code)
+        {
+            super(URI.create("string:///" + fileName), Kind.SOURCE);
+            this.code = code;
+        }
+
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors)
+                throws IOException
+        {
+            return code;
+        }
+    }
 }
