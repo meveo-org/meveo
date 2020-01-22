@@ -36,7 +36,7 @@ import org.primefaces.model.SortOrder;
  * 
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  */
 public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String, Object>> {
 
@@ -131,7 +131,8 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	 * @return A list of entities matching search criteria
 	 */
 	protected List<Map<String, Object>> loadData(PaginationConfiguration paginationConfig) {
-		return getPersistenceServiceImpl().list(getSqlConnectionCode(), SQLStorageConfiguration.getDbTablename(getCet()), paginationConfig);
+		String tableName = getTableName() == null ? SQLStorageConfiguration.getDbTablename(getCet()) : getTableName();
+		return getPersistenceServiceImpl().list(getSqlConnectionCode(), tableName, paginationConfig);
 	}
 
 	/**

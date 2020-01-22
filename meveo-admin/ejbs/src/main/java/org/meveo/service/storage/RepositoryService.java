@@ -1,5 +1,6 @@
 package org.meveo.service.storage;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.ejb.Stateless;
@@ -9,6 +10,8 @@ import org.elasticsearch.repositories.RepositoryException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.BusinessService;
 
@@ -104,6 +107,47 @@ public class RepositoryService extends BusinessService<Repository> {
 
 	public Repository findDefaultRepository() {
 		return findByCode("default");
+	}
+
+	/**
+	 * Retrieves a filtered list of repositories base on
+	 * {@linkplain CustomEntityTemplate} storage type.
+	 * 
+	 * @param cet instance of custom entity template
+	 * @return filtered list of repositories
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Repository> listByCet(CustomEntityTemplate cet) {
+
+		List<DBStorageType> storageTypes = cet.getAvailableStorages();
+
+		boolean withCustomTable = false;
+		withCustomTable = storageTypes.contains(DBStorageType.SQL) && cet.getSqlStorageConfigurationNullSafe().isStoreAsTable();
+
+		boolean withSql = false;
+		withSql = storageTypes.contains(DBStorageType.SQL);
+
+		boolean withNeo4j = false;
+		withNeo4j = storageTypes.contains(DBStorageType.NEO4J);
+
+		QueryBuilder qb = new QueryBuilder(Repository.class, "r");
+
+		if (withSql) {
+			if (withCustomTable) {
+				qb.addSql("r.sqlConfiguration IS NOT NULL");
+
+			} else {
+				if (!withNeo4j) {
+					return Arrays.asList(findDefaultRepository());
+				}
+			}
+		}
+
+		if (withNeo4j) {
+			qb.addSql("r.neo4jConfiguration IS NOT NULL");
+		}
+
+		return qb.getQuery(getEntityManager()).getResultList();
 	}
 
 }
