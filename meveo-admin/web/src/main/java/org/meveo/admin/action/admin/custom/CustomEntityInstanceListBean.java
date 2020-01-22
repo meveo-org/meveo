@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.naming.NamingException;
 import javax.persistence.Table;
 
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -14,6 +15,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.custom.NativeCustomEntityInstanceService;
+import org.meveo.util.view.CrossStorageDataModel;
 import org.meveo.util.view.NativeTableBasedDataModel;
 import org.primefaces.model.LazyDataModel;
 
@@ -44,7 +46,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		}
 	}
 
-	public LazyDataModel<Map<String, Object>> getNativeDataModel() {
+	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
 
 		return getNativeDataModel(filters);
 	}
@@ -54,14 +56,15 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	 * 
 	 * @param inputFilters Search criteria
 	 * @return LazyDataModel implementation.
+	 * @throws NamingException 
 	 */
-	public LazyDataModel<Map<String, Object>> getNativeDataModel(Map<String, Object> inputFilters) {
+	public LazyDataModel<Map<String, Object>> getNativeDataModel(Map<String, Object> inputFilters) throws NamingException {
 
-		if (nativeDataModel == null && customTableName != null) {
+		if (getCustomEntityTemplate() != null && getRepository() != null) {
 
 			final Map<String, Object> filters = inputFilters;
 
-			nativeDataModel = new NativeTableBasedDataModel() {
+			nativeDataModel = new CrossStorageDataModel() {
 
 				private static final long serialVersionUID = 6682319740448829853L;
 
@@ -71,24 +74,15 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 				}
 
 				@Override
-				protected NativePersistenceService getPersistenceServiceImpl() {
-					return nativeCustomEntityInstanceService;
+				protected Repository getRepository() {
+					return CustomEntityInstanceListBean.this.getRepository();
 				}
 
 				@Override
-				protected String getTableName() {
-					return CustomEntityInstanceListBean.this.getCustomTableName();
+				protected CustomEntityTemplate getCustomEntityTemplate() {
+					return CustomEntityInstanceListBean.this.getCustomEntityTemplate();
 				}
 
-				@Override
-				protected CustomEntityTemplate getCet() {
-					return customEntityTemplate;
-				}
-
-				@Override
-				protected String getSqlConnectionCode() {
-					return CustomEntityInstanceListBean.this.getSqlConnectionCode();
-				}
 			};
 		}
 

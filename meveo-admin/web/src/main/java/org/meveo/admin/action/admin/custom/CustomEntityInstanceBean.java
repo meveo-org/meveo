@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.ejb.Stateless;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,14 +24,16 @@ import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
-import org.meveo.service.custom.NativeCustomEntityInstanceService;
 import org.meveo.service.storage.RepositoryService;
+import org.omnifaces.cdi.Cookie;
+import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -41,9 +44,15 @@ import org.meveo.service.storage.RepositoryService;
 public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstance> {
 
 	private static final long serialVersionUID = -459772193950603406L;
+	
+	@Inject
+	private Logger log;
 
 	@Inject
 	private CustomizedEntityService customizedEntityService;
+	
+	@Inject
+	protected CrossStorageService crossStorageService;
 
 	@Inject
 	protected CustomEntityInstanceService customEntityInstanceService;
@@ -57,14 +66,15 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	@Inject
 	protected RepositoryService repositoryService;
 
-	@Inject
-	private NativeCustomEntityInstanceService nativeCustomEntityInstanceService;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cacheContainerProvider;
 
 	protected CustomEntityTemplate customEntityTemplate;
+	
+	@Cookie
 	private Repository repository;
+	
 	protected String customEntityTemplateCode;
 	protected String customTableName;
 	private String uuid;
@@ -114,7 +124,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		if (!StringUtils.isBlank(uuid)) {
 			try {
-				Map<String, Object> cfValues = nativeCustomEntityInstanceService.findInCrossStorage(repository, customEntityTemplate, uuid);
+				Map<String, Object> cfValues = crossStorageService.find(repository, customEntityTemplate, uuid);
 
 				if (cfValues != null) {
 					log.debug("Loading cfValues={}", cfValues);
@@ -152,22 +162,22 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		}
 
 		String result = getListViewName();
-		// Check for unicity of code
-		CustomEntityInstance ceiSameCode = customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
-		if (entity.getUuid() == null && ceiSameCode != null) {
-			messages.error(new BundleKey("messages", "commons.uniqueField.code"));
-			return null;
-		}
+//		// Check for unicity of code
+//		String existingId = crossStorageService.findEntityId(repository, entity);//customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
+//		if (entity.getUuid() == null && ceiSameCode != null) {
+//			messages.error(new BundleKey("messages", "commons.uniqueField.code"));
+//			return null;
+//		}
 
 		boolean isNew = entity.getUuid() == null;
 
 		try {
 
-			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
+//			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
 
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
 
-			nativeCustomEntityInstanceService.createOrUpdate(repository, entity, cfValues);
+			crossStorageService.createOrUpdate(repository, entity);
 
 			if (killConversation) {
 				endConversation();
@@ -185,6 +195,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		} catch (Exception e) {
 			messages.error(new BundleKey("messages", "customEntityInstance.save.ko"));
+			log.error("Canno't create or update CEI", e);
 			return null;
 		}
 
@@ -196,7 +207,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		repository = repository == null ? repositoryService.findByCode(repositoryCode) : repository;
 		String cetCode = org.meveo.commons.utils.StringUtils.isBlank(customEntityTemplateCode) ? entity.getCetCode() : customEntityTemplateCode;
-		nativeCustomEntityInstanceService.removeInCrossStorage(repository, customEntityTemplateService.findByCode(cetCode), uuid);
+		crossStorageService.remove(repository, customEntityTemplateService.findByCode(cetCode), uuid);
 		messages.info(new BundleKey("messages", "delete.successful"));
 	}
 

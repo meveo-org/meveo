@@ -76,16 +76,24 @@
 		</h:form>
 
 		<p:outputPanel id="contentBody">
-			<p:panel width="100"
-				rendered="#{customEntityInstanceListBean.repository != null}">
+			<p:panel width="100" rendered="#{customEntityInstanceListBean.repository != null}">
+				
+			<h:form prependId="false">
 				<p:dataTable id="results_panel"
 					value="#{customEntityInstanceListBean.nativeDataModel}"
-					var="entity" lazy="true" widgetVar="ctTable"
+					var="entity" 
+					lazy="true" 
+					widgetVar="ctTable"
 					paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
 					currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
-					paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
-					resizableColumns="true" styleClass="custom-grid" reflow="true"
-					editable="false" rowSelectMode="checkbox"
+					paginator="true" 
+					rows="10" 
+					rowsPerPageTemplate="10,15,20,50"
+					resizableColumns="true" 
+					styleClass="custom-grid" 
+					reflow="true"
+					editable="false" 
+					rowSelectMode="checkbox"
 					selection="#{customEntityInstanceListBean.selectedValues}"
 					rowIndexVar="rowIdx">
 
@@ -148,8 +156,12 @@
 						</p:commandButton>
 					</p:column>
 				</p:dataTable>
+			</h:form>
+				
 			</p:panel>
+			
 		</p:outputPanel>
+		
 
 	</ui:define>
 

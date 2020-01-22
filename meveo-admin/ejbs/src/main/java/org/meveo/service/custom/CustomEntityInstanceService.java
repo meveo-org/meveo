@@ -129,6 +129,14 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	private boolean filterOnValues(Map<String, Object> values, CustomEntityInstance customEntityInstance) {
 		final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
 		for (Map.Entry<String, Object> value : values.entrySet()) {
+			if(value.getValue() == null) {
+				continue;
+			}
+			
+			if(cfValuesAsValues.get(value.getKey()) == null) {
+				return false;
+			}
+			
 			if (!cfValuesAsValues.get(value.getKey()).equals(value.getValue())) {
 				return false;
 			}
