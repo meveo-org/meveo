@@ -3,7 +3,7 @@ package org.meveo.admin.action.admin.custom;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ConversationScoped;
+import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
@@ -18,7 +18,7 @@ import org.meveo.util.view.CrossStorageDataModel;
 import org.primefaces.model.LazyDataModel;
 
 @Named
-@ConversationScoped
+@ViewScoped
 public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	private static final long serialVersionUID = 2227098775326177111L;

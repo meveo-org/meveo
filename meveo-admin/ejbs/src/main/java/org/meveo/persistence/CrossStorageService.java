@@ -129,7 +129,11 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, List<String> fetchFields) throws EntityDoesNotExistsException {
 		if (uuid == null) {
-			throw new NullPointerException("Cannot retrieve entity by uuid without uuid");
+			throw new IllegalArgumentException("Cannot retrieve entity by uuid without uuid");
+		}
+		
+		if(cet == null) {
+			throw new IllegalArgumentException("CET should be provided");
 		}
 
 		List<String> selectFields;
@@ -141,7 +145,10 @@ public class CrossStorageService implements CustomPersistenceService {
 
 			// No restrictions about fields - retrieve all fields
 		} else {
-			selectFields = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values().stream().map(CustomFieldTemplate::getCode)
+			selectFields = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo())
+					.values()
+					.stream()
+					.map(CustomFieldTemplate::getCode)
 					.collect(Collectors.toList());
 		}
 

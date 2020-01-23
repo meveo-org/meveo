@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.ejb.Stateless;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -204,7 +205,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Override
 	public void delete() throws BusinessException {
-
 		repository = repository == null ? repositoryService.findByCode(repositoryCode) : repository;
 		String cetCode = org.meveo.commons.utils.StringUtils.isBlank(customEntityTemplateCode) ? entity.getCetCode() : customEntityTemplateCode;
 		crossStorageService.remove(repository, customEntityTemplateService.findByCode(cetCode), uuid);
@@ -253,6 +253,10 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	}
 
 	public String getCustomEntityTemplateCode() {
+		if(customEntityTemplateCode == null && getCustomEntityTemplate() != null) {
+			customEntityTemplateCode = getCustomEntityTemplate().getCode();
+		}
+		
 		return customEntityTemplateCode;
 	}
 
