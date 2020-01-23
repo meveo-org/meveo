@@ -477,6 +477,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCetCode(ceiToSave.getCetCode());
 		cei.setCode(ceiToSave.getCode());
+		cei.setDescription(ceiToSave.getDescription());
 
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cei.getCetCode());
@@ -843,25 +844,43 @@ public class CrossStorageService implements CustomPersistenceService {
 			// Custom table
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-				uuid = customTableService.findIdByValues(repository.getSqlConfigurationCode(), dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL, true));
+				try {
+					customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
+					uuid = cei.getUuid();
+				} catch (EntityDoesNotExistsException e) {
+					uuid = customTableService.findIdByValues(repository.getSqlConfigurationCode(), dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL, true));
+				}
 			} else {
-				final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), cei.getCode(), valuesFilters);
-				if (customEntityInstance != null) {
-					uuid = customEntityInstance.getUuid();
+				CustomEntityInstance existingCei = customEntityInstanceService.findByUuid(cet.getCode(), cei.getUuid());
+				if(existingCei != null) {
+					uuid = existingCei.getUuid();
+				} else {
+					final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), cei.getCode(), valuesFilters);
+					if (customEntityInstance != null) {
+						uuid = customEntityInstance.getUuid();
+					}
 				}
 			}
 		}
 
 		// Neo4J
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			Map<String, Object> val = neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), cei.getUuid());
+			
 			try {
-				String neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J, true));
+				final String neo4JUuid;
+				if(val != null && !val.isEmpty()) {
+					neo4JUuid = cei.getUuid();
+				} else {
+					neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J, true));
+				}
+				
 				if (uuid != null && neo4JUuid != null && !uuid.equals(neo4JUuid)) {
 					log.error("Neo4J and SQL UUIDs are different for instance of {} with values {} ({} =/= {})", cet, valuesFilters, neo4JUuid, uuid);
 				} else if (neo4JUuid != null) {
 					uuid = neo4JUuid;
 				}
-
+				
 			} catch (ELException | BusinessException e) {
 				throw new RuntimeException(e);
 			}
