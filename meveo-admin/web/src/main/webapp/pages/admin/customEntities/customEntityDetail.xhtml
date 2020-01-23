@@ -33,7 +33,7 @@
 						showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
 						showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}">
 						<hftl:formField label="#{messages['BusinessEntity.code']}"
-							field="code" required="true" />
+							field="code" required="false"/>
 						<hftl:formField label="#{messages['BusinessEntity.description']}"
 							field="description" useConverter="false" id="description" />
 						<hftl:formField label="#{messages['enableEntity.disabled']}"

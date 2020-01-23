@@ -344,7 +344,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		return valuesList;
 	}
-
+	
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 
 		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
@@ -376,7 +376,11 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 		}
-
+		
+		if(cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.count(repository, cet, paginationConfiguration);
+		}
+		
 		return 0;
 	}
 

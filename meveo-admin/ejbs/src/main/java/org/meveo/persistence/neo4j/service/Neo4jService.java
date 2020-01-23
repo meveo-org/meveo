@@ -27,6 +27,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.CETUtils;
 import org.meveo.api.dto.neo4j.Datum;
 import org.meveo.api.dto.neo4j.Neo4jQueryResultDto;
@@ -1585,6 +1586,23 @@ public class Neo4jService implements CustomPersistenceService {
             );
         }
     }
+    
+    public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+    		String graphQlQuery;
+
+    		// Find by graphql if query provided
+    		if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
+    			graphQlQuery = paginationConfiguration.getGraphQlQuery();
+    		} else {
+    			graphQlQuery = "{ " + cet.getCode() + " { } }";
+    		}
+
+    		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
+
+    		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
+
+    		return result.size();
+    }
 
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
 
@@ -1686,4 +1704,5 @@ public class Neo4jService implements CustomPersistenceService {
     private String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
         return sub.replace(findStartNodeId).replace('"', '\'');
     }
+    
 }
