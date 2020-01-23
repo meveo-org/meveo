@@ -188,7 +188,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				if (sqlFields != null) {
 					for (String field : sqlFields) {
 						if (cei.getCfValues() != null && cei.getCfValues().getCfValue(field) != null) {
-							values.put(field, cei.getCfValues().getCfValue(field).getValue());
+							values.putIfAbsent(field, cei.getCfValues().getCfValue(field).getValue());
 						}
 					}
 				} else {
@@ -269,6 +269,9 @@ public class CrossStorageService implements CustomPersistenceService {
 					Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
 					final HashMap<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
 					map.put("uuid", cei.getUuid());
+					map.put("code", cei.getCode());
+					map.put("description", cei.getDescription());
+					
 					if (!fetchAllFields) {
 						for (String k : cei.getCfValuesAsValues().keySet()) {
 							if (!actualFetchFields.contains(k)) {
