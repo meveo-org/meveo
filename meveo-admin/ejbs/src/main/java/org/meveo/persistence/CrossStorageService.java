@@ -507,11 +507,12 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// SQL Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-			Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, true);
+			Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, false);
 
 			if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				CustomEntityInstance sqlCei = new CustomEntityInstance();
 				sqlCei.setCet(cet);
+				sqlCei.setUuid(cei.getUuid());
 				sqlCei.setCode(cei.getCode());
 				sqlCei.setCetCode(cei.getCetCode());
 				sqlCei.setDescription(cei.getDescription());
@@ -522,10 +523,10 @@ public class CrossStorageService implements CustomPersistenceService {
 						.filter(f -> f.getStorages().contains(DBStorageType.SQL)).collect(Collectors.toList());
 
 				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-					uuid = createOrUpdateSQL(repository, cei, binariesInSql);
+					uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql);
 
 				} else {
-					uuid = createOrUpdateCei(repository, cei, binariesInSql);
+					uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
 				}
 
 				persistedEntities.add(new EntityRef(uuid, cet.getCode()));

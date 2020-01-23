@@ -22,6 +22,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
@@ -176,10 +177,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		try {
 
-//			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
-
+			//Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
+			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.getFieldValueHolderByUUID(entity.getUuid()).getValuesByCode();
+			
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
-
+			entity.setCfValues(new CustomFieldValues(cfValues));
+			
 			crossStorageService.createOrUpdate(repository, entity);
 
 			if (killConversation) {
