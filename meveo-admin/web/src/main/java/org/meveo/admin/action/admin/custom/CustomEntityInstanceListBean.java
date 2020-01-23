@@ -13,10 +13,8 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.custom.NativeCustomEntityInstanceService;
 import org.meveo.util.view.CrossStorageDataModel;
-import org.meveo.util.view.NativeTableBasedDataModel;
 import org.primefaces.model.LazyDataModel;
 
 @Named
@@ -56,11 +54,11 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	 * 
 	 * @param inputFilters Search criteria
 	 * @return LazyDataModel implementation.
-	 * @throws NamingException 
+	 * @throws NamingException
 	 */
 	public LazyDataModel<Map<String, Object>> getNativeDataModel(Map<String, Object> inputFilters) throws NamingException {
 
-		if (getCustomEntityTemplate() != null && getRepository() != null) {
+		if (nativeDataModel == null && getCustomEntityTemplate() != null && getRepository() != null) {
 
 			final Map<String, Object> filters = inputFilters;
 

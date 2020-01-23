@@ -3,6 +3,7 @@
  */
 package org.meveo.util.view;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,28 +21,51 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This data model is use to display a list of custom entities derive from cross
+ * storage.
+ * 
+ * @see CrossStorageService
  * @author clement.bareth
- *
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @since 6.8.0
+ * @version 6.8.0
  */
 public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Object>> {
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 
 	private CrossStorageService persistenceService = CDI.current().select(CrossStorageService.class).get();
-	
+
 	private Logger log = LoggerFactory.getLogger(CrossStorageDataModel.class);
-	
+
 	private Integer rowCount;
 
 	private Integer rowIndex;
-	
+
 	protected abstract Repository getRepository();
-	
+
 	protected abstract CustomEntityTemplate getCustomEntityTemplate();
-	
+
+	@Override
+	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+
+		PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(loadingFilters), null, getListFieldsToFetchImpl(), sortField,
+				sortOrder);
+
+		try {
+			setRowCount(persistenceService.count(getRepository(), getCustomEntityTemplate(), paginationConfig));
+
+			if (getRowCount() > 0) {
+				return persistenceService.find(getRepository(), getCustomEntityTemplate(), paginationConfig);
+			}
+
+		} catch (EntityDoesNotExistsException e) {
+			log.error("Error retrieving data", e);
+		}
+
+		return new ArrayList<>();
+	}
+
 	@Override
 	public void setRowIndex(int rowIndex) {
 		if (rowIndex == -1 || getPageSize() == 0) {
@@ -50,26 +74,24 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 			this.rowIndex = rowIndex % getPageSize();
 		}
 	}
-	
-	@SuppressWarnings({ "unchecked" })
+
+	@Override
+	public int getRowIndex() {
+		return this.rowIndex;
+	}
+
 	@Override
 	public boolean isRowAvailable() {
 		if (getWrappedData() == null) {
 			return false;
 		}
 
-		return rowIndex >= 0 && rowIndex < ((List<Map<String, Object>>) getWrappedData()).size();
-	}
-	
-	@Override
-	public Object getRowKey(Map<String, Object> object) {
-		return Optional.ofNullable(object.get("uuid"))
-				.orElse(object.get("meveo_uuid"));
+		return rowIndex >= 0 && rowIndex < (getWrappedData()).size();
 	}
 
 	@Override
-	public int getRowIndex() {
-		return this.rowIndex;
+	public Object getRowKey(Map<String, Object> object) {
+		return Optional.ofNullable(object.get("uuid")).orElse(object.get("meveo_uuid"));
 	}
 
 	@Override
@@ -84,45 +106,21 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 
 	@Override
 	public Map<String, Object> getRowData() {
-		return ((List<Map<String, Object>>) getWrappedData()).get(rowIndex);
+		return (getWrappedData()).get(rowIndex);
 	}
-	
-	
-	
-	@Override
-	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
-		PaginationConfiguration paginationConfig = new PaginationConfiguration(
-				first, 
-				pageSize, 
-				getSearchCriteria(loadingFilters), 
-				null, 
-				getListFieldsToFetchImpl(), 
-				sortField, 
-				sortOrder);
-		
-		try {
-			List<Map<String, Object>> find = persistenceService.find(getRepository(), getCustomEntityTemplate(), paginationConfig);
-			rowCount = find.size();
-			return find;
-		} catch (EntityDoesNotExistsException e) {
-			log.error("Error retrieving data", e);
-		}
-		
-		return null;
-	}
-	
+
 	@Override
 	public Map<String, Object> getRowData(String uuid) {
-		
+
 		try {
 			return persistenceService.find(getRepository(), getCustomEntityTemplate(), uuid);
 		} catch (EntityDoesNotExistsException e) {
 			log.error("Error retrieving detail", e);
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * Get default sort.
 	 * 
@@ -134,8 +132,8 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 
 	protected SortOrder getDefaultSortOrderImpl() {
 		return SortOrder.ASCENDING;
-	} 
-	
+	}
+
 	/**
 	 * Override this method if you need to fetch any fields when selecting list of
 	 * entities in data table. Return list of field names that has to be fetched.
@@ -145,7 +143,7 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	protected List<String> getListFieldsToFetchImpl() {
 		return null;
 	}
-	
+
 	/**
 	 * A method to mock List/Set/Collection size property, so it is easy to be used
 	 * in EL expressions.
@@ -155,7 +153,7 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	public Integer size() {
 		return rowCount;
 	}
-	
+
 	/**
 	 * Get search criteria for data searching.&lt;br/&gt; Search criteria is a map
 	 * with filter criteria name as a key and value as a value. &lt;br/&gt; Criteria
@@ -181,6 +179,4 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	 */
 	protected abstract Map<String, Object> getSearchCriteria();
 
-
-	
 }

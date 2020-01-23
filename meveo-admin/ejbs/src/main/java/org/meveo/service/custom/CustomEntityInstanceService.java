@@ -11,6 +11,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -126,17 +127,42 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return resultList;
 	}
 
+	public List<CustomEntityInstance> list(String cetCode, Map<String, Object> values, PaginationConfiguration paginationConfiguration) {
+
+		QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
+		qb.addCriterion("cei.cetCode", "=", cetCode, true);
+		qb.addPaginationConfiguration(paginationConfiguration);
+
+		final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
+
+		if (values != null && !values.isEmpty()) {
+			return resultList.stream().filter(customEntityInstance -> filterOnValues(values, customEntityInstance)).collect(Collectors.toList());
+		}
+
+		return resultList;
+	}
+
+	public long count(String cetCode, PaginationConfiguration paginationConfiguration) {
+
+		QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
+		qb.addCriterion("cei.cetCode", "=", cetCode, true);
+
+		qb.addPaginationConfiguration(paginationConfiguration);
+
+		return qb.count(getEntityManager());
+	}
+
 	private boolean filterOnValues(Map<String, Object> values, CustomEntityInstance customEntityInstance) {
 		final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
 		for (Map.Entry<String, Object> value : values.entrySet()) {
-			if(value.getValue() == null) {
+			if (value.getValue() == null) {
 				continue;
 			}
-			
-			if(cfValuesAsValues.get(value.getKey()) == null) {
+
+			if (cfValuesAsValues.get(value.getKey()) == null) {
 				return false;
 			}
-			
+
 			if (!cfValuesAsValues.get(value.getKey()).equals(value.getValue())) {
 				return false;
 			}
