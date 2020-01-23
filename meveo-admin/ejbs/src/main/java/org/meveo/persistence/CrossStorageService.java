@@ -514,6 +514,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				sqlCei.setCet(cet);
 				sqlCei.setCode(cei.getCode());
 				sqlCei.setCetCode(cei.getCetCode());
+				sqlCei.setDescription(cei.getDescription());
 				customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
 
 				// Update binaries stored in SQL
@@ -564,6 +565,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 			cei.setCfValues(ceiToSave.getCfValues());
+			cei.setDescription(ceiToSave.getDescription());
 			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
 				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
 			}

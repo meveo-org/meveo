@@ -132,6 +132,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					log.debug("Loading cfValues={}", cfValues);
 					entity.setCode((String) cfValues.get("code"));
 					entity.setCet(customEntityTemplate);
+					entity.setDescription((String) cfValues.get("description"));
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
 				}
