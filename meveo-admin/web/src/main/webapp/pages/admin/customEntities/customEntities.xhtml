@@ -38,7 +38,7 @@
 			<hftl:searchField label="#{messages['enableEntity.disabled']}"
 				field="disabled" />
 			<ui:define name="buttons">
-				<p:panel id="customButtons" styleClass="search-panel-actions">
+				<p:panel id="customButtons" styleClass="search-panel-actions" style="padding-left: 0px;">
 					<p:button value="#{messages['commons.new']}"
 						outcome="#{customEntityInstanceListBean.newViewName}"
 						rendered="#{customEntityInstanceListBean.repository != null}">
