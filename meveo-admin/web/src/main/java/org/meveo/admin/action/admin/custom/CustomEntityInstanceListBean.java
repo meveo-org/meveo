@@ -15,6 +15,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.custom.NativeCustomEntityInstanceService;
 import org.meveo.util.view.CrossStorageDataModel;
+import org.omnifaces.util.Faces;
 import org.primefaces.model.LazyDataModel;
 
 @Named
@@ -90,6 +91,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	public void handleRepositoryChangeEvent() {
 		dataModel = null;
 		filters = null;
+		Faces.addResponseCookie("repository", getRepository().getCode(), Integer.MAX_VALUE);
 	}
 
 	public List<Repository> listRepositories() {

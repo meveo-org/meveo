@@ -73,12 +73,13 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	protected CustomEntityTemplate customEntityTemplate;
 	
-	@Cookie
 	private Repository repository;
 	
 	protected String customEntityTemplateCode;
 	protected String customTableName;
 	private String uuid;
+	
+	@Inject @Cookie(name = "repository")
 	private String repositoryCode;
 
 	public CustomEntityInstanceBean() {
@@ -261,6 +262,10 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	}
 
 	public Repository getRepository() {
+		if(repository == null && repositoryCode != null) {
+			repository = this.repositoryService.findByCode(repositoryCode);
+		}
+		
 		return repository;
 	}
 

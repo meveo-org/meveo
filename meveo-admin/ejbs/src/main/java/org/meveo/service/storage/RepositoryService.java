@@ -133,13 +133,9 @@ public class RepositoryService extends BusinessService<Repository> {
 		QueryBuilder qb = new QueryBuilder(Repository.class, "r");
 
 		if (withSql) {
-			if (withCustomTable) {
-				qb.addSql("r.sqlConfiguration IS NOT NULL");
-
-			} else {
-				if (!withNeo4j) {
-					return Arrays.asList(findDefaultRepository());
-				}
+			qb.addSql("r.sqlConfiguration IS NOT NULL");
+			if (!withCustomTable) {
+				qb.addSql("r.sqlConfiguration.code = 'default'");
 			}
 		}
 
