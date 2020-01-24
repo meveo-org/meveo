@@ -37,7 +37,6 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
 
     @Column(name = "code", nullable = false, length = 255)
     @Size(max = 255, min = 1)
-    @NotNull
     protected String code;
 
     /**
