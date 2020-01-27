@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
@@ -13,7 +12,6 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.service.custom.NativeCustomEntityInstanceService;
 import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.util.Faces;
 import org.primefaces.model.LazyDataModel;
@@ -24,14 +22,12 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	private static final long serialVersionUID = 2227098775326177111L;
 
-	@Inject
-	private NativeCustomEntityInstanceService nativeCustomEntityInstanceService;
-
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
 
 	private List<Map<String, Object>> selectedValues;
 
 	public void initialize() {
+		
 		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
 
 		if (customEntityTemplate.getSqlStorageConfigurationNullSafe().isStoreAsTable()) {
@@ -43,6 +39,9 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 			Table table = CustomEntityInstance.class.getAnnotation(Table.class);
 			customTableName = table.name();
 		}
+		
+		// clean the cookie
+		Faces.addResponseCookie("repository", null, Integer.MAX_VALUE);
 	}
 
 	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
