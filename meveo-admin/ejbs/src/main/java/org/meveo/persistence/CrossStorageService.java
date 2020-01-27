@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -328,7 +329,9 @@ public class CrossStorageService implements CustomPersistenceService {
 					resultMap.put("uuid", resultMap.remove("meveo_uuid"));
 				}
 
-				valuesList.add(resultMap);
+				// merge the values from sql and neo4j
+				// valuesList.add(resultMap);
+				mergeData(valuesList, resultMap);
 			});
 		}
 
@@ -343,6 +346,31 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 
 		return valuesList;
+	}
+	
+	/**
+	 * Add or merge a map of data to a list.
+	 * 
+	 * @param valuesList list of map of values
+	 * @param resultMap map to merge or add
+	 */
+	private void mergeData(List<Map<String, Object>> valuesList, HashMap<String, Object> resultMap) {
+
+		String uuid = (String) (resultMap.get("uuid") != null ? resultMap.get("uuid") : resultMap.get("meveo_uuid"));
+
+		boolean found = false;
+		for (Map<String, Object> mapOfValues : valuesList) {
+			String uuid2 = (String) (mapOfValues.get("uuid") != null ? mapOfValues.get("uuid") : mapOfValues.get("meveo_uuid"));
+			if (uuid.equals(uuid2)) {
+				mapOfValues.putAll(resultMap);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			valuesList.add(resultMap);
+		}
 	}
 	
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
