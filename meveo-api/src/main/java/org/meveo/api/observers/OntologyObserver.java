@@ -16,7 +16,42 @@
 
 package org.meveo.api.observers;
 
-import com.github.javaparser.ast.CompilationUnit;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
+import javax.inject.Inject;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
@@ -45,24 +80,10 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.*;
-import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
-import javax.inject.Inject;
-import javax.tools.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import com.github.javaparser.ast.CompilationUnit;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -74,12 +95,8 @@ import java.util.stream.Collectors;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class OntologyObserver {
 
-//    @Inject
-//    private GraphQLService graphQLService;
-//
-//    @Inject
-//    private Logger log;
-
+	private static Logger LOGGER = LoggerFactory.getLogger(OntologyObserver.class);
+	
     @Inject
     private GitClient gitClient;
 
@@ -204,6 +221,8 @@ public class OntologyObserver {
         hasChange.set(true);
 
         final String templateSchema = getTemplateSchema(cet);
+        
+        System.out.println("test");
 
         final File cetDir = getCetDir();
 
@@ -654,6 +673,10 @@ public class OntologyObserver {
 
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            if(!classDir.exists()) {
+            	classDir.mkdirs();
+            }
+            
             fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(classDir));
             List<JavaFileObject> compilationUnits = new ArrayList<>();
             for (File file : fileList) {
@@ -674,7 +697,8 @@ public class OntologyObserver {
                     }
                 }
             }
-        } catch (IOException e) {} {
+        } catch (IOException e) {
+        	LOGGER.error("Error compiling java class", e);
         }
     }
 
