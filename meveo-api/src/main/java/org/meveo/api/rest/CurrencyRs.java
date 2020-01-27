@@ -21,13 +21,14 @@ import org.meveo.api.dto.response.GetCurrencyResponse;
 /**
  * Web service for managing {@link org.meveo.model.admin.Currency} and {@link org.meveo.model.billing.TradingCurrency}.
  * 
- * @author Edward P. Legaspi
- *  @deprecated will be renammed to  TradingCurrencyRs
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ * @deprecated will be renammed to  TradingCurrencyRs
  **/
 @Path("/currency")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Currency")
+@Api("CurrencyRs")
 public interface CurrencyRs extends IBaseRs {
 
     /**

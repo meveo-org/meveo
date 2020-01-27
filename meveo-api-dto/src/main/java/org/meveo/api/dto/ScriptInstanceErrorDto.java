@@ -8,21 +8,28 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.scripts.ScriptInstanceError;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class ScriptInstanceErrorDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "ScriptInstanceError")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class ScriptInstanceErrorDto {
 
     /** The line number. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("The line number")
     private long lineNumber;
 
     /** The column number. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("The column number")
     private long columnNumber;
 
     /** The message. */

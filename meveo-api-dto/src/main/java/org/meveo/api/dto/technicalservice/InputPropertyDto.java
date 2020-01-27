@@ -36,8 +36,21 @@ public class InputPropertyDto implements InputPropertyDescription {
     private String comparisonValue;
     private String defaultValue;
     private String descriptionName;
-
+    
     /**
+     * Priority on the input property
+     */
+    private Float priority = 0.5f;
+    
+    public Float getPriority() {
+		return priority;
+	}
+
+	public void setPriority(Float priority) {
+		this.priority = priority;
+	}
+
+	/**
      * Code of CustomEntityTemplate property
      *
      * @return Code of CustomEntityTemplate property

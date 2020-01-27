@@ -10,220 +10,232 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.model.notification.NotificationHistory;
 import org.meveo.model.notification.NotificationHistoryStatusEnum;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class NotificationHistoryDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "NotificationHistory")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("NotificationHistoryDto")
 public class NotificationHistoryDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 200495187386477746L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 200495187386477746L;
 
-    /** The notification. */
-    private String notification;
-    
-    /** The entity class name. */
-    private String entityClassName;
-    
-    /** The entity code. */
-    private String entityCode;
-    
-    /** The serialized entity. */
-    private String serializedEntity;
-    
-    /** The nb retry. */
-    private int nbRetry;
-    
-    /** The result. */
-    private String result;
-    
-    /** The date. */
-    private Date date;
+	/** The notification. */
+	@ApiModelProperty("The notification")
+	private String notification;
 
-    /**
-     * Possible values: SENT, TO_RETRY, FAILED, CANCELED.
-     */
-    private NotificationHistoryStatusEnum status;
+	/** The entity class name. */
+	@ApiModelProperty("The entity class name")
+	private String entityClassName;
 
-    /**
-     * Instantiates a new notification history dto.
-     */
-    public NotificationHistoryDto() {
+	/** The entity code. */
+	@ApiModelProperty("The entity code")
+	private String entityCode;
 
-    }
+	/** The serialized entity. */
+	@ApiModelProperty("The serialized entity")
+	private String serializedEntity;
 
-    /**
-     * Instantiates a new notification history dto.
-     *
-     * @param notificationHistory the NotificationHistory entity
-     */
-    public NotificationHistoryDto(NotificationHistory notificationHistory) {
-        if (notificationHistory.getNotification() != null) {
-            notification = notificationHistory.getNotification().getCode();
-        }
-        entityClassName = notificationHistory.getEntityClassName();
-        entityCode = notificationHistory.getEntityCode();
-        nbRetry = notificationHistory.getNbRetry();
-        result = notificationHistory.getResult();
-        if (notificationHistory.getAuditable() != null) {
-            if (notificationHistory.getAuditable().getUpdated() != null) {
-                date = notificationHistory.getAuditable().getUpdated();
-            } else {
-                date = notificationHistory.getAuditable().getCreated();
-            }
-        }
-    }
+	/** The nb retry. */
+	@ApiModelProperty("The nb retry")
+	private int nbRetry;
 
-    /**
-     * Gets the entity class name.
-     *
-     * @return the entity class name
-     */
-    public String getEntityClassName() {
-        return entityClassName;
-    }
+	/** The result. */
+	@ApiModelProperty("Result of notification")
+	private String result;
 
-    /**
-     * Sets the entity class name.
-     *
-     * @param entityClassName the new entity class name
-     */
-    public void setEntityClassName(String entityClassName) {
-        this.entityClassName = entityClassName;
-    }
+	/** The date. */
+	@ApiModelProperty("Date when this notification happened")
+	private Date date;
 
-    /**
-     * Gets the entity code.
-     *
-     * @return the entity code
-     */
-    public String getEntityCode() {
-        return entityCode;
-    }
+	/**
+	 * Possible values: SENT, TO_RETRY, FAILED, CANCELED.
+	 */
+	private NotificationHistoryStatusEnum status;
 
-    /**
-     * Sets the entity code.
-     *
-     * @param entityCode the new entity code
-     */
-    public void setEntityCode(String entityCode) {
-        this.entityCode = entityCode;
-    }
+	/**
+	 * Instantiates a new notification history dto.
+	 */
+	public NotificationHistoryDto() {
 
-    /**
-     * Gets the serialized entity.
-     *
-     * @return the serialized entity
-     */
-    public String getSerializedEntity() {
-        return serializedEntity;
-    }
+	}
 
-    /**
-     * Sets the serialized entity.
-     *
-     * @param serializedEntity the new serialized entity
-     */
-    public void setSerializedEntity(String serializedEntity) {
-        this.serializedEntity = serializedEntity;
-    }
+	/**
+	 * Instantiates a new notification history dto.
+	 *
+	 * @param notificationHistory the NotificationHistory entity
+	 */
+	public NotificationHistoryDto(NotificationHistory notificationHistory) {
+		if (notificationHistory.getNotification() != null) {
+			notification = notificationHistory.getNotification().getCode();
+		}
+		entityClassName = notificationHistory.getEntityClassName();
+		entityCode = notificationHistory.getEntityCode();
+		nbRetry = notificationHistory.getNbRetry();
+		result = notificationHistory.getResult();
+		if (notificationHistory.getAuditable() != null) {
+			if (notificationHistory.getAuditable().getUpdated() != null) {
+				date = notificationHistory.getAuditable().getUpdated();
+			} else {
+				date = notificationHistory.getAuditable().getCreated();
+			}
+		}
+	}
 
-    /**
-     * Gets the nb retry.
-     *
-     * @return the nb retry
-     */
-    public int getNbRetry() {
-        return nbRetry;
-    }
+	/**
+	 * Gets the entity class name.
+	 *
+	 * @return the entity class name
+	 */
+	public String getEntityClassName() {
+		return entityClassName;
+	}
 
-    /**
-     * Sets the nb retry.
-     *
-     * @param nbRetry the new nb retry
-     */
-    public void setNbRetry(int nbRetry) {
-        this.nbRetry = nbRetry;
-    }
+	/**
+	 * Sets the entity class name.
+	 *
+	 * @param entityClassName the new entity class name
+	 */
+	public void setEntityClassName(String entityClassName) {
+		this.entityClassName = entityClassName;
+	}
 
-    /**
-     * Gets the result.
-     *
-     * @return the result
-     */
-    public String getResult() {
-        return result;
-    }
+	/**
+	 * Gets the entity code.
+	 *
+	 * @return the entity code
+	 */
+	public String getEntityCode() {
+		return entityCode;
+	}
 
-    /**
-     * Sets the result.
-     *
-     * @param result the new result
-     */
-    public void setResult(String result) {
-        this.result = result;
-    }
+	/**
+	 * Sets the entity code.
+	 *
+	 * @param entityCode the new entity code
+	 */
+	public void setEntityCode(String entityCode) {
+		this.entityCode = entityCode;
+	}
 
-    /**
-     * Gets the status.
-     *
-     * @return the status
-     */
-    public NotificationHistoryStatusEnum getStatus() {
-        return status;
-    }
+	/**
+	 * Gets the serialized entity.
+	 *
+	 * @return the serialized entity
+	 */
+	public String getSerializedEntity() {
+		return serializedEntity;
+	}
 
-    /**
-     * Sets the status.
-     *
-     * @param status the new status
-     */
-    public void setStatus(NotificationHistoryStatusEnum status) {
-        this.status = status;
-    }
+	/**
+	 * Sets the serialized entity.
+	 *
+	 * @param serializedEntity the new serialized entity
+	 */
+	public void setSerializedEntity(String serializedEntity) {
+		this.serializedEntity = serializedEntity;
+	}
 
-    /**
-     * Gets the date.
-     *
-     * @return the date
-     */
-    public Date getDate() {
-        return date;
-    }
+	/**
+	 * Gets the nb retry.
+	 *
+	 * @return the nb retry
+	 */
+	public int getNbRetry() {
+		return nbRetry;
+	}
 
-    /**
-     * Sets the date.
-     *
-     * @param date the new date
-     */
-    public void setDate(Date date) {
-        this.date = date;
-    }
+	/**
+	 * Sets the nb retry.
+	 *
+	 * @param nbRetry the new nb retry
+	 */
+	public void setNbRetry(int nbRetry) {
+		this.nbRetry = nbRetry;
+	}
 
-    /**
-     * Gets the notification.
-     *
-     * @return the notification
-     */
-    public String getNotification() {
-        return notification;
-    }
+	/**
+	 * Gets the result.
+	 *
+	 * @return the result
+	 */
+	public String getResult() {
+		return result;
+	}
 
-    /**
-     * Sets the notification.
-     *
-     * @param notification the new notification
-     */
-    public void setNotification(String notification) {
-        this.notification = notification;
-    }
+	/**
+	 * Sets the result.
+	 *
+	 * @param result the new result
+	 */
+	public void setResult(String result) {
+		this.result = result;
+	}
 
-    @Override
-    public String toString() {
-        return "NotificationHistoryDto [notification=" + notification + ", entityClassName=" + entityClassName + ", entityCode=" + entityCode + ", serializedEntity="
-                + serializedEntity + ", nbRetry=" + nbRetry + ", result=" + result + ", date=" + date + ", status=" + status + "]";
-    }
+	/**
+	 * Gets the status.
+	 *
+	 * @return the status
+	 */
+	public NotificationHistoryStatusEnum getStatus() {
+		return status;
+	}
+
+	/**
+	 * Sets the status.
+	 *
+	 * @param status the new status
+	 */
+	public void setStatus(NotificationHistoryStatusEnum status) {
+		this.status = status;
+	}
+
+	/**
+	 * Gets the date.
+	 *
+	 * @return the date
+	 */
+	public Date getDate() {
+		return date;
+	}
+
+	/**
+	 * Sets the date.
+	 *
+	 * @param date the new date
+	 */
+	public void setDate(Date date) {
+		this.date = date;
+	}
+
+	/**
+	 * Gets the notification.
+	 *
+	 * @return the notification
+	 */
+	public String getNotification() {
+		return notification;
+	}
+
+	/**
+	 * Sets the notification.
+	 *
+	 * @param notification the new notification
+	 */
+	public void setNotification(String notification) {
+		this.notification = notification;
+	}
+
+	@Override
+	public String toString() {
+		return "NotificationHistoryDto [notification=" + notification + ", entityClassName=" + entityClassName + ", entityCode=" + entityCode + ", serializedEntity="
+				+ serializedEntity + ", nbRetry=" + nbRetry + ", result=" + result + ", date=" + date + ", status=" + status + "]";
+	}
 }

@@ -14,15 +14,23 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.sql.SqlConfigurationResponseDto;
 import org.meveo.api.dto.response.sql.SqlConfigurationsResponseDto;
 import org.meveo.api.dto.sql.SqlConfigurationDto;
+import org.meveo.model.sql.SqlConfiguration;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @version 6.6.0
+ * API for managing {@link SqlConfiguration}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since 6.6.0
  */
 @Path("/sql/configurations")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Api("SqlConfigurationRs")
 public interface SqlConfigurationRs {
 
 	/**
@@ -30,7 +38,8 @@ public interface SqlConfigurationRs {
 	 */
 	@POST
 	@Path("/")
-	ActionStatus create(SqlConfigurationDto postData);
+	@ApiOperation("Create a new sqlConfiguration")
+	ActionStatus create(@ApiParam("Data source configuration info") SqlConfigurationDto postData);
 
 	/**
 	 * Update an existing sqlConfiguration
@@ -40,7 +49,8 @@ public interface SqlConfigurationRs {
 	 */
 	@PUT
 	@Path("/")
-	ActionStatus update(SqlConfigurationDto postData);
+	@ApiOperation("Update an existing sqlConfiguration")
+	ActionStatus update(@ApiParam("Data source configuration info") SqlConfigurationDto postData);
 
 	/**
 	 * Create new or update an existing sqlConfiguration
@@ -50,14 +60,16 @@ public interface SqlConfigurationRs {
 	 */
 	@POST
 	@Path("/createOrUpdate")
-	ActionStatus createOrUpdate(SqlConfigurationDto postData);
+	@ApiOperation("Create new or update an existing sqlConfiguration")
+	ActionStatus createOrUpdate(@ApiParam("Data source configuration info") SqlConfigurationDto postData);
 
 	/**
 	 * Search for sqlConfiguration with a given code
 	 */
 	@GET
 	@Path("/{code}")
-	SqlConfigurationResponseDto find(@PathParam("code") String code);
+	@ApiOperation("Search for sqlConfiguration with a given code")
+	SqlConfigurationResponseDto find(@PathParam("code") @ApiParam("code of the connection") String code);
 
 	/**
 	 * List sqlConfiguration
@@ -66,16 +78,18 @@ public interface SqlConfigurationRs {
 	 */
 	@GET
 	@Path("/")
+	@ApiOperation("List sql configuration")
 	SqlConfigurationsResponseDto list();
 
 	/**
-	 * Remove an existing sqlConfiguration with a given code
+	 * Removes an existing sqlConfiguration with a given code
 	 * 
 	 * @param code The sqlConfiguration's code
 	 * @return Request processing status
 	 */
 	@DELETE
 	@Path("/{code}")
-	public ActionStatus remove(@PathParam("code") String code);
+	@ApiOperation("Removes an existing sqlConfiguration with a given code")
+	public ActionStatus remove(@PathParam("code") @ApiParam("code of the connection") String code);
 
 }

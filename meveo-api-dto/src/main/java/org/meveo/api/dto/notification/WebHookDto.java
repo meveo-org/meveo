@@ -8,261 +8,264 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.HttpProtocol;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.WebHook;
 import org.meveo.model.notification.WebHookMethodEnum;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class WebHookDto.
+ * Part of the notification package that handles webhook.
  *
- * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "WebhookNotification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("WebHookDto")
 public class WebHookDto extends NotificationDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = -24934196712758476L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = -24934196712758476L;
 
-    /** The http protocol. */
-    @ApiModelProperty("The http protocol")
-    private HttpProtocol httpProtocol;
-    
-    /** The host. */
-    @XmlElement(required = true)
-    @ApiModelProperty(required = true, value = "The host")
-    private String host;
-    
-    /** The port. */
-    @XmlElement(required = true)
-    @ApiModelProperty(required = true, value = "The port")
-    private Integer port;
+	/** The http protocol. */
+	@ApiModelProperty("The http protocol")
+	private HttpProtocol httpProtocol;
 
-    /** The page. */
-    @XmlElement(required = true)
-    @ApiModelProperty(required = true, value = "The page")
-    private String page;
+	/** The host. */
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "The host")
+	private String host;
 
-    /**
-     * Valid values: HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE.
-     */
-    @XmlElement(required = true)
-    @ApiModelProperty(required = true, value = "Http method")
-    private WebHookMethodEnum httpMethod;
+	/** The port. */
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "The port")
+	private Integer port;
 
-    /** The username. */
-    @ApiModelProperty("The username")
-    private String username;
-    
-    /** The password. */
-    @ApiModelProperty("The password")
-    private String password;
-    
-    /** The headers. */
-    @ApiModelProperty("Map of headers")
-    private Map<String, String> headers = new HashMap<String, String>();
-    
-    /** The params. */
-    @ApiModelProperty("Map of params")
-    private Map<String, String> params = new HashMap<String, String>();
+	/** The page. */
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "The page")
+	private String page;
 
-    /**
-     * Instantiates a new web hook dto.
-     */
-    public WebHookDto() {
+	/**
+	 * Valid values: HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE.
+	 */
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "Http method")
+	private WebHookMethodEnum httpMethod;
 
-    }
+	/** The username. */
+	@ApiModelProperty("The username")
+	private String username;
 
-    /**
-     * Instantiates a new web hook dto.
-     *
-     * @param webHook the WebHook entity
-     */
-    public WebHookDto(WebHook webHook) {
-        super((Notification) webHook);
-        host = webHook.getHost();
-        port = webHook.getPort();
-        page = webHook.getPage();
-        httpMethod = webHook.getHttpMethod();
-        username = webHook.getUsername();
-        password = webHook.getUsername();
-        if (webHook.getHeaders() != null) {
-            headers.putAll(webHook.getHeaders());
-        }
-        if (webHook.getParams() != null) {
-            params.putAll(webHook.getParams());
-        }
-        httpProtocol = webHook.getHttpProtocol();
-    }
+	/** The password. */
+	@ApiModelProperty("The password")
+	private String password;
 
-    /**
-     * Gets the host.
-     *
-     * @return the host
-     */
-    public String getHost() {
-        return host;
-    }
+	/** The headers. */
+	@ApiModelProperty("Map of headers")
+	private Map<String, String> headers = new HashMap<String, String>();
 
-    /**
-     * Sets the host.
-     *
-     * @param host the new host
-     */
-    public void setHost(String host) {
-        this.host = host;
-    }
+	/** The params. */
+	@ApiModelProperty("Map of params")
+	private Map<String, String> params = new HashMap<String, String>();
 
-    /**
-     * Gets the port.
-     *
-     * @return the port
-     */
-    public Integer getPort() {
-        return port;
-    }
+	/**
+	 * Instantiates a new web hook dto.
+	 */
+	public WebHookDto() {
 
-    /**
-     * Sets the port.
-     *
-     * @param port the new port
-     */
-    public void setPort(Integer port) {
-        this.port = port;
-    }
+	}
 
-    /**
-     * Gets the page.
-     *
-     * @return the page
-     */
-    public String getPage() {
-        return page;
-    }
+	/**
+	 * Instantiates a new web hook dto.
+	 *
+	 * @param webHook the WebHook entity
+	 */
+	public WebHookDto(WebHook webHook) {
+		super((Notification) webHook);
+		host = webHook.getHost();
+		port = webHook.getPort();
+		page = webHook.getPage();
+		httpMethod = webHook.getHttpMethod();
+		username = webHook.getUsername();
+		password = webHook.getUsername();
+		if (webHook.getHeaders() != null) {
+			headers.putAll(webHook.getHeaders());
+		}
+		if (webHook.getParams() != null) {
+			params.putAll(webHook.getParams());
+		}
+		httpProtocol = webHook.getHttpProtocol();
+	}
 
-    /**
-     * Sets the page.
-     *
-     * @param page the new page
-     */
-    public void setPage(String page) {
-        this.page = page;
-    }
+	/**
+	 * Gets the host.
+	 *
+	 * @return the host
+	 */
+	public String getHost() {
+		return host;
+	}
 
-    /**
-     * Gets the http method.
-     *
-     * @return the http method
-     */
-    public WebHookMethodEnum getHttpMethod() {
-        return httpMethod;
-    }
+	/**
+	 * Sets the host.
+	 *
+	 * @param host the new host
+	 */
+	public void setHost(String host) {
+		this.host = host;
+	}
 
-    /**
-     * Sets the http method.
-     *
-     * @param httpMethod the new http method
-     */
-    public void setHttpMethod(WebHookMethodEnum httpMethod) {
-        this.httpMethod = httpMethod;
-    }
+	/**
+	 * Gets the port.
+	 *
+	 * @return the port
+	 */
+	public Integer getPort() {
+		return port;
+	}
 
-    /**
-     * Gets the username.
-     *
-     * @return the username
-     */
-    public String getUsername() {
-        return username;
-    }
+	/**
+	 * Sets the port.
+	 *
+	 * @param port the new port
+	 */
+	public void setPort(Integer port) {
+		this.port = port;
+	}
 
-    /**
-     * Sets the username.
-     *
-     * @param username the new username
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	/**
+	 * Gets the page.
+	 *
+	 * @return the page
+	 */
+	public String getPage() {
+		return page;
+	}
 
-    /**
-     * Gets the password.
-     *
-     * @return the password
-     */
-    public String getPassword() {
-        return password;
-    }
+	/**
+	 * Sets the page.
+	 *
+	 * @param page the new page
+	 */
+	public void setPage(String page) {
+		this.page = page;
+	}
 
-    /**
-     * Sets the password.
-     *
-     * @param password the new password
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	/**
+	 * Gets the http method.
+	 *
+	 * @return the http method
+	 */
+	public WebHookMethodEnum getHttpMethod() {
+		return httpMethod;
+	}
 
-    /**
-     * Gets the headers.
-     *
-     * @return the headers
-     */
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
+	/**
+	 * Sets the http method.
+	 *
+	 * @param httpMethod the new http method
+	 */
+	public void setHttpMethod(WebHookMethodEnum httpMethod) {
+		this.httpMethod = httpMethod;
+	}
 
-    /**
-     * Sets the headers.
-     *
-     * @param headers the headers
-     */
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-    }
+	/**
+	 * Gets the username.
+	 *
+	 * @return the username
+	 */
+	public String getUsername() {
+		return username;
+	}
 
-    /**
-     * Gets the params.
-     *
-     * @return the params
-     */
-    public Map<String, String> getParams() {
-        return params;
-    }
+	/**
+	 * Sets the username.
+	 *
+	 * @param username the new username
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    /**
-     * Sets the params.
-     *
-     * @param params the params
-     */
-    public void setParams(Map<String, String> params) {
-        this.params = params;
-    }
+	/**
+	 * Gets the password.
+	 *
+	 * @return the password
+	 */
+	public String getPassword() {
+		return password;
+	}
 
-    /**
-     * Gets the http protocol.
-     *
-     * @return the http protocol
-     */
-    public HttpProtocol getHttpProtocol() {
-        return httpProtocol;
-    }
+	/**
+	 * Sets the password.
+	 *
+	 * @param password the new password
+	 */
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    /**
-     * Sets the http protocol.
-     *
-     * @param httpProtocol the new http protocol
-     */
-    public void setHttpProtocol(HttpProtocol httpProtocol) {
-        this.httpProtocol = httpProtocol;
-    }
-    
-    @Override
-    public String toString() {
-        return "WebhookDto [host=" + host + ", port=" + port + ", page=" + page + ", httpMethod=" + httpMethod + ", username=" + username + ", password=" + password + ", headers="
-                + headers + ", params=" + params + "]";
-    }
+	/**
+	 * Gets the headers.
+	 *
+	 * @return the headers
+	 */
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+
+	/**
+	 * Sets the headers.
+	 *
+	 * @param headers the headers
+	 */
+	public void setHeaders(Map<String, String> headers) {
+		this.headers = headers;
+	}
+
+	/**
+	 * Gets the params.
+	 *
+	 * @return the params
+	 */
+	public Map<String, String> getParams() {
+		return params;
+	}
+
+	/**
+	 * Sets the params.
+	 *
+	 * @param params the params
+	 */
+	public void setParams(Map<String, String> params) {
+		this.params = params;
+	}
+
+	/**
+	 * Gets the http protocol.
+	 *
+	 * @return the http protocol
+	 */
+	public HttpProtocol getHttpProtocol() {
+		return httpProtocol;
+	}
+
+	/**
+	 * Sets the http protocol.
+	 *
+	 * @param httpProtocol the new http protocol
+	 */
+	public void setHttpProtocol(HttpProtocol httpProtocol) {
+		this.httpProtocol = httpProtocol;
+	}
+
+	@Override
+	public String toString() {
+		return "WebhookDto [host=" + host + ", port=" + port + ", page=" + page + ", httpMethod=" + httpMethod + ", username=" + username + ", password=" + password + ", headers="
+				+ headers + ", params=" + params + "]";
+	}
 }

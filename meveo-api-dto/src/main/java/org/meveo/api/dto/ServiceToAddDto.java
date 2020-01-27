@@ -7,32 +7,42 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class ServiceToAddDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since Nov 13, 2013
  */
 @XmlRootElement(name = "ServiceToAdd")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class ServiceToAddDto implements Serializable {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 3267838736094614395L;
 
     /** The service id. */
+    @ApiModelProperty("The service id")
     private String serviceId;
     
     /** The subscription date. */
+    @ApiModelProperty("The subscription date")
     private Date subscriptionDate;
     
     /** The param 1. */
+    @ApiModelProperty("First parameter")
     private String param1;
     
     /** The param 2. */
+    @ApiModelProperty("Second parameter")
     private String param2;
     
     /** The param 3. */
+    @ApiModelProperty("Third parameter")
     private String param3;
 
     /**

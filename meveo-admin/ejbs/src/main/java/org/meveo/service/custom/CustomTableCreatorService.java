@@ -296,7 +296,7 @@ public class CustomTableCreatorService implements Serializable {
 				liquibase.update(new Contexts(), new LabelExpression());
 
 			} catch (Exception e) {
-				log.error("Failed to create a custom table {}", dbTableName, e);
+				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
 				throw new SQLException(e);
 			}
 
@@ -719,7 +719,12 @@ public class CustomTableCreatorService implements Serializable {
 			case LONG:
 			case ENTITY:
 			case BOOLEAN:
-				column.setDefaultValueNumeric(cft.getDefaultValue());
+				boolean value = Boolean.parseBoolean(cft.getDefaultValue());
+				if (value) {
+					column.setDefaultValueNumeric("1");
+				} else {
+					column.setDefaultValueNumeric("0");
+				}
 				break;
 			case STRING:
 			case TEXT_AREA:
@@ -777,7 +782,7 @@ public class CustomTableCreatorService implements Serializable {
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> createTable(e.getCode(), dbTablename));
 
-		createTable(null, dbTablename);
+//		createTable(null, dbTablename);
 	}
 
 	/**
@@ -791,7 +796,7 @@ public class CustomTableCreatorService implements Serializable {
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> addField(e.getCode(), dbTablename, cft));
 
-		addField(null, dbTablename, cft);
+//		addField(null, dbTablename, cft);
 	}
 
 	/**
@@ -805,7 +810,7 @@ public class CustomTableCreatorService implements Serializable {
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> updateField(e.getCode(), dbTablename, cft));
 
-		updateField(null, dbTablename, cft);
+//		updateField(null, dbTablename, cft);
 	}
 
 	/**
@@ -818,7 +823,7 @@ public class CustomTableCreatorService implements Serializable {
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> removeTable(e.getCode(), dbTablename));
 
-		removeTable(null, dbTablename);
+//		removeTable(null, dbTablename);
 	}
 
 	/**
@@ -832,7 +837,7 @@ public class CustomTableCreatorService implements Serializable {
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> removeField(e.getCode(), dbTablename, cft));
 
-		removeField(null, dbTablename, cft);
+//		removeField(null, dbTablename, cft);
 	}
 
 	/**

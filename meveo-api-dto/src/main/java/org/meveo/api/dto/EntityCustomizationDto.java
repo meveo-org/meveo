@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -19,12 +20,12 @@ import org.meveo.model.crm.custom.EntityCustomAction;
  * The Class EntityCustomizationDto.
  *
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
-
 @XmlRootElement(name = "EntityCustomization")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class EntityCustomizationDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

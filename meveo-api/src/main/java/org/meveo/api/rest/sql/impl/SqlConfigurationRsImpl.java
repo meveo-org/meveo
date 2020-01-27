@@ -17,7 +17,7 @@ import org.meveo.api.sql.SqlConfigurationApi;
 import org.meveo.model.sql.SqlConfiguration;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  * @since 6.6.0
  */

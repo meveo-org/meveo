@@ -39,7 +39,9 @@ import org.slf4j.Logger;
 @Stateless
 public class ApplicationInitializer {
 
-    @EJB
+	public static final String APPLICATION_INITIALIZER = "applicationInitializer";
+
+	@EJB
     private ApplicationInitializer multitenantAppInitializer;
 
     @Inject
@@ -120,7 +122,7 @@ public class ApplicationInitializer {
             entityManagerProvider.registerEntityManagerFactory(provider.getCode());
         }
 
-        currentUserProvider.forceAuthentication("applicationInitializer", isMainProvider ? null : provider.getCode());
+        currentUserProvider.forceAuthentication(APPLICATION_INITIALIZER, isMainProvider ? null : provider.getCode());
 
         // Ensure that provider code in secondary provider schema matches the tenant/provider code as it was listed in main provider's secondary tenant/provider record
         if (!isMainProvider) {
@@ -140,7 +142,7 @@ public class ApplicationInitializer {
 
             if (createESIndex) {
                 // Here cache will be populated as part of reindexing
-                elasticClient.cleanAndReindex(MeveoUser.instantiate("applicationInitializer", isMainProvider ? null : provider.getCode()), true);
+                elasticClient.cleanAndReindex(MeveoUser.instantiate(APPLICATION_INITIALIZER, isMainProvider ? null : provider.getCode()), true);
             } else {
                 esPopulationService.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
             }

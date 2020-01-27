@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.security.BlackListEntry;
+import org.meveo.model.security.EntityPermission;
 import org.meveo.model.security.EntityPermission.EntityPermissionId;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
@@ -81,6 +82,7 @@ public class PermissionService extends PersistenceService<Permission> {
             permissionEntity.setName(permission);
             permissionEntity.setPermission(permission);
             this.create(permissionEntity);
+            this.flush();
         }
 
         // Add to a role, creating role first if does not exist yet
@@ -158,30 +160,21 @@ public class PermissionService extends PersistenceService<Permission> {
     	session.saveOrUpdate(blackListEntry);
     }
     
-    public void removeFromBlackList(Role role, Permission permission, String id) {
-    	removeFromBlackList(role, permission.getPermission(), id);
-    }
-
-	public void removeFromBlackList(Role role, String permission, String id) {
-		this.getEntityManager().createQuery("DELETE FROM BlackListEntry "
-				+ "WHERE permissionCode = :permissionCode "
-				+ "AND entityId = :entityId AND role = :role")
-			.setParameter("permissionCode", permission)
-			.setParameter("entityId", id)
-			.setParameter("role", role)
-			.executeUpdate();
-	}
-    
-    public void removeFromWhiteList(Role role, Permission permission, String id) {
-    	removeFromWhiteList(role, permission.getPermission(), id);
+    public void removeEntityPermission(Role role, String permission, String id) {
+    	Permission p = findByPermission(permission);
+    	EntityPermissionId idEntry = new EntityPermissionId(role.getId(), p.getId(), id);
+    	EntityPermission entry = this.getEntityManager().find(EntityPermission.class, idEntry);
+    	if(entry != null) {
+    		this.getEntityManager().remove(entry);
+    	}
     }
     
-    public void removeFromWhiteList(Role role, String permission, String id) {
-    	this.getEntityManager().createQuery("DELETE FROM WhiteListEntry WHERE permissionCode = :permissionCode AND entityId = :entityId AND role = :role")
-			.setParameter("permissionCode", permission)
-			.setParameter("entityId", id)
-			.setParameter("role", role)
-			.executeUpdate();
+    public void removeEntityPermission(Role role, Permission permission, String id) {
+    	EntityPermissionId idEntry = new EntityPermissionId(role.getId(), permission.getId(), id);
+    	EntityPermission entry = this.getEntityManager().find(EntityPermission.class, idEntry);
+    	if(entry != null) {
+    		this.getEntityManager().remove(entry);
+    	}
     }
     
     public void removeFromEntityPermissions(String permission, String id) {

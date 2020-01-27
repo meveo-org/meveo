@@ -24,7 +24,7 @@
         </h:form>
 
         <hftl:formPanel formId="formGitRepository" label="#{messages['menu.gitRepositories']}"
-                        backingBean="#{gitRepositoryBean}" showFormButtons="false">
+                        backingBean="#{gitRepositoryBean}" showFormButtons="false" >
             <h:panelGrid columns="3">
                 <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" allowEdit="false"/>
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
@@ -44,18 +44,8 @@
             </h:panelGrid>
 
             <h:panelGrid columns="2">
-<!--                 <h:panelGroup id="readingRole"> -->
-<!--                     <hftl:formField label="#{messages['gitRepositories.readingRoles']}" -->
-<!--                                     field="readingRoles" textArea="true" rows="3" maxlength="200000"/> -->
-<!--                 </h:panelGroup> -->
-<!--                 <h:panelGroup id="writingRole"> -->
-<!--                     <hftl:formField label="#{messages['gitRepositories.writingRoles']}" -->
-<!--                                     field="writingRoles" textArea="true" rows="3" maxlength="200000"/> -->
-<!--                 </h:panelGroup> -->
-
 				<hftl:entityPermissions permission="git-write" varName="gitWrite" entityId="#{gitRepositoryBean.entity.id}"/>
 				<hftl:entityPermissions permission="git-read" varName="gitRead" entityId="#{gitRepositoryBean.entity.id}"/>
-
             </h:panelGrid>
 
             <h:panelGrid id="actions" columns="2">
@@ -84,7 +74,8 @@
                                     resetAction="#{gitRepositoryBean.resetFormEntity()}"/>
                     <p:button id="backButton" value="#{messages['action.back']}"
                               outcome="#{gitRepositoryBean.back()}"/>
-                    <p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
+                    <p:commandButton rendered="#{'Meveo' != gitRepositoryBean.entity.code}" 
+                    				 icon="ui-icon-trash" value="#{messages['commons.delete']}"
                                      action="#{gitRepositoryBean.deleteWithBack}" immediate="true" update="@form">
                         <p:confirm header="#{messages['commons.confirmationHeader']}"
                                    message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>

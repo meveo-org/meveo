@@ -14,137 +14,145 @@ import org.meveo.model.order.OrderItemActionEnum;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class UpdateServicesRequestDto.
+ * A wrapper class to a list of services that will be updated.
  *
- * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @see ServiceToUpdateDto
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "UpdateServicesRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties({ "orderNumber", "orderItemId", "orderItemAction" })
 public class UpdateServicesRequestDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 8352154466061113933L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 8352154466061113933L;
 
-    /** The subscription code. */
-    @XmlElement(required = true)
-    private String subscriptionCode;
+	/** The subscription code. */
+	@XmlElement(required = true)
+	@ApiModelProperty("Code of subscription")
+	private String subscriptionCode;
 
-    /** The services to update. */
-    @XmlElement(name = "serviceToUpdate")
-    @XmlElementWrapper(name = "servicesToUpdate")
-    private List<ServiceToUpdateDto> servicesToUpdate;
+	/** The services to update. */
+	@XmlElement(name = "serviceToUpdate")
+	@XmlElementWrapper(name = "servicesToUpdate")
+	@ApiModelProperty("List of services")
+	private List<ServiceToUpdateDto> servicesToUpdate;
 
-    /** The order number. */
-    private String orderNumber;
+	/** The order number. */
+	@ApiModelProperty("Order number")
+	private String orderNumber;
 
-    /** The order item id. */
-    private Long orderItemId;
+	/** The order item id. */
+	@ApiModelProperty("Order item id")
+	private Long orderItemId;
 
-    /** The order item action. */
-    private OrderItemActionEnum orderItemAction;
+	/** The order item action. */
+	@ApiModelProperty("Update operation")
+	private OrderItemActionEnum orderItemAction;
 
-    /**
-     * Gets the subscription code.
-     *
-     * @return the subscription code
-     */
-    public String getSubscriptionCode() {
-        return subscriptionCode;
-    }
+	/**
+	 * Gets the subscription code.
+	 *
+	 * @return the subscription code
+	 */
+	public String getSubscriptionCode() {
+		return subscriptionCode;
+	}
 
-    /**
-     * Sets the subscription code.
-     *
-     * @param subscriptionCode the new subscription code
-     */
-    public void setSubscriptionCode(String subscriptionCode) {
-        this.subscriptionCode = subscriptionCode;
-    }
+	/**
+	 * Sets the subscription code.
+	 *
+	 * @param subscriptionCode the new subscription code
+	 */
+	public void setSubscriptionCode(String subscriptionCode) {
+		this.subscriptionCode = subscriptionCode;
+	}
 
-    /**
-     * Gets the services to update.
-     *
-     * @return the services to update
-     */
-    public List<ServiceToUpdateDto> getServicesToUpdate() {
-        return servicesToUpdate;
-    }
+	/**
+	 * Gets the services to update.
+	 *
+	 * @return the services to update
+	 */
+	public List<ServiceToUpdateDto> getServicesToUpdate() {
+		return servicesToUpdate;
+	}
 
-    /**
-     * Sets the services to update.
-     *
-     * @param servicesToUpdate the new services to update
-     */
-    public void setServicesToUpdate(List<ServiceToUpdateDto> servicesToUpdate) {
-        this.servicesToUpdate = servicesToUpdate;
-    }
+	/**
+	 * Sets the services to update.
+	 *
+	 * @param servicesToUpdate the new services to update
+	 */
+	public void setServicesToUpdate(List<ServiceToUpdateDto> servicesToUpdate) {
+		this.servicesToUpdate = servicesToUpdate;
+	}
 
-    /**
-     * Adds the service.
-     *
-     * @param serviceToUpdate the service to update
-     */
-    public void addService(ServiceToUpdateDto serviceToUpdate) {
-        if (servicesToUpdate == null) {
-            servicesToUpdate = new ArrayList<>();
-        }
-        servicesToUpdate.add(serviceToUpdate);
-    }
+	/**
+	 * Adds the service.
+	 *
+	 * @param serviceToUpdate the service to update
+	 */
+	public void addService(ServiceToUpdateDto serviceToUpdate) {
+		if (servicesToUpdate == null) {
+			servicesToUpdate = new ArrayList<>();
+		}
+		servicesToUpdate.add(serviceToUpdate);
+	}
 
-    /**
-     * Gets the order item id.
-     *
-     * @return the order item id
-     */
-    public Long getOrderItemId() {
-        return orderItemId;
-    }
+	/**
+	 * Gets the order item id.
+	 *
+	 * @return the order item id
+	 */
+	public Long getOrderItemId() {
+		return orderItemId;
+	}
 
-    /**
-     * Sets the order item id.
-     *
-     * @param orderItemId the new order item id
-     */
-    public void setOrderItemId(Long orderItemId) {
-        this.orderItemId = orderItemId;
-    }
+	/**
+	 * Sets the order item id.
+	 *
+	 * @param orderItemId the new order item id
+	 */
+	public void setOrderItemId(Long orderItemId) {
+		this.orderItemId = orderItemId;
+	}
 
-    /**
-     * Gets the order item action.
-     *
-     * @return the order item action
-     */
-    public OrderItemActionEnum getOrderItemAction() {
-        return orderItemAction;
-    }
+	/**
+	 * Gets the order item action.
+	 *
+	 * @return the order item action
+	 */
+	public OrderItemActionEnum getOrderItemAction() {
+		return orderItemAction;
+	}
 
-    /**
-     * Sets the order item action.
-     *
-     * @param action the new order item action
-     */
-    public void setOrderItemAction(OrderItemActionEnum action) {
-        this.orderItemAction = action;
-    }
+	/**
+	 * Sets the order item action.
+	 *
+	 * @param action the new order item action
+	 */
+	public void setOrderItemAction(OrderItemActionEnum action) {
+		this.orderItemAction = action;
+	}
 
-    /**
-     * Gets the order number.
-     *
-     * @return the order number
-     */
-    public String getOrderNumber() {
-        return orderNumber;
-    }
+	/**
+	 * Gets the order number.
+	 *
+	 * @return the order number
+	 */
+	public String getOrderNumber() {
+		return orderNumber;
+	}
 
-    /**
-     * Sets the order number.
-     *
-     * @param orderNumber the new order number
-     */
-    public void setOrderNumber(String orderNumber) {
-        this.orderNumber = orderNumber;
-    }
+	/**
+	 * Sets the order number.
+	 *
+	 * @param orderNumber the new order number
+	 */
+	public void setOrderNumber(String orderNumber) {
+		this.orderNumber = orderNumber;
+	}
 }

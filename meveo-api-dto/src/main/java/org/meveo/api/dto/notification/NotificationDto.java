@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.notification.Notification;
@@ -18,10 +19,11 @@ import org.meveo.model.notification.NotificationEventTypeEnum;
  *
  * @author Edward P. Legaspi
  * @author akadid abdelmounaim
- * @lastModifiedVersion 5.0
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Notification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("NotificationDto")
 public class NotificationDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */

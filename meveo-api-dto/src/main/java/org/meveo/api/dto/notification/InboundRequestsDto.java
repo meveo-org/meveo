@@ -9,44 +9,51 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BaseEntityDto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class InboundRequestsDto.
+ * Wrapper class for a list of inbound request dto.
  *
- * @author Edward P. Legaspi
+ * @see InboundRequestDto
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "InboutRequests")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("InboundRequestsDto")
 public class InboundRequestsDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = -4968458684592803252L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = -4968458684592803252L;
 
-    /** The inbound request. */
-    private List<InboundRequestDto> inboundRequest;
+	/** The inbound request. */
+	@ApiModelProperty("List of inbound requests")
+	private List<InboundRequestDto> inboundRequest;
 
-    /**
-     * Gets the inbound request.
-     *
-     * @return the inbound request
-     */
-    public List<InboundRequestDto> getInboundRequest() {
-        if (inboundRequest == null)
-            inboundRequest = new ArrayList<InboundRequestDto>();
-        return inboundRequest;
-    }
+	/**
+	 * Gets the inbound request.
+	 *
+	 * @return the inbound request
+	 */
+	public List<InboundRequestDto> getInboundRequest() {
+		if (inboundRequest == null)
+			inboundRequest = new ArrayList<InboundRequestDto>();
+		return inboundRequest;
+	}
 
-    /**
-     * Sets the inbound request.
-     *
-     * @param inboundRequest the new inbound request
-     */
-    public void setInboundRequest(List<InboundRequestDto> inboundRequest) {
-        this.inboundRequest = inboundRequest;
-    }
+	/**
+	 * Sets the inbound request.
+	 *
+	 * @param inboundRequest the new inbound request
+	 */
+	public void setInboundRequest(List<InboundRequestDto> inboundRequest) {
+		this.inboundRequest = inboundRequest;
+	}
 
-    @Override
-    public String toString() {
-        return "InboutRequestsDto [inboundRequest=" + inboundRequest + ", toString()=" + super.toString() + "]";
-    }
+	@Override
+	public String toString() {
+		return "InboutRequestsDto [inboundRequest=" + inboundRequest + ", toString()=" + super.toString() + "]";
+	}
 
 }
