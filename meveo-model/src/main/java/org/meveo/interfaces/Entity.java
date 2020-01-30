@@ -42,6 +42,10 @@ public class Entity extends EntityOrRelation {
 	}
 
 	private Entity(Builder builder) {
+		if(builder.type == null) {
+			throw new IllegalArgumentException("Entity type should be provided !");
+		}
+		
 		this.index = builder.index;
 		this.type = builder.type;
 		this.name = builder.name;
