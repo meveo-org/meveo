@@ -18,21 +18,15 @@ package org.meveo.api.observers;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -47,9 +41,7 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import org.apache.commons.io.FileUtils;
@@ -80,6 +72,7 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.CustomScriptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,8 +88,8 @@ import com.github.javaparser.ast.CompilationUnit;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class OntologyObserver {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(OntologyObserver.class);
-	
+    private static Logger LOGGER = LoggerFactory.getLogger(OntologyObserver.class);
+
     @Inject
     private GitClient gitClient;
 
@@ -134,8 +127,6 @@ public class OntologyObserver {
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
 
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
-
     /**
      * At startup, update the IDL definitions
      */
@@ -143,7 +134,7 @@ public class OntologyObserver {
     public void init() {
         try {
             updateIDL();
-            constructClassPath();
+            CustomScriptService.constructClassPath();
         } catch (IOException e) {
         }
     }
@@ -205,7 +196,9 @@ public class OntologyObserver {
         FileUtils.write(javaFile, compilationUnit.toString());
         commitFiles.add(javaFile);
 
-        compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
+        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+        FileUtils.write(classFile, compilationUnit.toString());
+        compileClassJava(classDir, compilationUnit.toString(), classFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom entity template " + cet.getCode());
     }
 
@@ -221,7 +214,7 @@ public class OntologyObserver {
         hasChange.set(true);
 
         final String templateSchema = getTemplateSchema(cet);
-        
+
         System.out.println("test");
 
         final File cetDir = getCetDir();
@@ -252,7 +245,9 @@ public class OntologyObserver {
 
         FileUtils.write(javaFile, compilationUnit.toString());
 
-        compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
+        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+        FileUtils.write(classFile, compilationUnit.toString());
+        compileClassJava(classDir, compilationUnit.toString(), classFile);
 
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
     }
@@ -409,7 +404,9 @@ public class OntologyObserver {
                     CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
                     FileUtils.write(javaFile, compilationUnit.toString());
 
-                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
+                    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+                    FileUtils.write(classFile, compilationUnit.toString());
+                    compileClassJava(classDir, compilationUnit.toString(), classFile);
                 }
 
                 gitClient.commitFiles(
@@ -482,7 +479,9 @@ public class OntologyObserver {
                     FileUtils.write(javaFile, compilationUnit.toString());
                     listFile.add(javaFile);
 
-                    compileClassJava(classDir, cet.getCode(), compilationUnit.toString());
+                    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+                    FileUtils.write(classFile, compilationUnit.toString());
+                    compileClassJava(classDir, compilationUnit.toString(), classFile);
 
                 }
 
@@ -665,138 +664,43 @@ public class OntologyObserver {
         }
     }
 
-    public void compileClassJava(File classDir, String fileName, String compilationUnit) {
+    public void compileClassJava(File classDir, String compilationUnit, File classFile) {
 
         try {
             List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
-            String classPath = CLASSPATH_REFERENCE.get();
+            String classPackage = classDir.getAbsolutePath();
+            if (!StringUtils.isBlank(classPackage) && !CustomScriptService.CLASSPATH_REFERENCE.get().contains(classPackage)) {
+                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + classPackage);
+            }
+            String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
 
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-            if(!classDir.exists()) {
-            	classDir.mkdirs();
+            if (!classDir.exists()) {
+                classDir.mkdirs();
             }
-            
-            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(classDir));
-            List<JavaFileObject> compilationUnits = new ArrayList<>();
+
+            List<File> files = new ArrayList<>();
             for (File file : fileList) {
                 String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                JavaFileObject javaFileObject = new MemoryJavaSourceFileObject(file.getName(), content);
-                compilationUnits.add(javaFileObject);
+                File importFile = new File(classDir, "org/meveo/model/customEntities/" + file.getName());
+                FileUtils.write(importFile, content);
+                files.add(importFile);
             }
-            JavaFileObject javaFileObject = new MemoryJavaSourceFileObject(fileName + ".java", compilationUnit);
-            compilationUnits.add(javaFileObject);
+            files.add(classFile);
 
+            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(files);
             Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
             if (isOK) {
-                File classFile = new File(classDir, "org/meveo/model/customEntities/" + fileName + ".class");
-                synchronized (CLASSPATH_REFERENCE) {
-                    String path = classFile.getAbsolutePath();
-                    if (!StringUtils.isBlank(path) && !CLASSPATH_REFERENCE.get().contains(path)) {
-                        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + path);
+                for (File file : files) {
+                    if (file != null) {
+                        file.delete();
                     }
                 }
             }
+
         } catch (IOException e) {
-        	LOGGER.error("Error compiling java class", e);
-        }
-    }
-
-    public void constructClassPath() throws IOException {
-        if (CLASSPATH_REFERENCE.get().length() == 0) {
-            synchronized (CLASSPATH_REFERENCE) {
-                if (CLASSPATH_REFERENCE.get().length() == 0) {
-                    String classpath = CLASSPATH_REFERENCE.get();
-                    // Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
-
-                    File realFile = new File(thisClassfile);
-
-                    // Was deployed as exploded archive
-                    if (realFile.exists()) {
-                        File deploymentDir = realFile.getParentFile();
-                        File[] files = deploymentDir.listFiles();
-                        if (files != null) {
-                            for (File file : files) {
-                                if (file.getName().endsWith(".jar")) {
-                                    classpath += file.getCanonicalPath() + File.pathSeparator;
-                                }
-                            }
-                        }
-
-                        // War was deployed as compressed archive
-                    } else {
-
-                        org.jboss.vfs.VirtualFile vFile = org.jboss.vfs.VFS.getChild(thisClassfile);
-                        realFile = new File(org.jboss.vfs.VFSUtils.getPhysicalURI(vFile).getPath());
-
-                        File deploymentDir = realFile.getParentFile().getParentFile();
-
-                        Set<String> classPathEntries = new HashSet<>();
-
-                        for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-                            if (physicalLibDir.isDirectory()) {
-                                for (File f : org.meveo.commons.utils.FileUtils.getFilesToProcess(physicalLibDir, "*", "jar")) {
-                                    classPathEntries.add(f.getCanonicalPath());
-                                }
-                            }
-                        }
-
-                        /* Fallback when thorntail is used */
-                        if (classPathEntries.isEmpty()) {
-                            for (File physicalLibDir : Objects.requireNonNull(deploymentDir.listFiles())) {
-                                if (physicalLibDir.isDirectory()) {
-                                    for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
-                                        if (subLib.isDirectory()) {
-                                            final List<String> jars = org.meveo.commons.utils.FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
-                                            classPathEntries.addAll(jars);
-                                            if (subLib.getName().equals("classes")) {
-                                                classPathEntries.add(subLib.getCanonicalPath());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            // vfs used by thorntail
-                            File vfsDir = deploymentDir.getParentFile().getParentFile();
-                            for (File tempDir : Objects.requireNonNull(vfsDir.listFiles((dir, name) -> name.contains("temp")))) {
-                                if (!tempDir.isDirectory()) {
-                                    continue;
-                                }
-
-                                for (File subTempDir : Objects.requireNonNull(tempDir.listFiles((dir, name) -> name.contains("temp")))) {
-                                    if (!subTempDir.isDirectory()) {
-                                        continue;
-                                    }
-
-                                    for (File warDir : Objects.requireNonNull(subTempDir.listFiles((dir, name) -> name.contains(".war")))) {
-                                        if (!warDir.isDirectory()) {
-                                            continue;
-                                        }
-
-                                        for (File webInfDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.equals("WEB-INF")))) {
-                                            if (!webInfDir.isDirectory()) {
-                                                continue;
-                                            }
-
-                                            for (File classesDir : Objects.requireNonNull(webInfDir.listFiles((dir, name) -> name.equals("classes")))) {
-                                                if (classesDir.isDirectory()) {
-                                                    classPathEntries.add(classesDir.getCanonicalPath());
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        classpath = String.join(File.pathSeparator, classPathEntries);
-
-                    }
-                    CLASSPATH_REFERENCE.set(classpath);
-                }
-            }
+            LOGGER.error("Error compiling java class", e);
         }
     }
 
@@ -833,10 +737,10 @@ public class OntologyObserver {
                         location = location.substring(0, location.length() - 2);
                     }
 
-                    if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                        synchronized (CLASSPATH_REFERENCE) {
-                            if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                                CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+                    if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
+                        synchronized (CustomScriptService.CLASSPATH_REFERENCE) {
+                            if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
+                                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
                             }
                         }
                     }
@@ -873,44 +777,5 @@ public class OntologyObserver {
     private File getClassDir() {
         final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
         return classDir;
-    }
-
-    private String getFilePath(File jar) {
-        try {
-            return jar.getCanonicalPath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * In-memory representation of a source JavaFileObject
-     */
-    private static final class MemoryJavaSourceFileObject extends
-            SimpleJavaFileObject
-    {
-        /**
-         * The source code of the class
-         */
-        private final String code;
-
-        /**
-         * Creates a new in-memory representation of a Java file
-         *
-         * @param fileName The file name
-         * @param code The source code of the file
-         */
-        private MemoryJavaSourceFileObject(String fileName, String code)
-        {
-            super(URI.create("string:///" + fileName), Kind.SOURCE);
-            this.code = code;
-        }
-
-        @Override
-        public CharSequence getCharContent(boolean ignoreEncodingErrors)
-                throws IOException
-        {
-            return code;
-        }
     }
 }
