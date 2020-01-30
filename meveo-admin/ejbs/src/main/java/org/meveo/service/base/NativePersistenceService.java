@@ -44,6 +44,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -61,6 +62,7 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
@@ -1427,5 +1429,9 @@ public class NativePersistenceService extends BaseService {
 		} else if (value instanceof Boolean) {
 			ps.setBoolean(parameterIndex, (Boolean) value);
 		}
+	}
+
+	public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
+		throw new NotImplementedException();
 	}
 }

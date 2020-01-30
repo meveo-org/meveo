@@ -55,6 +55,7 @@
         validateRib - validate rib values
         validateEmail - validate email value
         validatorId - validator to apply
+        validateCode - whether to validate code field, default to true
         listenerUpdate - components (ids) to update when value changes 
         actionListenerBean and actionListenerMethod - action listener bean and method to execute when value changes
         
@@ -204,6 +205,9 @@
         <c:set var="imageHeight" value="150px" />
     </c:if>
 
+	<c:if test="${empty(validateCode)}">
+        <c:set var="validateCode" value="true" />
+    </c:if>
 
 <!--     <c:if test="#{rendered}"> Comented out as cause component id duplication on boolean and entity list type field updates-->
         <!--  Select and entity or a FK to an entity -->
@@ -224,7 +228,7 @@
                 listenerUpdate="${listenerUpdate}" actionListenerBean="${actionListenerBean}" actionListenerMethod="${actionListenerMethod}" newEntity="${newEntity}"
                 createEditPopup="${createEditPopup}" createEditPopupId="${createEditPopupId}" createEditPopupListenerBean="${createEditPopupListenerBean}"
                 createEditPopupListenerViewMethod="${createEditPopupListenerViewMethod}" createEditPopupListenerNewMethod="${createEditPopupListenerNewMethod}"
-                createEditPopupListenerUpdate="${createEditPopupListenerUpdate}" showPopupOnlyOnNew="${showPopupOnlyOnNew}" showResetButton="#{showResetButton}" edit="#{edit}" />
+                createEditPopupListenerUpdate="${createEditPopupListenerUpdate}" showPopupOnlyOnNew="${showPopupOnlyOnNew}" showResetButton="#{showResetButton}" edit="#{edit}" validateCode="${validateCode}" />
         </c:if>
 
         <!--  Enter text -->

@@ -3,8 +3,9 @@
 
     <ui:define name="metadata">
         <f:metadata>
-            <f:viewParam name="objectId" value="#{customEntityInstanceBean.objectId}" />
+            <f:viewParam name="uuid" value="#{customEntityInstanceBean.uuid}" />
             <f:viewParam name="cet" value="#{customEntityInstanceBean.customEntityTemplateCode}" />
+            <f:viewParam name="repo" value="#{customEntityInstanceBean.repositoryCode}" />
             <f:viewParam name="tab" value="#{customEntityInstanceBean.activeTab}" />
         </f:metadata>
     </ui:define>
@@ -15,38 +16,38 @@
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
                 <p:menuitem value="#{messages['menu.catalog']}" disabled="true" />
                 <p:menuitem outcome="customEntities" value="#{customEntityInstanceBean.customEntityTemplate.name}" />
-                <p:menuitem value="#{messages['customEntity.new']}" disabled="true" rendered="#{customEntityInstanceBean.entity.transient}" />
-                <p:menuitem value="#{messages['customEntity.editView']} - #{customEntityInstanceBean.entity.descriptionOrCode}" disabled="true" rendered="#{!customEntityInstanceBean.entity.transient}" />
+                <p:menuitem value="#{messages['customEntity.new']}" disabled="true" rendered="#{empty customEntityInstanceBean.uuid}" />
+                <p:menuitem value="#{messages['customEntity.editView']} - #{customEntityInstanceBean.uuid}" disabled="true" rendered="#{not empty customEntityInstanceBean.uuid}" />
             </p:breadCrumb>
         </h:form>
 
-        <p:tabView id="tabView"
-                   activeIndex="#{customEntityInstanceBean.activeTab}">
-            <p:tab title="#{messages['customer.tab.information']}">
-                <p:outputPanel autoUpdate="false">
-                    <hftl:formPanel ajaxSubmit="true" formId="informationForm"
-                                    submitPartialProcess=":tabView"
-                                    label="#{customEntityInstanceBean.customEntityTemplate.name}"
-                                    backingBean="#{customEntityInstanceBean}"
-                                    showAddModuleButton="true"
-                                    showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
-                                    showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}">
-                        <hftl:formField label="#{messages['BusinessEntity.code']}"
-                                        field="code" required="true" />
-                        <hftl:formField label="#{messages['BusinessEntity.description']}"
-                                        field="description" useConverter="false" id="description" />
-                        <hftl:formField label="#{messages['enableEntity.disabled']}"
-                                        doNotShowOnNew="true" allowEdit="false" field="disabled"
-                                        isMessage="true" />
-                    </hftl:formPanel>
-                </p:outputPanel>
-            </p:tab>
+		<p:tabView id="tabView"
+			activeIndex="#{customEntityInstanceBean.activeTab}">
+			<p:tab title="#{messages['customer.tab.information']}">
+				<p:outputPanel autoUpdate="false">
+					<hftl:formPanel ajaxSubmit="true" formId="informationForm"
+						submitPartialProcess=":tabView"
+						label="#{customEntityInstanceBean.customEntityTemplate.name}"
+						backingBean="#{customEntityInstanceBean}"
+						showAddModuleButton="true"
+						showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
+						showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}">
+						<hftl:formField label="#{messages['BusinessEntity.code']}"
+							field="code" required="false" validateCode="false"/>
+						<hftl:formField label="#{messages['BusinessEntity.description']}"
+							field="description" useConverter="false" id="description" />
+						<hftl:formField label="#{messages['enableEntity.disabled']}"
+							doNotShowOnNew="true" allowEdit="false" field="disabled"
+							isMessage="true" />
+					</hftl:formPanel>
+				</p:outputPanel>
+			</p:tab>
 
-            <hftl:customFields backingBean="#{customEntityInstanceBean}"
-                               messagesId=":tabView:informationForm:messages" renderForm="true"
-                               enctype="multipart/form-data" />
+			<hftl:customFields backingBean="#{customEntityInstanceBean}"
+				messagesId=":tabView:informationForm:messages" renderForm="true"
+				enctype="multipart/form-data" />
 
-        </p:tabView>
+		</p:tabView>
 
-    </ui:define>
+	</ui:define>
 </ui:composition>

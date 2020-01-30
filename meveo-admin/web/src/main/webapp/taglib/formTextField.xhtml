@@ -48,7 +48,7 @@
                 <c:if test="#{not empty listenerUpdate and not empty actionListenerBean}">
                     <p:ajax update="#{listenerUpdate}" listener="#{actionListenerBean[actionListenerMethod]}" event="change" />
                 </c:if>
-                <c:if test="#{field eq 'code'}">
+                <c:if test="#{field eq 'code' and validateCode}">
                     <o:validator validatorId="codeValidator" />
                 </c:if>
             </p:inputText>

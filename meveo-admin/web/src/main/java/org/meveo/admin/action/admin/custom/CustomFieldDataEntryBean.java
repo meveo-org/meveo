@@ -84,9 +84,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Provides support for custom field value data entry
  * 
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author akadid abdelmounaim
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.7.0
  */
 @Named
 @ViewScoped
@@ -127,11 +127,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
-    @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
+	@Inject
+	private CustomEntityInstanceService customEntityInstanceService;
 
-    @Inject
-    private CustomFieldsCacheContainerProvider cache;
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
 
 	@Inject
 	@CurrentUser
@@ -160,17 +160,17 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	private CustomEntityInstance entityInstance;
 
-    private List<BusinessEntity> availableEntities = new ArrayList<>();
+	private List<BusinessEntity> availableEntities = new ArrayList<>();
 
 	private transient UploadedFile uploadedBinaryFile;
 	private transient Repository repository;
-    private Map<String, Object> tempValues = new HashMap<>();
-    
-    private List<String> filesToDeleteOnExit = new ArrayList<>();
+	private Map<String, Object> tempValues = new HashMap<>();
 
-    private List<Object> listValues;
+	private List<String> filesToDeleteOnExit = new ArrayList<>();
 
-    public List<Object> getListValues() {
+	private List<Object> listValues;
+
+	public List<Object> getListValues() {
 		return listValues;
 	}
 
@@ -188,9 +188,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 	public void refreshFieldsAndActions(ICustomFieldEntity entity) {
 
 		this.entity = entity;
-        initFields(entity);
-        initCustomActions(entity);
-    }
+		initFields(entity);
+		initCustomActions(entity);
+	}
 
 	public Map<String, Object> getTempValues() {
 		return tempValues;
@@ -798,7 +798,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			Object newKey = null;
 
-            if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
+			if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
 				newKey = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
 				// No reason to support Long and Double as key values as it us covered by a
@@ -849,7 +849,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 				Object newValue = null;
 
-                if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
+				if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
 					newValue = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
 				} else if (column.getKeyType() == CustomFieldMapKeyEnum.LONG) {
@@ -1016,6 +1016,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 		return null;
 	}
 
+	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, boolean isNewEntity) throws BusinessException, ELException {
+		return saveCustomFieldsToEntity(entity, isNewEntity, true);
+	}
+
 	/**
 	 * Save custom fields for a given entity
 	 *
@@ -1024,14 +1028,20 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @return CustomFieldValue Map
 	 * @throws BusinessException
 	 */
-	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, boolean isNewEntity) throws BusinessException, ELException {
+	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, boolean isNewEntity, boolean isSaveEntity)
+			throws BusinessException, ELException {
 		String uuid = entity.getUuid();
-		return saveCustomFieldsToEntity(entity, uuid, false, isNewEntity);
+		return saveCustomFieldsToEntity(entity, uuid, false, isNewEntity, isSaveEntity);
 	}
 
 	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity)
 			throws BusinessException, ELException {
-		return saveCustomFieldsToEntity(entity, uuid, duplicateCFI, isNewEntity, false);
+		return saveCustomFieldsToEntity(entity, uuid, duplicateCFI, isNewEntity, true);
+	}
+
+	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity, boolean isSaveEntity)
+			throws BusinessException, ELException {
+		return saveCustomFieldsToEntity(entity, uuid, duplicateCFI, isNewEntity, false, isSaveEntity);
 	}
 
 	/**
@@ -1050,7 +1060,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @throws BusinessException
 	 */
 	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity,
-			boolean removedOriginalCFI) throws BusinessException, ELException {
+			boolean removedOriginalCFI, boolean isSaveEntity) throws BusinessException, ELException {
 
 		Map<String, List<CustomFieldValue>> newValuesByCode = new HashMap<>();
 
@@ -1097,8 +1107,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 					// cft.applicableOnEL evaluates to false
 					if ((cfValue.isValueEmptyForGui() //
 							&& (cft.getDefaultValue() == null || cft.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) && !cft.isVersionable()) //
-						|| ((isNewEntity && cft.isHideOnNew()) //
-							|| (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity))) //
+							|| ((isNewEntity && cft.isHideOnNew()) //
+									|| (entity != null && !MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(cft.getApplicableOnEl(), "entity", entity))) //
 					) {
 						log.trace("Will ommit from saving cfi {}", cfValue);
 
@@ -1111,16 +1121,17 @@ public class CustomFieldDataEntryBean implements Serializable {
 						}
 						newValuesByCode.get(cft.getCode()).add(cfValue);
 
-						saveChildEntities(entity, cfValue, cft);
+						saveChildEntities(entity, cfValue, cft, isSaveEntity);
 					}
 				}
 			}
 		}
 		// Update entity custom values field
 
-		if (entity != null) {
+		if (isSaveEntity && entity != null) {
 			if (newValuesByCode.isEmpty()) {
 				entity.clearCfValues();
+				
 			} else {
 				entity.getCfValuesNullSafe().setValuesByCode(newValuesByCode);
 			}
@@ -1376,6 +1387,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 		}
 	}
 
+	private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition)
+			throws BusinessException, ELException {
+		saveChildEntities(mainEntity, customFieldValue, childEntityFieldDefinition, true);
+	}
+	
 	/**
 	 * Save child entities to DB as Custom entity instance object along with its
 	 * custom fields.
@@ -1386,7 +1402,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @param childEntityFieldDefinition Custom field template
 	 * @throws BusinessException
 	 */
-	private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition)
+	private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition, boolean isSaveEntity)
 			throws BusinessException, ELException {
 		if (childEntityFieldDefinition.getFieldType() != CustomFieldTypeEnum.CHILD_ENTITY) {
 			return;
@@ -1403,12 +1419,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 			boolean isNewEntity = cei.isTransient();
 			if (isNewEntity) {
 				customEntityInstanceService.create(cei);
-				saveCustomFieldsToEntity(cei, isNewEntity);
+				saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
 
 			} else {
 				if (childEntityValueHolder.isUpdated()) {
 					cei = customEntityInstanceService.update(cei);
-					saveCustomFieldsToEntity(cei, isNewEntity);
+					saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
 				}
 				previousChildEntities.remove(cei);
 			}
@@ -1434,31 +1450,28 @@ public class CustomFieldDataEntryBean implements Serializable {
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 			customFieldValue.setEntityReferenceValueForGUI(deserializeEntityReferenceForGUI(customFieldValue.getEntityReferenceValue()));
 
-        } else if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
+		} else if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
 			// Populate childEntityValuesForGUI field - ONLY LIST storage is supported
 			List<CustomFieldValueHolder> cheHolderList = new ArrayList<>();
 
 			if (customFieldValue.getListValue() != null) {
 				for (Object listItem : customFieldValue.getListValue()) {
-                	EntityReferenceWrapper entityReferenceWrapper = null;
-                	CustomFieldValueHolder childEntityValueHolder = null;
+					EntityReferenceWrapper entityReferenceWrapper = null;
+					CustomFieldValueHolder childEntityValueHolder = null;
 
-                	if(listItem instanceof EntityReferenceWrapper) {
-                		entityReferenceWrapper = (EntityReferenceWrapper) listItem;
-                		childEntityValueHolder = loadChildEntityForGUI(entityReferenceWrapper);
+					if (listItem instanceof EntityReferenceWrapper) {
+						entityReferenceWrapper = (EntityReferenceWrapper) listItem;
+						childEntityValueHolder = loadChildEntityForGUI(entityReferenceWrapper);
 
-                	} else if(listItem instanceof Map) {
-                		Map<String, Object> values = (Map<String, Object>) listItem;
-                		String entityCode = (String) values.get("code");
+					} else if (listItem instanceof Map) {
+						Map<String, Object> values = (Map<String, Object>) listItem;
+						String entityCode = (String) values.get("code");
 
-                		entityReferenceWrapper = new EntityReferenceWrapper(
-                				CustomEntityInstance.class.getName(),
-                				CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()),
-                				entityCode
-            				);
+						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()),
+								entityCode);
 
-                		childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
-                	}
+						childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
+					}
 
 					if (childEntityValueHolder != null) {
 						cheHolderList.add(childEntityValueHolder);
@@ -1468,7 +1481,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			customFieldValue.setChildEntityValuesForGUI(cheHolderList);
 
 		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-            // Populate mapValuesForGUI field
+			// Populate mapValuesForGUI field
 			List<Map<String, Object>> listOfMapValues = new ArrayList<Map<String, Object>>();
 
 			if (customFieldValue.getListValue() != null) {
@@ -1600,39 +1613,39 @@ public class CustomFieldDataEntryBean implements Serializable {
 			return null;
 		}
 
-        CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(childEntityWrapper.getClassnameCode(), childEntityWrapper.getCode());
-        if (cei == null) {
-            return null;
-        }
-        initFields(cei);
-        return fieldsValues.get(cei.getUuid());
-    }
+		CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(childEntityWrapper.getClassnameCode(), childEntityWrapper.getCode());
+		if (cei == null) {
+			return null;
+		}
+		initFields(cei);
+		return fieldsValues.get(cei.getUuid());
+	}
 
-    /**
-     * Convert childEntity field type value of EntityReferenceWrapper type to GUI suitable format - CustomFieldValueHolder.
-     * Entity is created from map values.
-     *
-     * @param childEntityWrapper EntityReferenceWrapper value to convert
-     * @return CustomFieldValueHolder instance
-     */
-    private CustomFieldValueHolder initCustomFieldValueHolderFromMap(EntityReferenceWrapper childEntityWrapper, Map<String, Object> values) {
+	/**
+	 * Convert childEntity field type value of EntityReferenceWrapper type to GUI
+	 * suitable format - CustomFieldValueHolder. Entity is created from map values.
+	 *
+	 * @param childEntityWrapper EntityReferenceWrapper value to convert
+	 * @return CustomFieldValueHolder instance
+	 */
+	private CustomFieldValueHolder initCustomFieldValueHolderFromMap(EntityReferenceWrapper childEntityWrapper, Map<String, Object> values) {
 
-    	// Init CEI
-    	CustomEntityInstance cei = new CustomEntityInstance();
-    	cei.setCetCode(childEntityWrapper.getClassnameCode());
-    	cei.setCode(childEntityWrapper.getCode());
-    	cei.setUuid((String) values.get("uuid"));
-    	cei.setDescription((String) values.get("description"));
+		// Init CEI
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCetCode(childEntityWrapper.getClassnameCode());
+		cei.setCode(childEntityWrapper.getCode());
+		cei.setUuid((String) values.get("uuid"));
+		cei.setDescription((String) values.get("description"));
 
-    	// Init fields of CEI
-    	Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
-    	CustomFieldValues customFieldValues = CETUtils.initCustomFieldValues(values, fields.values());
-    	cei.setCfValues(customFieldValues);
+		// Init fields of CEI
+		Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
+		CustomFieldValues customFieldValues = CETUtils.initCustomFieldValues(values, fields.values());
+		cei.setCfValues(customFieldValues);
 
-    	// Init holder
-        CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(fields, customFieldValues.getValuesByCode(), cei);
-    	return entityFieldsValues;
-    }
+		// Init holder
+		CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(fields, customFieldValues.getValuesByCode(), cei);
+		return entityFieldsValues;
+	}
 
 	/**
 	 * Save custom fields for a given entity
@@ -1873,10 +1886,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
 
-		if(fieldValue.getStringValue() != null) {
+		if (fieldValue.getStringValue() != null) {
 			filesToDeleteOnExit.add(fieldValue.getStringValue());
 		}
-		
+
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
 		params.setShowOnExplorer(cft.isSaveOnExplorer());
 		params.setRootPath(rootPath);
@@ -1936,7 +1949,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
 		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
-		
+
 		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
 
 		log.debug("binary path={}", rootPath);
@@ -1977,10 +1990,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public StreamedContent downloadFile(String path) throws IOException {
 
-		if(StringUtils.isBlank(path)) {
+		if (StringUtils.isBlank(path)) {
 			return null;
 		}
-		
+
 		File file = new File(path);
 		InputStream stream = new FileInputStream(file);
 
@@ -1991,12 +2004,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-    @ActionMethod
-    public void onEntityReferenceSelected(SelectEvent event) {
-		Map<String, Object> selectedEntityInPopup = (Map<String,Object>) event.getObject();
+	@ActionMethod
+	public void onEntityReferenceSelected(SelectEvent event) {
+		Map<String, Object> selectedEntityInPopup = (Map<String, Object>) event.getObject();
 		String newId = (String) selectedEntityInPopup.get("uuid");
-    	listValues.add(newId);
-    }
+		listValues.add(newId);
+	}
 
 	public List<String> getFilesToDeleteOnExit() {
 		return filesToDeleteOnExit;

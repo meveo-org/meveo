@@ -16,7 +16,23 @@
  */
 package org.meveo.persistence.neo4j.base;
 
-import com.google.common.collect.ImmutableMap;
+import static org.meveo.persistence.neo4j.service.Neo4JRequests.CREATION_DATE;
+import static org.meveo.persistence.neo4j.service.Neo4JRequests.INTERNAL_UPDATE_DATE;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
@@ -27,23 +43,24 @@ import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
-import org.neo4j.driver.v1.*;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.Stateless;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.common.collect.ImmutableMap;
 
-import static org.meveo.persistence.neo4j.service.Neo4JRequests.CREATION_DATE;
-import static org.meveo.persistence.neo4j.service.Neo4JRequests.INTERNAL_UPDATE_DATE;
-
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ */
 @Stateless
 public class Neo4jDao {
 
@@ -344,12 +361,18 @@ public class Neo4jDao {
             transaction = session.beginTransaction();
             final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
 
-            List<Record> records = result.list();
-            if(records.size() == 1) {
-                return records.get(0).get(0).asMap();
-            } else {
-                throw new NonUniqueResult(records);
-            }
+			List<Record> records = result.list();
+			int size = records.size();
+			if (size == 1) {
+				return records.get(0).get(0).asMap();
+
+			} else {
+				if (size != 0) {
+					throw new NonUniqueResult(records);
+				}
+				
+				return new HashMap<>();
+			}
 
         } finally {
             if (transaction != null) {
