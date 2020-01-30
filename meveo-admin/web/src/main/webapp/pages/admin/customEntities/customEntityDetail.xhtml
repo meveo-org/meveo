@@ -16,8 +16,8 @@
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
                 <p:menuitem value="#{messages['menu.catalog']}" disabled="true" />
                 <p:menuitem outcome="customEntities" value="#{customEntityInstanceBean.customEntityTemplate.name}" />
-                <p:menuitem value="#{messages['customEntity.new']}" disabled="true" rendered="#{customEntityInstanceBean.entity.transient}" />
-                <p:menuitem value="#{messages['customEntity.editView']} - #{customEntityInstanceBean.entity.descriptionOrCode}" disabled="true" rendered="#{!customEntityInstanceBean.entity.transient}" />
+                <p:menuitem value="#{messages['customEntity.new']}" disabled="true" rendered="#{empty customEntityInstanceBean.uuid}" />
+                <p:menuitem value="#{messages['customEntity.editView']} - #{customEntityInstanceBean.uuid}" disabled="true" rendered="#{not empty customEntityInstanceBean.uuid}" />
             </p:breadCrumb>
         </h:form>
 

@@ -40,8 +40,6 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 			customTableName = table.name();
 		}
 		
-		// clean the cookie
-		Faces.addResponseCookie("repository", null, Integer.MAX_VALUE);
 	}
 
 	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {

@@ -94,30 +94,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Override
 	public CustomEntityInstance initEntity() {
-
-//		CustomEntityInstance entity = super.initEntity();
-//
-//		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
-//		defaultRepository = repositoryService.findDefaultRepository();
-//		if (entity.isTransient()) {
-//			entity.setCetCode(customEntityTemplateCode);
-//			entity.setCet(customEntityTemplate);
-//
-//		} else {
-//			try {
-//				Map<String, Object> cfValues = nativeCustomEntityInstanceService.findInCrossStorage(defaultRepository, customEntityTemplate, entity.getUuid());
-//				log.debug("Loading cfValues={}", cfValues);
-//				if (cfValues != null) {
-//					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-//				}
-//
-//			} catch (EntityDoesNotExistsException | BusinessException e) {
-//				log.error(e.getMessage());
-//			}
-//		}
-//
-//		return entity;
-
 		repository = repositoryService.findByCode(repositoryCode);
 
 		customEntityTemplate = cacheContainerProvider.getCustomEntityTemplate(customEntityTemplateCode);
@@ -134,6 +110,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setCode((String) cfValues.get("code"));
 					entity.setCet(customEntityTemplate);
 					entity.setDescription((String) cfValues.get("description"));
+					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
 				}
@@ -166,18 +143,11 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		}
 
 		String result = getListViewName();
-//		// Check for unicity of code
-//		String existingId = crossStorageService.findEntityId(repository, entity);//customEntityInstanceService.findByCodeByCet(entity.getCetCode(), entity.getCode());
-//		if (entity.getUuid() == null && ceiSameCode != null) {
-//			messages.error(new BundleKey("messages", "commons.uniqueField.code"));
-//			return null;
-//		}
 
-		boolean isNew = entity.getUuid() == null;
+		boolean isNew = StringUtils.isBlank(uuid);
 
 		try {
 
-			//Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew, false);
 			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.getFieldValueHolderByUUID(entity.getUuid()).getValuesByCode();
 			
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
