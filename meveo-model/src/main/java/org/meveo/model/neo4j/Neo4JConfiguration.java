@@ -30,7 +30,10 @@ import org.meveo.model.BusinessEntity;
  * Configuration used to access a Neo4j repository
  *
  * @author clement.bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ * @since 6.6.0
+ * 
  */
 @Entity
 @Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -40,45 +43,47 @@ public class Neo4JConfiguration extends BusinessEntity {
 
 	private static final long serialVersionUID = 5788790630004555788L;
 
-    /**
-     * Url of the Neo4j repository
-     */
-    @Column(name = "neo4j_url")
-    private String neo4jUrl;
+	public transient static final String DEFAULT_NEO4J_CONNECTION = "default";
 
-    /**
-     * Login to connect the repository
-     */
-    @Column(name="neo4j_login")
-    private String neo4jLogin;
+	/**
+	 * Url of the Neo4j repository
+	 */
+	@Column(name = "neo4j_url")
+	private String neo4jUrl;
 
-    /**
-     * Password to connect the repository
-     */
-    @Column(name="neo4j_password")
-    private String neo4jPassword;
+	/**
+	 * Login to connect the repository
+	 */
+	@Column(name = "neo4j_login")
+	private String neo4jLogin;
 
-    public String getNeo4jUrl() {
-        return neo4jUrl;
-    }
+	/**
+	 * Password to connect the repository
+	 */
+	@Column(name = "neo4j_password")
+	private String neo4jPassword;
 
-    public void setNeo4jUrl(String neo4jUrl) {
-        this.neo4jUrl = neo4jUrl;
-    }
+	public String getNeo4jUrl() {
+		return neo4jUrl;
+	}
 
-    public String getNeo4jLogin() {
-        return neo4jLogin;
-    }
+	public void setNeo4jUrl(String neo4jUrl) {
+		this.neo4jUrl = neo4jUrl;
+	}
 
-    public void setNeo4jLogin(String neo4jLogin) {
-        this.neo4jLogin = neo4jLogin;
-    }
+	public String getNeo4jLogin() {
+		return neo4jLogin;
+	}
 
-    public String getNeo4jPassword() {
-        return neo4jPassword;
-    }
+	public void setNeo4jLogin(String neo4jLogin) {
+		this.neo4jLogin = neo4jLogin;
+	}
 
-    public void setNeo4jPassword(String neo4jPassword) {
-        this.neo4jPassword = neo4jPassword;
-    }
+	public String getNeo4jPassword() {
+		return neo4jPassword;
+	}
+
+	public void setNeo4jPassword(String neo4jPassword) {
+		this.neo4jPassword = neo4jPassword;
+	}
 }

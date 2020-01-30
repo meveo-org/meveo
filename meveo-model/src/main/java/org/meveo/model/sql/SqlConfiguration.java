@@ -13,8 +13,8 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @version 6.6.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since 6.6.0
  */
 @Entity
@@ -24,6 +24,8 @@ import org.meveo.model.BusinessEntity;
 public class SqlConfiguration extends BusinessEntity {
 
 	private static final long serialVersionUID = 6630494504219053910L;
+
+	public transient static final String DEFAULT_SQL_CONNECTION = "default";
 
 	@NotNull
 	@Column(name = "driver_class", nullable = false)
