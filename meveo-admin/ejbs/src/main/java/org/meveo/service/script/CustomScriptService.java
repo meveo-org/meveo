@@ -109,7 +109,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+    public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -313,14 +313,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      */
-    public void constructClassPath() throws IOException {
+    public static void constructClassPath() throws IOException {
         if (CLASSPATH_REFERENCE.get().length() == 0) {
             synchronized (CLASSPATH_REFERENCE) {
                 if (CLASSPATH_REFERENCE.get().length() == 0) {
                     String classpath = CLASSPATH_REFERENCE.get();
 
                     // Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+                    String thisClassfile = new Object() {}.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
                     File realFile = new File(thisClassfile);
 
@@ -360,7 +360,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                                 if (physicalLibDir.isDirectory()) {
                                     for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
                                         if (subLib.isDirectory()) {
-                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(item->CustomScriptService.getFilePath(item)).collect(Collectors.toList());
                                             classPathEntries.addAll(jars);
                                             if (subLib.getName().equals("classes")) {
                                                 classPathEntries.add(subLib.getCanonicalPath());
@@ -429,7 +429,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private String getFilePath(File jar) {
+    private static String getFilePath(File jar) {
         try {
             return jar.getCanonicalPath();
         } catch (IOException e) {

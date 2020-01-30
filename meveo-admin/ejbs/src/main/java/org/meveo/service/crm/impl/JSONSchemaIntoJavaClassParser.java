@@ -49,17 +49,17 @@ public class JSONSchemaIntoJavaClassParser {
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
         if (classDeclaration != null) {
             Collection<FieldDeclaration> fds = new ArrayList<>();
-//            if (jsonMap.containsKey("storages")) {
-//                compilationUnit.addImport("org.meveo.model.persistence.DBStorageType");
-//                FieldDeclaration fd = new FieldDeclaration();
-//                VariableDeclarator variableDeclarator = new VariableDeclarator();
-//                variableDeclarator.setName("storages");
-//                variableDeclarator.setType("DBStorageType");
-//                fd.setModifiers(Modifier.Keyword.PRIVATE);
-//                fd.addVariable(variableDeclarator);
-//                classDeclaration.addMember(fd);
-//                ((ArrayList<FieldDeclaration>) fds).add(fd);
-//            }
+            if (jsonMap.containsKey("storages")) {
+                compilationUnit.addImport("org.meveo.model.persistence.DBStorageType");
+                FieldDeclaration fd = new FieldDeclaration();
+                VariableDeclarator variableDeclarator = new VariableDeclarator();
+                variableDeclarator.setName("storages");
+                variableDeclarator.setType("DBStorageType");
+                fd.setModifiers(Modifier.Keyword.PRIVATE);
+                fd.addVariable(variableDeclarator);
+                classDeclaration.addMember(fd);
+                ((ArrayList<FieldDeclaration>) fds).add(fd);
+            }
             Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
             if (items != null) {
                 for (Map.Entry<String, Object> item : items.entrySet()) {
@@ -111,6 +111,7 @@ public class JSONSchemaIntoJavaClassParser {
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
                     if (values.get("nullable").equals(false)) {
                         fd.addMarkerAnnotation("NotNull");
+                        compilationUnit.addImport("javax.validation.constraints.NotNull");
                     }
                     classDeclaration.addMember(fd);
                     ((ArrayList<FieldDeclaration>) fds).add(fd);
