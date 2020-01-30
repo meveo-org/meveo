@@ -25,8 +25,9 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
-import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.base.NativePersistenceService;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -65,7 +66,7 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 			return loadData(paginationConfig);
 		}
 
-		return new ArrayList<Map<String, Object>>();
+		return new ArrayList<>();
 
 	}
 
@@ -130,7 +131,7 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	 * @return A list of entities matching search criteria
 	 */
 	protected List<Map<String, Object>> loadData(PaginationConfiguration paginationConfig) {
-		return getPersistenceServiceImpl().list(getSqlConnectionCode(), getCet(), paginationConfig);
+		return getPersistenceServiceImpl().list(getSqlConnectionCode(), SQLStorageConfiguration.getDbTablename(getCet()), paginationConfig);
 	}
 
 	/**
@@ -175,7 +176,7 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	 * 
 	 * @return Persistence service
 	 */
-	protected abstract CustomTableService getPersistenceServiceImpl();
+	protected abstract NativePersistenceService getPersistenceServiceImpl();
 
 	/**
 	 * Method that returns a table name to load the data from

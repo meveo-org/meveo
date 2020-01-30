@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.model.scripts.MavenDependency;
@@ -17,11 +18,12 @@ import org.meveo.model.security.Role;
 /**
  * The Class ScriptInstanceDto.
  *
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "ScriptInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class ScriptInstanceDto extends CustomScriptDto {
 
     /** The Constant serialVersionUID. */

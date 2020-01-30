@@ -4,18 +4,21 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.dwh.BarChart;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.OrientationEnum;
 
 /**
- * The Class BarChartDto.
+ * Part of the graphing classes that represents bar chart information.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "BarChart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("BarChartDto")
 public class BarChartDto extends ChartDto {
 
     /** The Constant serialVersionUID. */

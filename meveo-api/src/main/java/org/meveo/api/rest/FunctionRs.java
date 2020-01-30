@@ -31,28 +31,29 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
-import org.meveo.service.script.ConcreteFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * API for managing {@link Function}.
+ * 
  * @author Clement Bareth
- * @lastModifiedVersion 6.5.2
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @Stateless
 @Path("/function")
-@Api("Function")
+@Api("FunctionRs")
 public class FunctionRs extends BaseRs {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FunctionRs.class);
@@ -87,7 +88,8 @@ public class FunctionRs extends BaseRs {
 	@POST
 	@Produces("application/json; charset=UTF-8")
 	@ApiOperation(value = "Test function")
-	public Map<String, Object> test(@PathParam("code") @ApiParam("Code of the function") String code, @ApiParam("Parameters to execute the function with") Map<String, Object> params) throws BusinessException {
+	public Map<String, Object> test(@PathParam("code") @ApiParam("Code of the function") String code,
+			@ApiParam("Parameters to execute the function with") Map<String, Object> params) throws BusinessException {
 		if (params == null) {
 			params = new HashMap<>();
 		}

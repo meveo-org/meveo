@@ -96,5 +96,32 @@
 		<sql>insert into ${db.schema.adapted}sql_configuration_seq values(1)
 		</sql>
 	</changeSet>
+
+	<changeSet author="Hien Bach" id="#4015">
+		<createTable tableName="remote_repository">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="pk_remote_repository" />
+			</column>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="url" type="varchar(255)"/>
+			<column name="version" type="int4" />
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+			<column name="created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated" type="datetime" />
+		</createTable>
+		<createSequence sequenceName="remote_repository_seq" />
+	</changeSet>
+	
+	<changeSet author="Clement Bareth" id="Add a priority to input property description">
+		<addColumn tableName="property_description">
+			<column name="priority" type="float4"/>
+		</addColumn>
+	</changeSet>
     
 </databaseChangeLog>

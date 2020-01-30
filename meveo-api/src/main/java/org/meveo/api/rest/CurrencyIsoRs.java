@@ -22,12 +22,13 @@ import org.meveo.api.dto.response.GetCurrencyIsoResponse;
 /**
  * Web service for managing Currency.
  * 
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  **/
 @Path("/currencyIso")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Currency iso")
+@Api("CurrencyIsoRs")
 public interface CurrencyIsoRs extends IBaseRs {
 
     /**

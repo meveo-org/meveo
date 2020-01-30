@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.communication.MeveoInstance;
@@ -16,10 +17,13 @@ import org.meveo.model.communication.MeveoInstanceStatusEnum;
  * The Class MeveoInstanceDto.
  *
  * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since Jun 3, 2016 6:50:08 AM
  */
 @XmlRootElement(name = "MeveoInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("MeveoInstanceDto")
 public class MeveoInstanceDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */

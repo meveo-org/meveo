@@ -13,13 +13,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Represents a single CF simple value inside a more complex CF value (list, map, matrix).
  *
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomFieldValue")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomFieldValueDto implements Serializable {
 
     /** The Constant serialVersionUID. */
@@ -29,6 +35,7 @@ public class CustomFieldValueDto implements Serializable {
     @XmlElements({ @XmlElement(name = "dateValue", type = Date.class), @XmlElement(name = "doubleValue", type = Double.class), @XmlElement(name = "longValue", type = Long.class),
             @XmlElement(name = "stringValue", type = String.class), @XmlElement(name = "entityReferenceValue", type = EntityReferenceDto.class),
             @XmlElement(name = "childEntityValue", type = CustomEntityInstanceDto.class) })
+    @ApiModelProperty("Object value representation of the custom field value")
     protected Object value;
 
     /**

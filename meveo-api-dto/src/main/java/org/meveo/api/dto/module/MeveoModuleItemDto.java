@@ -2,20 +2,23 @@ package org.meveo.api.dto.module;
 
 import org.meveo.api.dto.BaseEntityDto;
 
+import io.swagger.annotations.ApiModel;
+
 /**
- * Module item dto.
+ * An item can be a class, script, custom field, notification, etc inside meveo.
  *
  * @author Clément Bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
+@ApiModel("MeveoModuleItemDto")
 public class MeveoModuleItemDto extends BaseEntityDto {
-	
+
 	private static final long serialVersionUID = -5514899106616353330L;
-	
+
 	private String dtoClassName;
 	private Object dtoData;
-	
+
 	public MeveoModuleItemDto() {
 		super();
 	}
@@ -29,15 +32,15 @@ public class MeveoModuleItemDto extends BaseEntityDto {
 	public String getDtoClassName() {
 		return dtoClassName;
 	}
-	
+
 	public void setDtoClassName(String dtoClassName) {
 		this.dtoClassName = dtoClassName;
 	}
-	
+
 	public Object getDtoData() {
 		return dtoData;
 	}
-	
+
 	public void setDtoData(Object dtoData) {
 		this.dtoData = dtoData;
 	}
@@ -72,6 +75,5 @@ public class MeveoModuleItemDto extends BaseEntityDto {
 			return false;
 		return true;
 	}
-	
 
 }

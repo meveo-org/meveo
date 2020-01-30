@@ -19,6 +19,9 @@ package org.meveo.api.dto;
 
 import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,13 +33,17 @@ import java.util.List;
  * Data transfer object for connector.
  *
  * @author Clément Bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Connectors")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class TechnicalServicesDto extends BusinessEntityDto {
 
     private static final long serialVersionUID = -5952076128269784073L;
 
+    @ApiModelProperty("List of technical services information")
     private List<TechnicalServiceDto> technicalServices = new ArrayList<>();
 
     public TechnicalServicesDto() {

@@ -16,12 +16,7 @@
 
 package org.meveo.admin.action.admin.custom;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,6 +25,8 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import io.reactivex.internal.operators.observable.ObservableJoin;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
@@ -99,11 +96,13 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
      */
     private Map<String, CustomFieldTemplate> fields;
     
-    private Set<CustomFieldTemplate> quickAddFields;
+    private List<CustomFieldTemplate> quickAddFields;
 
     private List<CustomFieldTemplate> summaryFields;
 
     private List<CustomFieldTemplate> filterFields;
+
+    private List<CustomFieldTemplate> customFieldTemplateList = new ArrayList<>();
 
     private LazyDataModel<Map<String, Object>> customTableBasedDataModel;
 
@@ -150,10 +149,24 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		// Get fields and sort them by GUI order
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 		if (cfts != null) {
+		    GroupedCustomField groupedCFTAndActions = new GroupedCustomField(cfts.values(), "Custom fields", true);
+            List<GroupedCustomField> groupedCustomFields = groupedCFTAndActions.getChildren();
+            if (groupedCustomFields != null) {
+                int i = 0;
+                for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
+                    List<CustomFieldTemplate> list = new ArrayList<>();
+                    if (groupedCustomField != null) {
+                        CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
+                        list.add(cft);
+                    }
+                    i++;
+                    customFieldTemplateList.addAll(list);
+                }
+            }
 			fields = cfts;
-			summaryFields = fields.values().stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
-			filterFields = fields.values().stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
-			quickAddFields = Stream.concat(summaryFields.stream(), fields.values().stream().filter(CustomFieldTemplate::isValueRequired)).collect(Collectors.toSet());
+            summaryFields = customFieldTemplateList.stream().filter(c -> c.isSummary()).collect(Collectors.toList());
+            filterFields = customFieldTemplateList.stream().filter(c -> c.isFilter()).collect(Collectors.toList());
+            quickAddFields = customFieldTemplateList.stream().filter(c -> c.isSummary() && c.isValueRequired()).collect(Collectors.toList());
 		}
 
 		return entity;
@@ -255,7 +268,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         return summaryFields;
     }
     
-    public Set<CustomFieldTemplate> getQuickAddFields() {
+    public List<CustomFieldTemplate> getQuickAddFields() {
         if (entity == null) {
             initEntity();
         }
@@ -302,7 +315,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
         if (entity == null) {
             initEntity();
         }
-        return fields.values();
+        return customFieldTemplateList;
     }
 
     @Override

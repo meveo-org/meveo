@@ -1,4 +1,4 @@
-package org.meveo.api.rest;
+package org.meveo.api.custom;
 
 import java.util.ArrayList;
 import java.util.List;

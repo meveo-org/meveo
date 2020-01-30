@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.admin.SecuredEntity;
@@ -42,11 +43,13 @@ import org.meveo.model.security.Role;
  *
  * @author Mohamed Hamidi
  * @author Clement Bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since Mai 23, 2016
- * @lastModifiedVersion 6.4.0
  */
 @XmlRootElement(name = "User")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class UserDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

@@ -2,8 +2,6 @@ package org.meveo.api.dto;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAttribute;
-
 import org.meveo.api.message.exception.InvalidDTOException;
 import org.meveo.model.BaseEntity;
 
@@ -11,11 +9,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * A base class for all API DTO classes
  * 
- * @author Edward P. Legaspi
- * @since Oct 4, 2013
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  **/
 @JsonInclude(Include.NON_NULL)
 public abstract class BaseEntityDto implements Serializable {
@@ -24,6 +24,7 @@ public abstract class BaseEntityDto implements Serializable {
 
 	/** The id. */
 	@JsonIgnore
+	@ApiModelProperty("Entity id")
 	protected Long id;
 
 	public BaseEntityDto() {

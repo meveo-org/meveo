@@ -3,19 +3,50 @@ package org.meveo.api.dto.sql;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.sql.SqlConfiguration;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @version 6.6.0
- * @version 6.6.0
+ * Sql configuration that is use to connect to an external datasource. Tested on
+ * PostgreSQL.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ * @since 6.6.0
  */
+@ApiModel
 public class SqlConfigurationDto extends BusinessEntityDto {
 
 	private static final long serialVersionUID = -3116379097059429095L;
 
+	/**
+	 * The driver class use to load this datasource
+	 */
+	@ApiModelProperty("The driver class use to load this datasource")
 	private String driverClass;
+
+	/**
+	 * The url of this datasource. jdbc:postgresql://localhost:5432/meveo.
+	 */
+	@ApiModelProperty("The url of this datasource. jdbc:postgresql://localhost:5432/meveo.")
 	private String url;
+
+	/**
+	 * This datasource's username
+	 */
+	@ApiModelProperty("This datasource's username")
 	private String username;
+
+	/**
+	 * This datasource's password
+	 */
+	@ApiModelProperty("This datasource's password")
 	private String password;
+
+	/**
+	 * The dialect, if supported
+	 */
+	@ApiModelProperty("The dialect, if supported")
 	private String dialect;
 
 	public SqlConfigurationDto() {

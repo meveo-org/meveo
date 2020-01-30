@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.StringUtils;
@@ -13,9 +14,12 @@ import org.meveo.commons.utils.StringUtils;
  * The Class CommunicationRequestDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CommunicationRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("CommunicationRequestDto")
 public class CommunicationRequestDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

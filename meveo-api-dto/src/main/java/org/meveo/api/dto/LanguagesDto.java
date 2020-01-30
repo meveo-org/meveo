@@ -7,19 +7,25 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class LanguagesDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Languages")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class LanguagesDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 4455041168159380792L;
 
     /** The language. */
+    @ApiModelProperty("List of language information")
     private List<LanguageDto> language;
 
     /**

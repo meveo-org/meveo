@@ -4,6 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.api.custom.CustomEntityCategoryApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.CustomEntityCategoryDto;
@@ -11,7 +12,6 @@ import org.meveo.api.dto.response.CustomEntityCategoriesResponseDto;
 import org.meveo.api.dto.response.CustomEntityCategoryResponseDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.logging.WsRestApiInterceptor;
-import org.meveo.api.rest.CustomEntityCategoryApi;
 import org.meveo.api.rest.custom.CustomEntityCategoryRs;
 import org.meveo.api.rest.impl.BaseRs;
 

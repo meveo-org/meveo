@@ -296,7 +296,7 @@ public class CustomTableCreatorService implements Serializable {
 				liquibase.update(new Contexts(), new LabelExpression());
 
 			} catch (Exception e) {
-				log.error("Failed to create a custom table {}", dbTableName, e);
+				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
 				throw new SQLException(e);
 			}
 
@@ -719,7 +719,12 @@ public class CustomTableCreatorService implements Serializable {
 			case LONG:
 			case ENTITY:
 			case BOOLEAN:
-				column.setDefaultValueNumeric(cft.getDefaultValue());
+				boolean value = Boolean.parseBoolean(cft.getDefaultValue());
+				if (value) {
+					column.setDefaultValueNumeric("1");
+				} else {
+					column.setDefaultValueNumeric("0");
+				}
 				break;
 			case STRING:
 			case TEXT_AREA:

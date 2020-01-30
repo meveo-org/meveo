@@ -1,5 +1,6 @@
 package org.meveo.api.dto.job;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
@@ -14,10 +15,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * The Class JobInstanceInfoDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "JobInstanceInfo")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("JobInstanceInfoDto")
 public class JobInstanceInfoDto implements Serializable {
 
     /** The Constant serialVersionUID. */

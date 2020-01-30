@@ -9,43 +9,49 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BaseEntityDto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class NotificationHistoriesDto.
+ * Wrapper class for a list of notification history.
  *
+ * @see NotificationHistoryDto
  * @author Edward P. Legaspi
  */
 @XmlRootElement(name = "NotificationHistories")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("NotificationHistoriesDto")
 public class NotificationHistoriesDto extends BaseEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 4179758713839676597L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 4179758713839676597L;
 
-    /** The notification history. */
-    private List<NotificationHistoryDto> notificationHistory;
+	/** The notification history. */
+	@ApiModelProperty("List of notification histories")
+	private List<NotificationHistoryDto> notificationHistory;
 
-    /**
-     * Gets the notification history.
-     *
-     * @return the notification history
-     */
-    public List<NotificationHistoryDto> getNotificationHistory() {
-        if (notificationHistory == null)
-            notificationHistory = new ArrayList<NotificationHistoryDto>();
-        return notificationHistory;
-    }
+	/**
+	 * Gets the notification history.
+	 *
+	 * @return the notification history
+	 */
+	public List<NotificationHistoryDto> getNotificationHistory() {
+		if (notificationHistory == null)
+			notificationHistory = new ArrayList<NotificationHistoryDto>();
+		return notificationHistory;
+	}
 
-    /**
-     * Sets the notification history.
-     *
-     * @param notificationHistory the new notification history
-     */
-    public void setNotificationHistory(List<NotificationHistoryDto> notificationHistory) {
-        this.notificationHistory = notificationHistory;
-    }
+	/**
+	 * Sets the notification history.
+	 *
+	 * @param notificationHistory the new notification history
+	 */
+	public void setNotificationHistory(List<NotificationHistoryDto> notificationHistory) {
+		this.notificationHistory = notificationHistory;
+	}
 
-    @Override
-    public String toString() {
-        return "NotificationHistoriesDto [notificationHistory=" + notificationHistory + ", toString()=" + super.toString() + "]";
-    }
+	@Override
+	public String toString() {
+		return "NotificationHistoriesDto [notificationHistory=" + notificationHistory + ", toString()=" + super.toString() + "]";
+	}
 }

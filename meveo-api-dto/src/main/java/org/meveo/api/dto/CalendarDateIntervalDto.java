@@ -9,13 +9,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.catalog.CalendarDateInterval;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class CalendarDateIntervalDto.
  *
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CalendarDateInterval")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CalendarDateIntervalDto implements Serializable {
 
     /** The Constant serialVersionUID. */
@@ -23,10 +29,12 @@ public class CalendarDateIntervalDto implements Serializable {
 
     /** The interval begin. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("Beginning interval")
     private Integer intervalBegin;
 
     /** The interval end. */
     @XmlAttribute(required = true)
+    @ApiModelProperty("Ending interval")
     private Integer intervalEnd;
 
     /**

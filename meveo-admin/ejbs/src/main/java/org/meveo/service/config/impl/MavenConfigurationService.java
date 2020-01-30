@@ -19,12 +19,15 @@ import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.transaction.UserTransaction;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -40,6 +43,7 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -49,12 +53,14 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.storage.RemoteRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
 
@@ -104,6 +110,9 @@ public class MavenConfigurationService implements Serializable {
 
 	@Inject
 	private Logger log;
+
+	@Inject
+	private RemoteRepositoryService remoteRepositoryService;
 
 	@Resource
 	private TimerService timerService;
@@ -217,6 +226,26 @@ public class MavenConfigurationService implements Serializable {
 		model.setArtifactId("meveo-application");
 		model.setVersion("1.0.0");
 
+		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
+		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
+			for (RemoteRepository remoteRepository : remoteRepositories) {
+				Repository repositoryMaven = new Repository();
+				repositoryMaven.setId(remoteRepository.getCode());
+				repositoryMaven.setUrl(remoteRepository.getUrl());
+				model.addRepository(repositoryMaven);
+			}
+		}
+
+		Repository ownInstance = new Repository();
+		String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
+		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
+		ownInstance.setId("meveo-repo");
+		if (!baseUrl.endsWith("/")) {
+			baseUrl = baseUrl + "/";
+		}
+		ownInstance.setUrl(baseUrl + contextRoot + "/maven");
+		model.addRepository(ownInstance);
+
 		Dependency meveoDependency = new Dependency();
 		meveoDependency.setGroupId("org.meveo");
 		meveoDependency.setArtifactId("meveo-api");
@@ -267,7 +296,14 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public List<String> getMavenRepositories() {
-		return ParamBean.getInstance().getListProperty("maven.path.repositories", new ArrayList<String>());
+    	List<String> mavenRemoteRepositories = new ArrayList<>();
+    	List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
+    	if (CollectionUtils.isNotEmpty(remoteRepositories)) {
+    		for (RemoteRepository remoteRepository : remoteRepositories) {
+				mavenRemoteRepositories.add(remoteRepository.getUrl());
+			}
+		}
+		return mavenRemoteRepositories;
 	}
 
 	public void setMavenRepositories(List<String> mavenRepositories) {

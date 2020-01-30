@@ -28,9 +28,12 @@ import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.admin.impl.PermissionService;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 
@@ -51,6 +54,9 @@ public class StartupListener {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 
 	@Inject
 	private Logger log;
@@ -58,6 +64,9 @@ public class StartupListener {
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper entityManagerWrapper;
+	
+	@Inject
+	private PermissionService permissionService;
 
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
@@ -87,12 +96,33 @@ public class StartupListener {
 					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
 					repositoryService.create(defaultRepository);
+					log.info("Created default repository");
 				}
 			} catch (BusinessException e) {
 				log.error("Cannot create default repository", e);
 			}
 			
-			log.info("Created default repository");
+			// Create Meveo git repository
+			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
+			if(meveoRepo == null) {
+				try {
+					gitRepositoryService.create(
+						GitRepositoryService.MEVEO_DIR, 
+						false,
+						GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
+						GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword()
+					);
+					
+					log.info("Created Meveo git repository");
+					
+					
+				} catch (BusinessException e) {
+					log.error("Cannot create Meveo git repository", e);
+				}
+				
+			} else {
+				GitRepositoryService.MEVEO_DIR = meveoRepo;
+			}
 			
 			log.info("Thank you for running Meveo Community code.");
 		});

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
@@ -15,9 +16,12 @@ import org.meveo.model.customEntities.CustomEntityInstance;
  * The Class CustomEntityInstanceDto.
  *
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomEntityInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomEntityInstanceDto extends BaseEntityDto implements Serializable {
 
     /** The Constant serialVersionUID. */
