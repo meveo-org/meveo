@@ -18,6 +18,7 @@ package org.meveo.api.dto.technicalservice;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.meveo.interfaces.technicalservice.description.properties.InputPropertyDescription;
 import org.meveo.model.technicalservice.Comparator;
+import org.meveo.model.technicalservice.InputMeveoProperty;
 
 import java.util.Objects;
 
@@ -42,7 +43,25 @@ public class InputPropertyDto implements InputPropertyDescription {
      */
     private Float priority = 0.5f;
     
-    public Float getPriority() {
+    public InputPropertyDto() {
+    	
+    }
+    
+    /**
+	 * Instantiates a new InputPropertyDto
+	 *
+	 * @param p
+	 */
+	public InputPropertyDto(InputMeveoProperty p) {
+		String property = p.getCet().getCode();
+        setProperty(property);
+        setComparator(p.getComparator());
+        setComparisonValue(p.getComparisonValue());
+        setDefaultValue(p.getDefaultValue());
+        setRequired(p.isRequired());
+	}
+
+	public Float getPriority() {
 		return priority;
 	}
 

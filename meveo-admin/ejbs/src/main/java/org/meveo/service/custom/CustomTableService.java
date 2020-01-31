@@ -520,7 +520,7 @@ public class CustomTableService extends NativePersistenceService {
                 if(append) {
                 	lineValues = convertValue(lineValues, cfts, true, null);
                 	replaceEntityreferences(sqlConnectionCode, fields, entityReferencesCache, lineValues);
-                	String uuid = findIdByValues(sqlConnectionCode, dbTableName, lineValues);
+                	String uuid = findIdByUniqueValues(sqlConnectionCode, dbTableName, lineValues, fields);
                 	if(uuid == null) {
                 		final String tablename = SQLStorageConfiguration.getDbTablename(cet);
                 		super.createInNewTx(sqlConnectionCode, tablename, lineValues);
@@ -735,7 +735,7 @@ public class CustomTableService extends NativePersistenceService {
 		                        (String) value,
 		                        serializedValues -> {
 		                            Map<String, Object> entityRefValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
-		                            return findIdByValues(sqlConnectionCode, entityRefTableName, entityRefValues);
+		                            return findIdByUniqueValues(sqlConnectionCode, entityRefTableName, entityRefValues, fields);
 		                        }
 		                );
 

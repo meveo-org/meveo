@@ -36,7 +36,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ejb.TransactionAttribute;
@@ -215,12 +214,28 @@ public class NativePersistenceService extends BaseService {
 	 * @param queryValues Values used to filter the result
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
-	public String findIdByValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues) {
+	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
 		StringBuilder q = new StringBuilder("SELECT uuid FROM " + tableName + " as a\n");
 		
 		Map<Integer, Object> queryParamers = new HashMap<>();
+		
+		Map<String, Object> uniqueValues = new HashMap<>();
+		
+		for(CustomFieldTemplate cft : fields) {
+			if(cft.isUnique()) {
+				Object uniqueValue = Optional.ofNullable(queryValues.get(cft.getCode())).orElse(queryValues.get(cft.getDbFieldname()));
+				if(uniqueValue != null) {
+					uniqueValues.put(cft.getDbFieldname(), uniqueValue);
+				}
+			}
+		}
+		
+		if(uniqueValues.isEmpty()) {
+			return null;
+		}
+		
 		AtomicInteger i = new AtomicInteger(1);
-		queryValues.forEach((key, value) -> {
+		uniqueValues.forEach((key, value) -> {
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
 				if(i.get() == 1) {
 					q.append("WHERE a." + key + " = ?\n");
@@ -234,7 +249,6 @@ public class NativePersistenceService extends BaseService {
 		QueryBuilder builder = new QueryBuilder();
 		builder.setSqlString(q.toString());
 		
-
 		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
 		queryParamers.forEach((k, v) -> query.setParameter(k, v));
 		
@@ -312,9 +326,11 @@ public class NativePersistenceService extends BaseService {
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts,
 			boolean removeNullValues) throws BusinessException {
-
+		
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		return create(sqlConnectionCode, cei.getTableName(), values, returnId);
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
+		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
 	}
 
 	/**
@@ -596,8 +612,7 @@ public class NativePersistenceService extends BaseService {
 
 		String tableName = cei.getTableName();
 		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
-				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		
 		final Map<String, Object> values = convertValue(sqlValues, cftsMap, removeNullValues, null);
 		
@@ -689,11 +704,16 @@ public class NativePersistenceService extends BaseService {
 
 		try {
 			if (value == null) {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid)
-						.executeUpdate();
+				getEntityManager(sqlConnectionCode)
+					.createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+					.setParameter("uuid", uuid)
+					.executeUpdate();
 			} else {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
-						.setParameter(fieldName, value).setParameter("uuid", uuid).executeUpdate();
+				getEntityManager(sqlConnectionCode)
+					.createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+					.setParameter(fieldName, value)
+					.setParameter("uuid", uuid)
+					.executeUpdate();
 			}
 
 			CustomTableRecord record = new CustomTableRecord();
@@ -752,7 +772,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid=" + uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode)
+			.createNativeQuery("update " + tableName + " set disabled=0 where uuid= ?")
+			.setParameter(1, uuid)
+			.executeUpdate();
 	}
 
 	/**
@@ -793,7 +816,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= :uuid").setParameter("uuid", uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= ?")
+			.setParameter(1, uuid)
+			.executeUpdate();
 
 		CustomTableRecord record = new CustomTableRecord();
 		record.setCetCode(tableName);

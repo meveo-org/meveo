@@ -183,23 +183,17 @@ public abstract class InputOutputDescription implements TechnicalServiceDescript
         descriptionDto.setOutput(desc.isOutput());
         final List<InputPropertyDto> inputProperties = new ArrayList<>();
         final List<OutputPropertyDto> outputProperties = new ArrayList<>();
+        
         for (InputMeveoProperty p : desc.getInputProperties()) {
-            InputPropertyDto inputPropertyDto = new InputPropertyDto();
-            String property = p.getCet().getCode();
-            inputPropertyDto.setProperty(property);
-            inputPropertyDto.setComparator(p.getComparator());
-            inputPropertyDto.setComparisonValue(p.getComparisonValue());
-            inputPropertyDto.setDefaultValue(p.getDefaultValue());
-            inputPropertyDto.setRequired(p.isRequired());
+            InputPropertyDto inputPropertyDto = new InputPropertyDto(p);
             inputProperties.add(inputPropertyDto);
         }
+        
         for (OutputMeveoProperty p : desc.getOutputProperties()) {
-            OutputPropertyDto outputPropertyDto = new OutputPropertyDto();
-            String property = p.getCet().getCode();
-            outputPropertyDto.setProperty(property);
-            outputPropertyDto.setTrustness(p.getTrustness());
+            OutputPropertyDto outputPropertyDto = new OutputPropertyDto(p);
             outputProperties.add(outputPropertyDto);
         }
+        
         descriptionDto.setInputProperties(inputProperties);
         descriptionDto.setOutputProperties(outputProperties);
         return descriptionDto;

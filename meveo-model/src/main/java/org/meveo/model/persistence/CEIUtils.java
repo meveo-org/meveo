@@ -31,6 +31,7 @@ public class CEIUtils {
 		cei.setCetCode(pojo.getClass().getSimpleName());
 		CustomFieldValues customFieldValues = new CustomFieldValues();
 		pojoAsMap.forEach(customFieldValues::setValue);
+		cei.setCfValues(customFieldValues);
 		return cei;
 	}
 	

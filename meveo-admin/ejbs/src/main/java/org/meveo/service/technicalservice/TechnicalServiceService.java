@@ -17,6 +17,7 @@
  */
 package org.meveo.service.technicalservice;
 
+import org.hibernate.Hibernate;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.technicalservice.Description;
@@ -172,7 +173,13 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         Root<T> root = query.from(getEntityClass());
         query.select(root.get("descriptions"));
         query.where(cb.equal(root.get("code"), code));
-        return getEntityManager().createQuery(query).getResultList();
+        List<Description> resultList = getEntityManager().createQuery(query).getResultList();
+        for(Description desc : resultList) {
+        	Hibernate.initialize(desc.getInputProperties());
+        	Hibernate.initialize(desc.getOutputProperties());
+        }
+        
+		return resultList;
     }
 
     /**

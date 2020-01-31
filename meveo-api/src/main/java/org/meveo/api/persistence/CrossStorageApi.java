@@ -6,12 +6,21 @@ package org.meveo.api.persistence;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.persistence.EntityManager;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
@@ -25,20 +34,15 @@ import org.meveo.persistence.CrossStorageService;
  * @version 6.8.0
  * @since 6.8.0
  */
-public class CrossStorageApi<T> {
+@Stateless
+public class CrossStorageApi{
 
+	@Inject
 	private CrossStorageService crossStorageService;
-	private CustomFieldsCacheContainerProvider cache;
-	private Class<T> clazz;
-	private CustomEntityTemplate cet;
 	
-	public CrossStorageApi(CrossStorageService crossStorageService, CustomFieldsCacheContainerProvider cache, Class<T> clazz) {
-		this.crossStorageService = crossStorageService;
-		this.cache = cache;
-		this.clazz = clazz;
-		this.cet = cache.getCustomEntityTemplate(clazz.getSimpleName());
-	}
-
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
+	
 	/**
 	 * Find an instance of a given CET
 	 *
@@ -48,13 +52,11 @@ public class CrossStorageApi<T> {
 	 * @return the instanc of the cet
 	 * @throws EntityDoesNotExistsException the entity does not exists exception
 	 */
-	public T find(Repository repository, String uuid) throws EntityDoesNotExistsException {
-		if (cet == null) {
-			throw new IllegalArgumentException("CET " + clazz.getSimpleName() + " does not exists");
-		}
-		
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public <T> T find(Repository repository, String uuid, Class<T> cetClass) throws EntityDoesNotExistsException {
+		CustomEntityTemplate cet = getCet(cetClass);
 		Map<String, Object> values = crossStorageService.find(repository, cet, uuid);
-		return JacksonUtil.convert(values, clazz);
+		return JacksonUtil.convert(values, cetClass);
 	}
 
 	/**
@@ -66,12 +68,23 @@ public class CrossStorageApi<T> {
 	 * @throws BusinessException            See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 * @throws IOException                  See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 */
-	public void createOrUpdate(Repository repository, T value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createOrUpdate(Repository repository, Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
+		CustomEntityInstance cei = CEIUtils.pojoToCei(value);
+		crossStorageService.createOrUpdate(repository, cei);
+	}
+	
+	/**
+	 * @param cetClass
+	 * @return
+	 * @throws IllegalArgumentException
+	 */
+	private CustomEntityTemplate getCet(Class<?> cetClass) throws IllegalArgumentException {
+		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cetClass.getSimpleName());
 		if (cet == null) {
-			throw new IllegalArgumentException("CET " + clazz.getSimpleName() + " does not exists");
+			throw new IllegalArgumentException("CET " + cetClass.getSimpleName() + " does not exists");
 		}
-		
-		crossStorageService.createOrUpdate(repository, CEIUtils.pojoToCei(value));
+		return cet;
 	}
 
 }
