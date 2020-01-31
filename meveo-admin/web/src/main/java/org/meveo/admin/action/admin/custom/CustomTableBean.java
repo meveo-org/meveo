@@ -405,12 +405,11 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
     
     @ActionMethod
     public void update(Map<String, Object> values) throws BusinessException {
-        Map<String, Object> convertedValues = customTableService.convertValue(values, fields, false, null);
         CustomEntityInstance cei = new CustomEntityInstance();
         cei.setCet(entity);
         cei.setCetCode(entity.getCode());
-        cei.setUuid((String) convertedValues.get("uuid"));
-        customFieldInstanceService.setCfValues(cei, entity.getCode(), convertedValues);
+        cei.setUuid((String) values.get("uuid"));
+        customFieldInstanceService.setCfValues(cei, entity.getCode(), values);
         
     	customTableService.update(getSqlConnectionCode(), entity, cei);
         messages.info(new BundleKey("messages", "customTable.valuesSaved"));

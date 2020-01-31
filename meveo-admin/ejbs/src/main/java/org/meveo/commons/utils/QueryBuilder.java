@@ -97,8 +97,10 @@ public class QueryBuilder {
         if (convertToMap) {
             result.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
         }
-        for (Map.Entry<String, Object> e : params.entrySet()) {
-            result.setParameter(e.getKey(), e.getValue());
+        if(params != null) {
+	        for (Map.Entry<String, Object> e : params.entrySet()) {
+	            result.setParameter(e.getKey(), e.getValue());
+	        }
         }
 
         return result;
@@ -937,6 +939,10 @@ public class QueryBuilder {
 
     public String getSqlString() {
         return q.toString();
+    }
+    
+    public void setSqlString(String query) {
+    	this.q = new StringBuffer(query);
     }
 
     public Map<String, Object> getParams() {
