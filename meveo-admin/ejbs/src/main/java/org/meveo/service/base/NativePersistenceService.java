@@ -44,6 +44,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -61,10 +62,12 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.service.custom.CustomTableService;
@@ -76,7 +79,7 @@ import org.meveo.util.MeveoParamBean;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  */
 public class NativePersistenceService extends BaseService {
 
@@ -127,7 +130,7 @@ public class NativePersistenceService extends BaseService {
 	public EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		EntityManager em;
-		if (StringUtils.isBlank(sqlConfigurationCode) || sqlConfigurationCode.equals("default")) {
+		if (sqlConfigurationCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			em = emWrapper.getEntityManager();
 			em.joinTransaction();
 
@@ -393,7 +396,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode) && !"default".equals(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 				}
@@ -534,7 +537,7 @@ public class NativePersistenceService extends BaseService {
 						itemsProcessed++;
 					}
 					preparedStatement.executeBatch();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 
@@ -625,7 +628,7 @@ public class NativePersistenceService extends BaseService {
 					}
 
 					ps.executeUpdate();
-					if (!StringUtils.isBlank(sqlConnectionCode)) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
 				}
@@ -1426,5 +1429,9 @@ public class NativePersistenceService extends BaseService {
 		} else if (value instanceof Boolean) {
 			ps.setBoolean(parameterIndex, (Boolean) value);
 		}
+	}
+
+	public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
+		throw new NotImplementedException();
 	}
 }

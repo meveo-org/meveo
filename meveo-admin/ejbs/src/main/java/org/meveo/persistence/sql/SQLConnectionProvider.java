@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  * @since 6.6.0
  */
 @Startup
@@ -42,9 +42,9 @@ public class SQLConnectionProvider {
 	@Inject
 	@MeveoJpa
 	private Provider<EntityManagerWrapper> emWrapperProvider;
-	
-    @PersistenceUnit(unitName = "MeveoAdmin")
-    private EntityManagerFactory emf;
+
+	@PersistenceUnit(unitName = "MeveoAdmin")
+	private EntityManagerFactory emf;
 
 	@Inject
 	private Logger log;
@@ -68,7 +68,7 @@ public class SQLConnectionProvider {
 		password = ParamBean.getInstance().getProperty("sql.password", "meveo");
 		dialect = ParamBean.getInstance().getProperty("sql.dialect", "org.hibernate.dialect.PostgreSQLDialect");
 
-		defaultSqlConfiguration.setCode("default");
+		defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 		defaultSqlConfiguration.setDriverClass(driverClass);
 		defaultSqlConfiguration.setUrl(url);
 		defaultSqlConfiguration.setUsername(username);
@@ -129,16 +129,21 @@ public class SQLConnectionProvider {
 	}
 
 	public synchronized SessionFactory buildSessionFactory(SqlConfiguration sqlConfiguration) {
+
 		// Return the SessionFactory initialized by wildfly in case of using default configuration
-		if(sqlConfiguration.getCode().equals("default")) {
+		if(sqlConfiguration.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			return (SessionFactory) emf;
-			
+
 		} else {
 			Configuration config = new Configuration();
 			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
 			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
 			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
 			config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
+			config.setProperty("hibernate.c3p0.min_size", "5");
+			config.setProperty("hibernate.c3p0.acquire_increment", "5");
+			config.setProperty("hibernate.c3p0.timeout", "1800");
+
 			if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
 				config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());
 			}

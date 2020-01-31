@@ -44,27 +44,27 @@
         </h:form>
 
         <hftl:formPanel formId="formRepository" label="#{messages['repository.title']}" backingBean="#{repositoryBean}" showFormButtons="false" >
-            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
-            <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" allowEdit="false" />
+            <hftl:formField label="#{messages['businessEntity.description']}" field="description" edit="#{repositoryBean.entity.code ne 'default'}" />
             <hftl:formField id="parentRepositoryId" label="#{messages['repository.parentRepository']}" field="parentRepository" 
-            	valueLabelField="code" popup="true" popupId="parentRepositoryPopup" />
+            	valueLabelField="code" popup="true" popupId="parentRepositoryPopup" edit="#{repositoryBean.entity.code ne 'default'}" />
            	<hftl:formField label="#{messages['repository.neo4jConfiguration']}" field="neo4jConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{neo4jConfigurationBean}" />
-            <hftl:formField label="#{messages['repository.sqlConfiguration']}" field="sqlConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{sqlConfigurationBean}" />
-            <hftl:formField label="#{messages['repository.path']}" field="path" disabled="true" required="false" />
+            <hftl:formField label="#{messages['repository.sqlConfiguration']}" field="sqlConfiguration" valueField="id" valueLabelField="code" popup="false" listBean="#{sqlConfigurationBean}" edit="#{repositoryBean.entity.code ne 'default'}" />
+            <hftl:formField label="#{messages['repository.path']}" field="path" disabled="true" required="false" edit="#{repositoryBean.entity.code ne 'default'}" />
            	<hftl:formField id="binaryStorageConfigurationId" label="#{messages['binaryStorageConfiguration.title']}" field="binaryStorageConfiguration" 
-            	valueLabelField="code" popup="true" popupId="binaryStorageConfigurationPopup" />
-            <hftl:formField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" />
+            	valueLabelField="code" popup="true" popupId="binaryStorageConfigurationPopup" edit="#{repositoryBean.entity.code ne 'default'}" />
+            <hftl:formField label="#{messages['repository.dataSeparationType']}" field="dataSeparationType" edit="#{repositoryBean.entity.code ne 'default'}" />
             
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
 				<p:commandButton id="saveButton" value="#{messages['action.save']}" onclick="delayDisable(this);"
 								 oncomplete="this.disabled=false;" action="#{repositoryBean.saveOrUpdate}"
-								 icon="ui-icon-check" update="@form" rendered="#{!(repositoryBean.entity.code eq 'default')}">
+								 icon="ui-icon-check" update="@form">
 					<f:param name="edit" value="true"/>
 				</p:commandButton>
 				<hf:clearButton label="#{messages['action.reset']}" edit="#{repositoryBean.edit}" rendered="#{repositoryBean.canUserUpdateEntity()}" resetAction="#{repositoryBean.resetFormEntity()}"/>
 				<p:button id="backButton" value="#{messages['action.back']}" outcome="#{repositoryBean.back()}"/>
-				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" onclick="PF('deleteDialog').show();" rendered="#{!(repositoryBean.entity.code eq 'default')}">
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" onclick="PF('deleteDialog').show();" rendered="#{repositoryBean.entity.code ne 'default'}">
 				</p:commandButton>
 			</ui:define>
         </hftl:formPanel>

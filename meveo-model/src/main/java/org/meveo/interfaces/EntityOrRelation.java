@@ -127,7 +127,7 @@ public abstract class EntityOrRelation implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void addProperty(String name, Object value, boolean multivalued){
+	public EntityOrRelation addProperty(String name, Object value, boolean multivalued){
 		PropertyInstance propertyInstance = this.properties.computeIfAbsent(name, s -> {
 			PropertyInstance property = new PropertyInstance();
     		property.setEntityOrRelation(this);
@@ -142,6 +142,8 @@ public abstract class EntityOrRelation implements Serializable {
 		}else{
 			propertyInstance.setValue(value);
 		}
+		
+		return this;
 	}
 
 	public void merge(EntityOrRelation variable) {

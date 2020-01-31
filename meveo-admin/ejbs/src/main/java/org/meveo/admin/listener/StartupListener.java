@@ -80,20 +80,20 @@ public class StartupListener {
 			try {
 				SqlConfiguration defaultSqlConfiguration;
 				Repository defaultRepository;
-				defaultSqlConfiguration = sqlConfigurationService.findByCode("default");
+				defaultSqlConfiguration = sqlConfigurationService.findByCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 				if (defaultSqlConfiguration == null) {
 					defaultSqlConfiguration = new SqlConfiguration();
-					defaultSqlConfiguration.setCode("default");
+					defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.create(defaultSqlConfiguration);
 				} else {
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.update(defaultSqlConfiguration);
 				}
-				defaultRepository = repositoryService.findByCode("default");
+				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
 				if (defaultRepository == null) {
 					defaultRepository = new Repository();
-					defaultRepository.setCode("default");
+					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
 					repositoryService.create(defaultRepository);
 					log.info("Created default repository");

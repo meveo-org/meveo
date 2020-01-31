@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Rachid
  * @author clement.bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @Startup
 @Singleton
@@ -90,7 +90,7 @@ public class Neo4jConnectionProvider {
         neo4jLogin = ParamBean.getInstance().getProperty("neo4j.login", "neo4j");
         neo4jPassword = ParamBean.getInstance().getProperty("neo4j.password", "meveo");
 
-        defaultConfiguration.setCode("default");
+        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
         defaultConfiguration.setNeo4jLogin(neo4jLogin);
         defaultConfiguration.setNeo4jPassword(neo4jPassword);
         defaultConfiguration.setNeo4jUrl(neo4jUrl);

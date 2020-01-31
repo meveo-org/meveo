@@ -29,9 +29,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.model.persistence.JacksonUtil;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 
 /**
@@ -89,9 +91,14 @@ public class TechnicalServiceDto extends BusinessEntityDto {
     @JsonSetter
     private void setDescriptions(Object descriptions) {
     	if(descriptions instanceof Map) {
-    		setDescriptions((Map<String, InputOutputDescription>) descriptions);
+    		TypeReference<Map<String, InputOutputDescription>> typeref = new TypeReference<Map<String, InputOutputDescription>>(){};
+			Map<String, InputOutputDescription> desc = JacksonUtil.convert(descriptions, typeref);
+    		setDescriptions(desc);
+    		
     	} else {
-    		setDescriptions((List<InputOutputDescription>) descriptions);
+    		TypeReference<List<InputOutputDescription>> typeref = new TypeReference<List<InputOutputDescription>>(){};
+    		List<InputOutputDescription> desc = JacksonUtil.convert(descriptions, typeref);
+    		setDescriptions(desc);
     	}
     }
 

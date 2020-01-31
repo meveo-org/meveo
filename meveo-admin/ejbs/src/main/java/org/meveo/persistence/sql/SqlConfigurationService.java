@@ -26,7 +26,7 @@ import org.meveo.service.custom.CustomTableCreatorService;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  * @since 6.6.0
  */
 @Stateless
@@ -59,14 +59,14 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	public void create(SqlConfiguration entity) throws BusinessException {
 		sqlConfigurationService.createInNewTx(entity);
 		
-		if(!entity.getCode().equals("default")) {
+		if(!entity.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			sqlConfigurationService.initializeCet(entity);
 		}
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createInNewTx(SqlConfiguration entity) throws BusinessException {
-		if (entity.getCode().equals("default") || testConnection(entity)) {
+		if (entity.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION) || testConnection(entity)) {
 			super.create(entity);
 
 		} else {
