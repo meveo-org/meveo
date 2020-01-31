@@ -215,8 +215,6 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(cet);
 
-        System.out.println("test");
-
         final File cetDir = getCetDir();
 
         final File classDir = getClassDir();
