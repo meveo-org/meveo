@@ -47,9 +47,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
+import javax.tools.*;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -69,10 +67,7 @@ import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.MeveoFileUtils;
-import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.commons.utils.StringUtils;
+import org.meveo.commons.utils.*;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
@@ -109,17 +104,13 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+    public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
     @Inject
     private ResourceBundle resourceMessages;
 
     @Inject
     private EndpointService endpointService;
-
-    @Inject
-    @CurrentUser
-    protected MeveoUser currentUser;
 
     @Inject
     @MeveoRepository
@@ -135,6 +126,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private RepositorySystemSession defaultRepositorySystemSession;
 
+    private final static String SCRIPTS_DIR = "/scripts";
+
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -142,6 +135,20 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             defaultRepositorySystemSession = mavenConfigurationService.newRepositorySystemSession(defaultRepositorySystem);
         }
     }
+
+    /**
+     * @param currentUser Logged user
+     * @return the scripts directory relative to the file explorer directory for the user's provider
+     */
+    public static String getScriptsDirectory(MeveoUser currentUser) {
+        String rootDir = ParamBean.getInstance().getChrootDir(currentUser != null ? currentUser.getProviderCode() : null);
+        return rootDir + SCRIPTS_DIR;
+    }
+
+    public static File getScriptsClassDir(MeveoUser currentUser) {
+        return new File(getScriptsDirectory(currentUser));
+    }
+
 
     /**
      * Constructor.
@@ -713,11 +720,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws org.meveo.service.script.CharSequenceCompilerException char sequence
+     * @throws CharSequenceCompilerException char sequence
      *                                                                compiler
      *                                                                exception.
      */
-    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
 
         supplementClassPathWithMissingImports(javaSrc);
 

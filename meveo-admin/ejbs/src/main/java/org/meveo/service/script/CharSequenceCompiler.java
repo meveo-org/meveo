@@ -1,32 +1,14 @@
 package org.meveo.service.script;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import javax.tools.DiagnosticCollector;
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaCompiler;
+import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
 
 /**
  * Compile a String or other {@link CharSequence}, returning a Java
@@ -142,7 +124,7 @@ public class CharSequenceCompiler<T> {
          final DiagnosticCollector<JavaFileObject> diagnosticsList,
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
-       
+
       if (diagnosticsList != null) {
          diagnostics = diagnosticsList;
       } else {
@@ -179,35 +161,63 @@ public class CharSequenceCompiler<T> {
     *            if the source cannot be compiled
     */
    public synchronized Map<String, Class<T>> compile(
-         final Map<String, CharSequence> classes,
-         final DiagnosticCollector<JavaFileObject> diagnosticsList)
-         throws CharSequenceCompilerException {
-      List<JavaFileObject> sources = new ArrayList<JavaFileObject>();
-      for (Entry<String, CharSequence> entry : classes.entrySet()) {
-         String qualifiedClassName = entry.getKey();
-         CharSequence javaSource = entry.getValue();
-         if (javaSource != null) {
-            final int dotPos = qualifiedClassName.lastIndexOf('.');
-            final String className = dotPos == -1 ? qualifiedClassName
-                  : qualifiedClassName.substring(dotPos + 1);
-            final String packageName = dotPos == -1 ? "" : qualifiedClassName
-                  .substring(0, dotPos);
-            final JavaFileObjectImpl source = new JavaFileObjectImpl(className,
-                  javaSource);
-            sources.add(source);
-            // Store the source file in the FileManager via package/class
-            // name.
-            // For source files, we add a .java extension
-            javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName,
-                  className + JAVA_EXTENSION, source);
+           final Map<String, CharSequence> classes,
+           final DiagnosticCollector<JavaFileObject> diagnosticsList)
+           throws CharSequenceCompilerException {
+      try {
+         File scriptsDir = CustomScriptService.getScriptsClassDir(null);
+
+         if (!scriptsDir.exists()) {
+            scriptsDir.mkdirs();
          }
-      }
-      // Get a CompliationTask from the compiler and compile the sources
-      final CompilationTask task = compiler.getTask(null, javaFileManager, diagnostics,
-            options, null, sources);
-      final Boolean result = task.call();
-      if (result == null || !result.booleanValue()) {
-         throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
+
+         String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
+
+         List<File> fileList = new ArrayList<File>();
+         List<JavaFileObject> sources = new ArrayList<>();
+         for (Entry<String, CharSequence> entry : classes.entrySet()) {
+            String qualifiedClassName = entry.getKey();
+            CharSequence javaSource = entry.getValue();
+            if (javaSource != null) {
+               final int dotPos = qualifiedClassName.lastIndexOf('.');
+               final String className = dotPos == -1 ? qualifiedClassName
+                       : qualifiedClassName.substring(dotPos + 1);
+               final String packageName = dotPos == -1 ? "" : qualifiedClassName
+                       .substring(0, dotPos);
+               String packageNameFile = packageName.replace('.','/');
+               final JavaFileObjectImpl source = new JavaFileObjectImpl(className,
+                       javaSource);
+               File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
+               org.apache.commons.io.FileUtils.write(classFile, javaSource);
+               sources.add(source);
+               fileList.add(classFile);
+               // Store the source file in the FileManager via package/class
+               // name.
+               // For source files, we add a .java extension
+               javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, source);
+            }
+         }
+
+         // Get a CompliationTask from the compiler and compile the sources
+         final CompilationTask task = compiler.getTask(null, javaFileManager, diagnostics,
+                 options, null, sources);
+
+         final Boolean result = task.call();
+         if (result == null || !result.booleanValue()) {
+            throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
+         } else {
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
+            Boolean isOK = compiler.getTask(null, fileManager, diagnostics,
+                    Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            if (isOK) {
+               for (File file : fileList) {
+                  file.delete();
+               }
+            }
+         }
+      } catch (IOException e) {
       }
       try {
          // For each class name in the inpput map, get its compiled
