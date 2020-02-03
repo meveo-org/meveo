@@ -43,6 +43,8 @@ import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.observers.OntologyObserver;
+import org.meveo.api.rest.swagger.SwaggerHelper;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.api.utils.JSONata;
@@ -50,6 +52,8 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
@@ -60,6 +64,8 @@ import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
@@ -68,9 +74,9 @@ import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.meveo.util.Version;
-import org.slf4j.Logger;
 
 import io.swagger.models.Info;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Scheme;
@@ -97,9 +103,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
-
+	
 	@Inject
-	private Logger logger;
+	private CustomEntityTemplateService customEntityTemplateService;
+	
+	@Inject
+	private OntologyObserver ontologyObserver;
+	
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
 	@EJB
 	private KeycloakAdminClientService keycloakAdminClientService;
@@ -514,7 +526,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return true;
 
 		} catch (Exception e) {
-			logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+			log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
 			return false;
 		}
 	}
@@ -597,6 +609,16 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
 					BodyParameter bodyParameter = new BodyParameter();
 					bodyParameter.setName(tsParameterMapping.getParameterName());
+					
+					if (tsParameterMapping.getEndpointParameter() != null) {
+						String serviceParameter = tsParameterMapping.getEndpointParameter().getParameter();
+						CustomEntityTemplate cet = customEntityTemplateService.findByCodeOrDbTablename(serviceParameter);
+
+						if (cet != null) {
+							bodyParameter.setSchema(cetToModel(cet));
+						}
+					}
+					
 					operationParameter.add(bodyParameter);
 
 					if(samples != null && !samples.isEmpty()) {
@@ -605,7 +627,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
 						bodyParameter.addExample(mediaType, inputExampleSerialized);
 					}
-
 				}
 			}
 
@@ -635,6 +656,21 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		swagger.setResponses(responses);
 
 		return Response.ok(Json.pretty(swagger)).build();
+	}
+	
+	public ModelImpl cetToModel(CustomEntityTemplate cet) {
+
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		ModelImpl result = new ModelImpl();
+		result.setType(cet.getCode());
+		result.setName(cet.getName());
+		result.setDescription(cet.getDescription());
+
+		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
+		result.setRequired(SwaggerHelper.getRequiredFields(cfts));
+
+		return result;
 	}
 
 	/**

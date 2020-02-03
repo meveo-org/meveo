@@ -16,7 +16,26 @@
 
 package org.meveo.api.observers;
 
-import com.github.javaparser.ast.CompilationUnit;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
@@ -46,17 +65,7 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.*;
-import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.github.javaparser.ast.CompilationUnit;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -603,6 +612,19 @@ public class OntologyObserver {
             }
         }
     }
+    
+	public String findCetJsonSchema(CustomEntityTemplate cet) throws IOException {
+
+		final File cetDir = getCetDir();
+
+		if (!cetDir.exists()) {
+			return "";
+		}
+
+		File schemaFile = new File(cetDir, cet.getCode() + ".json");
+
+		return FileUtils.readFileToString(schemaFile, StandardCharsets.UTF_8);
+	}
 
     private File getCetDir() {
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
