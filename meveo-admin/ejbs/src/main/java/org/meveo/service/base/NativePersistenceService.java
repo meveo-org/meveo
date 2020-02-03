@@ -32,7 +32,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.ejb.TransactionAttribute;
@@ -61,6 +64,8 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
@@ -209,20 +214,51 @@ public class NativePersistenceService extends BaseService {
 	 * @param queryValues Values used to filter the result
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
-	public String findIdByValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues) {
-		QueryBuilder queryBuilder = new QueryBuilder("SELECT uuid FROM " + tableName + " a ", "a");
-		queryValues.forEach((key, value) -> {
+	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
+		StringBuilder q = new StringBuilder("SELECT uuid FROM " + tableName + " as a\n");
+		
+		Map<Integer, Object> queryParamers = new HashMap<>();
+		
+		Map<String, Object> uniqueValues = new HashMap<>();
+		
+		for(CustomFieldTemplate cft : fields) {
+			if(cft.isUnique()) {
+				Object uniqueValue = Optional.ofNullable(queryValues.get(cft.getCode())).orElse(queryValues.get(cft.getDbFieldname()));
+				if(uniqueValue != null) {
+					uniqueValues.put(cft.getDbFieldname(), uniqueValue);
+				}
+			}
+		}
+		
+		if(uniqueValues.isEmpty()) {
+			return null;
+		}
+		
+		AtomicInteger i = new AtomicInteger(1);
+		uniqueValues.forEach((key, value) -> {
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
-				queryBuilder.addCriterion(key, "=", value, false);
+				if(i.get() == 1) {
+					q.append("WHERE a." + key + " = ?\n");
+				} else {
+					q.append("AND a." + key + " = ?\n");
+				}
+				queryParamers.put(i.getAndIncrement(), value);
 			}
 		});
-
-		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		
+		QueryBuilder builder = new QueryBuilder();
+		builder.setSqlString(q.toString());
+		
+		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		queryParamers.forEach((k, v) -> query.setParameter(k, v));
+		
 		try {
 			Map<String, Object> singleResult = query.getSingleResult();
 			return (String) singleResult.get("uuid");
+		
 		} catch (NoResultException | NonUniqueResultException e) {
 			return null;
+			
 		} catch (Exception e) {
 			log.error("Error executing query {}", query.getQueryString());
 			throw e;
@@ -290,9 +326,11 @@ public class NativePersistenceService extends BaseService {
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts,
 			boolean removeNullValues) throws BusinessException {
-
+		
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		return create(sqlConnectionCode, cei.getTableName(), values, returnId);
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
+		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
 	}
 
 	/**
@@ -573,13 +611,16 @@ public class NativePersistenceService extends BaseService {
 			throws BusinessException {
 
 		String tableName = cei.getTableName();
-		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-
-		if (values.get(FIELD_ID) == null) {
+		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		
+		final Map<String, Object> values = convertValue(sqlValues, cftsMap, removeNullValues, null);
+		
+		if (sqlValues.get(FIELD_ID) == null) {
 			throw new BusinessException("'uuid' field value not provided to update values in native table");
 		}
 
-		if (values.size() < 2) {
+		if (sqlValues.size() < 2) {
 			return; // Nothing to update a there is only "uuid" value inside the map
 		}
 
@@ -596,7 +637,7 @@ public class NativePersistenceService extends BaseService {
 					sql.append(",");
 				}
 				if (values.get(fieldName) == null) {
-					sql.append(fieldName).append(" IS NULL");
+					sql.append(fieldName).append(" = NULL");
 
 				} else {
 					sql.append(fieldName).append(" = ? ");
@@ -663,11 +704,16 @@ public class NativePersistenceService extends BaseService {
 
 		try {
 			if (value == null) {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid").setParameter("uuid", uuid)
-						.executeUpdate();
+				getEntityManager(sqlConnectionCode)
+					.createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+					.setParameter("uuid", uuid)
+					.executeUpdate();
 			} else {
-				getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
-						.setParameter(fieldName, value).setParameter("uuid", uuid).executeUpdate();
+				getEntityManager(sqlConnectionCode)
+					.createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+					.setParameter(fieldName, value)
+					.setParameter("uuid", uuid)
+					.executeUpdate();
 			}
 
 			CustomTableRecord record = new CustomTableRecord();
@@ -726,7 +772,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid=" + uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode)
+			.createNativeQuery("update " + tableName + " set disabled=0 where uuid= ?")
+			.setParameter(1, uuid)
+			.executeUpdate();
 	}
 
 	/**
@@ -767,7 +816,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= :uuid").setParameter("uuid", uuid).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= ?")
+			.setParameter(1, uuid)
+			.executeUpdate();
 
 		CustomTableRecord record = new CustomTableRecord();
 		record.setCetCode(tableName);
@@ -1218,12 +1269,18 @@ public class NativePersistenceService extends BaseService {
 		if (StringUtils.isBlank(value)) {
 			return null;
 		}
+		
+		if(value.equals(true)) {
+			return 1;
+		}else if(value.equals(false)) {
+			return 0;
+		}
 
 		// Nothing to cast - same data type
 		if (targetClass.isAssignableFrom(value.getClass()) && !expectedList) {
 			return value;
 		}
-
+		
 		// A list is expected as value. If value is not a list, parse value as comma
 		// separated string and convert each value separately
 		if (expectedList) {
@@ -1428,10 +1485,131 @@ public class NativePersistenceService extends BaseService {
 
 		} else if (value instanceof Boolean) {
 			ps.setBoolean(parameterIndex, (Boolean) value);
+			
+		} else if (value instanceof Integer) {
+			ps.setInt(parameterIndex, (Integer) value);
 		}
 	}
 
 	public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
 		throw new NotImplementedException();
 	}
+	
+	/**
+	 * Convert values to a data type matching field definition. Cannot be converted
+	 * to CEI as map is filtered per key not per CEI.
+	 *
+	 * @param values      A map of values with field name of customFieldTemplate
+	 *                    code as a key and field value as a value
+	 * @param fields      Field definitions with field name or field code as a key
+	 *                    and data class as a value
+	 * @param discardNull If True, null values will be discarded
+	 * @return Converted values with db field name as a key and field value as
+	 *         value.
+	 */
+    @SuppressWarnings("rawtypes")
+    public List<Map<String, Object>> convertValues(List<Map<String, Object>> values, Map<String, CustomFieldTemplate> fields, boolean discardNull) throws ValidationException {
+
+        if (values == null) {
+            return null;
+        }
+        List<Map<String, Object>> convertedValues = new LinkedList<>();
+
+        String[] datePatterns = new String[] { DateUtils.DATE_TIME_PATTERN, paramBean.getDateTimeFormat(), DateUtils.DATE_PATTERN, paramBean.getDateFormat() };
+
+        for (Map<String, Object> value : values) {
+            convertedValues.add(convertValue(value, fields, discardNull, datePatterns));
+        }
+
+        return convertedValues;
+    }
+    
+	/**
+	 * Convert values to a data type matching field definition. Cannot be converted
+	 * to CEI as map is filtered per key not per CEI.
+	 *
+	 * @param values       A map of values with customFieldTemplate code or db field
+	 *                     name as a key and field value as a value.
+	 * @param fields       Field definitions
+	 * @param discardNull  If True, null values will be discarded
+	 * @param datePatterns Optional. Date patterns to apply to a date type field.
+	 *                     Conversion is attempted in that order until a valid date
+	 *                     is matched.If no values are provided, a standard date and
+	 *                     time and then date only patterns will be applied.
+	 * @return Converted values with db field name as a key and field value as
+	 *         value.
+	 */
+    @SuppressWarnings("rawtypes")
+    public Map<String, Object> convertValue(Map<String, Object> values, Map<String, CustomFieldTemplate> fields, boolean discardNull, String[] datePatterns)
+            throws ValidationException {
+
+        if (values == null) {
+            return null;
+        }
+
+
+        Map<String, Object> valuesConverted = new HashMap<>();
+
+        // Handle ID field
+        Object uuid = values.get(FIELD_ID);
+        if (uuid != null) {
+            valuesConverted.put(FIELD_ID, castValue(uuid, Long.class, false, datePatterns));
+        }
+
+        // Convert field based on data type
+        if (fields != null) {
+            for (Entry<String, Object> valueEntry : values.entrySet()) {
+
+                String key = valueEntry.getKey();
+                if (key.equals(FIELD_ID)) {
+                    continue; // Was handled before already
+                }
+                if (valueEntry.getValue() == null && !discardNull) {
+                    valuesConverted.put(key, null);
+
+                } else if (valueEntry.getValue() != null) {
+
+                    String[] fieldInfo = key.split(" ");
+                    // String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
+                    String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1]; // field name here can be a db field name or a custom field code
+
+                    Optional<CustomFieldTemplate> customFieldTemplateOpt = fields.values()
+                    		.stream()
+                    		.filter(f -> f.getDbFieldname().equals(fieldName) || f.getCode().equals(fieldName))
+                    		.findFirst();
+
+                    if(!customFieldTemplateOpt.isPresent()){
+                        throw new ValidationException("No custom field template for " + fieldName + " was found");
+                    }
+
+                    CustomFieldTemplate customFieldTemplate = customFieldTemplateOpt.get();
+                    
+					final CustomFieldTypeEnum fieldType = customFieldTemplate
+                    		.getFieldType();
+
+                    Class dataClass = fieldType.getDataClass();
+                    if (dataClass == null) {
+                        throw new ValidationException("No field definition " + fieldName + " was found");
+                    }
+
+                    boolean isList = customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST;
+
+                    if(isList && fieldType.isStoredSerializedList()) {
+                    	isList = false;
+                    }
+
+                    Object value = castValue(valueEntry.getValue(), dataClass, isList, datePatterns);
+
+                    // Replace cft code with db field name if needed
+                    String dbFieldname = CustomFieldTemplate.getDbFieldname(fieldName);
+                    if (!fieldName.equals(dbFieldname)) {
+                        key = key.replaceAll(fieldName, dbFieldname);
+                    }
+                    valuesConverted.put(key, value);
+                }
+            }
+
+        }
+        return valuesConverted;
+    }
 }
