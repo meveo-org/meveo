@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -111,6 +112,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    @CurrentUser
+    protected MeveoUser currentUser;
 
     @Inject
     @MeveoRepository
@@ -726,7 +731,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
 
-        supplementClassPathWithMissingImports(javaSrc);
+        List<File> fileList = supplementClassPathWithMissingImports(javaSrc);
 
         String fullClassName = getFullClassname(javaSrc);
 
@@ -736,7 +741,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, fileList, ScriptInterface.class);
     }
 
     /**
@@ -747,13 +752,44 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param javaSrc Java source to compile
      */
     @SuppressWarnings("rawtypes")
-    private void supplementClassPathWithMissingImports(String javaSrc) {
+    private List<File> supplementClassPathWithMissingImports(String javaSrc) {
+
+        List<File> files = new ArrayList<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
+
+            try {
+                final int dotPos = className.lastIndexOf('.');
+                String fileName = dotPos == -1 ? className : className.substring(dotPos + 1);
+                String packageName = dotPos == -1 ? "" : className.substring(0, dotPos);
+                String pathName = packageName.replace('.', '/');
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + pathName + File.separator + fileName + ".java");
+                if (file.exists()) {
+                    String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                    org.apache.commons.io.FileUtils.write(file, content);
+                    String regexImport = "import (.*?);";
+                    Pattern patternImport = Pattern.compile(regexImport);
+                    Matcher matcherImport = patternImport.matcher(content);
+                    while (matcherImport.find()) {
+                        String nameImport = matcherImport.group(1);
+                        final int dotPosImport = nameImport.lastIndexOf('.');
+                        String fileImportName = dotPosImport == -1 ? nameImport : nameImport.substring(dotPosImport + 1);
+                        String packageImportName = dotPosImport == -1 ? "" : nameImport.substring(0, dotPosImport);
+                        String path = packageImportName.replace('.', '/');
+                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + path + File.separator + fileImportName + ".java");
+                        if (fileImport.exists()) {
+                            files.add(fileImport);
+                        }
+                    }
+                    files.add(file);
+                }
+                continue;
+            } catch (IOException e) {}
+
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
                 	Class clazz;
@@ -790,7 +826,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 log.warn("Failed to find location for class {}", className, e);
             }
         }
-
+        return files;
     }
 
     /**

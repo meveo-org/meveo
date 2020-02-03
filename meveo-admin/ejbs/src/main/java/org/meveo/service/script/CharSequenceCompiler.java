@@ -1,8 +1,11 @@
 package org.meveo.service.script;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -121,7 +124,7 @@ public class CharSequenceCompiler<T> {
     */
    public synchronized Class<T> compile(final String qualifiedClassName,
          final CharSequence javaSource,
-         final DiagnosticCollector<JavaFileObject> diagnosticsList,
+         final DiagnosticCollector<JavaFileObject> diagnosticsList, List<File> files,
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
 
@@ -132,6 +135,14 @@ public class CharSequenceCompiler<T> {
       }
       
       Map<String, CharSequence> classes = new HashMap<String, CharSequence>(1);
+      try {
+         for (File file : files) {
+               String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+               String name = "org.meveo.script." + file.getName().split("\\.")[0];
+               classes.put(name, content);
+         }
+      } catch (IOException e) {
+      }
       classes.put(qualifiedClassName, javaSource);
       Map<String, Class<T>> compiled = compile(classes, diagnosticsList);
       Class<T> newClass = compiled.get(qualifiedClassName);
@@ -188,7 +199,7 @@ public class CharSequenceCompiler<T> {
                final JavaFileObjectImpl source = new JavaFileObjectImpl(className,
                        javaSource);
                File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
-               org.apache.commons.io.FileUtils.write(classFile, javaSource);
+               FileUtils.write(classFile, javaSource);
                sources.add(source);
                fileList.add(classFile);
                // Store the source file in the FileManager via package/class
@@ -347,8 +358,8 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
     * @param relativeName
     *           the file's relative name
     * @return a FileObject from this or the delegated FileManager
-    * @see javax.tools.ForwardingJavaFileManager#getFileForInput(javax.tools.JavaFileManager.Location,
-    *      java.lang.String, java.lang.String)
+    * @see ForwardingJavaFileManager#getFileForInput(Location,
+    *      String, String)
     */
    @Override
    public FileObject getFileForInput(Location location, String packageName,
@@ -361,7 +372,7 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
 
    /**
     * Store a file that may be retrieved later with
-    * {@link #getFileForInput(javax.tools.JavaFileManager.Location, String, String)}
+    * {@link #getFileForInput(Location, String, String)}
     * 
     * @param location
     *           the file location
@@ -389,9 +400,9 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
     * Create a JavaFileImpl for an output class file and store it in the
     * classloader.
     * 
-    * @see javax.tools.ForwardingJavaFileManager#getJavaFileForOutput(javax.tools.JavaFileManager.Location,
-    *      java.lang.String, javax.tools.JavaFileObject.Kind,
-    *      javax.tools.FileObject)
+    * @see ForwardingJavaFileManager#getJavaFileForOutput(Location,
+    *      String, Kind,
+    *      FileObject)
     */
    @Override
    public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName,
@@ -402,7 +413,7 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
    }
 
    @Override
-   public ClassLoader getClassLoader(JavaFileManager.Location location) {
+   public ClassLoader getClassLoader(Location location) {
       return classLoader;
    }
 
@@ -425,14 +436,14 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
             recurse);
       ArrayList<JavaFileObject> files = new ArrayList<JavaFileObject>();
       if (location == StandardLocation.CLASS_PATH
-            && kinds.contains(JavaFileObject.Kind.CLASS)) {
+            && kinds.contains(Kind.CLASS)) {
          for (JavaFileObject file : fileObjects.values()) {
             if (file.getKind() == Kind.CLASS && file.getName().startsWith(packageName))
                files.add(file);
          }
          files.addAll(classLoader.files());
       } else if (location == StandardLocation.SOURCE_PATH
-            && kinds.contains(JavaFileObject.Kind.SOURCE)) {
+            && kinds.contains(Kind.SOURCE)) {
          for (JavaFileObject file : fileObjects.values()) {
             if (file.getKind() == Kind.SOURCE && file.getName().startsWith(packageName))
                files.add(file);
@@ -456,7 +467,7 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
  * <li>The Java compiler also creates instances (indirectly through the
  * FileManagerImplFileManager) when it wants to create a JavaFileObject for the
  * .class output. This uses the
- * {@link JavaFileObjectImpl#JavaFileObjectImpl(String, JavaFileObject.Kind)}
+ * {@link JavaFileObjectImpl#JavaFileObjectImpl(String, Kind)}
  * constructor.
  * </ol>
  * This class does not attempt to reuse instances (there does not seem to be a
@@ -500,7 +511,7 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
    /**
     * Return the source code content
     * 
-    * @see javax.tools.SimpleJavaFileObject#getCharContent(boolean)
+    * @see SimpleJavaFileObject#getCharContent(boolean)
     */
    @Override
    public CharSequence getCharContent(final boolean ignoreEncodingErrors)
@@ -513,7 +524,7 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
    /**
     * Return an input stream for reading the byte code
     * 
-    * @see javax.tools.SimpleJavaFileObject#openInputStream()
+    * @see SimpleJavaFileObject#openInputStream()
     */
    @Override
    public InputStream openInputStream() {
@@ -523,7 +534,7 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
    /**
     * Return an output stream for writing the bytecode
     * 
-    * @see javax.tools.SimpleJavaFileObject#openOutputStream()
+    * @see SimpleJavaFileObject#openOutputStream()
     */
    @Override
    public OutputStream openOutputStream() {
