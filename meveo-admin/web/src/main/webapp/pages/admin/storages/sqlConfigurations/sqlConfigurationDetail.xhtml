@@ -37,7 +37,9 @@
 				
 			<c:if test="#{sqlConfigurationBean.entity.code != 'default'}">
 				<hftl:formField label="#{messages['sqlConfiguration.url']}"
-					field="url" required="true" />
+					field="url" maxlength="255" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.schema']}"
+					field="schema" maxlength="255" required="false" />
 				<hftl:formField label="#{messages['sqlConfiguration.username']}"
 					field="username" required="true" />
 				<hftl:formField label="#{messages['sqlConfiguration.password']}"

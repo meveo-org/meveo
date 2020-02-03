@@ -143,6 +143,10 @@ public class SQLConnectionProvider {
 			config.setProperty("hibernate.c3p0.min_size", "5");
 			config.setProperty("hibernate.c3p0.acquire_increment", "5");
 			config.setProperty("hibernate.c3p0.timeout", "1800");
+			
+			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
+				config.setProperty("default_schema", sqlConfiguration.getSchema());
+			}
 
 			if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
 				config.setProperty("hibernate.dialect", sqlConfiguration.getDialect());

@@ -13,6 +13,8 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 
 /**
+ * The Class SqlConfiguration.
+ *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
  * @since 6.6.0
@@ -25,6 +27,7 @@ public class SqlConfiguration extends BusinessEntity {
 
 	private static final long serialVersionUID = 6630494504219053910L;
 
+	/** The Constant DEFAULT_SQL_CONNECTION. */
 	public transient static final String DEFAULT_SQL_CONNECTION = "default";
 
 	@NotNull
@@ -45,56 +48,140 @@ public class SqlConfiguration extends BusinessEntity {
 
 	@Column(name = "dialect")
 	private String dialect;
+	
+	/**
+	 * Schema or tablespace to use if specified.
+	 */
+	@Column(name = "schema")
+	private String schema;
 
 	@Type(type = "numeric_boolean")
 	@ColumnDefault("0")
 	@Column(name = "initialized")
 	private boolean initialized = false;
+	
+	/**
+	 * Gets the schema or tablespace to use.
+	 *
+	 * @return the schema or tablespace to use
+	 */
+	public String getSchema() {
+		return schema;
+	}
 
+	/**
+	 * Sets the schema or tablespace to use.
+	 *
+	 * @param schema the new schema or tablespace to use.
+	 */
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+
+	/**
+	 * Gets the driver class.
+	 *
+	 * @return the driver class
+	 */
 	public String getDriverClass() {
 		return driverClass;
 	}
 
+	/**
+	 * Sets the driver class.
+	 *
+	 * @param driverClass the new driver class
+	 */
 	public void setDriverClass(String driverClass) {
 		this.driverClass = driverClass;
 	}
 
+	/**
+	 * Gets the url.
+	 *
+	 * @return the url
+	 */
 	public String getUrl() {
 		return url;
 	}
 
+	/**
+	 * Sets the url.
+	 *
+	 * @param url the new url
+	 */
 	public void setUrl(String url) {
 		this.url = url;
 	}
 
+	/**
+	 * Gets the username.
+	 *
+	 * @return the username
+	 */
 	public String getUsername() {
 		return username;
 	}
 
+	/**
+	 * Sets the username.
+	 *
+	 * @param username the new username
+	 */
 	public void setUsername(String username) {
 		this.username = username;
 	}
 
+	/**
+	 * Gets the password.
+	 *
+	 * @return the password
+	 */
 	public String getPassword() {
 		return password;
 	}
 
+	/**
+	 * Sets the password.
+	 *
+	 * @param password the new password
+	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
+	/**
+	 * Gets the dialect.
+	 *
+	 * @return the dialect
+	 */
 	public String getDialect() {
 		return dialect;
 	}
 
+	/**
+	 * Sets the dialect.
+	 *
+	 * @param dialect the new dialect
+	 */
 	public void setDialect(String dialect) {
 		this.dialect = dialect;
 	}
 
+	/**
+	 * Checks if is initialized.
+	 *
+	 * @return true, if is initialized
+	 */
 	public boolean isInitialized() {
 		return initialized;
 	}
 
+	/**
+	 * Sets the initialized.
+	 *
+	 * @param initialized the new initialized
+	 */
 	public void setInitialized(boolean initialized) {
 		this.initialized = initialized;
 	}

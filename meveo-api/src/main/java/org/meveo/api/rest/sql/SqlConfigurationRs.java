@@ -91,5 +91,15 @@ public interface SqlConfigurationRs {
 	@Path("/{code}")
 	@ApiOperation("Removes an existing sqlConfiguration with a given code")
 	public ActionStatus remove(@PathParam("code") @ApiParam("code of the connection") String code);
+	
+	/**
+	 * Initializes custom tables for the given configuration
+	 * 
+	 * @param code Code of the configuration
+	 */
+	@POST
+	@Path("/{code}/initialize")
+	@ApiOperation("Initializes custom tables for the given configuration")
+	public void initialize(@PathParam("code") @ApiParam("Code of the configuration to initialize") String code);
 
 }
