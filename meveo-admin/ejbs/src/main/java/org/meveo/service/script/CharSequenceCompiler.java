@@ -148,19 +148,16 @@ public class CharSequenceCompiler<T> {
          diagnostics = new DiagnosticCollector<JavaFileObject>();
       }
       Map<String, CharSequence> classes = new HashMap<String, CharSequence>(1);
-      classes.put(qualifiedClassName, javaSource);
       try {
          for (File file : files) {
             String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-            classes.put(file.getName(), content);
-            for (String className : classes.keySet()) {
-               Class<T> newClass = loadClass(className);
-               castable(newClass, types);
-            }
+            String name = "org.meveo.model.customEntities." + file.getName().split("\\.")[0];
+            classes.put(name, content);
          }
-      } catch (ClassNotFoundException e) {
       } catch (IOException e) {
       }
+      classes.put(qualifiedClassName, javaSource);
+
       Map<String, Class<T>> compiled = compile(classes, diagnosticsList);
       Class<T> newClass = compiled.get(qualifiedClassName);
       return castable(newClass, types);
