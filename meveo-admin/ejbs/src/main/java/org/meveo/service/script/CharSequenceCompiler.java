@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.tools.*;
 import javax.tools.JavaCompiler.CompilationTask;
@@ -137,9 +139,15 @@ public class CharSequenceCompiler<T> {
       Map<String, CharSequence> classes = new HashMap<String, CharSequence>(1);
       try {
          for (File file : files) {
-               String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-               String name = "org.meveo.script." + file.getName().split("\\.")[0];
-               classes.put(name, content);
+            String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            String regex = "package (.*?);";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(content);
+            while (matcher.find()) {
+               String packageName = matcher.group(1);
+               String className = packageName + "." + file.getName().split("\\.")[0];
+               classes.put(className, content);
+            }
          }
       } catch (IOException e) {
       }

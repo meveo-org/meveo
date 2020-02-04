@@ -66,6 +66,10 @@ public class ScriptInstance extends CustomScript {
     @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<MavenDependency> mavenDependencies = new HashSet<>();
 
+    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinTable(name = "meveo_script_instance_script_instance", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "child_script_instance_id"))
+    private Set<ScriptInstance> importScriptInstances = new HashSet<ScriptInstance>();
+
     /**
      * @return the executionRoles
      */
@@ -93,5 +97,13 @@ public class ScriptInstance extends CustomScript {
 
     public void setMavenDependencies(Set<MavenDependency> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
+    }
+
+    public Set<ScriptInstance> getImportScriptInstances() {
+        return importScriptInstances;
+    }
+
+    public void setImportScriptInstances(Set<ScriptInstance> importScriptInstances) {
+        this.importScriptInstances = importScriptInstances;
     }
 }

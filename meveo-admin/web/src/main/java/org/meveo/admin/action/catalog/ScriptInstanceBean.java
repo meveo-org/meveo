@@ -377,6 +377,19 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (isUnique) {
             return null;
         }
+
+        List<String> importedScripts = scriptInstanceService.getImportScripts(getEntity().getScript());
+        List<ScriptInstance> scriptInstances = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            for (String scriptCode : importedScripts) {
+                ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptCode);
+                if (scriptInstance != null) {
+                    scriptInstances.add(scriptInstance);
+                }
+            }
+            getEntity().getImportScriptInstances().clear();
+            getEntity().getImportScriptInstances().addAll(scriptInstances);
+        }
         super.saveOrUpdate(false);
 
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();

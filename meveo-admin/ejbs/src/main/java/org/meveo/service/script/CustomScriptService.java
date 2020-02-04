@@ -50,6 +50,7 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.tools.*;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -112,6 +113,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     @Inject
     @CurrentUser
@@ -762,33 +766,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         while (matcher.find()) {
             String className = matcher.group(1);
 
-            try {
-                final int dotPos = className.lastIndexOf('.');
-                String fileName = dotPos == -1 ? className : className.substring(dotPos + 1);
-                String packageName = dotPos == -1 ? "" : className.substring(0, dotPos);
-                String pathName = packageName.replace('.', '/');
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + pathName + File.separator + fileName + ".java");
+                String name = className.replace('.', '/');
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
                 if (file.exists()) {
-                    String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                    org.apache.commons.io.FileUtils.write(file, content);
-                    String regexImport = "import (.*?);";
-                    Pattern patternImport = Pattern.compile(regexImport);
-                    Matcher matcherImport = patternImport.matcher(content);
-                    while (matcherImport.find()) {
-                        String nameImport = matcherImport.group(1);
-                        final int dotPosImport = nameImport.lastIndexOf('.');
-                        String fileImportName = dotPosImport == -1 ? nameImport : nameImport.substring(dotPosImport + 1);
-                        String packageImportName = dotPosImport == -1 ? "" : nameImport.substring(0, dotPosImport);
-                        String path = packageImportName.replace('.', '/');
-                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + path + File.separator + fileImportName + ".java");
-                        if (fileImport.exists()) {
-                            files.add(fileImport);
-                        }
-                    }
+                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
+                    populateImportScriptInstance(scriptInstance, files);
                     files.add(file);
                 }
-                continue;
-            } catch (IOException e) {}
 
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
@@ -1059,6 +1043,32 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    private void populateImportScriptInstance(ScriptInstance scriptInstance, List<File> files) {
+        if (scriptInstance != null) {
+            if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
+                for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
+                    String path = instance.getCode().replace('.', '/');
+                    populateImportScriptInstance(instance, files);
+                    File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + path + ".java");
+                    if (fileImport.exists()) {
+                        files.add(fileImport);
+                    }
+                }
+            }
+        }
+    }
+
+    public List<String> getImportScripts(String javaSource) {
+        String regexImport = "import (.*?);";
+        Pattern patternImport = Pattern.compile(regexImport);
+        Matcher matcherImport = patternImport.matcher(javaSource);
+        List<String> results = new ArrayList<>();
+        while (matcherImport.find()) {
+            String nameImport = matcherImport.group(1);
+            results.add(nameImport);
+        }
+        return results;
     }
 }
