@@ -59,6 +59,19 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	/**
+	 * Gets the {@link SQLStorageConfiguration#schema}
+	 * 
+	 * @param sqlConfigurationCode Code of the {@link SqlConfiguration}
+	 * @return
+	 */
+	public String getSchema(String sqlConfigurationCode) {
+		String sql = "SELECT schema FROM " + SqlConfiguration.class.getName() + " WHERE code =:code";
+		return getEntityManager().createQuery(sql, String.class)
+			.setParameter("code", sqlConfigurationCode)
+			.getSingleResult();
+	}
 
 	@Override
 	public void create(SqlConfiguration entity) throws BusinessException {

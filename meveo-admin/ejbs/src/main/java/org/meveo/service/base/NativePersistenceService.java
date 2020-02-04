@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +76,7 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.sql.SQLConnectionProvider;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
@@ -126,6 +128,9 @@ public class NativePersistenceService extends BaseService {
 
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
+	
+	@Inject
+	private SqlConfigurationService sqlConfigurationService;
 
 	/**
 	 * Return an entity manager for a current provider
@@ -140,7 +145,9 @@ public class NativePersistenceService extends BaseService {
 			em.joinTransaction();
 
 		} else {
-			em = sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+			em = sqlConnectionProvider.getSession(sqlConfigurationCode)
+					.getEntityManagerFactory()
+					.createEntityManager();
 
 		}
 
@@ -178,12 +185,13 @@ public class NativePersistenceService extends BaseService {
 		if(uuid == null) {
 			throw new IllegalArgumentException("UUID must be provided");
 		}
-		
+
 		try {
-
 			Session session = getEntityManager(sqlConnectionCode).unwrap(Session.class);
-
-			StringBuilder selectQuery = new StringBuilder("SELECT ");
+		
+			StringBuilder selectQuery = new StringBuilder();
+			
+			selectQuery.append("SELECT ");
 
 			if (selectFields == null) {
 				selectQuery.append("*");
@@ -196,7 +204,7 @@ public class NativePersistenceService extends BaseService {
 				selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
 			}
 
-			NativeQuery query = session.createSQLQuery(selectQuery + " FROM " + tableName + " e WHERE uuid=:uuid");
+			NativeQuery query = session.createSQLQuery(selectQuery + " FROM {h-schema}" + tableName + " e WHERE uuid=:uuid");
 			query.setParameter("uuid", uuid);
 			query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
 
@@ -210,6 +218,17 @@ public class NativePersistenceService extends BaseService {
 		}
 	}
 
+	private void setSchema(String sqlConnectionCode, Connection connection) {
+		String schema = sqlConfigurationService.getSchema(sqlConnectionCode);		
+		if(!StringUtils.isBlank(schema)) {
+			try(Statement stmt = connection.createStatement()) {
+				stmt.execute("SET SCHEMA '" + schema + "'");
+			} catch (Exception e) {
+				log.error("Can't set schema for connection {}", connection, e);
+			}
+		}
+	}
+
 	/**
 	 * Find a record uuid in table using its exact values
 	 *
@@ -218,7 +237,9 @@ public class NativePersistenceService extends BaseService {
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
 	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
-		StringBuilder q = new StringBuilder("SELECT uuid FROM " + tableName + " as a\n");
+		
+		StringBuilder q = new StringBuilder();
+		q.append("SELECT uuid FROM {h-schema}" + tableName + " as a\n");
 		
 		Map<Integer, Object> queryParamers = new HashMap<>();
 		
@@ -374,15 +395,15 @@ public class NativePersistenceService extends BaseService {
 			throw new IllegalArgumentException("No values to insert");
 		}
 
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 		try {
 
 			Object uuid = values.get(FIELD_ID);
 
 			sql.append("insert into ").append(tableName);
-			StringBuffer fields = new StringBuffer();
-			StringBuffer fieldValues = new StringBuffer();
-			StringBuffer findIdFields = new StringBuffer();
+			StringBuilder fields = new StringBuilder();
+			StringBuilder fieldValues = new StringBuilder();
+			StringBuilder findIdFields = new StringBuilder();
 
 			boolean first = true;
 			for (String fieldName : values.keySet()) {
@@ -413,7 +434,9 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
 
 			hibernateSession.doWork(connection -> {
-
+				
+				setSchema(sqlConnectionCode, connection);
+								
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
 					int parameterIndex = 1;
@@ -448,7 +471,9 @@ public class NativePersistenceService extends BaseService {
 					return (String) uuid;
 				}
 
-				Query query = getEntityManager(sqlConnectionCode).createNativeQuery("select uuid from " + tableName + " where " + findIdFields).setMaxResults(1);
+				Query query = getEntityManager(sqlConnectionCode)
+						.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields)
+						.setMaxResults(1);
 
 				for (String fieldName : values.keySet()) {
 					Object fieldValue = values.get(fieldName);
@@ -502,12 +527,12 @@ public class NativePersistenceService extends BaseService {
 			return;
 		}
 
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
 		Map<String, Object> firstValue = values.get(0);
 
 		sql.append("insert into ").append(tableName);
-		StringBuffer fields = new StringBuffer();
-		StringBuffer fieldValues = new StringBuffer();
+		StringBuilder fields = new StringBuilder();
+		StringBuilder fieldValues = new StringBuilder();
 		List<String> fieldNames = new LinkedList<>();
 
 		boolean first = true;
@@ -531,7 +556,9 @@ public class NativePersistenceService extends BaseService {
 
 			@Override
 			public void execute(Connection connection) throws SQLException {
-
+				
+				setSchema(sqlConnectionCode, connection);
+				
 				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
 
 					Object fieldValue = null;
@@ -626,7 +653,8 @@ public class NativePersistenceService extends BaseService {
 			return; // Nothing to update a there is only "uuid" value inside the map
 		}
 
-		StringBuffer sql = new StringBuffer();
+		StringBuilder sql = new StringBuilder();
+		
 		try {
 			sql.append("UPDATE ").append(tableName).append(" SET ");
 			boolean first = true;
@@ -652,6 +680,9 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
 
 			hibernateSession.doWork(connection -> {
+				
+				setSchema(sqlConnectionCode, connection);
+				
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 					int parameterIndex = 1;
 					for (String fieldName : values.keySet()) {
@@ -703,16 +734,20 @@ public class NativePersistenceService extends BaseService {
 		if (value instanceof Collection) {
 			value = JacksonUtil.toString(value);
 		}
-
+		
+		StringBuilder sql = new StringBuilder();
+		
 		try {
 			if (value == null) {
+				sql.append("update " + tableName + " set " + fieldName + "= null where uuid=:uuid");
 				getEntityManager(sqlConnectionCode)
-					.createNativeQuery("update " + tableName + " set " + fieldName + "= null where uuid=:uuid")
+					.createNativeQuery(sql.toString())
 					.setParameter("uuid", uuid)
 					.executeUpdate();
 			} else {
+				sql.append("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid");
 				getEntityManager(sqlConnectionCode)
-					.createNativeQuery("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid")
+					.createNativeQuery(sql.toString())
 					.setParameter(fieldName, value)
 					.setParameter("uuid", uuid)
 					.executeUpdate();
@@ -787,7 +822,7 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName) throws BusinessException {
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName).executeUpdate();
 
 	}
 
@@ -799,7 +834,7 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
 		for (String id : ids) {
 			CustomTableRecord record = new CustomTableRecord();
@@ -818,7 +853,7 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from " + tableName + " where uuid= ?")
+		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
 			.setParameter(1, uuid)
 			.executeUpdate();
 
@@ -953,16 +988,16 @@ public class NativePersistenceService extends BaseService {
 
 		// If no fetch fields are defined, return everyinthing
 		if (config == null || config.getFetchFields() == null) {
-			startQuery = "select * from " + tableName + " a ";
+			startQuery = "select * from {h-schema}" + tableName + " a ";
 
 		} else if (config.getFetchFields().isEmpty()) {
 			// If fetch fields are empty, only return UUID
-			startQuery = "select uuid from " + tableName + " a ";
+			startQuery = "select uuid from {h-schema}" + tableName + " a ";
 		} else {
 			StringBuilder builder = new StringBuilder("select uuid, "); // Always return UUID
 			config.getFetchFields().forEach(s -> builder.append(s).append(", "));
 			builder.delete(builder.length() - 2, builder.length());
-			startQuery = builder.append(" from ").append(tableName).append(" a ").toString();
+			startQuery = builder.append(" from {h-schema}").append(tableName).append(" a ").toString();
 		}
 
 		QueryBuilder queryBuilder = new QueryBuilder(startQuery, "a");

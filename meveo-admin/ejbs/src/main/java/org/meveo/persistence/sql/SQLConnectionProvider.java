@@ -145,7 +145,7 @@ public class SQLConnectionProvider {
 			config.setProperty("hibernate.c3p0.timeout", "1800");
 			
 			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
-				config.setProperty("default_schema", sqlConfiguration.getSchema());
+				config.setProperty("hibernate.default_schema", sqlConfiguration.getSchema());
 			}
 
 			if (StringUtils.isNotBlank(sqlConfiguration.getDialect())) {
