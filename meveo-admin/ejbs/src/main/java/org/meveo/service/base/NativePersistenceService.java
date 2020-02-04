@@ -175,7 +175,10 @@ public class NativePersistenceService extends BaseService {
 	@SuppressWarnings("unchecked")
 	@Deprecated
 	public Map<String, Object> findById(String sqlConnectionCode, String tableName, String uuid, List<String> selectFields) {
-
+		if(uuid == null) {
+			throw new IllegalArgumentException("UUID must be provided");
+		}
+		
 		try {
 
 			Session session = getEntityManager(sqlConnectionCode).unwrap(Session.class);
@@ -202,7 +205,7 @@ public class NativePersistenceService extends BaseService {
 			return values;
 
 		} catch (Exception e) {
-			log.error("Failed to retrieve values from table by uuid {}/{} sql {}", tableName, uuid, e);
+			log.error("Failed to retrieve values from table by uuid {}/{}", tableName, uuid, e);
 			throw e;
 		}
 	}
@@ -330,6 +333,8 @@ public class NativePersistenceService extends BaseService {
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
+		convertedValues.put("uuid", cei.getUuid());
+		
 		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
 	}
 
@@ -373,9 +378,6 @@ public class NativePersistenceService extends BaseService {
 		try {
 
 			Object uuid = values.get(FIELD_ID);
-			if (uuid != null) {
-				values.put(FIELD_ID, uuid);
-			}
 
 			sql.append("insert into ").append(tableName);
 			StringBuffer fields = new StringBuffer();

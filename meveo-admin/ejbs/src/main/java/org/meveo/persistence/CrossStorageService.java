@@ -520,7 +520,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCetCode(ceiToSave.getCetCode());
 		cei.setCode(ceiToSave.getCode());
 		cei.setDescription(ceiToSave.getDescription());
-
+		cei.setUuid(ceiToSave.getUuid());
+		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cei.getCetCode());
 		final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
@@ -894,17 +895,26 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 				try {
-					customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
-					uuid = cei.getUuid();
-				} catch (EntityDoesNotExistsException e) {
+					if(cei.getUuid() != null) {
+						customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
+						uuid = cei.getUuid();
+					}
+				} catch (EntityDoesNotExistsException e) {}
+				
+				if(uuid == null) {
 					Map<String, CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cei.getCet().getAppliesTo());
 					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL, true), cfts.values());
 				}
+				
 			} else {
-				CustomEntityInstance existingCei = customEntityInstanceService.findByUuid(cet.getCode(), cei.getUuid());
-				if (existingCei != null) {
-					uuid = existingCei.getUuid();
-				} else {
+				if(cei.getUuid() != null) {
+					CustomEntityInstance existingCei = customEntityInstanceService.findByUuid(cet.getCode(), cei.getUuid());
+					if (existingCei != null) {
+						uuid = existingCei.getUuid();
+					}
+				}
+				
+				if(uuid == null){
 					final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), cei.getCode(), valuesFilters);
 					if (customEntityInstance != null) {
 						uuid = customEntityInstance.getUuid();
