@@ -55,6 +55,7 @@ import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -69,13 +70,16 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.script.ScriptUtils;
 import org.meveo.service.technicalservice.endpoint.ESGenerator;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
+import org.meveo.util.ClassUtils;
 import org.meveo.util.Version;
 
 import io.swagger.models.Info;
+import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
@@ -644,6 +648,28 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		responses.put("200", response);
 
+		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && endpoint.getService() instanceof CustomScript) {
+			String returnedVariableType = ScriptUtils.getReturnedVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+
+			Model returnModelSchema;
+
+			if (ClassUtils.isPrimitiveOrWrapperType(returnedVariableType)) {
+				returnModelSchema = SwaggerHelper.buildPrimitiveResponse(endpoint.getReturnedVariableName(), returnedVariableType);
+
+			} else {
+
+				CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
+				if (returnedCet != null) {
+					returnModelSchema = cetToModel(returnedCet);
+
+				} else {
+					returnModelSchema = SwaggerHelper.buildObjectResponse(endpoint.getReturnedVariableName());
+				}
+			}
+
+			response.setResponseSchema(returnModelSchema);
+		}
+		
 		Swagger swagger = new Swagger();
 		swagger.setInfo(info);
 		swagger.setBasePath(baseUrl);

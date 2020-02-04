@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
+import io.swagger.models.Model;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.BinaryProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateProperty;
@@ -110,6 +112,24 @@ public final class SwaggerHelper {
 		if (!cfts.isEmpty()) {
 			result = cfts.entrySet().stream().filter(e -> e.getValue().isValueRequired()).map(e -> e.getValue().getCode()).collect(Collectors.toList());
 		}
+
+		return result;
+	}
+
+	public static Model buildPrimitiveResponse(String variableName, String variableType) {
+
+		ModelImpl result = new ModelImpl();
+		result.setName(variableName);
+		result.setType(variableType);
+
+		return result;
+	}
+	
+	public static Model buildObjectResponse(String variableName) {
+
+		ModelImpl result = new ModelImpl();
+		result.setName(variableName);
+		result.setType("Object");
 
 		return result;
 	}
