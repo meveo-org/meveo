@@ -329,14 +329,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      */
-    public void constructClassPath() throws IOException {
+    public static void constructClassPath() throws IOException {
         if (CLASSPATH_REFERENCE.get().length() == 0) {
             synchronized (CLASSPATH_REFERENCE) {
                 if (CLASSPATH_REFERENCE.get().length() == 0) {
                     String classpath = CLASSPATH_REFERENCE.get();
 
                     // Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+                    String thisClassfile = new Object() {}.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
                     File realFile = new File(thisClassfile);
 
@@ -376,7 +376,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                                 if (physicalLibDir.isDirectory()) {
                                     for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
                                         if (subLib.isDirectory()) {
-                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(item->CustomScriptService.getFilePath(item)).collect(Collectors.toList());
                                             classPathEntries.addAll(jars);
                                             if (subLib.getName().equals("classes")) {
                                                 classPathEntries.add(subLib.getCanonicalPath());
@@ -445,7 +445,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private String getFilePath(File jar) {
+    private static String getFilePath(File jar) {
         try {
             return jar.getCanonicalPath();
         } catch (IOException e) {
@@ -765,7 +765,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
-
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom/entities/" + fileName + ".java");
+                files.add(file);
+                continue;
+            } else {
                 String name = className.replace('.', '/');
                 File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
                 if (file.exists()) {
@@ -773,6 +778,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     populateImportScriptInstance(scriptInstance, files);
                     files.add(file);
                 }
+            }
 
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
@@ -1046,18 +1052,33 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     private void populateImportScriptInstance(ScriptInstance scriptInstance, List<File> files) {
-        if (scriptInstance != null) {
-            if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
-                for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
-                    String path = instance.getCode().replace('.', '/');
-                    populateImportScriptInstance(instance, files);
-                    File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + path + ".java");
-                    if (fileImport.exists()) {
-                        files.add(fileImport);
+        try {
+            if (scriptInstance != null) {
+                String javaSource = scriptInstance.getScript();
+                String regex = "import (.*?);";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(javaSource);
+                while (matcher.find()) {
+                    String className = matcher.group(1);
+                    if (className.startsWith("org.meveo.model.customEntities")) {
+                        String fileName = className.split("\\.")[4];
+                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom" + File.separator + "entities" + File.separator + fileName + ".java");
+                        files.add(file);
+                        continue;
+                    }
+                }
+                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
+                    for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
+                        String path = instance.getCode().replace('.', '/');
+                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts" + File.separator + path + ".java");
+                        if (fileImport.exists()) {
+                            files.add(fileImport);
+                        }
+                        populateImportScriptInstance(instance, files);
                     }
                 }
             }
-        }
+        } catch (Exception e) {}
     }
 
     public List<String> getImportScripts(String javaSource) {

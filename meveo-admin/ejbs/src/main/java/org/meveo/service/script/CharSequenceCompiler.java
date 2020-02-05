@@ -1,10 +1,10 @@
 package org.meveo.service.script;
 
 import org.apache.commons.io.FileUtils;
+import org.meveo.service.custom.CustomEntityTemplateService;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
@@ -145,8 +145,13 @@ public class CharSequenceCompiler<T> {
             Matcher matcher = pattern.matcher(content);
             while (matcher.find()) {
                String packageName = matcher.group(1);
-               String className = packageName + "." + file.getName().split("\\.")[0];
-               classes.put(className, content);
+               if (packageName.startsWith("org.meveo.model.customEntities")) {
+                  String name = "org.meveo.model.customEntities." + file.getName().split("\\.")[0];
+                  classes.put(name, content);
+               } else {
+                  String className = packageName + "." + file.getName().split("\\.")[0];
+                  classes.put(className, content);
+               }
             }
          }
       } catch (IOException e) {
@@ -206,10 +211,12 @@ public class CharSequenceCompiler<T> {
                String packageNameFile = packageName.replace('.','/');
                final JavaFileObjectImpl source = new JavaFileObjectImpl(className,
                        javaSource);
-               File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
-               FileUtils.write(classFile, javaSource);
+               if (!qualifiedClassName.startsWith("org.meveo.model.customEntities")) {
+                  File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
+                  FileUtils.write(classFile, javaSource);
+                  fileList.add(classFile);
+               }
                sources.add(source);
-               fileList.add(classFile);
                // Store the source file in the FileManager via package/class
                // name.
                // For source files, we add a .java extension
