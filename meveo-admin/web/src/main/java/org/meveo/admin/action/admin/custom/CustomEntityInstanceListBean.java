@@ -21,9 +21,6 @@ import org.primefaces.model.LazyDataModel;
 @Named
 @ViewScoped
 public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
-	
-	@Inject
-	private CurrentRepositoryProvider repositoryProvider;
 
 	private static final long serialVersionUID = 2227098775326177111L;
 
