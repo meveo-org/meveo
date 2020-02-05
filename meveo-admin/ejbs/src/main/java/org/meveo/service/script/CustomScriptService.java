@@ -63,6 +63,7 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.jgroups.protocols.FILE_PING;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
@@ -89,6 +90,7 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -109,7 +111,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+    public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -313,14 +315,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      */
-    public void constructClassPath() throws IOException {
+    public static void constructClassPath() throws IOException {
         if (CLASSPATH_REFERENCE.get().length() == 0) {
             synchronized (CLASSPATH_REFERENCE) {
                 if (CLASSPATH_REFERENCE.get().length() == 0) {
                     String classpath = CLASSPATH_REFERENCE.get();
 
                     // Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+                    String thisClassfile = new Object() {}.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
                     File realFile = new File(thisClassfile);
 
@@ -360,7 +362,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                                 if (physicalLibDir.isDirectory()) {
                                     for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
                                         if (subLib.isDirectory()) {
-                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(item->CustomScriptService.getFilePath(item)).collect(Collectors.toList());
                                             classPathEntries.addAll(jars);
                                             if (subLib.getName().equals("classes")) {
                                                 classPathEntries.add(subLib.getCanonicalPath());
@@ -429,7 +431,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private String getFilePath(File jar) {
+    private static String getFilePath(File jar) {
         try {
             return jar.getCanonicalPath();
         } catch (IOException e) {
@@ -713,13 +715,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws org.meveo.service.script.CharSequenceCompilerException char sequence
+     * @throws CharSequenceCompilerException char sequence
      *                                                                compiler
      *                                                                exception.
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
 
-        supplementClassPathWithMissingImports(javaSrc);
+        List<File> javaFiles = supplementClassPathWithMissingImports(javaSrc);
 
         String fullClassName = getFullClassname(javaSrc);
 
@@ -729,7 +731,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, javaFiles, ScriptInterface.class);
     }
 
     /**
@@ -740,24 +742,32 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param javaSrc Java source to compile
      */
     @SuppressWarnings("rawtypes")
-    private void supplementClassPathWithMissingImports(String javaSrc) {
+    private List<File> supplementClassPathWithMissingImports(String javaSrc) {
+
+        List<File> files = new ArrayList<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom/entities/" + fileName + ".java");
+                files.add(file);
+                continue;
+            }
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-                	Class clazz;
-                	
-                	try {
-	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-	                    clazz = classLoader.loadClass(className);
-                	} catch(ClassNotFoundException e) {
-                		clazz = Class.forName(className);
-                	}
-                	
+                    Class clazz;
+
+                    try {
+                        URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                        clazz = classLoader.loadClass(className);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Class.forName(className);
+                    }
+
                     try {
                         String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
                         if (location.startsWith("file:")) {
@@ -783,7 +793,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 log.warn("Failed to find location for class {}", className, e);
             }
         }
-
+        return files;
     }
 
     /**
@@ -1018,4 +1028,5 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
     }
+
 }

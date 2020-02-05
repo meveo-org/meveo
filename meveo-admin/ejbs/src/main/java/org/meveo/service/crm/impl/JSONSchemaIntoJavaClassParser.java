@@ -5,11 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
 
 import java.io.File;
 import java.io.IOException;
@@ -115,6 +111,7 @@ public class JSONSchemaIntoJavaClassParser {
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
                     if (values.get("nullable").equals(false)) {
                         fd.addMarkerAnnotation("NotNull");
+                        compilationUnit.addImport("javax.validation.constraints.NotNull");
                     }
                     classDeclaration.addMember(fd);
                     ((ArrayList<FieldDeclaration>) fds).add(fd);
@@ -122,20 +119,8 @@ public class JSONSchemaIntoJavaClassParser {
             }
             for (FieldDeclaration fieldDeclaration : fds) {
                 if (fieldDeclaration != null) {
-                    if (fieldDeclaration.toString().startsWith("private DBStorageType")) {
-                        MethodDeclaration methodDeclaration = classDeclaration.addMethod("getStorages", Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC);
-                        BlockStmt blockStmt = new BlockStmt();
-                        ReturnStmt returnStmt = new ReturnStmt();
-                        NameExpr returnNameExpr = new NameExpr();
-                        returnNameExpr.setName("storages");
-                        returnStmt.setExpression(returnNameExpr);
-                        blockStmt.addStatement(returnStmt);
-                        methodDeclaration.setBody(blockStmt);
-                        fieldDeclaration.createSetter();
-                    } else {
-                        fieldDeclaration.createGetter();
-                        fieldDeclaration.createSetter();
-                    }
+                    fieldDeclaration.createGetter();
+                    fieldDeclaration.createSetter();
                 }
             }
 
