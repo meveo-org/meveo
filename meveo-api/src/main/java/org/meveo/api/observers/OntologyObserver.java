@@ -16,7 +16,34 @@
 
 package org.meveo.api.observers;
 
-import com.github.javaparser.ast.CompilationUnit;
+import java.io.File;
+import java.io.IOException;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
+import javax.inject.Inject;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
@@ -45,18 +72,11 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.CustomScriptService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.*;
-import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.github.javaparser.ast.CompilationUnit;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -68,11 +88,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class OntologyObserver {
 
-//    @Inject
-//    private GraphQLService graphQLService;
-//
-//    @Inject
-//    private Logger log;
+    private static Logger LOGGER = LoggerFactory.getLogger(OntologyObserver.class);
 
     @Inject
     private GitClient gitClient;
@@ -116,7 +132,11 @@ public class OntologyObserver {
      */
     @PostConstruct
     public void init() {
-        updateIDL();
+        try {
+            updateIDL();
+            CustomScriptService.constructClassPath();
+        } catch (IOException e) {
+        }
     }
 
     /**
@@ -152,6 +172,8 @@ public class OntologyObserver {
 
         final File cetDir = getCetDir();
 
+        final File classDir = getClassDir();
+
         if (!cetDir.exists()) {
             cetDir.mkdirs();
             commitFiles.add(cetDir);
@@ -174,6 +196,9 @@ public class OntologyObserver {
         FileUtils.write(javaFile, compilationUnit.toString());
         commitFiles.add(javaFile);
 
+        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+        FileUtils.write(classFile, compilationUnit.toString());
+        compileClassJava(classDir, compilationUnit.toString(), classFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom entity template " + cet.getCode());
     }
 
@@ -184,12 +209,15 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws IOException, BusinessException {
+    public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws
+            IOException, BusinessException {
         hasChange.set(true);
 
         final String templateSchema = getTemplateSchema(cet);
 
         final File cetDir = getCetDir();
+
+        final File classDir = getClassDir();
 
         // This is for retro-compatibility, in case a CET created before 6.4.0 is updated
         if (!cetDir.exists()) {
@@ -215,6 +243,10 @@ public class OntologyObserver {
 
         FileUtils.write(javaFile, compilationUnit.toString());
 
+        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+        FileUtils.write(classFile, compilationUnit.toString());
+        compileClassJava(classDir, compilationUnit.toString(), classFile);
+
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
     }
 
@@ -227,6 +259,7 @@ public class OntologyObserver {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
         final File cetDir = getCetDir();
+        final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
         final File schemaFile = new File(cetDir, cet.getCode() + ".json");
@@ -239,6 +272,11 @@ public class OntologyObserver {
         if (javaFile.exists()) {
             javaFile.delete();
             fileList.add(javaFile);
+        }
+
+        final File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
+        if (classFile.exists()) {
+            classFile.delete();
         }
 
         gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
@@ -341,6 +379,8 @@ public class OntologyObserver {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             final File cetDir = getCetDir();
 
+            final File classDir = getClassDir();
+
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
             if (!cetDir.exists()) {
                 cetDir.mkdirs();
@@ -361,6 +401,10 @@ public class OntologyObserver {
                     fileList.add(javaFile);
                     CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
                     FileUtils.write(javaFile, compilationUnit.toString());
+
+                    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+                    FileUtils.write(classFile, compilationUnit.toString());
+                    compileClassJava(classDir, compilationUnit.toString(), classFile);
                 }
 
                 gitClient.commitFiles(
@@ -410,6 +454,8 @@ public class OntologyObserver {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             final File cetDir = getCetDir();
 
+            final File classDir = getClassDir();
+
             // This is for retro-compatibility, in case we update a field of a CET created before 6.4.0
             if (!cetDir.exists()) {
                 cetDir.mkdirs();
@@ -430,6 +476,11 @@ public class OntologyObserver {
                     CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
                     FileUtils.write(javaFile, compilationUnit.toString());
                     listFile.add(javaFile);
+
+                    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+                    FileUtils.write(classFile, compilationUnit.toString());
+                    compileClassJava(classDir, compilationUnit.toString(), classFile);
+
                 }
 
                 gitClient.commitFiles(
@@ -482,6 +533,8 @@ public class OntologyObserver {
 
             final File cetDir = getCetDir();
 
+            final File classDir = getClassDir();
+
             if (!cetDir.exists()) {
                 // Nothing to delete
                 return;
@@ -489,12 +542,17 @@ public class OntologyObserver {
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
+            File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
 
                 if (javaFile.exists()) {
                     javaFile.delete();
+                }
+
+                if (classFile.exists()) {
+                    classFile.delete();
                 }
 
                 gitClient.commitFiles(
@@ -590,8 +648,8 @@ public class OntologyObserver {
                     if (customRelationshipTemplate == null) {
                         String absolutePath = crtFile.getAbsolutePath();
                         CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(absolutePath);
-                        if(customRelationshipTemplateDto.getStartNodeCode() != null) {	// Make sure we parsed a valid CRT and not a CET
-                        	customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                        if (customRelationshipTemplateDto.getStartNodeCode() != null) {    // Make sure we parsed a valid CRT and not a CET
+                            customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
                         }
                     } else if (customRelationshipTemplate != null && !crtFile.exists()) {
                         customRelationshipTemplateApi.removeCustomRelationshipTemplate(code);
@@ -602,6 +660,95 @@ public class OntologyObserver {
                 }
             }
         }
+    }
+
+    public void compileClassJava(File classDir, String compilationUnit, File classFile) {
+
+        try {
+            List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
+            String classPackage = classDir.getAbsolutePath();
+            if (!StringUtils.isBlank(classPackage) && !CustomScriptService.CLASSPATH_REFERENCE.get().contains(classPackage)) {
+                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + classPackage);
+            }
+            String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
+
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            if (!classDir.exists()) {
+                classDir.mkdirs();
+            }
+
+            List<File> files = new ArrayList<>();
+            for (File file : fileList) {
+                String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                File importFile = new File(classDir, "org/meveo/model/customEntities/" + file.getName());
+                FileUtils.write(importFile, content);
+                files.add(importFile);
+            }
+            files.add(classFile);
+
+            Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(files);
+            Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            if (isOK) {
+                for (File file : files) {
+                    if (file != null) {
+                        file.delete();
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            LOGGER.error("Error compiling java class", e);
+        }
+    }
+
+    private List<File> supplementClassPathWithMissingImports(String javaSrc, String pathJava) {
+
+        List<File> files = new ArrayList<>();
+
+        String regex = "import (.*?);";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(javaSrc);
+        while (matcher.find()) {
+            String className = matcher.group(1);
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(pathJava, fileName + ".java");
+                files.add(file);
+                continue;
+            }
+            try {
+                Class clazz;
+                try {
+                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                    clazz = classLoader.loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    clazz = Class.forName(className);
+                }
+
+                try {
+                    String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
+                    if (location.startsWith("file:")) {
+                        location = location.substring(5);
+                    }
+                    if (location.endsWith("!/")) {
+                        location = location.substring(0, location.length() - 2);
+                    }
+
+                    if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
+                        synchronized (CustomScriptService.CLASSPATH_REFERENCE) {
+                            if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
+                                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+                            }
+                        }
+                    }
+
+                } catch (Exception e) {
+                }
+            } catch (Exception e) {
+            }
+        }
+        return files;
     }
 
     private File getCetDir() {
@@ -625,4 +772,8 @@ public class OntologyObserver {
         return schema.replaceAll("#/definitions", "../entities");
     }
 
+    private File getClassDir() {
+        final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
+        return classDir;
+    }
 }
