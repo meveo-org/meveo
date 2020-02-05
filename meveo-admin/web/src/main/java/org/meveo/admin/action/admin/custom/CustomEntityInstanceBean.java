@@ -20,6 +20,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
+import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -68,9 +69,11 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	@Inject
 	protected RepositoryService repositoryService;
 
-
 	@Inject
 	private CustomFieldsCacheContainerProvider cacheContainerProvider;
+	
+	@Inject
+	protected CurrentRepositoryProvider repositoryProvider;
 
 	protected CustomEntityTemplate customEntityTemplate;
 	
@@ -238,6 +241,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	public Repository getRepository() {
 		if(repository == null && repositoryCode != null) {
 			repository = this.repositoryService.findByCode(repositoryCode);
+			repositoryProvider.setRepository(repository);
 		}
 		
 		return repository;

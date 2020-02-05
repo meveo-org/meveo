@@ -55,13 +55,17 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return entity;
 	}
 	
-	public CustomEntityInstance fromMap(CustomEntityTemplate cet, Map<String, Object> values) throws BusinessException {
+	public CustomEntityInstance fromMap(CustomEntityTemplate cet, Map<String, Object> values) {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCode((String) values.get("code"));
 		cei.setCet(cet);
 		cei.setDescription((String) values.get("description"));
 		cei.setUuid((String) values.get("uuid"));
-		customFieldInstanceService.setCfValues(cei, cet.getCode(), values);
+		try {
+			customFieldInstanceService.setCfValues(cei, cet.getCode(), values);
+		} catch (BusinessException e) {
+			log.error("Error setting cf values", e);
+		}
 		
 		return cei;
 	}

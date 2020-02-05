@@ -65,6 +65,7 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -446,15 +447,6 @@ public class NativePersistenceService extends BaseService {
 							continue;
 						}
 
-						// Serialize list values
-						if (fieldValue instanceof Collection) {
-							fieldValue = JacksonUtil.toString(fieldValue);
-						}
-
-						if (fieldValue instanceof File) {
-							fieldValue = ((File) fieldValue).getAbsolutePath();
-						}
-
 						setParameterValue(ps, parameterIndex++, fieldValue);
 					}
 
@@ -488,6 +480,10 @@ public class NativePersistenceService extends BaseService {
 
 					if (fieldValue instanceof File) {
 						fieldValue = ((File) fieldValue).getAbsolutePath();
+					}
+					
+					if(fieldValue instanceof EntityReferenceWrapper) {
+						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
 					}
 
 					query.setParameter(fieldName, fieldValue);
@@ -688,15 +684,6 @@ public class NativePersistenceService extends BaseService {
 					for (String fieldName : values.keySet()) {
 						Object fieldValue = values.get(fieldName);
 						if (fieldValue != null && fieldName != "uuid") {
-							// Serialize list values
-							if (fieldValue instanceof Collection) {
-								fieldValue = JacksonUtil.toString(fieldValue);
-							}
-
-							if (fieldValue instanceof File) {
-								fieldValue = ((File) fieldValue).getAbsolutePath();
-							}
-
 							setParameterValue(ps, parameterIndex++, fieldValue);
 						}
 					}
@@ -1506,6 +1493,19 @@ public class NativePersistenceService extends BaseService {
 	 * @throws SQLException error assigning the parameter value
 	 */
 	protected void setParameterValue(PreparedStatement ps, int parameterIndex, Object value) throws SQLException {
+		
+		// Serialize list values
+		if (value instanceof Collection) {
+			value = JacksonUtil.toString(value);
+		}
+
+		if (value instanceof File) {
+			value = ((File) value).getAbsolutePath();
+		}
+		
+		if(value instanceof EntityReferenceWrapper) {
+			value = ((EntityReferenceWrapper) value).getUuid();
+		}
 
 		if (value instanceof String) {
 			ps.setString(parameterIndex, (String) value);

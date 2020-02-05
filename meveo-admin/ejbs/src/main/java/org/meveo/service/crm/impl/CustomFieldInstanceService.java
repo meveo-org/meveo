@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
@@ -52,6 +53,7 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
@@ -102,30 +104,10 @@ public class CustomFieldInstanceService extends BaseService {
     private CrossStorageService crossStorageService;
     
     @Inject
+    private CustomEntityInstanceService customEntityInstanceService;
+    
+    @Inject
     private Repository repository;
-
-    // Previous comments
-    // /**
-    // * Convert BusinessEntityWrapper to an entity by doing a lookup in DB
-    // *
-    // * @param businessEntityWrapper Business entity information
-    // * @return A BusinessEntity object
-    // */
-    // @SuppressWarnings("unchecked")
-    // public BusinessEntity convertToBusinessEntityFromCfV(EntityReferenceWrapper businessEntityWrapper) {
-    // if (businessEntityWrapper == null) {
-    // return null;
-    // }
-    // Query query = getEntityManager().createQuery("select e from " + businessEntityWrapper.getClassname() + " e where e.code=:code ");
-    // query.setParameter("code", businessEntityWrapper.getCode());
-    // query;
-    // List<BusinessEntity> entities = query.getResultList();
-    // if (entities.size() > 0) {
-    // return entities.get(0);
-    // } else {
-    // return null;
-    // }
-    // }
 
     /**
      * Find a list of entities of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
@@ -158,7 +140,9 @@ public class CustomFieldInstanceService extends BaseService {
         	String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
         	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
         	try {
-				crossStorageService.find(repository, cet, new PaginationConfiguration());
+				List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
+				entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet,  m)).collect(Collectors.toList());
+					
 			} catch (EntityDoesNotExistsException e) {
 				log.error("Missing entity", e);
 			}
