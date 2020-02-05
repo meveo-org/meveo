@@ -150,6 +150,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		List<String> selectFields;
 		Map<String, Object> values = new HashMap<>();
+		values.put("uuid", uuid);
 
 		// Retrieve only asked fields
 		if (fetchFields != null) {

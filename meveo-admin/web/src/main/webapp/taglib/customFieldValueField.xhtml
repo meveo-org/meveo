@@ -106,11 +106,18 @@
         </p:inputText>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
-        <h:outputText value="#{field.entityReferenceValueForGUI.code}" styleClass="field-value" rendered="#{!edit or disabled}" />
-        <p:autoComplete value="#{field.entityReferenceValueForGUI}" required="#{cft.valueRequired and !hasInheritedValue}" size="30" maxlength="60" dropdown="true" label="#{cft.description}" placeholder="#{cft.description}"
-            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" itemLabel="#{e.code}"
+        <h:outputText value="#{field.entityReferenceValueForGUI.code}" 
+        	styleClass="field-value" rendered="#{!edit or disabled}" />
+        <p:autoComplete value="#{field.entityReferenceValueForGUI}" 
+        	required="#{cft.valueRequired and !hasInheritedValue}" 
+        	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
+        	placeholder="#{cft.description}"
+            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" itemLabel="#{not empty e.code ? e.code : e.uuid}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
+            <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
+                <h:outputText value="#{e.uuid}" />
+            </p:column>
             <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
                 <h:outputText value="#{e.code}" />
             </p:column>
