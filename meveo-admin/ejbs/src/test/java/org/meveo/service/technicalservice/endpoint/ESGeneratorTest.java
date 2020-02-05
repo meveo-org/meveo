@@ -17,9 +17,11 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import org.junit.Test;
-import org.meveo.model.technicalservice.endpoint.*;
-
-import static org.junit.Assert.*;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.model.technicalservice.endpoint.EndpointParameter;
+import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 
 public class ESGeneratorTest {
 

@@ -15,22 +15,15 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.Updated;
-import org.meveo.keycloak.client.KeycloakAdminClientConfig;
-import org.meveo.keycloak.client.KeycloakAdminClientService;
-import org.meveo.keycloak.client.KeycloakUtils;
-import org.meveo.model.git.GitRepository;
-import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.service.base.BusinessService;
-import org.meveo.service.git.GitClient;
-import org.meveo.service.git.GitHelper;
-import org.meveo.service.git.MeveoRepository;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -42,10 +35,39 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
+import org.meveo.keycloak.client.KeycloakAdminClientConfig;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.keycloak.client.KeycloakUtils;
+import org.meveo.model.git.GitRepository;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.Sample;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.service.base.BusinessService;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
+import org.meveo.util.Version;
+
+import io.swagger.models.Info;
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.Scheme;
+import io.swagger.models.Swagger;
+import io.swagger.models.parameters.BodyParameter;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
 
 /**
  * EJB for managing technical services endpoints
@@ -269,4 +291,93 @@ public class EndpointService extends BusinessService<Endpoint> {
         endpointDir.mkdirs();
         return new File(endpointDir, endpoint.getCode() + ".js");
     }
+    
+    public Swagger generateOpenApiJson(String baseUrl, Endpoint endpoint) {
+
+		Info info = new Info();
+		info.setTitle(endpoint.getCode());
+		info.setDescription(endpoint.getDescription());
+		info.setVersion(Version.appVersion);
+
+		Map<String, Path> paths = new HashMap<>();
+		Path path = new Path();
+
+		Operation operation = new Operation();
+
+		if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
+			path.setGet(operation);
+
+		} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
+			path.setPost(operation);
+		}
+
+		if (!Objects.isNull(endpoint.getPathParameters())) {
+			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParameters()) {
+				Parameter parameter = new PathParameter();
+				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
+				path.addParameter(parameter);
+			}
+		}
+
+		paths.put(endpoint.getEndpointUrl(), path);
+
+		List<Sample> samples = endpoint.getService().getSamples();
+
+		if (!Objects.isNull(endpoint.getParametersMapping())) {
+			List<Parameter> operationParameter = new ArrayList<>();
+
+			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+
+				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
+					QueryParameter queryParameter = new QueryParameter();
+					queryParameter.setName(tsParameterMapping.getParameterName());
+					operationParameter.add(queryParameter);
+
+					if(samples != null && !samples.isEmpty()) {
+						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+						queryParameter.setExample(String.valueOf(inputExample));
+					}
+
+				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
+					BodyParameter bodyParameter = new BodyParameter();
+					bodyParameter.setName(tsParameterMapping.getParameterName());
+					operationParameter.add(bodyParameter);
+
+					if(samples != null && !samples.isEmpty()) {
+						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
+						String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+						String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
+						bodyParameter.addExample(mediaType, inputExampleSerialized);
+					}
+
+				}
+			}
+
+			operation.setParameters(operationParameter);
+		}
+
+		Map<String, io.swagger.models.Response> responses = new HashMap<>();
+		io.swagger.models.Response response = new io.swagger.models.Response();
+
+		if(samples != null && !samples.isEmpty()) {
+			Object outputExample = samples.get(0).getOutputs();
+			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+			response.example(mediaType, outputExample);
+		}
+
+		responses.put("200", response);
+
+		Swagger swagger = new Swagger();
+		swagger.setInfo(info);
+		swagger.setBasePath(baseUrl);
+		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
+		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
+		if(endpoint.getMethod() == EndpointHttpMethod.POST) {
+			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
+		}
+		swagger.setPaths(paths);
+		swagger.setResponses(responses);
+
+		return swagger;
+	}
 }
