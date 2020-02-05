@@ -17,6 +17,7 @@ package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
+import org.meveo.model.technicalservice.OutputMeveoProperty;
 
 /**
  * Description of an output property of an entity or relation.
@@ -33,6 +34,24 @@ public class OutputPropertyDto implements PropertyDescription {
     private String value;
 
     /**
+	 * Instantiates a new OutputPropertyDto
+	 *
+	 * @param p
+	 */
+	public OutputPropertyDto(OutputMeveoProperty p) {
+        setProperty(p.getCet().getCode());
+        setTrustness(p.getTrustness());
+	}
+
+	/**
+	 * Instantiates a new OutputPropertyDto
+	 *
+	 */
+	public OutputPropertyDto() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
      * @return The expected value for that property
      */
     public String getValue() {

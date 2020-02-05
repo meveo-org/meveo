@@ -5,9 +5,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.ejb.Stateless;
+import javax.ejb.AccessTimeout;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
@@ -57,6 +68,7 @@ import liquibase.changelog.DatabaseChangeLog;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.DatabaseException;
 import liquibase.exception.MigrationFailedException;
 import liquibase.precondition.core.NotPrecondition;
 import liquibase.precondition.core.PreconditionContainer;
@@ -68,10 +80,11 @@ import liquibase.statement.DatabaseFunction;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  */
-@Stateless
+@Singleton
 @TransactionManagement(TransactionManagementType.BEAN)
+@Lock(LockType.WRITE)
 public class CustomTableCreatorService implements Serializable {
 
 	private static final String UUID = "uuid";
@@ -209,7 +222,7 @@ public class CustomTableCreatorService implements Serializable {
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
+				setSchemaName(database);
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 
@@ -235,6 +248,7 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTableName DB table name
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createTable(String sqlConnectionCode, String dbTableName) {
 
 		if (PostgresReserverdKeywords.isReserved(dbTableName)) {
@@ -291,7 +305,7 @@ public class CustomTableCreatorService implements Serializable {
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
+				setSchemaName(database);
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 
@@ -303,6 +317,16 @@ public class CustomTableCreatorService implements Serializable {
 		});
 	}
 
+	private void setSchemaName(Database database) throws DatabaseException {
+		String schemaName = null;
+		Matcher matcher = Pattern.compile("currentSchema=([^&]*)").matcher(database.getConnection().getURL());
+		if(matcher.find()) {
+			schemaName = matcher.group(1);
+		}
+		database.setDefaultSchemaName(schemaName);
+		database.setLiquibaseSchemaName(schemaName);
+	}
+
 	/**
 	 * Add a field to a db table. Creates a liquibase changeset to add a field to a
 	 * table and executes it
@@ -310,6 +334,8 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTableName DB Table name
 	 * @param cft         Field definition
 	 */
+	@AccessTimeout(value = 1L, unit = TimeUnit.MINUTES)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void addField(String sqlConnectionCode, String dbTableName, CustomFieldTemplate cft) {
 
 		// Don't add field if not stored in sql
@@ -385,20 +411,28 @@ public class CustomTableCreatorService implements Serializable {
 			EntityManager em = getEntityManager(sqlConnectionCode);
 
 			Session hibernateSession = em.unwrap(Session.class);
+			
+			try {
+				CompletableFuture.runAsync(() -> {
+					hibernateSession.doWork(connection -> {
+						Database database;
+						try {
+							database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+							setSchemaName(database);
+							Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+							liquibase.update(new Contexts(), new LabelExpression());
+							liquibase.forceReleaseLocks();
 
-			hibernateSession.doWork(connection -> {
-				Database database;
-				try {
-					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
-					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-					liquibase.update(new Contexts(), new LabelExpression());
-
-				} catch (Exception e) {
-					log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
-					throw new SQLException(e);
-				}
-			});
+						} catch (Exception e) {
+							log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
+							throw new SQLException(e);
+						}
+					});
+				}).get(1, TimeUnit.MINUTES);
+			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				log.error("Failed to add field {} to custom table {} within 1 minute", e);
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -543,7 +577,7 @@ public class CustomTableCreatorService implements Serializable {
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
+				setSchemaName(database);
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 
@@ -630,7 +664,7 @@ public class CustomTableCreatorService implements Serializable {
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
+				setSchemaName(database);
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 
@@ -693,7 +727,7 @@ public class CustomTableCreatorService implements Serializable {
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-
+				setSchemaName(database);
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 

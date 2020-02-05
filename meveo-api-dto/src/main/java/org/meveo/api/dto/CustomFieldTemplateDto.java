@@ -194,7 +194,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     
     @XmlElement
     @ApiModelProperty("Whether to unique")
-    protected boolean isUnique;
+    protected boolean isUnique = false;
     
     @XmlElement
     @ApiModelProperty("Whether to filter")

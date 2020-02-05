@@ -15,6 +15,7 @@ import org.meveo.api.rest.impl.BaseCrudRs;
 import org.meveo.api.rest.sql.SqlConfigurationRs;
 import org.meveo.api.sql.SqlConfigurationApi;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.persistence.sql.SqlConfigurationService;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -27,7 +28,7 @@ public class SqlConfigurationRsImpl extends BaseCrudRs<SqlConfiguration, SqlConf
 
 	@Inject
 	private SqlConfigurationApi sqlConfigurationApi;
-
+	
 	@Override
 	public ActionStatus create(SqlConfigurationDto postData) {
 
@@ -116,5 +117,10 @@ public class SqlConfigurationRsImpl extends BaseCrudRs<SqlConfiguration, SqlConf
 	@Override
 	public BaseCrudApi<SqlConfiguration, SqlConfigurationDto> getBaseCrudApi() {
 		return sqlConfigurationApi;
+	}
+
+	@Override
+	public void initialize(String code) {
+		sqlConfigurationApi.initialize(code);
 	}
 }

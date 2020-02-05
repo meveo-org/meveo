@@ -20,9 +20,14 @@ package org.meveo.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -45,6 +50,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 /**
  * Base API service for CRUD operations on entity
@@ -225,10 +231,12 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 */
 	public void importXML(InputStream xml, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
 		XmlMapper xmlMapper = new XmlMapper();
-		List<?> entities = xmlMapper.readValue(xml, List.class);
+		xmlMapper.registerModule(new JaxbAnnotationModule());
 
+		List<?> entities = xmlMapper.readValue(xml, List.class);
 		List<T> entitiesCasted = new ArrayList<>();
 		for (Object entity : entities) {
+			
 			entitiesCasted.add(xmlMapper.convertValue(entity, dtoClass));
 		}
 

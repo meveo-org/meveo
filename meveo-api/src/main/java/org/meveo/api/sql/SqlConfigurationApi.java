@@ -137,5 +137,19 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 	public boolean exists(SqlConfigurationDto dto) {
 		return false;
 	}
+	
+	/**
+	 * Initializes custom tables for the given configuration
+	 * 
+	 * @param code Code of the configuration
+	 */
+	public void initialize(String code) {
+		SqlConfiguration conf = sqlConfigurationService.findByCode(code);
+		if(conf == null) {
+			throw new IllegalArgumentException("SQL Configuration " + code + " does not exists");
+		}
+		
+		sqlConfigurationService.initializeCet(conf);		
+	}
 
 }

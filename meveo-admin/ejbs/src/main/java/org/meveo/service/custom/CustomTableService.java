@@ -520,7 +520,7 @@ public class CustomTableService extends NativePersistenceService {
                 if(append) {
                 	lineValues = convertValue(lineValues, cfts, true, null);
                 	replaceEntityreferences(sqlConnectionCode, fields, entityReferencesCache, lineValues);
-                	String uuid = findIdByValues(sqlConnectionCode, dbTableName, lineValues);
+                	String uuid = findIdByUniqueValues(sqlConnectionCode, dbTableName, lineValues, fields);
                 	if(uuid == null) {
                 		final String tablename = SQLStorageConfiguration.getDbTablename(cet);
                 		super.createInNewTx(sqlConnectionCode, tablename, lineValues);
@@ -735,7 +735,7 @@ public class CustomTableService extends NativePersistenceService {
 		                        (String) value,
 		                        serializedValues -> {
 		                            Map<String, Object> entityRefValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
-		                            return findIdByValues(sqlConnectionCode, entityRefTableName, entityRefValues);
+		                            return findIdByUniqueValues(sqlConnectionCode, entityRefTableName, entityRefValues, fields);
 		                        }
 		                );
 
@@ -944,128 +944,13 @@ public class CustomTableService extends NativePersistenceService {
         }
     }
 
-	/**
-	 * Convert values to a data type matching field definition. Cannot be converted
-	 * to CEI as map is filtered per key not per CEI.
-	 *
-	 * @param values      A map of values with field name of customFieldTemplate
-	 *                    code as a key and field value as a value
-	 * @param fields      Field definitions with field name or field code as a key
-	 *                    and data class as a value
-	 * @param discardNull If True, null values will be discarded
-	 * @return Converted values with db field name as a key and field value as
-	 *         value.
-	 */
-    @SuppressWarnings("rawtypes")
-    public List<Map<String, Object>> convertValues(List<Map<String, Object>> values, Map<String, CustomFieldTemplate> fields, boolean discardNull) throws ValidationException {
 
-        if (values == null) {
-            return null;
-        }
-        List<Map<String, Object>> convertedValues = new LinkedList<>();
-
-        String[] datePatterns = new String[] { DateUtils.DATE_TIME_PATTERN, paramBean.getDateTimeFormat(), DateUtils.DATE_PATTERN, paramBean.getDateFormat() };
-
-        for (Map<String, Object> value : values) {
-            convertedValues.add(convertValue(value, fields, discardNull, datePatterns));
-        }
-
-        return convertedValues;
-    }
-
-	/**
-	 * Convert values to a data type matching field definition. Cannot be converted
-	 * to CEI as map is filtered per key not per CEI.
-	 *
-	 * @param values       A map of values with customFieldTemplate code or db field
-	 *                     name as a key and field value as a value.
-	 * @param fields       Field definitions
-	 * @param discardNull  If True, null values will be discarded
-	 * @param datePatterns Optional. Date patterns to apply to a date type field.
-	 *                     Conversion is attempted in that order until a valid date
-	 *                     is matched.If no values are provided, a standard date and
-	 *                     time and then date only patterns will be applied.
-	 * @return Converted values with db field name as a key and field value as
-	 *         value.
-	 */
-    @SuppressWarnings("rawtypes")
-    public Map<String, Object> convertValue(Map<String, Object> values, Map<String, CustomFieldTemplate> fields, boolean discardNull, String[] datePatterns)
-            throws ValidationException {
-
-        if (values == null) {
-            return null;
-        }
-
-
-        Map<String, Object> valuesConverted = new HashMap<>();
-
-        // Handle ID field
-        Object uuid = values.get(FIELD_ID);
-        if (uuid != null) {
-            valuesConverted.put(FIELD_ID, castValue(uuid, Long.class, false, datePatterns));
-        }
-
-        // Convert field based on data type
-        if (fields != null) {
-            for (Entry<String, Object> valueEntry : values.entrySet()) {
-
-                String key = valueEntry.getKey();
-                if (key.equals(FIELD_ID)) {
-                    continue; // Was handled before already
-                }
-                if (valueEntry.getValue() == null && !discardNull) {
-                    valuesConverted.put(key, null);
-
-                } else if (valueEntry.getValue() != null) {
-
-                    String[] fieldInfo = key.split(" ");
-                    // String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
-                    String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1]; // field name here can be a db field name or a custom field code
-
-                    Optional<CustomFieldTemplate> customFieldTemplateOpt = fields.values()
-                    		.stream()
-                    		.filter(f -> f.getDbFieldname().equals(fieldName) || f.getCode().equals(fieldName))
-                    		.findFirst();
-
-                    if(!customFieldTemplateOpt.isPresent()){
-                        throw new ValidationException("No custom field template for " + fieldName + " was found");
-                    }
-
-                    CustomFieldTemplate customFieldTemplate = customFieldTemplateOpt.get();
-                    
-					final CustomFieldTypeEnum fieldType = customFieldTemplate
-                    		.getFieldType();
-
-                    Class dataClass = fieldType.getDataClass();
-                    if (dataClass == null) {
-                        throw new ValidationException("No field definition " + fieldName + " was found");
-                    }
-
-                    boolean isList = customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST;
-
-                    if(isList && fieldType.isStoredSerializedList()) {
-                    	isList = false;
-                    }
-
-                    Object value = castValue(valueEntry.getValue(), dataClass, isList, datePatterns);
-
-                    // Replace cft code with db field name if needed
-                    String dbFieldname = CustomFieldTemplate.getDbFieldname(fieldName);
-                    if (!fieldName.equals(dbFieldname)) {
-                        key = key.replaceAll(fieldName, dbFieldname);
-                    }
-                    valuesConverted.put(key, value);
-                }
-            }
-
-        }
-        return valuesConverted;
-    }
 
     public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet) {
         return list(sqlConnectionCode, cet, null);
     }
 
+    @Override
     public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
         PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 

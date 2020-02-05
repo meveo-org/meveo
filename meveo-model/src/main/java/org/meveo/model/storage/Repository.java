@@ -21,7 +21,7 @@ import org.meveo.model.sql.SqlConfiguration;
  * Storage for logical repository separation.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.7.0
  * @since 6.3.0
  */
 @Entity
@@ -32,6 +32,8 @@ public class Repository extends BusinessEntity {
 
 	private static final long serialVersionUID = -93688572926121511L;
 
+	public transient static final String DEFAULT_REPOSITORY = "default";
+	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "parent_id")
 	private Repository parentRepository;
@@ -106,7 +108,7 @@ public class Repository extends BusinessEntity {
 
 	public String getSqlConfigurationCode() {
 
-		return sqlConfiguration == null ? null : sqlConfiguration.getCode();
+		return sqlConfiguration == null ? SqlConfiguration.DEFAULT_SQL_CONNECTION : sqlConfiguration.getCode();
 	}
 
 }

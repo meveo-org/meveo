@@ -6,6 +6,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +17,7 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.ModuleLicenseEnum;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -56,6 +59,9 @@ public class MeveoModuleDto extends BaseDataModelDto {
 
 	/** The module items. */
 	@ApiModelProperty("List of module items information")
+	@XmlElementWrapper(name = "moduleItems")
+	@XmlElement(name = "moduleItem")
+	@JsonProperty("moduleItems")
 	private List<MeveoModuleItemDto> moduleItems;
 
 	/**
