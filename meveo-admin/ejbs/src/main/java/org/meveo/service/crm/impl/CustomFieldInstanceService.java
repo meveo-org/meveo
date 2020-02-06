@@ -3,6 +3,7 @@ package org.meveo.service.crm.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -433,12 +434,42 @@ public class CustomFieldInstanceService extends BaseService {
         			Map<String, Object> valueAsMap = (Map<String, Object>) value;
         			entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
         			entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
+        			if(entityReferenceWrapper.getUuid() == null) {
+        				entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+        			}
         			
         		} else if(value instanceof String) {
         			entityReferenceWrapper.setUuid((String) value);
+        			
         		}
         		
-        		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+        		if(entityReferenceWrapper.getUuid() != null) {
+        			cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+        			
+        		} else if(value instanceof Collection) {
+        			List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
+        			for(Object item : (Collection<?>) value) {
+        				EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
+        				itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+            			
+                		if(item instanceof Map) {
+                			Map<String, Object> valueAsMap = (Map<String, Object>) item;
+                			itemWrapper.setCode((String) valueAsMap.get("code"));
+                			itemWrapper.setUuid((String) valueAsMap.get("uuid"));
+                			if(itemWrapper.getUuid() == null) {
+                    			itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+                			}
+                			
+                		} else if(item instanceof String) {
+                			itemWrapper.setUuid((String) item);
+                			
+                		}
+                		
+                		entityReferences.add(itemWrapper);
+        			}
+        			
+        			cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+        		}
         		
         	} else {
         		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
