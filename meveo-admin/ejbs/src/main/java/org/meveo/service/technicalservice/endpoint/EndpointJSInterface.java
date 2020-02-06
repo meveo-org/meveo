@@ -32,6 +32,7 @@ public class EndpointJSInterface {
 	private String endpointCode;
 	private String requestSchema;
 	private String responseSchema;
+	private String endpointDescription;
 	private String template;
 
 	public String build() {
@@ -39,7 +40,9 @@ public class EndpointJSInterface {
 
 		Map<String, String> valuesMap = new HashMap<>();
 		valuesMap.put("ENDPOINT_CODE", endpointCode);
+		valuesMap.put("ENDPOINT_DESCRIPTION", endpointDescription);
 		valuesMap.put("REQUEST_SCHEMA", requestSchema);
+		valuesMap.put("RESPONSE_SCHEMA", responseSchema);
 
 		StrSubstitutor sub = new StrSubstitutor(valuesMap);
 		sub.setVariablePrefix("#{");
@@ -77,5 +80,13 @@ public class EndpointJSInterface {
 
 	public void setEndpointCode(String endpointCode) {
 		this.endpointCode = endpointCode;
+	}
+
+	public String getEndpointDescription() {
+		return endpointDescription;
+	}
+
+	public void setEndpointDescription(String endpointDescription) {
+		this.endpointDescription = endpointDescription;
 	}
 }

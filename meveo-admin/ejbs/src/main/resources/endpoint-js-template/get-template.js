@@ -19,3 +19,13 @@ export const registerEventListeners = (
 export const getRequestSchema = async (parameters, config) => {
 	 return #{REQUEST_SCHEMA}
 };
+
+export const getResponseSchema = async (parameters, config) => {
+	return {
+		name: #{ENDPOINT_CODE}Response,
+		description: #{ENDPOINT_DESCRIPTION},
+		properties: {
+			#{RESPONSE_SCHEMA}
+		}
+	}
+}

@@ -7,10 +7,15 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
+import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.slf4j.Logger;
 
+import io.swagger.models.Response;
 import io.swagger.models.Swagger;
+import io.swagger.util.Json;
 
 /**
  * This service is use to build the endpoint interface from a template file. The
@@ -24,7 +29,10 @@ import io.swagger.models.Swagger;
 public class ESGeneratorService {
 
 	@Inject
-	private EndpointService endpointService;
+	private Logger log;
+
+	@Inject
+	private SwaggerDocService swaggerDocService;
 
 	/**
 	 * Generates an endpoint interface in js code using a template file.
@@ -39,8 +47,14 @@ public class ESGeneratorService {
 
 		EndpointJSInterface endpointJSInterface = new EndpointJSInterface();
 		endpointJSInterface.setEndpointCode(endpoint.getCode());
+		endpointJSInterface.setEndpointDescription(endpoint.getDescription());
 
-		Swagger swaggerDoc = endpointService.generateOpenApiJson(baseUrl, endpoint);
+		Swagger swaggerDoc = swaggerDocService.generateOpenApiJson(baseUrl, endpoint);
+		
+		Response response = swaggerDoc.getResponses().get("" + HttpStatus.SC_OK);
+		endpointJSInterface.setResponseSchema(Json.pretty(response.getSchema()));
+		
+		log.debug(Json.pretty(swaggerDoc));
 
 		try {
 			if (endpoint.getMethod() == EndpointHttpMethod.GET) {

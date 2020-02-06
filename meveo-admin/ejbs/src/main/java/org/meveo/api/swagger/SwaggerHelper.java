@@ -1,4 +1,4 @@
-package org.meveo.api.rest.swagger;
+package org.meveo.api.swagger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +11,6 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
 import io.swagger.models.Model;
-import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.BinaryProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateProperty;
@@ -19,6 +18,8 @@ import io.swagger.models.properties.DoubleProperty;
 import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.PropertyBuilder;
+import io.swagger.models.properties.PropertyBuilder.PropertyId;
 import io.swagger.models.properties.StringProperty;
 
 /**
@@ -99,6 +100,12 @@ public final class SwaggerHelper {
 		return result;
 	}
 
+	public static Property convertTypeToProperty(CustomFieldTemplate cft) {
+
+		Property result = new ObjectProperty();
+		return result;
+	}
+
 	/**
 	 * Retrieves a list of required {@link CustomFieldTemplate}.
 	 * 
@@ -118,19 +125,20 @@ public final class SwaggerHelper {
 
 	public static Model buildPrimitiveResponse(String variableName, String variableType) {
 
-		ModelImpl result = new ModelImpl();
-		result.setName(variableName);
-		result.setType(variableType);
-
-		return result;
+		variableType = variableType.toLowerCase();
+		Map<PropertyId, Object> props = new HashMap<>();
+		props.put(PropertyId.TITLE, variableName);
+		Property prop = PropertyBuilder.build(variableType, "", props);
+		prop.setDescription(variableName);
+		return PropertyBuilder.toModel(prop);
 	}
-	
+
 	public static Model buildObjectResponse(String variableName) {
 
-		ModelImpl result = new ModelImpl();
-		result.setName(variableName);
-		result.setType("Object");
-
-		return result;
+		Map<PropertyId, Object> props = new HashMap<>();
+		props.put(PropertyId.TITLE, variableName);
+		Property prop = PropertyBuilder.build("object", "", props);
+		prop.setDescription(variableName);
+		return PropertyBuilder.toModel(prop);
 	}
 }

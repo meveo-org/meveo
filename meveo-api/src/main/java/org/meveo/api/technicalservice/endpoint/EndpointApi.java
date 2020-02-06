@@ -41,17 +41,14 @@ import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.dto.technicalservice.endpoint.TSParameterMappingDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.observers.OntologyObserver;
-import org.meveo.api.rest.swagger.SwaggerHelper;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
+import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
-import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -60,8 +57,6 @@ import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
@@ -70,7 +65,6 @@ import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 
-import io.swagger.models.ModelImpl;
 import io.swagger.util.Json;
 
 /**
@@ -89,21 +83,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
-	
-	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
-	
-	@Inject
-	private OntologyObserver ontologyObserver;
-	
-	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
 
 	@EJB
 	private KeycloakAdminClientService keycloakAdminClientService;
 
 	@Inject
 	private ESGeneratorService esGeneratorService;
+	
+	@Inject
+	private SwaggerDocService swaggerDocService;
 	
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -159,7 +147,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return The result of the execution
 	 * @throws BusinessException if error occurs while execution
 	 */
-	@SuppressWarnings("rawtypes")
 	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
@@ -242,6 +229,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
 					}
 				} else if (parameterValue instanceof Collection) {
+					@SuppressWarnings("rawtypes")
 					Collection colValue = (Collection) parameterValue;
 					if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
 						parameterValue = colValue.iterator().next();
@@ -551,22 +539,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return Response.status(403).entity("You are not authorized to access this endpoint").build();
 		}
 
-		return Response.ok(Json.pretty(endpointService.generateOpenApiJson(baseUrl, endpoint))).build();
-	}
-	
-	public ModelImpl cetToModel(CustomEntityTemplate cet) {
-
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
-		ModelImpl result = new ModelImpl();
-		result.setType(cet.getCode());
-		result.setName(cet.getName());
-		result.setDescription(cet.getDescription());
-
-		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
-		result.setRequired(SwaggerHelper.getRequiredFields(cfts));
-
-		return result;
+		return Response.ok(Json.pretty(swaggerDocService.generateOpenApiJson(baseUrl, endpoint))).build();
 	}
 
 	/**
