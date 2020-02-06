@@ -33,6 +33,8 @@ public class EntityReferenceWrapper implements Serializable {
      * Entity code
      */
     private String code;
+    
+    private String uuid;
 
     public EntityReferenceWrapper() {
     }
@@ -54,8 +56,16 @@ public class EntityReferenceWrapper implements Serializable {
         this.classnameCode = classnameCode;
         this.code = code;
     }
+  
+    public String getUuid() {
+		return uuid;
+	}
 
-    public String getClassname() {
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public String getClassname() {
         return classname;
     }
 

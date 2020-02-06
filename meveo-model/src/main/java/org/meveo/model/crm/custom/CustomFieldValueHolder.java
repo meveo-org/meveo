@@ -248,7 +248,7 @@ public class CustomFieldValueHolder implements Serializable {
     public List<CustomFieldValue> getValues(CustomFieldTemplate cft) {
         return valuesByCode.get(cft.getCode());
     }
-
+    
     public CustomFieldValue getFirstValue(String cftCode) {
         List<CustomFieldValue> cfValues = valuesByCode.get(cftCode);
         if (cfValues != null && !cfValues.isEmpty()) {
