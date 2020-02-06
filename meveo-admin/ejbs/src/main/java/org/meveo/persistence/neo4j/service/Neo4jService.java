@@ -47,6 +47,7 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -363,11 +364,18 @@ public class Neo4jService implements CustomPersistenceService {
                 Object referencedCetValue = fieldValues.get(entityReference.getCode());
                 String referencedCetCode = entityReference.getEntityClazzCetCode();
                 CustomEntityTemplate referencedCet = customFieldsCache.getCustomEntityTemplate(referencedCetCode);
+                
+                if(referencedCetValue instanceof EntityReferenceWrapper) {
+                	EntityReferenceWrapper wrapper = (EntityReferenceWrapper) referencedCetValue;
+                	if(wrapper.getUuid() == null) {
+                		continue;
+                	}
+                }
 
                 Collection<Object> values;
                 if (entityReference.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
                     if (!(referencedCetValue instanceof Collection)) {
-                        throw new BusinessException("Value for CFT " + entityReference.getCode() + "of CET " + cet.getCode() + " should be a collection");
+                        throw new BusinessException("Value for CFT " + entityReference.getCode() + " of CET " + cet.getCode() + " should be a collection");
                     }
 
                     values = ((Collection<Object>) referencedCetValue);

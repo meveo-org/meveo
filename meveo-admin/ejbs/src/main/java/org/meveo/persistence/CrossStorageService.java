@@ -148,6 +148,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		List<String> selectFields;
 		Map<String, Object> values = new HashMap<>();
 		values.put("uuid", uuid);
+		
+		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
 		// Retrieve only asked fields
 		if (fetchFields != null) {
@@ -155,17 +157,32 @@ public class CrossStorageService implements CustomPersistenceService {
 
 			// No restrictions about fields - retrieve all fields
 		} else {
-			selectFields = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values().stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
+			selectFields = cfts.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 		}
 
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
 			if (!neo4jFields.isEmpty()) {
 				try {
-					final Map<String, Object> existingValues = neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid, neo4jFields);
+					String repoCode = repository.getNeo4jConfiguration().getCode();
+					final Map<String, Object> existingValues = neo4jDao.findNodeById(repoCode, cet.getCode(), uuid, neo4jFields);
 					if (existingValues != null) {
 						values.putAll(existingValues);
+						// We need to fetch every relationship defined as entity references
+						for(CustomFieldTemplate cft : cfts) {
+							if(cft.getStorages().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+								if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+									List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+									values.put(cft.getCode(), targets);
+									
+								} else {
+									Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+									values.put(cft.getCode(), target);
+								}
+							}
+						}
 					}
+					
 				} catch (EJBException e) {
 					if (e.getCausedByException() instanceof NoSuchRecordException) {
 						throw new EntityDoesNotExistsException(cet.getCode() + " instance with UUID : " + uuid + " does not exist in NEO4J");
