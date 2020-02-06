@@ -765,20 +765,33 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
-            if (className.startsWith("org.meveo.model.customEntities")) {
-                String fileName = className.split("\\.")[4];
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom/entities/" + fileName + ".java");
-                files.add(file);
-                continue;
-            } else {
-                String name = className.replace('.', '/');
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
-                if (file.exists()) {
-                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
-                    populateImportScriptInstance(scriptInstance, files);
+            try {
+                if (className.startsWith("org.meveo.model.customEntities")) {
+                    String fileName = className.split("\\.")[4];
+                    File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
+                    String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                    matcher = pattern.matcher(content);
+                    while (matcher.find()) {
+                        String name = matcher.group(1);
+                        if (name.startsWith("org.meveo.model.customEntities")) {
+                            String cetName = name.split("\\.")[4];
+                            File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
+                            files.add(cetFile);
+                            continue;
+                        }
+                    }
                     files.add(file);
+                    continue;
+                } else {
+                    String name = className.replace('.', '/');
+                    File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
+                    if (file.exists()) {
+                        ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
+                        populateImportScriptInstance(scriptInstance, files);
+                        files.add(file);
+                    }
                 }
-            }
+            } catch (IOException e) {}
 
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
@@ -1063,6 +1076,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     if (className.startsWith("org.meveo.model.customEntities")) {
                         String fileName = className.split("\\.")[4];
                         File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom" + File.separator + "entities" + File.separator + fileName + ".java");
+                        String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                        matcher = pattern.matcher(content);
+                        while (matcher.find()) {
+                            String name = matcher.group(1);
+                            if (name.startsWith("org.meveo.model.customEntities")) {
+                                String cetName = name.split("\\.")[4];
+                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
+                                files.add(cetFile);
+                                continue;
+                            }
+                        }
                         files.add(file);
                         continue;
                     }

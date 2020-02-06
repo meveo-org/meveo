@@ -443,6 +443,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         scriptInstanceService.compileScript(entity, true);
         if (!entity.isError()) {
             messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
+            initEntity(entity.getId());
         }
     }
 

@@ -1,7 +1,6 @@
 package org.meveo.service.script;
 
 import org.apache.commons.io.FileUtils;
-import org.meveo.service.custom.CustomEntityTemplateService;
 
 import java.io.*;
 import java.net.*;
