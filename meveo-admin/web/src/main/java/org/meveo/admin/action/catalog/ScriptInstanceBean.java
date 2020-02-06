@@ -379,6 +379,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
 
         List<String> importedScripts = scriptInstanceService.getImportScripts(getEntity().getScript());
+        getEntity().getImportScriptInstances().clear();
         List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(importedScripts)) {
             for (String scriptCode : importedScripts) {
@@ -387,7 +388,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                     scriptInstances.add(scriptInstance);
                 }
             }
-            getEntity().getImportScriptInstances().clear();
             getEntity().getImportScriptInstances().addAll(scriptInstances);
         }
         super.saveOrUpdate(false);
