@@ -9,8 +9,11 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.meveo.api.swagger.SwaggerDocService;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.script.ScriptUtils;
 import org.slf4j.Logger;
 
 import io.swagger.models.Response;
@@ -34,6 +37,9 @@ public class ESGeneratorService {
 	@Inject
 	private SwaggerDocService swaggerDocService;
 
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
+
 	/**
 	 * Generates an endpoint interface in js code using a template file.
 	 * 
@@ -49,12 +55,15 @@ public class ESGeneratorService {
 		endpointJSInterface.setEndpointCode(endpoint.getCode());
 		endpointJSInterface.setEndpointDescription(endpoint.getDescription());
 
+		String returnedVariableType = ScriptUtils.getReturnedVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+		CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
+		if (returnedCet != null) {
+			endpointJSInterface.setCet(true);
+		}
+
 		Swagger swaggerDoc = swaggerDocService.generateOpenApiJson(baseUrl, endpoint);
-		
 		Response response = swaggerDoc.getResponses().get("" + HttpStatus.SC_OK);
 		endpointJSInterface.setResponseSchema(Json.pretty(response.getSchema()));
-		
-		log.debug(Json.pretty(swaggerDoc));
 
 		try {
 			if (endpoint.getMethod() == EndpointHttpMethod.GET) {

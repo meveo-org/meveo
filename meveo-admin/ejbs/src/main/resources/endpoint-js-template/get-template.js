@@ -22,10 +22,8 @@ export const getRequestSchema = async (parameters, config) => {
 
 export const getResponseSchema = async (parameters, config) => {
 	return {
-		name: #{ENDPOINT_CODE}Response,
-		description: #{ENDPOINT_DESCRIPTION},
-		properties: {
-			#{RESPONSE_SCHEMA}
-		}
+		"name": "#{ENDPOINT_CODE}Response",
+		"description": "#{ENDPOINT_DESCRIPTION}",
+		#{RESPONSE_SCHEMA}
 	}
 }

@@ -34,6 +34,7 @@ public class EndpointJSInterface {
 	private String responseSchema;
 	private String endpointDescription;
 	private String template;
+	private boolean isCet;
 
 	public String build() {
 		StringBuilder sb = new StringBuilder(template);
@@ -42,7 +43,8 @@ public class EndpointJSInterface {
 		valuesMap.put("ENDPOINT_CODE", endpointCode);
 		valuesMap.put("ENDPOINT_DESCRIPTION", endpointDescription);
 		valuesMap.put("REQUEST_SCHEMA", requestSchema);
-		valuesMap.put("RESPONSE_SCHEMA", responseSchema);
+		String propertyFieldName = (isCet ? "\"customEntityTemplate\": " : "\"properties\": ");
+		valuesMap.put("RESPONSE_SCHEMA", propertyFieldName + responseSchema);
 
 		StrSubstitutor sub = new StrSubstitutor(valuesMap);
 		sub.setVariablePrefix("#{");
@@ -88,5 +90,13 @@ public class EndpointJSInterface {
 
 	public void setEndpointDescription(String endpointDescription) {
 		this.endpointDescription = endpointDescription;
+	}
+
+	public boolean isCet() {
+		return isCet;
+	}
+
+	public void setCet(boolean isCet) {
+		this.isCet = isCet;
 	}
 }

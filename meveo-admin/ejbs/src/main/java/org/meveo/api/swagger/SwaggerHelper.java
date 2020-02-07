@@ -19,8 +19,8 @@ import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.PropertyBuilder;
-import io.swagger.models.properties.PropertyBuilder.PropertyId;
 import io.swagger.models.properties.StringProperty;
+import io.swagger.models.properties.PropertyBuilder.PropertyId;
 
 /**
  * Utility class for Swagger documentation.
@@ -96,13 +96,8 @@ public final class SwaggerHelper {
 		}
 
 		result.setName(cft.getCode());
-
-		return result;
-	}
-
-	public static Property convertTypeToProperty(CustomFieldTemplate cft) {
-
-		Property result = new ObjectProperty();
+		result.setTitle(cft.getDescription());
+		
 		return result;
 	}
 

@@ -39,6 +39,9 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
+import io.swagger.models.properties.MapProperty;
+import io.swagger.models.properties.Property;
+import io.swagger.models.properties.StringProperty;
 
 /**
  * Service class for generating swagger documentation on the fly.
@@ -62,8 +65,6 @@ public class SwaggerDocService {
 
 		ModelImpl result = new ModelImpl();
 		result.setType("object");
-		result.setReference(cet.getCode());
-		result.setName(cet.getName());
 		result.setDescription(cet.getDescription());
 
 		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
