@@ -55,7 +55,7 @@ public class CrossStorageApi{
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public <T> T find(Repository repository, String uuid, Class<T> cetClass) throws EntityDoesNotExistsException {
 		CustomEntityTemplate cet = getCet(cetClass);
-		Map<String, Object> values = crossStorageService.find(repository, cet, uuid);
+		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
 		return JacksonUtil.convert(values, cetClass);
 	}
 

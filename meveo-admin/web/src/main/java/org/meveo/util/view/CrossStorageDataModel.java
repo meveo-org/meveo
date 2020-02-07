@@ -113,7 +113,7 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	public Map<String, Object> getRowData(String uuid) {
 
 		try {
-			return persistenceService.find(getRepository(), getCustomEntityTemplate(), uuid);
+			return persistenceService.find(getRepository(), getCustomEntityTemplate(), uuid, true);
 		} catch (EntityDoesNotExistsException e) {
 			log.error("Error retrieving detail", e);
 		}

@@ -20,6 +20,7 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 
 /**
  * CustomEntityInstance persistence service implementation.
@@ -32,6 +33,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
+	
+	@Inject
+	private CustomFieldInstanceService customFieldInstanceService;
 
 	@Override
 	public void create(CustomEntityInstance entity) throws BusinessException {
@@ -49,6 +53,21 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		entity = super.update(entity);
 
 		return entity;
+	}
+	
+	public CustomEntityInstance fromMap(CustomEntityTemplate cet, Map<String, Object> values) {
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCode((String) values.get("code"));
+		cei.setCet(cet);
+		cei.setDescription((String) values.get("description"));
+		cei.setUuid((String) values.get("uuid"));
+		try {
+			customFieldInstanceService.setCfValues(cei, cet.getCode(), values);
+		} catch (BusinessException e) {
+			log.error("Error setting cf values", e);
+		}
+		
+		return cei;
 	}
 
 	/**

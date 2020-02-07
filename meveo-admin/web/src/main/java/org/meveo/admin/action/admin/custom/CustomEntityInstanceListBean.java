@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
 
+import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -89,6 +91,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		dataModel = null;
 		filters = null;
 		Faces.addResponseCookie("repository", getRepository().getCode(), Integer.MAX_VALUE);
+		repositoryProvider.setRepository(getRepository());
 	}
 
 	public List<Repository> listRepositories() {
