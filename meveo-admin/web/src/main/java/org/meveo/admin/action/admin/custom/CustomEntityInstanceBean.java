@@ -106,7 +106,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		if (!StringUtils.isBlank(uuid)) {
 			try {
-				Map<String, Object> cfValues = crossStorageService.find(repository, customEntityTemplate, uuid);
+				Map<String, Object> cfValues = crossStorageService.find(repository, customEntityTemplate, uuid, true);
 
 				if (cfValues != null) {
 					log.debug("Loading cfValues={}", cfValues);

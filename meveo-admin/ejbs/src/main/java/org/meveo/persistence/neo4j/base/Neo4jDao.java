@@ -105,7 +105,16 @@ public class Neo4jDao {
     	return cypherHelper.execute(repo, 
     			query.toString(), 
     			Collections.singletonMap("uuid", sourceId),
-    			(t, r) -> r.single().get(0).asMap()
+    			(t, r) -> {
+    				List<Record> list = r.list();
+    				if(list.isEmpty()) {
+    					return null;
+    				} else if(list.size() > 1) {
+    					LOGGER.warn("findTarget: Multiple results found for query \n{}\nand uuid {}", query, sourceId);
+    				}
+    				
+    				return list.get(0).get(0).asMap();
+    			}
 			);
     }
     
