@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.meveo.api.swagger.SwaggerDocService;
+import org.meveo.api.swagger.SwaggerHelper;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
@@ -54,7 +55,8 @@ public class ESGeneratorService {
 		EndpointJSInterface endpointJSInterface = new EndpointJSInterface();
 		endpointJSInterface.setEndpointCode(endpoint.getCode());
 		endpointJSInterface.setEndpointDescription(endpoint.getDescription());
-
+		endpointJSInterface.setHttpMethod(endpoint.getMethod());
+		
 		String returnedVariableType = ScriptUtils.getReturnedVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 		CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
 		if (returnedCet != null) {
@@ -63,10 +65,12 @@ public class ESGeneratorService {
 
 		Swagger swaggerDoc = swaggerDocService.generateOpenApiJson(baseUrl, endpoint);
 		Response response = swaggerDoc.getResponses().get("" + HttpStatus.SC_OK);
+
 		endpointJSInterface.setResponseSchema(Json.pretty(response.getSchema()));
 
 		try {
 			if (endpoint.getMethod() == EndpointHttpMethod.GET) {
+				endpointJSInterface.setRequestSchema(Json.pretty(SwaggerHelper.getGetPathParamaters(swaggerDoc.getPaths())));
 				endpointJSInterface
 						.setTemplate(FileUtils.readFileToString(new File(ESGenerator.class.getClassLoader().getResource("endpoint-js-template/get-template.js").getFile())));
 

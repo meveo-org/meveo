@@ -1,6 +1,6 @@
 const EVENT = {
-  SUCCESS: "get${ENDPOINT_CODE}-SUCCESS",
-  ERROR: "get${ENDPOINT_CODE}-ERROR"
+  SUCCESS: "post#{ENDPOINT_CODE}-SUCCESS",
+  ERROR: "post#{ENDPOINT_CODE}-ERROR"
 };
 
 export const registerEventListeners = (
@@ -15,3 +15,15 @@ export const registerEventListeners = (
     component.addEventListener(EVENT.ERROR, errorCallback);
   }
 };
+
+export const getRequestSchema = async (parameters, config) => {
+	 return #{REQUEST_SCHEMA}
+};
+
+export const getResponseSchema = async (parameters, config) => {
+	return {
+		"name": "#{ENDPOINT_CODE}Response",
+		"description": "#{ENDPOINT_DESCRIPTION}",
+		#{RESPONSE_SCHEMA}
+	}
+}

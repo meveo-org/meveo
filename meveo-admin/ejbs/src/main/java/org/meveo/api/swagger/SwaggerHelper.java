@@ -5,12 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 
 import io.swagger.models.Model;
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.BinaryProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateProperty;
@@ -19,8 +23,8 @@ import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.PropertyBuilder;
-import io.swagger.models.properties.StringProperty;
 import io.swagger.models.properties.PropertyBuilder.PropertyId;
+import io.swagger.models.properties.StringProperty;
 
 /**
  * Utility class for Swagger documentation.
@@ -97,7 +101,7 @@ public final class SwaggerHelper {
 
 		result.setName(cft.getCode());
 		result.setTitle(cft.getDescription());
-		
+
 		return result;
 	}
 
@@ -135,5 +139,16 @@ public final class SwaggerHelper {
 		Property prop = PropertyBuilder.build("object", "", props);
 		prop.setDescription(variableName);
 		return PropertyBuilder.toModel(prop);
+	}
+
+	public static List<Parameter> getGetPathParamaters(Map<String, Path> map) {
+
+		Optional<Entry<String, Path>> getPath = map.entrySet().stream().filter(e -> e.getValue().getGet() != null).findAny();
+		if (getPath.isPresent()) {
+			Operation getOperation = getPath.get().getValue().getGet();
+			return getOperation.getParameters();
+		}
+
+		return new ArrayList<Parameter>();
 	}
 }

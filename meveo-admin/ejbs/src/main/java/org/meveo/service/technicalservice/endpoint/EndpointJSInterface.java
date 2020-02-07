@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 /**
  * Template for building an Endpoint interface in JS code.
@@ -35,6 +36,7 @@ public class EndpointJSInterface {
 	private String endpointDescription;
 	private String template;
 	private boolean isCet;
+	private EndpointHttpMethod httpMethod;
 
 	public String build() {
 		StringBuilder sb = new StringBuilder(template);
@@ -42,7 +44,11 @@ public class EndpointJSInterface {
 		Map<String, String> valuesMap = new HashMap<>();
 		valuesMap.put("ENDPOINT_CODE", endpointCode);
 		valuesMap.put("ENDPOINT_DESCRIPTION", endpointDescription);
-		valuesMap.put("REQUEST_SCHEMA", requestSchema);
+
+		if (httpMethod.equals(EndpointHttpMethod.GET)) {
+			valuesMap.put("REQUEST_SCHEMA", "\"parameters\": " + requestSchema);
+		}
+
 		String propertyFieldName = (isCet ? "\"customEntityTemplate\": " : "\"properties\": ");
 		valuesMap.put("RESPONSE_SCHEMA", propertyFieldName + responseSchema);
 
@@ -98,5 +104,13 @@ public class EndpointJSInterface {
 
 	public void setCet(boolean isCet) {
 		this.isCet = isCet;
+	}
+
+	public EndpointHttpMethod getHttpMethod() {
+		return httpMethod;
+	}
+
+	public void setHttpMethod(EndpointHttpMethod httpMethod) {
+		this.httpMethod = httpMethod;
 	}
 }
