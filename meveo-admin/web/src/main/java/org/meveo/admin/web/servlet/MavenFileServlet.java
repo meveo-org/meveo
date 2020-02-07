@@ -60,6 +60,8 @@ public class MavenFileServlet extends HttpServlet {
 	 */
 	public void initUserPath() throws ServletException {
 
+		MavenConfigurationService.construct();
+
 		// Get base path (path to get all resources from) as init parameter.
 		this.userPath = MavenConfigurationService.getM2Directory(currentUser);
 
