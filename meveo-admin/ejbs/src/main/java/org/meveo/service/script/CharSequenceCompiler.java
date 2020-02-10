@@ -1,6 +1,7 @@
 package org.meveo.service.script;
 
 import org.apache.commons.io.FileUtils;
+import org.meveo.service.custom.CustomEntityTemplateService;
 
 import java.io.*;
 import java.net.*;
@@ -188,7 +189,7 @@ public class CharSequenceCompiler<T> {
            final DiagnosticCollector<JavaFileObject> diagnosticsList)
            throws CharSequenceCompilerException {
       try {
-         File scriptsDir = CustomScriptService.getScriptsClassDir(null);
+         File scriptsDir = CustomEntityTemplateService.getClassesDir(null);
 
          if (!scriptsDir.exists()) {
             scriptsDir.mkdirs();
@@ -210,11 +211,9 @@ public class CharSequenceCompiler<T> {
                String packageNameFile = packageName.replace('.','/');
                final JavaFileObjectImpl source = new JavaFileObjectImpl(className,
                        javaSource);
-               if (!qualifiedClassName.startsWith("org.meveo.model.customEntities")) {
-                  File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
-                  FileUtils.write(classFile, javaSource);
-                  fileList.add(classFile);
-               }
+               File classFile = new File(scriptsDir, packageNameFile + File.separator + className + ".java");
+               FileUtils.write(classFile, javaSource);
+               fileList.add(classFile);
                sources.add(source);
                // Store the source file in the FileManager via package/class
                // name.
@@ -234,12 +233,9 @@ public class CharSequenceCompiler<T> {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
-            Boolean isOK = compiler.getTask(null, fileManager, diagnostics,
-                    Arrays.asList("-cp", classPath), null, compilationUnits).call();
-            if (isOK) {
-               for (File file : fileList) {
-                  file.delete();
-               }
+            compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            for (File file : fileList) {
+               file.delete();
             }
          }
       } catch (IOException e) {

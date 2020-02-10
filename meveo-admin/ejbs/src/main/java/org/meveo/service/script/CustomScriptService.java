@@ -135,8 +135,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private RepositorySystemSession defaultRepositorySystemSession;
 
-    private final static String SCRIPTS_DIR = "/scripts";
-
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -144,20 +142,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             defaultRepositorySystemSession = mavenConfigurationService.newRepositorySystemSession(defaultRepositorySystem);
         }
     }
-
-    /**
-     * @param currentUser Logged user
-     * @return the scripts directory relative to the file explorer directory for the user's provider
-     */
-    public static String getScriptsDirectory(MeveoUser currentUser) {
-        String rootDir = ParamBean.getInstance().getChrootDir(currentUser != null ? currentUser.getProviderCode() : null);
-        return rootDir + SCRIPTS_DIR;
-    }
-
-    public static File getScriptsClassDir(MeveoUser currentUser) {
-        return new File(getScriptsDirectory(currentUser));
-    }
-
 
     /**
      * Constructor.
