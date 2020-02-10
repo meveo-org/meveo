@@ -62,7 +62,7 @@ public class NativeCustomEntityInstanceService extends NativePersistenceService 
 	}
 
 	public Map<String, Object> findInCrossStorage(Repository repository, CustomEntityTemplate cet, String uuid) throws EntityDoesNotExistsException {
-		return crossStorageService.find(repository, cet, uuid);
+		return crossStorageService.find(repository, cet, uuid, true);
 	}
 	
 }

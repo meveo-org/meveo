@@ -1568,18 +1568,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 		// NOTE: For PF autocomplete seems that fake BusinessEntity object with code
 		// value filled is sufficient - it does not have to be a full loaded JPA object
 
-		// BusinessEntity convertedEntity =
-		// customFieldInstanceService.convertToBusinessEntityFromCfV(entityReferenceValue);
-		// if (convertedEntity == null) {
-		// convertedEntity = (BusinessEntity)
-		// ReflectionUtils.createObject(entityReferenceValue.getClassname());
-		// if (convertedEntity != null) {
-		// convertedEntity.setCode("NOT FOUND: " + entityReferenceValue.getCode());
-		// }
-		// } else {
-
 		try {
-			BusinessEntity convertedEntity = (BusinessEntity) ReflectionUtils.createObject(entityReferenceValue.getClassname());
+			BusinessEntity convertedEntity = entityReferenceValue.getClassname() != null
+					? (BusinessEntity) ReflectionUtils.createObject(entityReferenceValue.getClassname())
+					: null;
+					
 			if (convertedEntity != null) {
 				if (convertedEntity instanceof CustomEntityInstance) {
 					((CustomEntityInstance) convertedEntity).setCetCode(entityReferenceValue.getClassnameCode());
@@ -1587,10 +1580,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 				convertedEntity.setCode(entityReferenceValue.getCode());
 			} else {
-				Logger log = LoggerFactory.getLogger(this.getClass());
-				log.error("Unknown entity class specified " + entityReferenceValue.getClassname() + "in a custom field value {} ", entityReferenceValue);
+				convertedEntity = new BusinessEntity();
+				convertedEntity.setCode(entityReferenceValue.getCode() != null ? entityReferenceValue.getCode() : entityReferenceValue.getUuid());
 			}
-			// }
+			
 			return convertedEntity;
 
 		} catch (Exception e) {

@@ -94,6 +94,43 @@ public class Neo4jDao {
 
     @Inject
     private CypherHelper cypherHelper;
+    
+    public Map<String, Object> findTarget(String repo, String sourceId, String sourceLabel, String relationType, String targetLabel) {
+    	StringBuilder query = new StringBuilder()
+        		.append("MATCH (target:").append(targetLabel).append(")-[:")
+        		.append(relationType).append("]-(source:").append(sourceLabel).append(")\n")
+        		.append("WHERE source.meveo_uuid = $uuid\n")
+        		.append("RETURN target");
+    	
+    	return cypherHelper.execute(repo, 
+    			query.toString(), 
+    			Collections.singletonMap("uuid", sourceId),
+    			(t, r) -> {
+    				List<Record> list = r.list();
+    				if(list.isEmpty()) {
+    					return null;
+    				} else if(list.size() > 1) {
+    					LOGGER.warn("findTarget: Multiple results found for query \n{}\nand uuid {}", query, sourceId);
+    				}
+    				
+    				return list.get(0).get(0).asMap();
+    			}
+			);
+    }
+    
+    public List<Map<String, Object>> findTargets(String repo, String sourceId, String sourceLabel, String relationType, String targetLabel) {
+    	StringBuilder query = new StringBuilder()
+        		.append("MATCH (target:").append(targetLabel).append(")-[:")
+        		.append(relationType).append("]-(source:").append(sourceLabel).append(")\n")
+        		.append("WHERE source.meveo_uuid = $uuid\n")
+        		.append("RETURN target");
+    	
+    	return cypherHelper.execute(repo, 
+    			query.toString(), 
+    			Collections.singletonMap("uuid", sourceId),
+    			(t, r) -> r.list().stream().map(record -> record.get(0).asMap()).collect(Collectors.toList())
+			);
+    }
 
 	/**
 	 * Drop an unique constraint on a given label and property if it does not exists yet
@@ -418,7 +455,8 @@ public class Neo4jDao {
 
     public void updateIDL(String neo4jConfiguration, String idl) {
         Transaction transaction = null;
-
+    	LOGGER.info("Updating IDL for repository {}", neo4jConfiguration);
+    	
         try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
             if(session != null) {
                 transaction = session.beginTransaction();
@@ -426,9 +464,12 @@ public class Neo4jDao {
 
                 transaction.success();
                 transaction.close();
+                
+            	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
             } else {
                 LOGGER.warn("Repository {} not found", neo4jConfiguration);
             }
+            
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.failure();
