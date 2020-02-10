@@ -227,7 +227,7 @@ public class ScriptUtils {
 				}).collect(Collectors.toList());
 	}
 
-	public static String getReturnedVariableType(Function function, String returnVariableName) {
+	public static String findScriptVariableType(Function function, String variableName) {
 
 		if (function instanceof CustomScript) {
 			CustomScript customScript = (CustomScript) function;
@@ -243,7 +243,7 @@ public class ScriptUtils {
 
 				final List<Accessor> getters = getGetters(methods);
 
-				Optional<Accessor> returnMethod = getters.stream().filter(e -> e.getName().equals(returnVariableName)).findAny();
+				Optional<Accessor> returnMethod = getters.stream().filter(e -> e.getName().equals(variableName)).findAny();
 
 				if (returnMethod.isPresent()) {
 					return returnMethod.get().getType();

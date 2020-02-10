@@ -17,6 +17,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
@@ -24,6 +25,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptUtils;
 import org.meveo.util.ClassUtils;
 import org.meveo.util.Version;
@@ -39,9 +41,7 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
-import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
-import io.swagger.models.properties.StringProperty;
 
 /**
  * Service class for generating swagger documentation on the fly.
@@ -59,19 +59,8 @@ public class SwaggerDocService {
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
 
-	public ModelImpl cetToModel(CustomEntityTemplate cet) {
-
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
-		ModelImpl result = new ModelImpl();
-		result.setType("object");
-		result.setDescription(cet.getDescription());
-
-		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
-		result.setRequired(SwaggerHelper.getRequiredFields(cfts));
-
-		return result;
-	}
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
 
 	public Swagger generateOpenApiJson(String baseUrl, Endpoint endpoint) {
 
@@ -112,6 +101,8 @@ public class SwaggerDocService {
 				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
 					QueryParameter queryParameter = new QueryParameter();
 					queryParameter.setName(tsParameterMapping.getParameterName());
+					queryParameter.setDefaultValue(tsParameterMapping.getDefaultValue());
+					queryParameter.setFormat(ScriptUtils.findScriptVariableType(endpoint.getService(), tsParameterMapping.getEndpointParameter().getParameter()));
 					operationParameter.add(queryParameter);
 
 					if (samples != null && !samples.isEmpty()) {
@@ -122,6 +113,7 @@ public class SwaggerDocService {
 				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
 					BodyParameter bodyParameter = new BodyParameter();
 					bodyParameter.setName(tsParameterMapping.getParameterName());
+					bodyParameter.setSchema(buildBodyParameterSchema(endpoint.getService(), tsParameterMapping));
 					operationParameter.add(bodyParameter);
 
 					if (samples != null && !samples.isEmpty()) {
@@ -146,10 +138,70 @@ public class SwaggerDocService {
 			response.example(mediaType, outputExample);
 		}
 
+		buildResponseSchema(endpoint, response);
+
+		responses.put("" + HttpStatus.SC_OK, response);
+
+		Swagger swagger = new Swagger();
+		swagger.setInfo(info);
+		swagger.setBasePath(baseUrl);
+		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
+		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
+		if (endpoint.getMethod() == EndpointHttpMethod.POST) {
+			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
+		}
+		swagger.setPaths(paths);
+		swagger.setResponses(responses);
+
+		return swagger;
+	}
+
+	public ModelImpl cetToModel(CustomEntityTemplate cet) {
+
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		ModelImpl result = new ModelImpl();
+		result.setType("object");
+		result.setDescription(cet.getDescription());
+
+		Property additionalProperty = new CetProperty(cet.getCode());
+		result.setAdditionalProperties(additionalProperty);
+
+		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
+		result.setRequired(SwaggerHelper.getRequiredFields(cfts));
+
+		return result;
+	}
+
+	private Model buildBodyParameterSchema(Function service, TSParameterMapping tsParameterMapping) {
+
+		Model returnModelSchema;
+		String cetCode = tsParameterMapping.getEndpointParameter().getParameter();
+
+		if (ClassUtils.isPrimitiveOrWrapperType(cetCode)) {
+			returnModelSchema = SwaggerHelper.buildPrimitiveResponse(tsParameterMapping.getParameterName(), cetCode);
+			returnModelSchema.setReference("primitive");
+
+		} else {
+
+			CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(cetCode);
+			if (returnedCet != null) {
+				returnModelSchema = cetToModel(returnedCet);
+
+			} else {
+				returnModelSchema = SwaggerHelper.buildObjectResponse(tsParameterMapping.getParameterName());
+			}
+		}
+
+		return returnModelSchema;
+	}
+
+	private void buildResponseSchema(Endpoint endpoint, io.swagger.models.Response response) {
+
 		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && endpoint.getService() instanceof CustomScript) {
-			String returnedVariableType = ScriptUtils.getReturnedVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 
 			Model returnModelSchema;
+			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 
 			if (ClassUtils.isPrimitiveOrWrapperType(returnedVariableType)) {
 				returnModelSchema = SwaggerHelper.buildPrimitiveResponse(endpoint.getReturnedVariableName(), returnedVariableType);
@@ -168,20 +220,5 @@ public class SwaggerDocService {
 
 			response.setResponseSchema(returnModelSchema);
 		}
-
-		responses.put("" + HttpStatus.SC_OK, response);
-
-		Swagger swagger = new Swagger();
-		swagger.setInfo(info);
-		swagger.setBasePath(baseUrl);
-		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
-		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
-		if (endpoint.getMethod() == EndpointHttpMethod.POST) {
-			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
-		}
-		swagger.setPaths(paths);
-		swagger.setResponses(responses);
-
-		return swagger;
 	}
 }

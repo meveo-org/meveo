@@ -57,7 +57,7 @@ public class ESGeneratorService {
 		endpointJSInterface.setEndpointDescription(endpoint.getDescription());
 		endpointJSInterface.setHttpMethod(endpoint.getMethod());
 		
-		String returnedVariableType = ScriptUtils.getReturnedVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+		String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 		CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
 		if (returnedCet != null) {
 			endpointJSInterface.setCet(true);
@@ -75,6 +75,7 @@ public class ESGeneratorService {
 						.setTemplate(FileUtils.readFileToString(new File(ESGenerator.class.getClassLoader().getResource("endpoint-js-template/get-template.js").getFile())));
 
 			} else if (endpoint.getMethod() == EndpointHttpMethod.POST) {
+				endpointJSInterface.setRequestSchema(Json.pretty(SwaggerHelper.getPostPathParamaters(swaggerDoc.getPaths())));
 				endpointJSInterface
 						.setTemplate(FileUtils.readFileToString(new File(ESGenerator.class.getClassLoader().getResource("endpoint-js-template/post-template.js").getFile())));
 			}

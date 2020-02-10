@@ -17,8 +17,7 @@ export const registerEventListeners = (
 };
 
 export const getRequestSchema = async (parameters, config) => {
-	 return {	 
-		 return {
+	 return {
 		"name": "#{ENDPOINT_CODE}Request",
 		"description": "#{ENDPOINT_DESCRIPTION}",
 		 #{REQUEST_SCHEMA}

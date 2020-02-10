@@ -47,6 +47,9 @@ public class EndpointJSInterface {
 
 		if (httpMethod.equals(EndpointHttpMethod.GET)) {
 			valuesMap.put("REQUEST_SCHEMA", "\"parameters\": " + requestSchema);
+			
+		} else if (httpMethod.equals(EndpointHttpMethod.POST)) {
+			valuesMap.put("REQUEST_SCHEMA", "\"parameters\": " + requestSchema);
 		}
 
 		String propertyFieldName = (isCet ? "\"customEntityTemplate\": " : "\"properties\": ");

@@ -149,6 +149,17 @@ public final class SwaggerHelper {
 			return getOperation.getParameters();
 		}
 
-		return new ArrayList<Parameter>();
+		return new ArrayList<>();
+	}
+	
+	public static List<Parameter> getPostPathParamaters(Map<String, Path> map) {
+
+		Optional<Entry<String, Path>> postPath = map.entrySet().stream().filter(e -> e.getValue().getPost() != null).findAny();
+		if (postPath.isPresent()) {
+			Operation postOperation= postPath.get().getValue().getPost();
+			return postOperation.getParameters();
+		}
+
+		return new ArrayList<>();
 	}
 }
