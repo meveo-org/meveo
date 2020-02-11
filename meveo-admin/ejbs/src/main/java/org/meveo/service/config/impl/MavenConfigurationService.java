@@ -399,45 +399,74 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public static void construct() {
-		if (CLASSPATH_REFERENCE.get().length() == 0) {
-			synchronized (CLASSPATH_REFERENCE) {
-				if (CLASSPATH_REFERENCE.get().length() == 0) {
-					String classpath = CLASSPATH_REFERENCE.get();
+		try {
+			if (CLASSPATH_REFERENCE.get().length() == 0) {
+				synchronized (CLASSPATH_REFERENCE) {
+					if (CLASSPATH_REFERENCE.get().length() == 0) {
+						String classpath = CLASSPATH_REFERENCE.get();
 
-					File realFile = new File(System.getProperty("jboss.server.config.dir")).getAbsoluteFile();
-					File deploymentDir = realFile.getParentFile().getParentFile();
+						File realFile = new File(System.getProperty("jboss.server.config.dir")).getAbsoluteFile();
+						File deploymentDir = realFile.getParentFile().getParentFile();
 
-					Set<String> classPathEntries = new HashSet<>();
+						Set<String> classPathEntries = new HashSet<>();
 
-					for (File modulesDir : Objects.requireNonNull(deploymentDir.listFiles((dir, name) -> name.contains("modules")))) {
-						if (!modulesDir.isDirectory()) {
-							continue;
-						}
-
-						for (File systemDir : Objects.requireNonNull(modulesDir.listFiles((dir, name) -> name.contains("system")))) {
-							if (!systemDir.isDirectory()) {
+						for (File modulesDir : Objects.requireNonNull(deploymentDir.listFiles((dir, name) -> name.contains("modules")))) {
+							if (!modulesDir.isDirectory()) {
 								continue;
 							}
 
-							for (File layersDir : Objects.requireNonNull(systemDir.listFiles((dir, name) -> name.contains("layers")))) {
-								if (!layersDir.isDirectory()) {
+							for (File systemDir : Objects.requireNonNull(modulesDir.listFiles((dir, name) -> name.contains("system")))) {
+								if (!systemDir.isDirectory()) {
 									continue;
 								}
 
-								for (File baseDir : Objects.requireNonNull(layersDir.listFiles((dir, name) -> name.equals("base")))) {
-									if (baseDir.isDirectory()) {
-										getSubFolder(baseDir, classPathEntries);
-										classpath = String.join(File.pathSeparator, classPathEntries);
+								for (File layersDir : Objects.requireNonNull(systemDir.listFiles((dir, name) -> name.contains("layers")))) {
+									if (!layersDir.isDirectory()) {
+										continue;
+									}
+
+									for (File baseDir : Objects.requireNonNull(layersDir.listFiles((dir, name) -> name.equals("base")))) {
+										if (baseDir.isDirectory()) {
+											getSubFolder(baseDir, classPathEntries);
+										}
 									}
 								}
 							}
 						}
+
+						File deployDir = realFile.getParentFile();
+
+						for (File deploymentsDir : Objects.requireNonNull(deployDir.listFiles((dir, name) -> name.contains("deployments")))) {
+							if (!deploymentsDir.isDirectory()) {
+								continue;
+							}
+
+							for (File warDir : Objects.requireNonNull(deploymentsDir.listFiles((dir, name) -> name.contains(ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + ".war")))) {
+								if (!warDir.isDirectory()) {
+									continue;
+								}
+
+								for (File webDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.contains("WEB-INF")))) {
+									if (!webDir.isDirectory()) {
+										continue;
+									}
+
+									for (File libDir : Objects.requireNonNull(webDir.listFiles((dir, name) -> name.equals("lib")))) {
+										if (libDir.isDirectory()) {
+											for (File f : FileUtils.getFilesToProcess(libDir, "*", "jar")) {
+												classPathEntries.add(f.getCanonicalPath());
+											}
+										}
+									}
+								}
+							}
+						}
+						classpath = String.join(File.pathSeparator, classPathEntries);
+						CLASSPATH_REFERENCE.set(classpath);
 					}
-					CLASSPATH_REFERENCE.set(classpath);
 				}
 			}
-		}
-
+		} catch (IOException e) {}
 	}
 
 	private static void getSubFolder (File file, Set<String> classPathEntries) {

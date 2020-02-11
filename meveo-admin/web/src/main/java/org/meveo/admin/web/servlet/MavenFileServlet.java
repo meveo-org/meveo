@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
@@ -60,6 +61,9 @@ public class MavenFileServlet extends HttpServlet {
 	 */
 	public void initUserPath() throws ServletException {
 
+		/**
+		 * Construct classpath for maven servlet
+		 */
 		MavenConfigurationService.construct();
 
 		// Get base path (path to get all resources from) as init parameter.
@@ -138,11 +142,24 @@ public class MavenFileServlet extends HttpServlet {
 
 		// Check if file actually exists in filesystem.
 		if (!file.exists()) {
-			// Do your thing if the file appears to be non-existing.
-			// Throw an exception, or send 404, or show default/warning page, or just ignore
-			// it.
-			response.sendError(HttpServletResponse.SC_NOT_FOUND);
-			return;
+			File realFile = new File(System.getProperty("jboss.server.config.dir")).getAbsoluteFile();
+			File deploymentDir = realFile.getParentFile().getParentFile();
+			String path = deploymentDir.getAbsolutePath() + File.separator + "modules" + File.separator + "system" + File.separator + "layers" + File.separator + "base";
+			file = new File(path, URLDecoder.decode(requestedFile, "UTF-8"));
+			// Check if file actually exists in classpath.
+			if (!MavenConfigurationService.CLASSPATH_REFERENCE.get().contains(file.getAbsolutePath())) {
+				File deployDir = realFile.getParentFile();
+				String nameWarDir = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + ".war";
+				String pathFile = deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir + File.separator + "WEB-INF" + File.separator + "lib";
+				file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
+				if (!MavenConfigurationService.CLASSPATH_REFERENCE.get().contains(file.getAbsolutePath())) {
+					// Do your thing if the file appears to be non-existing.
+					// Throw an exception, or send 404, or show default/warning page, or just ignore
+					// it.
+					response.sendError(HttpServletResponse.SC_NOT_FOUND);
+					return;
+				}
+			}
 		}
 
 		// Prepare some variables. The ETag is an unique identifier of the file.
