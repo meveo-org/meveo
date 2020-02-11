@@ -37,12 +37,16 @@ public class ScriptInstanceDto extends CustomScriptDto {
     @ApiModelProperty("The sourcing roles")
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
-    @ApiModelProperty("Whether to error")
+    @ApiModelProperty("Whether the script has compilation errors")
     private Boolean error;
 
     /** The maven dependencies. */
     @ApiModelProperty("The maven dependencies")
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
+
+    /** The import script instances. */
+    @ApiModelProperty("The import script instances")
+    private List<ScriptInstanceDto> importScriptInstances = new ArrayList<>();
 
     /**
      * Instantiates a new script instance dto.
@@ -80,6 +84,12 @@ public class ScriptInstanceDto extends CustomScriptDto {
         if (scriptInstance.getMavenDependencies() != null) {
             for (MavenDependency maven : scriptInstance.getMavenDependencies() ) {
                 mavenDependencies.add(new MavenDependencyDto(maven));
+            }
+        }
+
+        if (scriptInstance.getImportScriptInstances() != null) {
+            for (ScriptInstance script : scriptInstance.getImportScriptInstances() ) {
+                importScriptInstances.add(new ScriptInstanceDto(script, script.getScript()));
             }
         }
     }
@@ -127,12 +137,40 @@ public class ScriptInstanceDto extends CustomScriptDto {
         this.sourcingRoles = sourcingRoles;
     }
 
+    /**
+     * Gets the maven dependencies.
+     *
+     * @return the mavenDependencies
+     */
     public List<MavenDependencyDto> getMavenDependencies() {
         return mavenDependencies;
     }
 
+    /**
+     * Sets the maven dependencies.
+     *
+     * @param mavenDependencies the mavenDependencies to set
+     */
     public void setMavenDependencies(List<MavenDependencyDto> mavenDependencies) {
         this.mavenDependencies = mavenDependencies;
+    }
+
+    /**
+     * Gets the import script instances.
+     *
+     * @return the importScriptInstances
+     */
+    public List<ScriptInstanceDto> getImportScriptInstances() {
+        return importScriptInstances;
+    }
+
+    /**
+     * Sets the import script instances.
+     *
+     * @param importScriptInstances the importScriptInstances to set
+     */
+    public void setImportScriptInstances(List<ScriptInstanceDto> importScriptInstances) {
+        this.importScriptInstances = importScriptInstances;
     }
 
     /* (non-Javadoc)

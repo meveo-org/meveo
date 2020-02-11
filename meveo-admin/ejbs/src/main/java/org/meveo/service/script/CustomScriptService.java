@@ -1048,6 +1048,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
+    /**
+     * Populate import script instance.
+     *
+     * @param scriptInstance script instance
+     * @param files list of files
+     */
     private void populateImportScriptInstance(ScriptInstance scriptInstance, List<File> files) {
         try {
             if (scriptInstance != null) {
@@ -1089,6 +1095,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } catch (Exception e) {}
     }
 
+    /**
+     * Return list of import scripts.
+     *
+     * @param javaSource java source
+     */
     public List<String> getImportScripts(String javaSource) {
         String regexImport = "import (.*?);";
         Pattern patternImport = Pattern.compile(regexImport);
@@ -1099,5 +1110,20 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             results.add(nameImport);
         }
         return results;
+    }
+
+    public List<ScriptInstance> populateImportScriptInstance(ScriptInstance instance) {
+        List<String> importedScripts = getImportScripts(instance.getScript());
+        instance.getImportScriptInstances().clear();
+        List<ScriptInstance> scriptInstances = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            for (String scriptCode : importedScripts) {
+                ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptCode);
+                if (scriptInstance != null) {
+                    scriptInstances.add(scriptInstance);
+                }
+            }
+        }
+        return scriptInstances;
     }
 }

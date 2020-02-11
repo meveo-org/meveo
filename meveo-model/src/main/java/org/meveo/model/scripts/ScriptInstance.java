@@ -106,10 +106,16 @@ public class ScriptInstance extends CustomScript {
         this.mavenDependencies = mavenDependencies;
     }
 
+    /**
+     * @return the importScriptInstances
+     */
     public Set<ScriptInstance> getImportScriptInstances() {
         return importScriptInstances;
     }
 
+    /**
+     * @param importScriptInstances the importScriptInstances to set
+     */
     public void setImportScriptInstances(Set<ScriptInstance> importScriptInstances) {
         this.importScriptInstances = importScriptInstances;
     }

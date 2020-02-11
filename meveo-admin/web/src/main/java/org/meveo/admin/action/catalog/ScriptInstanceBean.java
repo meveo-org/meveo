@@ -378,17 +378,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             return null;
         }
 
-        List<String> importedScripts = scriptInstanceService.getImportScripts(getEntity().getScript());
+        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity());
         getEntity().getImportScriptInstances().clear();
-        List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(importedScripts)) {
-            for (String scriptCode : importedScripts) {
-                ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptCode);
-                if (scriptInstance != null) {
-                    scriptInstances.add(scriptInstance);
-                }
-            }
-            getEntity().getImportScriptInstances().addAll(scriptInstances);
+            getEntity().getImportScriptInstances().addAll(importedScripts);
         }
         super.saveOrUpdate(false);
 
