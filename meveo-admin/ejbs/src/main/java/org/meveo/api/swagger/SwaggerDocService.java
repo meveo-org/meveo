@@ -13,7 +13,6 @@ import javax.inject.Inject;
 
 import org.apache.http.HttpStatus;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.CustomScript;
@@ -23,16 +22,13 @@ import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptUtils;
 import org.meveo.util.ClassUtils;
 import org.meveo.util.Version;
 
 import io.swagger.models.Info;
 import io.swagger.models.Model;
-import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Scheme;
@@ -41,7 +37,6 @@ import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
-import io.swagger.models.properties.Property;
 
 /**
  * Service class for generating swagger documentation on the fly.
@@ -57,10 +52,7 @@ public class SwaggerDocService {
 	private CustomEntityTemplateService customEntityTemplateService;
 
 	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
-
-	@Inject
-	private ScriptInstanceService scriptInstanceService;
+	private SwaggerHelperService swaggerHelperService;
 
 	public Swagger generateOpenApiJson(String baseUrl, Endpoint endpoint) {
 
@@ -156,40 +148,23 @@ public class SwaggerDocService {
 		return swagger;
 	}
 
-	public ModelImpl cetToModel(CustomEntityTemplate cet) {
-
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
-		ModelImpl result = new ModelImpl();
-		result.setType("object");
-		result.setDescription(cet.getDescription());
-
-		Property additionalProperty = new CetProperty(cet.getCode());
-		result.setAdditionalProperties(additionalProperty);
-
-		result.setProperties(SwaggerHelper.convertCftsToProperties(cfts));
-		result.setRequired(SwaggerHelper.getRequiredFields(cfts));
-
-		return result;
-	}
-
 	private Model buildBodyParameterSchema(Function service, TSParameterMapping tsParameterMapping) {
 
 		Model returnModelSchema;
 		String cetCode = tsParameterMapping.getEndpointParameter().getParameter();
 
 		if (ClassUtils.isPrimitiveOrWrapperType(cetCode)) {
-			returnModelSchema = SwaggerHelper.buildPrimitiveResponse(tsParameterMapping.getParameterName(), cetCode);
+			returnModelSchema = swaggerHelperService.buildPrimitiveResponse(tsParameterMapping.getParameterName(), cetCode);
 			returnModelSchema.setReference("primitive");
 
 		} else {
 
 			CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(cetCode);
 			if (returnedCet != null) {
-				returnModelSchema = cetToModel(returnedCet);
+				returnModelSchema = swaggerHelperService.cetToModel(returnedCet);
 
 			} else {
-				returnModelSchema = SwaggerHelper.buildObjectResponse(tsParameterMapping.getParameterName());
+				returnModelSchema = swaggerHelperService.buildObjectResponse(tsParameterMapping.getParameterName());
 			}
 		}
 
@@ -204,17 +179,17 @@ public class SwaggerDocService {
 			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 
 			if (ClassUtils.isPrimitiveOrWrapperType(returnedVariableType)) {
-				returnModelSchema = SwaggerHelper.buildPrimitiveResponse(endpoint.getReturnedVariableName(), returnedVariableType);
+				returnModelSchema = swaggerHelperService.buildPrimitiveResponse(endpoint.getReturnedVariableName(), returnedVariableType);
 				returnModelSchema.setReference("primitive");
 
 			} else {
 
 				CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
 				if (returnedCet != null) {
-					returnModelSchema = cetToModel(returnedCet);
+					returnModelSchema = swaggerHelperService.cetToModel(returnedCet);
 
 				} else {
-					returnModelSchema = SwaggerHelper.buildObjectResponse(endpoint.getReturnedVariableName());
+					returnModelSchema = swaggerHelperService.buildObjectResponse(endpoint.getReturnedVariableName());
 				}
 			}
 

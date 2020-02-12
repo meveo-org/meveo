@@ -8,10 +8,17 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 
 import io.swagger.models.Model;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.parameters.Parameter;
@@ -20,6 +27,7 @@ import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DoubleProperty;
 import io.swagger.models.properties.LongProperty;
+import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.PropertyBuilder;
@@ -33,13 +41,16 @@ import io.swagger.models.properties.StringProperty;
  * @since 6.8.0
  * @version 6.8.0
  */
-public final class SwaggerHelper {
+@Stateless
+public class SwaggerHelperService {
 
-	private SwaggerHelper() {
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
-	}
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
-	public static Map<String, Property> convertCftsToProperties(Map<String, CustomFieldTemplate> cfts) {
+	public Map<String, Property> convertCftsToProperties(Map<String, CustomFieldTemplate> cfts) {
 
 		Map<String, Property> result = new HashMap<>();
 
@@ -53,7 +64,7 @@ public final class SwaggerHelper {
 		return result;
 	}
 
-	public static Property convertToProperty(CustomFieldTemplate cft) {
+	public Property convertToProperty(CustomFieldTemplate cft) {
 
 		Property result = new ObjectProperty();
 
@@ -74,6 +85,7 @@ public final class SwaggerHelper {
 			result.setName(CustomFieldTypeEnum.LIST.name());
 			break;
 		case ENTITY:
+			result = buildTypeOfEntity(cft);
 			result.setName(CustomFieldTypeEnum.ENTITY.name());
 			break;
 		case TEXT_AREA:
@@ -105,6 +117,47 @@ public final class SwaggerHelper {
 		return result;
 	}
 
+	public ModelImpl cetToModel(CustomEntityTemplate cet) {
+
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		ModelImpl result = new ModelImpl();
+		result.setType("object");
+		result.setDescription(cet.getDescription());
+
+		MapProperty mapProperty = new MapProperty();
+		mapProperty.setType("cet");
+		mapProperty.setFormat(cet.getCode());
+		mapProperty.setDescription(cet.getDescription());
+		Map<String, Property> properties = convertCftsToProperties(cfts);
+		properties.put("_additionalProperties", mapProperty);
+
+		result.setProperties(properties);
+		result.setRequired(getRequiredFields(cfts));
+
+		return result;
+	}
+
+	public Property buildTypeOfEntity(CustomFieldTemplate cft) {
+
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cft.getCode());
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		ObjectProperty result = new ObjectProperty();
+	
+		MapProperty mapProperty = new MapProperty();
+		mapProperty.setType("cet");
+		mapProperty.setFormat(cet.getCode());
+		mapProperty.setDescription(cet.getDescription());
+		Map<String, Property> properties = convertCftsToProperties(cfts);
+		properties.put("_additionalProperties", mapProperty);
+
+		result.setProperties(properties);
+		result.setRequiredProperties(getRequiredFields(cfts));
+
+		return result;
+	}
+
 	/**
 	 * Retrieves a list of required {@link CustomFieldTemplate}.
 	 * 
@@ -112,7 +165,7 @@ public final class SwaggerHelper {
 	 * @return required custom fields
 	 * @see CustomFieldTemplate
 	 */
-	public static List<String> getRequiredFields(Map<String, CustomFieldTemplate> cfts) {
+	public List<String> getRequiredFields(Map<String, CustomFieldTemplate> cfts) {
 
 		List<String> result = new ArrayList<>();
 		if (!cfts.isEmpty()) {
@@ -122,7 +175,7 @@ public final class SwaggerHelper {
 		return result;
 	}
 
-	public static Model buildPrimitiveResponse(String variableName, String variableType) {
+	public Model buildPrimitiveResponse(String variableName, String variableType) {
 
 		variableType = variableType.toLowerCase();
 		Map<PropertyId, Object> props = new HashMap<>();
@@ -132,7 +185,7 @@ public final class SwaggerHelper {
 		return PropertyBuilder.toModel(prop);
 	}
 
-	public static Model buildObjectResponse(String variableName) {
+	public Model buildObjectResponse(String variableName) {
 
 		Map<PropertyId, Object> props = new HashMap<>();
 		props.put(PropertyId.TITLE, variableName);
@@ -141,7 +194,7 @@ public final class SwaggerHelper {
 		return PropertyBuilder.toModel(prop);
 	}
 
-	public static List<Parameter> getGetPathParamaters(Map<String, Path> map) {
+	public List<Parameter> getGetPathParamaters(Map<String, Path> map) {
 
 		Optional<Entry<String, Path>> getPath = map.entrySet().stream().filter(e -> e.getValue().getGet() != null).findAny();
 		if (getPath.isPresent()) {
@@ -151,12 +204,12 @@ public final class SwaggerHelper {
 
 		return new ArrayList<>();
 	}
-	
-	public static List<Parameter> getPostPathParamaters(Map<String, Path> map) {
+
+	public List<Parameter> getPostPathParamaters(Map<String, Path> map) {
 
 		Optional<Entry<String, Path>> postPath = map.entrySet().stream().filter(e -> e.getValue().getPost() != null).findAny();
 		if (postPath.isPresent()) {
-			Operation postOperation= postPath.get().getValue().getPost();
+			Operation postOperation = postPath.get().getValue().getPost();
 			return postOperation.getParameters();
 		}
 
