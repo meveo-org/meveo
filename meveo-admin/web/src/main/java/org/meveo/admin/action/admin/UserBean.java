@@ -36,8 +36,11 @@ import org.meveo.model.admin.SecuredEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.PersistenceService;
@@ -87,6 +90,9 @@ public class UserBean extends CustomFieldBean<User> {
     /** paramBeanFactory */
     @Inject
     private ParamBeanFactory paramBeanFactory;
+
+    @Inject
+    private MeveoModuleService meveoModuleService;
 
     private DualListModel<Role> rolesDM;
 
@@ -704,6 +710,16 @@ public class UserBean extends CustomFieldBean<User> {
             messages.info(new BundleKey("messages", "user.generate.successful"));
         } catch (BusinessException e) {
             messages.error(new BundleKey("messages", "user.generate.error"));
+        }
+    }
+
+    /**
+     *  Add file to selected module
+     */
+    public void addFileToModule() {
+        if (!StringUtils.isBlank(selectedFileName)) {
+            String filePath = getFilePath(selectedFileName);
+            File currentFile = new File(filePath);
         }
     }
 

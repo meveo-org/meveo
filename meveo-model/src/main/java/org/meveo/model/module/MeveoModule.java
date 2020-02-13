@@ -2,24 +2,11 @@ package org.meveo.model.module;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -54,6 +41,11 @@ public class MeveoModule extends BusinessEntity implements Serializable {
 
     @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<MeveoModuleItem> moduleItems = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "module_files", joinColumns = { @JoinColumn(name = "module_id") })
+    @Column(name = "module_file")
+    private Set<String> moduleFiles = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "module_license", nullable = false)
@@ -102,6 +94,14 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     public void removeItem(MeveoModuleItem item) {
         this.moduleItems.remove(item);
         item.setMeveoModule(null);
+    }
+
+    public Set<String> getModuleFiles() {
+        return moduleFiles;
+    }
+
+    public void setModuleFiles(Set<String> moduleFiles) {
+        this.moduleFiles = moduleFiles;
     }
 
     public ModuleLicenseEnum getLicense() {

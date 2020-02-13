@@ -24,5 +24,16 @@
     		<column name="schema" type="varchar(255)"></column>
     	</addColumn>
     </changeSet>
+
+	<changeSet id="#4046" author="Hien Bach">
+		<createTable tableName="module_files">
+			<column name="module_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column name="module_file" type="varchar(255)">
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="module_id, module_file" constraintName="module_files_pkey" tableName="module_files" />
+	</changeSet>
     
 </databaseChangeLog>

@@ -6,7 +6,7 @@
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:o="http://omnifaces.org/ui"
-	xmlns:of="http://omnifaces.org/functions"
+	xmlns:of="http://omnifaces.org/functions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
  	template="/layout/template.xhtml">
  	
  
@@ -97,6 +97,12 @@
 					</p:commandButton>
 				</p:panel>
 			</h:form>
+
+			<h:form rendered="#{userBean.canUserUpdateEntity()}">
+				<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
+								 update="addFileToModuleForm" oncomplete="PF('addFileToModuleDlg').show()">
+				</p:commandButton>
+			</h:form>
 			
 			<h:form rendered="#{userBean.selectedFileName!=null and userBean.canUserUpdateEntity()}">
                  <p:inputText id="newFilename" value="#{userBean.newFilename}"/>
@@ -138,6 +144,53 @@
                      multiple="true" mode="advanced" dragDropSupport="true"
                      fileLimit="5" update=":fileExplorer" styleClass="TexAlCenter"/>
              </h:form>
+
+			<p:dialog widgetVar="addFileToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+				<h:form id="addFileToModuleForm">
+					<h:panelGroup layout="block" styleClass="search-panel">
+						<p:outputPanel styleClass="search-panel-fields">
+							<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+								<c:if test="#{not empty converter}">
+									<f:converter converterId="#{converter}" />
+								</c:if>
+							</p:inputText>
+						</p:outputPanel>
+						<h:panelGroup layout="block" styleClass="search-panel-actions">
+							<p:commandButton id="buttonOneSearch" process="@this,addFileToModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
+							<p:commandButton id="buttonOneClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+						</h:panelGroup>
+					</h:panelGroup>
+
+					<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{userBean.meveoModule}"
+								 rowKey="#{e.id}" lazy="#{lazy}">
+						<p:column selectionMode="single" style="width:16px;text-align:center"/>
+						<p:column>
+							<f:facet name="header">
+								<h:outputText value="#{messages['BusinessEntity.code']}" />
+							</f:facet>
+							<h:outputText value="#{e['code']}" />
+						</p:column>
+						<p:column>
+							<f:facet name="header">
+								<h:outputText value="#{messages['BusinessEntity.description']}" />
+							</f:facet>
+							<h:outputText value="#{e['description']}" />
+						</p:column>
+						<f:facet name="footer">
+							<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
+											 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+											 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addFileToModuleDlg').hide()"
+											 action="#{userBean.addFileToModule}">
+								<p:resetInput target="@form" />
+							</p:commandButton>
+							<p:commandButton value="#{messages['commons.close']}" update="@form"
+											 oncomplete="PF('addFileToModuleDlg').hide()">
+								<p:resetInput target="@form" />
+							</p:commandButton>
+						</f:facet>
+					</p:dataTable>
+				</h:form>
+			</p:dialog>
 		</p:panel>
 	</ui:define>
 
