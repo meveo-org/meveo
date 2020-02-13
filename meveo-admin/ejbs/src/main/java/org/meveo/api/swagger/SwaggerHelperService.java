@@ -104,6 +104,7 @@ public class SwaggerHelperService {
 			result = new BooleanProperty();
 			break;
 		case EMBEDDED_ENTITY:
+			result = buildTypeOfEntity(cft);
 			result.setName(CustomFieldTypeEnum.EMBEDDED_ENTITY.name());
 			break;
 		case BINARY:
@@ -140,7 +141,11 @@ public class SwaggerHelperService {
 
 	public Property buildTypeOfEntity(CustomFieldTemplate cft) {
 
-		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cft.getCode());
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+		if(cet == null) {
+			return null;
+		}
+		
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		ObjectProperty result = new ObjectProperty();
