@@ -714,12 +714,19 @@ public class UserBean extends CustomFieldBean<User> {
     }
 
     /**
-     *  Add file to selected module
+     *  Add file/folder to selected module
      */
     public void addFileToModule() {
         if (!StringUtils.isBlank(selectedFileName)) {
-            String filePath = getFilePath(selectedFileName);
-            File currentFile = new File(filePath);
+            MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+            if (!module.getModuleFiles().contains(selectedFileName)) {
+                module.addModuleFile(selectedFileName);
+            }
+        } else if (!StringUtils.isBlank(selectedFolder)) {
+            MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+            if (!module.getModuleFiles().contains(selectedFolder)) {
+                module.addModuleFile(selectedFolder);
+            }
         }
     }
 

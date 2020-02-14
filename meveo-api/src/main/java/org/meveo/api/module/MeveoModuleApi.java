@@ -40,6 +40,7 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
+import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.catalog.BusinessServiceModelDto;
 import org.meveo.api.dto.catalog.ServiceTemplateDto;
@@ -92,6 +93,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
     @Inject
     private ScriptInstanceApi scriptInstanceApi;
+
+    @Inject
+    private FilesApi filesApi;
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
@@ -488,6 +492,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             }
         }
 
+        Set<String> moduleFiles = module.getModuleFiles();
+        if (moduleFiles != null) {
+            for (String moduleFile : moduleFiles) {
+                moduleDto.addModuleFile(moduleFile);
+            }
+        }
+
         List<MeveoModuleItem> moduleItems = module.getModuleItems();
         if (moduleItems != null) {
             for (MeveoModuleItem item : moduleItems) {
@@ -633,6 +644,34 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         moduleItem.setItemClass(itemClassName);
 
         module.removeItem(moduleItem);
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public MeveoModuleDto addFileToModule(String code, String path) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if (module == null) {
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+        if (filesApi.checkFile(path)) {
+            module.addModuleFile(path);
+        }
+
+        meveoModuleService.update(module);
+
+        return toDto(module);
+    }
+
+    public MeveoModuleDto removeFileFromModule(String code, String path) throws EntityDoesNotExistsException, BusinessException {
+        final MeveoModule module = meveoModuleService.findByCode(code);
+        if(module == null){
+            throw new EntityDoesNotExistsException(MeveoModule.class, code);
+        }
+
+        if (module.getModuleFiles().contains(path)) {
+            module.removeModuleFile(path);
+        }
         meveoModuleService.update(module);
 
         return toDto(module);

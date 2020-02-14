@@ -201,6 +201,37 @@ public interface ModuleRs extends IBaseRs {
 			throws EntityDoesNotExistsException, BusinessException;
 
 	/**
+	 * Add a file/folder to a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/add")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Add file to module")
+	MeveoModuleDto addFileToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+							   @FormParam("path") @ApiParam("Path of file/folder to add") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
+	/**
+	 * Remove a file/folder from a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder to remove
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/remove")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Remove from module")
+	MeveoModuleDto removeFileFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+										@FormParam("path") @ApiParam("Path of file/folder to remove") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
+
+	/**
 	 * Forks a Meveo module
 	 * 
 	 * @return Request processing status

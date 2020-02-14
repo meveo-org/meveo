@@ -200,7 +200,17 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         return moduleApi.removeFromModule(moduleCode, itemCode, itemType);
     }
 
-	@Override
+    @Override
+    public MeveoModuleDto addFileToModule(String moduleCode, String path) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.addFileToModule(moduleCode, path);
+    }
+
+    @Override
+    public MeveoModuleDto removeFileFromModule(String moduleCode, String path) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.removeFileFromModule(moduleCode, path);
+    }
+
+    @Override
 	public ActionStatus fork(String moduleCode) {
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {

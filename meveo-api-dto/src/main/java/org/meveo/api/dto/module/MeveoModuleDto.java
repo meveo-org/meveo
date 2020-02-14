@@ -64,6 +64,12 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@JsonProperty("moduleItems")
 	private List<MeveoModuleItemDto> moduleItems;
 
+	/** The module files. */
+	@XmlElementWrapper(name = "List of module files information")
+	@XmlElement(name = "moduleFiles")
+	@ApiModelProperty("The module files")
+	private List<String> moduleFiles;
+
 	/**
 	 * Instantiates a new meveo module dto.
 	 */
@@ -80,6 +86,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 		this.license = meveoModule.getLicense();
 		this.logoPicture = meveoModule.getLogoPicture();
 		this.moduleItems = new ArrayList<>();
+		this.moduleFiles = new ArrayList<>();
 		if (meveoModule.getScript() != null) {
 			this.setScript(new ScriptInstanceDto(meveoModule.getScript(), meveoModule.getScript().getScript()));
 		}
@@ -169,6 +176,35 @@ public class MeveoModuleDto extends BaseDataModelDto {
 		}
 	}
 
+	/**
+	 * Gets the module files.
+	 *
+	 * @return the module files
+	 */
+	public List<String> getModuleFiles() {
+		return moduleFiles;
+	}
+
+	/**
+	 * Sets the module files.
+	 *
+	 * @param moduleFiles the new module files
+	 */
+	public void setModuleFiles(List<String> moduleFiles) {
+		this.moduleFiles = moduleFiles;
+	}
+
+	/**
+	 * Adds the module file.
+	 *
+	 * @param path the path file/folder
+	 */
+	public void addModuleFile(String path) {
+		if (!moduleFiles.contains(path)) {
+			moduleFiles.add(path);
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -204,7 +240,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	 */
 	public boolean isCodeOnly() {
 		return StringUtils.isBlank(getDescription()) && license == null && StringUtils.isBlank(logoPicture) && logoPictureFile == null && script == null
-				&& (moduleItems == null || moduleItems.isEmpty());
+				&& (moduleItems == null || moduleItems.isEmpty() && (moduleFiles == null || moduleFiles.isEmpty()));
 	}
 
 	@Override
