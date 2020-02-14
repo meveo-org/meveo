@@ -152,8 +152,9 @@ public class SwaggerDocService {
 
 		Model returnModelSchema;
 		String cetCode = tsParameterMapping.getEndpointParameter().getParameter();
-
-		if (ClassUtils.isPrimitiveOrWrapperType(cetCode)) {
+		String parameterDataType = ScriptUtils.findScriptVariableType(service, tsParameterMapping.getEndpointParameter().getParameter());
+		
+		if (ClassUtils.isPrimitiveOrWrapperType(parameterDataType)) {
 			returnModelSchema = swaggerHelperService.buildPrimitiveResponse(tsParameterMapping.getParameterName(), cetCode);
 			returnModelSchema.setReference("primitive");
 

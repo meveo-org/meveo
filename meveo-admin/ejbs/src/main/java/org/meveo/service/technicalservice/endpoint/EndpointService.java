@@ -52,7 +52,9 @@ import org.meveo.service.git.MeveoRepository;
  * EJB for managing technical services endpoints
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 01.02.2019
+ * @version 6.8.0
  */
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
@@ -74,6 +76,9 @@ public class EndpointService extends BusinessService<Endpoint> {
 
     @EJB
     private KeycloakAdminClientService keycloakAdminClientService;
+    
+    @Inject
+    private ESGeneratorService esGeneratorService;
 
     public static String getEndpointPermission(Endpoint endpoint) {
         return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
@@ -224,7 +229,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File createESFile(@Observes @Created Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        FileUtils.write(scriptFile, ESGenerator.generate(endpoint));
+        FileUtils.write(scriptFile, esGeneratorService.buildJSInterfaceFromTemplate(endpoint));
         gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
         return scriptFile;
     }
@@ -240,7 +245,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File updateESFile(@Observes @Updated Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        String updatedScript = ESGenerator.generate(endpoint);
+        String updatedScript = esGeneratorService.buildJSInterfaceFromTemplate(endpoint);
 
         if(!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
             FileUtils.write(scriptFile, updatedScript);

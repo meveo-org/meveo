@@ -39,6 +39,18 @@ public class ESGeneratorService {
 
 	@Inject
 	private SwaggerHelperService swaggerHelperService;
+	
+	/**
+	 * Generates an endpoint interface in js code using a template file.
+	 * 
+	 * @param endpoint endpoint
+	 * @see Endpoint
+	 * @return it returns the endpoint interface in js
+	 * @throws IOException when template is not found
+	 */
+	public String buildJSInterfaceFromTemplate(Endpoint endpoint) {
+		return buildJSInterfaceFromTemplate("", endpoint);
+	}
 
 	/**
 	 * Generates an endpoint interface in js code using a template file.
