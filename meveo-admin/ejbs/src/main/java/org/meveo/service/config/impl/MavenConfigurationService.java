@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Resource;
 import javax.ejb.NoSuchObjectLocalException;
@@ -19,7 +20,6 @@ import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.transaction.UserTransaction;
@@ -42,8 +42,8 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
+import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -118,6 +118,8 @@ public class MavenConfigurationService implements Serializable {
 	private TimerService timerService;
 
 	private javax.ejb.Timer ejbTimer;
+
+	public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
     /**
      * @param currentUser Logged user
@@ -394,5 +396,96 @@ public class MavenConfigurationService implements Serializable {
 		Set<String> localRepos = new HashSet<>(getMavenRepositories());
 		localRepos.addAll(remoteRepositories);
 		setMavenRepositories(new ArrayList<>(localRepos));
+	}
+
+	public static void construct() {
+		try {
+			if (CLASSPATH_REFERENCE.get().length() == 0) {
+				synchronized (CLASSPATH_REFERENCE) {
+					if (CLASSPATH_REFERENCE.get().length() == 0) {
+						String classpath = CLASSPATH_REFERENCE.get();
+
+						File realFile = new File(System.getProperty("jboss.server.config.dir")).getAbsoluteFile();
+						File deploymentDir = realFile.getParentFile().getParentFile();
+
+						Set<String> classPathEntries = new HashSet<>();
+
+						for (File modulesDir : Objects.requireNonNull(deploymentDir.listFiles((dir, name) -> name.contains("modules")))) {
+							if (!modulesDir.isDirectory()) {
+								continue;
+							}
+
+							for (File systemDir : Objects.requireNonNull(modulesDir.listFiles((dir, name) -> name.contains("system")))) {
+								if (!systemDir.isDirectory()) {
+									continue;
+								}
+
+								for (File layersDir : Objects.requireNonNull(systemDir.listFiles((dir, name) -> name.contains("layers")))) {
+									if (!layersDir.isDirectory()) {
+										continue;
+									}
+
+									for (File baseDir : Objects.requireNonNull(layersDir.listFiles((dir, name) -> name.equals("base")))) {
+										if (baseDir.isDirectory()) {
+											getSubFolder(baseDir, classPathEntries);
+										}
+									}
+								}
+							}
+						}
+
+						File deployDir = realFile.getParentFile();
+
+						for (File deploymentsDir : Objects.requireNonNull(deployDir.listFiles((dir, name) -> name.contains("deployments")))) {
+							if (!deploymentsDir.isDirectory()) {
+								continue;
+							}
+
+							for (File warDir : Objects.requireNonNull(deploymentsDir.listFiles((dir, name) -> name.contains(ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + ".war")))) {
+								if (!warDir.isDirectory()) {
+									continue;
+								}
+
+								for (File webDir : Objects.requireNonNull(warDir.listFiles((dir, name) -> name.contains("WEB-INF")))) {
+									if (!webDir.isDirectory()) {
+										continue;
+									}
+
+									for (File libDir : Objects.requireNonNull(webDir.listFiles((dir, name) -> name.equals("lib")))) {
+										if (libDir.isDirectory()) {
+											for (File f : FileUtils.getFilesToProcess(libDir, "*", "jar")) {
+												classPathEntries.add(f.getCanonicalPath());
+											}
+										}
+									}
+								}
+							}
+						}
+						classpath = String.join(File.pathSeparator, classPathEntries);
+						CLASSPATH_REFERENCE.set(classpath);
+					}
+				}
+			}
+		} catch (IOException e) {}
+	}
+
+	private static void getSubFolder (File file, Set<String> classPathEntries) {
+		try {
+			ArrayList<File> directories = new ArrayList<File>(
+					Arrays.asList(
+							new File(file.getAbsolutePath()).listFiles(File::isDirectory)
+					)
+			);
+			for (File subFile : directories) {
+				if (!subFile.getName().equals("main")) {
+					getSubFolder(subFile, classPathEntries);
+				} else {
+					for (File f : FileUtils.getFilesToProcess(subFile, "*", "jar")) {
+						classPathEntries.add(f.getCanonicalPath());
+					}
+				}
+			}
+		} catch (IOException e) {
+		}
 	}
 }
