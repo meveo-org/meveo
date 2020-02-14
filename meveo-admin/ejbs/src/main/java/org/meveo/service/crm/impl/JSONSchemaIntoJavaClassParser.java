@@ -106,7 +106,15 @@ public class JSONSchemaIntoJavaClassParser {
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);
                             vd.setType(type);
                         }
+                    } else if(values.get("$ref") != null) {
+                        String[] data = ((String) values.get("$ref")).split("/");
+                        if (data.length > 0) {
+                            String name = data[data.length - 1];
+                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            vd.setType(name);
+                        }
                     }
+                    
                     fd.addVariable(vd);
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
                     if (values.get("nullable").equals(false)) {
