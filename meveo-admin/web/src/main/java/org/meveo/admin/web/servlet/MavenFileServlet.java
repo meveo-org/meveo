@@ -151,7 +151,8 @@ public class MavenFileServlet extends HttpServlet {
 				File deployDir = realFile.getParentFile();
 				String nameWarDir = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + ".war";
 				String pathFile = deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir + File.separator + "WEB-INF" + File.separator + "lib";
-				file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
+				//file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
+				file = new File(pathFile, file.getName());
 				if (!MavenConfigurationService.CLASSPATH_REFERENCE.get().contains(file.getAbsolutePath())) {
 					// Do your thing if the file appears to be non-existing.
 					// Throw an exception, or send 404, or show default/warning page, or just ignore
