@@ -26,6 +26,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
+import javax.transaction.Transactional;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
@@ -216,5 +217,11 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         }
 
         return scriptInterfaces;
+    }
+
+    @Override
+    @Transactional
+    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
+        return super.update(executable);
     }
 }

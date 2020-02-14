@@ -377,6 +377,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (isUnique) {
             return null;
         }
+
+        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity());
+        getEntity().getImportScriptInstances().clear();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            getEntity().getImportScriptInstances().addAll(importedScripts);
+        }
         super.saveOrUpdate(false);
 
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
@@ -430,6 +436,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         scriptInstanceService.compileScript(entity, true);
         if (!entity.isError()) {
             messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
+            initEntity(entity.getId());
         }
     }
 
