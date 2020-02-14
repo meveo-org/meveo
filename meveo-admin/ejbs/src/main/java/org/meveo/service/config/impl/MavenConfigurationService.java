@@ -227,6 +227,7 @@ public class MavenConfigurationService implements Serializable {
 		model.setGroupId("org.meveo");
 		model.setArtifactId("meveo-application");
 		model.setVersion("1.0.0");
+		model.setModelVersion("4.0.0");
 
 		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
 		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
