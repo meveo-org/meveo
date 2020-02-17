@@ -116,10 +116,12 @@ public class JSONSchemaIntoJavaClassParser {
                         }
                         
                     } else if(values.get("$ref") != null) {
-                    	String referenceType = (String) values.get("$ref");
-                    	referenceType = referenceType.substring(2);
-                    	vd.setType(referenceType);
-						compilationUnit.addImport("org.meveo.model.custom.entities." + referenceType);
+                        String[] data = ((String) values.get("$ref")).split("/");
+                        if (data.length > 0) {
+                            String name = data[data.length - 1];
+                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            vd.setType(name);
+                        }
                     }
                     
                     fd.addVariable(vd);

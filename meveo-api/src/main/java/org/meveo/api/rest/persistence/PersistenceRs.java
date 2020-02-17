@@ -180,7 +180,7 @@ public class PersistenceRs {
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
-        Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid);
+        Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
 
         convertFiles(customEntityTemplate, values, base64Encode);
 
