@@ -19,26 +19,36 @@
  */
 package org.meveo.admin.action;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
+import java.util.List;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.IEntity;
+import org.meveo.model.module.MeveoModule;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
@@ -53,6 +63,9 @@ import org.primefaces.model.StreamedContent;
 public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> extends BaseBean<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    @Inject
+    private ParamBeanFactory paramBeanFactory;
 
     private BaseCrudApi<T, D> baseCrudApi;
     
@@ -183,6 +196,25 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
         DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
 
         File exportFile = baseCrudApi.exportEntities(exportFormat, getSelectedEntities());
+        try {
+            String exportName = exportFile.getName();
+            String[] exportFileName = exportName.split("_");
+            String name = exportFileName[1];
+            if (name.startsWith("MeveoModule")) {
+                String[] moduleName = name.split("\\.");
+                String fileName = moduleName[0];
+                List<MeveoModule> meveoModules = (List<MeveoModule>) getSelectedEntities();
+                for (int i = 0; i < meveoModules.size(); i++) {
+                    if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
+                        String providerRoot = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+                        byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules, providerRoot);
+                        InputStream is = new ByteArrayInputStream(filedata);
+                        return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
 
         defaultStreamedContent.setContentEncoding("UTF-8");
         defaultStreamedContent.setStream(new FileInputStream(exportFile));
@@ -194,4 +226,47 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 	public ExportFormat[] getExportFormats(){
 	    return ExportFormat.values();
     }
+
+    /**
+     * Compress module and its files into byte array.
+     *
+     * @param exportFile file to export
+     * @param meveoModules list of meveo modules
+     * @param providerRoot
+     * @return zip file as byte array
+     * @throws Exception exception.
+     */
+    public static byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules, String providerRoot) throws Exception {
+
+        Logger log = LoggerFactory.getLogger(FileUtils.class);
+        log.info("Creating zip file for {}", exportFile);
+
+        ZipOutputStream zos = null;
+        ByteArrayOutputStream baos = null;
+        CheckedOutputStream cos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            cos = new CheckedOutputStream(baos, new CRC32());
+            zos = new ZipOutputStream(new BufferedOutputStream(cos));
+            File sourceFile = new File(exportFile);
+            addToZipFile(sourceFile, zos, null);
+           for (MeveoModule meveoModule: meveoModules) {
+               if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
+                   for (String pathFile : meveoModule.getModuleFiles()) {
+                       File file = new File(providerRoot + pathFile);
+                       addToZipFile(file, zos, null);
+                   }
+               }
+           }
+            zos.flush();
+            zos.close();
+            return baos.toByteArray();
+
+        } finally {
+            IOUtils.closeQuietly(zos);
+            IOUtils.closeQuietly(cos);
+            IOUtils.closeQuietly(baos);
+        }
+    }
+
 }

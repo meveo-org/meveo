@@ -718,9 +718,11 @@ public class UserBean extends CustomFieldBean<User> {
      */
     public void addFileToModule() {
         if (!StringUtils.isBlank(selectedFileName)) {
+            String folder = this.selectedFolder == null ? "" : this.selectedFolder;
+            String fileName = folder + File.separator + selectedFileName;
             MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
-            if (!module.getModuleFiles().contains(selectedFileName)) {
-                module.addModuleFile(selectedFileName);
+            if (!module.getModuleFiles().contains(fileName)) {
+                module.addModuleFile(fileName);
             }
         } else if (!StringUtils.isBlank(selectedFolder)) {
             MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
