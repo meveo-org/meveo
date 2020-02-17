@@ -48,12 +48,20 @@ import org.meveo.service.technicalservice.TechnicalServiceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
 /**
- * TechnicalService management api
+ * TechnicalService management api.
  *
  * @author Clément Bareth
+ * @param <T> the generic type of service
+ * @param <D> the generic type service's dto
  */
 public abstract class TechnicalServiceApi<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseCrudApi<T, D> {
 
+    /**
+	 * Instantiates a new technical service api.
+	 *
+	 * @param jpaClass the jpa class
+	 * @param dtoClass the dto class
+	 */
     public TechnicalServiceApi(Class<T> jpaClass, Class<D> dtoClass) {
 		super(jpaClass, dtoClass);
 	}
@@ -85,6 +93,9 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         dto.setName(technicalService.getName());
         dto.setVersion(technicalService.getFunctionVersion());
         dto.setDisabled(technicalService.isDisabled());
+        dto.setExtendedServices(
+        		technicalService.getExtendedServices().stream().map(TechnicalService::getCode).collect(Collectors.toSet())	
+		);
         return dto;
     }
 
@@ -105,6 +116,18 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         technicalService.setName(postData.getName());
         technicalService.setFunctionVersion(postData.getVersion());
         technicalService.setDisabled(postData.isDisabled());
+        
+        // Retrieve extended services
+        technicalService.getExtendedServices().clear();
+        if(postData.getExtendedServices() != null) {
+        	for(String serviceCode : postData.getExtendedServices()) {
+        		TechnicalService extendedService = persistenceService.findByCode(serviceCode);
+        		if(extendedService != null) {
+        			technicalService.getExtendedServices().add(extendedService);
+        		}
+        	}
+        }
+        
         return technicalService;
     }
 
@@ -130,6 +153,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * If the version is not specified, create a new version of the technical service if it already exists
      *
      * @param postData Data used to create the technical service
+     * @return the created service
      * @throws BusinessException If technical service already exists for specified name and version
      * @throws EntityDoesNotExistsException If elements referenced in the dto does not exists
      */
@@ -155,12 +179,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     /**
-     * Update the technical service with the specified information
-     *
-     * @param postData New data of the technical service
-     * @throws EntityDoesNotExistsException if the technical service to update does not exists
-     * @throws BusinessException            if the technical service can't be updated
-     */
+	 * Update the technical service with the specified information.
+	 *
+	 * @param postData New data of the technical service
+	 * @return the updated service
+	 * @throws EntityDoesNotExistsException if the technical service to update does not exists
+	 * @throws BusinessException            if the technical service can't be updated
+	 */
     public T update(@Valid @NotNull D postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(postData.getName(), postData.getVersion());
         final T updatedService = updateService(technicalService, postData);
@@ -173,6 +198,27 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         checkEndpoints(service, descriptions.values());
         service.setDescriptions(descriptions);
         service.setDisabled(data.isDisabled());
+        
+        // Synchronize extended connectors
+        if(data.getExtendedServices() == null) {
+        	data.getExtendedServices().clear();
+        } else {
+        	service.getExtendedServices().removeIf(e -> !data.getExtendedServices().contains(e.getCode()));
+        	for(String serviceCode : data.getExtendedServices()) {
+        		boolean isIncluded = service.getExtendedServices()
+        			.stream()
+        			.anyMatch(connector -> connector.getCode().equals(serviceCode));
+        		
+        		if(!isIncluded) {
+            		TechnicalService extendedService = persistenceService.findByCode(serviceCode);
+            		if(extendedService != null) {
+            			service.getExtendedServices().add(extendedService);
+            		}
+        		}
+        	}
+
+        }
+        
         return service;
     }
 
@@ -280,6 +326,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         return new TechnicalServicesDto(customEntityInstanceDTOs);
     }
 
+    /**
+	 * Find by newer than given date.
+	 *
+	 * @param filters   the filters
+	 * @param sinceDate the since date
+	 * @return the technical services dto matching criteria
+	 */
     public TechnicalServicesDto findByNewerThan(TechnicalServiceFilters filters, Date sinceDate) {
         List<T> list = persistenceService.findByNewerThan(filters, sinceDate);
         List<TechnicalServiceDto> customEntityInstanceDTOs = list.stream()
@@ -407,13 +460,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     /**
-     * Enable / disable a given version of a service
-     *
-     * @param name    Name of the service to disable / enable
-     * @param version Version of the service to disable / enable
-     * @param state   Whether to enable / disable the service
-     * @throws EntityDoesNotExistsException if the entity does not exists
-     */
+	 * Enable / disable a given version of a service.
+	 *
+	 * @param name    Name of the service to disable / enable
+	 * @param version Version of the service to disable / enable
+	 * @param state   Whether to enable / disable the service
+	 * @throws EntityDoesNotExistsException if the entity does not exists
+	 * @throws BusinessException            if error occurs
+	 */
     public void disable(String name, Integer version, Boolean state) throws EntityDoesNotExistsException, BusinessException {
         TechnicalService technicalService = technicalServiceService().findByNameAndVersion(name, version)
                 .orElseThrow(() -> getEntityDoesNotExistsException(name));

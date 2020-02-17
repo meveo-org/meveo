@@ -17,6 +17,18 @@
  */
 package org.meveo.service.technicalservice;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Hibernate;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
@@ -25,29 +37,20 @@ import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
 /**
- * Technical service persistence service
+ * Technical service persistence service.
  *
  * @author Clément Bareth
+ * @param <T> the generic type of service
  */
 public abstract class TechnicalServiceService<T extends TechnicalService> extends FunctionService<T, TechnicalServiceEngine<T>> {
 
 
     /**
-     * @param serviceId id of the service to remove description
-     */
+	 * Removes the description.
+	 *
+	 * @param serviceId id of the service to remove description
+	 */
     public void removeDescription(long serviceId){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Description> query = cb.createQuery(Description.class);
@@ -58,11 +61,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieve the last version of the technical service with the specified name
-     *
-     * @param name Name of the technical service to retrieve
-     * @return The last version number or empty if the technical service does not exists
-     */
+	 * Retrieve the last version of the technical service with the specified name.
+	 *
+	 * @param name Name of the technical service to retrieve
+	 * @return The last version number or empty if the technical service does not exists
+	 */
     public Optional<Integer> latestVersionNumber(String name) {
         String queryString = "Select max(service.functionVersion) from "+getEntityClass().getName()+" service \n" +
                 "where service.name = :name";
@@ -76,11 +79,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieve all the version of the technical services that have the specified name
-     *
-     * @param name Name of the technical services to retrieve
-     * @return The list of technical service's version
-     */
+	 * Retrieve all the version of the technical services that have the specified name.
+	 *
+	 * @param name Name of the technical services to retrieve
+	 * @return The list of technical service's version
+	 */
     @SuppressWarnings("unchecked")
     public List<T> findByName(String name) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
@@ -94,11 +97,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieve the latest version of the technical service
-     *
-     * @param name Name of the technical service to retrieve
-     * @return The last version of the technical service
-     */
+	 * Retrieve the latest version of the technical service.
+	 *
+	 * @param name Name of the technical service to retrieve
+	 * @return The last version of the technical service
+	 */
     @SuppressWarnings("unchecked")
     public Optional<T> findLatestByName(String name) {
         try {
@@ -114,12 +117,12 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieve a technical service based on name and version
-     *
-     * @param name    Name of the technical service to retrieve
-     * @param version Version of the technical service to retrieve
-     * @return The retrieved technical service or empty if not found
-     */
+	 * Retrieve a technical service based on name and version.
+	 *
+	 * @param name    Name of the technical service to retrieve
+	 * @param version Version of the technical service to retrieve
+	 * @return The retrieved technical service or empty if not found
+	 */
     @SuppressWarnings("unchecked")
     public Optional<T> findByNameAndVersion(String name, Integer version) {
         QueryBuilder qb = new QueryBuilder(getEntityClass(), "service", null);
@@ -134,11 +137,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieves a filtered list of all services
-     *
-     * @param filters Filter to apply
-     * @return The services corresponding to the specified filters
-     */
+	 * Retrieves a filtered list of all services.
+	 *
+	 * @param filters Filter to apply
+	 * @return The services corresponding to the specified filters
+	 */
     public List<T> list(TechnicalServiceFilters filters) {
         QueryBuilder qb = filteredQueryBuilder(filters);
         TypedQuery<T> query = qb.getTypedQuery(getEntityManager(), getEntityClass());
@@ -147,10 +150,10 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieves the names of all the technical services
-     *
-     * @return The names of all the technical services
-     */
+	 * Retrieves the names of all the technical services.
+	 *
+	 * @return The names of all the technical services
+	 */
     public List<String> names(){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<String> query = cb.createQuery(String.class);
@@ -162,18 +165,39 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieve the description for a particular technical service
-     *
-     * @param code Code of the service
-     * @return The description of the service with given code
-     */
-    public List<Description> description(String code) {
-        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Description> query = cb.createQuery(Description.class);
-        Root<T> root = query.from(getEntityClass());
-        query.select(root.get("descriptions"));
-        query.where(cb.equal(root.get("code"), code));
-        List<Description> resultList = getEntityManager().createQuery(query).getResultList();
+	 * Retrieve the description for a particular technical service.
+	 *
+	 * @param code Code of the service
+	 * @return The description of the service with given code
+	 */
+	public List<Description> description(String code) {
+    	String serviceQuery = "FROM " + getEntityClass() + " service \n"
+    						+ "WHERE service.code = :code \n"
+    						+ "JOIN FETCH service.extendedServices";
+    	
+		T service = getEntityManager()
+				.createQuery(serviceQuery, getEntityClass())
+    			.getSingleResult();
+    	
+        List<Description> resultList = getEntityManager()
+        		.createQuery("FROM " + Description.class + " desc WHERE desc.service = :service", Description.class)
+        		.setParameter("service", service)
+        		.getResultList();
+        
+        if(!service.getExtendedServices().isEmpty()) {
+	        // Retrieve inherited descriptions
+	        String inheritedDescriptionsQuery = "FROM " + Description.class + " description \n"
+	    									  + "WHERE description.service IN :extendedServices";
+	        
+	        List<Description> inheritedDescriptions = getEntityManager()
+        		.createQuery(inheritedDescriptionsQuery, Description.class)
+	        	.setParameter("extendedServices", service.getExtendedServices())
+	        	.getResultList();
+	        
+	        inheritedDescriptions.forEach(d -> d.setInherited(true));
+	        resultList.addAll(inheritedDescriptions);
+        }
+        
         for(Description desc : resultList) {
         	Hibernate.initialize(desc.getInputProperties());
         	Hibernate.initialize(desc.getOutputProperties());
@@ -183,11 +207,11 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Retrieves the different versions number for a technical service
-     *
-     * @param name Name of the service
-     * @return The versions numbers for the technical service with the given name
-     */
+	 * Retrieves the different versions number for a technical service.
+	 *
+	 * @param name Name of the service
+	 * @return The versions numbers for the technical service with the given name
+	 */
     public List<Integer> versions(String name){
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Integer> query = cb.createQuery(Integer.class);
@@ -198,19 +222,27 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     }
 
     /**
-     * Count the technical services
-     *
-     * @param filters Filters to apply
-     * @return The count of technical services corresponding to the filters
-     */
+	 * Count the technical services.
+	 *
+	 * @param filters Filters to apply
+	 * @return The count of technical services corresponding to the filters
+	 */
     public long count(TechnicalServiceFilters filters){
         QueryBuilder qb = filteredQueryBuilder(filters);
         return qb.count(getEntityManager());
     }
 
+    /**
+	 * Find by newer than.
+	 *
+	 * @param filters   the filters
+	 * @param sinceDate the since date
+	 * @return the list of result
+	 */
     public List<T> findByNewerThan(TechnicalServiceFilters filters, Date sinceDate) {
         QueryBuilder qb = queryBuilder(filters,sinceDate);
-        return (List<T>) qb.getQuery(getEntityManager()).getSingleResult();
+        return qb.getTypedQuery(getEntityManager(), getEntityClass())
+        		.getResultList();
     }
 
     @Override

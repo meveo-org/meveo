@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Describe the input and output properties for a variable
+ * Describe the input and output properties for a variable.
  *
  * @author Clément Bareth
  */
@@ -69,6 +69,12 @@ public abstract class Description implements TechnicalServiceDescription {
     @OneToMany(mappedBy = "description", targetEntity = MeveoPropertyDescription.class, cascade = CascadeType.ALL)
     @Where(clause = "direction = 'output'")
     private List<OutputMeveoProperty> outputProperties = new ArrayList<>();
+    
+    /**
+     * Whether the description is inherited from an other technical service
+     */
+    @Transient
+    private boolean isInherited;
 
     /**
      * Whether the variable is defined as input of the connector.
@@ -81,6 +87,24 @@ public abstract class Description implements TechnicalServiceDescription {
     private boolean output;
 
     /**
+	 * Checks if the description is inherited from an other technical service.
+	 *
+	 * @return true, if is inherited
+	 */
+    public boolean isInherited() {
+		return isInherited;
+	}
+
+	/**
+	 * Update whether the description is inherited from an other technical service.
+	 *
+	 * @param isInherited whether the description is inherited from an other technical service
+	 */
+	public void setInherited(boolean isInherited) {
+		this.isInherited = isInherited;
+	}
+
+	/**
      * List of properties that are defined as inputs. Non empty list implies input = true.
      * @return The list of the properties that are defined as inputs.
      */
@@ -122,64 +146,80 @@ public abstract class Description implements TechnicalServiceDescription {
     }
 
     /**
-     * Instance name of the variable described
-     *
-     * @param name Instance name of the variable described
-     */
+	 * Instance name of the variable described.
+	 *
+	 * @param name Instance name of the variable described
+	 */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * @return Type name of the described entity
-     */
+	 * Gets the type name.
+	 *
+	 * @return Type name of the described entity
+	 */
     public abstract String getTypeName();
 
     /**
-     * @param inputProperties Input properties defined for the described entity
-     */
+	 * Sets the list of properties that are defined as inputs.
+	 *
+	 * @param inputProperties Input properties defined for the described entity
+	 */
     public void setInputProperties(List<InputMeveoProperty> inputProperties) {
         this.inputProperties = inputProperties;
     }
 
     /**
-     * @param outputProperties Output properties defined for the described entity
-     */
+	 * Sets the list of properties that are defined as outputs.
+	 *
+	 * @param outputProperties Output properties defined for the described entity
+	 */
     public void setOutputProperties(List<OutputMeveoProperty> outputProperties) {
         this.outputProperties = outputProperties;
     }
 
     /**
-     * @param input Whether the described entity is an input
-     */
+	 * Sets the whether the variable is defined as input of the connector.
+	 *
+	 * @param input Whether the described entity is an input
+	 */
     public void setInput(boolean input) {
         this.input = input;
     }
 
     /**
-     * @param output Whether the described entity is an output
-     */
+	 * Sets the whether the variable is defined as output of the connector.
+	 *
+	 * @param output Whether the described entity is an output
+	 */
     public void setOutput(boolean output) {
         this.output = output;
     }
 
     /**
-     * @return Technical service that is described
-     */
+	 * Gets the service.
+	 *
+	 * @return Technical service that is described
+	 */
     public Function getService() {
         return service;
     }
 
     /**
-     * @param service Technical service that is described
-     */
+	 * Sets the service.
+	 *
+	 * @param service Technical service that is described
+	 */
     public void setService(TechnicalService service) {
         this.service = service;
     }
 
     /**
-     * @return The id of the description in the database
-     */
+	 * Gets the id.
+	 *
+	 * @return The id of the description in the database
+	 */
     public long getId() {
         return id;
     }
