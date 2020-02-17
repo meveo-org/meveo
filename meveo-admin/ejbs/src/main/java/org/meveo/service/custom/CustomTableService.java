@@ -996,7 +996,8 @@ public class CustomTableService extends NativePersistenceService {
 		Map<String, Object> data = super.findById(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
 
 		if(data == null) {
-		    throw new EntityDoesNotExistsException("CET " + cet.getCode() + " with UUID : " + uuid);
+		    //throw new EntityDoesNotExistsException("CET " + cet.getCode() + " with UUID : " + uuid);
+			return null;
         }
 
 		// Format the data to the representation defined by the fields

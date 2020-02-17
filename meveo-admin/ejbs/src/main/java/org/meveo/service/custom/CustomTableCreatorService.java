@@ -106,13 +106,13 @@ public class CustomTableCreatorService implements Serializable {
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
 
-	public EntityManager getEntityManager(String sqlConfigurationCode) {
+	private EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		if (StringUtils.isBlank(sqlConfigurationCode)) {
 			return entityManagerProvider.getEntityManagerWoutJoinedTransactions();
 
 		} else {
-			return sqlConnectionProvider.getSession(sqlConfigurationCode).getEntityManagerFactory().createEntityManager();
+			return sqlConnectionProvider.getEntityManager(sqlConfigurationCode);
 		}
 	}
 
@@ -296,9 +296,7 @@ public class CustomTableCreatorService implements Serializable {
 		mysqlChangeSet.addChange(createMsTableChange);
 		dbLog.addChangeSet(mysqlChangeSet);
 
-		EntityManager em = getEntityManager(sqlConnectionCode);
-
-		Session hibernateSession = em.unwrap(Session.class);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 		hibernateSession.doWork(connection -> {
 
@@ -315,6 +313,8 @@ public class CustomTableCreatorService implements Serializable {
 			}
 
 		});
+		
+		hibernateSession.close();
 	}
 
 	private void setSchemaName(Database database) throws DatabaseException {
@@ -408,9 +408,7 @@ public class CustomTableCreatorService implements Serializable {
 
 			dbLog.addChangeSet(changeSet);
 
-			EntityManager em = getEntityManager(sqlConnectionCode);
-
-			Session hibernateSession = em.unwrap(Session.class);
+			Session hibernateSession =  sqlConnectionProvider.getSession(sqlConnectionCode);
 			
 			try {
 				CompletableFuture.runAsync(() -> {
@@ -432,6 +430,8 @@ public class CustomTableCreatorService implements Serializable {
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
 				log.error("Failed to add field {} to custom table {} within 1 minute", e);
 				throw new RuntimeException(e);
+			} finally {
+				hibernateSession.close();
 			}
 		}
 	}
@@ -447,12 +447,12 @@ public class CustomTableCreatorService implements Serializable {
 
 		String dbFieldname = cft.getDbFieldname();
 
-		EntityManager em = getEntityManager(sqlConnectionCode);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 		String columnExistsQueryStr = "SELECT EXISTS(\n" + "	SELECT column_name\n" + "	FROM information_schema.columns \n"
 				+ "	WHERE table_name=:tableName and column_name=:columnName\n" + ");";
 
-		Query columnExistsQuery = em.createNativeQuery(columnExistsQueryStr).setParameter("tableName", dbTableName).setParameter("columnName", dbFieldname);
+		Query columnExistsQuery = hibernateSession.createNativeQuery(columnExistsQueryStr).setParameter("tableName", dbTableName).setParameter("columnName", dbFieldname);
 
 		boolean columnExists = (boolean) columnExistsQuery.getSingleResult();
 
@@ -570,8 +570,6 @@ public class CustomTableCreatorService implements Serializable {
 		}
 		createOrUpdateUniqueField(dbTableName, cft, changeSet);
 
-		Session hibernateSession = em.unwrap(Session.class);
-
 		hibernateSession.doWork(connection -> {
 
 			Database database;
@@ -586,6 +584,8 @@ public class CustomTableCreatorService implements Serializable {
 				throw new SQLException(e);
 			}
 		});
+		
+		hibernateSession.close();
 	}
 
 	/**
@@ -655,9 +655,7 @@ public class CustomTableCreatorService implements Serializable {
 		changeSet.addChange(dropColumnChange);
 		dbLog.addChangeSet(changeSet);
 
-		EntityManager em = getEntityManager(sqlConnectionCode);
-
-		Session hibernateSession = em.unwrap(Session.class);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 		hibernateSession.doWork(connection -> {
 
@@ -673,6 +671,8 @@ public class CustomTableCreatorService implements Serializable {
 				throw new SQLException(e);
 			}
 		});
+		
+		hibernateSession.close();
 	}
 
 	/**
@@ -718,9 +718,7 @@ public class CustomTableCreatorService implements Serializable {
 
 		dbLog.addChangeSet(pgChangeSet);
 
-		EntityManager em = getEntityManager(sqlConnectionCode);
-
-		Session hibernateSession = em.unwrap(Session.class);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 		hibernateSession.doWork(connection -> {
 
@@ -883,8 +881,7 @@ public class CustomTableCreatorService implements Serializable {
 
 		String uuidExtension = "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"";
 
-		EntityManager em = getEntityManager(sqlConfigurationCode);
-		Session hibernateSession = em.unwrap(Session.class);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConfigurationCode);
 
 		hibernateSession.doWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
@@ -894,5 +891,7 @@ public class CustomTableCreatorService implements Serializable {
 				}
 			}
 		});
+		
+		hibernateSession.close();
 	}
 }
