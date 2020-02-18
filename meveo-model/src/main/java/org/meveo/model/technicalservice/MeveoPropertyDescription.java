@@ -24,6 +24,13 @@ import org.meveo.model.crm.CustomFieldTemplate;
 
 import javax.persistence.*;
 
+/**
+ * {@link PropertyDescription} implementation
+ * 
+ * @author clement.bareth
+ * @since 6.0.0
+ * @version 6.8.0
+ */
 @Entity
 @GenericGenerator(
         name = "ID_GENERATOR",
@@ -46,7 +53,32 @@ public abstract class MeveoPropertyDescription implements PropertyDescription {
     @ManyToOne
     @JoinColumn(name = "cft_id")
     private CustomFieldTemplate property;
+    
     /**
+     * Whether the property is inherited
+     */
+    @Transient
+    private boolean isInherited;
+    
+    /**
+	 * Checks if the property is inherited.
+	 *
+	 * @return true, if the property is inherited
+	 */
+    public boolean isInherited() {
+		return isInherited;
+	}
+
+	/**
+	 * Sets whether the property is inherited.
+	 *
+	 * @param isInherited true if the property is inherited
+	 */
+	public void setInherited(boolean isInherited) {
+		this.isInherited = isInherited;
+	}
+
+	/**
      * CustomFieldTemplate linked to the CustomEntityTemplate described
      *
      * @return The CustomFieldTemplate object

@@ -37,12 +37,32 @@ public class InputPropertyDto implements InputPropertyDescription {
     private String comparisonValue;
     private String defaultValue;
     private String descriptionName;
+    private boolean isInherited;
     
     /**
+     * Whether the description is inherited
+     */
+    public boolean isInherited() {
+		return isInherited;
+	}
+
+	/**
+	 * Sets whether the property is inherited.
+	 *
+	 * @param isInherited the new inherited
+	 */
+	public void setInherited(boolean isInherited) {
+		this.isInherited = isInherited;
+	}
+
+	/**
      * Priority on the input property
      */
     private Float priority = 0.5f;
     
+    /**
+	 * Instantiates a new input property dto.
+	 */
     public InputPropertyDto() {
     	
     }
@@ -50,7 +70,7 @@ public class InputPropertyDto implements InputPropertyDescription {
     /**
 	 * Instantiates a new InputPropertyDto
 	 *
-	 * @param p
+	 * @param p the property to copy
 	 */
 	public InputPropertyDto(InputMeveoProperty p) {
 		String property = p.getCet().getCode();
@@ -59,6 +79,7 @@ public class InputPropertyDto implements InputPropertyDescription {
         setComparisonValue(p.getComparisonValue());
         setDefaultValue(p.getDefaultValue());
         setRequired(p.isRequired());
+        setInherited(p.isInherited());
 	}
 
 	public Float getPriority() {

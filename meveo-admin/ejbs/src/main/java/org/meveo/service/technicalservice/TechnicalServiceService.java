@@ -171,22 +171,26 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	 * @return The description of the service with given code
 	 */
 	public List<Description> description(String code) {
-    	String serviceQuery = "FROM " + getEntityClass() + " service \n"
-    						+ "WHERE service.code = :code \n"
-    						+ "JOIN FETCH service.extendedServices";
+    	String serviceQuery = "FROM " + getEntityClass().getName() + " service \n"
+    						+ "LEFT JOIN FETCH service.extendedServices \n"
+    						+ "WHERE service.code = :code \n";
     	
 		T service = getEntityManager()
 				.createQuery(serviceQuery, getEntityClass())
+				.setParameter("code", code)
     			.getSingleResult();
+		
+		String descriptionQuery = "FROM " + Description.class.getName() + "\n"
+								+ "WHERE service = :service";
     	
         List<Description> resultList = getEntityManager()
-        		.createQuery("FROM " + Description.class + " desc WHERE desc.service = :service", Description.class)
+        		.createQuery(descriptionQuery, Description.class)
         		.setParameter("service", service)
         		.getResultList();
         
         if(!service.getExtendedServices().isEmpty()) {
 	        // Retrieve inherited descriptions
-	        String inheritedDescriptionsQuery = "FROM " + Description.class + " description \n"
+	        String inheritedDescriptionsQuery = "FROM " + Description.class.getName() + " description \n"
 	    									  + "WHERE description.service IN :extendedServices";
 	        
 	        List<Description> inheritedDescriptions = getEntityManager()
@@ -200,7 +204,9 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         
         for(Description desc : resultList) {
         	Hibernate.initialize(desc.getInputProperties());
+        	desc.getInputProperties().forEach(p -> p.setInherited(desc.isInherited()));
         	Hibernate.initialize(desc.getOutputProperties());
+        	desc.getOutputProperties().forEach(p -> p.setInherited(desc.isInherited()));
         }
         
 		return resultList;

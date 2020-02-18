@@ -33,6 +33,7 @@ import javax.persistence.OneToMany;
 
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
+import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 /**
  * The Class TechnicalService.
@@ -65,7 +66,8 @@ public class TechnicalService extends Function {
     		joinColumns = @JoinColumn(name = "technical_service_id", referencedColumnName = "id"),
     		inverseJoinColumns = @JoinColumn(name = "ext_technical_service_id", referencedColumnName = "id")
     )
-    @OneToMany
+    @OneToMany(targetEntity = Function.class)
+    @SubTypeOf(TechnicalService.class)
     private Set<TechnicalService> extendedServices = new HashSet<>();
 
     /**

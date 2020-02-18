@@ -201,7 +201,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         
         // Synchronize extended connectors
         if(data.getExtendedServices() == null) {
-        	data.getExtendedServices().clear();
+        	service.getExtendedServices().clear();
         } else {
         	service.getExtendedServices().removeIf(e -> !data.getExtendedServices().contains(e.getCode()));
         	for(String serviceCode : data.getExtendedServices()) {
