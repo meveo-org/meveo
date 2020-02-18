@@ -167,6 +167,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 		
 		String contentType = event.getFile().getContentType();
 		InputStream inputStream = event.getFile().getInputstream();
+		String fileName = event.getFile().getFileName();
 		
 		switch(contentType.trim()) {
 			case "text/xml": 
@@ -182,7 +183,12 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 			case "application/vnd.ms-excel":
 				baseCrudApi.importCSV(inputStream, override);
 				break;
-				
+
+
+            case "application/octet-stream":
+            case "application/x-zip-compressed":
+                baseCrudApi.importZip(fileName, inputStream, override);
+                break;
 		}
 	}
 

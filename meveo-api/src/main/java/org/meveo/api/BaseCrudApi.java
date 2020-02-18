@@ -17,12 +17,8 @@
  */
 package org.meveo.api;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
@@ -38,7 +34,10 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.IEntity;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.model.SortOrder;
 
@@ -61,10 +60,10 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
  * @param <T> Dto class
  */
 public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi implements ApiService<E, T> {
-	
+
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
-    
+
 	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();
 		this.dtoClass = dtoClass;
@@ -73,78 +72,81 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	/**
 	 * Function used to construct a dto representation of a given JPA entity
-	 * 
+	 *
 	 * @param entity Entity to convert
 	 * @return Entity converted
 	 */
 	public abstract T toDto(E entity);
-	
+
 	/**
-	 * Build a JPA representation from a DTO 
-	 * 
+	 * Build a JPA representation from a DTO
+	 *
 	 * @param dto DTO to convert
 	 * @return The JPA entity built from the DTO
 	 * @throws org.meveo.exceptions.EntityDoesNotExistsException if a linked entity does not exists
 	 */
 	public abstract E fromDto(T dto) throws org.meveo.exceptions.EntityDoesNotExistsException;
-	
+
 	/**
 	 * @return The persistence service used by the implementation
 	 */
 	public abstract IPersistenceService<E> getPersistenceService();
-	
+
 	/**
 	 * Use a dto to check if the JPA version already exists or not
-	 * 
+	 *
 	 * @param dto DTO representation to use
 	 * @return <code>true</code> if the JPA version of the entity exists
 	 */
 	public abstract boolean exists(T dto);
 
 	/*
-     * (non-Javadoc)
-     * 
-     * @see org.meveo.api.ApiService#findIgnoreNotFound(java.lang.String)
-     */
-    @Override
-    public T findIgnoreNotFound(String code) throws MeveoApiException {
-        try {
-            return find(code);
-        } catch (EntityDoesNotExistsException | org.meveo.exceptions.EntityDoesNotExistsException e) {
-            return null;
-        }
+	 * (non-Javadoc)
+	 *
+	 * @see org.meveo.api.ApiService#findIgnoreNotFound(java.lang.String)
+	 */
+	@Override
+	public T findIgnoreNotFound(String code) throws MeveoApiException {
+		try {
+			return find(code);
+		} catch (EntityDoesNotExistsException | org.meveo.exceptions.EntityDoesNotExistsException e) {
+			return null;
+		}
 	}
-    
-    /**
-     * Export entities matching filters to an XML file
-     * @param conf Filters 
-     * @return the export file
-     */
+
+	/**
+	 * Export entities matching filters to an XML file
+	 *
+	 * @param conf Filters
+	 * @return the export file
+	 */
 	public File exportXML(PaginationConfiguration conf) throws IOException {
 		return exportEntities(conf, ExportFormat.XML);
 	}
-	
-    /**
-     * Export entities matching filters to a JSON file
-     * @param config Filters 
-     * @return the export file
-     */
+
+	/**
+	 * Export entities matching filters to a JSON file
+	 *
+	 * @param config Filters
+	 * @return the export file
+	 */
 	public File exportJSON(PaginationConfiguration config) throws IOException {
 		return exportEntities(config, ExportFormat.JSON);
 	}
-	
-    /**
-     * Export entities matching filters to a CSV file
-     * @param config Filters 
-     * @return the export file
-     */
+
+	/**
+	 * Export entities matching filters to a CSV file
+	 *
+	 * @param config Filters
+	 * @return the export file
+	 */
 	public File exportCSV(PaginationConfiguration config) throws IOException {
 		return exportEntities(config, ExportFormat.CSV);
 	}
-	
+
 	/**
 	 * Export entities matching filters to a give format
-	 * 
+	 *
 	 * @param conf   Filters
 	 * @param format Format of generated file
 	 * @return the export file
@@ -153,7 +155,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		List<E> entities = getPersistenceService().list(conf);
 
 		List<T> dtos = new ArrayList<>();
-		for(E entity : entities) {
+		for (E entity : entities) {
 			dtos.add(toDto(entity));
 		}
 
@@ -162,8 +164,8 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	public File exportEntities(ExportFormat format, List<E> entities) throws IOException {
 		List<T> dtos;
-		
-		if(CollectionUtils.isEmpty(entities)){
+
+		if (CollectionUtils.isEmpty(entities)) {
 			dtos = new ArrayList<>();
 		} else {
 			dtos = entities.stream().map(this::toDto).collect(Collectors.toList());
@@ -173,10 +175,10 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	}
 
 	private File exportDtos(ExportFormat format, List<T> dtos) throws IOException {
-		if(format == null) {
+		if (format == null) {
 			throw new IllegalArgumentException("Format must be provided");
 		}
-		
+
 		File exportFile = new File("export_" + jpaClass.getSimpleName() + System.currentTimeMillis() + "." + format.getFormat());
 
 		switch (format) {
@@ -209,23 +211,23 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	/**
 	 * Import a list of entities into the database
-	 * 
+	 *
 	 * @param entities  Entities to import
 	 * @param overwrite Whether we should update existing entities
 	 */
 	public void importEntities(List<T> entities, boolean overwrite) throws BusinessException, MeveoApiException {
 		for (T entity : entities) {
-			if(overwrite) {
+			if (overwrite) {
 				createOrUpdate(entity);
-			} else if(!exists(entity)) {
+			} else if (!exists(entity)) {
 				createOrUpdate(entity);
 			}
 		}
 	}
-	
+
 	/**
 	 * Import data from an XML file
-	 * 
+	 *
 	 * @param xml       File to import
 	 * @param overwrite Whether we should update existing data
 	 */
@@ -236,30 +238,41 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		List<?> entities = xmlMapper.readValue(xml, List.class);
 		List<T> entitiesCasted = new ArrayList<>();
 		for (Object entity : entities) {
-			
+
 			entitiesCasted.add(xmlMapper.convertValue(entity, dtoClass));
 		}
 
 		importEntities(entitiesCasted, overwrite);
 	}
-	
+
 	/**
 	 * Import data from a JSON file
-	 * 
+	 *
 	 * @param json      File to import
 	 * @param overwrite Whether we should update existing data
 	 */
 	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		List<?> entities = jsonMapper.readValue(json, List.class);
-		
+
 		List<T> entitiesCasted = new ArrayList<>();
-		for(Object entity : entities) {
+		for (Object entity : entities) {
+			Map<String, Object> map = (LinkedHashMap<String, Object>) entity;
+			if (map.containsKey("moduleItems")) {
+				List<String> items = (List<String>) map.get("moduleFiles");
+				for (String moduleFile : items) {
+					String name = moduleFile.substring(0, moduleFile.length() - 1);
+					File file = new File(name);
+					FileInputStream inputStream = new FileInputStream(file);
+					copyFile(moduleFile, inputStream);
+				}
+			}
 			entitiesCasted.add(jsonMapper.convertValue(entity, dtoClass));
 		}
-		
-		importEntities(entitiesCasted, overwrite);
-	}
+
+	importEntities(entitiesCasted, overwrite);
+
+}
 	
 	/**
 	 * Import data from a CSV file
@@ -278,6 +291,77 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 				.readValues(csv);
 		
 		importEntities(reader.readAll(), overwrite);
+	}
+
+	/**
+	 * Import data from a zip
+	 *
+	 * @param file       File to import
+	 * @param overwrite Whether we should update existing data
+	 */
+	public void importZip(String fileName, InputStream file, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
+		try {
+			FileUtils.unzipFile(fileName, file);
+			buildFileList(fileName, overwrite);
+		} catch (Exception e) {}
+	}
+
+	private void buildFileList(String fileName, boolean overwrite) throws BusinessException, IOException, MeveoApiException{
+		try {
+			File file = new File(fileName);
+			if (fileName.endsWith(".zip")) {
+				File[] files = file.listFiles();
+				for (File importFile : files) {
+					if (importFile.getName().startsWith("export")) {
+						String[] importFileName = importFile.getName().split("\\.");
+						String typeFile = importFileName[1];
+						FileInputStream inputStream = new FileInputStream(importFile);
+						if (typeFile.equals("json")) {
+							importJSON(inputStream, overwrite);
+						} else if (typeFile.equals("xml")) {
+							importXML(inputStream, overwrite);
+						} else if (typeFile.equals("csv")) {
+							importCSV(inputStream, overwrite);
+						}
+					}
+				}
+			} else {
+				String folder = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + File.separator + fileName;
+				File fileFromModule = new File(folder);
+
+				File[] files = fileFromModule.listFiles();
+
+				List<File> fileList = files == null ? new ArrayList<File>() : new ArrayList<File>(Arrays.asList(files));
+				String selectedFolder = fileName.substring(0, fileName.length() - 1);
+				boolean currentDirEmpty = !StringUtils.isBlank(selectedFolder) && fileList.size() == 0;
+			}
+		} catch (FileNotFoundException e) {}
+	}
+
+	private void copyFile(String fileName, InputStream in) {
+		try {
+
+			// write the inputStream to a FileOutputStream
+			String providerRoot = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+			String filePath = providerRoot + fileName;
+			OutputStream out = new FileOutputStream(new File(filePath));
+
+			int read = 0;
+			byte[] bytes = new byte[1024];
+
+			while ((read = in.read(bytes)) != -1) {
+				out.write(bytes, 0, read);
+			}
+
+			in.close();
+			out.flush();
+			out.close();
+
+			log.debug("New file created!");
+			buildFileList(fileName, false);
+		} catch (Exception e) {
+			log.error("Failed saving file. ", e);
+		}
 	}
 
 	/**

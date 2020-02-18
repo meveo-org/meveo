@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
@@ -189,6 +190,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
         if (StringUtils.isBlank(moduleDto.getLicense())) {
             missingParameters.add("module license is null");
+        }
+
+        if (CollectionUtils.isEmpty(moduleDto.getModuleFiles())) {
+            missingParameters.add("module files is null");
         }
 
         if (moduleDto.getScript() != null) {
@@ -364,6 +369,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
         if (meveoModule.isTransient()) {
             meveoModule.setInstalled(false);
+        }
+        if (CollectionUtils.isNotEmpty(moduleDto.getModuleFiles())) {
+           for (String moduleFile : moduleDto.getModuleFiles()) {
+               meveoModule.addModuleFile(moduleFile);
+           }
         }
 
         // Converting subclasses of MeveoModuleDto class

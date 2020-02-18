@@ -246,7 +246,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@Override
 	public String toString() {
 		final int maxLen = 10;
-		return String.format("ModuleDto [code=%s, license=%s, description=%s, logoPicture=%s, logoPictureFile=%s, moduleItems=%s, script=%s]", getCode(), license, getDescription(),
-				logoPicture, logoPictureFile, moduleItems != null ? moduleItems.subList(0, Math.min(moduleItems.size(), maxLen)) : null, script);
+		return String.format("ModuleDto [code=%s, license=%s, description=%s, logoPicture=%s, logoPictureFile=%s, moduleItems=%s, script=%s, moduleFiles=%s]", getCode(), license, getDescription(),
+				logoPicture, logoPictureFile, moduleItems != null ? moduleItems.subList(0, Math.min(moduleItems.size(), maxLen)) : null, script, moduleFiles);
 	}
 }
