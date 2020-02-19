@@ -18,9 +18,13 @@
 package org.meveo.service.technicalservice;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -30,9 +34,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.technicalservice.Description;
+import org.meveo.model.technicalservice.InputMeveoProperty;
+import org.meveo.model.technicalservice.OutputMeveoProperty;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
@@ -135,6 +142,13 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         }
         return Optional.empty();
     }
+    
+    public TechnicalService findServiceByCode(String code) throws NoResultException {
+    	QueryBuilder qb = new QueryBuilder(TechnicalService.class, "service", null);
+    	qb.addCriterion("service.code", "=", code, true);
+		return qb.getTypedQuery(getEntityManager(), TechnicalService.class)
+				.getSingleResult();
+    }
 
     /**
 	 * Retrieves a filtered list of all services.
@@ -171,12 +185,12 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	 * @return The description of the service with given code
 	 */
 	public List<Description> description(String code) {
-    	String serviceQuery = "FROM " + getEntityClass().getName() + " service \n"
+    	String serviceQuery = "FROM " + TechnicalService.class.getName() + " service \n"
     						+ "LEFT JOIN FETCH service.extendedServices \n"
     						+ "WHERE service.code = :code \n";
     	
-		T service = getEntityManager()
-				.createQuery(serviceQuery, getEntityClass())
+    	TechnicalService service = getEntityManager()
+				.createQuery(serviceQuery, TechnicalService.class)
 				.setParameter("code", code)
     			.getSingleResult();
 		
@@ -190,23 +204,40 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         
         if(!service.getExtendedServices().isEmpty()) {
 	        // Retrieve inherited descriptions
-	        String inheritedDescriptionsQuery = "FROM " + Description.class.getName() + " description \n"
-	    									  + "WHERE description.service IN :extendedServices";
+	        List<Description> inheritedDescriptions = service.getExtendedServices()
+	        		.stream()
+	        		.map(TechnicalService::getCode)
+	        		.map(this::description)
+	        		.flatMap(List::stream)
+	        		.collect(Collectors.toList());
 	        
-	        List<Description> inheritedDescriptions = getEntityManager()
-        		.createQuery(inheritedDescriptionsQuery, Description.class)
-	        	.setParameter("extendedServices", service.getExtendedServices())
-	        	.getResultList();
+	        inheritedDescriptions.forEach(d -> { 
+	        	d.setInherited(true);
+	        	d.getInputProperties().forEach(p -> p.setInherited(true));
+	        	d.getOutputProperties().forEach(p -> p.setInherited(true));
+	        });
 	        
-	        inheritedDescriptions.forEach(d -> d.setInherited(true));
-	        resultList.addAll(inheritedDescriptions);
+	        inheritedDescriptions.forEach(inheritedDescription -> {
+	        	Optional<Description> descriptionWithSameName = resultList.stream()
+	        			.filter(d -> d.getName().equals(inheritedDescription.getName()))
+	        			.findFirst();
+	        	
+	        	if(!descriptionWithSameName.isPresent()) {
+	        		resultList.add(inheritedDescription);
+	        	} else {
+	        		// Merge the descriptions
+	        		descriptionWithSameName.get().setInherited(true);
+	        		descriptionWithSameName.get().getInputProperties().addAll(inheritedDescription.getInputProperties());
+	        		descriptionWithSameName.get().getOutputProperties().addAll(inheritedDescription.getOutputProperties());
+	        		descriptionWithSameName.get().setInput(descriptionWithSameName.get().isInput() || inheritedDescription.isInput());
+	        		descriptionWithSameName.get().setOutput(descriptionWithSameName.get().isOutput() || inheritedDescription.isOutput());
+	        	}
+	        });
         }
         
         for(Description desc : resultList) {
         	Hibernate.initialize(desc.getInputProperties());
-        	desc.getInputProperties().forEach(p -> p.setInherited(desc.isInherited()));
         	Hibernate.initialize(desc.getOutputProperties());
-        	desc.getOutputProperties().forEach(p -> p.setInherited(desc.isInherited()));
         }
         
 		return resultList;
@@ -233,6 +264,10 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	 * @param filters Filters to apply
 	 * @return The count of technical services corresponding to the filters
 	 */
+    /**
+     * @param filters
+     * @return
+     */
     public long count(TechnicalServiceFilters filters){
         QueryBuilder qb = filteredQueryBuilder(filters);
         return qb.count(getEntityManager());
@@ -250,8 +285,27 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         return qb.getTypedQuery(getEntityManager(), getEntityClass())
         		.getResultList();
     }
-
+    
     @Override
+	public void create(T executable) throws BusinessException {
+    	retainInheritedDescriptions(executable, executable.getDescriptions());
+		super.create(executable);
+	}
+
+	@Override
+	public T update(T executable) throws BusinessException {
+		removeDescription(executable.getId());
+    	retainInheritedDescriptions(executable, executable.getDescriptions());
+    	System.out.println(executable.getId() + " : " + executable.getDescriptions());
+		return super.update(executable);
+	}
+
+	@Override
+	public void remove(T executable) throws BusinessException {
+		super.remove(executable);
+	}
+
+	@Override
     protected void afterUpdateOrCreate(T executable) {}
 
     @Override
@@ -260,6 +314,66 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     @Override
     protected String getCode(T executable) {
         return executable.getName() + "." + executable.getFunctionVersion();
+    }
+    
+    /**
+     * Remove the inherited descriptions from persisted object
+     * 
+     * @param executable target Technical service
+     */
+    public Map<String, Description> retainInheritedDescriptions(T executable, Map<String, Description> descriptions) {
+    	for(Description description : descriptions.values()) {
+    		if(description.isInherited()) {
+    			description.getInputProperties().removeIf(InputMeveoProperty::isInherited);
+    			description.getOutputProperties().removeIf(OutputMeveoProperty::isInherited);
+    		}
+    	}
+    	
+    	Map<String, Description> inheritedDecriptions = executable.getExtendedServices()
+    			.stream()
+    			.map(service -> description(service.getCode()))
+    			.flatMap(Collection::stream)
+    			.collect(Collectors.toMap(Description::getName, Function.identity()));
+    	
+    	List<String> toRemove = new ArrayList<>();
+    	
+    	for(Description description : descriptions.values()) {
+    		if(description.isInherited()) {
+    			// Compute difference between inherited and actual description
+    			Description inheritedDescription = inheritedDecriptions.get(description.getName());
+    			
+    			if(inheritedDescription != null) {
+	    			// Check if input / ouput is different
+	    			if(description.isInput() != inheritedDescription.isInput()) {
+	    				continue;
+	    			}
+	    			
+	    			if(description.isOutput() != inheritedDescription.isOutput()) {
+	    				continue;
+	    			}
+	    			
+	    			if(!description.getInputProperties().isEmpty()) {
+	    				continue;
+	    			}
+	    			
+	    			if(!description.getOutputProperties().isEmpty()) {
+	    				continue;
+	    			}
+    			}
+    			
+    			toRemove.add(description.getName());    			
+    		}
+    	}
+    	
+    	descriptions.values().removeIf(d -> {
+    		boolean remove = toRemove.contains(d.getName());
+    		if(remove) {
+    			getEntityManager().remove(d);
+    		}
+    		return remove;
+    	});
+    	return descriptions;
+//    	toRemove.forEach(executable.getDescriptions()::remove);
     }
 
     private QueryBuilder filteredQueryBuilder(TechnicalServiceFilters filters) {

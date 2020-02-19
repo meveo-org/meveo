@@ -62,5 +62,9 @@ public class MeveoEntityDescription extends Description implements EntityDescrip
     public String getTypeName() {
         return type.getCode();
     }
+    
+    public String getAppliesTo() {
+    	return type.getAppliesTo();
+    }
 
 }

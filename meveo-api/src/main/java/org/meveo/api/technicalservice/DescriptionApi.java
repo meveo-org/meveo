@@ -144,6 +144,7 @@ public class DescriptionApi {
         Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesTo(appliesTo);
         description.setInput(dto.isInput());
         description.setOutput(dto.isOutput());
+        description.setName(dto.getName());
         final List<InputMeveoProperty> inputProperties = new ArrayList<>();
         final List<OutputMeveoProperty> outputProperties = new ArrayList<>();
         for (InputPropertyDto p : dto.getInputProperties()) {
@@ -172,7 +173,7 @@ public class DescriptionApi {
             outputProperty.setProperty(property);
             outputProperty.setDescription(description);
             outputProperty.setTrustness(p.getTrustness());
-            outputProperty.setInherited(dto.isInherited());
+            outputProperty.setInherited(p.isInherited());
             outputProperties.add(outputProperty);
         }
         description.setOutputProperties(outputProperties);
