@@ -1,10 +1,16 @@
 package org.meveo.model.crm.custom;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import org.meveo.model.crm.EntityReferenceWrapper;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.8.0
+ */
 public enum CustomFieldTypeEnum {
     /**
      * String value
@@ -107,4 +113,13 @@ public enum CustomFieldTypeEnum {
     public Class getDataClass() {
         return dataClass;
     }
+	
+	public static CustomFieldTypeEnum guessEnum(String enumType) {
+		Optional<CustomFieldTypeEnum> opt = Arrays.asList(CustomFieldTypeEnum.values()).stream().filter(e -> e.name().equals(enumType)).findFirst();
+		if (opt.isPresent()) {
+			return opt.get();
+		}
+
+		return CustomFieldTypeEnum.LONG;
+	}
 }

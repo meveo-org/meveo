@@ -40,6 +40,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
 import liquibase.Contexts;
@@ -80,7 +81,7 @@ import liquibase.statement.DatabaseFunction;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.8.0
  */
 @Singleton
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -353,8 +354,14 @@ public class CustomTableCreatorService implements Serializable {
 
 		ChangeSet changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AF_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
 
-		String columnType = getColumnType(cft);
-
+		String columnType;
+		try {
+			columnType = getColumnType(cft);
+			
+		} catch (ClassNotFoundException e1) {
+			throw new IllegalArgumentException("Cannot get field type for entity with code " + cft.getEntityClazzCetCode());
+		}
+		
 		// Check if column type is handled
 		if (columnType != null) {
 
@@ -386,22 +393,7 @@ public class CustomTableCreatorService implements Serializable {
 		// entity reference
 		if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
 
-			// Only add foreign key constraint if referenced entity is stored as table
-			final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-			if (referenceCet == null) {
-				throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet " + cft.getEntityClazzCetCode() + " does not exists");
-			}
-
-			if (referenceCet.getSqlStorageConfiguration() != null && referenceCet.getSqlStorageConfiguration().isStoreAsTable()) {
-				AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
-				foreignKeyConstraint.setBaseColumnNames(dbFieldname);
-				foreignKeyConstraint.setBaseTableName(dbTableName);
-				foreignKeyConstraint.setReferencedColumnNames(UUID);
-				foreignKeyConstraint.setReferencedTableName(SQLStorageConfiguration.getDbTablename(referenceCet));
-				foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
-
-				changeSet.addChange(foreignKeyConstraint);
-			}
+			addForeignKey(sqlConnectionCode, changeSet, cft, dbTableName, dbFieldname);
 		}
 
 		if (!changeSet.getChanges().isEmpty()) {
@@ -587,6 +579,48 @@ public class CustomTableCreatorService implements Serializable {
 		
 		hibernateSession.close();
 	}
+	
+	/**
+	 * Add a foreign key
+	 * @param sqlConnectionCode SQL connection code
+	 * @param changeSet Liquibase changeSet
+	 * @param cft the custom field template
+	 * @param dbTableName SQL table name
+	 * @param dbFieldname SQL field name
+	 */
+	private void addForeignKey(String sqlConnectionCode, ChangeSet changeSet, CustomFieldTemplate cft, String dbTableName, String dbFieldname) {
+		String referenceColumnNames = UUID;
+
+		// Only add foreign key constraint if referenced entity is stored as table
+		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+		String referenceTableName = null;
+		if (referenceCet == null) {
+			try {
+				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
+
+				// get field type of reference entity
+				referenceColumnNames = PersistenceUtils.getPKColumnName(jpaEntityClazz);
+				referenceTableName = PersistenceUtils.getTableName(jpaEntityClazz);
+				
+			} catch (ClassNotFoundException e) {
+				throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet " + cft.getEntityClazzCetCode() + " does not exists");
+			}
+			
+		} else {
+			referenceTableName = SQLStorageConfiguration.getDbTablename(referenceCet);
+		}
+
+		if ((referenceCet != null && referenceCet.getSqlStorageConfiguration() != null && referenceCet.getSqlStorageConfiguration().isStoreAsTable()) || referenceCet == null) {
+			AddForeignKeyConstraintChange foreignKeyConstraint = new AddForeignKeyConstraintChange();
+			foreignKeyConstraint.setBaseColumnNames(dbFieldname);
+			foreignKeyConstraint.setBaseTableName(dbTableName);
+			foreignKeyConstraint.setReferencedColumnNames(referenceColumnNames);
+			foreignKeyConstraint.setReferencedTableName(referenceTableName);
+			foreignKeyConstraint.setConstraintName(getFkConstraintName(dbTableName, cft));
+
+			changeSet.addChange(foreignKeyConstraint);
+		}
+	}
 
 	/**
 	 * Add a change for dropping or creating a unique constraint for a CFT
@@ -766,8 +800,23 @@ public class CustomTableCreatorService implements Serializable {
 			}
 		}
 	}
+	
+	private String getColumnType(CustomFieldTemplate cft) throws ClassNotFoundException {
 
-	private String getColumnType(CustomFieldTemplate cft) {
+		CustomFieldTypeEnum fieldType = cft.getFieldType();
+		if (fieldType == CustomFieldTypeEnum.ENTITY) {
+			final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+			if (referenceCet == null) {
+				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
+				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));
+			}
+		}
+
+		return getColumnType(cft, fieldType);
+	}
+
+	private String getColumnType(CustomFieldTemplate cft, CustomFieldTypeEnum fieldType) throws ClassNotFoundException {
+		
 		// Serialize the field if it is a list, but not a list of entity references
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 			if (cft.getFieldType() != CustomFieldTypeEnum.ENTITY) {
@@ -775,7 +824,7 @@ public class CustomTableCreatorService implements Serializable {
 			}
 		}
 
-		switch (cft.getFieldType()) {
+		switch (fieldType) {
 		case DATE:
 			return "datetime";
 		case DOUBLE:
