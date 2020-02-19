@@ -104,6 +104,14 @@ public class MeveoModule extends BusinessEntity implements Serializable {
         this.moduleFiles = moduleFiles;
     }
 
+    public void addModuleFile(String moduleFile) {
+        this.moduleFiles.add(moduleFile);
+    }
+
+    public void removeModuleFile(String moduleFile) {
+        this.moduleFiles.remove(moduleFile);
+    }
+
     public ModuleLicenseEnum getLicense() {
         return license;
     }

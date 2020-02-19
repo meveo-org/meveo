@@ -206,7 +206,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
             String exportName = exportFile.getName();
             String[] exportFileName = exportName.split("_");
             String name = exportFileName[1];
-            if (name.startsWith("MeveoModule")) {
+            if (name.startsWith("MeveoModule") && name.endsWith(".json")) {
                 String[] moduleName = name.split("\\.");
                 String fileName = moduleName[0];
                 List<MeveoModule> meveoModules = (List<MeveoModule>) getSelectedEntities();

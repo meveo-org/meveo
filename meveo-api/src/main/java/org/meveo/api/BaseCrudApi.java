@@ -63,6 +63,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
+	private Set<File> fileImport = new HashSet<>();;
 
 	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();
@@ -261,10 +262,20 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			if (map.containsKey("moduleItems")) {
 				List<String> items = (List<String>) map.get("moduleFiles");
 				for (String moduleFile : items) {
-					String name = moduleFile.substring(0, moduleFile.length() - 1);
-					File file = new File(name);
-					FileInputStream inputStream = new FileInputStream(file);
-					copyFile(moduleFile, inputStream);
+					for (File file : fileImport) {
+						if (moduleFile.endsWith(file.getName())) {
+							String filePath = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()).replace("\\", "") + moduleFile.replace("\\", "/");
+							File fileFromModule = new File(filePath);
+							if (fileFromModule.isDirectory()) {
+								if (!fileFromModule.exists()) {
+									fileFromModule.mkdir();
+								}
+							} else {
+								FileInputStream inputStream = new FileInputStream(file);
+								copyFile(filePath, inputStream);
+							}
+						}
+					}
 				}
 			}
 			entitiesCasted.add(jsonMapper.convertValue(entity, dtoClass));
@@ -299,41 +310,27 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param file       File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importZip(String fileName, InputStream file, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
+	public void importZip(String fileName, InputStream file, boolean overwrite) {
 		try {
 			FileUtils.unzipFile(fileName, file);
 			buildFileList(fileName, overwrite);
 		} catch (Exception e) {}
 	}
 
-	private void buildFileList(String fileName, boolean overwrite) throws BusinessException, IOException, MeveoApiException{
+	private void buildFileList(String fileName, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		try {
 			File file = new File(fileName);
 			if (fileName.endsWith(".zip")) {
 				File[] files = file.listFiles();
+				for (File fileFromZip : files) {
+					fileImport.add(fileFromZip);
+				}
 				for (File importFile : files) {
-					if (importFile.getName().startsWith("export")) {
-						String[] importFileName = importFile.getName().split("\\.");
-						String typeFile = importFileName[1];
+					if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
 						FileInputStream inputStream = new FileInputStream(importFile);
-						if (typeFile.equals("json")) {
-							importJSON(inputStream, overwrite);
-						} else if (typeFile.equals("xml")) {
-							importXML(inputStream, overwrite);
-						} else if (typeFile.equals("csv")) {
-							importCSV(inputStream, overwrite);
-						}
+						importJSON(inputStream, overwrite);
 					}
 				}
-			} else {
-				String folder = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + File.separator + fileName;
-				File fileFromModule = new File(folder);
-
-				File[] files = fileFromModule.listFiles();
-
-				List<File> fileList = files == null ? new ArrayList<File>() : new ArrayList<File>(Arrays.asList(files));
-				String selectedFolder = fileName.substring(0, fileName.length() - 1);
-				boolean currentDirEmpty = !StringUtils.isBlank(selectedFolder) && fileList.size() == 0;
 			}
 		} catch (FileNotFoundException e) {}
 	}
@@ -342,9 +339,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		try {
 
 			// write the inputStream to a FileOutputStream
-			String providerRoot = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-			String filePath = providerRoot + fileName;
-			OutputStream out = new FileOutputStream(new File(filePath));
+			OutputStream out = new FileOutputStream(new File(fileName));
 
 			int read = 0;
 			byte[] bytes = new byte[1024];
@@ -358,7 +353,6 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			out.close();
 
 			log.debug("New file created!");
-			buildFileList(fileName, false);
 		} catch (Exception e) {
 			log.error("Failed saving file. ", e);
 		}
