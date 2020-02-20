@@ -32,6 +32,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -123,6 +124,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
+	
+	@Transient
+	private boolean hasReferenceJpaEntity = false;
 
 	public SQLStorageConfiguration getSqlStorageConfigurationNullSafe() {
 
@@ -272,6 +276,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 			descendance.addAll(this.getSuperTemplate().ascendance());
 		}
 		return descendance;
+	}
+
+	public boolean hasReferenceJpaEntity() {
+		return hasReferenceJpaEntity;
+	}
+
+	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
+		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
 	}
 
 }

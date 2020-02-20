@@ -436,6 +436,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setUnique(dto.isUnique());
 
         cft.setIdentifier(dto.isIdentifier());
+        
+        cft.setHasReferenceJpaEntity(dto.hasReferenceJpaEntity());
 
         // A cft can't be stored in a db that is not available for its cet
         List<DBStorageType> storageTypes = null;

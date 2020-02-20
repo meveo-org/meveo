@@ -591,4 +591,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
         }
     }
+    
+	public boolean isJpaEntity(String clazz) {
+
+		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(clazz);
+		if (referenceCet == null) {
+			try {
+				Class.forName(clazz);
+				return true;
+
+			} catch (ClassNotFoundException e) {
+				throw new IllegalArgumentException("Class " + clazz + " does not exists.");
+			}
+
+		}
+
+		return false;
+	}
 }

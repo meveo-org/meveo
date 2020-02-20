@@ -40,6 +40,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
@@ -106,6 +107,9 @@ public class CustomTableCreatorService implements Serializable {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
 	private EntityManager getEntityManager(String sqlConfigurationCode) {
 
@@ -314,14 +318,14 @@ public class CustomTableCreatorService implements Serializable {
 			}
 
 		});
-		
+
 		hibernateSession.close();
 	}
 
 	private void setSchemaName(Database database) throws DatabaseException {
 		String schemaName = null;
 		Matcher matcher = Pattern.compile("currentSchema=([^&]*)").matcher(database.getConnection().getURL());
-		if(matcher.find()) {
+		if (matcher.find()) {
 			schemaName = matcher.group(1);
 		}
 		database.setDefaultSchemaName(schemaName);
@@ -357,11 +361,11 @@ public class CustomTableCreatorService implements Serializable {
 		String columnType;
 		try {
 			columnType = getColumnType(cft);
-			
+
 		} catch (ClassNotFoundException e1) {
-			throw new IllegalArgumentException("Cannot get field type for entity with code " + cft.getEntityClazzCetCode());
+			throw new IllegalArgumentException("Cannot get field type for entity with class or code " + cft.getEntityClazzCetCode());
 		}
-		
+
 		// Check if column type is handled
 		if (columnType != null) {
 
@@ -400,8 +404,8 @@ public class CustomTableCreatorService implements Serializable {
 
 			dbLog.addChangeSet(changeSet);
 
-			Session hibernateSession =  sqlConnectionProvider.getSession(sqlConnectionCode);
-			
+			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+
 			try {
 				CompletableFuture.runAsync(() -> {
 					hibernateSession.doWork(connection -> {
@@ -576,17 +580,18 @@ public class CustomTableCreatorService implements Serializable {
 				throw new SQLException(e);
 			}
 		});
-		
+
 		hibernateSession.close();
 	}
-	
+
 	/**
 	 * Add a foreign key
+	 * 
 	 * @param sqlConnectionCode SQL connection code
-	 * @param changeSet Liquibase changeSet
-	 * @param cft the custom field template
-	 * @param dbTableName SQL table name
-	 * @param dbFieldname SQL field name
+	 * @param changeSet         Liquibase changeSet
+	 * @param cft               the custom field template
+	 * @param dbTableName       SQL table name
+	 * @param dbFieldname       SQL field name
 	 */
 	private void addForeignKey(String sqlConnectionCode, ChangeSet changeSet, CustomFieldTemplate cft, String dbTableName, String dbFieldname) {
 		String referenceColumnNames = UUID;
@@ -601,11 +606,11 @@ public class CustomTableCreatorService implements Serializable {
 				// get field type of reference entity
 				referenceColumnNames = PersistenceUtils.getPKColumnName(jpaEntityClazz);
 				referenceTableName = PersistenceUtils.getTableName(jpaEntityClazz);
-				
+
 			} catch (ClassNotFoundException e) {
-				throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet " + cft.getEntityClazzCetCode() + " does not exists");
+				throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet or jpa entity " + cft.getEntityClazzCetCode() + " does not exists");
 			}
-			
+
 		} else {
 			referenceTableName = SQLStorageConfiguration.getDbTablename(referenceCet);
 		}
@@ -705,7 +710,7 @@ public class CustomTableCreatorService implements Serializable {
 				throw new SQLException(e);
 			}
 		});
-		
+
 		hibernateSession.close();
 	}
 
@@ -800,7 +805,7 @@ public class CustomTableCreatorService implements Serializable {
 			}
 		}
 	}
-	
+
 	private String getColumnType(CustomFieldTemplate cft) throws ClassNotFoundException {
 
 		CustomFieldTypeEnum fieldType = cft.getFieldType();
@@ -816,7 +821,7 @@ public class CustomTableCreatorService implements Serializable {
 	}
 
 	private String getColumnType(CustomFieldTemplate cft, CustomFieldTypeEnum fieldType) throws ClassNotFoundException {
-		
+
 		// Serialize the field if it is a list, but not a list of entity references
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 			if (cft.getFieldType() != CustomFieldTypeEnum.ENTITY) {
@@ -858,12 +863,14 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
-	public void createTable(String dbTablename) {
+	public void createTable(String dbTablename, boolean hasReferenceJpaEntity) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> createTable(e.getCode(), dbTablename));
-
-//		createTable(null, dbTablename);
+		sqlConfigs.forEach(e -> {
+			if (!hasReferenceJpaEntity || (hasReferenceJpaEntity && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				createTable(e.getCode(), dbTablename);
+			}
+		});
 	}
 
 	/**
@@ -875,9 +882,12 @@ public class CustomTableCreatorService implements Serializable {
 	public void addField(String dbTablename, CustomFieldTemplate cft) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> addField(e.getCode(), dbTablename, cft));
-
-//		addField(null, dbTablename, cft);
+		sqlConfigs.forEach(e -> {
+			// non entity field
+			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				addField(e.getCode(), dbTablename, cft);
+			}
+		});
 	}
 
 	/**
@@ -889,9 +899,12 @@ public class CustomTableCreatorService implements Serializable {
 	public void updateField(String dbTablename, CustomFieldTemplate cft) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> updateField(e.getCode(), dbTablename, cft));
-
-//		updateField(null, dbTablename, cft);
+		sqlConfigs.forEach(e -> {
+			// non entity field
+			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				updateField(e.getCode(), dbTablename, cft);
+			}
+		});
 	}
 
 	/**
@@ -903,8 +916,6 @@ public class CustomTableCreatorService implements Serializable {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> removeTable(e.getCode(), dbTablename));
-
-//		removeTable(null, dbTablename);
 	}
 
 	/**
@@ -916,9 +927,13 @@ public class CustomTableCreatorService implements Serializable {
 	public void removeField(String dbTablename, CustomFieldTemplate cft) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> removeField(e.getCode(), dbTablename, cft));
+		sqlConfigs.forEach(e -> {
+			// non entity field
+			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				removeField(e.getCode(), dbTablename, cft);
+			}
+		});
 
-//		removeField(null, dbTablename, cft);
 	}
 
 	/**
@@ -940,7 +955,7 @@ public class CustomTableCreatorService implements Serializable {
 				}
 			}
 		});
-		
+
 		hibernateSession.close();
 	}
 }

@@ -60,6 +60,7 @@ import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
@@ -67,6 +68,7 @@ import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
@@ -114,6 +116,9 @@ public class CrossStorageService implements CustomPersistenceService {
 
 	@Inject
 	private Logger log;
+	
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
 	/**
 	 * Retrieves one entity instance
@@ -531,6 +536,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (repository == null) {
 			throw new IllegalArgumentException("Repository should be provided");
 		}
+		
+		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(ceiToSave.getCet());
+		
+		if (hasReferenceJpaEntity && !repository.getSqlConfigurationCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+			throw new IllegalArgumentException("CET with JPA reference entity cannot be save in a non-default SqlConfiguration.");
+		}
 
 		Set<EntityRef> persistedEntities = new HashSet<>();
 
@@ -753,7 +764,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		String tableName = cei.getTableName();
 		String sqlUUID = null;
-
+		
 		if(cei.getUuid() != null) {
 			try {
 				Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
@@ -1142,69 +1153,85 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
 				final CustomEntityTemplate referencedCet = customFieldsCacheContainerProvider.getCustomEntityTemplate(customFieldTemplate.getEntityClazzCetCode());
 
-				List<Object> entitiesToCreate = new ArrayList<>();
-				final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
-
-				if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
-					Collection<?> collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
-					if (!collectionValue.isEmpty()) {
-						entitiesToCreate.add(collectionValue.iterator().next());
-					}
-				} else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-					entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
-				} else if (fieldValue instanceof Map) {
-					entitiesToCreate.add(fieldValue);
-				} else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
-					entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
-				} else if(fieldValue instanceof EntityReferenceWrapper) {
-					updatedValues.put(customFieldTemplate.getCode(), ((EntityReferenceWrapper) fieldValue).getUuid());
-				}
-
-				final Set<EntityRef> createdEntityReferences = new HashSet<>();
-
-				for (Object e : entitiesToCreate) {
-					if (e instanceof Map) {
-						CustomEntityInstance cei = new CustomEntityInstance();
-						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
-						cei.setCode((String) ((Map<?, ?>) e).get("code"));
-
-						customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
-
-						final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
-						if (createdEntities.isEmpty()) {
-							log.error("Failed to create reference for {} ", cei, new Exception());
-						}
-
-						createdEntityReferences.addAll(createdEntities);
-
-					} else if (e instanceof String) {
-						// If entity reference is a string, then it means it refers to an existing UUID
-						EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
-						entityRef.setTrustScore(100);
-						createdEntityReferences.add(entityRef);
-					}
-				}
-
-				List<String> uuids = getTrustedUuids(createdEntityReferences);
-
-				// Replace with entity reference's UUID only when target is not primitive
-				if (referencedCet.getNeo4JStorageConfiguration() == null || !referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
-
-					if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-						updatedValues.put(customFieldTemplate.getCode(), uuids);
-					} else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !uuids.isEmpty()) {
-						updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
-					}
-
+				if(referencedCet != null) {
+					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
+				
 				} else {
-					// If entity reference is primitive, place the UUID in the map along with the
-					// value
-					updatedValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
+					
 				}
+				
 			}
 		}
 
 		return updatedValues;
+	}
+
+	private void createCetReference(Repository repository, Map<String, Object> updatedValues, CustomFieldTemplate customFieldTemplate, CustomEntityTemplate referencedCet) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
+		List<Object> entitiesToCreate = new ArrayList<>();
+		final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
+
+		if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
+			Collection<?> collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
+			if (!collectionValue.isEmpty()) {
+				entitiesToCreate.add(collectionValue.iterator().next());
+			}
+		
+		} else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+			entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
+		
+		} else if (fieldValue instanceof Map) {
+			entitiesToCreate.add(fieldValue);
+		
+		} else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
+		
+		} else if (fieldValue instanceof EntityReferenceWrapper) {
+			updatedValues.put(customFieldTemplate.getCode(), ((EntityReferenceWrapper) fieldValue).getUuid());
+		}
+
+		final Set<EntityRef> createdEntityReferences = new HashSet<>();
+
+		for (Object e : entitiesToCreate) {
+			if (e instanceof Map) {
+				CustomEntityInstance cei = new CustomEntityInstance();
+				cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
+				cei.setCode((String) ((Map<?, ?>) e).get("code"));
+
+				customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
+
+				final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
+				if (createdEntities.isEmpty()) {
+					log.error("Failed to create reference for {} ", cei, new Exception());
+				}
+
+				createdEntityReferences.addAll(createdEntities);
+
+			} else if (e instanceof String) {
+				// If entity reference is a string, then it means it refers to an existing UUID
+				EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
+				entityRef.setTrustScore(100);
+				createdEntityReferences.add(entityRef);
+			}
+		}
+
+		List<String> uuids = getTrustedUuids(createdEntityReferences);
+
+		// Replace with entity reference's UUID only when target is not primitive
+		if (referencedCet.getNeo4JStorageConfiguration() == null || !referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+
+			if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+				updatedValues.put(customFieldTemplate.getCode(), uuids);
+
+			} else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !uuids.isEmpty()) {
+				updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
+			}
+
+		} else {
+			// If entity reference is primitive, place the UUID in the map along with the
+			// value
+			updatedValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
+		}
+
 	}
 
 	private String findUniqueRelationByTargetUuid(Repository repository, String targetUuid, CustomRelationshipTemplate crt) {

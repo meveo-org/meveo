@@ -13,8 +13,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -22,6 +20,11 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.persistence.DBStorageType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class CustomFieldTemplateDto.
@@ -273,6 +276,9 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     @XmlElement()
     @ApiModelProperty("Display format")
     private String displayFormat;
+    
+    @JsonIgnore
+	private boolean hasReferenceJpaEntity;
 
     /**
      * Instantiates a new custom field template dto.
@@ -994,4 +1000,16 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     public void setSamples(List<String> samples) {
         this.samples = samples;
     }
+    
+    public String getEntityClazzCetCode() {
+        return CustomFieldTemplate.retrieveCetCode(entityClazz);
+    }
+
+	public boolean hasReferenceJpaEntity() {
+		return hasReferenceJpaEntity;
+	}
+
+	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
+		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
+	}
 }

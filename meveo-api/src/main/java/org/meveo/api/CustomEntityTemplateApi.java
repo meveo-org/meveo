@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,7 @@ import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -134,7 +136,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			}
 		}
 
+    	boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
         CustomEntityTemplate cet = fromDTO(dto, null);
+        cet.setHasReferenceJpaEntity(hasReferenceJpaEntity);
 
         setSuperTemplate(dto, cet);
         
@@ -144,6 +148,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+	            	cftDto.setHasReferenceJpaEntity(hasReferenceJpaEntity);
 	                customFieldTemplateApi.createOrUpdate(cftDto, cet.getAppliesTo());
 	            }
 	        }
@@ -191,6 +196,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet == null) {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
         }
+        boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
+        cet.setHasReferenceJpaEntity(hasReferenceJpaEntity);
         
         // Validate field types for custom table
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && dto.getFields() != null) {
@@ -704,6 +711,18 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         return dto;
     }
+    
+	private boolean hasReferenceJpaEntity(CustomEntityTemplateDto cetDto) {
+		if (cetDto.getFields() != null) {
+			Optional<CustomFieldTemplateDto> opt = cetDto.getFields().stream()
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isJpaEntity(e.getEntityClazzCetCode())).findAny();
+			if (opt.isPresent()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	@Override
 	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
