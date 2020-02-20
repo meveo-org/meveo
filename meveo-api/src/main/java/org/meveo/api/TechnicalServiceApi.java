@@ -311,7 +311,10 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      */
     public TechnicalServiceDto findByNameAndVersionOrLatest(String name, Integer version) throws EntityDoesNotExistsException {
         T technicalService = getTechnicalService(name, version);
-        return toDto(technicalService);
+        D dto = toDto(technicalService);
+        List<InputOutputDescription> description = description(name, version);
+        dto.setDescriptions(description);
+		return dto;
     }
 
     /**
