@@ -17,13 +17,21 @@
  */
 package org.meveo.api.rest.module.impl;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -31,6 +39,7 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.rest.impl.BaseRs;
@@ -49,6 +58,9 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
     @Inject
     private MeveoModuleApi moduleApi;
+
+    @Context
+    private HttpServletResponse httpServletResponse;
 
     @Override
     public ActionStatus create(MeveoModuleDto moduleData, boolean development) {
@@ -221,4 +233,60 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         return result;
 	}
+
+    @Override
+    public void importZip(@NotNull InputStream inputStream, String fileName, boolean overwrite) {
+        moduleApi.importZip(fileName, inputStream, overwrite);
+    }
+
+    @Override
+    public ActionStatus export(List<String> modulesCode, ExportFormat exportFormat) throws IOException, EntityDoesNotExistsException {
+        ActionStatus actionStatus = new ActionStatus();
+
+        List<MeveoModule> meveoModules = new ArrayList<>();
+        if (modulesCode != null) {
+            for (String code : modulesCode) {
+                MeveoModule meveoModule = moduleApi.findByCode(code);
+                if (meveoModule != null) {
+                    meveoModules.add(meveoModule);
+                }
+            }
+        }
+        File exportFile = moduleApi.exportEntities(exportFormat, meveoModules);
+        OutputStream opStream = null;
+        File fileZip = null;
+        InputStream is = null;
+        try {
+            String exportName = exportFile.getName();
+            String[] exportFileName = exportName.split("_");
+            String name = exportFileName[1];
+            String[] data = name.split("\\.");
+            String fileName = data[0];
+            if (name.startsWith("MeveoModule") && name.endsWith(".json")) {
+                for (int i = 0; i < meveoModules.size(); i++) {
+                    if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
+                       byte[] filedata = moduleApi.createZipFile(exportFile.getAbsolutePath(), meveoModules);
+                       fileZip = new File(fileName);
+                       opStream = new FileOutputStream(fileZip);
+                       opStream.write(filedata);
+                    }
+                }
+            }
+            if (fileZip != null) {
+                is = new FileInputStream(fileZip);
+                httpServletResponse.setContentType(Files.probeContentType(fileZip.toPath()));
+            } else {
+                is = new FileInputStream(exportFile);
+                httpServletResponse.setContentType(Files.probeContentType(exportFile.toPath()));
+            }
+            httpServletResponse.addHeader("Content-disposition", "attachment;filename=\"" + fileName + "\"");
+            IOUtils.copy(is, httpServletResponse.getOutputStream());
+            httpServletResponse.flushBuffer();
+
+        } catch (Exception e) {
+            processException(e, actionStatus);
+        }
+
+        return actionStatus;
+    }
 }

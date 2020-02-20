@@ -17,6 +17,7 @@
  */
 package org.meveo.api.rest.module;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -32,17 +33,24 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * JAX-RS interface for MeveoModule management
@@ -240,4 +248,28 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/fork/{code}")
 	@ApiOperation(value = "Fork meveo module by code")
 	ActionStatus fork(@PathParam("code") @ApiParam("Code of the module") String moduleCode);
+
+	/**
+	 * Import a zipped module with files
+	 *
+	 * @param inputStream Input stream
+	 * @param fileName    Name of the zip
+	 * @param overwrite   Overwrite
+	 */
+	@POST
+	@Path("/{fileName}/importZip")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@ApiOperation(value = "Import from a zip")
+	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Input stream") InputStream inputStream, @PathParam("fileName") @ApiParam("Name of the zip") String fileName,
+						   @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
+
+	/**
+	 * Export module
+	 *
+	 * @param modulesCode   List of the code meveo module
+	 */
+	@GET
+	@Path("/export")
+	@ApiOperation(value = "Export to a file")
+	ActionStatus export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws IOException, EntityDoesNotExistsException;
 }

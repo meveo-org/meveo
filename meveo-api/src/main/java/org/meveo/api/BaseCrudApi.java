@@ -20,12 +20,11 @@ package org.meveo.api;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipOutputStream;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
@@ -35,7 +34,6 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.IEntity;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
@@ -50,6 +48,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * Base API service for CRUD operations on entity
@@ -322,6 +324,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			File file = new File(fileName);
 			if (fileName.endsWith(".zip")) {
 				File[] files = file.listFiles();
+				fileImport.clear();
 				for (File fileFromZip : files) {
 					fileImport.add(fileFromZip);
 				}
@@ -355,6 +358,47 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			log.debug("New file created!");
 		} catch (Exception e) {
 			log.error("Failed saving file. ", e);
+		}
+	}
+
+	/**
+	 * Compress module and its files into byte array.
+	 *
+	 * @param exportFile file to export
+	 * @param meveoModules list of meveo modules
+	 * @return zip file as byte array
+	 * @throws Exception exception.
+	 */
+	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules) throws Exception {
+
+		Logger log = LoggerFactory.getLogger(FileUtils.class);
+		log.info("Creating zip file for {}", exportFile);
+
+		ZipOutputStream zos = null;
+		ByteArrayOutputStream baos = null;
+		CheckedOutputStream cos = null;
+		try {
+			baos = new ByteArrayOutputStream();
+			cos = new CheckedOutputStream(baos, new CRC32());
+			zos = new ZipOutputStream(new BufferedOutputStream(cos));
+			File sourceFile = new File(exportFile);
+			addToZipFile(sourceFile, zos, null);
+			for (MeveoModule meveoModule: meveoModules) {
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
+					for (String pathFile : meveoModule.getModuleFiles()) {
+						File file = new File(paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + pathFile);
+						addToZipFile(file, zos, null);
+					}
+				}
+			}
+			zos.flush();
+			zos.close();
+			return baos.toByteArray();
+
+		} finally {
+			IOUtils.closeQuietly(zos);
+			IOUtils.closeQuietly(cos);
+			IOUtils.closeQuietly(baos);
 		}
 	}
 

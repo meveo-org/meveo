@@ -64,9 +64,6 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    private ParamBeanFactory paramBeanFactory;
-
     private BaseCrudApi<T, D> baseCrudApi;
     
     private boolean override;
@@ -212,8 +209,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
                 List<MeveoModule> meveoModules = (List<MeveoModule>) getSelectedEntities();
                 for (int i = 0; i < meveoModules.size(); i++) {
                     if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
-                        String providerRoot = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-                        byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules, providerRoot);
+                        byte[] filedata = baseCrudApi.createZipFile(exportFile.getAbsolutePath(), meveoModules);
                         InputStream is = new ByteArrayInputStream(filedata);
                         return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
                     }
@@ -232,47 +228,4 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 	public ExportFormat[] getExportFormats(){
 	    return ExportFormat.values();
     }
-
-    /**
-     * Compress module and its files into byte array.
-     *
-     * @param exportFile file to export
-     * @param meveoModules list of meveo modules
-     * @param providerRoot
-     * @return zip file as byte array
-     * @throws Exception exception.
-     */
-    public static byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules, String providerRoot) throws Exception {
-
-        Logger log = LoggerFactory.getLogger(FileUtils.class);
-        log.info("Creating zip file for {}", exportFile);
-
-        ZipOutputStream zos = null;
-        ByteArrayOutputStream baos = null;
-        CheckedOutputStream cos = null;
-        try {
-            baos = new ByteArrayOutputStream();
-            cos = new CheckedOutputStream(baos, new CRC32());
-            zos = new ZipOutputStream(new BufferedOutputStream(cos));
-            File sourceFile = new File(exportFile);
-            addToZipFile(sourceFile, zos, null);
-           for (MeveoModule meveoModule: meveoModules) {
-               if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
-                   for (String pathFile : meveoModule.getModuleFiles()) {
-                       File file = new File(providerRoot + pathFile);
-                       addToZipFile(file, zos, null);
-                   }
-               }
-           }
-            zos.flush();
-            zos.close();
-            return baos.toByteArray();
-
-        } finally {
-            IOUtils.closeQuietly(zos);
-            IOUtils.closeQuietly(cos);
-            IOUtils.closeQuietly(baos);
-        }
-    }
-
 }

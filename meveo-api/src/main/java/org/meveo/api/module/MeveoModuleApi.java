@@ -709,4 +709,14 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		module.setModuleSource(null);
 	}
+
+	public MeveoModule findByCode(String moduleCode) throws EntityDoesNotExistsException {
+        MeveoModule meveoModule = meveoModuleService.findByCode(moduleCode);
+
+        if (meveoModule == null) {
+            throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
+        }
+
+        return meveoModule;
+    }
 }
