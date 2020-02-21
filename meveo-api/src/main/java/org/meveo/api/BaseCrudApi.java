@@ -289,7 +289,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			FileUtils.unzipFile(fileName, file);
 			buildFileList(fileName, overwrite);
 		} catch (Exception e) {
-			log.error("Error import zip file {} {}", fileName, e.getMessage());
+			log.error("Error import zip file {}", fileName, e);
 		}
 	}
 

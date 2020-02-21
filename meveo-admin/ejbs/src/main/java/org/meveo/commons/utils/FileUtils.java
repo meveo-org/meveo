@@ -465,7 +465,10 @@ public final class FileUtils {
                 if (!fileout.exists()) {
                     (new File(fileout.getParent())).mkdirs();
                 }
-                try (OutputStream fos = new FileOutputStream(fileout); BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                try (
+                		OutputStream fos = new FileOutputStream(fileout);
+                		BufferedOutputStream bos = new BufferedOutputStream(fos)
+    				) {
                     int b = -1;
                     while ((b = bis.read()) != -1) {
                         bos.write(b);
