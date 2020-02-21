@@ -12,7 +12,6 @@ import org.meveo.api.dto.CountryDto;
  *
  * @author Edward P. Legaspi
  * @since Oct 7, 2013
- * @deprecated will be renammed to GettTradingCountryResponse
  */
 @XmlRootElement(name = "GetCountryResponse")
 @XmlAccessorType(XmlAccessType.FIELD)

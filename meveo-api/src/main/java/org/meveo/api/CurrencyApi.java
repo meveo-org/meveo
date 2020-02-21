@@ -14,8 +14,7 @@ import javax.inject.Inject;
 
 /**
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingCurrencyApi
+ *
  **/
 @Stateless
 public class CurrencyApi extends BaseApi {

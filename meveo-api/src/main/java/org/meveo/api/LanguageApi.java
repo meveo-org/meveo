@@ -15,8 +15,7 @@ import javax.inject.Inject;
 
 /**
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingLanguageApi
+ *
  **/
 @Stateless
 public class LanguageApi extends BaseApi {

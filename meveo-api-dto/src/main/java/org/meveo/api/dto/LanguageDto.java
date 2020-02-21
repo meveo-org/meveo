@@ -14,7 +14,6 @@ import org.meveo.model.billing.Language;
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * @deprecated will be renammed to TradingLanguageDto
  */
 @XmlRootElement(name = "Language")
 @XmlAccessorType(XmlAccessType.FIELD)

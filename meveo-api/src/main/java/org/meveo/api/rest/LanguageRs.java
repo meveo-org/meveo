@@ -25,8 +25,7 @@ import io.swagger.annotations.ApiParam;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * 
- * @deprecated will be rennamed to TradingLanguageRs
+ *
  **/
 @Path("/language")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

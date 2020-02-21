@@ -18,8 +18,7 @@ import javax.inject.Inject;
 /**
  * @author Edward P. Legaspi
  * @since Oct 4, 2013
- * 
- * @deprecated will be renammed to TradingCountryApi
+ *
  **/
 @Stateless
 public class CountryApi extends BaseApi {
