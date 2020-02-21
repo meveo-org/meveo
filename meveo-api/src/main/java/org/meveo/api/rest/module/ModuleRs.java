@@ -42,6 +42,7 @@ import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.module.impl.ModuleUploadForm;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 import io.swagger.annotations.Api;
@@ -252,24 +253,22 @@ public interface ModuleRs extends IBaseRs {
 	/**
 	 * Import a zipped module with files
 	 *
-	 * @param inputStream Input stream
-	 * @param fileName    Name of the zip
+	 * @param uploadForm  Upload module
 	 * @param overwrite   Overwrite
 	 */
 	@POST
-	@Path("/{fileName}/importZip")
+	@Path("/importZip")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@ApiOperation(value = "Import from a zip")
-	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Input stream") InputStream inputStream, @PathParam("fileName") @ApiParam("Name of the zip") String fileName,
-						   @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
+	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Upload module") ModuleUploadForm uploadForm, @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
 
 	/**
 	 * Export module
 	 *
-	 * @param modulesCode   List of the code meveo module
+	 * @param modulesCode List of the code meveo module
 	 */
 	@GET
 	@Path("/export")
 	@ApiOperation(value = "Export to a file")
-	ActionStatus export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws IOException, EntityDoesNotExistsException;
+	ActionStatus export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat);
 }

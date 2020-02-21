@@ -199,24 +199,6 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
         DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
 
         File exportFile = baseCrudApi.exportEntities(exportFormat, getSelectedEntities());
-        try {
-            String exportName = exportFile.getName();
-            String[] exportFileName = exportName.split("_");
-            String name = exportFileName[1];
-            if (name.startsWith("MeveoModule") && name.endsWith(".json")) {
-                String[] moduleName = name.split("\\.");
-                String fileName = moduleName[0];
-                List<MeveoModule> meveoModules = (List<MeveoModule>) getSelectedEntities();
-                for (int i = 0; i < meveoModules.size(); i++) {
-                    if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
-                        byte[] filedata = baseCrudApi.createZipFile(exportFile.getAbsolutePath(), meveoModules);
-                        InputStream is = new ByteArrayInputStream(filedata);
-                        return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
-                    }
-                }
-            }
-        } catch (Exception e) {
-        }
 
         defaultStreamedContent.setContentEncoding("UTF-8");
         defaultStreamedContent.setStream(new FileInputStream(exportFile));

@@ -20,11 +20,8 @@ package org.meveo.api;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedOutputStream;
-import java.util.zip.ZipOutputStream;
+
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
@@ -35,7 +32,6 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.IEntity;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.model.SortOrder;
 
@@ -48,10 +44,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * Base API service for CRUD operations on entity
@@ -65,7 +57,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
-	private Set<File> fileImport = new HashSet<>();;
+	private Set<File> fileImport = new HashSet<>();
 
 	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();
@@ -259,33 +251,12 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		List<?> entities = jsonMapper.readValue(json, List.class);
 
 		List<T> entitiesCasted = new ArrayList<>();
-		for (Object entity : entities) {
-			Map<String, Object> map = (LinkedHashMap<String, Object>) entity;
-			if (map.containsKey("moduleItems")) {
-				List<String> items = (List<String>) map.get("moduleFiles");
-				for (String moduleFile : items) {
-					for (File file : fileImport) {
-						if (moduleFile.endsWith(file.getName())) {
-							String filePath = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()).replace("\\", "") + moduleFile.replace("\\", "/");
-							File fileFromModule = new File(filePath);
-							if (fileFromModule.isDirectory()) {
-								if (!fileFromModule.exists()) {
-									fileFromModule.mkdir();
-								}
-							} else {
-								FileInputStream inputStream = new FileInputStream(file);
-								copyFile(filePath, inputStream);
-							}
-						}
-					}
-				}
-			}
+		for(Object entity : entities) {
 			entitiesCasted.add(jsonMapper.convertValue(entity, dtoClass));
 		}
 
-	importEntities(entitiesCasted, overwrite);
-
-}
+		importEntities(entitiesCasted, overwrite);
+	}
 	
 	/**
 	 * Import data from a CSV file
@@ -309,6 +280,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * Import data from a zip
 	 *
+	 * @param fileName   Name of the file
 	 * @param file       File to import
 	 * @param overwrite Whether we should update existing data
 	 */
@@ -316,7 +288,9 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		try {
 			FileUtils.unzipFile(fileName, file);
 			buildFileList(fileName, overwrite);
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			log.error("Error import zip file {} {}", fileName, e.getMessage());
+		}
 	}
 
 	private void buildFileList(String fileName, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
@@ -335,70 +309,8 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 					}
 				}
 			}
-		} catch (FileNotFoundException e) {}
-	}
-
-	private void copyFile(String fileName, InputStream in) {
-		try {
-
-			// write the inputStream to a FileOutputStream
-			OutputStream out = new FileOutputStream(new File(fileName));
-
-			int read = 0;
-			byte[] bytes = new byte[1024];
-
-			while ((read = in.read(bytes)) != -1) {
-				out.write(bytes, 0, read);
-			}
-
-			in.close();
-			out.flush();
-			out.close();
-
-			log.debug("New file created!");
-		} catch (Exception e) {
-			log.error("Failed saving file. ", e);
-		}
-	}
-
-	/**
-	 * Compress module and its files into byte array.
-	 *
-	 * @param exportFile file to export
-	 * @param meveoModules list of meveo modules
-	 * @return zip file as byte array
-	 * @throws Exception exception.
-	 */
-	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules) throws Exception {
-
-		Logger log = LoggerFactory.getLogger(FileUtils.class);
-		log.info("Creating zip file for {}", exportFile);
-
-		ZipOutputStream zos = null;
-		ByteArrayOutputStream baos = null;
-		CheckedOutputStream cos = null;
-		try {
-			baos = new ByteArrayOutputStream();
-			cos = new CheckedOutputStream(baos, new CRC32());
-			zos = new ZipOutputStream(new BufferedOutputStream(cos));
-			File sourceFile = new File(exportFile);
-			addToZipFile(sourceFile, zos, null);
-			for (MeveoModule meveoModule: meveoModules) {
-				if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
-					for (String pathFile : meveoModule.getModuleFiles()) {
-						File file = new File(paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + pathFile);
-						addToZipFile(file, zos, null);
-					}
-				}
-			}
-			zos.flush();
-			zos.close();
-			return baos.toByteArray();
-
-		} finally {
-			IOUtils.closeQuietly(zos);
-			IOUtils.closeQuietly(cos);
-			IOUtils.closeQuietly(baos);
+		} catch (FileNotFoundException e) {
+			throw new FileNotFoundException();
 		}
 	}
 
@@ -424,5 +336,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	public File exportJSON(PagingAndFiltering config) throws InvalidParameterException, IOException {
 		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
 		return exportJSON(pagination);
+	}
+
+	public Class<T> getDtoClass() {
+		return dtoClass;
+	}
+
+	public Set<File> getFileImport() {
+		return fileImport;
 	}
 }

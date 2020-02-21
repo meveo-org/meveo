@@ -235,58 +235,18 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 	}
 
     @Override
-    public void importZip(@NotNull InputStream inputStream, String fileName, boolean overwrite) {
-        moduleApi.importZip(fileName, inputStream, overwrite);
+    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) {
+        moduleApi.importZip(uploadForm.getFilename(), uploadForm.getData(), overwrite);
     }
 
     @Override
-    public ActionStatus export(List<String> modulesCode, ExportFormat exportFormat) throws IOException, EntityDoesNotExistsException {
-        ActionStatus actionStatus = new ActionStatus();
-
-        List<MeveoModule> meveoModules = new ArrayList<>();
-        if (modulesCode != null) {
-            for (String code : modulesCode) {
-                MeveoModule meveoModule = moduleApi.findByCode(code);
-                if (meveoModule != null) {
-                    meveoModules.add(meveoModule);
-                }
-            }
-        }
-        File exportFile = moduleApi.exportEntities(exportFormat, meveoModules);
-        OutputStream opStream = null;
-        File fileZip = null;
-        InputStream is = null;
+    public ActionStatus export(List<String> modulesCode, ExportFormat exportFormat) {
+        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {
-            String exportName = exportFile.getName();
-            String[] exportFileName = exportName.split("_");
-            String name = exportFileName[1];
-            String[] data = name.split("\\.");
-            String fileName = data[0];
-            if (name.startsWith("MeveoModule") && name.endsWith(".json")) {
-                for (int i = 0; i < meveoModules.size(); i++) {
-                    if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
-                       byte[] filedata = moduleApi.createZipFile(exportFile.getAbsolutePath(), meveoModules);
-                       fileZip = new File(fileName);
-                       opStream = new FileOutputStream(fileZip);
-                       opStream.write(filedata);
-                    }
-                }
-            }
-            if (fileZip != null) {
-                is = new FileInputStream(fileZip);
-                httpServletResponse.setContentType(Files.probeContentType(fileZip.toPath()));
-            } else {
-                is = new FileInputStream(exportFile);
-                httpServletResponse.setContentType(Files.probeContentType(exportFile.toPath()));
-            }
-            httpServletResponse.addHeader("Content-disposition", "attachment;filename=\"" + fileName + "\"");
-            IOUtils.copy(is, httpServletResponse.getOutputStream());
-            httpServletResponse.flushBuffer();
-
+            moduleApi.exportModule(modulesCode, exportFormat, httpServletResponse);
         } catch (Exception e) {
-            processException(e, actionStatus);
+            processException(e, result);
         }
-
-        return actionStatus;
+        return result;
     }
 }

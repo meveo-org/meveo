@@ -17,19 +17,22 @@
  */
 package org.meveo.api.module;
 
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
@@ -51,6 +54,8 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.export.ExportFormat;
+import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -70,6 +75,10 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * @author Clément Bareth
@@ -710,13 +719,149 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		module.setModuleSource(null);
 	}
 
-	public MeveoModule findByCode(String moduleCode) throws EntityDoesNotExistsException {
-        MeveoModule meveoModule = meveoModuleService.findByCode(moduleCode);
+    @Override
+    public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
+        ObjectMapper jsonMapper = new ObjectMapper();
+        List<MeveoModule> entities = jsonMapper.readValue(json, List.class);
 
-        if (meveoModule == null) {
-            throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
+        List<MeveoModuleDto> entitiesCasted = new ArrayList<>();
+        for (Object entity : entities) {
+            Map<String, Object> map = (LinkedHashMap<String, Object>) entity;
+            List<String> moduleFiles = (List<String>) map.get("moduleFiles");
+                for (String moduleFile : moduleFiles) {
+                    for (File file : getFileImport()) {
+                        if (moduleFile.endsWith(file.getName())) {
+                            String filePath = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()).replace("\\", "") + moduleFile.replace("\\", "/");
+                            File fileFromModule = new File(filePath);
+                            if (fileFromModule.isDirectory()) {
+                                if (!fileFromModule.exists()) {
+                                    fileFromModule.mkdir();
+                                }
+                            } else {
+                                FileInputStream inputStream = new FileInputStream(file);
+                                copyFile(filePath, inputStream);
+                            }
+                        }
+                    }
+                }
+            entitiesCasted.add(jsonMapper.convertValue(entity, getDtoClass()));
         }
 
-        return meveoModule;
+        importEntities(entitiesCasted, overwrite);
+    }
+
+    @Override
+    public void importZip(String fileName, InputStream inputStream, boolean overwrite) {
+        super.importZip(fileName, inputStream, overwrite);
+    }
+
+    private void copyFile(String fileName, InputStream in) {
+        try {
+
+            // write the inputStream to a FileOutputStream
+            OutputStream out = new FileOutputStream(new File(fileName));
+
+            int read = 0;
+            byte[] bytes = new byte[1024];
+
+            while ((read = in.read(bytes)) != -1) {
+                out.write(bytes, 0, read);
+            }
+
+            in.close();
+            out.flush();
+            out.close();
+
+            log.debug("New file created!");
+        } catch (Exception e) {
+            log.error("Failed saving file. ", e);
+        }
+    }
+
+    /**
+     * Compress module and its files into byte array.
+     *
+     * @param exportFile file to export
+     * @param meveoModules list of meveo modules
+     * @return zip file as byte array
+     * @throws Exception exception.
+     */
+    public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules) throws Exception {
+
+        Logger log = LoggerFactory.getLogger(FileUtils.class);
+        log.info("Creating zip file for {}", exportFile);
+
+        ZipOutputStream zos = null;
+        ByteArrayOutputStream baos = null;
+        CheckedOutputStream cos = null;
+        Set<String> moduleFileList = new HashSet<>();
+        try {
+            baos = new ByteArrayOutputStream();
+            cos = new CheckedOutputStream(baos, new CRC32());
+            zos = new ZipOutputStream(new BufferedOutputStream(cos));
+            File sourceFile = new File(exportFile);
+            addToZipFile(sourceFile, zos, null);
+            for (MeveoModule meveoModule: meveoModules) {
+                for (String pathFile : meveoModule.getModuleFiles()) {
+                    moduleFileList.add(pathFile);
+                }
+            }
+
+            for (String moduleFile : moduleFileList) {
+                File file = new File(paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + moduleFile);
+                addToZipFile(file, zos, null);
+            }
+
+            zos.flush();
+            zos.close();
+            return baos.toByteArray();
+
+        } finally {
+            IOUtils.closeQuietly(zos);
+            IOUtils.closeQuietly(cos);
+            IOUtils.closeQuietly(baos);
+        }
+    }
+
+    public void exportModule(List<String> modulesCode, ExportFormat exportFormat, HttpServletResponse httpServletResponse) throws Exception {
+
+        List<MeveoModule> meveoModules = new ArrayList<>();
+        if (modulesCode != null) {
+            for (String code : modulesCode) {
+                MeveoModule meveoModule = meveoModuleService.findByCode(code);
+                if (meveoModule != null) {
+                    meveoModules.add(meveoModule);
+                }
+            }
+        }
+        File exportFile = exportEntities(exportFormat, meveoModules);
+        OutputStream opStream = null;
+        File fileZip = null;
+        InputStream is = null;
+        String exportName = exportFile.getName();
+        String[] exportFileName = exportName.split("_");
+        String name = exportFileName[1];
+        String[] data = name.split("\\.");
+        String fileName = data[0];
+        if (exportName.endsWith(".json")) {
+            for (int i = 0; i < meveoModules.size(); i++) {
+                if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
+                    byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules);
+                    fileZip = new File(fileName);
+                    opStream = new FileOutputStream(fileZip);
+                    opStream.write(filedata);
+                }
+            }
+        }
+        if (fileZip != null) {
+            is = new FileInputStream(fileZip);
+            httpServletResponse.setContentType(Files.probeContentType(fileZip.toPath()));
+        } else {
+            is = new FileInputStream(exportFile);
+            httpServletResponse.setContentType(Files.probeContentType(exportFile.toPath()));
+        }
+        httpServletResponse.addHeader("Content-disposition", "attachment;filename=\"" + fileName + "\"");
+        IOUtils.copy(is, httpServletResponse.getOutputStream());
+        httpServletResponse.flushBuffer();
     }
 }
