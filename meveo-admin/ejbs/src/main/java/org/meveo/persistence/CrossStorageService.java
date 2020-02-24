@@ -77,7 +77,7 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.8.0
  */
 @Stateless
 @LocalBean
@@ -772,7 +772,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					sqlUUID = cei.getUuid();
 				}
 			} catch (EntityDoesNotExistsException e) {
-				sqlUUID = null;
+				log.debug("Entity with id={} does not exists", cei.getUuid());
 			}
 		}
 		
@@ -1156,10 +1156,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				if(referencedCet != null) {
 					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
 				
-				} else {
-					
 				}
-				
 			}
 		}
 

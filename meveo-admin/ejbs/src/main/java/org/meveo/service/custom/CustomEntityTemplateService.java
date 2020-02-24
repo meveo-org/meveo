@@ -65,7 +65,7 @@ import com.google.common.collect.Lists;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.6.0
+ * @lastModifiedVersion 6.8.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -537,7 +537,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
 		if (cfts.size() > 0) {
 			Optional<CustomFieldTemplate> opt = cfts.values().stream()
-					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isJpaEntity(e.getEntityClazzCetCode())).findAny();
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
 			if (opt.isPresent()) {
 				return true;
 			}

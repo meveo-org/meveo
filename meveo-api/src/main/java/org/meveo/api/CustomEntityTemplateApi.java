@@ -57,7 +57,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.6.0
+ * @version 6.8.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -715,7 +715,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	private boolean hasReferenceJpaEntity(CustomEntityTemplateDto cetDto) {
 		if (cetDto.getFields() != null) {
 			Optional<CustomFieldTemplateDto> opt = cetDto.getFields().stream()
-					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isJpaEntity(e.getEntityClazzCetCode())).findAny();
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
 			if (opt.isPresent()) {
 				return true;
 			}

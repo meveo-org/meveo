@@ -65,7 +65,7 @@ import org.w3c.dom.Element;
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 6.4.0
+ * @lastModifiedVersion 6.8.0
  */
 @Stateless
 public class CustomFieldInstanceService extends BaseService {
@@ -429,47 +429,63 @@ public class CustomFieldInstanceService extends BaseService {
         	if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
         		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
     			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+    			
+				if (customFieldTemplateService.isReferenceJpaEntity(entityReferenceWrapper.getClassnameCode())) {
+					if(value instanceof EntityReferenceWrapper) {
+						entityReferenceWrapper = (EntityReferenceWrapper) value;
+						
+					} else if(value instanceof String) {
+						entityReferenceWrapper.setUuid((String) value);
+						
+					} else if (StringUtils.isNumeric(String.valueOf(value))) {
+						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
+					}
+					
+					cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+					
+				} else {
 
-        		if(value instanceof Map) {
-        			Map<String, Object> valueAsMap = (Map<String, Object>) value;
-        			entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
-        			entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
-        			if(entityReferenceWrapper.getUuid() == null) {
-        				entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
-        			}
-        			
-        		} else if(value instanceof String) {
-        			entityReferenceWrapper.setUuid((String) value);
-        			
-        		}
-        		
-        		if(entityReferenceWrapper.getUuid() != null) {
-        			cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
-        			
-        		} else if(value instanceof Collection) {
-        			List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
-        			for(Object item : (Collection<?>) value) {
-        				EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
-        				itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
-            			
-                		if(item instanceof Map) {
-                			Map<String, Object> valueAsMap = (Map<String, Object>) item;
-                			itemWrapper.setCode((String) valueAsMap.get("code"));
-                			itemWrapper.setUuid((String) valueAsMap.get("uuid"));
-                			if(itemWrapper.getUuid() == null) {
-                    			itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
-                			}
-                			
-                		} else if(item instanceof String) {
-                			itemWrapper.setUuid((String) item);
-                			
-                		}
-                		
-                		entityReferences.add(itemWrapper);
-        			}
-        			
-        			cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
-        		}
+					if (value instanceof Map) {
+						Map<String, Object> valueAsMap = (Map<String, Object>) value;
+						entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
+						entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
+						if (entityReferenceWrapper.getUuid() == null) {
+							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+						}
+
+					} else if (value instanceof String) {
+						entityReferenceWrapper.setUuid((String) value);
+
+					}
+
+					if (entityReferenceWrapper.getUuid() != null) {
+						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+
+					} else if (value instanceof Collection) {
+						List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
+						for (Object item : (Collection<?>) value) {
+							EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
+							itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+
+							if (item instanceof Map) {
+								Map<String, Object> valueAsMap = (Map<String, Object>) item;
+								itemWrapper.setCode((String) valueAsMap.get("code"));
+								itemWrapper.setUuid((String) valueAsMap.get("uuid"));
+								if (itemWrapper.getUuid() == null) {
+									itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+								}
+
+							} else if (item instanceof String) {
+								itemWrapper.setUuid((String) item);
+
+							}
+
+							entityReferences.add(itemWrapper);
+						}
+
+						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+					}
+				}
         		
         	} else {
         		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);

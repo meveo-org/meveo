@@ -78,6 +78,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
@@ -87,7 +88,7 @@ import org.meveo.util.MeveoParamBean;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.8.0
  */
 public class NativePersistenceService extends BaseService {
 
@@ -132,6 +133,9 @@ public class NativePersistenceService extends BaseService {
 	
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
 	/**
 	 * Return an entity manager for a current provider
@@ -1516,7 +1520,13 @@ public class NativePersistenceService extends BaseService {
 		}
 		
 		if(value instanceof EntityReferenceWrapper) {
-			value = ((EntityReferenceWrapper) value).getUuid();
+			EntityReferenceWrapper erw = (EntityReferenceWrapper) value;
+			if (customFieldTemplateService.isReferenceJpaEntity(erw.getClassnameCode())) {
+				value = erw.getId();
+			
+			} else {
+				value = erw.getUuid();
+			}
 		}
 
 		if (value instanceof String) {
