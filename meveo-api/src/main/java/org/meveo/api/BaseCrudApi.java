@@ -286,27 +286,25 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 */
 	public void importZip(String fileName, InputStream file, boolean overwrite) {
 		try {
-			FileUtils.unzipFile(fileName, file);
-			buildFileList(fileName, overwrite);
+			File fileImport = new File(fileName);
+			FileUtils.unzipFile(fileImport.getAbsolutePath(), file);
+			buildFileList(fileImport, overwrite);
 		} catch (Exception e) {
 			log.error("Error import zip file {}", fileName, e);
 		}
 	}
 
-	private void buildFileList(String fileName, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
+	private void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		try {
-			File file = new File(fileName);
-			if (fileName.endsWith(".zip")) {
-				File[] files = file.listFiles();
-				fileImport.clear();
-				for (File fileFromZip : files) {
-					fileImport.add(fileFromZip);
-				}
-				for (File importFile : files) {
-					if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
-						FileInputStream inputStream = new FileInputStream(importFile);
-						importJSON(inputStream, overwrite);
-					}
+			File[] files = file.listFiles();
+			fileImport.clear();
+			for (File fileFromZip : files) {
+				fileImport.add(fileFromZip);
+			}
+			for (File importFile : files) {
+				if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
+					FileInputStream inputStream = new FileInputStream(importFile);
+					importJSON(inputStream, overwrite);
 				}
 			}
 		} catch (FileNotFoundException e) {

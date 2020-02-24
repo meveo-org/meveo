@@ -78,6 +78,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.meveo.commons.utils.FileUtils.addDirectoryToZip;
 import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
@@ -731,12 +732,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
                 for (String moduleFile : moduleFiles) {
                     for (File file : getFileImport()) {
                         if (moduleFile.endsWith(file.getName())) {
-                            String filePath = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()).replace("\\", "") + moduleFile.replace("\\", "/");
+                            String filePath = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()).replace("\\","") + moduleFile.replace("\\", "/");
                             File fileFromModule = new File(filePath);
-                            if (fileFromModule.isDirectory()) {
+                            if (file.isDirectory()) {
                                 if (!fileFromModule.exists()) {
                                     fileFromModule.mkdir();
                                 }
+                                copyFileFromFolder(filePath, file);
                             } else {
                                 FileInputStream inputStream = new FileInputStream(file);
                                 copyFile(filePath, inputStream);
@@ -748,6 +750,27 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
         }
 
         importEntities(entitiesCasted, overwrite);
+    }
+
+    public void copyFileFromFolder(String pathFile, File file) throws FileNotFoundException {
+        File[] files = file.listFiles();
+        if (files != null) {
+            for (File fileFromFolder : files) {
+                String name = fileFromFolder.getName();
+                String nameFileFromZip = name.split(".zip")[0];
+                String path = pathFile + "/" + nameFileFromZip;
+                if (!fileFromFolder.isDirectory()) {
+                    FileInputStream inputStream = new FileInputStream(fileFromFolder);
+                    copyFile(path, inputStream);
+                } else {
+                    File folder = new File(path);
+                    if (!folder.exists()) {
+                        folder.mkdir();
+                    }
+                    copyFileFromFolder(path, fileFromFolder);
+                }
+            }
+        }
     }
 
     @Override
@@ -803,7 +826,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
             addToZipFile(sourceFile, zos, null);
             for (MeveoModule meveoModule: meveoModules) {
                 for (String pathFile : meveoModule.getModuleFiles()) {
-                    moduleFileList.add(pathFile);
+                    File file = new File(paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + pathFile);
+                    if (file.isDirectory()) {
+                       addDirectoryToZip(file, zos, null);
+                    } else {
+                        moduleFileList.add(pathFile);
+                    }
                 }
             }
 

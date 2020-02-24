@@ -723,11 +723,13 @@ public class UserBean extends CustomFieldBean<User> {
             MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
             if (!module.getModuleFiles().contains(fileName)) {
                 module.addModuleFile(fileName);
+                messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFileName, module.getCode());
             }
         } else if (!StringUtils.isBlank(selectedFolder)) {
             MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
             if (!module.getModuleFiles().contains(selectedFolder)) {
                 module.addModuleFile(selectedFolder);
+                messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFolder, module.getCode());
             }
         }
     }

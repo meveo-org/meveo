@@ -147,6 +147,7 @@
 
 			<p:dialog widgetVar="addFileToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
 				<h:form id="addFileToModuleForm">
+					<p:growl id="message" showDetail="true" />
 					<h:panelGroup layout="block" styleClass="search-panel">
 						<p:outputPanel styleClass="search-panel-fields">
 							<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
@@ -178,7 +179,7 @@
 						</p:column>
 						<f:facet name="footer">
 							<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
-											 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form"
+											 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form :addFileToModuleForm:message"
 											 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addFileToModuleDlg').hide()"
 											 action="#{userBean.addFileToModule}">
 								<p:resetInput target="@form" />
