@@ -661,6 +661,19 @@ public class OntologyObserver {
             }
         }
     }
+    
+	public String findCetJsonSchema(CustomEntityTemplate cet) throws IOException {
+
+		final File cetDir = getCetDir();
+
+		if (!cetDir.exists()) {
+			return "";
+		}
+
+		File schemaFile = new File(cetDir, cet.getCode() + ".json");
+
+		return FileUtils.readFileToString(schemaFile, StandardCharsets.UTF_8);
+	}
 
     public void compileClassJava(File classDir, String compilationUnit, File classFile) {
 
