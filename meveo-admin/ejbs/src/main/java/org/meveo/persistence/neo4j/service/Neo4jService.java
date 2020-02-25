@@ -1596,20 +1596,24 @@ public class Neo4jService implements CustomPersistenceService {
     }
     
     public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
-    		String graphQlQuery;
+		if(repository.getNeo4jConfiguration() == null) {
+			return 0;
+		}
+	
+		String graphQlQuery;
 
-    		// Find by graphql if query provided
-    		if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
-    			graphQlQuery = paginationConfiguration.getGraphQlQuery();
-    		} else {
-    			graphQlQuery = "{ " + cet.getCode() + " { } }";
-    		}
+		// Find by graphql if query provided
+		if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
+			graphQlQuery = paginationConfiguration.getGraphQlQuery();
+		} else {
+			graphQlQuery = "{ " + cet.getCode() + " { } }";
+		}
 
-    		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
+		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
-    		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
+		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
 
-    		return result.size();
+		return result.size();
     }
 
     private Object setExpressionField(Map<String, Object> fieldValues, CustomFieldTemplate cft, Map<String, Object> convertedFields) throws ELException {
