@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
 /**
  * @author clement.bareth
  * @author akadid abdelmounaim
- * @lastModifiedVersion 6.0.15
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.8.0
  **/
 @Entity
 @ModuleItem("CustomFieldTemplate")

@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.6.0
+ * @lastModifiedVersion 6.8.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -113,6 +113,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return new File(getClassesDirectory(currentUser));
     }
 
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void createInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
+    	create(cet);
+    }
+    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {

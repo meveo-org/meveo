@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +37,8 @@ import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.8.0
  **/
 @Stateless
 public class CustomFieldTemplateApi extends BaseApi {
@@ -268,6 +271,11 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
     }
 
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void createOrUpdateInNewTransaction(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
+    	createOrUpdate(postData, appliesTo);
+    }
+    
     public void createOrUpdate(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -478,7 +486,7 @@ public class CustomFieldTemplateApi extends BaseApi {
     }
 
     private List<String> getCustomizedEntitiesAppliesTo() {
-        List<String> cftAppliesto = new ArrayList<String>();
+        List<String> cftAppliesto = new ArrayList<>();
         List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(null, false, true, true, null, null);
         for (CustomizedEntity customizedEntity : entities) {
             cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));

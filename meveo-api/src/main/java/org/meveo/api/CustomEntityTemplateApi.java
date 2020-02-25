@@ -55,7 +55,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.6.0
+ * @version 6.8.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -140,7 +140,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-            customEntityTemplateService.create(cet);
+            customEntityTemplateService.createInNewTransaction(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -239,10 +239,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet != null) {
             // Related custom field templates will be removed along with CET
             customEntityTemplateService.remove(cet.getId());
-            Map<String, CustomFieldTemplate> relatedCfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            for(CustomFieldTemplate cft : relatedCfts.values()) {
-            	customFieldTemplateService.remove(cft);
-            }
 
         } else {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);
