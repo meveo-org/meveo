@@ -18,8 +18,7 @@ import javax.inject.Inject;
 /**
  * @author Edward P. Legaspi
  * @since Oct 4, 2013
- * 
- * @deprecated will be renammed to TradingCountryApi
+ *
  **/
 @Stateless
 public class CountryApi extends BaseApi {
@@ -41,6 +40,12 @@ public class CountryApi extends BaseApi {
 
         handleMissingParameters();
 
+        Country country = countryService.findByCode(countryCode);
+        if (country == null) {
+            throw new EntityDoesNotExistsException(Country.class, countryCode);
+        }
+
+        countryService.remove(country);
     }
 
     public void create(CountryDto postData) throws MeveoApiException, BusinessException {
@@ -100,7 +105,16 @@ public class CountryApi extends BaseApi {
         
         handleMissingParameters();
 
-        throw new EntityDoesNotExistsException(Country.class, countryCode);
+        CountryDto result = new CountryDto();
+
+        Country country = countryService.findByCode(countryCode);
+        if (country == null) {
+            throw new EntityDoesNotExistsException(Country.class, countryCode);
+        }
+
+        result = new CountryDto(country);
+
+        return result;
     }
 
 
@@ -134,9 +148,26 @@ public class CountryApi extends BaseApi {
             }
         }
 
+        country.setDescription(postData.getName());
+        if (language != null) {
+            country.setLanguage(language);
+        }
+        if (currency != null) {
+            country.setCurrency(currency);
+        }
+
+        countryService.update(country);
+
     }
 
     public void createOrUpdate(CountryDto postData) throws MeveoApiException, BusinessException {
+
+        Country country = countryService.findByCode(postData.getCountryCode());
+        if (country == null) {
+            create(postData);
+        } else {
+            update(postData);
+        }
 
     }
 

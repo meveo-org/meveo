@@ -14,8 +14,7 @@ import javax.inject.Inject;
 
 /**
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingCurrencyApi
+ *
  **/
 @Stateless
 public class CurrencyApi extends BaseApi {
@@ -49,7 +48,17 @@ public class CurrencyApi extends BaseApi {
             missingParameters.add("code");
         }
         handleMissingParameters();
-        return null;
+
+        CurrencyDto result = new CurrencyDto();
+
+        Currency currency = currencyService.findByCode(code);
+        if (currency == null) {
+            throw new EntityDoesNotExistsException(Currency.class, code);
+        }
+
+        result = new CurrencyDto(currency);
+
+        return result;
     }
 
     public void remove(String code) throws BusinessException, MissingParameterException, EntityDoesNotExistsException {
@@ -57,6 +66,13 @@ public class CurrencyApi extends BaseApi {
             missingParameters.add("code");
         }
         handleMissingParameters();
+
+        Currency currency = currencyService.findByCode(code);
+        if (currency == null) {
+            throw new EntityDoesNotExistsException(Currency.class, code);
+        }
+
+        currencyService.remove(currency);
     }
 
     public void update(CurrencyDto postData) throws MeveoApiException, BusinessException {
@@ -80,8 +96,15 @@ public class CurrencyApi extends BaseApi {
     }
 
     public void createOrUpdate(CurrencyDto postData) throws MeveoApiException, BusinessException {
+        Currency currency = currencyService.findByCode(postData.getCode());
+        if (currency == null) {
+            create(postData);
+        } else {
+            update(postData);
+        }
     }
-    public void findOrCreate(String currencyCode) throws EntityDoesNotExistsException, BusinessException {
+
+    public void findOrCreate(String currencyCode) throws EntityDoesNotExistsException {
         if (StringUtils.isBlank(currencyCode)){
             return;
         }
