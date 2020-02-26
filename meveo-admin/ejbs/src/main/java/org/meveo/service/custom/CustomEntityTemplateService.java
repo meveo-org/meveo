@@ -121,6 +121,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	create(cet);
     }
     
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void removeInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
+    }
+    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {

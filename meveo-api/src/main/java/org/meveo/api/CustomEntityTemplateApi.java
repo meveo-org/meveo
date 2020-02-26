@@ -160,12 +160,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        }
         
         } catch(Exception e) {
-        	// Delete created table if CET creation failed
-        	if(storeAsTable) {
-        		log.error("{} creation failed, removing table", cet);
-        		customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
-        	}
-        	
+        	// Delete CET if error occurs
+    		log.error("{} creation failed, rollback ...", cet);
+    		customEntityTemplateService.removeInNewTransaction(cet);
         	throw e;
         }
 
