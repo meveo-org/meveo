@@ -173,4 +173,14 @@ public class FilesApi extends BaseApi {
         }
     }
 
+    public boolean checkFile(String filePath) {
+        String filename = getProviderRootDir() + File.separator + filePath;
+        File file = new File(filename);
+
+        if (!file.exists()) {
+           return false;
+        }
+        return true;
+    }
+
 }

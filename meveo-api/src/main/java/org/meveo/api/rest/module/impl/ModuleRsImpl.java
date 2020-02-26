@@ -17,13 +17,21 @@
  */
 package org.meveo.api.rest.module.impl;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -31,6 +39,7 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.rest.impl.BaseRs;
@@ -49,6 +58,9 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
     @Inject
     private MeveoModuleApi moduleApi;
+
+    @Context
+    private HttpServletResponse httpServletResponse;
 
     @Override
     public ActionStatus create(MeveoModuleDto moduleData, boolean development) {
@@ -200,7 +212,17 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         return moduleApi.removeFromModule(moduleCode, itemCode, itemType);
     }
 
-	@Override
+    @Override
+    public MeveoModuleDto addFileToModule(String moduleCode, String path) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.addFileToModule(moduleCode, path);
+    }
+
+    @Override
+    public MeveoModuleDto removeFileFromModule(String moduleCode, String path) throws EntityDoesNotExistsException, BusinessException {
+        return moduleApi.removeFileFromModule(moduleCode, path);
+    }
+
+    @Override
 	public ActionStatus fork(String moduleCode) {
 		ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {
@@ -211,4 +233,14 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         return result;
 	}
+
+    @Override
+    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) {
+        moduleApi.importZip(uploadForm.getFilename(), uploadForm.getData(), overwrite);
+    }
+
+    @Override
+    public File export(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
+    	return moduleApi.exportModules(modulesCode, exportFormat);
+    }
 }

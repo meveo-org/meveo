@@ -609,4 +609,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             messages.error(new BundleKey("messages", "meveoModule.uninstallFailed"), entity.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
         }
     }
+
+    public void removeFileFromModule(String item) {
+        entity.removeModuleFile(item);
+    }
 }
