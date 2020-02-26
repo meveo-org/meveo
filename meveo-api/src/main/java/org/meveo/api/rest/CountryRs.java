@@ -23,8 +23,7 @@ import org.meveo.api.dto.response.GetCountryResponse;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * 
- * @deprecated will be renammed to  TradingCountryRs
+ *
  **/
 @Path("/country")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

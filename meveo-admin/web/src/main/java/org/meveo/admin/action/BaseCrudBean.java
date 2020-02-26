@@ -19,26 +19,36 @@
  */
 package org.meveo.admin.action;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
+import java.util.List;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.IEntity;
+import org.meveo.model.module.MeveoModule;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
@@ -154,6 +164,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 		
 		String contentType = event.getFile().getContentType();
 		InputStream inputStream = event.getFile().getInputstream();
+		String fileName = event.getFile().getFileName();
 		
 		switch(contentType.trim()) {
 			case "text/xml": 
@@ -169,7 +180,12 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 			case "application/vnd.ms-excel":
 				baseCrudApi.importCSV(inputStream, override);
 				break;
-				
+
+
+            case "application/octet-stream":
+            case "application/x-zip-compressed":
+                baseCrudApi.importZip(fileName, inputStream, override);
+                break;
 		}
 	}
 

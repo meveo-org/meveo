@@ -18,11 +18,9 @@ package org.meveo.api.technicalservice.endpoint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -45,6 +43,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointScript;
+import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
@@ -52,9 +51,7 @@ import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.scripts.Sample;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
@@ -63,22 +60,11 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
-import org.meveo.service.technicalservice.endpoint.ESGenerator;
+import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
-import org.meveo.util.Version;
-import org.slf4j.Logger;
 
-import io.swagger.models.Info;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.Scheme;
-import io.swagger.models.Swagger;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
 import io.swagger.util.Json;
 
 /**
@@ -98,12 +84,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	@Inject
-	private Logger logger;
-
 	@EJB
 	private KeycloakAdminClientService keycloakAdminClientService;
 
+	@Inject
+	private ESGeneratorService esGeneratorService;
+	
+	@Inject
+	private SwaggerDocService swaggerDocService;
+	
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
 	}
@@ -114,7 +103,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		this.concreteFunctionService = concreteFunctionService;
 	}
 
-	public String getEndpointScript(String code) throws EntityDoesNotExistsException {
+	public String getEndpointScript(String baseUrl, String code) throws EntityDoesNotExistsException {
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
@@ -124,7 +113,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throw new UserNotAuthorizedException();
 		}
 
-		return ESGenerator.generateFile(endpoint);
+		return esGeneratorService.buildJSInterfaceFromTemplate(baseUrl, endpoint);
 	}
 	
 	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {
@@ -158,7 +147,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return The result of the execution
 	 * @throws BusinessException if error occurs while execution
 	 */
-	@SuppressWarnings("rawtypes")
 	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
@@ -241,6 +229,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
 					}
 				} else if (parameterValue instanceof Collection) {
+					@SuppressWarnings("rawtypes")
 					Collection colValue = (Collection) parameterValue;
 					if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
 						parameterValue = colValue.iterator().next();
@@ -514,7 +503,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return true;
 
 		} catch (Exception e) {
-			logger.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+			log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
 			return false;
 		}
 	}
@@ -550,91 +539,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return Response.status(403).entity("You are not authorized to access this endpoint").build();
 		}
 
-		Info info = new Info();
-		info.setTitle(endpoint.getCode());
-		info.setDescription(endpoint.getDescription());
-		info.setVersion(Version.appVersion);
-
-		Map<String, Path> paths = new HashMap<>();
-		Path path = new Path();
-
-		Operation operation = new Operation();
-
-		if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
-			path.setGet(operation);
-
-		} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
-			path.setPost(operation);
-		}
-
-		if (!Objects.isNull(endpoint.getPathParameters())) {
-			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParameters()) {
-				Parameter parameter = new PathParameter();
-				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
-				path.addParameter(parameter);
-			}
-		}
-
-		paths.put(endpoint.getEndpointUrl(), path);
-
-		List<Sample> samples = endpoint.getService().getSamples();
-
-		if (!Objects.isNull(endpoint.getParametersMapping())) {
-			List<Parameter> operationParameter = new ArrayList<>();
-
-			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
-
-				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
-					QueryParameter queryParameter = new QueryParameter();
-					queryParameter.setName(tsParameterMapping.getParameterName());
-					operationParameter.add(queryParameter);
-
-					if(samples != null && !samples.isEmpty()) {
-						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-						queryParameter.setExample(String.valueOf(inputExample));
-					}
-
-				} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
-					BodyParameter bodyParameter = new BodyParameter();
-					bodyParameter.setName(tsParameterMapping.getParameterName());
-					operationParameter.add(bodyParameter);
-
-					if(samples != null && !samples.isEmpty()) {
-						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-						String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
-						String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
-						bodyParameter.addExample(mediaType, inputExampleSerialized);
-					}
-
-				}
-			}
-
-			operation.setParameters(operationParameter);
-		}
-
-		Map<String, io.swagger.models.Response> responses = new HashMap<>();
-		io.swagger.models.Response response = new io.swagger.models.Response();
-
-		if(samples != null && !samples.isEmpty()) {
-			Object outputExample = samples.get(0).getOutputs();
-			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
-			response.example(mediaType, outputExample);
-		}
-
-		responses.put("200", response);
-
-		Swagger swagger = new Swagger();
-		swagger.setInfo(info);
-		swagger.setBasePath(baseUrl);
-		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
-		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
-		if(endpoint.getMethod() == EndpointHttpMethod.POST) {
-			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
-		}
-		swagger.setPaths(paths);
-		swagger.setResponses(responses);
-
-		return Response.ok(Json.pretty(swagger)).build();
+		return Response.ok(Json.pretty(swaggerDocService.generateOpenApiJson(baseUrl, endpoint))).build();
 	}
 
 	/**

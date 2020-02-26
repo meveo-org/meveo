@@ -116,7 +116,7 @@ public class EndpointRs extends BaseRs {
 	@Produces("application/javascript")
 	@ApiOperation(value = " Get script of the endpoint")
 	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code) throws EntityDoesNotExistsException, IOException {
-		return endpointApi.getEndpointScript(code);
+		return endpointApi.getEndpointScript(uriContextInfo.getBaseUri().toString(), code);
 	}
 
 	/**

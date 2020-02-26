@@ -192,7 +192,7 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		try {
-			Session session = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+			Session session = sqlConnectionProvider.getSession(sqlConnectionCode);
 		
 			StringBuilder selectQuery = new StringBuilder();
 			
@@ -1236,7 +1236,7 @@ public class NativePersistenceService extends BaseService {
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		SQLQuery query = queryBuilder.getNativeQuery(sqlConnectionProvider.getSession(sqlConnectionCode), true);
 		return query.list();
 	}
 
@@ -1266,7 +1266,7 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		EntityManager entityManager = getEntityManager(sqlConnectionCode);
+		EntityManager entityManager = sqlConnectionProvider.getSession(sqlConnectionCode);
 		
 		try {
 			Query query = queryBuilder.getNativeCountQuery(entityManager);

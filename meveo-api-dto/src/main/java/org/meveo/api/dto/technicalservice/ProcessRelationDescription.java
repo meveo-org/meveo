@@ -10,6 +10,8 @@ public class ProcessRelationDescription extends InputOutputDescription {
     private String source;
     @JsonProperty(required = true)
     private String target;
+    
+    private String name;
 
     /**
      * Source entity instance name of the relation
@@ -41,11 +43,13 @@ public class ProcessRelationDescription extends InputOutputDescription {
 
     @Override
     public String getName() {
-        return source + "-" + target;
+        return name == null ? source + "-" + target : this.name;
     }
 
     @Override
-    public void setName(String name) {}
+    public void setName(String name) {
+    	this.name = name;
+    }
 
     public String getDescriptionType(){
         return RELATION_DESCRIPTION;

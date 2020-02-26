@@ -285,8 +285,10 @@
                     </p:selectBooleanCheckbox>
                 </hftl:decorateFormField>
                 <div class="clearLeft">
-                	<p:fileUpload accept=".xml,.csv,.json" mode="advanced" dragDropSupport="true" allowTypes="/(\.|\/)(xml|json|csv)$/"
+                	<p:fileUpload rendered="#{backingBean != meveoModuleListBean}" accept=".xml,.csv,.json" mode="advanced" dragDropSupport="true" allowTypes="/(\.|\/)(xml|json|csv)$/"
                 	fileUploadListener="#{backingBean.importData}" update=":#{formId} :datatable_#{resultsId}"/>
+                    <p:fileUpload rendered="#{backingBean == meveoModuleListBean}" accept=".xml,.csv,.json,.zip" mode="advanced" dragDropSupport="true" allowTypes="/(\.|\/)(xml|json|csv|zip)$/"
+                                  fileUploadListener="#{backingBean.importData}" update=":#{formId} :datatable_#{resultsId}"/>
                 </div>
             </p:dialog>
 

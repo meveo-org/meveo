@@ -1039,7 +1039,13 @@ public class CustomTableService extends NativePersistenceService {
             		continue;
             	}
 
-            	CustomFieldTemplate cft = getCustomFieldTemplate(cfts, field).get();
+            	Optional<CustomFieldTemplate> customFieldTemplate = getCustomFieldTemplate(cfts, field);
+            	if(!customFieldTemplate.isPresent()) {
+            		log.warn("No custom field template found for {}", field);
+            		continue;
+            	}
+            	
+            	CustomFieldTemplate cft = customFieldTemplate.get();
 
             	// De-serialize lists
                 if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)){

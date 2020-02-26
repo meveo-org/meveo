@@ -144,7 +144,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-            customEntityTemplateService.create(cet);
+            customEntityTemplateService.createInNewTransaction(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -246,10 +246,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet != null) {
             // Related custom field templates will be removed along with CET
             customEntityTemplateService.remove(cet.getId());
-            Map<String, CustomFieldTemplate> relatedCfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            for(CustomFieldTemplate cft : relatedCfts.values()) {
-            	customFieldTemplateService.remove(cft);
-            }
 
         } else {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);

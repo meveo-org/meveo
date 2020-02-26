@@ -14,7 +14,6 @@ import org.meveo.model.admin.Currency;
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * @deprecated will be renammed to TradingCurrencyDto
  */
 @XmlRootElement(name = "Currency")
 @XmlAccessorType(XmlAccessType.FIELD)

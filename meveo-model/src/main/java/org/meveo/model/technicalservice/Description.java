@@ -223,5 +223,10 @@ public abstract class Description implements TechnicalServiceDescription {
     public long getId() {
         return id;
     }
+    
+    /**
+     * @return the "applies to" expression for the given type
+     */
+    public abstract String getAppliesTo();
 
 }

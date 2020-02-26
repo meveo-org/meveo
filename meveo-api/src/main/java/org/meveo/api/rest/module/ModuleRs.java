@@ -17,6 +17,10 @@
  */
 package org.meveo.api.rest.module;
 
+import java.io.File;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -32,12 +36,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.module.impl.ModuleUploadForm;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 
 import io.swagger.annotations.Api;
@@ -201,6 +209,37 @@ public interface ModuleRs extends IBaseRs {
 			throws EntityDoesNotExistsException, BusinessException;
 
 	/**
+	 * Add a file/folder to a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/add")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Add file to module")
+	MeveoModuleDto addFileToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+							   @FormParam("path") @ApiParam("Path of file/folder to add") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
+	/**
+	 * Remove a file/folder from a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder to remove
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/remove")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Remove from module")
+	MeveoModuleDto removeFileFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+										@FormParam("path") @ApiParam("Path of file/folder to remove") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
+
+	/**
 	 * Forks a Meveo module
 	 * 
 	 * @return Request processing status
@@ -209,4 +248,27 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/fork/{code}")
 	@ApiOperation(value = "Fork meveo module by code")
 	ActionStatus fork(@PathParam("code") @ApiParam("Code of the module") String moduleCode);
+
+	/**
+	 * Import a zipped module with files
+	 *
+	 * @param uploadForm  Upload module
+	 * @param overwrite   Overwrite
+	 */
+	@POST
+	@Path("/importZip")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@ApiOperation(value = "Import from a zip")
+	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Upload module") ModuleUploadForm uploadForm, @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
+
+	/**
+	 * Export module
+	 *
+	 * @param modulesCode List of the code meveo module
+	 * @throws Exception 
+	 */
+	@GET
+	@Path("/export")
+	@ApiOperation(value = "Export to a file")
+	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws Exception;
 }

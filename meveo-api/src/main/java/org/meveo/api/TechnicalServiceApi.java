@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -210,10 +211,12 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         			.anyMatch(connector -> connector.getCode().equals(serviceCode));
         		
         		if(!isIncluded) {
-            		TechnicalService extendedService = persistenceService.findByCode(serviceCode);
-            		if(extendedService != null) {
-            			service.getExtendedServices().add(extendedService);
-            		}
+        			try {
+	            		TechnicalService extendedService = persistenceService.findServiceByCode(serviceCode);
+	        			service.getExtendedServices().add(extendedService);
+        			} catch (NoResultException e) {
+        				throw new IllegalArgumentException("Service " + serviceCode + " does not exists");
+        			}
         		}
         	}
 
@@ -258,9 +261,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      */
     public void updateDescription(String name, Integer version, @Valid ProcessDescriptionsDto descriptionsDto) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(name, version);
-        final Map<String, Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
+        Map<String, Description> descriptions = descriptionApi.fromDescriptionsDto(technicalService, descriptionsDto);
         checkEndpoints(technicalService, descriptions.values());
-        persistenceService.removeDescription(technicalService.getId());
         technicalService.setDescriptions(descriptions);
         persistenceService.update(technicalService);
     }
@@ -309,7 +311,10 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      */
     public TechnicalServiceDto findByNameAndVersionOrLatest(String name, Integer version) throws EntityDoesNotExistsException {
         T technicalService = getTechnicalService(name, version);
-        return toDto(technicalService);
+        D dto = toDto(technicalService);
+        List<InputOutputDescription> description = description(name, version);
+        dto.setDescriptions(description);
+		return dto;
     }
 
     /**

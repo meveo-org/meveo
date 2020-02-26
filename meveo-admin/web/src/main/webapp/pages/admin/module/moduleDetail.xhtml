@@ -63,6 +63,17 @@
                 <ui:param name="backingBean" value="#{meveoModuleBean}" />
             </ui:include>
 
+            <hftl:decorateFormField componentWidth="50" label="#{messages['meveoModule.moduleFiles']}">
+                <p:dataTable id="moduleFilesId" resizableColumns="true" var="item" value="#{meveoModuleBean.entity.moduleFiles}">
+                    <p:column headerText="#{messages['meveoModule.moduleFile.name']}">
+                        <h:outputText value="#{item}" size="90"/>
+                    </p:column>
+                    <p:column headerText="#{messages['commons.actions']}" width="15%">
+                        <p:commandButton icon="ui-icon-minus" partialSubmit="true" immediate="true" update="moduleFilesId" action="#{meveoModuleBean.removeFileFromModule(item)}"/>
+                    </p:column>
+                </p:dataTable>
+            </hftl:decorateFormField>
+
             <ui:param name="buttons" value="true" />
             <ui:define name="buttons">
                 <hf:formButtons backingBean="#{meveoModuleBean}" edit="true" showEditButton="#{!meveoModuleBean.entity.downloaded}"

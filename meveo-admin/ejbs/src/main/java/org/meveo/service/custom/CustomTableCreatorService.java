@@ -56,6 +56,7 @@ import liquibase.change.core.AddForeignKeyConstraintChange;
 import liquibase.change.core.AddNotNullConstraintChange;
 import liquibase.change.core.AddPrimaryKeyChange;
 import liquibase.change.core.AddUniqueConstraintChange;
+import liquibase.change.core.CreateSequenceChange;
 import liquibase.change.core.CreateTableChange;
 import liquibase.change.core.DropColumnChange;
 import liquibase.change.core.DropDefaultValueChange;
@@ -281,6 +282,10 @@ public class CustomTableCreatorService implements Serializable {
 		pgUuidColumn.setConstraints(idConstraints);
 		createPgTableChange.addColumn(pgUuidColumn);
 		pgChangeSet.addChange(createPgTableChange);
+		
+		CreateSequenceChange createPgSequence = new CreateSequenceChange();
+		createPgSequence.setSequenceName(dbTableName + "_seq");
+		pgChangeSet.addChange(createPgSequence);
 
 		dbLog.addChangeSet(pgChangeSet);
 
