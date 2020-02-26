@@ -20,6 +20,7 @@ package org.meveo.admin.action.admin.module;
 
 import java.io.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -113,8 +114,18 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
     public DefaultStreamedContent export() throws IOException {
 
         DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
-
-        File exportFile = meveoModuleApi.exportEntities(getExportFormat(), getSelectedEntities());
+        List<String> modulesCodes = getSelectedEntities().stream().map(MeveoModule::getCode).collect(Collectors.toList());
+        
+        try {
+        	File exportFile = meveoModuleApi.exportModules(modulesCodes, getExportFormat());
+            defaultStreamedContent.setContentEncoding("UTF-8");
+            defaultStreamedContent.setStream(new FileInputStream(exportFile));
+            defaultStreamedContent.setName(exportFile.getName());
+        } catch (Exception e) {
+            log.error("Error exporting modules {}", modulesCodes);
+        }
+        
+        /* File exportFile = meveoModuleApi.exportEntities(getExportFormat(), getSelectedEntities());
         try {
             String exportName = exportFile.getName();
             String[] exportFileName = exportName.split("_");
@@ -133,11 +144,8 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
             }
         } catch (Exception e) {
             log.error("Error when create zip file {}", exportFile.getName());
-        }
+        } */
 
-        defaultStreamedContent.setContentEncoding("UTF-8");
-        defaultStreamedContent.setStream(new FileInputStream(exportFile));
-        defaultStreamedContent.setName(exportFile.getName());
 
         return defaultStreamedContent;
     }

@@ -17,6 +17,9 @@
  */
 package org.meveo.api.rest.module;
 
+import java.io.File;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -48,10 +51,6 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * JAX-RS interface for MeveoModule management
@@ -266,9 +265,10 @@ public interface ModuleRs extends IBaseRs {
 	 * Export module
 	 *
 	 * @param modulesCode List of the code meveo module
+	 * @throws Exception 
 	 */
 	@GET
 	@Path("/export")
 	@ApiOperation(value = "Export to a file")
-	ActionStatus export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat);
+	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws Exception;
 }

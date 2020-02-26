@@ -448,6 +448,7 @@ public final class FileUtils {
         ZipInputStream zis = null;
         BufferedInputStream bis = null;
         CheckedInputStream cis = null;
+        
         try {
             cis = new CheckedInputStream(in, new CRC32());
             zis = new ZipInputStream(cis);
@@ -479,8 +480,6 @@ public final class FileUtils {
                     throw ex;
                 }
             }
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
         } finally {
             IOUtils.closeQuietly(bis);
             IOUtils.closeQuietly(zis);
@@ -576,12 +575,13 @@ public final class FileUtils {
         }
 
         File[] files = source.listFiles();
-        if (files != null && files.length != 0) {
+        String baseDir = basedir != null ? (basedir + File.separator) : "";
+		if (files != null && files.length != 0) {
             for (File file : files) {
-                addToZipFile(file, zos, (basedir != null ? (basedir + File.separator) : "") + source.getName());
+                addToZipFile(file, zos, baseDir + source.getName());
             }
         } else {
-            ZipEntry entry = new ZipEntry(((basedir != null ? (basedir + File.separator) : "") + source.getName() + File.separator).replaceAll("\\" + File.separator, "/"));
+            ZipEntry entry = new ZipEntry((baseDir + source.getName() + File.separator).replaceAll("\\" + File.separator, "/"));
             entry.setTime(source.lastModified());
             zos.putNextEntry(entry);
         }

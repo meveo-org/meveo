@@ -240,13 +240,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public ActionStatus export(List<String> modulesCode, ExportFormat exportFormat) {
-        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
-        try {
-            moduleApi.exportModule(modulesCode, exportFormat, httpServletResponse);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-        return result;
+    public File export(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
+    	return moduleApi.exportModules(modulesCode, exportFormat);
     }
 }

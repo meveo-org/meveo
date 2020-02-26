@@ -17,8 +17,16 @@
  */
 package org.meveo.api;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -285,30 +293,38 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param overwrite Whether we should update existing data
 	 */
 	public void importZip(String fileName, InputStream file, boolean overwrite) {
+		Path fileImport = null;
+		
 		try {
-			File fileImport = new File(fileName);
-			FileUtils.unzipFile(fileImport.getAbsolutePath(), file);
-			buildFileList(fileImport, overwrite);
+			fileImport = Files.createTempDirectory(fileName);
+			FileUtils.unzipFile(fileImport.toString(), file);
+			buildFileList(fileImport.toFile(), overwrite);
 		} catch (Exception e) {
 			log.error("Error import zip file {}", fileName, e);
+		}
+		
+		if(fileImport != null) {
+			try {
+				org.apache.commons.io.FileUtils.deleteDirectory(fileImport.toFile());
+			} catch (IOException e) {
+				log.error("Can't delete temp folder {}", fileImport, e);
+			}
 		}
 	}
 
 	private void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
-		try {
-			File[] files = file.listFiles();
-			fileImport.clear();
-			for (File fileFromZip : files) {
-				fileImport.add(fileFromZip);
+		File[] files = file.listFiles();
+		fileImport.clear();
+		
+		for (File fileFromZip : files) {
+			fileImport.add(fileFromZip);
+		}
+		
+		for (File importFile : files) {
+			if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
+				FileInputStream inputStream = new FileInputStream(importFile);
+				importJSON(inputStream, overwrite);
 			}
-			for (File importFile : files) {
-				if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
-					FileInputStream inputStream = new FileInputStream(importFile);
-					importJSON(inputStream, overwrite);
-				}
-			}
-		} catch (FileNotFoundException e) {
-			throw new FileNotFoundException();
 		}
 	}
 
