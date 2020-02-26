@@ -37,12 +37,15 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
@@ -118,6 +121,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	create(cet);
     }
     
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void removeInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
+    }
+    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
@@ -128,7 +136,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet));
+            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet), cet.hasReferenceJpaEntity());
         }
 
         elasticClient.createCETMapping(cet);
@@ -223,6 +231,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         // Synchronize custom fields storages with CET available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
+        	cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
             if (cft.getStorages() != null) {
                 for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
                     if (!cet.getAvailableStorages().contains(storage)) {
@@ -532,4 +541,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return converted;
     }
+    
+	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		if (cfts.size() > 0) {
+			Optional<CustomFieldTemplate> opt = cfts.values().stream()
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
+			if (opt.isPresent()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

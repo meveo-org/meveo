@@ -21,7 +21,7 @@ import io.swagger.annotations.ApiModelProperty;
  * 
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.8.0
  **/
 @XmlRootElement(name = "EntityReference")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -48,6 +48,13 @@ public class EntityReferenceDto implements Serializable {
 	@XmlAttribute(required = true)
 	@ApiModelProperty(required = true, value = "Code of this entity")
 	private String code;
+	
+	/**
+	 * Entity id
+	 */
+	@XmlAttribute(required = false)
+	@ApiModelProperty(required = true, value = "Id of this entity")
+	private Long id;
 
 	/**
 	 * Instantiates a new entity reference dto.
@@ -65,6 +72,7 @@ public class EntityReferenceDto implements Serializable {
 		classname = entityReferenceWrapper.getClassname();
 		classnameCode = entityReferenceWrapper.getClassnameCode();
 		code = entityReferenceWrapper.getCode();
+		id = entityReferenceWrapper.getId();
 	}
 
 	/**
@@ -76,7 +84,7 @@ public class EntityReferenceDto implements Serializable {
 		if (isEmpty()) {
 			return null;
 		}
-		return new EntityReferenceWrapper(classname, classnameCode, code);
+		return new EntityReferenceWrapper(classname, classnameCode, code, id);
 	}
 
 	/**
@@ -132,5 +140,13 @@ public class EntityReferenceDto implements Serializable {
 	 */
 	public boolean isEmpty() {
 		return StringUtils.isBlank(classname) || StringUtils.isBlank(code);
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 }

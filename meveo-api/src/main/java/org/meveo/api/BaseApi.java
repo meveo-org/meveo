@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Edward P. Legaspi
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
+ * @lastModifiedVersion 6.8.0
  * 
  **/
 public abstract class BaseApi {
@@ -267,7 +267,7 @@ public abstract class BaseApi {
 
                         for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
                             customEntityInstanceApi.createOrUpdate(ceiDto);
-                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode()));
+                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
                         }
 
                         customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);

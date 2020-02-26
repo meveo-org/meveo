@@ -49,7 +49,7 @@ import org.meveo.util.PersistenceUtils;
  * @author Wassim Drira
  * @author Clément Bareth
  * @author Edward P. Legaspi czetsuya@gmail.com
- * @lastModifiedVersion 6.6.0
+ * @lastModifiedVersion 6.8.0
  */
 @Stateless
 public class CustomFieldTemplateService extends BusinessService<CustomFieldTemplate> {
@@ -591,4 +591,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
         }
     }
+    
+	public boolean isReferenceJpaEntity(String clazz) {
+
+		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(clazz);
+		if (referenceCet == null) {
+			try {
+				Class.forName(clazz);
+				return true;
+
+			} catch (ClassNotFoundException e) {
+				throw new IllegalArgumentException("Class " + clazz + " does not exists.");
+			}
+
+		}
+
+		return false;
+	}
 }

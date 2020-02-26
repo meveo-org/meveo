@@ -86,7 +86,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author akadid abdelmounaim
- * @lastModifiedVersion 6.7.0
+ * @lastModifiedVersion 6.8.0
  */
 @Named
 @ViewScoped
@@ -1466,9 +1466,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 					} else if (listItem instanceof Map) {
 						Map<String, Object> values = (Map<String, Object>) listItem;
 						String entityCode = (String) values.get("code");
+						Long entityId = (Long) values.getOrDefault("id", null);
 
 						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()),
-								entityCode);
+								entityCode, entityId);
 
 						childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
 					}
