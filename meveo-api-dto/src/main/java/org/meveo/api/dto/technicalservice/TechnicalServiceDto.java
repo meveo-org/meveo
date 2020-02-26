@@ -17,10 +17,10 @@
  */
 package org.meveo.api.dto.technicalservice;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -70,20 +70,46 @@ public class TechnicalServiceDto extends BusinessEntityDto {
      */
     private String serviceType;
 
-    /**
-     * Whether the entity is disabled
-     */
+    /** Whether the entity is disabled. */
     protected boolean disabled;
+    
+    private Set<String> extendedServices;
 
+    /**
+	 * Instantiates a new technical service dto.
+	 */
     public TechnicalServiceDto() {
 
     }
 
-    @Override
+    /**
+	 * Gets the extended services.
+	 *
+	 * @return the extended services
+	 */
+    public Set<String> getExtendedServices() {
+		return extendedServices;
+	}
+
+	/**
+	 * Sets the extended services.
+	 *
+	 * @param extendedServices the new extended services
+	 */
+	public void setExtendedServices(Set<String> extendedServices) {
+		this.extendedServices = extendedServices;
+	}
+
+	@Override
     public String getCode() {
         return name + "." + version;
     }
 
+    /**
+	 * Gets the description of the inputs and outputs of the technical service.
+	 *
+	 * @return the description of the inputs and outputs of the technical service
+	 */
     public Map<String, InputOutputDescription> getDescriptions() {
         return descriptions;
     }
@@ -102,34 +128,74 @@ public class TechnicalServiceDto extends BusinessEntityDto {
     	}
     }
 
+    /**
+	 * Sets the description of the inputs and outputs of the technical service.
+	 *
+	 * @param dto the new description of the inputs and outputs of the technical service
+	 */
     public void setDescriptions(Map<String, InputOutputDescription> dto) {
         this.descriptions = dto;
     }
     
+    /**
+	 * Sets the description of the inputs and outputs of the technical service.
+	 *
+	 * @param dto the new description of the inputs and outputs of the technical service
+	 */
     public void setDescriptions(List<InputOutputDescription> dto) {
         dto.forEach(d -> this.descriptions.put(d.getName(), d));
     }
 
+    /**
+	 * Gets the name of the technical service.
+	 *
+	 * @return the name of the technical service
+	 */
     public String getName() {
         return name;
     }
 
+    /**
+	 * Sets the name of the technical service.
+	 *
+	 * @param name the new name of the technical service
+	 */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+	 * Gets the version of the technical service.
+	 *
+	 * @return the version of the technical service
+	 */
     public Integer getVersion() {
         return version;
     }
 
+    /**
+	 * Sets the version of the technical service.
+	 *
+	 * @param version the new version of the technical service
+	 */
     public void setVersion(Integer version) {
         this.version = version;
     }
 
+    /**
+	 * Gets the name of the service type defined by the administrator.
+	 *
+	 * @return the name of the service type defined by the administrator
+	 */
     public String getServiceType() {
         return serviceType;
     }
 
+    /**
+	 * Sets the name of the service type defined by the administrator.
+	 *
+	 * @param serviceType the new name of the service type defined by the administrator
+	 */
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
     }
@@ -139,6 +205,11 @@ public class TechnicalServiceDto extends BusinessEntityDto {
         return disabled;
     }
 
+    /**
+	 * Sets the whether the entity is disabled.
+	 *
+	 * @param disabled the new whether the entity is disabled
+	 */
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }

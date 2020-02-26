@@ -1,12 +1,5 @@
 package org.meveo.service.crm.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +8,21 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
+
+/**
+ * Parse a cet map into a java source code.
+ * 
+ * @author Edward P. Legaspi
+ * @since 6.8.0
+ * @version 6.8.0
+ *
+ */
 public class JSONSchemaIntoJavaClassParser {
 
     private Map<String, Object> jsonMap;
@@ -106,7 +114,16 @@ public class JSONSchemaIntoJavaClassParser {
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);
                             vd.setType(type);
                         }
+                        
+                    } else if(values.get("$ref") != null) {
+                        String[] data = ((String) values.get("$ref")).split("/");
+                        if (data.length > 0) {
+                            String name = data[data.length - 1];
+                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            vd.setType(name);
+                        }
                     }
+                    
                     fd.addVariable(vd);
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
                     if (values.get("nullable").equals(false)) {

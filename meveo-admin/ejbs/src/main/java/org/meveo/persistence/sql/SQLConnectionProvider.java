@@ -106,6 +106,22 @@ public class SQLConnectionProvider {
 			return null;
 		}
 	}
+	
+	public EntityManager getEntityManager(String sqlConfigurationCode) {
+
+		SqlConfiguration sqlConfiguration = getSqlConfiguration(sqlConfigurationCode);
+
+		try {
+			SessionFactory sessionFactory = SESSION_FACTORY_MAP.computeIfAbsent(sqlConfigurationCode, this::buildSessionFactory);
+			synchronized (this) {
+				return sessionFactory.createEntityManager();
+			}
+
+		} catch (Exception e) {
+			log.warn("Can't connect to sql configuration with code={}, url={}, error={}", sqlConfigurationCode, sqlConfiguration.getUrl(), e.getCause());
+			return null;
+		}
+	}
 
 	public org.hibernate.Session testSession(SqlConfiguration sqlConfiguration) {
 

@@ -136,8 +136,10 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Return an entity manager for a current provider
 	 *
+	 * @deprecated Use {@link SQLConnectionProvider#getSession(String)} instead
 	 * @return Entity manager
 	 */
+	@Deprecated
 	public EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		EntityManager em;
@@ -146,9 +148,7 @@ public class NativePersistenceService extends BaseService {
 			em.joinTransaction();
 
 		} else {
-			em = sqlConnectionProvider.getSession(sqlConfigurationCode)
-					.getEntityManagerFactory()
-					.createEntityManager();
+			em = sqlConnectionProvider.getSession(sqlConfigurationCode);
 
 		}
 
@@ -188,7 +188,7 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		try {
-			Session session = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+			Session session = sqlConnectionProvider.getSession(sqlConnectionCode);
 		
 			StringBuilder selectQuery = new StringBuilder();
 			
@@ -432,7 +432,7 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
 				
@@ -457,6 +457,8 @@ public class NativePersistenceService extends BaseService {
 				}
 			});
 
+			hibernateSession.close();
+			
 			// Find the identifier of the last inserted record
 			if (returnId) {
 				if (uuid != null) {
@@ -546,7 +548,7 @@ public class NativePersistenceService extends BaseService {
 
 		sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-		Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 		hibernateSession.doWork(new org.hibernate.jdbc.Work() {
 
@@ -610,6 +612,8 @@ public class NativePersistenceService extends BaseService {
 				}
 			}
 		});
+		
+		hibernateSession.close();
 	}
 
 	/**
@@ -673,7 +677,7 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
 
-			Session hibernateSession = getEntityManager(sqlConnectionCode).unwrap(Session.class);
+			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
 				
@@ -694,6 +698,8 @@ public class NativePersistenceService extends BaseService {
 					}
 				}
 			});
+			
+			hibernateSession.close();
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
@@ -1226,7 +1232,7 @@ public class NativePersistenceService extends BaseService {
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		SQLQuery query = queryBuilder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		SQLQuery query = queryBuilder.getNativeQuery(sqlConnectionProvider.getSession(sqlConnectionCode), true);
 		return query.list();
 	}
 
@@ -1256,16 +1262,22 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		Query query = queryBuilder.getNativeCountQuery(getEntityManager(sqlConnectionCode));
-		Object count = query.getSingleResult();
-		if (count instanceof Long) {
-			return (Long) count;
-		} else if (count instanceof BigDecimal) {
-			return ((BigDecimal) count).longValue();
-		} else if (count instanceof Integer) {
-			return ((Integer) count).longValue();
-		} else {
-			return Long.valueOf(count.toString());
+		EntityManager entityManager = sqlConnectionProvider.getSession(sqlConnectionCode);
+		
+		try {
+			Query query = queryBuilder.getNativeCountQuery(entityManager);
+			Object count = query.getSingleResult();
+			if (count instanceof Long) {
+				return (Long) count;
+			} else if (count instanceof BigDecimal) {
+				return ((BigDecimal) count).longValue();
+			} else if (count instanceof Integer) {
+				return ((Integer) count).longValue();
+			} else {
+				return Long.valueOf(count.toString());
+			}
+		} finally {
+			entityManager.close();
 		}
 	}
 

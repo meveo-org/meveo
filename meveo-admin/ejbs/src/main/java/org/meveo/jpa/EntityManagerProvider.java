@@ -89,10 +89,18 @@ public class EntityManagerProvider {
                 // Create an application managed persistence context main provider, for GUI
             } else {
                 final EntityManager em = emf.createEntityManager();
-                EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[] { EntityManager.class }, (proxy, method, args) -> {
-                    em.joinTransaction();
+                EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(
+                		this.getClass().getClassLoader(),
+                		new Class<?>[] { EntityManager.class },
+                		(proxy, method, args) -> {
+                			
+        			if(em.isOpen()) {
+        				em.joinTransaction();
+        			}
+        			
                     return method.invoke(em, args);
                 });
+                
                 return new EntityManagerWrapper(emProxy, true);
             }
         }
@@ -113,7 +121,9 @@ public class EntityManagerProvider {
      */
     public void disposeEMWrapper(@Disposes @MeveoJpa EntityManagerWrapper entityManagerWrapper) {
         // log.error("AKK will try dispose entityManagerWrapper");
-        entityManagerWrapper.dispose();
+    	if(entityManagerWrapper.getEntityManager().isOpen()) {
+    		entityManagerWrapper.dispose();
+    	}
     }
 
     /**

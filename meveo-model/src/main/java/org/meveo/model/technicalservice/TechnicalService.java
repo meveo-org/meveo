@@ -18,19 +18,26 @@
 package org.meveo.model.technicalservice;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.MapKey;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
+import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 /**
+ * The Class TechnicalService.
+ *
  * @author Clément Bareth
  */
 @MappedSuperclass
@@ -38,45 +45,73 @@ public class TechnicalService extends Function {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Service's name
+	 */
     @Column(name = "name")
     private String name;
 
+    /**
+     * Input and output descriptions
+     */
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @MapKey(name = "name")
     private Map<String, Description> descriptions;
+    
+    /**
+     * Inherited services
+     */
+    @JoinTable(
+    		name = "technical_service_technical_service", 
+    		joinColumns = @JoinColumn(name = "technical_service_id", referencedColumnName = "id"),
+    		inverseJoinColumns = @JoinColumn(name = "ext_technical_service_id", referencedColumnName = "id")
+    )
+    @OneToMany(targetEntity = Function.class)
+    @SubTypeOf(TechnicalService.class)
+    private Set<TechnicalService> extendedServices = new HashSet<>();
 
     /**
-     * Description of the inputs and outputs of the connector
-     */
+	 * Description of the inputs and outputs of the connector.
+	 *
+	 * @return Input and output descriptions
+	 */
     public Map<String, Description> getDescriptions() {
         return descriptions;
     }
 
     /**
-     * @param descriptions Description of the inputs and outputs of the connector
-     */
+	 * Sets the input and output descriptions.
+	 *
+	 * @param descriptions Description of the inputs and outputs of the connector
+	 */
     public void setDescriptions(Map<String, Description> descriptions) {
         this.descriptions = descriptions;
     }
 
     /**
-     * Name of the connector
-     */
+	 * Gets the service's name.
+	 *
+	 * @return name of the connector
+	 */
     public String getName() {
         return name;
     }
 
     /**
-     * @param name Name of the connector
-     */
+	 * Sets the service's name.
+	 *
+	 * @param name Name of the connector
+	 */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * @param contextMap Context map of the current execution
-     * @return {@code true} if the service can be used for the given context
-     */
+	 * Checks if is applicable.
+	 *
+	 * @param contextMap Context map of the current execution
+	 * @return {@code true} if the service can be used for the given context
+	 */
     public boolean isApplicable(Map<String, Object> contextMap) { 
     	return true;
     }
@@ -124,8 +159,27 @@ public class TechnicalService extends Function {
     public boolean hasOutputs() {
         return descriptions.values().stream().anyMatch(d -> d.isOutput() && !d.getInputProperties().isEmpty());
     }
+    
+    /**
+	 * Gets the inherited services.
+	 *
+	 * @return the inherited services
+	 */
+    public Set<TechnicalService> getExtendedServices() {
+		return extendedServices;
+	}
 
-    @Override
+	/**
+	 * Sets the inherited services.
+	 *
+	 * @param extendedServices the new inherited services
+	 */
+	@SuppressWarnings("unused")	/* Used by Hibernate */
+	private void setExtendedServices(Set<TechnicalService> extendedServices) {
+		this.extendedServices = extendedServices;
+	}
+
+	@Override
     public String getFunctionType() {
         return "TechinalService";
     }

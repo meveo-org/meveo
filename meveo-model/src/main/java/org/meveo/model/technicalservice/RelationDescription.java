@@ -43,7 +43,9 @@ public class RelationDescription extends Description implements RelationshipDesc
 
     @PrePersist @PreUpdate
     private void prePersist(){
-        super.setName(this.getName());
+    	if(super.getName() == null) {
+    		super.setName(source + "-" + target);
+    	}
     }
 
     /**
@@ -98,13 +100,18 @@ public class RelationDescription extends Description implements RelationshipDesc
 
     @Override
     public String getName() {
-        return source + "-" + target;
+        return super.getName() != null ? super.getName() : source + "-" + target;
     }
 
     @Override
     public String getTypeName() {
         return type.getCode();
     }
+
+	@Override
+	public String getAppliesTo() {
+		return type.getAppliesTo();
+	}
 
 
 

@@ -29,7 +29,7 @@ public class Accessor implements Serializable {
 	private String name;
 
 	/**
-	 * Type of the property
+	 * Type of the property. Can be primitive, object or custom entity template.
 	 */
 	private String type;
 

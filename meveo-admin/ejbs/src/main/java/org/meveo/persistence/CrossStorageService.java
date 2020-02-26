@@ -755,9 +755,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		String sqlUUID = null;
 
 		if(cei.getUuid() != null) {
-			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
-			if(values != null) {
-				sqlUUID = cei.getUuid();
+			try {
+				Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
+				if(values != null) {
+					sqlUUID = cei.getUuid();
+				}
+			} catch (EntityDoesNotExistsException e) {
+				sqlUUID = null;
 			}
 		}
 		
