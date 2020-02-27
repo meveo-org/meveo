@@ -187,6 +187,7 @@ public class SwaggerHelperService {
 		props.put(PropertyId.TITLE, variableName);
 		Property prop = PropertyBuilder.build(variableType, "", props);
 		prop.setDescription(variableName);
+
 		return PropertyBuilder.toModel(prop);
 	}
 

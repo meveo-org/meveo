@@ -101,7 +101,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @lastModifiedVersion 6.8.0
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -749,34 +749,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
-            try {
-                if (className.startsWith("org.meveo.model.customEntities")) {
-                    String fileName = className.split("\\.")[4];
-                    File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
-                    String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                    matcher = pattern.matcher(content);
-                    while (matcher.find()) {
-                        String name = matcher.group(1);
-                        if (name.startsWith("org.meveo.model.customEntities")) {
-                            String cetName = name.split("\\.")[4];
-                            File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
-                            files.add(cetFile);
-                            continue;
-                        }
-                    }
-                    files.add(file);
-                    continue;
-                } else {
-                    String name = className.replace('.', '/');
-                    File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
-                    if (file.exists()) {
-                        ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
-                        populateImportScriptInstance(scriptInstance, files);
-                        files.add(file);
-                    }
-                }
-            } catch (IOException e) {}
-
+            files.addAll(parseImportCustomEntity(pattern, className));
+            
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
                 	Class clazz;
@@ -784,6 +758,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 	try {
 	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 	                    clazz = classLoader.loadClass(className);
+	                    
                 	} catch(ClassNotFoundException e) {
                 		clazz = Class.forName(className);
                 	}
@@ -793,6 +768,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         if (location.startsWith("file:")) {
                             location = location.substring(5);
                         }
+                        
                         if (location.endsWith("!/")) {
                             location = location.substring(0, location.length() - 2);
                         }
@@ -806,14 +782,58 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         }
 
                     } catch (Exception e) {
-                        log.warn("Failed to find location for class {}", className, e);
+                        log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
                     }
                 }
+                
             } catch (Exception e) {
-                log.warn("Failed to find location for class {}", className, e);
+                log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
             }
         }
+        
         return files;
+    }
+    
+    /**
+     * Recursively read the dependency of CET in a script.
+     * 
+     * @param pattern import patter
+     * @param className class name of the cet
+     * @return a list of CET java class file names.
+     */
+    private List<File> parseImportCustomEntity(Pattern pattern, String className) {
+    	
+    	List<File> files = new ArrayList<>();
+    	try {
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
+                String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                Matcher matcher2 = pattern.matcher(content);
+                while (matcher2.find()) {
+                    String name = matcher2.group(1);
+                    if (name.startsWith("org.meveo.model.customEntities")) {
+                    	files.addAll(parseImportCustomEntity(pattern, name));
+                    }
+                }
+                
+                files.add(file);
+                
+            } else {
+                String name = className.replace('.', '/');
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
+                if (file.exists()) {
+                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
+                    populateImportScriptInstance(scriptInstance, files);
+                    files.add(file);
+                }
+            }
+            
+        } catch (IOException e) {
+        	log.warn("Miss matcher when loading custom entities {}", e.getMessage());
+        }
+    	
+    	return files;
     }
 
     /**
