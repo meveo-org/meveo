@@ -14,7 +14,7 @@
 		<version.keycloak>4.8.3.Final</version.keycloak>
 		<dbtype>generic</dbtype>
 		<releaseOption />
-		<jackson.version>2.9.5</jackson.version>
+		<jackson.version>2.10.2</jackson.version>
 		<scm.url>scm:git:ssh://git@github.com/manaty/meveo</scm.url>
 	</properties>
 
