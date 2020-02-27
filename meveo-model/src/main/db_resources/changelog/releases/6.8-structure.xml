@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+  ~ even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+  ~ not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+  ~ General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+    <changeSet id="#4070" author="Clément Bareth">
+    	<addColumn tableName="sql_configuration">
+    		<column name="schema" type="varchar(255)"></column>
+    	</addColumn>
+    </changeSet>
+    
+    <changeSet author="Hien Bach" id="#3969">
+		<createTable tableName="meveo_script_instance_script_instance">
+			<column name="script_instance_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column name="child_script_instance_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="script_instance_id, child_script_instance_id" constraintName="meveo_script_instance_script_instance_pkey" tableName="meveo_script_instance_script_instance" />
+	</changeSet>
+	
+	<changeSet id="#3987 - Technical service can extends other technical service" author="Clément Bareth">
+		<createTable tableName="technical_service_technical_service">
+			<column name="technical_service_id" type="bigint">
+				<constraints foreignKeyName="fk_technical_service_technical_service" references="meveo_function(id)"/>
+			</column>
+			<column name="ext_technical_service_id"  type="bigint">
+				<constraints foreignKeyName="fk_technical_service_ext_technical_service" references="meveo_function(id)"/>
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="technical_service_technical_service" columnNames="technical_service_id, ext_technical_service_id"/>
+		
+	</changeSet>
+
+	<changeSet id="#4046" author="Hien Bach">
+		<createTable tableName="module_files">
+			<column name="module_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column name="module_file" type="varchar(255)">
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="module_id, module_file" constraintName="module_files_pkey" tableName="module_files" />
+	</changeSet>
+    
+</databaseChangeLog>

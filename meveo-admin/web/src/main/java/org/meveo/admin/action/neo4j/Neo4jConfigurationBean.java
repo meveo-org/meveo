@@ -12,7 +12,7 @@ import org.meveo.service.neo4j.Neo4jConfigurationService;
 /**
  * Controller for managing {@link Neo4JConfiguration} CRUD operations.
  * 
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  */
 @Named
 @ViewScoped
@@ -32,4 +32,13 @@ public class Neo4jConfigurationBean extends BaseBean<Neo4JConfiguration> {
 		return neo4jConfigurationService;
 	}
 
+	@Override
+	protected String getListViewName() {
+		return "neo4jConfigurations";
+	}
+
+	@Override
+	public String getEditViewName() {
+		return "neo4jConfigurationDetail";
+	}
 }

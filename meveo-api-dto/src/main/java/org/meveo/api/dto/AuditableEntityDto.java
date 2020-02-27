@@ -6,13 +6,16 @@ import org.meveo.model.AuditableEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Contain the entity creation and modification dates.
  * 
- * 
- * @author Edward P. Legaspi
- * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
+@ApiModel
 public class AuditableEntityDto extends BaseEntityDto {
 
 	/**
@@ -24,11 +27,13 @@ public class AuditableEntityDto extends BaseEntityDto {
 	 * created date.
 	 */
 	@JsonIgnore
+	@ApiModelProperty("Created date")
 	private Date created;
 
 	@JsonIgnore
+	@ApiModelProperty("Updated date")
 	private Date updated;
-	
+
 	public AuditableEntityDto() {
 		super();
 	}

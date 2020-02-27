@@ -326,21 +326,24 @@ public class FileSystemService {
                         	((File) oldFile).delete();
 						}
                     }
-                    
-                    File tempFile = (File) values.get(field.getCode());
-                    binaryStoragePathParam.setFile(tempFile);
-                    binaryStoragePathParam.setFilename(tempFile.getName());
-					binaryStoragePathParam.setFileSizeInBytes(tempFile.length());
-
+					
 					try {
-						final String persistedPath = persists(binaryStoragePathParam, values);
-						values.put(field.getCode(), persistedPath);
-						binariesSaved.put(field, persistedPath);
-					} catch (IllegalArgumentException e) {
-						throw new IllegalArgumentException(e.getMessage() + " for field " + field.getCode());
+						File tempFile = (File) values.get(field.getCode());
+						binaryStoragePathParam.setFile(tempFile);
+						binaryStoragePathParam.setFilename(tempFile.getName());
+						binaryStoragePathParam.setFileSizeInBytes(tempFile.length());
+
+						try {
+							final String persistedPath = persists(binaryStoragePathParam, values);
+							values.put(field.getCode(), persistedPath);
+							binariesSaved.put(field, persistedPath);
+						} catch (IllegalArgumentException e) {
+							throw new IllegalArgumentException(e.getMessage() + " for field " + field.getCode());
+						}
+						
+					} catch (ClassCastException cce) {
+						// save from GUI
 					}
-
-
 
                 } else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && values.get(field.getCode()) != null) {
                 	List<?> value = (List<?>) values.get(field.getCode());

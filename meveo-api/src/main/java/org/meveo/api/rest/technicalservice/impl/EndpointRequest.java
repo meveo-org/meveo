@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.DispatcherType;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
@@ -43,8 +44,8 @@ public class EndpointRequest {
 
     public EndpointRequest(HttpServletRequest httpServletRequest, Endpoint endpoint) {
         this.httpServletRequest = httpServletRequest;
-        
-        // Compute remainging path if endpoint exists
+
+        // Compute remaining path if endpoint exists
         if(endpoint != null) {
             remainingPath = httpServletRequest.getPathInfo();
             remainingPath = remainingPath.replace("/" + endpoint.getCode(), "");
@@ -59,7 +60,7 @@ public class EndpointRequest {
             }
         }
     }
-    
+
     public String getRemainingPath() {
     	return remainingPath;
     }
@@ -292,4 +293,9 @@ public class EndpointRequest {
     public DispatcherType getDispatcherType() {
         return httpServletRequest.getDispatcherType();
     }
+
+    public ServletContext getServletContext() {
+        return httpServletRequest.getServletContext();
+    }
+
 }

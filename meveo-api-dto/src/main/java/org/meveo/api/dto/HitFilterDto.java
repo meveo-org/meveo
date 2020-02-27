@@ -1,60 +1,82 @@
 package org.meveo.api.dto;
 
-import org.meveo.api.dto.BaseEntityDto;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author Phu Bach
- *
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "hitFilter")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class HitFilterDto extends BaseEntityDto {
 
 	private static final long serialVersionUID = -763450889692487278L;
 
-    @XmlAttribute
-    protected String operator;
-    @XmlAttribute
-    protected String fieldName;
-    @XmlAttribute
-    private String fieldType;
-    @XmlAttribute
-    private String value;
+	/**
+	 * Operator
+	 */
+	@XmlAttribute
+	@ApiModelProperty("Operator")
+	protected String operator;
 
-    public String getOperator() {
-        return operator;
-    }
+	/**
+	 * Fieldname to operate
+	 */
+	@XmlAttribute
+	@ApiModelProperty("Fieldname to operate")
+	protected String fieldName;
 
-    public void setOperator(String operator) {
-        this.operator = operator;
-    }
+	/**
+	 * Type of field
+	 */
+	@XmlAttribute
+	@ApiModelProperty("Type of field")
+	private String fieldType;
 
-    public String getFieldName() {
-        return fieldName;
-    }
+	/**
+	 * Value of the filter
+	 */
+	@XmlAttribute
+	@ApiModelProperty("Value of the filter")
+	private String value;
 
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
+	public String getOperator() {
+		return operator;
+	}
 
-    public String getFieldType() {
-        return fieldType;
-    }
+	public void setOperator(String operator) {
+		this.operator = operator;
+	}
 
-    public void setFieldType(String fieldType) {
-        this.fieldType = fieldType;
-    }
+	public String getFieldName() {
+		return fieldName;
+	}
 
-    public String getValue() {
-        return value;
-    }
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
+	}
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public String getFieldType() {
+		return fieldType;
+	}
+
+	public void setFieldType(String fieldType) {
+		this.fieldType = fieldType;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
 }

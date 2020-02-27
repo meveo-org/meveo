@@ -14,8 +14,7 @@ import org.meveo.api.rest.LanguageRs;
 
 /**
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingLanguageRsImpl
+ *
  **/
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })

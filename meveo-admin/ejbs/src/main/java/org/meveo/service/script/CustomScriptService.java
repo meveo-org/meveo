@@ -19,12 +19,38 @@
  */
 package org.meveo.service.script;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.javadoc.JavadocBlockTag;
+import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.tools.*;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -43,14 +69,19 @@ import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.MeveoFileUtils;
-import org.meveo.commons.utils.StringUtils;
+import org.meveo.commons.utils.*;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.scripts.*;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.Accessor;
+import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -60,47 +91,31 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.meveo.model.scripts.ScriptSourceTypeEnum.JAVA;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @lastModifiedVersion 6.8.0
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
-    private static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
-
-    private static final String SET = "set";
-    private static final String GET = "get";
-    private static final String IS = "is";
+    public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
 
     @Inject
     private ResourceBundle resourceMessages;
 
     @Inject
     private EndpointService endpointService;
+
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     @Inject
     @CurrentUser
@@ -231,7 +246,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             classAndValue.setClass(setterValue.getClass());
                         }
 
-                        scriptInstance.getClass().getMethod(setter.getMethodName(), classAndValue.getTypeClass()).invoke(scriptInstance, classAndValue.getValue());
+                        Method method = ReflectionUtils.getSetterByNameAndSimpleClassName(scriptInstance.getClass(), setter.getMethodName(), setter.getType())
+                        		.orElse(null);
+                        
+                        if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
+                        	// If value is a map, convert the map into target class
+                        	if(classAndValue.getValue() instanceof Map) {
+                        		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
+                            	method.invoke(scriptInstance, convertedValue);
+                        	}
+                        	
+                        } else {
+                        	method.invoke(scriptInstance, classAndValue.getValue());
+                        }
+                        
+                       // , classAndValue.getTypeClass()).invoke(scriptInstance, classAndValue.getValue());
                     }
                 }
             }
@@ -284,14 +313,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * Construct classpath for script compilation
      */
-    public void constructClassPath() throws IOException {
+    public static void constructClassPath() throws IOException {
         if (CLASSPATH_REFERENCE.get().length() == 0) {
             synchronized (CLASSPATH_REFERENCE) {
                 if (CLASSPATH_REFERENCE.get().length() == 0) {
                     String classpath = CLASSPATH_REFERENCE.get();
 
                     // Check if deploying an exploded archive or a compressed file
-                    String thisClassfile = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+                    String thisClassfile = new Object() {}.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
                     File realFile = new File(thisClassfile);
 
@@ -331,7 +360,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                                 if (physicalLibDir.isDirectory()) {
                                     for (File subLib : Objects.requireNonNull(physicalLibDir.listFiles())) {
                                         if (subLib.isDirectory()) {
-                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(this::getFilePath).collect(Collectors.toList());
+                                            final List<String> jars = FileUtils.getFilesToProcess(subLib, "*", "jar").stream().map(item->CustomScriptService.getFilePath(item)).collect(Collectors.toList());
                                             classPathEntries.addAll(jars);
                                             if (subLib.getName().equals("classes")) {
                                                 classPathEntries.add(subLib.getCanonicalPath());
@@ -400,7 +429,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private String getFilePath(File jar) {
+    private static String getFilePath(File jar) {
         try {
             return jar.getCanonicalPath();
         } catch (IOException e) {
@@ -566,40 +595,40 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers().stream().filter(e -> e instanceof MethodDeclaration).map(e -> (MethodDeclaration) e)
                 .collect(Collectors.toList());
 
-        final List<Accessor> setters = methods.stream().filter(e -> e.getNameAsString().startsWith(SET))
-                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().size() == 1)
-                .map(methodDeclaration -> {
-                    Accessor setter = new Accessor();
-                    String accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                    setter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                    setter.setType(methodDeclaration.getParameter(0).getTypeAsString());
-                    setter.setMethodName(methodDeclaration.getNameAsString());
-                    methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                        javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.PARAM).findFirst()
-                                .ifPresent(javadocBlockTag -> setter.setDescription(javadocBlockTag.getContent().toText()));
-                    }));
-                    return setter;
-                }).collect(Collectors.toList());
+        final List<Accessor> setters = ScriptUtils.getSetters(methods);
 
-        final List<Accessor> getters = methods.stream().filter(e -> e.getNameAsString().startsWith(GET) || e.getNameAsString().startsWith(IS))
-                .filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().isEmpty())
-                .map(methodDeclaration -> {
-                    Accessor getter = new Accessor();
-                    String accessorFieldName;
-                    if (methodDeclaration.getNameAsString().startsWith(GET)) {
-                        accessorFieldName = methodDeclaration.getNameAsString().substring(3);
-                    } else {
-                        accessorFieldName = methodDeclaration.getNameAsString().substring(2);
-                    }
-                    getter.setName(Character.toLowerCase(accessorFieldName.charAt(0)) + accessorFieldName.substring(1));
-                    getter.setMethodName(methodDeclaration.getNameAsString());
-                    getter.setType(methodDeclaration.getTypeAsString());
-                    methodDeclaration.getComment().ifPresent(comment -> comment.ifJavadocComment(javadocComment -> {
-                        javadocComment.parse().getBlockTags().stream().filter(e -> e.getType() == JavadocBlockTag.Type.RETURN).findFirst()
-                                .ifPresent(javadocBlockTag -> getter.setDescription(javadocBlockTag.getContent().toText()));
-                    }));
-                    return getter;
-                }).collect(Collectors.toList());
+        final List<Accessor> getters = ScriptUtils.getGetters(methods);
+        
+        // Find getter and setter defined in super types
+        for(ClassOrInterfaceType type : classOrInterfaceDeclaration.getExtendedTypes()) {
+        	String className = compilationUnit.getImports().stream()
+        		.filter(importEntry -> importEntry.getNameAsString().contains(type.getNameAsString()))
+        		.map(ImportDeclaration::getNameAsString)
+        		.findFirst()
+        		.orElse(type.getNameAsString());
+        	
+        	try {
+				Class<?> typeClass = Class.forName(className);
+				
+				// Build getters and setter of extended types
+				Arrays.stream(typeClass.getMethods())
+						.filter(m -> m.getName().startsWith(Accessor.SET))
+						.filter(m -> m.getParameterCount() == 1)
+						.filter(m -> m.getReturnType() == void.class)
+						.map(Accessor::new)
+						.forEach(setters::add);
+				
+				Arrays.stream(typeClass.getMethods())
+						.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
+						.filter(m -> m.getParameterCount() == 0)
+						.filter(m -> m.getReturnType() != void.class)
+						.map(Accessor::new)
+						.forEach(getters::add);
+				
+			} catch (ClassNotFoundException e1) {
+				log.warn("Can't find class {}", className);
+			}
+        }
 
         checkEndpoints(script, setters);
 
@@ -607,7 +636,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         script.setSetters(setters);
     }
 
-    /**
+	/**
      * Compile script. DOES NOT update script entity status. Successfully compiled
      * script is added to a compiled script cache if active and not in test
      * compilation mode.
@@ -684,13 +713,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws org.meveo.service.script.CharSequenceCompilerException char sequence
+     * @throws CharSequenceCompilerException char sequence
      *                                                                compiler
      *                                                                exception.
      */
-    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
 
-        supplementClassPathWithMissingImports(javaSrc);
+        List<File> fileList = supplementClassPathWithMissingImports(javaSrc);
 
         String fullClassName = getFullClassname(javaSrc);
 
@@ -700,7 +729,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, fileList, ScriptInterface.class);
     }
 
     /**
@@ -711,22 +740,35 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param javaSrc Java source to compile
      */
     @SuppressWarnings("rawtypes")
-    private void supplementClassPathWithMissingImports(String javaSrc) {
+    private List<File> supplementClassPathWithMissingImports(String javaSrc) {
+
+        List<File> files = new ArrayList<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
+            files.addAll(parseImportCustomEntity(pattern, className));
+            
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                    Class clazz = classLoader.loadClass(className);
+                	Class clazz;
+                	
+                	try {
+	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+	                    clazz = classLoader.loadClass(className);
+	                    
+                	} catch(ClassNotFoundException e) {
+                		clazz = Class.forName(className);
+                	}
+                	
                     try {
                         String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
                         if (location.startsWith("file:")) {
                             location = location.substring(5);
                         }
+                        
                         if (location.endsWith("!/")) {
                             location = location.substring(0, location.length() - 2);
                         }
@@ -740,14 +782,58 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         }
 
                     } catch (Exception e) {
-                        log.warn("Failed to find location for class {}", className);
+                        log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
                     }
                 }
+                
             } catch (Exception e) {
-                log.warn("Failed to find location for class {}", className);
+                log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
             }
         }
-
+        
+        return files;
+    }
+    
+    /**
+     * Recursively read the dependency of CET in a script.
+     * 
+     * @param pattern import patter
+     * @param className class name of the cet
+     * @return a list of CET java class file names.
+     */
+    private List<File> parseImportCustomEntity(Pattern pattern, String className) {
+    	
+    	List<File> files = new ArrayList<>();
+    	try {
+            if (className.startsWith("org.meveo.model.customEntities")) {
+                String fileName = className.split("\\.")[4];
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
+                String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                Matcher matcher2 = pattern.matcher(content);
+                while (matcher2.find()) {
+                    String name = matcher2.group(1);
+                    if (name.startsWith("org.meveo.model.customEntities")) {
+                    	files.addAll(parseImportCustomEntity(pattern, name));
+                    }
+                }
+                
+                files.add(file);
+                
+            } else {
+                String name = className.replace('.', '/');
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
+                if (file.exists()) {
+                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
+                    populateImportScriptInstance(scriptInstance, files);
+                    files.add(file);
+                }
+            }
+            
+        } catch (IOException e) {
+        	log.warn("Miss matcher when loading custom entities {}", e.getMessage());
+        }
+    	
+    	return files;
     }
 
     /**
@@ -980,6 +1066,84 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    /**
+     * Populate import script instance.
+     *
+     * @param scriptInstance script instance
+     * @param files list of files
+     */
+    private void populateImportScriptInstance(ScriptInstance scriptInstance, List<File> files) {
+        try {
+            if (scriptInstance != null) {
+                String javaSource = scriptInstance.getScript();
+                String regex = "import (.*?);";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(javaSource);
+                while (matcher.find()) {
+                    String className = matcher.group(1);
+                    if (className.startsWith("org.meveo.model.customEntities")) {
+                        String fileName = className.split("\\.")[4];
+                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom" + File.separator + "entities" + File.separator + fileName + ".java");
+                        String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                        matcher = pattern.matcher(content);
+                        while (matcher.find()) {
+                            String name = matcher.group(1);
+                            if (name.startsWith("org.meveo.model.customEntities")) {
+                                String cetName = name.split("\\.")[4];
+                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
+                                files.add(cetFile);
+                                continue;
+                            }
+                        }
+                        files.add(file);
+                        continue;
+                    }
+                }
+                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
+                    for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
+                        String path = instance.getCode().replace('.', '/');
+                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts" + File.separator + path + ".java");
+                        if (fileImport.exists()) {
+                            files.add(fileImport);
+                        }
+                        populateImportScriptInstance(instance, files);
+                    }
+                }
+            }
+        } catch (Exception e) {}
+    }
+
+    /**
+     * Return list of import scripts.
+     *
+     * @param javaSource java source
+     */
+    public List<String> getImportScripts(String javaSource) {
+        String regexImport = "import (.*?);";
+        Pattern patternImport = Pattern.compile(regexImport);
+        Matcher matcherImport = patternImport.matcher(javaSource);
+        List<String> results = new ArrayList<>();
+        while (matcherImport.find()) {
+            String nameImport = matcherImport.group(1);
+            results.add(nameImport);
+        }
+        return results;
+    }
+
+    public List<ScriptInstance> populateImportScriptInstance(ScriptInstance instance) {
+        List<String> importedScripts = getImportScripts(instance.getScript());
+        instance.getImportScriptInstances().clear();
+        List<ScriptInstance> scriptInstances = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            for (String scriptCode : importedScripts) {
+                ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptCode);
+                if (scriptInstance != null) {
+                    scriptInstances.add(scriptInstance);
+                }
+            }
+        }
+        return scriptInstances;
     }
 }

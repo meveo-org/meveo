@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -9,9 +10,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by Hien Bach
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "MailerConfiguration")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class MailerConfigurationDto {
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;

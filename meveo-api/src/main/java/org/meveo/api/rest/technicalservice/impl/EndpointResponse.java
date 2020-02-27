@@ -17,89 +17,134 @@
 package org.meveo.api.rest.technicalservice.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
 /**
  * Class representing the response of the call of an endpoint.
  * It allows to override the default comportment of the endpoint servlet.
- * 
  * @author clement.bareth
- *
  */
+
 /**
  * @author clement.bareth
  *
  */
 public class EndpointResponse {
 
-	/**
-	 * Servlet response
-	 */
+    /**
+     * Servlet response
+     */
     private HttpServletResponse httpServletResponse;
-    
+
     /**
      * Content to write on the servlet response
      */
     private byte[] output;
-    
+
     /**
      * If error, content to write on the servlet response
      */
     private String errorMessage;
-    
+
     /**
      * MIME type of the response
      */
     private String contentType;
-    
+
     /**
      * Status of the response
      */
     private Integer status;
 
+	/**
+	 * Response headers
+	 */
+	private Map<String, String> headers;
+
+	/**
+	 * Response date headers
+	 */
+	private Map<String, Long> dateHeaders;
+
+	/**
+	 * Response buffer size
+	 */
+	private Integer bufferSize;
+
+
+
     public EndpointResponse(HttpServletResponse httpServletResponse) {
         this.httpServletResponse = httpServletResponse;
     }
-    
+
+    public Integer getBufferSize() {
+    	return this.bufferSize;
+	}
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
+
+    public Map<String, String> getHeaders() {
+    	return this.headers;
+    }
+
     public void setHeader(String headerName, String value) {
-    	httpServletResponse.setHeader(headerName, value);
+    	if(this.headers == null) {
+        	this.headers = new HashMap<>();
+        }
+        this.headers.put(headerName, value);
     }
-    
+
+	public Map<String, Long> getDateHeaders() {
+		return this.dateHeaders;
+	}
+
+    public void setDateHeader(String headerName, long value) {
+	    if(this.dateHeaders == null) {
+		    this.dateHeaders = new HashMap<>();
+	    }
+	    this.dateHeaders.put(headerName, value);
+    }
+
+	public byte[] getOutput() {
+		return output;
+	}
+
     public void setOutput(byte[] output) throws IOException {
-    	this.output = output;
-    }
-    
-    public void setError(String errorMessage) {
-    	this.errorMessage = errorMessage;
+        this.output = output;
     }
 
 	public String getErrorMessage() {
 		return errorMessage;
 	}
 
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
-	}
+    public void setError(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
 
-	public byte[] getOutput() {
-		return output;
-	}
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
 
-	public Integer getStatus() {
-		return status;
-	}
+    public Integer getStatus() {
+        return status;
+    }
 
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 
-	public String getContentType() {
-		return contentType;
-	}
+    public String getContentType() {
+        return contentType;
+    }
 
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}
-    
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
 }

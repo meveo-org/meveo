@@ -21,14 +21,14 @@ import org.meveo.api.dto.response.GetCountryResponse;
 /**
  * Web service for managing {@link org.meveo.model.billing.Country} and {@link org.meveo.model.billing.TradingCountry}.
  * 
- * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to  TradingCountryRs
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
+ *
  **/
 @Path("/country")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Country")
+@Api("CountryRs")
 public interface CountryRs extends IBaseRs {
 
     /**

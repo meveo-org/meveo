@@ -13,7 +13,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  */
 @Named
 @ViewScoped

@@ -61,7 +61,7 @@ public class FileSystemApi extends BaseApi {
 			}
 
 			// Retrieve the entity
-			Map<String, Object> values = crossStorageService.find(repository, cet, uuid, Collections.singletonList(cftCode));
+			Map<String, Object> values = crossStorageService.find(repository, cet, uuid, Collections.singletonList(cftCode), true);
 			if(values == null){
 				throw new EntityDoesNotExistsException("EntityInstance", uuid);
 			}

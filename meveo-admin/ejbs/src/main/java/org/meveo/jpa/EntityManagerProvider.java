@@ -24,6 +24,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
@@ -65,14 +66,14 @@ public class EntityManagerProvider {
     private Cache<String, EntityManagerFactory> entityManagerFactories;
 
     private static boolean isMultiTenancyEnabled = ParamBean.isMultitenancyEnabled();
-
+    
     /**
      * Instantiates an Entity manager for use in GUI exclusively. Will consider a tenant that currently connected user belongs to
      * 
      * @return Entity manager
      */
     @Produces
-    @RequestScoped
+//    @RequestScoped
     @MeveoJpa
     public EntityManagerWrapper getEntityManager() {
         String providerCode = currentUserProvider.getCurrentUserProviderCode();
@@ -88,10 +89,18 @@ public class EntityManagerProvider {
                 // Create an application managed persistence context main provider, for GUI
             } else {
                 final EntityManager em = emf.createEntityManager();
-                EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[] { EntityManager.class }, (proxy, method, args) -> {
-                    em.joinTransaction();
+                EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(
+                		this.getClass().getClassLoader(),
+                		new Class<?>[] { EntityManager.class },
+                		(proxy, method, args) -> {
+                			
+        			if(em.isOpen()) {
+        				em.joinTransaction();
+        			}
+        			
                     return method.invoke(em, args);
                 });
+                
                 return new EntityManagerWrapper(emProxy, true);
             }
         }
@@ -112,7 +121,9 @@ public class EntityManagerProvider {
      */
     public void disposeEMWrapper(@Disposes @MeveoJpa EntityManagerWrapper entityManagerWrapper) {
         // log.error("AKK will try dispose entityManagerWrapper");
-        entityManagerWrapper.dispose();
+    	if(entityManagerWrapper.getEntityManager().isOpen()) {
+    		entityManagerWrapper.dispose();
+    	}
     }
 
     /**

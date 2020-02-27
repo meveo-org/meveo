@@ -94,14 +94,14 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		return result;
 	}
 
-	public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto)
-			throws MissingParameterException, EntityDoesNotExistsException, MeveoApiException, BusinessException {
+	public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
 
 		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
 		scriptInstance.getMavenDependencies().clear();
+		scriptInstance.getImportScriptInstances().clear();
 		scriptInstanceService.flush();
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
@@ -281,6 +281,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				}
 				line++;
 			}
+		}
+		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance);
+		if (CollectionUtils.isNotEmpty(importedScripts)) {
+			scriptInstance.getImportScriptInstances().addAll(importedScripts);
 		}
 
 		return scriptInstance;

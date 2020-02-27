@@ -17,6 +17,7 @@ package org.meveo.api.dto.technicalservice;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
+import org.meveo.model.technicalservice.OutputMeveoProperty;
 
 /**
  * Description of an output property of an entity or relation.
@@ -27,12 +28,49 @@ public class OutputPropertyDto implements PropertyDescription {
 
     @JsonProperty(required = true)
     private String property;
+    
+    private boolean isInherited;
+    
+    /**
+     * Whether the description is inherited
+     */
+    public boolean isInherited() {
+		return isInherited;
+	}
+
+	/**
+	 * Sets whether the property is inherited.
+	 *
+	 * @param isInherited the new inherited
+	 */
+	public void setInherited(boolean isInherited) {
+		this.isInherited = isInherited;
+	}
 
     private int trustness = 0;
 
     private String value;
 
     /**
+	 * Instantiates a new OutputPropertyDto 
+	 *
+	 * @param p the property to copy
+	 */
+	public OutputPropertyDto(OutputMeveoProperty p) {
+        setProperty(p.getCet().getCode());
+        setTrustness(p.getTrustness());
+        setInherited(p.isInherited());
+	}
+
+	/**
+	 * Instantiates a new OutputPropertyDto
+	 *
+	 */
+	public OutputPropertyDto() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
      * @return The expected value for that property
      */
     public String getValue() {

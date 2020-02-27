@@ -18,150 +18,160 @@
  */
 package org.meveo.api.dto.payment;
 
-import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.model.wf.WFAction;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.model.wf.WFAction;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class WFActionDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("WFActionDto")
 public class WFActionDto extends BaseEntityDto {
-    
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 8309866046667741458L;
 
-    /** The uuid. */
-    @XmlElement(required = false)
-    private String uuid;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 8309866046667741458L;
 
-    /** The action el. */
-    @XmlElement(required = true)
-    private String actionEl;
+	/** The uuid. */
+	@XmlElement(required = false)
+	@ApiModelProperty(required = true, value = "workflow's id")
+	private String uuid;
 
-    /** The priority. */
-    @XmlElement(required = false)
-    private Integer priority;
+	/** The action el. */
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "expression to trigger when condition is true")
+	private String actionEl;
 
-    /** The condition el. */
-    @XmlElement(required = false)
-    private String conditionEl;
+	/** The priority. */
+	@XmlElement(required = false)
+	@ApiModelProperty("order of this action")
+	private Integer priority;
 
-    /**
-     * Instantiates a new WF action dto.
-     */
-    public WFActionDto() {
-    }
+	/** The condition el. */
+	@XmlElement(required = false)
+	@ApiModelProperty("expression to evaluate to trigger an action")
+	private String conditionEl;
 
-    /**
-     * Instantiates a new WF action dto.
-     *
-     * @param wfAction the WFAction entity
-     */
-    public WFActionDto(WFAction wfAction) {
-        this.uuid = wfAction.getUuid();
-        this.actionEl = wfAction.getActionEl();
-        this.priority = wfAction.getPriority();
-        this.conditionEl = wfAction.getConditionEl();
-    }
+	/**
+	 * Instantiates a new WF action dto.
+	 */
+	public WFActionDto() {
+	}
 
-    /**
-     * From dto.
-     *
-     * @param wfAction the wf action
-     * @return the WF action
-     */
-    public WFAction fromDto(WFAction wfAction) {
-        if (wfAction == null) {
-            wfAction = new WFAction();
-        }
-        wfAction.setUuid(getUuid());
-        wfAction.setActionEl(getActionEl());
-        wfAction.setPriority(getPriority());
-        wfAction.setConditionEl(getConditionEl());
-        return wfAction;
-    }
+	/**
+	 * Instantiates a new WF action dto.
+	 *
+	 * @param wfAction the WFAction entity
+	 */
+	public WFActionDto(WFAction wfAction) {
+		this.uuid = wfAction.getUuid();
+		this.actionEl = wfAction.getActionEl();
+		this.priority = wfAction.getPriority();
+		this.conditionEl = wfAction.getConditionEl();
+	}
 
-    /**
-     * Gets the uuid.
-     *
-     * @return the uuid
-     */
-    public String getUuid() {
-        return uuid;
-    }
+	/**
+	 * From dto.
+	 *
+	 * @param wfAction the wf action
+	 * @return the WF action
+	 */
+	public WFAction fromDto(WFAction wfAction) {
+		if (wfAction == null) {
+			wfAction = new WFAction();
+		}
+		wfAction.setUuid(getUuid());
+		wfAction.setActionEl(getActionEl());
+		wfAction.setPriority(getPriority());
+		wfAction.setConditionEl(getConditionEl());
+		return wfAction;
+	}
 
-    /**
-     * Sets the uuid.
-     *
-     * @param uuid the uuid to set
-     */
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+	/**
+	 * Gets the uuid.
+	 *
+	 * @return the uuid
+	 */
+	public String getUuid() {
+		return uuid;
+	}
 
-    /**
-     * Gets the action el.
-     *
-     * @return the actionEl
-     */
-    public String getActionEl() {
-        return actionEl;
-    }
+	/**
+	 * Sets the uuid.
+	 *
+	 * @param uuid the uuid to set
+	 */
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 
-    /**
-     * Sets the action el.
-     *
-     * @param actionEl the actionEl to set
-     */
-    public void setActionEl(String actionEl) {
-        this.actionEl = actionEl;
-    }
+	/**
+	 * Gets the action el.
+	 *
+	 * @return the actionEl
+	 */
+	public String getActionEl() {
+		return actionEl;
+	}
 
-    /**
-     * Gets the priority.
-     *
-     * @return the priority
-     */
-    public Integer getPriority() {
-        return priority;
-    }
+	/**
+	 * Sets the action el.
+	 *
+	 * @param actionEl the actionEl to set
+	 */
+	public void setActionEl(String actionEl) {
+		this.actionEl = actionEl;
+	}
 
-    /**
-     * Sets the priority.
-     *
-     * @param priority the priority to set
-     */
-    public void setPriority(Integer priority) {
-        this.priority = priority;
-    }
+	/**
+	 * Gets the priority.
+	 *
+	 * @return the priority
+	 */
+	public Integer getPriority() {
+		return priority;
+	}
 
-    /**
-     * Gets the condition el.
-     *
-     * @return the conditionEl
-     */
-    public String getConditionEl() {
-        return conditionEl;
-    }
+	/**
+	 * Sets the priority.
+	 *
+	 * @param priority the priority to set
+	 */
+	public void setPriority(Integer priority) {
+		this.priority = priority;
+	}
 
-    /**
-     * Sets the condition el.
-     *
-     * @param conditionEl the conditionEl to set
-     */
-    public void setConditionEl(String conditionEl) {
-        this.conditionEl = conditionEl;
-    }
+	/**
+	 * Gets the condition el.
+	 *
+	 * @return the conditionEl
+	 */
+	public String getConditionEl() {
+		return conditionEl;
+	}
 
-    @Override
-    public String toString() {
-        return "WFActionDto [actionEl=" + actionEl + ", priority=" + priority + ", conditionEl=" + conditionEl + "]";
-    }
+	/**
+	 * Sets the condition el.
+	 *
+	 * @param conditionEl the conditionEl to set
+	 */
+	public void setConditionEl(String conditionEl) {
+		this.conditionEl = conditionEl;
+	}
+
+	@Override
+	public String toString() {
+		return "WFActionDto [actionEl=" + actionEl + ", priority=" + priority + ", conditionEl=" + conditionEl + "]";
+	}
 
 }

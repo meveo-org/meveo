@@ -24,6 +24,10 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
+ **/
 @Stateless
 public class JSONSchemaGenerator {
 
@@ -268,19 +272,26 @@ public class JSONSchemaGenerator {
 			default:
 				throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
 		}
+		if (field.getIndexType() != null) {
+			result.indexType(field.getIndexType().name());
+		}
 		result
 				.readOnly(!field.isAllowEdit())
 				.nullable(!field.isValueRequired())
 				.versionable(field.isVersionable())
 
 		;
-		result
+		result = result
 				.id(field.getAppliesTo() + '_' + field.getCode())
 				.title(template.code() + "." + field.getCode())
 				.description(field.getDescription())
 				.storages(buildDBStorageType(field.getStorages()))
-				.indexType(field.getIndexType().name())
 				.schemaLocation(schemaLocation);
+		
+		if (field.getIndexType() != null) {
+			result = result.indexType(field.getIndexType().name());
+		}
+		
 		return result;
 	}
 

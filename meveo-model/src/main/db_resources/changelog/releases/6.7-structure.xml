@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify it under the terms of the
+  ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+  ~ even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is
+  ~ not suitable for any direct or indirect application in MILITARY industry See the GNU Affero
+  ~ General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+    <changeSet id="#3607 - Add sql configuration table"
+		author="EdwardPLegaspi">
+		<createTable tableName="sql_configuration">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_sql_configuration" />
+			</column>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="description" type="varchar(255)" />
+			<column name="version" type="int4" />
+			<column name="disabled" type="${type.boolean}"
+				defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+			<column name="created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated" type="datetime" />
+			<column name="driver_class" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="url" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="username" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="password" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="dialect" type="varchar(255)" />
+			<column name="initialized" type="${type.boolean}" defaultValueNumeric="0" />
+		</createTable>
+
+		<addColumn tableName="storage_repository">
+			<column name="sql_configuration_id" type="BIGINT" />
+		</addColumn>
+
+		<addForeignKeyConstraint
+			constraintName="storage_repository_sql_configuration_fk"
+			referencedTableName="sql_configuration"
+			baseColumnNames="sql_configuration_id"
+			baseTableName="storage_repository" referencedColumnNames="id" />
+		<createSequence sequenceName="sql_configuration_seq" />
+
+		<dropIndex tableName="adm_title" indexName="adm_title_index" />
+		<dropIndex tableName="billing_service_instance" indexName="billing_service_instance_code_index" />
+		<dropIndex tableName="cat_service_template" indexName="cat_service_template_code_index" />
+		<dropIndex tableName="crm_customer_brand" indexName="crm_customer_brand_index" />
+		<dropIndex tableName="crm_customer_category" indexName="crm_customer_category_index" />
+		
+		<createIndex tableName="adm_title" indexName="adm_title_index">
+			<column name="code"></column>
+		</createIndex>
+		<createIndex tableName="billing_service_instance" indexName="billing_service_instance_code_index">
+			<column name="code"></column>
+		</createIndex>
+		<createIndex tableName="cat_service_template" indexName="cat_service_template_code_index">
+			<column name="code"></column>
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="#3607 - Add sql configuration table Mysql" author="EdwardLegaspi"
+		dbms="mysql">
+		<createTable tableName="sql_configuration_seq">
+			<column name="next_val" type="BIGINT">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="sql_configuration_seq_pk" />
+			</column>
+		</createTable>
+		<sql>insert into ${db.schema.adapted}sql_configuration_seq values(1)
+		</sql>
+	</changeSet>
+
+	<changeSet author="Hien Bach" id="#4015">
+		<createTable tableName="remote_repository">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="pk_remote_repository" />
+			</column>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="url" type="varchar(255)"/>
+			<column name="version" type="int4" />
+			<column name="creator" type="varchar(100)" />
+			<column name="updater" type="varchar(100)" />
+			<column name="created" type="datetime">
+				<constraints nullable="false" />
+			</column>
+			<column name="updated" type="datetime" />
+		</createTable>
+		<createSequence sequenceName="remote_repository_seq" />
+	</changeSet>
+	
+	<changeSet author="Clement Bareth" id="Add a priority to input property description">
+		<addColumn tableName="property_description">
+			<column name="priority" type="float4"/>
+		</addColumn>
+	</changeSet>
+    
+</databaseChangeLog>

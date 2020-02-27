@@ -18,96 +18,104 @@
  */
 package org.meveo.api.dto.payment;
 
-import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.model.wf.WFDecisionRule;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.model.wf.WFDecisionRule;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class WFDecisionRuleDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("WFDecisionRuleDto")
 public class WFDecisionRuleDto extends BaseEntityDto {
-    
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 8309866046667741458L;
 
-    /** The name. */
-    @XmlElement(required = true)
-    private String name;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 8309866046667741458L;
 
-    /** The value. */
-    @XmlElement(required = true)
-    private String value;
+	/** The name. */
+	@XmlElement(required = true)
+	@ApiModelProperty("Name of the decision. Use for display.")
+	private String name;
 
-    /**
-     * Instantiates a new WF decision rule dto.
-     */
-    public WFDecisionRuleDto() {
-    }
+	/** The value. */
+	@XmlElement(required = true)
+	@ApiModelProperty("Value of the decision")
+	private String value;
 
-    /**
-     * Instantiates a new WF decision rule dto.
-     *
-     * @param wfDecisionRule the wf decision rule
-     */
-    public WFDecisionRuleDto(WFDecisionRule wfDecisionRule) {
-        this.name = wfDecisionRule.getName();
-        this.value = wfDecisionRule.getValue();
-    }
+	/**
+	 * Instantiates a new WF decision rule dto.
+	 */
+	public WFDecisionRuleDto() {
+	}
 
-    /**
-     * From dto.
-     *
-     * @param wfDecisionRule the wf decision rule
-     * @return the WF decision rule
-     */
-    public WFDecisionRule fromDto(WFDecisionRule wfDecisionRule) {
-        if (wfDecisionRule == null)
-            wfDecisionRule = new WFDecisionRule();
-        wfDecisionRule.setName(getName());
-        wfDecisionRule.setValue(getValue());
-        return wfDecisionRule;
-    }
+	/**
+	 * Instantiates a new WF decision rule dto.
+	 *
+	 * @param wfDecisionRule the wf decision rule
+	 */
+	public WFDecisionRuleDto(WFDecisionRule wfDecisionRule) {
+		this.name = wfDecisionRule.getName();
+		this.value = wfDecisionRule.getValue();
+	}
 
-    /**
-     * Gets the name.
-     *
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * From dto.
+	 *
+	 * @param wfDecisionRule the wf decision rule
+	 * @return the WF decision rule
+	 */
+	public WFDecisionRule fromDto(WFDecisionRule wfDecisionRule) {
+		if (wfDecisionRule == null)
+			wfDecisionRule = new WFDecisionRule();
+		wfDecisionRule.setName(getName());
+		wfDecisionRule.setValue(getValue());
+		return wfDecisionRule;
+	}
 
-    /**
-     * Sets the name.
-     *
-     * @param name the new name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
 
-    /**
-     * Gets the value.
-     *
-     * @return the value
-     */
-    public String getValue() {
-        return value;
-    }
+	/**
+	 * Sets the name.
+	 *
+	 * @param name the new name
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    /**
-     * Sets the value.
-     *
-     * @param value the new value
-     */
-    public void setValue(String value) {
-        this.value = value;
-    }
+	/**
+	 * Gets the value.
+	 *
+	 * @return the value
+	 */
+	public String getValue() {
+		return value;
+	}
+
+	/**
+	 * Sets the value.
+	 *
+	 * @param value the new value
+	 */
+	public void setValue(String value) {
+		this.value = value;
+	}
 
 }

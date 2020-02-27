@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -21,10 +22,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Rachid AITYAAZZA
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  **/
-
 @XmlRootElement(name = "CustomRelationshipTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
     private static final long serialVersionUID = -6633504145323452803L;

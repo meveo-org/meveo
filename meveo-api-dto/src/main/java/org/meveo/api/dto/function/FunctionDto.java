@@ -19,18 +19,22 @@ package org.meveo.api.dto.function;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.meveo.model.scripts.Sample;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import io.swagger.annotations.ApiModelProperty;
+
 /**
+ * Contains function information.
+ * 
+ * @see Function
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @version 6.7.0
  */
 public class FunctionDto extends BusinessEntityDto implements Serializable {
 
@@ -39,12 +43,34 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 	public static final TypeReference<List<FunctionDto>> DTO_LIST_TYPE_REF = new TypeReference<List<FunctionDto>>() {
 	};
 
+	/**
+	 * Name of test suite
+	 */
+	@ApiModelProperty("Name of test suite")
 	private String testSuite;
 
+	/**
+	 * Input parameters
+	 */
+	@ApiModelProperty("Input parameters")
 	private List<FunctionIO> inputs = new ArrayList<>();
+
+	/**
+	 * List of outputs
+	 */
+	@ApiModelProperty("List of outputs")
 	private List<FunctionIO> outputs = new ArrayList<>();
+
+	/**
+	 * Example input / outputs
+	 */
+	@ApiModelProperty("Example input / outputs")
 	private List<Sample> samples;
-	
+
+	/**
+	 * Whether to generate outputs or not
+	 */
+	@ApiModelProperty("Whether to generate outputs or not")
 	private Boolean generateOutputs = false;
 
 	public FunctionDto() {

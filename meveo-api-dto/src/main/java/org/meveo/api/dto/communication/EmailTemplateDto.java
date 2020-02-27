@@ -5,17 +5,22 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.communication.email.EmailTemplate;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class EmailTemplateDto.
  *
  * @author Tyshan Shi(tyshan@manaty.net)
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  * @since Jun 3, 2016 4:49:13 AM
  */
 @XmlRootElement(name = "EmailTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("EmailTemplateDto")
 public class EmailTemplateDto extends MessageTemplateDto {
 
     /** The Constant serialVersionUID. */

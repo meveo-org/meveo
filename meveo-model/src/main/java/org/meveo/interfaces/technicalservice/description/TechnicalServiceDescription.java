@@ -17,9 +17,17 @@ package org.meveo.interfaces.technicalservice.description;
 
 import org.meveo.interfaces.technicalservice.description.properties.InputPropertyDescription;
 import org.meveo.interfaces.technicalservice.description.properties.PropertyDescription;
+import org.meveo.model.technicalservice.TechnicalService;
 
 import java.util.List;
 
+/**
+ * Description of an input or output of a {@link TechnicalService}
+ * 
+ * @author clement.bareth
+ * @since 6.0.0
+ * @version 6.8.0
+ */
 public interface TechnicalServiceDescription {
 
     /**
@@ -63,5 +71,10 @@ public interface TechnicalServiceDescription {
      * @return The instance name of the variable described
      */
     String getName();
+    
+    /**
+     * @return true if the description is inherited
+     */
+    boolean isInherited();
 
 }

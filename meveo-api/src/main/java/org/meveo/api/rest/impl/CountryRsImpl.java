@@ -17,8 +17,7 @@ import org.meveo.api.rest.CountryRs;
 /**
  * 
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingCountryRsImpl
+ *
  **/
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })

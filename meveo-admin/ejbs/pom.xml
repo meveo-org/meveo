@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
-		<version>6.6.1</version>
+		<version>6.8.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>meveo-admin-ejbs</artifactId>
@@ -25,7 +27,7 @@
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>2.7</version>
 				<executions>
-					<!-- Copy message, authentication and other configuration files from
+					<!-- Copy message, authentication and other configuration files from 
 						configuration module for testing -->
 					<execution>
 						<id>copy-config-properties-file</id>
@@ -131,7 +133,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -168,7 +170,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>3.6.3</version>
+			<version>3.8.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>javax.servlet</groupId>
@@ -192,7 +194,7 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api-dto</artifactId>
-			</dependency>
+		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-json-schema</artifactId>
@@ -525,6 +527,27 @@
 			<groupId>org.eclipse.aether</groupId>
 			<artifactId>aether-impl</artifactId>
 			<version>1.1.0</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.hibernate</groupId> -->
+<!-- 			<artifactId>hibernate-c3p0</artifactId> -->
+<!-- 			<version>5.4.10.Final</version> -->
+<!-- 		</dependency> -->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.5.23</version>
+        </dependency>
+        <dependency>
+		  <groupId>io.swagger</groupId>
+		  <artifactId>swagger-jaxrs</artifactId>
+		  <version>1.5.23</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 	</dependencies>
 

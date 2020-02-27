@@ -25,36 +25,120 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.hibernate.Session;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
+import org.meveo.model.git.GitRepository;
+import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.admin.impl.PermissionService;
+import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @author Clément Bareth
+ * @version 6.7.0
  */
 @Startup
 @Singleton
 public class StartupListener {
 
-    @Inject
-    private ApplicationInitializer applicationInitializer;
+	@Inject
+	private ApplicationInitializer applicationInitializer;
 
-    @Inject
-    private Logger log;
+	@Inject
+	private RepositoryService repositoryService;
 
-    @Inject
-    @MeveoJpa
-    private EntityManagerWrapper entityManagerWrapper;
+	@Inject
+	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 
-    @PostConstruct
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void init() {
-        entityManagerWrapper.getEntityManager().joinTransaction();
-        Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
-        session.doWork(connection -> {
-            applicationInitializer.init();
-            log.info("Thank you for running Meveo Community code.");
-        });
-    }
+	@Inject
+	private Logger log;
+
+	@Inject
+	@MeveoJpa
+	private EntityManagerWrapper entityManagerWrapper;
+	
+	@Inject
+	private PermissionService permissionService;
+
+	@PostConstruct
+	@Transactional(Transactional.TxType.REQUIRES_NEW)
+	public void init() {
+		entityManagerWrapper.getEntityManager().joinTransaction();
+		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
+		session.doWork(connection -> {
+			applicationInitializer.init();
+			
+			// A default Repository and SQL Configuration should be genarated/updated at Meveo first initialization
+			try {
+				SqlConfiguration defaultSqlConfiguration;
+				Repository defaultRepository;
+				defaultSqlConfiguration = sqlConfigurationService.findByCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
+				if (defaultSqlConfiguration == null) {
+					defaultSqlConfiguration = new SqlConfiguration();
+					defaultSqlConfiguration.setCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
+					setSqlConfiguration(defaultSqlConfiguration);
+					sqlConfigurationService.create(defaultSqlConfiguration);
+				} else {
+					setSqlConfiguration(defaultSqlConfiguration);
+					sqlConfigurationService.update(defaultSqlConfiguration);
+				}
+				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
+				if (defaultRepository == null) {
+					defaultRepository = new Repository();
+					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
+					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
+					repositoryService.create(defaultRepository);
+					log.info("Created default repository");
+				}
+			} catch (BusinessException e) {
+				log.error("Cannot create default repository", e);
+			}
+			
+			// Create Meveo git repository
+			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
+			if(meveoRepo == null) {
+				try {
+					gitRepositoryService.create(
+						GitRepositoryService.MEVEO_DIR, 
+						false,
+						GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
+						GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword()
+					);
+					
+					log.info("Created Meveo git repository");
+					
+					
+				} catch (BusinessException e) {
+					log.error("Cannot create Meveo git repository", e);
+				}
+				
+			} else {
+				GitRepositoryService.MEVEO_DIR = meveoRepo;
+			}
+			
+			log.info("Thank you for running Meveo Community code.");
+		});
+		
+		session.flush();	
+	}
+
+	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {
+		sqlConfiguration.setDriverClass("MeveoAdmin driver class");
+		sqlConfiguration.setUrl("MeveoAdmin jdbc url");
+		sqlConfiguration.setUsername("MeveoAdmin username");
+		sqlConfiguration.setPassword("MeveoAdmin password");
+		sqlConfiguration.setDialect("MeveoAdmin dialect");
+		sqlConfiguration.setInitialized(true);
+		
+		return sqlConfiguration;
+	}
+
 }

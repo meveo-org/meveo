@@ -2,10 +2,14 @@ package org.meveo.interfaces;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 public class PropertyInstance {
 	
 	private String name;
+	
 	private EntityOrRelation entityOrRelation;
+	
 	private Object value;
 	private Map<String, Object> metaData;
 	

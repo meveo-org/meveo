@@ -321,6 +321,8 @@ public class CustomFieldValue implements Serializable {
      */
     public void setEntityReferenceValue(EntityReferenceWrapper entityReferenceValue) {
         this.entityReferenceValue = entityReferenceValue;
+        this.entityReferenceValueForGUI = new BusinessEntity();
+        this.entityReferenceValueForGUI.setCode(entityReferenceValue.getCode() != null ? entityReferenceValue.getCode() : entityReferenceValue.getUuid());
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -516,6 +518,10 @@ public class CustomFieldValue implements Serializable {
     }
 
     public BusinessEntity getEntityReferenceValueForGUI() {
+    	if(entityReferenceValueForGUI == null && entityReferenceValue != null) {
+    		this.entityReferenceValueForGUI = new BusinessEntity();
+            this.entityReferenceValueForGUI.setCode(entityReferenceValue.getCode() != null ? entityReferenceValue.getCode() : entityReferenceValue.getUuid());         
+    	}
         return entityReferenceValueForGUI;
     }
 

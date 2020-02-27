@@ -59,13 +59,13 @@
 							rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE}">
 							<f:converter converterId="javax.faces.Double" />
 						</h:outputText>
-
 	
 						<h:outputText id="#{entity[field.dbFieldname]}_input_link"
 							rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] != null}"
 							value="#{entity[field.dbFieldname]}" styleClass="field-value">
 							<f:converter binding="#{entityReferenceConverter}" />
 							<f:attribute name="field" value="#{field}" />
+							<f:attribute name="repository" value="#{bean.repository}" />
 						</h:outputText>
 
 						<h:outputText id="choose_#{entity[field.dbFieldname]}_input_link"

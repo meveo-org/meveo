@@ -1,13 +1,13 @@
 package org.meveo.api.module;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
@@ -224,9 +224,27 @@ public class MeveoModuleItemInstaller {
 		}
 	}
 	
-    private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+    @SuppressWarnings("rawtypes")
+	private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
         if (moduleDto.getModuleItems() != null) {
             meveoModule.getModuleItems().clear();
+            
+            /* To avoid conflict we should first create CET, then their fields, so we need to separate them and sort them */
+            for(MeveoModuleItemDto moduleItemDto :  new ArrayList<>(moduleDto.getModuleItems())) {
+            	if(moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+            		CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
+            		for(CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+            			MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+            			cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+            			cftModuleItem.setDtoData(cftData);
+            			moduleDto.getModuleItems().add(cftModuleItem);
+            			
+            			cet.getFields().remove(cftData);
+            			moduleItemDto.setDtoData(cet);
+            		}
+            	}
+            }
+            
             for (MeveoModuleItemDto moduleItemDto : moduleDto.getModuleItems()) {
             	try {
 					unpackAndInstallModuleItem(meveoModule, moduleItemDto);

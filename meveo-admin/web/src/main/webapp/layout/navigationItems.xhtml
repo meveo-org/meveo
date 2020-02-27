@@ -70,7 +70,7 @@
                     <c:forEach items="#{menu.value}" var="cet">
                         <c:if test="#{currentUser.hasRole(cet.readPermission) }">
                             <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
-                            <p:menuitem id="cet_#{cetIndex}" outcome="#{storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
+                            <p:menuitem id="cet_#{cetIndex}" outcome="customEntities" value="#{cet.name}">
                                 <f:param name="cet" value="#{cet.code}"/>
                             </p:menuitem>
                             <c:set var="cetIndex" value="#{cetIndex + 1}" />
@@ -84,7 +84,7 @@
             <c:forEach items="#{menu.value}" var="cet">
                 <c:if test="#{currentUser.hasRole(cet.readPermission) }">
                     <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
-                    <p:menuitem id="cet_#{cetIndex}" outcome="#{storeAsTable ? 'customTables' : 'customEntities'}" value="#{cet.name}">
+                    <p:menuitem id="cet_#{cetIndex}" outcome="customEntities" value="#{cet.name}">
                         <f:param name="cet" value="#{cet.code}"></f:param>
                     </p:menuitem>
                     <c:set var="cetIndex" value="#{cetIndex + 1}" />
@@ -140,6 +140,12 @@
                     rendered="#{currentUser.hasRole('administrationVisualization')}" />
             <p:menuitem id="binaryStorageConfigurations" value="#{messages['binaryStorageConfiguration.title']}"
                     outcome="binaryStorageConfigurations"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
+            <p:menuitem id="sqlConfigurations" value="#{messages['repository.sqlConfiguration']}"
+                    outcome="sqlConfigurations"
+                    rendered="#{currentUser.hasRole('administrationVisualization')}" />
+            <p:menuitem id="neo4jConfigurations" value="#{messages['repository.neo4jConfiguration']}"
+                    outcome="neo4jConfigurations"
                     rendered="#{currentUser.hasRole('administrationVisualization')}" />
             <p:menuitem id="gitRepositories"
                         value="#{messages['menu.gitRepositories']}" outcome="gitRepositories" />

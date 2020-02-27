@@ -54,8 +54,8 @@ import org.meveo.service.job.Job;
  * Import data to custom tables
  * 
  * @author Andrius Karpavicius
- * @lastModifiedVersion 7.0
- * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Stateless
 public class CustomTableImportJob extends Job {
@@ -82,12 +82,16 @@ public class CustomTableImportJob extends Job {
         try {
             Long nbRuns;
             Long waitingMillis;
+            String sqlConnectionCode = null;
             try {
                 nbRuns = (Long) this.getParamOrCFValue(jobInstance, "nbRuns");
                 waitingMillis = (Long) this.getParamOrCFValue(jobInstance, "waitingMillis");
+                sqlConnectionCode = (String) this.getParamOrCFValue(jobInstance, "sqlConnectionCode");
+                
                 if (nbRuns == -1) {
                     nbRuns = (long) Runtime.getRuntime().availableProcessors();
                 }
+                
             } catch (Exception e) {
                 nbRuns = 1L;
                 waitingMillis = 0L;
@@ -116,7 +120,7 @@ public class CustomTableImportJob extends Job {
                 SubListCreator subListCreator = new SubListCreator(files, nbRuns.intValue());
 
                 while (subListCreator.isHasNext()) {
-                    futures.add(customTableImportJobAsync.launchAndForget(customTableDir, (List<File>) subListCreator.getNextWorkSet(), result, jobInstance.getParametres(),
+                    futures.add(customTableImportJobAsync.launchAndForget(sqlConnectionCode, customTableDir, (List<File>) subListCreator.getNextWorkSet(), result, jobInstance.getParametres(),
                         lastCurrentUser));
                     if (subListCreator.isHasNext()) {
                         try {
@@ -162,7 +166,7 @@ public class CustomTableImportJob extends Job {
      */
     @Asynchronous
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    public Future<String> launchAndForget(String customTableDir, List<File> files, JobExecutionResultImpl result, String parameter, MeveoUser lastCurrentUser)
+    public Future<String> launchAndForget(String sqlConnectionCode, String customTableDir, List<File> files, JobExecutionResultImpl result, String parameter, MeveoUser lastCurrentUser)
             throws BusinessException {
 
         currentUserProvider.reestablishAuthentication(lastCurrentUser);
@@ -204,7 +208,7 @@ public class CustomTableImportJob extends Job {
                     throw new BusinessException("No Custom table matched by name " + filename);
                 }
 
-                customTableService.importData(customTable, file, appendImportedData);
+                customTableService.importData(sqlConnectionCode, customTable, file, appendImportedData);
                 result.registerSucces();
                 FileUtils.moveFile(outputDir, file, filename);
 

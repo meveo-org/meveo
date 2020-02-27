@@ -17,167 +17,227 @@
  */
 package org.meveo.api.rest.module;
 
-import javax.ws.rs.*;
+import java.io.File;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.module.impl.ModuleUploadForm;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * JAX-RS interface for MeveoModule management
+ * 
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @Path("/module")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Module")
+@Api("ModuleRs")
 public interface ModuleRs extends IBaseRs {
 
-    /**
-     * Create a new meveo module
-     * 
-     * @param moduleDto The meveo module's data
-     * @return Request processing status
-     */
-    @POST
-    @Path("/")
-    @ApiOperation(value = "Create meveo module")
-    ActionStatus create(@ApiParam("Meveo module information") MeveoModuleDto moduleDto, @QueryParam("development") @ApiParam("Whether to development meveo module") @DefaultValue("false") boolean development);
+	/**
+	 * Create a new meveo module
+	 * 
+	 * @param moduleDto The meveo module's data
+	 * @return Request processing status
+	 */
+	@POST
+	@Path("/")
+	@ApiOperation(value = "Create meveo module")
+	ActionStatus create(@ApiParam("Meveo module information") MeveoModuleDto moduleDto,
+			@QueryParam("development") @ApiParam("Whether to development meveo module") @DefaultValue("false") boolean development);
 
-    /**
-     * Update an existing Meveo module
-     * 
-     * @param moduleDto The Meveo module's data
-     * @return Request processing status
-     */
-    @PUT
-    @Path("/")
-    @ApiOperation(value = "Update meveo module")
-    ActionStatus update(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
+	/**
+	 * Update an existing Meveo module
+	 * 
+	 * @param moduleDto The Meveo module's data
+	 * @return Request processing status
+	 */
+	@PUT
+	@Path("/")
+	@ApiOperation(value = "Update meveo module")
+	ActionStatus update(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
-    /**
-     * Create new or update an existing Meveo module
-     * 
-     * @param moduleDto The Meveo module's data
-     * @return Request processing status
-     */
-    @POST
-    @Path("/createOrUpdate")
-    @ApiOperation(value = "Create or update meveo module")
-    ActionStatus createOrUpdate(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
+	/**
+	 * Create new or update an existing Meveo module
+	 * 
+	 * @param moduleDto The Meveo module's data
+	 * @return Request processing status
+	 */
+	@POST
+	@Path("/createOrUpdate")
+	@ApiOperation(value = "Create or update meveo module")
+	ActionStatus createOrUpdate(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
-    /**
-     * Remove an existing module with a given code 
-     * 
-     * @param code The module's code
-     * @return Request processing status
-     */
-    @DELETE
-    @Path("/{code}")
-    @ApiOperation(value = "Remove meveo module by code")
-    ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code);
+	/**
+	 * Remove an existing module with a given code
+	 * 
+	 * @param code The module's code
+	 * @return Request processing status
+	 */
+	@DELETE
+	@Path("/{code}")
+	@ApiOperation(value = "Remove meveo module by code")
+	ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code);
 
-    /**
-     * List all Meveo's modules
-     *
-     * @return A list of Meveo's modules
-     */
-    @GET
-    @Path("/list")
-    @ApiOperation(value = "List meveo module")
-    Response list(@QueryParam("codesOnly") @ApiParam("Whether to codes only for list of modules") boolean codesOnly, @BeanParam @ApiParam("Meveo module filters information") MeveoModuleFilters filters);
+	/**
+	 * List all Meveo's modules
+	 *
+	 * @return A list of Meveo's modules
+	 */
+	@GET
+	@Path("/list")
+	@ApiOperation(value = "List meveo module")
+	Response list(@QueryParam("codesOnly") @ApiParam("Whether to codes only for list of modules") boolean codesOnly,
+			@BeanParam @ApiParam("Meveo module filters information") MeveoModuleFilters filters);
 
-    /**
-     * Install Meveo module
-     * 
-     * @return Request processing status
-     */
-    @PUT
-    @Path("/install")
-    @ApiOperation(value = "Instance meveo module")
-    ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
+	/**
+	 * Install Meveo module
+	 * 
+	 * @return Request processing status
+	 */
+	@PUT
+	@Path("/install")
+	@ApiOperation(value = "Instance meveo module")
+	ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
 
-    /**
-     * Find a Meveo's module with a given code 
-     * 
-     * @param code The Meveo module's code
-     */
-    @GET
-    @Path("/")
-    @ApiOperation(value = "Get meveo module by code")
-    MeveoModuleDtoResponse get(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
+	/**
+	 * Find a Meveo's module with a given code
+	 * 
+	 * @param code The Meveo module's code
+	 */
+	@GET
+	@Path("/")
+	@ApiOperation(value = "Get meveo module by code")
+	MeveoModuleDtoResponse get(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
-    /**
-     * Uninstall a Meveo's module with a given code
-     *
-     * @param code   The Meveo module's code
-     * @param remove Whether to remove elements
-     * @return Request processing status
-     */
-    @GET
-    @Path("/uninstall")
-    @ApiOperation(value = "Uninstall meveo module")
-    ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code, @QueryParam("remove") @ApiParam("Whether to remove elements") @DefaultValue("false") boolean remove);
+	/**
+	 * Uninstall a Meveo's module with a given code
+	 *
+	 * @param code   The Meveo module's code
+	 * @param remove Whether to remove elements
+	 * @return Request processing status
+	 */
+	@GET
+	@Path("/uninstall")
+	@ApiOperation(value = "Uninstall meveo module")
+	ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code,
+			@QueryParam("remove") @ApiParam("Whether to remove elements") @DefaultValue("false") boolean remove);
 
-    /**
-     * Enable a Meveo's module with a given code
-     * 
-     * @param code The Meveo module's code
-     * @return Request processing status
-     */
-    @GET
-    @Path("/enable")
-    @ApiOperation(value = "Enable meveo module")
-    ActionStatus enable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
+	/**
+	 * Enable a Meveo's module with a given code
+	 * 
+	 * @param code The Meveo module's code
+	 * @return Request processing status
+	 */
+	@GET
+	@Path("/enable")
+	@ApiOperation(value = "Enable meveo module")
+	ActionStatus enable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
-    /**
-     * Disable a Meveo's module with a given code
-     * 
-     * @param code The Meveo module's code
-     * @return Request processing status
-     */
-    @GET
-    @Path("/disable")
-    @ApiOperation(value = "Disable meveo module")
-    ActionStatus disable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
+	/**
+	 * Disable a Meveo's module with a given code
+	 * 
+	 * @param code The Meveo module's code
+	 * @return Request processing status
+	 */
+	@GET
+	@Path("/disable")
+	@ApiOperation(value = "Disable meveo module")
+	ActionStatus disable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
 
-    /**
-     * Add a business entity to a module
-     *
-     * @param moduleCode Code of the module to modify
-     * @param itemCode  Code of the item to add
-     * @param itemType Type of the item to add
-     * @return the modified module
-     */
-    @POST()
-    @Path("/{code}/items/add")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @ApiOperation(value = "Add to module")
-    MeveoModuleDto addToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode, @FormParam("itemCode") @ApiParam("Code of the item to add") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to add") String itemType) throws EntityDoesNotExistsException, BusinessException;
+	/**
+	 * Add a business entity to a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param itemCode   Code of the item to add
+	 * @param itemType   Type of the item to add
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/items/add")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Add to module")
+	MeveoModuleDto addToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+			@FormParam("itemCode") @ApiParam("Code of the item to add") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to add") String itemType)
+			throws EntityDoesNotExistsException, BusinessException;
 
-    /**
-     * Remove a business entity from a module
-     *
-     * @param moduleCode Code of the module to modify
-     * @param itemCode  Code of the item to remove
-     * @param itemType Type of the item to remove
-     * @return the modified module
-     */
-    @POST()
-    @Path("/{code}/items/remove")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @ApiOperation(value = "Remove from module")
-    MeveoModuleDto removeFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode, @FormParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to remove") String itemType) throws EntityDoesNotExistsException, BusinessException;
+	/**
+	 * Remove a business entity from a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param itemCode   Code of the item to remove
+	 * @param itemType   Type of the item to remove
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/items/remove")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Remove from module")
+	MeveoModuleDto removeFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+			@FormParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to remove") String itemType)
+			throws EntityDoesNotExistsException, BusinessException;
+
+	/**
+	 * Add a file/folder to a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/add")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Add file to module")
+	MeveoModuleDto addFileToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+							   @FormParam("path") @ApiParam("Path of file/folder to add") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
+	/**
+	 * Remove a file/folder from a module
+	 *
+	 * @param moduleCode Code of the module to modify
+	 * @param path   Path of file/folder to remove
+	 * @return the modified module
+	 */
+	@POST()
+	@Path("/{code}/file/remove")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Remove from module")
+	MeveoModuleDto removeFileFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+										@FormParam("path") @ApiParam("Path of file/folder to remove") String path)
+			throws EntityDoesNotExistsException, BusinessException;
+
 
 	/**
 	 * Forks a Meveo module
@@ -186,6 +246,29 @@ public interface ModuleRs extends IBaseRs {
 	 */
 	@PUT
 	@Path("/fork/{code}")
-    @ApiOperation(value = "Fork meveo module by code")
+	@ApiOperation(value = "Fork meveo module by code")
 	ActionStatus fork(@PathParam("code") @ApiParam("Code of the module") String moduleCode);
+
+	/**
+	 * Import a zipped module with files
+	 *
+	 * @param uploadForm  Upload module
+	 * @param overwrite   Overwrite
+	 */
+	@POST
+	@Path("/importZip")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@ApiOperation(value = "Import from a zip")
+	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Upload module") ModuleUploadForm uploadForm, @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
+
+	/**
+	 * Export module
+	 *
+	 * @param modulesCode List of the code meveo module
+	 * @throws Exception 
+	 */
+	@GET
+	@Path("/export")
+	@ApiOperation(value = "Export to a file")
+	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws Exception;
 }

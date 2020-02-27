@@ -15,6 +15,22 @@
  */
 package org.meveo.service.technicalservice.endpoint;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -32,26 +48,13 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * EJB for managing technical services endpoints
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 01.02.2019
+ * @version 6.8.0
  */
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
@@ -71,13 +74,16 @@ public class EndpointService extends BusinessService<Endpoint> {
     @Inject
     private GitClient gitClient;
 
+    @EJB
+    private KeycloakAdminClientService keycloakAdminClientService;
+    
+    @Inject
+    private ESGeneratorService esGeneratorService;
+
     public static String getEndpointPermission(Endpoint endpoint) {
         return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
     }
-
-    @EJB
-    private KeycloakAdminClientService keycloakAdminClientService;
-
+    
     /**
      * Retrieve all endpoints associated to the given service
      *
@@ -223,7 +229,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File createESFile(@Observes @Created Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        FileUtils.write(scriptFile, ESGenerator.generate(endpoint));
+        FileUtils.write(scriptFile, esGeneratorService.buildJSInterfaceFromTemplate(endpoint));
         gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
         return scriptFile;
     }
@@ -239,7 +245,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File updateESFile(@Observes @Updated Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        String updatedScript = ESGenerator.generate(endpoint);
+        String updatedScript = esGeneratorService.buildJSInterfaceFromTemplate(endpoint);
 
         if(!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
             FileUtils.write(scriptFile, updatedScript);

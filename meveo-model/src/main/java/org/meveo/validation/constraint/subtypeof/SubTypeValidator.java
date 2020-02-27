@@ -16,9 +16,18 @@
 
 package org.meveo.validation.constraint.subtypeof;
 
+import java.util.Collection;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+/**
+ * Validates that the target entity is a subtype of specified class
+ * 
+ * @author clement.bareth
+ * @since 6.0.0
+ * @version 6.8.0
+ */
 public class SubTypeValidator implements ConstraintValidator<SubTypeOf, Object> {
 
     private Class<?> superTypeClass;
@@ -30,6 +39,19 @@ public class SubTypeValidator implements ConstraintValidator<SubTypeOf, Object> 
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
-        return superTypeClass.isAssignableFrom(value.getClass());
+    	if(value == null) {
+    		return true;
+    	}
+    	
+    	if(value instanceof Collection) {
+    		Collection<?> collection = (Collection<?>) value;
+    		if(collection.isEmpty()) {
+    			return true;
+    		}
+    		
+    		return superTypeClass.isAssignableFrom(collection.iterator().next().getClass());
+    	} else {
+    		return superTypeClass.isAssignableFrom(value.getClass());
+    	}
     }
 }

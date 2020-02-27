@@ -26,7 +26,10 @@
             <hftl:column label="#{messages['businessEntity.description']}" field="description" />
             <hftl:column label ="#{messages['repository.currentbranch']}" field="currentBranch"/>
 
-            <hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
+            <hftl:actionsColumn 
+            	permission="#{currentUser.hasRole('administrationManagement')}" 
+            	renderDeleteLink = "#{entity.code != 'Meveo'}"
+            />
 
         </hftl:dataList>
 

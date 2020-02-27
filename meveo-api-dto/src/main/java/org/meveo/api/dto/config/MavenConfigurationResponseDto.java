@@ -1,11 +1,15 @@
 package org.meveo.api.dto.config;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.response.BaseResponse;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * Wrapper to maven configuration information.
+ * 
+ * @see MavenConfigurationDto
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 public class MavenConfigurationResponseDto extends BaseResponse {
 

@@ -18,6 +18,7 @@ import javax.interceptor.InvocationContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.exception.UserNotAuthorizedException;
+import org.meveo.admin.listener.ApplicationInitializer;
 import org.meveo.model.IEntity;
 import org.meveo.model.security.DefaultPermission;
 import org.meveo.model.security.DefaultRole;
@@ -60,6 +61,7 @@ public class PermissionInterceptor {
 	@Inject
 	private PermissionService permissionService;
 
+	@SuppressWarnings("unchecked")
 	@AroundInvoke
 	public Object before(InvocationContext context) throws Exception {
 		Method method = context.getMethod();
@@ -137,12 +139,14 @@ public class PermissionInterceptor {
 			}
 		}
 		
+		String orRole = requirePermission.orRole().getRoleName();
+		
 		// In case we did not have a @SecuredEntity annotation, we need to check blacklist / whitelist on the returned value
 		if(id == null && result instanceof IEntity) {
 			iEntity = (IEntity<?>) result;
 			if(iEntity.getId() != null) {
 				id = String.valueOf(iEntity.getId());
-				checkWhiteAndBlackLists(id, permissions, currentUser);
+				checkWhiteAndBlackLists(id, permissions, currentUser, orRole);
 			}
 			
 		} else if(id == null && result instanceof Collection) {
@@ -155,7 +159,7 @@ public class PermissionInterceptor {
 						try {
 							if(e.getId() != null) {
 								id = String.valueOf(e.getId());
-								checkWhiteAndBlackLists(id, permissions, currentUser);
+								checkWhiteAndBlackLists(id, permissions, currentUser, orRole);
 							}
 						} catch(UserNotAuthorizedException ex) {
 							iEntityCollection.remove(e);
@@ -171,9 +175,14 @@ public class PermissionInterceptor {
 	/**
 	 * @param id
 	 * @param permissions
+	 * @param orRole TODO
 	 * @throws UserNotAuthorizedException
 	 */
-	public void checkWhiteAndBlackLists(String id, List<String> permissions, MeveoUser user) throws UserNotAuthorizedException {
+	public void checkWhiteAndBlackLists(String id, List<String> permissions, MeveoUser user, String orRole) throws UserNotAuthorizedException {
+		if(orRole != null && user.getRoles().contains(orRole)) {
+			return;
+		}
+		
 		for(String p : permissions) {
 			if(!isInWhiteList(p, id, user.getWhiteList()) || !isNotInBlackList(p, id, user.getBlackList())) {
 				throw new UserNotAuthorizedException();
@@ -181,7 +190,7 @@ public class PermissionInterceptor {
 		}
 	}
 	
-	public List<String> checkAuthorization(String permission, String[] oneOf, String[] allOf, MeveoUser user, String id) throws UserNotAuthorizedException {
+	public List<String> checkAuthorization(String permission, String[] oneOf, String[] allOf, MeveoUser user, String id, String orRole) throws UserNotAuthorizedException {
 		boolean userHasPermission = true;
 		
 		List<String> validPermissions = new ArrayList<>();
@@ -207,13 +216,23 @@ public class PermissionInterceptor {
 			}
 		}
 		
+		// Bypass security check at initialization
+		if(user.getUserName().equals(ApplicationInitializer.APPLICATION_INITIALIZER)) {
+			return validPermissions;
+		}
+		
+		// If a role is specified, grant access if user has target role
+		if(orRole != null && user.getRoles().contains(orRole)) {
+			return validPermissions;
+		}
+		
 		if(!userHasPermission) {
 			throw new UserNotAuthorizedException();
 		}
 		
 		// Then if an id is defined, check the whitelists and black lists to make sure user have access to this specific resource
 		if (id != null) {
-			checkWhiteAndBlackLists(id, validPermissions, user);
+			checkWhiteAndBlackLists(id, validPermissions, user, orRole);
 		}
 		
 		return validPermissions;
@@ -224,8 +243,9 @@ public class PermissionInterceptor {
 		String permission = requirePermission.value().getPermission();
 		String[] oneOf = Stream.of(requirePermission.oneOf()).map(DefaultPermission::getPermission).toArray(String[]::new);
 		String[] allOf = Stream.of(requirePermission.allOf()).map(DefaultPermission::getPermission).toArray(String[]::new);
+		DefaultRole orRole = requirePermission.orRole();
 		
-		return checkAuthorization(permission, oneOf, allOf, user, id);
+		return checkAuthorization(permission, oneOf, allOf, user, id, orRole.getRoleName());
 	}
 	
 	private boolean isInWhiteList(String permission, String id, Map<String, List<String>> whiteList) {

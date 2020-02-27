@@ -3,6 +3,7 @@ package org.meveo.service.crm.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
@@ -25,6 +27,8 @@ import javax.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -34,6 +38,7 @@ import org.meveo.model.DatePeriod;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
@@ -43,9 +48,13 @@ import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
@@ -56,7 +65,7 @@ import org.w3c.dom.Element;
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
- * @lastModifiedVersion 6.4.0
+ * @lastModifiedVersion 6.8.0
  */
 @Stateless
 public class CustomFieldInstanceService extends BaseService {
@@ -91,29 +100,15 @@ public class CustomFieldInstanceService extends BaseService {
     
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-
-    // Previous comments
-    // /**
-    // * Convert BusinessEntityWrapper to an entity by doing a lookup in DB
-    // *
-    // * @param businessEntityWrapper Business entity information
-    // * @return A BusinessEntity object
-    // */
-    // @SuppressWarnings("unchecked")
-    // public BusinessEntity convertToBusinessEntityFromCfV(EntityReferenceWrapper businessEntityWrapper) {
-    // if (businessEntityWrapper == null) {
-    // return null;
-    // }
-    // Query query = getEntityManager().createQuery("select e from " + businessEntityWrapper.getClassname() + " e where e.code=:code ");
-    // query.setParameter("code", businessEntityWrapper.getCode());
-    // query;
-    // List<BusinessEntity> entities = query.getResultList();
-    // if (entities.size() > 0) {
-    // return entities.get(0);
-    // } else {
-    // return null;
-    // }
-    // }
+    
+    @Inject
+    private CrossStorageService crossStorageService;
+    
+    @Inject
+    private CustomEntityInstanceService customEntityInstanceService;
+    
+    @Inject
+    private Repository repository;
 
     /**
      * Find a list of entities of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
@@ -125,17 +120,35 @@ public class CustomFieldInstanceService extends BaseService {
     @SuppressWarnings("unchecked") // TODO review location
     public List<BusinessEntity> findBusinessEntityForCFVByCode(String classNameAndCode, String wildcode) {
         Query query = null;
-        if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
-            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-            query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) like :code");
-            query.setParameter("cetCode", cetCode);
+        
+        List<BusinessEntity> entities = new ArrayList<>();
+        
+        if(SqlConfiguration.DEFAULT_SQL_CONNECTION.equals(repository.getSqlConfigurationCode())) {
+            if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+                String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+                query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) like :code");
+                query.setParameter("cetCode", cetCode);
 
-        } else {
-            query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
+            } else {
+                query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
+            }
+
+            query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
+            entities = query.getResultList();
         }
-
-        query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
-        List<BusinessEntity> entities = query.getResultList();
+ 
+        if (entities.isEmpty() && classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+        	String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+        	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+        	try {
+				List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
+				entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet,  m)).collect(Collectors.toList());
+					
+			} catch (EntityDoesNotExistsException e) {
+				log.error("Missing entity", e);
+			}
+        }
+        
         return entities;
     }
 
@@ -384,7 +397,8 @@ public class CustomFieldInstanceService extends BaseService {
      * @return custom field value
      * @throws BusinessException business exception.
      */
-    public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
+    @SuppressWarnings("unchecked")
+	public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
 
         log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
 
@@ -411,10 +425,72 @@ public class CustomFieldInstanceService extends BaseService {
         log.trace("Setting CF value1. Code: {}, cfValue {}", cfCode, cfValue);
         // No existing CF value. Create CF value with new value. Assign(persist) NULL value only if cft.defaultValue is present
         if (cfValue == null) {
-//            if (value == null && cft.getDefaultValue() == null) {
-//                return null;
-//            }
-            cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
+        	
+        	if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+    			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+    			
+				if (customFieldTemplateService.isReferenceJpaEntity(entityReferenceWrapper.getClassnameCode())) {
+					if(value instanceof EntityReferenceWrapper) {
+						entityReferenceWrapper = (EntityReferenceWrapper) value;
+						
+					} else if(value instanceof String) {
+						entityReferenceWrapper.setUuid((String) value);
+						
+					} else if (StringUtils.isNumeric(String.valueOf(value))) {
+						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
+					}
+					
+					cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+					
+				} else {
+
+					if (value instanceof Map) {
+						Map<String, Object> valueAsMap = (Map<String, Object>) value;
+						entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
+						entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
+						if (entityReferenceWrapper.getUuid() == null) {
+							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+						}
+
+					} else if (value instanceof String) {
+						entityReferenceWrapper.setUuid((String) value);
+
+					}
+
+					if (entityReferenceWrapper.getUuid() != null) {
+						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+
+					} else if (value instanceof Collection) {
+						List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
+						for (Object item : (Collection<?>) value) {
+							EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
+							itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+
+							if (item instanceof Map) {
+								Map<String, Object> valueAsMap = (Map<String, Object>) item;
+								itemWrapper.setCode((String) valueAsMap.get("code"));
+								itemWrapper.setUuid((String) valueAsMap.get("uuid"));
+								if (itemWrapper.getUuid() == null) {
+									itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+								}
+
+							} else if (item instanceof String) {
+								itemWrapper.setUuid((String) item);
+
+							}
+
+							entityReferences.add(itemWrapper);
+						}
+
+						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+					}
+				}
+        		
+        	} else {
+        		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
+        	}
+        	
             log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
             // Existing CFI found. Update with new value or NULL value only if cft.defaultValue is present
         } else if (value != null || cft.getDefaultValue() != null) {

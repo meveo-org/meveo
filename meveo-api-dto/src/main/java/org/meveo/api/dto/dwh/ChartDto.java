@@ -4,205 +4,209 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.dwh.Chart;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * The Class ChartDto.
+ * Part of the graphing classes that represents chart information.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Chart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("ChartDto")
 public class ChartDto extends BusinessEntityDto {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 2573963792647472501L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 2573963792647472501L;
 
-    /** The measurable quantity. */
-    @ApiModelProperty("Measurable quantity information")
-    private MeasurableQuantityDto measurableQuantity;
-    
-    /** The width. */
-    @ApiModelProperty("The width")
-    private String width = "500px";
-    
-    /** The height. */
-    @ApiModelProperty("The height")
-    private String height = "300px";
-    
-    /** The style. */
-    @ApiModelProperty("The style")
-    private String style;
-    
-    /** The style class. */
-    @ApiModelProperty("The style class")
-    private String styleClass;
-    
-    /** The extender. */
-    @ApiModelProperty("The extender")
-    private String extender;
-    
-    /** The visible. */
-    @ApiModelProperty("Whether to visible")
-    private Boolean visible = false;
+	/** The measurable quantity. */
+	@ApiModelProperty("Measurable quantity information")
+	private MeasurableQuantityDto measurableQuantity;
 
-    /**
-     * Instantiates a new chart dto.
-     */
-    public ChartDto() {
-        super();
-    }
+	/** The width. */
+	@ApiModelProperty("The width")
+	private String width = "500px";
 
-    /**
-     * Instantiates a new chart dto.
-     *
-     * @param chart the chart entity
-     */
-    public ChartDto(Chart chart) {
-        super(chart);
+	/** The height. */
+	@ApiModelProperty("The height")
+	private String height = "300px";
 
-        if (chart.getMeasurableQuantity() != null) {
-            setMeasurableQuantity(new MeasurableQuantityDto(chart.getMeasurableQuantity()));
-        }
-        setWidth(chart.getWidth());
-        setHeight(chart.getHeight());
-        setStyle(chart.getStyle());
-        setStyleClass(chart.getStyleClass());
-        setExtender(chart.getExtender());
-        setVisible(chart.isVisible());
-    }
+	/** The style. */
+	@ApiModelProperty("The style")
+	private String style;
 
-    /**
-     * Gets the measurable quantity.
-     *
-     * @return the measurable quantity
-     */
-    public MeasurableQuantityDto getMeasurableQuantity() {
-        return measurableQuantity;
-    }
+	/** The style class. */
+	@ApiModelProperty("The style class")
+	private String styleClass;
 
-    /**
-     * Sets the measurable quantity.
-     *
-     * @param measurableQuantity the new measurable quantity
-     */
-    public void setMeasurableQuantity(MeasurableQuantityDto measurableQuantity) {
-        this.measurableQuantity = measurableQuantity;
-    }
+	/** The extender. */
+	@ApiModelProperty("The extender")
+	private String extender;
 
-    /**
-     * Gets the width.
-     *
-     * @return the width
-     */
-    public String getWidth() {
-        return width;
-    }
+	/** The visible. */
+	@ApiModelProperty("Whether to visible")
+	private Boolean visible = false;
 
-    /**
-     * Sets the width.
-     *
-     * @param width the new width
-     */
-    public void setWidth(String width) {
-        this.width = width;
-    }
+	/**
+	 * Instantiates a new chart dto.
+	 */
+	public ChartDto() {
+		super();
+	}
 
-    /**
-     * Gets the height.
-     *
-     * @return the height
-     */
-    public String getHeight() {
-        return height;
-    }
+	/**
+	 * Instantiates a new chart dto.
+	 *
+	 * @param chart the chart entity
+	 */
+	public ChartDto(Chart chart) {
+		super(chart);
 
-    /**
-     * Sets the height.
-     *
-     * @param height the new height
-     */
-    public void setHeight(String height) {
-        this.height = height;
-    }
+		if (chart.getMeasurableQuantity() != null) {
+			setMeasurableQuantity(new MeasurableQuantityDto(chart.getMeasurableQuantity()));
+		}
+		setWidth(chart.getWidth());
+		setHeight(chart.getHeight());
+		setStyle(chart.getStyle());
+		setStyleClass(chart.getStyleClass());
+		setExtender(chart.getExtender());
+		setVisible(chart.isVisible());
+	}
 
-    /**
-     * Gets the style.
-     *
-     * @return the style
-     */
-    public String getStyle() {
-        return style;
-    }
+	/**
+	 * Gets the measurable quantity.
+	 *
+	 * @return the measurable quantity
+	 */
+	public MeasurableQuantityDto getMeasurableQuantity() {
+		return measurableQuantity;
+	}
 
-    /**
-     * Sets the style.
-     *
-     * @param style the new style
-     */
-    public void setStyle(String style) {
-        this.style = style;
-    }
+	/**
+	 * Sets the measurable quantity.
+	 *
+	 * @param measurableQuantity the new measurable quantity
+	 */
+	public void setMeasurableQuantity(MeasurableQuantityDto measurableQuantity) {
+		this.measurableQuantity = measurableQuantity;
+	}
 
-    /**
-     * Gets the style class.
-     *
-     * @return the style class
-     */
-    public String getStyleClass() {
-        return styleClass;
-    }
+	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
+	public String getWidth() {
+		return width;
+	}
 
-    /**
-     * Sets the style class.
-     *
-     * @param styleClass the new style class
-     */
-    public void setStyleClass(String styleClass) {
-        this.styleClass = styleClass;
-    }
+	/**
+	 * Sets the width.
+	 *
+	 * @param width the new width
+	 */
+	public void setWidth(String width) {
+		this.width = width;
+	}
 
-    /**
-     * Gets the extender.
-     *
-     * @return the extender
-     */
-    public String getExtender() {
-        return extender;
-    }
+	/**
+	 * Gets the height.
+	 *
+	 * @return the height
+	 */
+	public String getHeight() {
+		return height;
+	}
 
-    /**
-     * Sets the extender.
-     *
-     * @param extender the new extender
-     */
-    public void setExtender(String extender) {
-        this.extender = extender;
-    }
+	/**
+	 * Sets the height.
+	 *
+	 * @param height the new height
+	 */
+	public void setHeight(String height) {
+		this.height = height;
+	}
 
-    /**
-     * Gets the visible.
-     *
-     * @return the visible
-     */
-    public Boolean getVisible() {
-        return visible;
-    }
+	/**
+	 * Gets the style.
+	 *
+	 * @return the style
+	 */
+	public String getStyle() {
+		return style;
+	}
 
-    /**
-     * Sets the visible.
-     *
-     * @param visible the new visible
-     */
-    public void setVisible(Boolean visible) {
-        this.visible = visible;
-    }
+	/**
+	 * Sets the style.
+	 *
+	 * @param style the new style
+	 */
+	public void setStyle(String style) {
+		this.style = style;
+	}
 
-    @Override
-    public String toString() {
-        return String.format("ChartDto [code=%s, description=%s, measurableQuantityDto=%s, width=%s, height=%s, style=%s, styleClass=%s, extender=%s, visible=%s]", getCode(),
-            getDescription(), measurableQuantity, width, height, style, styleClass, extender, visible);
-    }
+	/**
+	 * Gets the style class.
+	 *
+	 * @return the style class
+	 */
+	public String getStyleClass() {
+		return styleClass;
+	}
+
+	/**
+	 * Sets the style class.
+	 *
+	 * @param styleClass the new style class
+	 */
+	public void setStyleClass(String styleClass) {
+		this.styleClass = styleClass;
+	}
+
+	/**
+	 * Gets the extender.
+	 *
+	 * @return the extender
+	 */
+	public String getExtender() {
+		return extender;
+	}
+
+	/**
+	 * Sets the extender.
+	 *
+	 * @param extender the new extender
+	 */
+	public void setExtender(String extender) {
+		this.extender = extender;
+	}
+
+	/**
+	 * Gets the visible.
+	 *
+	 * @return the visible
+	 */
+	public Boolean getVisible() {
+		return visible;
+	}
+
+	/**
+	 * Sets the visible.
+	 *
+	 * @param visible the new visible
+	 */
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("ChartDto [code=%s, description=%s, measurableQuantityDto=%s, width=%s, height=%s, style=%s, styleClass=%s, extender=%s, visible=%s]", getCode(),
+				getDescription(), measurableQuantity, width, height, style, styleClass, extender, visible);
+	}
 }

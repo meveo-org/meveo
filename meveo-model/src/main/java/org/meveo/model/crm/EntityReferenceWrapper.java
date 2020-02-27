@@ -13,6 +13,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * required to identify a concrete custom entity template by its code
  * 
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.8.0
  **/
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EntityReferenceWrapper implements Serializable {
@@ -33,6 +35,10 @@ public class EntityReferenceWrapper implements Serializable {
      * Entity code
      */
     private String code;
+    
+    private String uuid;
+    
+    private Long id;
 
     public EntityReferenceWrapper() {
     }
@@ -47,15 +53,30 @@ public class EntityReferenceWrapper implements Serializable {
             classnameCode = ((CustomEntityInstance) entity).getCetCode();
         }
         code = entity.getCode();
+        id = entity.getId();
     }
 
-    public EntityReferenceWrapper(String classname, String classnameCode, String code) {
+    public EntityReferenceWrapper(String classname, String classnameCode, String code, Long id) {
         this.classname = classname;
         this.classnameCode = classnameCode;
         this.code = code;
+        this.id = id;
     }
 
-    public String getClassname() {
+    @Override
+	public String toString() {
+		return "EntityReferenceWrapper [classname=" + classname + ", classnameCode=" + classnameCode + ", code=" + code + ", uuid=" + uuid + ", id=" + id + "]";
+	}
+  
+    public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public String getClassname() {
         return classname;
     }
 
@@ -83,8 +104,11 @@ public class EntityReferenceWrapper implements Serializable {
         return code == null;
     }
 
-    @Override
-    public String toString() {
-        return String.format("EntityReferenceWrapper [classname=%s, classnameCode=%s, code=%s]", classname, classnameCode, code);
-    }
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

@@ -59,13 +59,21 @@ public class StringUtils {
         return ((value == null) || ((value instanceof String) && ((String) value).trim().length() == 0));
     }
 
-    public static String readBuffer(BufferedReader reader){
-        return reader.lines().collect(Collectors.joining("\n"));
-    }
-
     public static boolean isBlank(String value) {
         return (value == null || value.trim().length() == 0);
     }
+
+	public static boolean isNotBlank(String value) {
+		return !isBlank(value);
+	}
+
+    public static String readBuffer(BufferedReader reader){
+        return reader.lines().collect(Collectors.joining("\n"));
+    }
+    
+	public static boolean isNoBlank(String value) {
+		return !isBlank(value);
+	}
 
     public static String concatenate(String... values) {
         return concatenate(" ", values);

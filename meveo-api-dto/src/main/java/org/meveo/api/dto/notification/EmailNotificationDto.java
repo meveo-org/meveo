@@ -8,17 +8,20 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.Notification;
 
 /**
- * The Class EmailNotificationDto.
+ * Part of the notification package that handles email.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "EmailNotification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("EmailNotificationDto")
 public class EmailNotificationDto extends NotificationDto {
 
     /** The Constant serialVersionUID. */

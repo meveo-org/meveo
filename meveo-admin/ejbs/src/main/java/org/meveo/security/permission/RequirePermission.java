@@ -32,4 +32,9 @@ public @interface RequirePermission {
 	 */
 	@Nonbinding DefaultPermission[] allOf() default {};
 	
+	/**
+	 * If specified, acess will always be granted if user has the given role
+	 */
+	@Nonbinding DefaultRole orRole() default DefaultRole.NONE;
+	
 }

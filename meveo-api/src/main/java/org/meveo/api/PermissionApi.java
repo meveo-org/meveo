@@ -51,14 +51,9 @@ public class PermissionApi extends BaseApi {
 		permissionService.addToBlackList(role, permission, id);
 	}
 
-	public void removeFromWhiteList(String permissionName, String id, String roleName) {
+	public void removeEntityPermission(String permissionName, String id, String roleName) {
 		fetchRoleAndPermission(permissionName, roleName);
-		permissionService.removeFromWhiteList(role, permission, id);
-	}
-
-	public void removeFromBlackList(String permissionName, String id, String roleName) {
-		fetchRoleAndPermission(permissionName, roleName);
-		permissionService.removeFromBlackList(role, permission, id);
+		permissionService.removeEntityPermission(role, permission, id);
 	}
 	
 	private <T extends EntityPermission> void fetchRoleAndPermission(String permissionName, String roleName) {

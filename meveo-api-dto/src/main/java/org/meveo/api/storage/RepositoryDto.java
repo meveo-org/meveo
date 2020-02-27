@@ -1,33 +1,62 @@
 package org.meveo.api.storage;
 
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.DataSeparationTypeEnum;
 import org.meveo.model.storage.Repository;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
+ * A repository is a data storage. Supported storages are database and local
+ * folder. If storage is a database, it will load the respective database
+ * configuration. For local folder it uses the configuration in
+ * {@link BinaryStorageConfiguration} on where to save a file.
+ * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.7.0
  */
+@ApiModel
 public class RepositoryDto extends BusinessEntityDto {
 
 	private static final long serialVersionUID = 57566827213462626L;
 
+	private String sqlConfigurationCode;
+
+	/**
+	 * Code of the parent
+	 */
 	@ApiModelProperty("Code of the parent")
 	private String parentCode;
 
+	/**
+	 * Code of the binary storage configuration
+	 */
 	@ApiModelProperty("Code of the binary storage configuration")
 	private String binaryStorageConfigurationCode;
 
+	/**
+	 * Code of the neo4j configuration
+	 */
 	@ApiModelProperty("Code of the neo4j configuration")
 	private String neo4jConfigurationCode;
 
+	/**
+	 * Data separation type
+	 */
 	@ApiModelProperty("Data separation type")
 	private DataSeparationTypeEnum dataSeparationType;
 
-	@ApiModelProperty("Path")
+	/**
+	 * Physical path
+	 */
+	@ApiModelProperty("Physical ath")
 	private String path;
 
+	/**
+	 * Whether to delete the children of the repository
+	 */
 	@ApiModelProperty("Whether to delete the children of the repository")
 	private Boolean forceDelete;
 
@@ -45,6 +74,9 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		if (e.getNeo4jConfiguration() != null) {
 			neo4jConfigurationCode = e.getNeo4jConfiguration().getCode();
+		}
+		if (e.getSqlConfiguration() != null) {
+			sqlConfigurationCode = e.getSqlConfiguration().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
@@ -96,5 +128,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setForceDelete(Boolean forceDelete) {
 		this.forceDelete = forceDelete;
+	}
+
+	public String getSqlConfigurationCode() {
+		return sqlConfigurationCode;
+	}
+
+	public void setSqlConfigurationCode(String sqlConfigurationCode) {
+		this.sqlConfigurationCode = sqlConfigurationCode;
 	}
 }

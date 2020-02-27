@@ -5,7 +5,7 @@
         <groupId>org.meveo</groupId>
         <artifactId>meveo</artifactId>
         <relativePath>../pom.xml</relativePath>
-        <version>6.6.1</version>
+        <version>6.8.0</version>
     </parent>
     <artifactId>meveo-api</artifactId>
     <name>Meveo API</name>
@@ -105,22 +105,6 @@
             <artifactId>jboss-servlet-api_4.0_spec</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.5.23</version>
-        </dependency>
-        <dependency>
-		  <groupId>io.swagger</groupId>
-		  <artifactId>swagger-jaxrs</artifactId>
-		  <version>1.5.23</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
-		</dependency>
-        <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js</artifactId>
             <version>19.2.0.1</version>
@@ -130,6 +114,11 @@
             <artifactId>js-scriptengine</artifactId>
             <version>19.2.0.1</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-vfs</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
     <build>

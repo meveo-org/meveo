@@ -961,6 +961,14 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         return Boolean.valueOf(edit);
     }
+    
+    public void setEdit(String value) {
+		this.edit = value;
+    }
+    
+    public void setEdit(boolean value) {
+    	this.edit = String.valueOf(value);
+    }
 
     protected void clearObjectId() {
         objectId = null;

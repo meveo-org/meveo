@@ -15,7 +15,7 @@ import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.neo4j.Neo4jConfigurationRs;
 
 /**
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })

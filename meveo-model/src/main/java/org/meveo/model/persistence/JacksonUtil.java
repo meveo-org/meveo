@@ -99,6 +99,10 @@ public class JacksonUtil {
         return OBJECT_MAPPER.convertValue(value, clazz);
     }
     
+    public static <T> T convert(Object value, TypeReference<T> typeref) {
+        return OBJECT_MAPPER.convertValue(value, typeref);
+    }
+    
     public static Map<String, Object> convertToMap(CustomEntityInstance value) {
     	return OBJECT_MAPPER.convertValue(value, new TypeReference<Map<String, Object>>() {});
     }

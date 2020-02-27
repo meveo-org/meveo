@@ -15,25 +15,35 @@
  */
 package org.meveo.api.technicalservice;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.meveo.api.dto.ProcessEntityDescription;
-import org.meveo.api.dto.technicalservice.*;
+import org.meveo.api.dto.technicalservice.InputOutputDescription;
+import org.meveo.api.dto.technicalservice.InputPropertyDto;
+import org.meveo.api.dto.technicalservice.OutputPropertyDto;
+import org.meveo.api.dto.technicalservice.ProcessRelationDescription;
+import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.technicalservice.*;
+import org.meveo.model.technicalservice.Description;
+import org.meveo.model.technicalservice.InputMeveoProperty;
+import org.meveo.model.technicalservice.MeveoEntityDescription;
+import org.meveo.model.technicalservice.OutputMeveoProperty;
+import org.meveo.model.technicalservice.RelationDescription;
+import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.technicalservice.DescriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author clement.bareth
@@ -79,6 +89,7 @@ public class DescriptionApi {
         inputPropertyDto.setRequired(inputMeveoProperty.isRequired());
         inputPropertyDto.setDescriptionName(inputMeveoProperty.getDescription().getName());
         inputPropertyDto.setProperty(inputMeveoProperty.getCet().getCode());
+        inputPropertyDto.setInherited(inputMeveoProperty.isInherited());
         return inputPropertyDto;
     }
 
@@ -127,10 +138,13 @@ public class DescriptionApi {
             code = customRelationshipTemplate.getCode();
             appliesTo = customRelationshipTemplate.getAppliesTo();
         }
+        
+        description.setInherited(dto.isInherited());
         description.setService(technicalService);
         Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesTo(appliesTo);
         description.setInput(dto.isInput());
         description.setOutput(dto.isOutput());
+        description.setName(dto.getName());
         final List<InputMeveoProperty> inputProperties = new ArrayList<>();
         final List<OutputMeveoProperty> outputProperties = new ArrayList<>();
         for (InputPropertyDto p : dto.getInputProperties()) {
@@ -146,6 +160,7 @@ public class DescriptionApi {
             inputProperty.setComparisonValue(p.getComparisonValue());
             inputProperty.setDefaultValue(p.getDefaultValue());
             inputProperty.setRequired(p.isRequired());
+            inputProperty.setInherited(p.isInherited());
             inputProperties.add(inputProperty);
         }
         description.setInputProperties(inputProperties);
@@ -158,6 +173,7 @@ public class DescriptionApi {
             outputProperty.setProperty(property);
             outputProperty.setDescription(description);
             outputProperty.setTrustness(p.getTrustness());
+            outputProperty.setInherited(p.isInherited());
             outputProperties.add(outputProperty);
         }
         description.setOutputProperties(outputProperties);
@@ -195,4 +211,5 @@ public class DescriptionApi {
         }
         return descriptions;
     }
+    
 }

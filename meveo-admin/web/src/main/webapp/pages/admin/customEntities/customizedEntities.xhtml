@@ -50,10 +50,22 @@
 
         <h:form prependId="false">
             <p:panel width="100">
-                <p:dataTable id="searchResults" value="#{customEntityTemplateListBean.customizedEntities}" var="entity" sortOrder="ascending" sortBy="#{entity.customEntityCategory.code}"
-                    paginator="true" rows="30" resizableColumns="true" multiViewState="true" rowKey="#{entity.customEntityId}" selection="#{customEntityTemplateListBean.selectedCustomizedEntities}"
+                <p:dataTable id="searchResults" 
+                	value="#{customEntityTemplateListBean.customizedEntities}" 
+                	var="entity" 
+                	sortOrder="ascending" 
+                	sortBy="#{entity.customEntityCategory.code}"
+                    paginator="true" 
+                    rows="30" 
+                    resizableColumns="true" 
+                    multiViewState="true" 
+                    rowKey="#{entity.customEntityId}" 
+                    selection="#{customEntityTemplateListBean.selectedCustomizedEntities}"
                     paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="30,50"
-                    lazy="true" styleClass="custom-grid" rowIndexVar="rowIndex">
+                    lazy="true" 
+                    styleClass="custom-grid" 
+                    rowIndexVar="rowIndex">
+                    
                     <p:ajax event="toggleSelect" update="@this" process="@this" />
                     <p:ajax event="rowSelectCheckbox"/>
                     <p:ajax event="rowUnselectCheckbox" />

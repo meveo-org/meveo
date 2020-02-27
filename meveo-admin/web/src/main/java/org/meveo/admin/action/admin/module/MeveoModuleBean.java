@@ -18,18 +18,22 @@
  */
 package org.meveo.admin.action.admin.module;
 
+import java.io.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
+import org.primefaces.model.DefaultStreamedContent;
 
 /**
  * Meveo module bean
@@ -104,5 +108,45 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
     	entity.setModuleSource(null);
     	init();
     	initEntity();
+    }
+
+    @Override
+    public DefaultStreamedContent export() throws IOException {
+
+        DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
+        List<String> modulesCodes = getSelectedEntities().stream().map(MeveoModule::getCode).collect(Collectors.toList());
+        
+        try {
+        	File exportFile = meveoModuleApi.exportModules(modulesCodes, getExportFormat());
+            defaultStreamedContent.setContentEncoding("UTF-8");
+            defaultStreamedContent.setStream(new FileInputStream(exportFile));
+            defaultStreamedContent.setName(exportFile.getName());
+        } catch (Exception e) {
+            log.error("Error exporting modules {}", modulesCodes);
+        }
+        
+        /* File exportFile = meveoModuleApi.exportEntities(getExportFormat(), getSelectedEntities());
+        try {
+            String exportName = exportFile.getName();
+            String[] exportFileName = exportName.split("_");
+            String name = exportFileName[1];
+            if (exportName.endsWith(".json")) {
+                String[] moduleName = name.split("\\.");
+                String fileName = moduleName[0];
+                List<MeveoModule> meveoModules = getSelectedEntities();
+                for (int i = 0; i < meveoModules.size(); i++) {
+                    if (CollectionUtils.isNotEmpty(meveoModules.get(i).getModuleFiles())) {
+                        byte[] filedata = meveoModuleApi.createZipFile(exportFile.getAbsolutePath(), meveoModules);
+                        InputStream is = new ByteArrayInputStream(filedata);
+                        return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error when create zip file {}", exportFile.getName());
+        } */
+
+
+        return defaultStreamedContent;
     }
 }

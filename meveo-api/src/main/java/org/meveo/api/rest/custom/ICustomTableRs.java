@@ -1,5 +1,6 @@
 package org.meveo.api.rest.custom;
 
+import javax.transaction.NotSupportedException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -24,6 +25,8 @@ import org.meveo.api.rest.PATCH;
  * Rest API for custom table for relation data management
  * 
  * @author Clément Bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  **/
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -69,11 +72,12 @@ public interface ICustomTableRs <T extends CustomTableDataDto > extends IBaseRs 
      * @param customTableCode Custom table code - can be either db table's name or a custom entity template code
      * @param pagingAndFiltering Paging and search criteria
      * @return Custom table data
+     * @throws NotSupportedException
      */
     @POST
     @Path("/list/{customTableCode}")
     @ApiOperation(value = "List of custom table")
-    CustomTableDataResponseDto list(@PathParam("customTableCode") @ApiParam("Code of the custom table") String customTableCode, @ApiParam("Paging and search criteria") PagingAndFiltering pagingAndFiltering) throws MeveoApiException, BusinessException;
+    CustomTableDataResponseDto list(@PathParam("customTableCode") @ApiParam("Code of the custom table") String customTableCode, @ApiParam("Paging and search criteria") PagingAndFiltering pagingAndFiltering) throws MeveoApiException, BusinessException, NotSupportedException;
 
     /**
      * Append or update data in a custom table

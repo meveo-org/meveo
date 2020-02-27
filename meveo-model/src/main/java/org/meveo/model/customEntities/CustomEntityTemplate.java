@@ -17,6 +17,26 @@
  */
 package org.meveo.model.customEntities;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -31,30 +51,23 @@ import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Clément Bareth
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.6.0
  */
 @Entity
 @ModuleItem("CustomEntityTemplate")
 @Cacheable
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cet", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
-@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @Parameter(name = "sequence_name", value = "cust_cet_seq"), })
-@NamedQueries({
-		@NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@Parameter(name = "sequence_name", value = "cust_cet_seq"), })
+@NamedQueries({ @NamedQuery(name = "CustomEntityTemplate.getCETForCache", query = "SELECT cet from CustomEntityTemplate cet where cet.disabled=false order by cet.name "),
 		@NamedQuery(name = "CustomEntityTemplate.getCETForConfiguration", query = "SELECT DISTINCT cet from CustomEntityTemplate cet join fetch cet.entityReference left join fetch cet.subTemplates where cet.disabled=false order by cet.name"),
 		@NamedQuery(name = "CustomEntityTemplate.PrimitiveType", query = "SELECT cet.neo4JStorageConfiguration.primitiveType FROM CustomEntityTemplate cet WHERE code = :code"),
 		@NamedQuery(name = "CustomEntityTemplate.getCETsByCategoryId", query = "SELECT cet FROM CustomEntityTemplate cet WHERE cet.customEntityCategory.id = :id"),
-		@NamedQuery(name = "CustomEntityTemplate.ReSetCategoryEmptyByCategoryId", query = "UPDATE CustomEntityTemplate cet SET cet.customEntityCategory=NULL WHERE cet.customEntityCategory.id = :id")
-})
+		@NamedQuery(name = "CustomEntityTemplate.ReSetCategoryEmptyByCategoryId", query = "UPDATE CustomEntityTemplate cet SET cet.customEntityCategory=NULL WHERE cet.customEntityCategory.id = :id") })
 @ObservableEntity
 @ImportOrder(2)
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate>, CustomModelObject {
@@ -62,7 +75,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	private static final long serialVersionUID = 8281478284763353310L;
 
 	/**
-	 * Prefix for CustomEntityTemplate. If this prefix is changed, the hard-coded value in exportImportTemplates.xml must be updated too.
+	 * Prefix for CustomEntityTemplate. If this prefix is changed, the hard-coded
+	 * value in exportImportTemplates.xml must be updated too.
 	 */
 	public static String CFT_PREFIX = "CE";
 
@@ -73,7 +87,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	@Embedded
 	private SQLStorageConfiguration sqlStorageConfiguration = new SQLStorageConfiguration();
-	
+
 	@Embedded
 	private Neo4JStorageConfiguration neo4JStorageConfiguration = new Neo4JStorageConfiguration();
 
@@ -110,29 +124,38 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
+	
+	@Transient
+	private boolean hasReferenceJpaEntity = false;
+
+	public SQLStorageConfiguration getSqlStorageConfigurationNullSafe() {
+
+		if (sqlStorageConfiguration == null) {
+			sqlStorageConfiguration = new SQLStorageConfiguration();
+		}
+
+		return sqlStorageConfiguration;
+	}
 
 	public SQLStorageConfiguration getSqlStorageConfiguration() {
-		if(availableStorages != null && availableStorages.contains(DBStorageType.SQL)) {
+		if (availableStorages != null && availableStorages.contains(DBStorageType.SQL)) {
 			return sqlStorageConfiguration;
 		}
-		
+
 		return null;
 	}
 
 	public Neo4JStorageConfiguration getNeo4JStorageConfiguration() {
-		if(availableStorages != null && availableStorages.contains(DBStorageType.NEO4J)) {
+		if (availableStorages != null && availableStorages.contains(DBStorageType.NEO4J)) {
 			return neo4JStorageConfiguration;
 		}
-		
+
 		return null;
 	}
 
 	public void setNeo4JStorageConfiguration(Neo4JStorageConfiguration neo4jStorageConfiguration) {
 		neo4JStorageConfiguration = neo4jStorageConfiguration;
 	}
-
-
-
 
 	public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
 		this.sqlStorageConfiguration = sqlStorageConfiguration;
@@ -229,7 +252,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	}
 
 	/**
-	 * /!\ The subTemplates field should have been fetch, will raise an exception otherwise
+	 * /!\ The subTemplates field should have been fetch, will raise an exception
+	 * otherwise
+	 * 
 	 * @return the cet with all of its descendance
 	 */
 	public List<CustomEntityTemplate> descendance() {
@@ -247,11 +272,18 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public List<CustomEntityTemplate> ascendance() {
 		List<CustomEntityTemplate> descendance = new ArrayList<>();
 		descendance.add(this);
-		if(this.getSuperTemplate() != null) {
+		if (this.getSuperTemplate() != null) {
 			descendance.addAll(this.getSuperTemplate().ascendance());
 		}
 		return descendance;
 	}
 
+	public boolean hasReferenceJpaEntity() {
+		return hasReferenceJpaEntity;
+	}
+
+	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
+		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
+	}
 
 }

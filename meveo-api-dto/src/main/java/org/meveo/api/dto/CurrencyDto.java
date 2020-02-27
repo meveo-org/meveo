@@ -5,17 +5,19 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.admin.Currency;
 
 /**
  * The Class CurrencyDto.
  *
- * @author Edward P. Legaspi
- * @deprecated will be renammed to TradingCurrencyDto
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Currency")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CurrencyDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

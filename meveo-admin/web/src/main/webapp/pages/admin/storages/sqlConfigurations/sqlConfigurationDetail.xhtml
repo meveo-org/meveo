@@ -1,0 +1,77 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	template="/layout/template.xhtml">
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId" value="#{sqlConfigurationBean.objectId}" />
+			<f:viewParam name="edit" value="#{sqlConfigurationBean.edit}"/>
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
+				<p:menuitem outcome="sqlConfigurations"
+					value="#{messages['repository.sqlConfiguration']}" />
+				<p:menuitem
+					value="#{messages['commons.new']} #{messages['repository.sqlConfiguration']}"
+					disabled="true" rendered="#{sqlConfigurationBean.entity.transient}" />
+				<p:menuitem
+					value="#{messages['repository.sqlConfiguration']} - #{sqlConfigurationBean.entity.code}"
+					disabled="true"
+					rendered="#{!sqlConfigurationBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
+
+		<hftl:formPanel label="#{messages['repository.sqlConfiguration']}"
+			backingBean="#{sqlConfigurationBean}" showFormButtons="false">
+			<hftl:formField label="#{messages['businessEntity.code']}"
+				field="code" required="true" validateUnique="true" allowEdit="false" />
+				
+			<c:if test="#{sqlConfigurationBean.entity.code != 'default'}">
+				<hftl:formField label="#{messages['sqlConfiguration.url']}"
+					field="url" maxlength="255" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.schema']}"
+					field="schema" maxlength="255" required="false" />
+				<hftl:formField label="#{messages['sqlConfiguration.username']}"
+					field="username" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.password']}"
+					field="password" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.driverClass']}"
+					field="driverClass" required="true" />
+				<hftl:formField label="#{messages['sqlConfiguration.dialect']}"
+					field="dialect" required="false" />
+				<hftl:formField label="#{messages['sqlConfiguration.initialized']}"
+					field="initialized" required="false" edit="false" />
+				<ui:param name="buttons" value="true" />
+			</c:if>
+			
+			<ui:define name="buttons">
+				<p:commandButton id="saveButton" value="#{messages['action.save']}" onclick="delayDisable(this);"
+								 oncomplete="this.disabled=false;" action="#{sqlConfigurationBean.saveOrUpdate(true)}"
+								 icon="ui-icon-check" update="@form" rendered="#{!(sqlConfigurationBean.entity.code eq 'default')}">
+					<f:param name="edit" value="true"/>
+				</p:commandButton>
+				<hf:clearButton label="#{messages['action.reset']}" edit="#{sqlConfigurationBean.edit}" rendered="#{sqlConfigurationBean.canUserUpdateEntity()}" resetAction="#{sqlConfigurationBean.resetFormEntity()}"/>
+				<p:button id="backButton" value="#{messages['action.back']}" outcome="#{sqlConfigurationBean.back()}"/>
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}" immediate="true" action="#{sqlConfigurationBean.deleteWithBack}" rendered="#{!(sqlConfigurationBean.entity.code eq 'default')}">
+					<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
+				</p:commandButton>
+				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.transient}"
+					value="#{messages['sqlConfiguration.testConnection']}"
+					action="#{sqlConfigurationBean.testConnection()}" update="messages"></p:commandButton>
+				<p:commandButton process="@this" rendered="#{not sqlConfigurationBean.entity.initialized}"
+					value="#{messages['sqlConfiguration.initializeSchema']}"
+					action="#{sqlConfigurationBean.initializeSchema()}" update="messages"></p:commandButton>
+			</ui:define>
+			
+		</hftl:formPanel>
+	</ui:define>
+</ui:composition>

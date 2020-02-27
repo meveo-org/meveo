@@ -10,22 +10,27 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationResponseDto;
 import org.meveo.api.dto.response.storage.BinaryStorageConfigurationsResponseDto;
 import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.api.storage.BinaryStorageConfigurationDto;
+import org.meveo.model.storage.BinaryStorageConfiguration;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
- * @author Edward P. Legaspi
+ * API for managing {@link BinaryStorageConfiguration}.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @Path("/storages/binaries")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA,  "text/csv"})
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.MULTIPART_FORM_DATA, "text/csv" })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "text/csv" })
-@Api("Binary storage configuration")
+@Api("BinaryStorageConfigurationRs")
 public interface BinaryStorageConfigurationRs extends IBaseBaseCrudRs {
 
 	/**

@@ -25,25 +25,33 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.billing.Sequence;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * The Class SequenceDto.
  *
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class SequenceDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 4763606402719751014L;
 
     /** The prefix EL. */
+    @ApiModelProperty("The prefix EL")
     private String prefixEL;
 
     /** The sequence size. */
+    @ApiModelProperty("The sequence size")
     private Integer sequenceSize;
 
     /** The current invoice nb. */
+    @ApiModelProperty("The current invoice nb")
     private Long currentInvoiceNb;
 
     /**

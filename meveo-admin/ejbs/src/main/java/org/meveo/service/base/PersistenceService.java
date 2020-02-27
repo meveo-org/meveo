@@ -365,7 +365,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
      * @see org.meveo.service.base.local.IPersistenceService#remove(java.lang.Long)
      */
     @Override
-    public final void remove(Long id) throws BusinessException {
+    public void remove(Long id) throws BusinessException {
         E e = findById(id);
         if (e != null) {
             remove(e);

@@ -12,92 +12,122 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.model.sql.SqlConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * Represents data in custom table - custom entity data stored in a separate table
+ * Represents data in custom table - custom entity data stored in a separate
+ * table
  * 
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomTableData")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel("CustomTableDataDto")
 public class CustomTableDataDto extends BaseEntityDto {
 
-    private static final long serialVersionUID = -1209601309024979414L;
+	private static final long serialVersionUID = -1209601309024979414L;
 
-    /**
-     * Custom table/custom entity (or relation) template code
-     */
-    @XmlAttribute(required = true)
-    private String customTableCode;
+	/**
+	 * The {@link SqlConfiguration} code.
+	 */
+	@ApiModelProperty("Code of SqlConnection")
+	private String sqlConnectionCode;
 
-    /**
-     * Should data be overwritten (deleted all data first) instead of appended to existing values. Defaults to false if omitted.
-     */
-    @XmlAttribute
-    private Boolean overwrite;
+	/**
+	 * Custom table/custom entity (or relation) template code
+	 */
+	@XmlAttribute(required = true)
+	@ApiModelProperty("Custom table/custom entity (or relation) template code")
+	private String customTableCode;
 
-    /**
-     * A list of values with field name as map's key and field value as map's value
-     */
-    @XmlElementWrapper(name = "records")
-    @XmlElement(name = "record")
-    @JsonProperty("records")
-    private List<CustomTableRecordDto> values;
+	/**
+	 * Should data be overwritten (deleted all data first) instead of appended to
+	 * existing values. Defaults to false if omitted.
+	 */
+	@XmlAttribute
+	@ApiModelProperty("Should data be overwritten (deleted all data first) instead of appended to existing values. Defaults to false if omitted.")
+	private Boolean overwrite;
 
-    /**
-     * @return Custom table/custom entity template code
-     */
-    public String getCustomTableCode() {
-        return customTableCode;
-    }
+	/**
+	 * A list of values with field name as map's key and field value as map's value
+	 */
+	@XmlElementWrapper(name = "records")
+	@XmlElement(name = "record")
+	@JsonProperty("records")
+	@ApiModelProperty("A list of values with field name as map's key and field value as map's value")
+	private List<CustomTableRecordDto> values;
 
-    /**
-     * @param customTableCode Custom table/custom entity template code
-     */
-    public void setCustomTableCode(String customTableCode) {
-        this.customTableCode = customTableCode;
-    }
+	/**
+	 * @return Custom table/custom entity template code
+	 */
+	public String getCustomTableCode() {
+		return customTableCode;
+	}
 
-    /**
-     * @return Should data be overwritten (deleted all data first) instead of appended to existing values. Defaults to false if null.
-     */
-    public Boolean getOverwrite() {
-        return overwrite;
-    }
+	/**
+	 * @param customTableCode Custom table/custom entity template code
+	 */
+	public void setCustomTableCode(String customTableCode) {
+		this.customTableCode = customTableCode;
+	}
 
-    /**
-     * @param overrwrite Should data be overwritten (deleted all data first) instead of appended to existing values.
-     */
-    public void setOverwrite(Boolean overrwrite) {
-        this.overwrite = overrwrite;
-    }
+	/**
+	 * @return Should data be overwritten (deleted all data first) instead of
+	 *         appended to existing values. Defaults to false if null.
+	 */
+	public Boolean getOverwrite() {
+		return overwrite;
+	}
 
-    /**
-     * @return A list of values with field name as map's key and field value as map's value
-     */
-    public List<CustomTableRecordDto> getValues() {
-        return values;
-    }
+	/**
+	 * @param overrwrite Should data be overwritten (deleted all data first) instead
+	 *                   of appended to existing values.
+	 */
+	public void setOverwrite(Boolean overrwrite) {
+		this.overwrite = overrwrite;
+	}
 
-    /**
-     * @param values A list of values with field name as map's key and field value as map's value
-     */
-    public void setValues(List<CustomTableRecordDto> values) {
-        this.values = values;
-    }
+	/**
+	 * @return A list of values with field name as map's key and field value as
+	 *         map's value
+	 */
+	public List<CustomTableRecordDto> getValues() {
+		return values;
+	}
 
-    public void setValuesFromListofMap(List<Map<String, Object>> list) {
+	/**
+	 * @param values A list of values with field name as map's key and field value
+	 *               as map's value
+	 */
+	public void setValues(List<CustomTableRecordDto> values) {
+		this.values = values;
+	}
 
-        if (list == null) {
-            return;
+	public void setValuesFromListofMap(List<Map<String, Object>> list) {
 
-        }
-        values = new ArrayList<>();
+		if (list == null) {
+			return;
 
-        for (Map<String, Object> item : list) {
-            values.add(new CustomTableRecordDto(item));
-        }
-    }
+		}
+		values = new ArrayList<>();
+
+		for (Map<String, Object> item : list) {
+			values.add(new CustomTableRecordDto(item));
+		}
+	}
+
+	public String getSqlConnectionCode() {
+		return sqlConnectionCode;
+	}
+
+	public void setSqlConnectionCode(String sqlConnectionCode) {
+		this.sqlConnectionCode = sqlConnectionCode;
+	}
 }

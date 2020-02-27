@@ -49,13 +49,18 @@
 	                <hftl:decorateFormField label="#{messages['scriptInstance.script']}" fieldId="codeMirror" componentWidth="100">
 	                    <pe:codeMirror id="codeMirror" theme="eclipse" 
 	                    			   mode="text/x-java"
-	                    			   value="#{scriptInstanceBean.entity.script}"
+	                    			   value="#{scriptInstanceBean.sourceCode}"
 	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javaHint);}}"
 	                    			   smartIndent="true"
 	                                   lineNumbers="true" required="true"/>
 	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
 	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
 	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors :growl"/>
+							<p:commandButton value="Format code"
+	                                         action="#{scriptInstanceBean.formatSourceCode}" update="@form:codeMirror"/>
+
+							<p:commandButton value="Organize imports"
+	                                         action="#{scriptInstanceBean.organizeImports}" update="@form:codeMirror"/>
 	                    </h:panelGroup>
 	                </hftl:decorateFormField>
  				</c:if>

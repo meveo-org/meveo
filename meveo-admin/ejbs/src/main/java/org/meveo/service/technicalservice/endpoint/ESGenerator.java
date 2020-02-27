@@ -16,14 +16,14 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
+
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
 
 public class ESGenerator {
 
@@ -128,8 +128,9 @@ public class ESGenerator {
 
         // Body parameters
         if (endpoint.getMethod() == EndpointHttpMethod.POST) {
-            StringJoiner bodyParamJoiner = new StringJoiner(",\n\t\t\t", "`{\n\t\t\t", "\n\t\t}`");
-            endpoint.getParametersMapping().forEach(tsParameterMapping -> bodyParamJoiner.add("\"" + tsParameterMapping.getEndpointParameter().getParameter() + "\" : ${" + tsParameterMapping.getEndpointParameter().getParameter() + "}"));
+        	buffer.append(", \n\t\theaders : new Headers({\n \t\t\t'Content-Type': 'application/json'\n\t\t})");
+            StringJoiner bodyParamJoiner = new StringJoiner(",\n\t\t\t", "JSON.stringify({\n\t\t\t", "\n\t\t})");
+            endpoint.getParametersMapping().forEach(tsParameterMapping -> bodyParamJoiner.add(tsParameterMapping.getParameterName() + " : parameters." + tsParameterMapping.getParameterName()));
             buffer.append(",\n\t\tbody: ").append(bodyParamJoiner.toString());
         }
 

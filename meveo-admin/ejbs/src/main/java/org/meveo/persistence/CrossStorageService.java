@@ -16,6 +16,32 @@
 
 package org.meveo.persistence;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+import javax.ejb.EJBException;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
+import javax.inject.Inject;
+import javax.persistence.NonUniqueResultException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -24,6 +50,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -33,6 +60,7 @@ import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
@@ -40,327 +68,425 @@ import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 
-import javax.ejb.EJBException;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.persistence.NonUniqueResultException;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 /**
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.8.0
  */
-@Default
+@Stateless
+@LocalBean
+@TransactionManagement(TransactionManagementType.BEAN)
 public class CrossStorageService implements CustomPersistenceService {
 
-    @Inject
-    private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
+	@Resource
+	private UserTransaction transaction;
 
-    @Inject
-    private Neo4jService neo4jService;
+	@Inject
+	private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
 
-    @Inject
-    private Neo4jDao neo4jDao;
+	@Inject
+	private Neo4jService neo4jService;
 
-    @Inject
-    private CustomTableService customTableService;
+	@Inject
+	private Neo4jDao neo4jDao;
 
-    @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
+	@Inject
+	private CustomTableService customTableService;
 
-    @Inject
-    private CustomTableRelationService customTableRelationService;
+	@Inject
+	private CustomEntityInstanceService customEntityInstanceService;
 
-    @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
+	@Inject
+	private CustomTableRelationService customTableRelationService;
 
-    @Inject
-    private FileSystemService fileSystemService;
-    
-    @Inject
-    private CustomFieldInstanceService customFieldInstanceService;
-    
-    @Inject
-    private Logger log;
+	@Inject
+	private CustomFieldTemplateService customFieldTemplateService;
 
-    /**
-     * Retrieves one entity instance
-     *
-     * @param repository Repository code
-     * @param cet        Template of the entities to retrieve
-     * @param uuid       UUID of the entity
-     * @return list of matching entities
-     */
-    public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid) throws EntityDoesNotExistsException {
-        return find(repository, cet, uuid, null);
-    }
+	@Inject
+	private FileSystemService fileSystemService;
 
-    /**
-     * Retrieves one entity instance
-     *
-     * @param repository  Repository code
-     * @param cet         Template of the entities to retrieve
-     * @param uuid        UUID of the entity
-     * @param fetchFields Fields to select
-     * @return list of matching entities
-     */
-    //TODO : add "fetchSubEntities" parameter
-    public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, List<String> fetchFields) throws EntityDoesNotExistsException {
-        if (uuid == null) {
-            throw new NullPointerException("Cannot retrieve entity by uuid without uuid");
-        }
+	@Inject
+	private CustomFieldInstanceService customFieldInstanceService;
 
-        List<String> selectFields;
-        Map<String, Object> values = new HashMap<>();
+	@Inject
+	private Logger log;
+	
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
-        // Retrieve only asked fields
-        if (fetchFields != null) {
-            selectFields = new ArrayList<>(fetchFields);
+	/**
+	 * Retrieves one entity instance
+	 *
+	 * @param repository     Repository code
+	 * @param cet            Template of the entities to retrieve
+	 * @param uuid           UUID of the entity
+	 * @param withReferences Whether to fetch entity references
+	 * @return list of matching entities
+	 */
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, boolean withReferences) throws EntityDoesNotExistsException {
+		return find(repository, cet, uuid, null, true);
+	}
 
-            // No restrictions about fields - retrieve all fields
-        } else {
-            selectFields = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo())
-                    .values()
-                    .stream()
-                    .map(CustomFieldTemplate::getCode)
-                    .collect(Collectors.toList());
-        }
+	/**
+	 * Retrieves one entity instance
+	 *
+	 * @param repository           Repository code
+	 * @param cet                  Template of the entities to retrieve
+	 * @param uuid                 UUID of the entity
+	 * @param fetchFields          Fields to select
+	 * @param withEntityReferences Whether to fetch entity references
+	 * @return list of matching entities
+	 */
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, List<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+		if (uuid == null) {
+			throw new IllegalArgumentException("Cannot retrieve entity by uuid without uuid");
+		}
 
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
-            if (!neo4jFields.isEmpty()) {
-                try {
-                    final Map<String, Object> existingValues = neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid, neo4jFields);
-                    if (existingValues != null) {
-                        values.putAll(existingValues);
-                    }
-                } catch (EJBException e){
-                    if(e.getCausedByException() instanceof NoSuchRecordException) {
-                        throw new EntityDoesNotExistsException(cet.getCode() + " instance with UUID : " + uuid + " does not exist in NEO4J");
-                    }
-                }
-            }
-        }
+		if (cet == null) {
+			throw new IllegalArgumentException("CET should be provided");
+		}
 
-        // Don't retrieve the fields we already fetched
-        selectFields.removeAll(values.keySet());
+		List<String> selectFields;
+		Map<String, Object> values = new HashMap<>();
+		values.put("uuid", uuid);
+		
+		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final Map<String, Object> customTableValue = customTableService.findById(cet, uuid, sqlFields);
-                replaceKeys(cet, sqlFields, customTableValue);
-                values.putAll(customTableValue);
-            } else {
-                final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-                if (cei == null) {
-                    return null;
-                }
+		// Retrieve only asked fields
+		if (fetchFields != null) {
+			selectFields = new ArrayList<>(fetchFields);
 
-                values.put("code", cei.getCode());
-                values.put("description", cei.getDescription());
-                if (sqlFields != null) {
-                    for (String field : sqlFields) {
-                        if (cei.getCfValues() != null && cei.getCfValues().getCfValue(field) != null) {
-                            values.put(field, cei.getCfValues().getCfValue(field).getValue());
-                        }
-                    }
-                } else {
-                    if (cei.getCfValuesAsValues() != null) {
-                        values.putAll(cei.getCfValuesAsValues());
-                    }
-                }
+			// No restrictions about fields - retrieve all fields
+		} else {
+			selectFields = cfts.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
+		}
 
-            }
-        }
+		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			List<String> neo4jFields = filterFields(selectFields, cet, DBStorageType.NEO4J);
+			if (!neo4jFields.isEmpty()) {
+				try {
+					String repoCode = repository.getNeo4jConfiguration().getCode();
+					final Map<String, Object> existingValues = neo4jDao.findNodeById(repoCode, cet.getCode(), uuid, neo4jFields);
+					if (existingValues != null) {
+						values.putAll(existingValues);
+						// We need to fetch every relationship defined as entity references
+						if(withEntityReferences) {
+							for(CustomFieldTemplate cft : cfts) {
+								if(cft.getStorages().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+									if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+										values.put(cft.getCode(), targets);
+										
+									} else {
+										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+										values.put(cft.getCode(), target);
+									}
+								}
+							}
+						}
+					}
+					
+				} catch (EJBException e) {
+					if (e.getCausedByException() instanceof NoSuchRecordException) {
+						throw new EntityDoesNotExistsException(cet.getCode() + " instance with UUID : " + uuid + " does not exist in NEO4J");
+					}
+				}
+			}
+		}
 
-        // Remove null values
-        values.values().removeIf(Objects::isNull);
+		// Don't retrieve the fields we already fetched
+		selectFields.removeAll(values.keySet());
 
-        // Fetch entity references
-        fetchEntityReferences(repository, cet, values);
+		try {
+			transaction.begin();
 
-        return values;
-    }
+			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+				List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
+				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					final Map<String, Object> customTableValue = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, sqlFields);
+					replaceKeys(cet, sqlFields, customTableValue);
+					values.putAll(customTableValue);
+				} else {
+					final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+					if (cei == null) {
+						return null;
+					}
 
-    public Map<String, Object> getMissingData(Map<String, Object> data, Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> selectFields) throws EntityDoesNotExistsException {
-        List<String> actualFetchField = new ArrayList<>(selectFields);
-        actualFetchField.removeAll(data.keySet());
+					values.put("code", cei.getCode());
+					values.put("description", cei.getDescription());
+					if (sqlFields != null) {
+						for (String field : sqlFields) {
+							if (cei.getCfValues() != null && cei.getCfValues().getCfValue(field) != null) {
+								values.putIfAbsent(field, cei.getCfValues().getCfValue(field).getValue());
+							}
+						}
+					} else {
+						if (cei.getCfValuesAsValues() != null) {
+							values.putAll(cei.getCfValuesAsValues());
+						}
+					}
+				}
+			}
 
-        // Every field has been already retrieved
-        if (actualFetchField.isEmpty()) {
-            return new HashMap<>();
-        }
+			transaction.commit();
+		} catch (Exception e) {
+			
+			try {
+				transaction.rollback();
+			} catch (IllegalStateException | SecurityException | SystemException e1) {}
 
-        // Retrieve the missing fields
-        return find(repository, cet, uuid, actualFetchField);
-    }
+			if(e instanceof EntityDoesNotExistsException) {
+				throw (EntityDoesNotExistsException) e;
+			} else {
+				log.error("Can't retrieve data stored in SQL", e);
+			}
+			
+			throw new RuntimeException(e);
+		}
 
-    /**
-     * Retrieves entity instances
-     *
-     * @param repository              Repository code
-     * @param cet                     Template of the entities to retrieve
-     * @param paginationConfiguration Pagination and filters
-     * @return list of matching entities
-     */
-    @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+		// Remove null values
+		values.values().removeIf(Objects::isNull);
 
-        final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
+		// Fetch entity references
+		fetchEntityReferences(repository, cet, values);
 
-        final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
+		return values;
+	}
 
-        List<Map<String, Object>> valuesList = new ArrayList<>();
+	public Map<String, Object> getMissingData(Map<String, Object> data, Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> selectFields) throws EntityDoesNotExistsException {
+		List<String> actualFetchField = new ArrayList<>(selectFields);
+		actualFetchField.removeAll(data.keySet());
 
-        // If no pagination nor fetch fields are defined, we consider that we must fetch everything
-        boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
+		// Every field has been already retrieved
+		if (actualFetchField.isEmpty()) {
+			return new HashMap<>();
+		}
 
-        // In case where only graphql query is passed, we will only use it so we won't fetch sql
-        boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
+		// Retrieve the missing fields
+		return find(repository, cet, uuid, actualFetchField, false);
+	}
 
-        boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream()
-                .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+	/**
+	 * Retrieves entity instances
+	 *
+	 * @param repository              Repository code
+	 * @param cet                     Template of the entities to retrieve
+	 * @param paginationConfiguration Pagination and filters
+	 * @return list of matching entities
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
 
-        boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream()
-                .anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
 
-        // Collect initial data
-        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final List<Map<String, Object>> values = customTableService.list(cet, paginationConfiguration);
-                values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
-                valuesList.addAll(values);
+		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
-            } else {
-                final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), filters);
-                final List<Map<String, Object>> values = new ArrayList<>();
+		List<Map<String, Object>> valuesList = new ArrayList<>();
 
-                for (CustomEntityInstance cei : ceis) {
-                    Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
-                    final HashMap<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
-                    map.put("uuid", cei.getUuid());
-                    if (!fetchAllFields) {
-                        for (String k : cei.getCfValuesAsValues().keySet()) {
-                            if (!actualFetchFields.contains(k)) {
-                                map.remove(k);
-                            }
-                        }
-                    }
-                    values.add(map);
-                }
+		// If no pagination nor fetch fields are defined, we consider that we must fetch
+		// everything
+		boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
 
-                valuesList.addAll(values);
-            }
-        }
+		// In case where only graphql query is passed, we will only use it so we won't
+		// fetch sql
+		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
 
-        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+		boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
-            // Find by graphql if query provided
-            if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
+		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
-                String graphQlQuery = paginationConfiguration.getGraphQlQuery()
-                        .replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
+		// Collect initial data
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				final List<Map<String, Object>> values = customTableService.list(repository.getSqlConfigurationCode(), cet, paginationConfiguration);
+				values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
+				valuesList.addAll(values);
 
-                final Map<String, Object> result = neo4jDao.executeGraphQLQuery(
-                        repository.getNeo4jConfiguration().getCode(),
-                        graphQlQuery,
-                        null,
-                        null
-                );
+			} else {
+				final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), filters, paginationConfiguration);
+				final List<Map<String, Object>> values = new ArrayList<>();
 
-                List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
-                values = values != null ? values : new ArrayList<>();
+				for (CustomEntityInstance cei : ceis) {
+					Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
+					final HashMap<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
+					map.put("uuid", cei.getUuid());
+					map.put("code", cei.getCode());
+					map.put("description", cei.getDescription());
 
-                values.forEach(map -> {
-                    final HashMap<String, Object> resultMap = new HashMap<>(map);
-                    map.forEach((key, mapValue) -> {
-                        if (!key.equals("uuid") && !key.equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(key)) {
-                            resultMap.remove(key);
-                        }
+					if (!fetchAllFields) {
+						for (String k : cei.getCfValuesAsValues().keySet()) {
+							if (!actualFetchFields.contains(k)) {
+								map.remove(k);
+							}
+						}
+					}
+					values.add(map);
+				}
 
-                        // Flatten primitive types and Binary values (singleton maps with only "value" and optionally "meveo_uuid" attribute)
-                        if (mapValue instanceof Map && ((Map) mapValue).size() == 1 && ((Map) mapValue).containsKey("value")) {
-                            Object value = ((Map) mapValue).get("value");
-                            resultMap.put(key, value);
-                        } else if (mapValue instanceof Map && ((Map) mapValue).size() == 2 && ((Map) mapValue).containsKey("value") && ((Map) mapValue).containsKey("meveo_uuid")) {
-                            Object value = ((Map) mapValue).get("value");
-                            resultMap.put(key, value);
-                        }
-                    });
+				valuesList.addAll(values);
+			}
+		}
 
-                    // Rewrite "meveo_uuid" to "uuid"
-                    if(resultMap.get("meveo_uuid") != null){
-                        resultMap.put("uuid", resultMap.remove("meveo_uuid"));
-                    }
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
-                    valuesList.add(resultMap);
-                });
-            } //XXXX: retrieve every records otherwise ?
-        }
+			String graphQlQuery;
 
-        // Complete missing data
-        for (Map<String, Object> data : valuesList) {
-            String uuid = (String) (data.get("uuid") != null ? data.get("uuid") : data.get("meveo_uuid"));
+			// Find by graphql if query provided
+			if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
+				graphQlQuery = paginationConfiguration.getGraphQlQuery();
+			} else {
+				graphQlQuery = "{ " + cet.getCode() + " { } }";
+				// TODO: Build GraphQL Query using pagination configuration
+			}
 
-            Collection<String> fetchFields = actualFetchFields != null
-                    ? actualFetchFields
-                    : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
+			graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
-            final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, fetchFields);
-            data.putAll(missingData);
-        }
+			final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
 
-        return valuesList;
-    }
+			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
+			values = values != null ? values : new ArrayList<>();
 
-    /**
-     * Insert / update an entity with the sourceValues. The target entity is retrieved from the target values.
-     * <br> If the target entity does not exist, create the source node.
-     * <br> If the target entity and the relation exists, update the source entity with the source values.
-     * <br> If the target entity exists but not the relation, create the relation along with the source entity.
-     *
-     * @param repository   Code of the repository / configuration to store the data.
-     *                     <br> NOTE : only available for NEO4J at the moment.
-     * @param relationCode Code of the relation to create
-     * @param sourceValues Values to insert
-     * @param targetValues Filters on target entity
-     */
-    @Override
-    public PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-        CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
+			values.forEach(map -> {
+				final HashMap<String, Object> resultMap = new HashMap<>(map);
+				map.forEach((key, mapValue) -> {
+					if (!key.equals("uuid") && !key.equals("meveo_uuid") && actualFetchFields != null && !actualFetchFields.contains(key)) {
+						resultMap.remove(key);
+					}
 
-        if (!crt.isUnique()) {
-            throw new IllegalArgumentException("CRT must be unique !");
-        }
+					// Flatten primitive types and Binary values (singleton maps with only "value"
+					// and optionally "meveo_uuid" attribute)
+					if (mapValue instanceof Map && ((Map) mapValue).size() == 1 && ((Map) mapValue).containsKey("value")) {
+						Object value = ((Map) mapValue).get("value");
+						resultMap.put(key, value);
+					} else if (mapValue instanceof Map && ((Map) mapValue).size() == 2 && ((Map) mapValue).containsKey("value") && ((Map) mapValue).containsKey("meveo_uuid")) {
+						Object value = ((Map) mapValue).get("value");
+						resultMap.put(key, value);
+					}
+				});
 
-        final CustomEntityTemplate endNode = crt.getEndNode();
-        final CustomEntityTemplate startNode = crt.getStartNode();
+				// Rewrite "meveo_uuid" to "uuid"
+				if (resultMap.get("meveo_uuid") != null) {
+					resultMap.put("uuid", resultMap.remove("meveo_uuid"));
+				}
 
-        // Everything is stored in Neo4J
-        if (
-                isEverythingStoredInNeo4J(crt)
-        ) {
-            return neo4jService.addSourceNodeUniqueCrt(
-                    repository.getNeo4jConfiguration().getCode(),
-                    relationCode,
-                    filterValues(sourceValues, crt, DBStorageType.NEO4J),
-                    filterValues(targetValues, crt, DBStorageType.NEO4J)
-            );
-        }
+				// merge the values from sql and neo4j
+				// valuesList.add(resultMap);
+				mergeData(valuesList, resultMap);
+			});
+		}
 
-        String targetUUUID = findEntityId(repository, targetValues, endNode);
+		// Complete missing data
+		for (Map<String, Object> data : valuesList) {
+			String uuid = (String) (data.get("uuid") != null ? data.get("uuid") : data.get("meveo_uuid"));
 
-        // Target does not exists. We create the source
+			Collection<String> fetchFields = actualFetchFields != null ? actualFetchFields : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
+
+			final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, fetchFields);
+			data.putAll(missingData);
+		}
+
+		return valuesList;
+	}
+
+	/**
+	 * Add or merge a map of data to a list.
+	 * 
+	 * @param valuesList list of map of values
+	 * @param resultMap  map to merge or add
+	 */
+	private void mergeData(List<Map<String, Object>> valuesList, HashMap<String, Object> resultMap) {
+
+		String uuid = (String) (resultMap.get("uuid") != null ? resultMap.get("uuid") : resultMap.get("meveo_uuid"));
+
+		boolean found = false;
+		for (Map<String, Object> mapOfValues : valuesList) {
+			String uuid2 = (String) (mapOfValues.get("uuid") != null ? mapOfValues.get("uuid") : mapOfValues.get("meveo_uuid"));
+			if (uuid.equals(uuid2)) {
+				mapOfValues.putAll(resultMap);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			valuesList.add(resultMap);
+		}
+	}
+
+	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+
+		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
+
+		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
+
+		// If no pagination nor fetch fields are defined, we consider that we must fetch
+		// everything
+		boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
+
+		// In case where only graphql query is passed, we will only use it so we won't
+		// fetch sql
+		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
+
+		boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
+		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
+			final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				return (int) customTableService.count(repository.getSqlConfigurationCode(), dbTablename, paginationConfiguration);
+
+			} else {
+				return (int) customEntityInstanceService.count(cet.getCode(), paginationConfiguration);
+			}
+
+		}
+
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.count(repository, cet, paginationConfiguration);
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Insert / update an entity with the sourceValues. The target entity is retrieved from the target values. <br>
+	 * If the target entity does not exist, create the source node. <br>
+	 * If the target entity and the relation exists, update the source entity with the source values. <br>
+	 * If the target entity exists but not the relation, create the relation along with the source entity.
+	 *
+	 * @param repository   Code of the repository / configuration to store the data. <br>
+	 *                     NOTE : only available for NEO4J at the moment.
+	 * @param relationCode Code of the relation to create
+	 * @param sourceValues Values to insert
+	 * @param targetValues Filters on target entity
+	 */
+	@Override
+	public PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
+
+		if (!crt.isUnique()) {
+			throw new IllegalArgumentException("CRT must be unique !");
+		}
+
+		final CustomEntityTemplate endNode = crt.getEndNode();
+		final CustomEntityTemplate startNode = crt.getStartNode();
+
+		// Everything is stored in Neo4J
+		if (isEverythingStoredInNeo4J(crt)) {
+			return neo4jService.addSourceNodeUniqueCrt(repository.getNeo4jConfiguration().getCode(), relationCode, filterValues(sourceValues, crt, DBStorageType.NEO4J), filterValues(targetValues, crt, DBStorageType.NEO4J));
+		}
+
+		String targetUUUID = findEntityId(repository, targetValues, endNode);
+
+		// Target does not exists. We create the source
 		if (targetUUUID == null) {
 			CustomEntityInstance cei = new CustomEntityInstance();
 			cei.setCetCode(startNode.getCode());
@@ -372,10 +498,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			// Target exists. Let's check if the relation exist.
 			final String relationUUID = findUniqueRelationByTargetUuid(repository, targetUUUID, crt);
 
-            CustomEntityInstance cei = new CustomEntityInstance();
-            cei.setCetCode(startNode.getCode());
-            cei.setCet(customFieldsCacheContainerProvider.getCustomEntityTemplate(startNode.getCode()));
-            customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
+			CustomEntityInstance cei = new CustomEntityInstance();
+			cei.setCetCode(startNode.getCode());
+			cei.setCet(customFieldsCacheContainerProvider.getCustomEntityTemplate(startNode.getCode()));
+			customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
 
 			// Relation does not exists. We create the source.
 			if (relationUUID == null) {
@@ -390,548 +516,546 @@ public class CrossStorageService implements CustomPersistenceService {
 				return new PersistenceActionResult(sourceUUID);
 			}
 		}
-    }
+	}
 
-    private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
-        return crt.getAvailableStorages().contains(DBStorageType.NEO4J) &&
-                crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J) &&
-                crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J);
-    }
+	private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
+		return crt.getAvailableStorages().contains(DBStorageType.NEO4J) && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J) && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J);
+	}
 
-    /**
-     * Create or update an entity and enventyally entity references that it holds
-     *
-     * @param repository Code of the repository / configuration to store the data.
-     *                   <br> NOTE : only available for NEO4J at the moment.
-     * @param ceiToSave the {@link CustomEntityInstance}
-     * @return the persisted entites
-     */
-    @Override
-    public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance ceiToSave) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-        if(repository == null){
-            throw new IllegalArgumentException("Reposiroty should be provided");
-        }
+	/**
+	 * Create or update an entity and enventyally entity references that it holds
+	 *
+	 * @param repository Code of the repository / configuration to store the data. <br>
+	 *                   NOTE : only available for NEO4J at the moment.
+	 * @param ceiToSave  the {@link CustomEntityInstance}
+	 * @return the persisted entites
+	 */
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance ceiToSave) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		if (repository == null) {
+			throw new IllegalArgumentException("Repository should be provided");
+		}
+		
+		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(ceiToSave.getCet());
+		
+		if (hasReferenceJpaEntity && !repository.getSqlConfigurationCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+			throw new IllegalArgumentException("CET with JPA reference entity cannot be save in a non-default SqlConfiguration.");
+		}
 
-        Set<EntityRef> persistedEntities = new HashSet<>();
+		Set<EntityRef> persistedEntities = new HashSet<>();
 
-        // Initialize the CEI that will be manipulated
-    	CustomEntityInstance cei = new CustomEntityInstance();
-    	cei.setCetCode(ceiToSave.getCetCode());
-    	cei.setCode(ceiToSave.getCode());
+		// Initialize the CEI that will be manipulated
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCetCode(ceiToSave.getCetCode());
+		cei.setCode(ceiToSave.getCode());
+		cei.setDescription(ceiToSave.getDescription());
+		cei.setUuid(ceiToSave.getUuid());
+		
+		// Retrieve corresponding CET
+		CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cei.getCetCode());
+		final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
+		cei.setCet(cet);
 
-    	// Retrieve corresponding CET
-        CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cei.getCetCode());
-        final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
-        cei.setCet(cet);
+		// Create referenced entities and set UUIDs in the values
+		Map<String, Object> entityValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
+		entityValues = createEntityReferences(repository, entityValues, cet);
+		customFieldInstanceService.setCfValues(cei, cet.getCode(), entityValues);
 
-        // Create referenced entities and set UUIDs in the values
-        Map<String, Object> entityValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
-        entityValues = createEntityReferences(repository, entityValues, cet);
-        customFieldInstanceService.setCfValues(cei, cet.getCode(), entityValues);
+		String uuid = null;
 
-        String uuid = null;
-        
-        // First check if data exist, in order to synchronize UUID across all storages
-        String foundId = findEntityId(repository, cei);
-        if(foundId != null) {
-        	cei.setUuid(foundId);
-        }
-        
-        // NEO4J Storage
-        if(cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-        	uuid = createOrUpdateNeo4J(repository, cei, customFieldTemplates, persistedEntities);
-            if(foundId == null) {
-                cei.setUuid(uuid);
-            }
-        }
+		// First check if data exist, in order to synchronize UUID across all storages
+		String foundId = findEntityId(repository, cei);
+		if (foundId != null) {
+			cei.setUuid(foundId);
+		}
 
-        // SQL Storage
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL);
-            
-            if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                CustomEntityInstance sqlCei = new CustomEntityInstance();
-                sqlCei.setCet(cet);
-                sqlCei.setCode(cei.getCode());
-                sqlCei.setCetCode(cei.getCetCode());
-                customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
-                
-                // Update binaries stored in SQL
-                List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream()
-                        .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
-                        .filter(f -> f.getStorages().contains(DBStorageType.SQL))
-                        .collect(Collectors.toList());
+		// NEO4J Storage
+		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			uuid = createOrUpdateNeo4J(repository, cei, customFieldTemplates, persistedEntities);
+			if (foundId == null) {
+				cei.setUuid(uuid);
+			}
+		}
 
-                if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                    uuid = createOrUpdateSQL(repository, cei, binariesInSql);
-                    
-                } else {
-                    uuid = createOrUpdateCei(repository, cei, binariesInSql);
-                }
+		try {
+			transaction.begin();
 
-                persistedEntities.add(new EntityRef(uuid, cet.getCode()));
-            }
-        }
+			// SQL Storage
+			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+				Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, false);
 
-        return new PersistenceActionResult(persistedEntities, uuid);
-    }
+				if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					CustomEntityInstance sqlCei = new CustomEntityInstance();
+					sqlCei.setCet(cet);
+					sqlCei.setUuid(cei.getUuid());
+					sqlCei.setCode(cei.getCode());
+					sqlCei.setCetCode(cei.getCetCode());
+					sqlCei.setDescription(cei.getDescription());
+					customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
 
-    private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException {
-        CustomEntityTemplate cet = ceiToSave.getCet();
-    	Map<String, Object> values = ceiToSave.getCfValuesAsValues();
-    	
+					// Update binaries stored in SQL
+					List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStorages().contains(DBStorageType.SQL)).collect(Collectors.toList());
+
+					if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+						uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql);
+
+					} else {
+						uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
+					}
+
+					persistedEntities.add(new EntityRef(uuid, cet.getCode()));
+				}
+			}
+
+			transaction.commit();
+		} catch (Exception e) {
+			
+			try {
+				transaction.rollback();
+			} catch (Exception e1) {
+
+			}
+			
+			log.error("Can't create or update data in SQL", e);
+			
+			throw new RuntimeException(e);
+		}
+
+		return new PersistenceActionResult(persistedEntities, uuid);
+	}
+
+	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException {
+		CustomEntityTemplate cet = ceiToSave.getCet();
+		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
+
 		CustomEntityInstance cei = getCustomEntityInstance(ceiToSave.getCetCode(), ceiToSave.getCode(), values);
 
-        Map<CustomFieldTemplate, Object> persistedBinaries = new HashMap<>();
+		Map<CustomFieldTemplate, Object> persistedBinaries = new HashMap<>();
 
-        if (cei == null) {
-        	cei = ceiToSave;
+		if (cei == null) {
+			cei = ceiToSave;
 
-            if (CollectionUtils.isNotEmpty(binariesInSql)) {
-                persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
-            }
+			if (CollectionUtils.isNotEmpty(binariesInSql)) {
+				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
+			}
 
-            for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
-                cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
-            }
+			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
+				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
+			}
 
-            customEntityInstanceService.create(cei);
+			customEntityInstanceService.create(cei);
 
+		} else {
 
-        } else {
+			if (CollectionUtils.isNotEmpty(binariesInSql)) {
+				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
+				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
+			}
 
-            if (CollectionUtils.isNotEmpty(binariesInSql)) {
-                final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-                persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
-            }
+			cei.setCfValues(ceiToSave.getCfValues());
+			cei.setDescription(ceiToSave.getDescription());
+			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
+				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
+			}
 
-            cei.setCfValues(ceiToSave.getCfValues());
-            for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
-                cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
-            }
+			customEntityInstanceService.update(cei);
+		}
 
-            customEntityInstanceService.update(cei);
-        }
+		return cei.getUuid();
+	}
 
-        return cei.getUuid();
-    }
+	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
+		String uuid = null;
 
-    private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
-        String uuid = null;
-        
-        CustomEntityInstance neo4jCei = new CustomEntityInstance();
-        neo4jCei.setCetCode(cei.getCetCode());
-        neo4jCei.setUuid(cei.getUuid());
-        neo4jCei.setCet(cei.getCet());
+		CustomEntityInstance neo4jCei = new CustomEntityInstance();
+		neo4jCei.setCetCode(cei.getCetCode());
+		neo4jCei.setUuid(cei.getUuid());
+		neo4jCei.setCet(cei.getCet());
 
-        if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
+		if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
-            Map<String, Object> neo4jValues = filterValues(cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J);
-            customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
-            
-            if (!neo4jValues.isEmpty()) {
-            	PersistenceActionResult persistenceResult = neo4jService.addCetNode(repository.getNeo4jConfiguration().getCode(), neo4jCei);
+			Map<String, Object> neo4jValues = filterValues(cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, false);
+			customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
+
+			if (!neo4jValues.isEmpty()) {
+				PersistenceActionResult persistenceResult = neo4jService.addCetNode(repository.getNeo4jConfiguration().getCode(), neo4jCei);
 				uuid = persistenceResult.getBaseEntityUuid();
-            	
-                if (uuid == null) {
-                    throw new NullPointerException("Generated UUID from Neo4J cannot be null");
-                }
-                
-                if(cei.getUuid() != null && !cei.getUuid().equals(uuid)) {
-                	log.error("Wrong Neo4J UUID {} for {}, should be {}", uuid, neo4jCei, cei.getUuid(), new Exception());
-                }
 
-                // Update binaries stored in Neo4j
-                updateNeo4jBinaries(repository, cei.getCet(), customFieldTemplates, uuid, neo4jValues);
+				if (uuid == null) {
+					throw new NullPointerException("Generated UUID from Neo4J cannot be null");
+				}
 
-                persistedEntities.addAll(persistenceResult.getPersistedEntities());
-            }
-        }
+				if (cei.getUuid() != null && !cei.getUuid().equals(uuid)) {
+					log.error("Wrong Neo4J UUID {} for {}, should be {}", uuid, neo4jCei, cei.getUuid(), new Exception());
+				}
 
-        return uuid;
-    }
+				// Update binaries stored in Neo4j
+				updateNeo4jBinaries(repository, cei.getCet(), customFieldTemplates, uuid, neo4jValues);
 
-    /**
-     * TODO: Document
-     */
-    @SuppressWarnings("unchecked")
-    private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessApiException {
-        List<CustomFieldTemplate> binariesInNeo4J = customFieldTemplates.values().stream()
-                .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
-                .filter(f -> f.getStorages().contains(DBStorageType.NEO4J))
-                .collect(Collectors.toList());
+				persistedEntities.addAll(persistenceResult.getPersistedEntities());
+			}
+		}
 
-        String neo4JCode = repository.getNeo4jConfiguration().getCode();
+		return uuid;
+	}
 
-        if (!CollectionUtils.isEmpty(binariesInNeo4J)) {
+	/**
+	 * TODO: Document
+	 */
+	@SuppressWarnings("unchecked")
+	private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessApiException {
+		List<CustomFieldTemplate> binariesInNeo4J = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStorages().contains(DBStorageType.NEO4J)).collect(Collectors.toList());
 
-            Map<String, Object> existingBinaries = new HashMap<>();
+		String neo4JCode = repository.getNeo4jConfiguration().getCode();
 
-            for (CustomFieldTemplate neo4jField : binariesInNeo4J) {
-                // Retrieve binaries
-                List<String> binaries = neo4jService.findBinaries(
-                        uuid,
-                        repository.getNeo4jConfiguration().getCode(),
-                        cet,
-                        neo4jField
-                );
+		if (!CollectionUtils.isEmpty(binariesInNeo4J)) {
 
-                if (CollectionUtils.isEmpty(binaries)) {
-                    continue;
-                }
+			Map<String, Object> existingBinaries = new HashMap<>();
 
-                if (neo4jField.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
-                    existingBinaries.put(neo4jField.getCode(), binaries.get(0));
-                } else if (neo4jField.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
-                    existingBinaries.put(neo4jField.getCode(), binaries);
-                }
+			for (CustomFieldTemplate neo4jField : binariesInNeo4J) {
+				// Retrieve binaries
+				List<String> binaries = neo4jService.findBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, neo4jField);
 
-            }
+				if (CollectionUtils.isEmpty(binaries)) {
+					continue;
+				}
 
-            // Persist binaries in file system
-            final Map<CustomFieldTemplate, Object> binariesByCft = fileSystemService.updateBinaries(
-                    repository,
-                    uuid,
-                    cet,
-                    customFieldTemplates.values(),
-                    neo4jValues,
-                    existingBinaries
-            );
+				if (neo4jField.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+					existingBinaries.put(neo4jField.getCode(), binaries.get(0));
+				} else if (neo4jField.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+					existingBinaries.put(neo4jField.getCode(), binaries);
+				}
 
-            // Handle binaries references stored in Neo4J
-            for (Map.Entry<CustomFieldTemplate, Object> binary : binariesByCft.entrySet()) {
-                if (binary.getValue() instanceof String) {
-                    neo4jService.updateBinary(uuid, neo4JCode, cet, binary.getKey(), (String) binary.getValue());
+			}
 
-                } else if (binary.getValue() instanceof Collection) {
-                    // Delete binaries present in previous values and not in persisted values
-                    List<String> previousBinaries = (List<String>) existingBinaries.get(binary.getKey().getCode());
-                    if (previousBinaries != null) {
-                        for (String previousBinary : previousBinaries) {
-                            // Check if existing files were deleted and remove them from neo4j if they were
-                            if (!new File(previousBinary).exists()) {
-                                neo4jService.removeBinary(uuid, neo4JCode, cet, binary.getKey(), previousBinary);
-                            }
-                        }
-                    }
+			// Persist binaries in file system
+			final Map<CustomFieldTemplate, Object> binariesByCft = fileSystemService.updateBinaries(repository, uuid, cet, customFieldTemplates.values(), neo4jValues, existingBinaries);
 
-                    // Add or update remaining binaries
-                    neo4jService.addBinaries(uuid, neo4JCode, cet, binary.getKey(), (Collection<String>) binary.getValue());
+			// Handle binaries references stored in Neo4J
+			for (Map.Entry<CustomFieldTemplate, Object> binary : binariesByCft.entrySet()) {
+				if (binary.getValue() instanceof String) {
+					neo4jService.updateBinary(uuid, neo4JCode, cet, binary.getKey(), (String) binary.getValue());
 
-                    // All binaries were deleted
-                } else if (binary.getValue() == null) {
-                    neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, binary.getKey());
-                }
-            }
+				} else if (binary.getValue() instanceof Collection) {
+					// Delete binaries present in previous values and not in persisted values
+					List<String> previousBinaries = (List<String>) existingBinaries.get(binary.getKey().getCode());
+					if (previousBinaries != null) {
+						for (String previousBinary : previousBinaries) {
+							// Check if existing files were deleted and remove them from neo4j if they were
+							if (!new File(previousBinary).exists()) {
+								neo4jService.removeBinary(uuid, neo4JCode, cet, binary.getKey(), previousBinary);
+							}
+						}
+					}
 
-        }
-    }
+					// Add or update remaining binaries
+					neo4jService.addBinaries(uuid, neo4JCode, cet, binary.getKey(), (Collection<String>) binary.getValue());
 
-    private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-        String tableName = cei.getTableName();
+					// All binaries were deleted
+				} else if (binary.getValue() == null) {
+					neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, binary.getKey());
+				}
+			}
 
-        Map<String, Object> sqlValues = filterValues(cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL);
+		}
+	}
 
-        //TODO: Find by UUID if updated in Neo4J and throw error if not found
-        String sqlUUID = customTableService.findIdByValues(tableName, sqlValues);
+	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		String tableName = cei.getTableName();
+		String sqlUUID = null;
+		
+		if(cei.getUuid() != null) {
+			try {
+				Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
+				if(values != null) {
+					sqlUUID = cei.getUuid();
+				}
+			} catch (EntityDoesNotExistsException e) {
+				log.debug("Entity with id={} does not exists", cei.getUuid());
+			}
+		}
+		
+		if(sqlUUID == null) {
+			Map<String, Object> sqlValues = filterValues(cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL, false);
+			Map<String, CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cei.getCet().getAppliesTo());		
+			sqlUUID = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), tableName, sqlValues, cfts.values());
+		}
+		
+		if (sqlUUID != null) {
 
-        if (sqlUUID != null) {
+			// Update binaries
+			if (CollectionUtils.isNotEmpty(binariesInSql)) {
+				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 
-            // Update binaries
-            if (CollectionUtils.isNotEmpty(binariesInSql)) {
-                List<String> binariesFieldsToFetch = binariesInSql.stream()
-                        .map(CustomFieldTemplate::getCode)
-                        .collect(Collectors.toList());
+				Map<String, Object> existingBinariesField = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID, binariesFieldsToFetch);
+				fileSystemService.updateBinaries(repository, cei.getUuid(), cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), existingBinariesField);
 
-                Map<String, Object> existingBinariesField = customTableService.findById(cei.getCet(), sqlUUID, binariesFieldsToFetch);
-                fileSystemService.updateBinaries(
-                        repository,
-                        cei.getUuid(),
-                        cei.getCet(),
-                        binariesInSql,
-                        cei.getCfValuesAsValues(),
-                        existingBinariesField
-                );
+			}
 
-            }
+			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 
-            customTableService.update(cei.getCet(), cei);
+		} else {
+			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
+			cei.setUuid(uuid);
 
-        } else {
-            String uuid = customTableService.create(cei.getCet(), cei);
-            cei.setUuid(uuid);
+			// Save binaries
+			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 
-            // Save binaries
-            if (CollectionUtils.isNotEmpty(binariesInSql)) {
+				final Map<CustomFieldTemplate, Object> binariesPaths = fileSystemService.updateBinaries(repository, uuid, cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), null);
 
-                final Map<CustomFieldTemplate, Object> binariesPaths = fileSystemService.updateBinaries(
-                        repository,
-                        uuid,
-                        cei.getCet(),
-                        binariesInSql,
-                        cei.getCfValuesAsValues(),
-                        null
-                );
+				for (Map.Entry<CustomFieldTemplate, Object> binary : binariesPaths.entrySet()) {
+					customTableService.updateValue(repository.getSqlConfigurationCode(), cei.getTableName(), uuid, binary.getKey().getDbFieldname(), binary.getValue());
+				}
+			}
 
-                for (Map.Entry<CustomFieldTemplate, Object> binary : binariesPaths.entrySet()) {
-                    customTableService.updateValue(
-                            cei.getTableName(),
-                            uuid,
-                            binary.getKey().getDbFieldname(),
-                            binary.getValue()
-                    );
-                }
-            }
+		}
 
-        }
+		return cei.getUuid();
+	}
 
-        return cei.getUuid();
-    }
+	/**
+	 * Update an entity instance
+	 *
+	 * @param repository Repository code
+	 */
+	public void update(Repository repository, CustomEntityInstance ceiToUpdate) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 
-    /**
-     * Update an entity instance
-     *
-     * @param repository Repository code
-     */
-    public void update(Repository repository, CustomEntityInstance ceiToUpdate) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		CustomEntityTemplate cet = ceiToUpdate.getCet();
+		Map<String, Object> values = ceiToUpdate.getCfValuesAsValues();
+		String uuid = ceiToUpdate.getUuid();
+		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
 
-        CustomEntityTemplate cet = ceiToUpdate.getCet();
-        Map<String, Object> values = ceiToUpdate.getCfValuesAsValues();
-        String uuid = ceiToUpdate.getUuid();
-        Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
+		// Neo4j storage
+		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			Map<String, Object> neo4jValues = filterValues(values, cet, DBStorageType.NEO4J);
 
-        // Neo4j storage
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            Map<String, Object> neo4jValues = filterValues(values, cet, DBStorageType.NEO4J);
+			final List<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
+			List<String> labels = new ArrayList<>(cetLabels);
+			labels.add(cet.getCode());
 
-            final List<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
-            List<String> labels = new ArrayList<>(cetLabels);
-            labels.add(cet.getCode());
+			updateNeo4jBinaries(repository, cet, customFieldTemplates, uuid, neo4jValues);
 
-            updateNeo4jBinaries(repository, cet, customFieldTemplates, uuid, neo4jValues);
+			neo4jDao.updateNodeByNodeId(repository.getNeo4jConfiguration().getCode(), uuid, cet.getCode(), neo4jValues, labels);
+		}
 
-            neo4jDao.updateNodeByNodeId(repository.getNeo4jConfiguration().getCode(), uuid, cet.getCode(), neo4jValues, labels);
+		// SQL Storage
+		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStorages().contains(DBStorageType.SQL)).collect(Collectors.toList());
 
-            //TODO: Delete binaries that were removed
-        }
+			// Custom table
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
 
-        // SQL Storage
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream()
-                    .filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
-                    .filter(f -> f.getStorages().contains(DBStorageType.SQL))
-                    .collect(Collectors.toList());
+				if (!CollectionUtils.isEmpty(binariesInSql)) {
+					List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 
-            // Custom table
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                Map<String, Object> sqlValues = filterValues(values, cet, DBStorageType.SQL);
+					final Map<String, Object> existingBinariesFields = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, binariesFieldsToFetch);
+					fileSystemService.updateBinaries(repository, uuid, cet, binariesInSql, sqlValues, existingBinariesFields);
+				}
 
-                if (!CollectionUtils.isEmpty(binariesInSql)) {
-                    List<String> binariesFieldsToFetch = binariesInSql.stream()
-                            .map(CustomFieldTemplate::getCode)
-                            .collect(Collectors.toList());
+				customTableService.update(repository.getSqlConfigurationCode(), cet, ceiToUpdate);
+			} else {
+				// CEI storage
+				final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
 
-                    final Map<String, Object> existingBinariesFields = customTableService.findById(cet, uuid, binariesFieldsToFetch);
-                    fileSystemService.updateBinaries(
-                            repository,
-                            uuid,
-                            cet,
-                            binariesInSql,
-                            sqlValues,
-                            existingBinariesFields
-                    );
-                }
+				// Update binaries
+				if (CollectionUtils.isNotEmpty(binariesInSql)) {
+					final Map<String, Object> existingValues = cei.getCfValuesAsValues();
+					fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
+				}
 
-                customTableService.update(cet, ceiToUpdate);
-            } else {
-                // CEI storage
-                final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+				CustomFieldValues customFieldValues = new CustomFieldValues();
+				values.forEach(customFieldValues::setValue);
+				cei.setCfValues(customFieldValues);
+				customEntityInstanceService.update(cei);
+			}
+		}
+	}
 
-                // Update binaries
-                if (CollectionUtils.isNotEmpty(binariesInSql)) {
-                    final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-                    fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
-                }
+	@Override
+	public PersistenceActionResult addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
+		CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
-                CustomFieldValues customFieldValues = new CustomFieldValues();
-                values.forEach(customFieldValues::setValue);
-                cei.setCfValues(customFieldValues);
-                customEntityInstanceService.update(cei);
-            }
-        }
-    }
+		final CustomEntityTemplate endNode = crt.getEndNode();
+		final CustomEntityTemplate startNode = crt.getStartNode();
 
-    @Override
-    public PersistenceActionResult addCRTByValues(Repository repository, String relationCode, Map<String, Object> relationValues, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException {
-        CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
+		// All Neo4j storage
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J) && startNode.getAvailableStorages().contains(DBStorageType.NEO4J) && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.addCRTByNodeValues(repository.getNeo4jConfiguration().getCode(), relationCode, filterValues(relationValues, crt, DBStorageType.NEO4J), filterValues(sourceValues, crt, DBStorageType.NEO4J), filterValues(targetValues, crt, DBStorageType.NEO4J));
+		}
 
-        final CustomEntityTemplate endNode = crt.getEndNode();
-        final CustomEntityTemplate startNode = crt.getStartNode();
+		String sourceUUID = findEntityId(repository, sourceValues, startNode);
+		String targetUUUID = findEntityId(repository, sourceValues, endNode);
 
-        // All Neo4j storage
-        if (
-                crt.getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && startNode.getAvailableStorages().contains(DBStorageType.NEO4J)
-                        && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)
-        ) {
-            return neo4jService.addCRTByNodeValues(
-                    repository.getNeo4jConfiguration().getCode(),
-                    relationCode,
-                    filterValues(relationValues, crt, DBStorageType.NEO4J),
-                    filterValues(sourceValues, crt, DBStorageType.NEO4J),
-                    filterValues(targetValues, crt, DBStorageType.NEO4J));
-        }
+		// SQL Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			String relationUuid = customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+			return new PersistenceActionResult(relationUuid);
+		}
 
-        String sourceUUID = findEntityId(repository, sourceValues, startNode);
-        String targetUUUID = findEntityId(repository, sourceValues, endNode);
+		// Neo4J Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUUID, targetUUUID);
+		}
 
-        // SQL Storage
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            //TODO: Check if entity references placed in values maps does not interfer ...
-            String relationUuid = customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
-            return new PersistenceActionResult(relationUuid);
-        }
+		return null;
+	}
 
-        // Neo4J Storage
-        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUUID, targetUUUID);
-        }
+	@Override
+	public PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
+		CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
 
-        return null;
-    }
+		// All neo4j storage
+		if (isEverythingStoredInNeo4J(crt)) {
+			return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), relationCode, filterValues(relationValues, crt, DBStorageType.NEO4J), sourceUuid, targetUuid);
+		}
 
-    @Override
-    public PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
-        CustomRelationshipTemplate crt = customFieldsCacheContainerProvider.getCustomRelationshipTemplate(relationCode);
+		// SQL Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			String relationUuid = customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
+			return new PersistenceActionResult(relationUuid);
 
-        // All neo4j storage
-        if (isEverythingStoredInNeo4J(crt)) {
-            return neo4jService.addCRTByNodeIds(
-                    repository.getNeo4jConfiguration().getCode(),
-                    relationCode,
-                    filterValues(relationValues, crt, DBStorageType.NEO4J),
-                    sourceUuid,
-                    targetUuid);
-        }
+		}
 
-        // SQL Storage
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            //TODO: Check if entity references placed in values maps does not interfer ...
-            String relationUuid = customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
-            return new PersistenceActionResult(relationUuid);
+		// Neo4J Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
+		}
 
-        }
+		return null;
+	}
 
-        // Neo4J Storage
-        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
-        }
+	public String findEntityId(Repository repository, CustomEntityInstance cei) {
+		String uuid = null;
+		CustomEntityTemplate cet = cei.getCet();
+		Map<String, Object> valuesFilters = cei.getValuesNullSafe();
 
-        return null;
-    }
-    
-    public String findEntityId(Repository repository, CustomEntityInstance cei) {
-    	String uuid = null;
-    	CustomEntityTemplate cet = cei.getCet();
-    	Map<String, Object> valuesFilters = cei.getValuesNullSafe();
-
-        // SQL
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            // Custom table
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-                uuid = customTableService.findIdByValues(dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL));
-            } else {
-                final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), cei.getCode(), valuesFilters);
-                if (customEntityInstance != null) {
-                    uuid = customEntityInstance.getUuid();
-                }
-            }
-        }
-
-        // Neo4J
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-        	try {
-				String neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J));
-				if(uuid != null && neo4JUuid != null && !uuid.equals(neo4JUuid)) {
-					log.error("Neo4J and SQL UUIDs are different for instance of {} with values {} ({} =/= {})", cet, valuesFilters, neo4JUuid, uuid);
-				} else if(neo4JUuid != null) {
-					uuid = neo4JUuid;
+		// SQL
+		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+			// Custom table
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+				try {
+					if(cei.getUuid() != null) {
+						customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
+						uuid = cei.getUuid();
+					}
+				} catch (EntityDoesNotExistsException e) {}
+				
+				if(uuid == null) {
+					Map<String, CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL, true), cfts.values());
 				}
 				
-        	} catch (ELException | BusinessException e) {
+			} else {
+				if(cei.getUuid() != null) {
+					CustomEntityInstance existingCei = customEntityInstanceService.findByUuid(cet.getCode(), cei.getUuid());
+					if (existingCei != null) {
+						uuid = existingCei.getUuid();
+					}
+				}
+				
+				if(uuid == null){
+					final CustomEntityInstance customEntityInstance = getCustomEntityInstance(cet.getCode(), cei.getCode(), valuesFilters);
+					if (customEntityInstance != null) {
+						uuid = customEntityInstance.getUuid();
+					}
+				}
+			}
+		}
+
+		// Neo4J
+		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			Map<String, Object> val = neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), cei.getUuid());
+
+			try {
+				final String neo4JUuid;
+				if (val != null && !val.isEmpty()) {
+					neo4JUuid = cei.getUuid();
+				} else {
+					neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J, true));
+				}
+
+				if (uuid != null && neo4JUuid != null && !uuid.equals(neo4JUuid)) {
+					log.error("Neo4J and SQL UUIDs are different for instance of {} with values {} ({} =/= {})", cet, valuesFilters, neo4JUuid, uuid);
+				} else if (neo4JUuid != null) {
+					uuid = neo4JUuid;
+				}
+
+			} catch (ELException | BusinessException e) {
 				throw new RuntimeException(e);
 			}
-        }
-        
-        return uuid;
-    }
+		}
 
-    /**
-     * Find an entity instance UUID
-     *
-     * @param repository    Repository to search in
-     * @param valuesFilters Filter on entity's values
-     * @param cet           Template of the entity
-     * @return UUID of the entity or nul if it was'nt found
-     */
-    public String findEntityId(Repository repository, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
-        CustomEntityInstance cei = new CustomEntityInstance();
-        cei.setCet(cet);
-        cei.setCetCode(cet.getCode());
-        cei.setCode((String) valuesFilters.get("code"));
-        customFieldInstanceService.setCfValues(cei, cet.getCode(), valuesFilters);
-        return findEntityId(repository, cei);
-    }
+		return uuid;
+	}
 
-    /**
-     * Remove an entity from database
-     *
-     * @param repository Repository
-     * @param cet        Template of the entity
-     * @param uuid       UUID of the entity
-     */
-    public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
-        if (uuid == null) {
-            throw new IllegalArgumentException("Cannot remove entity by UUID without uuid");
-        }
+	/**
+	 * Find an entity instance UUID
+	 *
+	 * @param repository    Repository to search in
+	 * @param valuesFilters Filter on entity's values
+	 * @param cet           Template of the entity
+	 * @return UUID of the entity or nul if it was'nt found
+	 */
+	public String findEntityId(Repository repository, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(cet);
+		cei.setCetCode(cet.getCode());
+		cei.setCode((String) valuesFilters.get("code"));
+		customFieldInstanceService.setCfValues(cei, cet.getCode(), valuesFilters);
+		return findEntityId(repository, cei);
+	}
 
-        if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-            if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-                final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-                customTableService.remove(dbTablename, uuid);
-            } else {
-                final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-                customEntityInstanceService.remove(customEntityInstance);
-            }
-        }
+	/**
+	 * Remove an entity from database
+	 *
+	 * @param repository Repository
+	 * @param cet        Template of the entity
+	 * @param uuid       UUID of the entity
+	 */
+	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
+		if (uuid == null) {
+			throw new IllegalArgumentException("Cannot remove entity by UUID without uuid");
+		}
 
-        if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
-        }
+		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+				customTableService.remove(repository.getSqlConfigurationCode(), dbTablename, uuid);
+			} else {
+				final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+				customEntityInstanceService.remove(customEntityInstance);
+			}
+		}
 
-        fileSystemService.delete(repository, cet, uuid);
+		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
+		}
 
-    }
+		fileSystemService.delete(repository, cet, uuid);
 
-    /**
-     * Remove a relation from database
-     *
-     * @param repositoryCode Repository
-     * @param crt            Template of the relation
-     * @param uuid           UUID of the relation
-     */
-    public void remove(String repositoryCode, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            final String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-            customTableRelationService.remove(dbTablename, uuid);
-        }
+	}
 
-        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jDao.removeRelation(repositoryCode, crt.getCode(), uuid);
-        }
-    }
-    
+	/**
+	 * Remove a relation from database
+	 *
+	 * @param repository Repository
+	 * @param crt            Template of the relation
+	 * @param uuid           UUID of the relation
+	 */
+	public void remove(Repository repository, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			final String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
+			customTableRelationService.remove(repository.getSqlConfigurationCode(), dbTablename, uuid);
+		}
+
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			neo4jDao.removeRelation(repository.getNeo4jConfiguration().getCode(), crt.getCode(), uuid);
+		}
+	}
+
 	/**
 	 * Replace the files references by the one in input
 	 * 
@@ -957,7 +1081,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				customTableService.updateValue(SQLStorageConfiguration.getDbTablename(cet), uuid, cft.getDbFieldname(), valueToSave);
+				customTableService.updateValue(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), uuid, cft.getDbFieldname(), valueToSave);
 			} else {
 				CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
 				CustomFieldValues cfValues = cei.getCfValues();
@@ -968,200 +1092,210 @@ public class CrossStorageService implements CustomPersistenceService {
 
 	}
 
-    private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
-        Map<String, Object> filteredValues = new HashMap<>();
+	private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
+		return filterValues(values, cet, storageType, false);
+	}
 
-        values.entrySet()
-                .stream()
-                .filter(entry -> {
-                    // Always include UUID
-                    if (entry.getKey().equals("uuid")) {
-                        return true;
-                    }
+	private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, DBStorageType storageType, boolean isRequiredOnly) {
+		Map<String, Object> filteredValues = new HashMap<>();
 
-                    // For CEI storage, always include code
-                    if (cet instanceof CustomEntityTemplate && entry.getKey().equals("code")) {
-                        if (storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()) {
-                            return true;
-                        }
-                    }
+		values.entrySet().stream().filter(entry -> {
+			// Always include UUID
+			if (entry.getKey().equals("uuid")) {
+				return true;
+			}
 
-                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
+			// For CEI storage, always include code
+			if (cet instanceof CustomEntityTemplate && entry.getKey().equals("code") && storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()) {
+				return true;
+			}
 
-                    if (cft == null) {
-                        return false;
-                    }
+			CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), cet.getAppliesTo());
 
-                    return cft.getStorages().contains(storageType);
-                }).forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
+			if (cft == null || (isRequiredOnly && !cft.isValueRequired())) {
+				return false;
+			}
 
-        return filteredValues;
-    }
+			return cft.getStorages().contains(storageType);
+		}).forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
 
-    private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
-        // If fields are null return all avaiblable fields for the given storage
-        if (fields == null) {
-            return new ArrayList<>();
-        }
+		return filteredValues;
+	}
 
-        return fields.stream()
-                .filter(entry -> {
-                    CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry, cet.getAppliesTo());
-                    if (cft == null) {
-                        return false;
-                    }
+	private List<String> filterFields(List<String> fields, CustomModelObject cet, DBStorageType storageType) {
+		// If fields are null return all avaiblable fields for the given storage
+		if (fields == null) {
+			return new ArrayList<>();
+		}
 
-                    return cft.getStorages().contains(storageType);
-                }).collect(Collectors.toList());
-    }
+		return fields.stream().filter(entry -> {
+			CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry, cet.getAppliesTo());
+			if (cft == null) {
+				return false;
+			}
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-    	Map<String, Object> updatedValues = new HashMap<>(entityValues);    	
-    	
-    	// Extract entities references
-        for (String fieldName : updatedValues.keySet()) {
-            customFieldsCacheContainerProvider.getCustomFieldTemplate(fieldName, cet.getAppliesTo());
-        }
+			return cft.getStorages().contains(storageType);
+		}).collect(Collectors.toList());
+	}
 
-        List<CustomFieldTemplate> cetFields = updatedValues.keySet()
-                .stream()
-                .map(fieldName -> customFieldsCacheContainerProvider.getCustomFieldTemplate(fieldName, cet.getAppliesTo()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		Map<String, Object> updatedValues = new HashMap<>(entityValues);
 
-        for (CustomFieldTemplate customFieldTemplate : cetFields) {
-            if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
-                final CustomEntityTemplate referencedCet = customFieldsCacheContainerProvider.getCustomEntityTemplate(customFieldTemplate.getEntityClazzCetCode());
+		// Extract entities references
+		for (String fieldName : updatedValues.keySet()) {
+			customFieldsCacheContainerProvider.getCustomFieldTemplate(fieldName, cet.getAppliesTo());
+		}
 
-                List<Object> entitiesToCreate = new ArrayList<>();
-                final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
+		List<CustomFieldTemplate> cetFields = updatedValues.keySet().stream().map(fieldName -> customFieldsCacheContainerProvider.getCustomFieldTemplate(fieldName, cet.getAppliesTo())).filter(Objects::nonNull).collect(Collectors.toList());
 
-                if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
-                    Collection collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
-                    if (!collectionValue.isEmpty()) {
-                        entitiesToCreate.add(collectionValue.iterator().next());
-                    }
-                } else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-                    entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
-                } else if (fieldValue instanceof Map) {
-                    entitiesToCreate.add(fieldValue);
-                } else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
-                    entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
-                }
+		for (CustomFieldTemplate customFieldTemplate : cetFields) {
+			if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
+				final CustomEntityTemplate referencedCet = customFieldsCacheContainerProvider.getCustomEntityTemplate(customFieldTemplate.getEntityClazzCetCode());
 
-                final Set<EntityRef> createdEntityReferences = new HashSet<>();
+				if(referencedCet != null) {
+					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
+				
+				}
+			}
+		}
 
-                for (Object e : entitiesToCreate) {
-					if (e instanceof Map) {
-						CustomEntityInstance cei = new CustomEntityInstance();
-						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
-						cei.setCode((String) ((Map) e).get("code"));
-						
-						customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
+		return updatedValues;
+	}
 
-						final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
-						if(createdEntities.isEmpty()){
-							log.error("Failed to create reference for {} ", cei, new Exception());
-                        }
-						
-						
-						createdEntityReferences.addAll(createdEntities);
+	private void createCetReference(Repository repository, Map<String, Object> updatedValues, CustomFieldTemplate customFieldTemplate, CustomEntityTemplate referencedCet) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
+		List<Object> entitiesToCreate = new ArrayList<>();
+		final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
 
-					} else if (e instanceof String) {
-						// If entity reference is a string, then it means it refers to an existing UUID
-						EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
-						entityRef.setTrustScore(100);
-						createdEntityReferences.add(entityRef);
-					}
-                }
+		if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
+			Collection<?> collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
+			if (!collectionValue.isEmpty()) {
+				entitiesToCreate.add(collectionValue.iterator().next());
+			}
+		
+		} else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+			entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
+		
+		} else if (fieldValue instanceof Map) {
+			entitiesToCreate.add(fieldValue);
+		
+		} else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
+		
+		} else if (fieldValue instanceof EntityReferenceWrapper) {
+			updatedValues.put(customFieldTemplate.getCode(), ((EntityReferenceWrapper) fieldValue).getUuid());
+		}
 
-                List<String> uuids = getTrustedUuids(createdEntityReferences);
+		final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
-                // Replace with entity reference's UUID only when target is not primitive
-                if (referencedCet.getNeo4JStorageConfiguration() == null || !referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+		for (Object e : entitiesToCreate) {
+			if (e instanceof Map) {
+				CustomEntityInstance cei = new CustomEntityInstance();
+				cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
+				cei.setCode((String) ((Map<?, ?>) e).get("code"));
 
-                    if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-                    	updatedValues.put(customFieldTemplate.getCode(), uuids);
-                    } else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !uuids.isEmpty()) {
-                    	updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
-                    }
+				customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
 
-                } else {
-                    // If entity reference is primitive, place the UUID in the map along with the value
-                	updatedValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
-                }
-            }
-        }
-        
-        return updatedValues;
-    }
+				final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
+				if (createdEntities.isEmpty()) {
+					log.error("Failed to create reference for {} ", cei, new Exception());
+				}
 
-    private String findUniqueRelationByTargetUuid(Repository repository, String targetUuid, CustomRelationshipTemplate crt) {
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            return customTableRelationService.findIdOfUniqueRelationByTargetId(crt, targetUuid);
-        }
+				createdEntityReferences.addAll(createdEntities);
 
-        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            return neo4jService.findIdOfUniqueRelationByTargetId(repository.getNeo4jConfiguration().getCode(), crt, targetUuid);
-        }
+			} else if (e instanceof String) {
+				// If entity reference is a string, then it means it refers to an existing UUID
+				EntityRef entityRef = new EntityRef((String) e, referencedCet.getCode());
+				entityRef.setTrustScore(100);
+				createdEntityReferences.add(entityRef);
+			}
+		}
 
-        return null;
-    }
+		List<String> uuids = getTrustedUuids(createdEntityReferences);
 
-    private String findIdOfSourceEntityByRelationId(Repository repository, String relationUuid, CustomRelationshipTemplate crt) {
-        if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            return customTableRelationService.findIdOfSourceEntityByRelationId(crt, relationUuid);
-        }
+		// Replace with entity reference's UUID only when target is not primitive
+		if (referencedCet.getNeo4JStorageConfiguration() == null || !referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 
-        if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            return neo4jService.findIdOfUniqueRelationByTargetId(repository.getNeo4jConfiguration().getCode(), crt, relationUuid);
-        }
+			if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+				updatedValues.put(customFieldTemplate.getCode(), uuids);
 
-        return null;
-    }
+			} else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !uuids.isEmpty()) {
+				updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
+			}
 
-    private void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
-        // TODO: extract sub-entities fetch fields. Ex : "a.x". Fetch level by default is one.
-        for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
-            CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-            if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
-                CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cft.getEntityClazzCetCode());
-                Map<String, Object> refValues = find(repository, cet, (String) entry.getValue());
-                values.put(cft.getCode(), refValues);
-            }
-            //TODO: fetch list of references
-        }
-    }
+		} else {
+			// If entity reference is primitive, place the UUID in the map along with the
+			// value
+			updatedValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
+		}
 
-    private void replaceKeys(CustomEntityTemplate cet, List<String> sqlFields, Map<String, Object> customTableValue) {
-        if (sqlFields != null && !sqlFields.isEmpty()) {
-            List<CustomFieldTemplate> cfts = sqlFields.stream()
-                    .map(field -> customFieldsCacheContainerProvider.getCustomFieldTemplate(field, cet.getAppliesTo()))
-                    .collect(Collectors.toList());
+	}
 
-            customTableService.replaceKeys(cfts, customTableValue);
-        } else {
-            final Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
-            customTableService.replaceKeys(cfts, customTableValue);
-        }
-    }
+	private String findUniqueRelationByTargetUuid(Repository repository, String targetUuid, CustomRelationshipTemplate crt) {
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			return customTableRelationService.findIdOfUniqueRelationByTargetId(crt, targetUuid);
+		}
 
-    private CustomEntityInstance getCustomEntityInstance(String cetCode, String code, Map<String, Object> values) {
-        if (code != null) {
-            return customEntityInstanceService.findByCodeByCet(cetCode, code);
-        }
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.findIdOfUniqueRelationByTargetId(repository.getNeo4jConfiguration().getCode(), crt, targetUuid);
+		}
 
-        final List<CustomEntityInstance> list = customEntityInstanceService.list(cetCode, values);
+		return null;
+	}
 
-        if (list.isEmpty()) {
-            return null;
-        } else if(list.size() > 1){
-            throw new NonUniqueResultException(list.size() + " results found for CEI for CET " + cetCode + " with values " + values);
-        } else {
-            return list.get(0);
-        }
+	private String findIdOfSourceEntityByRelationId(Repository repository, String relationUuid, CustomRelationshipTemplate crt) {
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			return customTableRelationService.findIdOfSourceEntityByRelationId(crt, relationUuid);
+		}
 
-    }
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			return neo4jService.findIdOfUniqueRelationByTargetId(repository.getNeo4jConfiguration().getCode(), crt, relationUuid);
+		}
+
+		return null;
+	}
+
+	private void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
+		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
+			CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
+			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+				CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+				if(entry.getValue() instanceof String) {
+					Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
+					values.put(cft.getCode(), refValues);
+				} else if(entry.getValue() instanceof Map) {
+					values.put(cft.getCode(), entry.getValue());
+				}
+			}
+		}
+	}
+
+	private void replaceKeys(CustomEntityTemplate cet, List<String> sqlFields, Map<String, Object> customTableValue) {
+		if (sqlFields != null && !sqlFields.isEmpty()) {
+			List<CustomFieldTemplate> cfts = sqlFields.stream().map(field -> customFieldsCacheContainerProvider.getCustomFieldTemplate(field, cet.getAppliesTo())).collect(Collectors.toList());
+
+			customTableService.replaceKeys(cfts, customTableValue);
+		} else {
+			final Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
+			customTableService.replaceKeys(cfts, customTableValue);
+		}
+	}
+
+	private CustomEntityInstance getCustomEntityInstance(String cetCode, String code, Map<String, Object> values) {
+		if (code != null) {
+			return customEntityInstanceService.findByCodeByCet(cetCode, code);
+		}
+
+		final List<CustomEntityInstance> list = customEntityInstanceService.list(cetCode, values);
+
+		if (list.isEmpty()) {
+			return null;
+		} else if (list.size() > 1) {
+			throw new NonUniqueResultException(list.size() + " results found for CEI for CET " + cetCode + " with values " + values);
+		} else {
+			return list.get(0);
+		}
+
+	}
 
 }

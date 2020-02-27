@@ -13,18 +13,24 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.inject.Any;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.storage.RemoteRepository;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.storage.RemoteRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
@@ -53,7 +59,13 @@ public class MavenConfigurationBean implements Serializable {
 	@Inject
 	private MavenConfigurationService mavenConfigurationService;
 
+	@Inject
+	private RemoteRepositoryService remoteRepositoryService;
+
 	private MavenConfigurationDto mavenConfiguration;
+
+	private List<RemoteRepository> remoteRepositories;
+	private RemoteRepository remoteRepository;
 
 	private String groupId;
 	private String artifactId;
@@ -100,24 +112,6 @@ public class MavenConfigurationBean implements Serializable {
 		}
 	}
 
-	@ActionMethod
-	public void save() throws BusinessApiException {
-
-		UrlValidator urlValidator = new UrlValidator();
-		List<String> urls = new ArrayList<>(mavenConfiguration.getMavenRepositories());
-		urls.removeIf(StringUtils::isBlank);
-		for (String url : urls) {
-			if (!urlValidator.isValid(url)) {
-				throw new BusinessApiException("Invalid URL format : " + url);
-			}
-		}
-
-		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("properties.save.successful"), bundle.getString("properties.save.successful"));
-		FacesContext.getCurrentInstance().addMessage(null, msg);
-
-		mavenConfigurationService.saveConfiguration(mavenConfiguration);
-	}
-
 	public void uploadAnArtifact(FileUploadEvent event) {
 		UploadedFile file = event.getFile();
 		String fileName = file.getFileName();
@@ -152,6 +146,48 @@ public class MavenConfigurationBean implements Serializable {
 		}
 	}
 
+	public List<RemoteRepository> getRemoteRepositories() {
+		remoteRepositories = remoteRepositoryService.list();
+		if (remoteRepositories == null) {
+			remoteRepositories = new ArrayList<>();
+		}
+		return remoteRepositories;
+	}
+
+	public void setRemoteRepositories(List<RemoteRepository> remoteRepositories) {
+		this.remoteRepositories = remoteRepositories;
+	}
+
+	@ActionMethod
+	public void saveRemoteRepository() throws BusinessException {
+		if (remoteRepositories != null) {
+			if (!remoteRepositoryService.validateUniqueCode(remoteRepository.getCode())) {
+				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, bundle.getString("remoteRepository.uniqueField.code"), bundle.getString("remoteRepository.uniqueField.code"));
+				FacesContext.getCurrentInstance().addMessage(null, msg);
+				return;
+			}
+		}
+		remoteRepositoryService.create(remoteRepository);
+		remoteRepositories.add(remoteRepository);
+		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("save.successful"), bundle.getString("save.successful"));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void removeRemoteRepository(RemoteRepository selectRemoteRepository) throws BusinessException {
+		for (RemoteRepository remoteRepository : remoteRepositories) {
+			if (remoteRepository != null && remoteRepository.getCode().equals(selectRemoteRepository.getCode())) {
+				remoteRepositoryService.remove(selectRemoteRepository);
+				break;
+			}
+		}
+		FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, bundle.getString("delete.successful"), bundle.getString("delete.successful"));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void addRemoteRepository() {
+		remoteRepository = new RemoteRepository();
+	}
+
 	public String getGroupId() {
 		return groupId;
 	}
@@ -184,4 +220,11 @@ public class MavenConfigurationBean implements Serializable {
 		this.classifier = classifier;
 	}
 
+	public RemoteRepository getRemoteRepository() {
+		return remoteRepository;
+	}
+
+	public void setRemoteRepository(RemoteRepository remoteRepository) {
+		this.remoteRepository = remoteRepository;
+	}
 }

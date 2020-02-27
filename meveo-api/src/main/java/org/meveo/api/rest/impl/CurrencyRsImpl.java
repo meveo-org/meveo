@@ -14,8 +14,7 @@ import org.meveo.api.rest.CurrencyRs;
 
 /**
  * @author Edward P. Legaspi
- * 
- * @deprecated will be renammed to TradingCurrencyRsImpl
+ *
  **/
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })

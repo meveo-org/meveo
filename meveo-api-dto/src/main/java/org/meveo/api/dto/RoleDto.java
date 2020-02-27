@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
@@ -21,9 +22,12 @@ import org.meveo.model.security.Role;
  * The Class RoleDto.
  * 
  * @author anasseh
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "Role")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class RoleDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

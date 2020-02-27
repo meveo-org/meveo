@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.customEntities.CustomEntityCategory;
 
@@ -9,11 +10,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 @XmlRootElement(name = "CustomEntityCategory")
 @XmlAccessorType(XmlAccessType.FIELD)
+@ApiModel
 public class CustomEntityCategoryDto extends BaseEntityDto {
 
     /** The Constant serialVersionUID. */

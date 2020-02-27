@@ -10,7 +10,7 @@ import org.meveo.service.job.Job;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @version 6.8.0
  */
 public class EntityCustomizationUtils {
 
@@ -22,24 +22,24 @@ public class EntityCustomizationUtils {
      * @return An "appliesTo" value for a given class
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static String getAppliesTo(Class clazz, String code) {
+	public static String getAppliesTo(Class clazz, String code) {
 
-        String appliesToPrefix = null;
-        if (Job.class.isAssignableFrom(clazz)) {
-            appliesToPrefix = Job.CFT_PREFIX + "_" + ReflectionUtils.getCleanClassName(clazz.getSimpleName());
+		String appliesToPrefix = null;
+		if (Job.class.isAssignableFrom(clazz)) {
+			appliesToPrefix = Job.CFT_PREFIX + "_" + ReflectionUtils.getCleanClassName(clazz.getSimpleName());
 
-        } else if (CustomEntityTemplate.class.isAssignableFrom(clazz)) {
-            appliesToPrefix = CustomEntityTemplate.getAppliesTo(code);
+		} else if (CustomEntityTemplate.class.isAssignableFrom(clazz)) {
+			appliesToPrefix = CustomEntityTemplate.getAppliesTo(code);
 
-        }else if (CustomRelationshipTemplate.class.isAssignableFrom(clazz)) {
-            appliesToPrefix = CustomRelationshipTemplate.getAppliesTo(code);
+		} else if (CustomRelationshipTemplate.class.isAssignableFrom(clazz)) {
+			appliesToPrefix = CustomRelationshipTemplate.getAppliesTo(code);
 
-        }  else {
-            appliesToPrefix = ((CustomFieldEntity) clazz.getAnnotation(CustomFieldEntity.class)).cftCodePrefix();
-        }
+		} else {
+			appliesToPrefix = ((CustomFieldEntity) clazz.getAnnotation(CustomFieldEntity.class)).cftCodePrefix();
+		}
 
-        return appliesToPrefix;
-    }
+		return appliesToPrefix;
+	}
 
     /**
      * Get entity code from applies to value. Applicable to CustomEntityTempalate/Instance only

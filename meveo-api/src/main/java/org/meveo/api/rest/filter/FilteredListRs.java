@@ -24,12 +24,12 @@ import org.meveo.api.rest.IBaseRs;
  * @author Edward P. Legaspi
  * @author Andrius Karpavicius
  * @author Tony Alejandro
- * @lastModifiedVersion 5.0
+ * @version 6.7.0
  **/
 @Path("/filteredList")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Api("Filter list")
+@Api("FilteredListRs")
 public interface FilteredListRs extends IBaseRs {
 
     /**

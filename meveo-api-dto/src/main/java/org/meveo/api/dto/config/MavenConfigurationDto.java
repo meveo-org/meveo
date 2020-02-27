@@ -1,13 +1,15 @@
 package org.meveo.api.dto.config;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.io.Serializable;
 import java.util.List;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * Maven configuration information.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.7.0
  */
 public class MavenConfigurationDto implements Serializable {
 
