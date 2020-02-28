@@ -73,7 +73,7 @@ import io.swagger.util.Json;
  * @author clement.bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 01.02.2019
- * @version 6.5.0
+ * @version 6.8.0
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
@@ -360,6 +360,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
 		updatedEndpoint.setContentType(endpointDto.getContentType());
 		updatedEndpoint.setRoles(endpointDto.getRoles());
+		
+		// Technical Service
+		if (!StringUtils.isBlank(endpointDto.getServiceCode())) {
+			final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
+			Function service = functionService.findByCode(endpointDto.getServiceCode());
+			updatedEndpoint.setService(service);
+		}
 
 		endpointService.update(updatedEndpoint);
 	}
