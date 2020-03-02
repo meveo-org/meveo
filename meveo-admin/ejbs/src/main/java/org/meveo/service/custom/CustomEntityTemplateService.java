@@ -20,8 +20,15 @@
 package org.meveo.service.custom;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -37,8 +44,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.api.dto.CustomEntityTemplateDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -55,6 +60,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -65,7 +71,7 @@ import com.google.common.collect.Lists;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.8.0
+ * @lastModifiedVersion 6.9.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -93,6 +99,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private Neo4jService neo4jService;
+	
+	@Inject
+	private JSONSchemaGenerator jsonSchemaGenerator;
 
     private static boolean useCETCache = true;
 
@@ -554,5 +563,14 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		}
 
 		return false;
+	}
+	
+
+	
+	public String requestSchema(String code) {
+		
+		CustomEntityTemplate cet = findByCode(code);
+//		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
+		return null;
 	}
 }

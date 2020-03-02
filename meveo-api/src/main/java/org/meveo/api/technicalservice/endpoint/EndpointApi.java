@@ -64,6 +64,7 @@ import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
+import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
 
 import io.swagger.util.Json;
 
@@ -73,7 +74,7 @@ import io.swagger.util.Json;
  * @author clement.bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 01.02.2019
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
@@ -92,6 +93,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	@Inject
 	private SwaggerDocService swaggerDocService;
+	
+	@Inject
+	private EndpointSchemaService endpointRequestSchemaService;
 	
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -587,5 +591,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	    return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
 	
+	}
+
+	public String requestSchema(@NotNull String code) {
+		
+		Endpoint endpoint = endpointService.findByCode(code);
+		
+		return endpointRequestSchemaService.generateRequestSchema(endpoint);
 	}
 }
