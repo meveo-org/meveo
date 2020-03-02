@@ -615,7 +615,7 @@ public class OntologyObserver {
                     String[] cetFileName = fileName.split("\\.");
                     String code = cetFileName[0];
                     CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(code);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
                     File cetFile = new File(repositoryDir, modifiedFile);
                     if (customEntityTemplate == null) {
                         String absolutePath = cetFile.getAbsolutePath();
@@ -765,7 +765,7 @@ public class OntologyObserver {
     }
 
     private File getCetDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
         return new File(repositoryDir, "custom/entities");
     }
 

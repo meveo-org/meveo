@@ -807,7 +807,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	try {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + fileName + ".java");
                 String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 Matcher matcher2 = pattern.matcher(content);
                 while (matcher2.find()) {
@@ -821,7 +821,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 
             } else {
                 String name = className.replace('.', '/');
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts/" + name + ".java");
                 if (file.exists()) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
                     populateImportScriptInstance(scriptInstance, files);
@@ -1007,7 +1007,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (modifiedFile.startsWith("scripts")) {
                     String scriptCode = modifiedFile.replaceAll("scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
                     File scriptFile = new File(repositoryDir, modifiedFile);
 
                     if (script == null && scriptFile.exists()) {
@@ -1047,7 +1047,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     private File findScriptFile(CustomScript scriptInstance) {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
         final File scriptDir = new File(repositoryDir, "/scripts");
         if (!scriptDir.exists()) {
             scriptDir.mkdirs();
@@ -1085,14 +1085,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     String className = matcher.group(1);
                     if (className.startsWith("org.meveo.model.customEntities")) {
                         String fileName = className.split("\\.")[4];
-                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom" + File.separator + "entities" + File.separator + fileName + ".java");
+                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/","custom" + File.separator + "entities" + File.separator + fileName + ".java");
                         String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                         matcher = pattern.matcher(content);
                         while (matcher.find()) {
                             String name = matcher.group(1);
                             if (name.startsWith("org.meveo.model.customEntities")) {
                                 String cetName = name.split("\\.")[4];
-                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
+                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + cetName + ".java");
                                 files.add(cetFile);
                                 continue;
                             }
@@ -1104,7 +1104,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
                     for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
                         String path = instance.getCode().replace('.', '/');
-                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts" + File.separator + path + ".java");
+                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
                         if (fileImport.exists()) {
                             files.add(fileImport);
                         }
