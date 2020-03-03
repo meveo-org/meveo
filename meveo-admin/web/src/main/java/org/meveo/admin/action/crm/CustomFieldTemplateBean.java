@@ -1,6 +1,10 @@
 package org.meveo.admin.action.crm;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -23,17 +27,27 @@ import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.SampleValueHelper;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DualListModel;
 
+/**
+ * Bean for managing {@link CustomFieldTemplate}.
+ *
+ * @author clement.bareth
+ * @version 6.0.9
+ * @since 6.0.0
+ */
 @Named
 @ViewScoped
 public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldTemplate> {
@@ -54,6 +68,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     @Inject
     private ResourceBundle resourceMessages;
+    
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     private DualListModel<CustomFieldMatrixColumn> childEntityFieldDM;
 
@@ -72,10 +89,19 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     private String appliesTo;
 
+    /**
+	 * Instantiates a new custom field template bean.
+	 */
     public CustomFieldTemplateBean() {
         super(CustomFieldTemplate.class);
     }
 
+    /**
+	 * Creates a new entity linked an other entity pointed by the applies to query.
+	 *
+	 * @param appliesTo the applies to query
+	 * @return the custom field template created
+	 */
     public CustomFieldTemplate newEntity(String appliesTo) {
         storagesDM = new DualListModel<>();
         CustomFieldTemplate customFieldTemplate = super.newEntity();
@@ -98,20 +124,69 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         return customFieldTemplate;
     }
 
+    /**
+	 * Gets the applies to.
+	 *
+	 * @return the applies to
+	 */
     public String getAppliesTo() {
         return appliesTo;
     }
 
+    /**
+	 * Sets the applies to.
+	 *
+	 * @param appliesTo the new applies to
+	 */
     public void setAppliesTo(String appliesTo) {
         this.appliesTo = appliesTo;
     }
 
+	/**
+	 * <p>In case of entity reference, 
+	 * gets the available relationships according to the CET pointed by the applies to query and the referenced CET.</p>
+	 * Will return null if: 
+	 * <ul>
+	 * 	<li>Field is not stored in neo4j</li>
+	 * 	<li>Field does not applies to a custom entity template</li>
+	 *  <li>Field does not refers to a custom entity template</li>
+	 *</ul>
+	 *  
+	 * @see #getAppliesTo()
+	 * @see CustomFieldTemplateBean#getEntityClazzCetCode()
+	 * @see CustomRelationshipTemplateService#findBySourceOrTarget(String, String)
+	 * @return the available relationships
+	 */
+	public List<CustomRelationshipTemplate> getAvailableRelationships() {
+		if(!cetStorageDM.getTarget().contains(DBStorageType.NEO4J))
+			return null;
+		
+		String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(getAppliesTo());
+		if(cetCode == null)
+			return null;
+		
+		String targetCode = getEntity().getEntityClazzCetCode();
+		if(targetCode == null) 
+			return null;
+		
+		return customRelationshipTemplateService.findBySourceOrTarget(cetCode, targetCode);
+	}
 
 
+    /**
+	 * Gets the cet storage DM.
+	 *
+	 * @return the cet storage DM
+	 */
     public DualListModel<DBStorageType> getCetStorageDM() {
 		return cetStorageDM;
 	}
 
+	/**
+	 * Sets the cet storage DM.
+	 *
+	 * @param cetStorageDM the new cet storage DM
+	 */
 	public void setCetStorageDM(DualListModel<DBStorageType> cetStorageDM) {
 		this.cetStorageDM = cetStorageDM;
 	}
@@ -213,15 +288,21 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     /**
-     * Autocomplete method for selecting a class/custom entity template for entity reference type Custom field template
-     * 
-     * @param query Partial value entered
-     * @return A list of matching values
-     */
+	 * Autocomplete method for selecting a class/custom entity template for entity reference type Custom field template.
+	 *
+	 * @param query Partial value entered
+	 * @return A list of matching values
+	 */
     public List<String> autocompleteClassNames(String query) {
         List<String> clazzNames = new ArrayList<String>();
 
-        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(query, false, true, false, null, null);
+        CustomizedEntityFilter filter = new CustomizedEntityFilter();
+        filter.setEntityName(query);
+        filter.setCustomEntityTemplatesOnly(false);
+        filter.setIncludeNonManagedEntities(true);
+        filter.setIncludeParentClassesOnly(false);
+        
+        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
 
         for (CustomizedEntity customizedEntity : entities) {
             clazzNames.add(customizedEntity.getClassnameToDisplay());
@@ -231,15 +312,21 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     }
 
     /**
-     * Autocomplete method for selecting a custom entity template for child entity reference type Custom field template
-     * 
-     * @param query Partial value entered
-     * @return A list of matching values
-     */
+	 * Autocomplete method for selecting a custom entity template for child entity reference type Custom field template.
+	 *
+	 * @param query Partial value entered
+	 * @return A list of matching values
+	 */
     public List<String> autocompleteClassNamesCEIOnly(String query) {
         List<String> clazzNames = new ArrayList<String>();
 
-        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(query, true, false, false, null, null);
+        CustomizedEntityFilter filter = new CustomizedEntityFilter();
+        filter.setEntityName(query);
+        filter.setCustomEntityTemplatesOnly(true);
+        filter.setIncludeNonManagedEntities(false);
+        filter.setIncludeParentClassesOnly(false);
+        
+        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
 
         for (CustomizedEntity customizedEntity : entities) {
             clazzNames.add(customizedEntity.getClassnameToDisplay());
@@ -252,12 +339,18 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
      * Autocomplete method for selecting a class that implement ICustomFieldEntity. Return a human readable class name. Used in conjunction with n
      * 
      * @param query Partial class name to match
-     * @return
+     * @return the matching class names
      */
     public List<String> autocompleteClassNamesHuman(String query) {
         List<String> clazzNames = new ArrayList<String>();
 
-        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(query, false, true, true, null, null);
+        CustomizedEntityFilter filter = new CustomizedEntityFilter();
+        filter.setEntityName(query);
+        filter.setCustomEntityTemplatesOnly(false);
+        filter.setIncludeNonManagedEntities(true);
+        filter.setIncludeParentClassesOnly(true);
+        
+        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
 
         for (CustomizedEntity customizedEntity : entities) {
             clazzNames.add(customizedEntity.getClassnameToDisplayHuman());
@@ -266,6 +359,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         return clazzNames;
     }
 
+    /**
+	 * Update default values.
+	 */
     public void updateDefaultValues() {
 
         if (entity.getFieldType() == CustomFieldTypeEnum.STRING && entity.getMaxValue() == null) {
@@ -283,10 +379,18 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
     }
 
+    /**
+	 * Reset child entity fields.
+	 */
     public void resetChildEntityFields() {
         childEntityFieldDM = null;
     }
 
+    /**
+	 * Gets the child entity field list model.
+	 *
+	 * @return the child entity field list model
+	 */
     public DualListModel<CustomFieldMatrixColumn> getChildEntityFieldListModel() {
         if (childEntityFieldDM == null && CustomFieldTemplate.retrieveCetCode(entity.getEntityClazz()) != null) {
 
@@ -321,21 +425,31 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         return childEntityFieldDM;
     }
     
+    /**
+	 * Gets the child entity field list.
+	 *
+	 * @return the child entity field list
+	 */
     public List<CustomFieldMatrixColumn> getChildEntityFieldList(){
     	ArrayList<CustomFieldMatrixColumn> arrayList = new ArrayList<>(childEntityFieldDM.getSource());
     	arrayList.addAll(childEntityFieldDM.getTarget());
     	return arrayList;
     }
 
+    /**
+	 * Sets the child entity field list model.
+	 *
+	 * @param childEntityFieldDM the new child entity field list model
+	 */
     public void setChildEntityFieldListModel(DualListModel<CustomFieldMatrixColumn> childEntityFieldDM) {
         this.childEntityFieldDM = childEntityFieldDM;
     }
 
     /**
-     * Validate matrix columns of a custom field template
-     * 
-     * @param cft Custom field template
-     */
+	 * Validate matrix columns of a custom field template.
+	 *
+	 * @param cft Custom field template
+	 */
     public void validateMatrixColumns(CustomFieldTemplate cft) {
 
         if (cft.getStorageType() != CustomFieldStorageTypeEnum.MATRIX) {
@@ -369,19 +483,29 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
     }
 
+    /**
+	 * Gets the to what entity class CFT should be copied to - a appliesTo value.
+	 *
+	 * @return the to what entity class CFT should be copied to - a appliesTo value
+	 */
     public String getCopyCftTo() {
         return copyCftTo;
     }
 
+    /**
+	 * Sets the to what entity class CFT should be copied to - a appliesTo value.
+	 *
+	 * @param copyCftTo the new to what entity class CFT should be copied to - a appliesTo value
+	 */
     public void setCopyCftTo(String copyCftTo) {
         this.copyCftTo = copyCftTo;
     }
 
     /**
-     * Copy and associate custom field template with another entity class
-     * 
-     * @throws BusinessException
-     */
+	 * Copy and associate custom field template with another entity class.
+	 *
+	 * @throws BusinessException the business exception
+	 */
     @ActionMethod
     public void copyCFT() throws BusinessException {
 
@@ -395,31 +519,49 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         messages.info(new BundleKey("messages", "customFieldTemplate.copyCFT.ok"));
     }
 
+    /**
+	 * Gets the identifier field types.
+	 *
+	 * @return the identifier field types
+	 */
     public List<CustomFieldTypeEnum> getIdentifierFieldTypes() {
         return identifierFieldTypes;
     }
 
+    /**
+	 * Gets the field type.
+	 *
+	 * @return the field type
+	 */
     public CustomFieldTypeEnum getFieldType() {
         entity.setFieldType(fieldType);
         return fieldType;
     }
 
+    /**
+	 * Sets the field type.
+	 *
+	 * @param fieldType the new field type
+	 */
     public void setFieldType(CustomFieldTypeEnum fieldType) {
         entity.setFieldType(fieldType);
         this.fieldType = fieldType;
     }
 
+    /**
+	 * Reset field type.
+	 */
     public void resetFieldType() {
         this.fieldType = null;
     }
 
     /**
-     * The possible storages of a CFT are the available storages of the CET / CRT <br>
-     * If CFT is being created, the storage list has by default all the storages of its CET or CRT <br>
-     * If the CFT is being edited, the target list is filled with persisted data, and the remaining available storages are put in the source list
-     *
-     * @return The dual list for storages of the CFT
-     */
+	 * The possible storages of a CFT are the available storages of the CET / CRT <br>
+	 * If CFT is being created, the storage list has by default all the storages of its CET or CRT <br>
+	 * If the CFT is being edited, the target list is filled with persisted data, and the remaining available storages are put in the source list.
+	 *
+	 * @return The dual list for storages of the CFT
+	 */
     public DualListModel<DBStorageType> getStoragesDM() {
     	if(storagesDM == null) {
     		List<DBStorageType> perksSource = new ArrayList<>();
@@ -442,48 +584,83 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         return storagesDM;
     }
 
+    /**
+	 * Sets the storages DM.
+	 *
+	 * @param storagesDM the new storages DM
+	 */
     public void setStoragesDM(DualListModel<DBStorageType> storagesDM) {
         this.storagesDM = storagesDM;
     }
 
+    /**
+	 * Gets the storage types list.
+	 *
+	 * @return the storage types list
+	 */
     public List<DBStorageType> getStorageTypesList(){
         ArrayList<DBStorageType> arrayList = new ArrayList<>(storagesDM.getSource());
         arrayList.addAll(storagesDM.getTarget());
         return arrayList;
     }
 
+	/**
+	 * Adds the content types.
+	 */
 	public void addContentTypes() {
 		if (!StringUtils.isBlank(entity.getContentType())) {
 			entity.addContentType(entity.getContentType());
 		}
 	}
 
+	/**
+	 * Adds the file extensions.
+	 */
 	public void addFileExtensions() {
 		if (!StringUtils.isBlank(entity.getFileExtension())) {
 			entity.addFileExtension(entity.getFileExtension());
 		}
 	}
 
+	/**
+	 * Clear content type.
+	 */
 	public void clearContentType() {
 		entity.setContentType(null);
 	}
 
+	/**
+	 * Clear file extension.
+	 */
 	public void clearFileExtension() {
 		entity.setFileExtension(null);
 	}
 
+	/**
+	 * Reinit content type.
+	 *
+	 * @return the string
+	 */
 	public String reinitContentType() {
 		entity.setContentType(null);
 
         return null;
     }
 
+	/**
+	 * Reinit file extension.
+	 *
+	 * @return the string
+	 */
 	public String reinitFileExtension() {
 		entity.setFileExtension(null);
 
         return null;
     }
 
+    /**
+	 * On change available storages.
+	 */
     public void onChangeAvailableStorages() {
         if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
             getEntity().getStorages().clear();
@@ -493,6 +670,12 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
     }
 
+    /**
+	 * Gets the cet id.
+	 *
+	 * @param entityClazz the entity clazz
+	 * @return the cet id
+	 */
     public Long getCetId(String entityClazz) {
         if (!entityClazz.startsWith("org.meveo")) {
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomFieldTemplate.retrieveCetCode(entityClazz));

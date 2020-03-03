@@ -33,6 +33,7 @@ import org.meveo.service.crm.impl.SampleValueHelper;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -60,6 +61,14 @@ public class CustomFieldTemplateApi extends BaseApi {
     
     private String displayFormat;
 
+    /**
+	 * Creates a new CustomFieldTemplate using the given data.
+	 *
+	 * @param postData  the post data
+	 * @param appliesTo the applies to query
+	 * @throws MeveoApiException if api exception occurs
+	 * @throws BusinessException if business exception occurs
+	 */
     public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -135,6 +144,14 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     }
 
+    /**
+	 * Update the corresponding custom field template.
+	 *
+	 * @param postData  the post data
+	 * @param appliesTo the applies to query
+	 * @throws MeveoApiException if api exception occurs
+	 * @throws BusinessException if business exception occurs
+	 */
     public void update(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -200,6 +217,14 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     }
 
+    /**
+	 * Removes the corresponding CustomFieldTemplate.
+	 *
+	 * @param code      the code of the field
+	 * @param appliesTo the applies to query
+	 * @throws MeveoApiException if api exception occurs
+	 * @throws BusinessException if business exception occurs
+	 */
     public void remove(String code, String appliesTo) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("code");
@@ -271,11 +296,29 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
     }
 
+    /**
+	 * Same a {@link #createOrUpdate(CustomFieldTemplateDto, String)} but in a new transaction.
+	 *
+	 * @param postData  the post data
+	 * @param appliesTo the applies to
+	 * @throws MeveoApiException if api exception occurs
+	 * @throws BusinessException if business exception occurs
+	 */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void createOrUpdateInNewTransaction(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
     	createOrUpdate(postData, appliesTo);
     }
     
+    /**
+	 * Update the corresponding custom field template if exists, or create it otherwise.
+	 *
+	 * @param postData  the post data
+	 * @param appliesTo the applies to
+	 * @see #create(CustomFieldTemplateDto, String)
+	 * @see #update(CustomFieldTemplateDto, String)
+	 * @throws MeveoApiException if api exception occurs
+	 * @throws BusinessException if business exception occurs
+	 */
     public void createOrUpdate(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -308,10 +351,20 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
     }
     
+    /**
+	 * Gets the display format.
+	 *
+	 * @return the display format
+	 */
     public String getDisplayFormat() {
         return displayFormat;
     }
 
+    /**
+	 * Sets the display format.
+	 *
+	 * @param displayFormat the new display format
+	 */
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
@@ -345,7 +398,24 @@ public class CustomFieldTemplateApi extends BaseApi {
             cft.setDescription(dto.getDescription());
         }
         
-        cft.setRelationshipName(dto.getRelationshipName());
+        if(dto.getRelationship() != null) {
+        	CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getRelationship());
+			cft.setRelationship(crt);
+
+        } else if(dto.getRelationshipName() != null) {
+            // Old api support - find relationship that has same source / target than entity_clazz and same name, or create one
+        	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(appliesTo);
+        	CustomRelationshipTemplate crt;
+        	if(cetCode != null) {
+		        try {
+					crt = findOrCreateRelationship(dto.getRelationshipName(), cetCode, dto.getEntityClazzCetCode());
+				} catch (BusinessException e) {
+					throw new RuntimeException(e);
+				}
+		        
+				cft.setRelationship(crt);
+        	}
+        }
 
         if (dto.getDefaultValue() != null) {
             cft.setDefaultValue(dto.getDefaultValue());
@@ -487,9 +557,36 @@ public class CustomFieldTemplateApi extends BaseApi {
         return cft;
     }
 
+	/**
+	 * Find a relationship with same name and with given source or target, or create a default one.
+	 *
+	 * @param relationshipName the relationship name
+	 * @param sourceCet        the source cet
+	 * @param targetCet        the target cet
+	 * @return a relationship with the given name and that has the sourceCet or targetCet either as source or as target
+	 * @throws BusinessException if an exception occurs during the creation of the {@link CustomRelationshipTemplate}
+	 */
+	public CustomRelationshipTemplate findOrCreateRelationship(String relationshipName, String sourceCet, String targetCet) throws BusinessException {
+		CustomRelationshipTemplate crt;
+		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(relationshipName, sourceCet, targetCet);
+		if(!availableCrts.isEmpty()) {
+			crt = availableCrts.get(0);
+		} else {
+			crt = new CustomRelationshipTemplate();
+			crt.setCode(sourceCet + "_" + relationshipName + "_" + targetCet);
+			crt.setName(relationshipName);
+			customRelationshipTemplateService.create(crt);
+		}
+		return crt;
+	}
+
     private List<String> getCustomizedEntitiesAppliesTo() {
         List<String> cftAppliesto = new ArrayList<>();
-        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(null, false, true, true, null, null);
+        CustomizedEntityFilter filter = new CustomizedEntityFilter();
+        filter.setCustomEntityTemplatesOnly(false);
+        filter.setIncludeNonManagedEntities(true);
+        filter.setIncludeParentClassesOnly(true);
+        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
         for (CustomizedEntity customizedEntity : entities) {
             cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));
         }
