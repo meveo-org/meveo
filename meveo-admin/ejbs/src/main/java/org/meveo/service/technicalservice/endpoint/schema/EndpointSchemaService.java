@@ -5,7 +5,9 @@ import java.util.Objects;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
@@ -81,11 +83,47 @@ public class EndpointSchemaService {
 		return result;
 	}
 
-	private EndpointParameter cetToModel(CustomEntityTemplate cet) {
+	public String generateResponseSchema(Endpoint endpoint) {
+
+		EndpointSchema responseSchema = new EndpointSchema();
+		responseSchema.setName(endpoint.getCode() + "Response");
+		responseSchema.setDescription("Schema definition for " + endpoint.getCode());
+		responseSchema.addEndpointParameter(endpoint.getReturnedVariableName(), buildResponseSchema(endpoint));
+
+		return endpointSchemaGeneratorService.generateSchema("endpoint", responseSchema);
+	}
+
+	private EndpointParameter buildResponseSchema(Endpoint endpoint) {
+
+		EndpointParameter result = null;
+
+		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && endpoint.getService() instanceof CustomScript) {
+
+			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+
+			if (ClassUtils.isPrimitiveOrWrapperType(returnedVariableType)) {
+				result = buildPrimitiveDataType(endpoint.getReturnedVariableName(), returnedVariableType);
+
+			} else {
+
+				CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
+				if (returnedCet != null) {
+					result = cetToModel(returnedCet);
+
+				} else {
+					result = buildObjectResponse(endpoint.getReturnedVariableName());
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public EndpointParameter buildPrimitiveDataType(String parameterName, String parameterDataType) {
 
 		EndpointParameter result = new EndpointParameter();
-		result.setName(cet.getName());
-		result.setCet(cet);
+		result.setName(parameterName);
+		result.setType(parameterDataType);
 
 		return result;
 	}
@@ -99,11 +137,11 @@ public class EndpointSchemaService {
 		return result;
 	}
 
-	public EndpointParameter buildPrimitiveDataType(String parameterName, String parameterDataType) {
+	private EndpointParameter cetToModel(CustomEntityTemplate cet) {
 
 		EndpointParameter result = new EndpointParameter();
-		result.setName(parameterName);
-		result.setType(parameterDataType);
+		result.setName(cet.getName());
+		result.setCet(cet);
 
 		return result;
 	}

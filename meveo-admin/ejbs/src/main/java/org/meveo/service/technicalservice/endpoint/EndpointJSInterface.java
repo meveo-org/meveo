@@ -26,7 +26,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.9.0
  */
 public class EndpointJSInterface {
 
@@ -44,16 +44,8 @@ public class EndpointJSInterface {
 		Map<String, String> valuesMap = new HashMap<>();
 		valuesMap.put("ENDPOINT_CODE", endpointCode);
 		valuesMap.put("ENDPOINT_DESCRIPTION", endpointDescription);
-
-		if (httpMethod.equals(EndpointHttpMethod.GET)) {
-			valuesMap.put("REQUEST_SCHEMA", "\"parameters\": " + requestSchema);
-			
-		} else if (httpMethod.equals(EndpointHttpMethod.POST)) {
-			valuesMap.put("REQUEST_SCHEMA", "\"parameters\": " + requestSchema);
-		}
-
-		String propertyFieldName = (isCet ? "\"customEntityTemplate\": " : "\"properties\": ");
-		valuesMap.put("RESPONSE_SCHEMA", propertyFieldName + responseSchema);
+		valuesMap.put("REQUEST_SCHEMA", requestSchema);
+		valuesMap.put("RESPONSE_SCHEMA", responseSchema);
 
 		StrSubstitutor sub = new StrSubstitutor(valuesMap);
 		sub.setVariablePrefix("#{");

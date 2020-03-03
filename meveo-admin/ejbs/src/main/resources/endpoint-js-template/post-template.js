@@ -44,19 +44,11 @@ export const registerEventListeners = (
 };
 
 export const getRequestSchema = async (parameters, config) => {
-    return {
-        "name": "#{ENDPOINT_CODE}Request",
-        "description": "#{ENDPOINT_DESCRIPTION}",
-        #{REQUEST_SCHEMA}
-    }
+    return #{REQUEST_SCHEMA}
 };
 
 export const getResponseSchema = async (parameters, config) => {
-    return {
-        "name": "#{ENDPOINT_CODE}Response",
-        "description": "#{ENDPOINT_DESCRIPTION}",
-        #{RESPONSE_SCHEMA}
-    }
+    return #{RESPONSE_SCHEMA}
 }
 
 export const executeApiCall = async (

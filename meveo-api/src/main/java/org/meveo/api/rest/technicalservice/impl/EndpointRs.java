@@ -184,8 +184,8 @@ public class EndpointRs extends BaseRs {
 	
 	@GET
 	@Path("/schema/{code}/response")
-	public Response responseSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
-		return null;
+	public String responseSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+		return endpointApi.responseSchema(code);
 	}
 
 }

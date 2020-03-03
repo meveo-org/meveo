@@ -599,4 +599,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		
 		return endpointRequestSchemaService.generateRequestSchema(endpoint);
 	}
+
+	public String responseSchema(@NotNull String code) {
+
+		Endpoint endpoint = endpointService.findByCode(code);
+
+		return endpointRequestSchemaService.generateResponseSchema(endpoint);
+	}
 }

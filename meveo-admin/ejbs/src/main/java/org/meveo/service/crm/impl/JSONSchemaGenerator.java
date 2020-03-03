@@ -484,6 +484,11 @@ public class JSONSchemaGenerator {
 		}
 		if (null != field.getMinValue()) {
 			result.minLength(field.getMinValue().intValue());
+
+		} else {
+			if (field.isValueRequired()) {
+				result.minLength(1);
+			}
 		}
 		return result.requiresString(true);
 	}
@@ -516,6 +521,9 @@ public class JSONSchemaGenerator {
 		Object defaultValue = field.getDefaultValue();
 		if (null != defaultValue) {
 			result.defaultValue(defaultValue);
+		}
+		if(field.isValueRequired()) {
+			result.minItems(1);
 		}
 		return result.allItemSchema(arrayElementSchema).requiresArray(true).uniqueItems(true);
 	}

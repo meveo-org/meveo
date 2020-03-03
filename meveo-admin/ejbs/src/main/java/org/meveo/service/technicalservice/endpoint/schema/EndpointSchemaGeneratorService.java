@@ -15,6 +15,7 @@ import org.everit.json.schema.ObjectSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
+import org.meveo.commons.utils.JsonUtils;
 import org.meveo.json.schema.RootObjectSchema;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 
@@ -98,7 +99,7 @@ public class EndpointSchemaGeneratorService {
 		JSONPrinter json = new JSONPrinter(out);
 
 		builder.build().describeTo(json);
-		return out.toString();
+		return JsonUtils.beautifyString(out.toString());
 	}
 
 	private ObjectSchema createSchema(String schemaLocation, CustomEndpointParameterProcessor template, Map<String, Schema> processed) {
@@ -207,6 +208,7 @@ public class EndpointSchemaGeneratorService {
 	private Schema.Builder<StringSchema> createStringSchema(EndpointParameter field) {
 
 		StringSchema.Builder result = StringSchema.builder();
+		result.minLength(1);
 		Object defaultValue = field.getDefaultValue();
 		if (null != defaultValue) {
 			result.defaultValue(defaultValue);
