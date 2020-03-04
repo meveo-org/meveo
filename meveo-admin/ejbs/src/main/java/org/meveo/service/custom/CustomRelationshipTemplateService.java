@@ -72,7 +72,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     private Cache<String, Boolean> uniqueRelations;
 
     private ParamBean paramBean = ParamBean.getInstance();
-
+    
     @Override
     public void create(CustomRelationshipTemplate crt) throws BusinessException {
         if (!EntityCustomizationUtils.validateOntologyCode(crt.getCode())) {
@@ -122,21 +122,27 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         return cetUpdated;
     }
 
+    /**
+	 * Synchronize storages.
+	 *
+	 * @param crt the crt
+	 * @throws BusinessException if we can't remove a storage
+	 */
     public void synchronizeStorages(CustomRelationshipTemplate crt) throws BusinessException {
-        // Synchronize custom fields storages with CRT available storages
-        for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(crt.getAppliesTo()).values()) {
-            if(cft.getStorages() == null){
-                    cft.setStorages(new ArrayList<>());
-            }
+    	// Synchronize custom fields storages with CRT available storages
+    	for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(crt.getAppliesTo()).values()) {
+    		if(cft.getStorages() == null){
+    			cft.setStorages(new ArrayList<>());
+    		}
 
-            for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
-                if (!crt.getAvailableStorages().contains(storage)) {
-                    log.info("Remove storage '{}' from CFT '{}' of CRT '{}'", storage, cft.getCode(), crt.getCode());
-                    cft.getStorages().remove(storage);
-                    customFieldTemplateService.update(cft);
-                }
-            }
-        }
+    		for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+    			if (!crt.getAvailableStorages().contains(storage)) {
+    				log.info("Remove storage '{}' from CFT '{}' of CRT '{}'", storage, cft.getCode(), crt.getCode());
+    				cft.getStorages().remove(storage);
+    				customFieldTemplateService.update(cft);
+    			}
+    		}
+    	}
     }
 
 
@@ -198,6 +204,14 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         return super.findByCode(code);
     }
 
+    /**
+	 * Find {@link CustomRelationshipTemplate} by start code, end code and name.
+	 *
+	 * @param startCode the start code
+	 * @param endCode   the end code
+	 * @param name      the name
+	 * @return the query results
+	 */
     public List<CustomRelationshipTemplate> findByStartEndAndName(String startCode, String endCode, String name){
         return getEntityManager().createNamedQuery("CustomRelationshipTemplate.findByStartEndAndName", CustomRelationshipTemplate.class)
                 .setParameter("startCode", startCode)
@@ -207,6 +221,13 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     }
 
+    /**
+     * Find all relationships related to a given custom entity template
+     * 
+     * @param cet the custom entity template
+     * @param name the name of the relationship
+     * @return all relationships related to the entity template
+     */
     @SuppressWarnings("unchecked")
     public List<String> findByCetAndName(CustomEntityTemplate cet, String name) {
         String query = "WITH RECURSIVE ancestors AS (\n" +
@@ -230,5 +251,45 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
                 .collect(Collectors.toList());
 
     }
+    
+	/**
+	 * Find all relationships with the given name that links source and target
+	 * 
+	 * @param source Code of the source template
+	 * @param target Code of the target template
+	 * @param name   Name of the relationships
+	 * @return the matching relationships
+	 */
+	public List<CustomRelationshipTemplate> findByNameAndSourceOrTarget(String source, String target, String name) {
+		return getEntityManager().createQuery("FROM CustomRelationshipTemplate crt "
+				+ "WHERE crt.name = :name "
+				+ "AND ("
+				+ "    (crt.startNode.code = :source AND crt.endNode.code = :target)"
+				+ "    OR (crt.startNode.code = :target AND crt.endNode.code = :source)"
+				+ ")", 
+				CustomRelationshipTemplate.class)
+				.setParameter("name", name)
+				.setParameter("target", target)
+				.setParameter("source", source)
+				.getResultList();
+	}
+	
+	/**
+	 * Find all relationships that links source and target
+	 * 
+	 * @param source Code of the source template
+	 * @param target Code of the target template
+	 * @return the matching relationships
+	 */
+	public List<CustomRelationshipTemplate> findBySourceOrTarget(String source, String target) {
+		return getEntityManager().createQuery("FROM CustomRelationshipTemplate crt "
+				+ "WHERE crt.startNode.code = :source AND crt.endNode.code = :target "
+				+ "OR (crt.startNode.code = :target AND crt.endNode.code = :source)", 
+				CustomRelationshipTemplate.class)
+				.setParameter("target", target)
+				.setParameter("source", source)
+				.getResultList();
+	}
+	
 
 }

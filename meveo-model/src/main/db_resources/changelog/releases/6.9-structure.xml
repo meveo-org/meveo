@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+	<changeSet id="#4079 - generated relationship should refer to a CustomRelationshipTemplate" author="Clément Bareth">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="crt_id" type="bigint">
+				<constraints foreignKeyName="fk_cft_crt" references="cust_crt(id)" />
+			</column>
+		</addColumn>
+		<!-- Update CFTs that already refers a CRT name -->
+		<sql><![CDATA[
+			UPDATE 
+				crm_custom_field_tmpl AS cft
+			SET 
+				crt_id = crt.id
+			FROM 
+				cust_crt AS crt 
+					INNER JOIN cust_cet AS cet_source 
+						ON cet_source.id = crt.start_node_id
+					INNER JOIN cust_cet AS cet_target
+						ON cet_target.id = crt.end_node_id
+				
+			WHERE cft.relationship_name = crt.name
+			AND cft.entity_clazz <> ''
+			AND (
+				cft.entity_clazz = 'org.meveo.model.customEntities.CustomEntityTemplate - ' || cet_source.code
+				OR cft.entity_clazz = 'org.meveo.model.customEntities.CustomEntityTemplate - ' || cet_target.code
+			)
+			]]>
+		</sql>
+	</changeSet>
+</databaseChangeLog>

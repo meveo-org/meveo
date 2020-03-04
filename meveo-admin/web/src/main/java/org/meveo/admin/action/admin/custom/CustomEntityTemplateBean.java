@@ -40,6 +40,13 @@ import org.primefaces.model.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Bean for managing custom entity templates.
+ *
+ * @author clement.bareth
+ * @version 6.9.0
+ * @since 6.0.0
+ */
 @Named
 @ViewScoped
 public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
@@ -48,13 +55,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
-
+	
 	/**
 	 * Object being customized in case customization corresponds to a non
 	 * CustomEntityTemplate class instance
 	 */
 	private CustomizedEntity customizedEntity;
 
+	/** The logger. */
 	Logger logger = LoggerFactory.getLogger(CustomEntityTemplateBean.class);
 
 	/**
@@ -99,6 +107,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	@Inject
 	private MeveoModuleService meveoModuleService;
 
+	/**
+	 * Instantiates a new custom entity template bean.
+	 */
 	public CustomEntityTemplateBean() {
 		super(CustomEntityTemplate.class);
 		entityClass = CustomEntityTemplate.class;
@@ -116,28 +127,53 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return customEntityTemplateService;
 	}
 
+	/**
+	 * Checks if is custom entity template.
+	 *
+	 * @return true, if is custom entity template
+	 */
 	public boolean isCustomEntityTemplate() {
 		return entityClassName == null || CustomEntityTemplate.class.getName().equals(entityClassName);
 	}
 
+	/**
+	 * Gets the custom entity templates.
+	 *
+	 * @return the custom entity templates
+	 */
 	public List<CustomEntityTemplate> getCustomEntityTemplates() {
 		return customEntityTemplates;
 	}
 
+	/**
+	 * Gets the cet configurations.
+	 *
+	 * @return the cet configurations
+	 */
 	public List<CustomEntityTemplate> getCetConfigurations() {
 		return cetConfigurations;
 	}
 
+	/**
+	 * Gets the custom entity categories.
+	 *
+	 * @return the custom entity categories
+	 */
 	public List<CustomEntityCategory> getCustomEntityCategories() {
 		return customEntityCategories;
 	}
-
+	
+	/**
+	 * Gets the table name if store in SQL.
+	 *
+	 * @return the table name
+	 */
 	public String getTableName() {
 		return SQLStorageConfiguration.getDbTablename(entity);
 	}
 
 	/**
-	 * Is entity being customized is a Custom entity template and will be stored as a separate table
+	 * Is entity being customized is a Custom entity template and will be stored as a separate table.
 	 *
 	 * @return True if entity being customized is a Custom entity template and will be stored as a separate table
 	 */
@@ -145,6 +181,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return isCustomEntityTemplate() && entity != null && entity.getSqlStorageConfiguration() != null && entity.getSqlStorageConfiguration().isStoreAsTable();
 	}
 
+	/**
+	 * List menu custom entities.
+	 *
+	 * @return the custom entities to be displayed in the menu
+	 */
 	public Map<String, List<CustomEntityTemplate>> listMenuCustomEntities() {
 		if (listMap != null) {
 			return listMap;
@@ -180,8 +221,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 * Prepare to show entity customization for a particular class - To be used from
-	 * GUI action button/link
+	 * Prepare to show entity customization for a particular class - To be used from GUI action button/link.
 	 *
 	 * @param entityClassName Entity class
 	 */
@@ -196,11 +236,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 * Construct customizedEntity instance which is a representation of customizable
-	 * class (e.g. Customer)
+	 * Construct customizedEntity instance which is a representation of customizable class (e.g. Customer)
 	 *
-	 * @return
-	 * @throws ClassNotFoundException
+	 * @return the {@link CustomizedEntity} implementation
+	 * @throws ClassNotFoundException if customized entity is not on class path
 	 */
 	public CustomizedEntity getCustomizedEntity() throws ClassNotFoundException {
 
@@ -248,6 +287,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return editView;
 	}
 
+	/**
+	 * On change available storages.
+	 */
 	public void onChangeAvailableStorages() {
 		if (CollectionUtils.isNotEmpty(getEntity().getAvailableStorages())) {
 			getEntity().getAvailableStorages().clear();
@@ -257,6 +299,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Gets the fields.
+	 *
+	 * @return the fields
+	 */
 	public TreeNode getFields() {
 		if (groupedFields != null || cetPrefix == null) {
 			return groupedFields;
@@ -320,6 +367,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return groupedFields;
 	}
 
+	/**
+	 * Gets the entity actions.
+	 *
+	 * @return the entity actions
+	 */
 	public List<EntityCustomAction> getEntityActions() {
 
 		if (entityActions != null || cetPrefix == null) {
@@ -361,37 +413,75 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		groupedFields = null;
 	}
 
+	/**
+	 * Refresh actions.
+	 */
 	public void refreshActions() {
 		entityActions = null;
 	}
 
+	/**
+	 * Edits the field grouping.
+	 *
+	 * @param selectedFieldGrouping the selected field grouping
+	 */
 	public void editFieldGrouping(TreeNode selectedFieldGrouping) {
 		setSelectedFieldGrouping(selectedFieldGrouping);
 		// this.selectedFieldGroupingLabel = (TranslatableLabel)
 		// selectedFieldGrouping.getData();
 	}
 
+	/**
+	 * Sets the selected field grouping.
+	 *
+	 * @param selectedFieldGrouping the new selected field grouping
+	 */
 	public void setSelectedFieldGrouping(TreeNode selectedFieldGrouping) {
 		this.selectedFieldGrouping = selectedFieldGrouping;
 		this.selectedFieldGroupingLabel = (TranslatableLabel) selectedFieldGrouping.getData();
 	}
 
+	/**
+	 * Gets the selected field grouping.
+	 *
+	 * @return the selected field grouping
+	 */
 	public TreeNode getSelectedFieldGrouping() {
 		return selectedFieldGrouping;
 	}
 
+	/**
+	 * Gets the selected field grouping label.
+	 *
+	 * @return the selected field grouping label
+	 */
 	public TranslatableLabel getSelectedFieldGroupingLabel() {
 		return selectedFieldGroupingLabel;
 	}
 
+	/**
+	 * Sets the selected field grouping label.
+	 *
+	 * @param selectedFieldGroupingLabel the new selected field grouping label
+	 */
 	public void setSelectedFieldGroupingLabel(TranslatableLabel selectedFieldGroupingLabel) {
 		this.selectedFieldGroupingLabel = selectedFieldGroupingLabel;
 	}
 
+	/**
+	 * Sets the selected entity action.
+	 *
+	 * @param selectedEntityAction the new selected entity action
+	 */
 	public void setSelectedEntityAction(EntityCustomAction selectedEntityAction) {
 		this.selectedEntityAction = selectedEntityAction;
 	}
 
+	/**
+	 * Gets the selected entity action.
+	 *
+	 * @return the selected entity action
+	 */
 	public EntityCustomAction getSelectedEntityAction() {
 		return selectedEntityAction;
 	}
@@ -406,6 +496,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return "customizedEntities";
 	}
 
+	/**
+	 * Gets the prefix to apply to custom field templates (appliesTo value).
+	 *
+	 * @return the prefix to apply to custom field templates (appliesTo value)
+	 */
 	public String getCetPrefix() {
 		if (cetPrefix != null) {
 			return cetPrefix;
@@ -445,6 +540,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Move up the node on the tree.
+	 *
+	 * @param node the node
+	 */
 	public void moveUp(SortedTreeNode node) {
 
 		int currentIndex = node.getIndexInParent();
@@ -471,6 +571,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Move down the node on the tree.
+	 *
+	 * @param node the node
+	 */
 	public void moveDown(SortedTreeNode node) {
 
 		int currentIndex = node.getIndexInParent();
@@ -606,6 +711,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Gets the custom entity template unique constraints.
+	 *
+	 * @return the custom entity template unique constraints
+	 */
 	public List<CustomEntityTemplateUniqueConstraint> getCustomEntityTemplateUniqueConstraints() {
 		if (entity.getNeo4JStorageConfiguration() != null) {
 			if (entity != null && entity.getNeo4JStorageConfiguration().getUniqueConstraints() != null) {
@@ -617,20 +727,38 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Gets the custom entity template unique constraint.
+	 *
+	 * @return the custom entity template unique constraint
+	 */
 	public CustomEntityTemplateUniqueConstraint getCustomEntityTemplateUniqueConstraint() {
 		return customEntityTemplateUniqueConstraint;
 	}
 
+	/**
+	 * Sets the custom entity template unique constraint.
+	 *
+	 * @param customEntityTemplateUniqueConstraint the new custom entity template unique constraint
+	 */
 	public void setCustomEntityTemplateUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
 		this.customEntityTemplateUniqueConstraint = customEntityTemplateUniqueConstraint;
 	}
 
+	/**
+	 * Adds an empty unique constraint.
+	 */
 	public void addUniqueConstraint() {
 		isUpdate = false;
 		customEntityTemplateUniqueConstraint = new CustomEntityTemplateUniqueConstraint();
 		customEntityTemplateUniqueConstraint.setTrustScore(100);
 	}
 
+	/**
+	 * Removes the unique constraint.
+	 *
+	 * @param selectedUniqueConstraint the selected unique constraint
+	 */
 	public void removeUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
 		for (CustomEntityTemplateUniqueConstraint uniqueConstraint : customEntityTemplateUniqueConstraints) {
 			if (uniqueConstraint != null && uniqueConstraint.equals(selectedUniqueConstraint)) {
@@ -642,11 +770,19 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	/**
+	 * Edits the unique constraint.
+	 *
+	 * @param selectedUniqueConstraint the selected unique constraint
+	 */
 	public void editUniqueConstraint(CustomEntityTemplateUniqueConstraint selectedUniqueConstraint) {
 		isUpdate = true;
 		customEntityTemplateUniqueConstraint = selectedUniqueConstraint;
 	}
 
+	/**
+	 * Save the unique constraint being edited.
+	 */
 	public void saveUniqueConstraint() {
 		if (!isUpdate) {
 			customEntityTemplateUniqueConstraint.setCustomEntityTemplate(entity);
@@ -669,10 +805,20 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 
+	/**
+	 * Gets the graphql query field.
+	 *
+	 * @return the graphql query field
+	 */
 	public GraphQLQueryField getGraphqlQueryField() {
 		return graphqlQueryField;
 	}
 
+	/**
+	 * Gets the graphql query fields.
+	 *
+	 * @return the graphql query fields
+	 */
 	public List<GraphQLQueryField> getGraphqlQueryFields() {
 		if (entity.getNeo4JStorageConfiguration() != null) {
 			if (entity != null && entity.getNeo4JStorageConfiguration().getGraphqlQueryFields() != null) {
@@ -685,6 +831,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	}
 
+	/**
+	 * Removes the graphql query field.
+	 *
+	 * @param selectedGraphQLQueryField the selected graph QL query field
+	 */
 	public void removeGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
 		for (GraphQLQueryField graphqlQueryField : graphqlQueryFields) {
 			if (graphqlQueryField != null && graphqlQueryField.equals(selectedGraphQLQueryField)) {
@@ -696,16 +847,27 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	/**
+	 * Edits the graphql query field.
+	 *
+	 * @param selectedGraphQLQueryField the selected graph QL query field
+	 */
 	public void editGraphqlQueryField(GraphQLQueryField selectedGraphQLQueryField) {
 		isUpdate = true;
 		graphqlQueryField = selectedGraphQLQueryField;
 	}
 
+	/**
+	 * Adds a graphql query field.
+	 */
 	public void addGraphqlQueryField() {
 		isUpdate = false;
 		graphqlQueryField = new GraphQLQueryField();
 	}
 
+	/**
+	 * Save graphql query field.
+	 */
 	public void saveGraphqlQueryField() {
 		if (!isUpdate) {
 			graphqlQueryFields.add(graphqlQueryField);
@@ -726,10 +888,20 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	/**
+	 * Gets the mutation.
+	 *
+	 * @return the mutation
+	 */
 	public Mutation getMutation() {
 		return mutation;
 	}
 
+	/**
+	 * Gets the mutations.
+	 *
+	 * @return the mutations
+	 */
 	public List<Mutation> getMutations() {
 		if (entity.getNeo4JStorageConfiguration() != null) {
 			if (entity != null && entity.getNeo4JStorageConfiguration().getMutations() != null) {
@@ -741,6 +913,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Removes the mutation.
+	 *
+	 * @param selectedMutation the selected mutation
+	 */
 	public void removeMutation(Mutation selectedMutation) {
 		for (Mutation mutation : mutations) {
 			if (mutation != null && mutation.equals(selectedMutation)) {
@@ -752,16 +929,27 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	/**
+	 * Edits the mutation.
+	 *
+	 * @param selectedMutation the selected mutation
+	 */
 	public void editMutation(Mutation selectedMutation) {
 		isUpdate = true;
 		mutation = selectedMutation;
 	}
 
+	/**
+	 * Adds a mutation.
+	 */
 	public void addMutation() {
 		isUpdate = false;
 		mutation = new Mutation();
 	}
 
+	/**
+	 * Save mutation.
+	 */
 	public void saveMutation() {
 		if (!isUpdate) {
 			mutation.getParameters().clear();
@@ -796,10 +984,18 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		messages.info(new BundleKey("messages", message));
 	}
 
+	/**
+	 * Removes the map param.
+	 *
+	 * @param mapValue the map value
+	 */
 	public void removeMapParam(Map<String, String> mapValue) {
 		parameters.remove(mapValue);
 	}
 
+	/**
+	 * Adds the map param.
+	 */
 	public void addMapParam() {
 		Map<String, String> mapValue = new HashMap<String, String>();
 		mapValue.put("key", null);
@@ -807,22 +1003,46 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		parameters.add(mapValue);
 	}
 
+	/**
+	 * Gets the checks if is update.
+	 *
+	 * @return the checks if is update
+	 */
 	public Boolean getIsUpdate() {
 		return isUpdate;
 	}
 
+	/**
+	 * Sets the checks if is update.
+	 *
+	 * @param isUpdate the new checks if is update
+	 */
 	public void setIsUpdate(Boolean isUpdate) {
 		this.isUpdate = isUpdate;
 	}
 
+	/**
+	 * The Class SortedTreeNode.
+	 */
 	public class SortedTreeNode extends DefaultTreeNode {
 
 		private static final long serialVersionUID = 3694377290046737073L;
 
+		/**
+		 * Instantiates a new sorted tree node.
+		 */
 		public SortedTreeNode() {
 			super();
 		}
 
+		/**
+		 * Instantiates a new sorted tree node.
+		 *
+		 * @param type     the type
+		 * @param data     the data
+		 * @param parent   the parent
+		 * @param expanded the expanded
+		 */
 		public SortedTreeNode(GroupedCustomFieldTreeItemType type, Object data, TreeNode parent, Boolean expanded) {
 			super(type.name(), data, parent);
 			if (expanded != null && expanded) {
@@ -830,6 +1050,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			}
 		}
 
+		/**
+		 * Gets the gui position for field.
+		 *
+		 * @return the gui position for field
+		 */
 		public String getGuiPositionForField() {
 
 			if (getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
@@ -847,6 +1072,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return null;
 		}
 
+		/**
+		 * Gets the gui position for action.
+		 *
+		 * @return the gui position for action
+		 */
 		public String getGuiPositionForAction() {
 
 			if (getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
@@ -864,6 +1094,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return null;
 		}
 
+		/**
+		 * Can move up.
+		 *
+		 * @return true, if successful
+		 */
 		public boolean canMoveUp() {
 			// Can not move if its is a first item in a tree and nowhere to move
 			return !(getIndexInParent() == 0 && (this.getType().equals(GroupedCustomFieldTreeItemType.tab.name())
@@ -873,6 +1108,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		}
 
+		/**
+		 * Can move down.
+		 *
+		 * @return true, if successful
+		 */
 		public boolean canMoveDown() {
 
 			return !(isLast() && (this.getType().equals(GroupedCustomFieldTreeItemType.tab.name())
@@ -884,14 +1124,29 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		}
 
+		/**
+		 * Gets the index in parent.
+		 *
+		 * @return the index in parent
+		 */
 		protected int getIndexInParent() {
 			return getParent().getChildren().indexOf(this);
 		}
 
+		/**
+		 * Checks if is last.
+		 *
+		 * @return true, if is last
+		 */
 		protected boolean isLast() {
 			return getIndexInParent() == this.getParent().getChildCount() - 1;
 		}
 
+		/**
+		 * Gets the parent sibling down.
+		 *
+		 * @return the parent sibling down
+		 */
 		public SortedTreeNode getParentSiblingDown() {
 
 			SortedTreeNode parent = (SortedTreeNode) this.getParent();
@@ -907,6 +1162,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return null;
 		}
 
+		/**
+		 * Gets the sibling down.
+		 *
+		 * @return the sibling down
+		 */
 		public SortedTreeNode getSiblingDown() {
 			int currentIndex = this.getIndexInParent();
 			if (getParent().getChildCount() > currentIndex + 1) {
@@ -916,6 +1176,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return null;
 		}
 
+		/**
+		 * Gets the parent sibling up.
+		 *
+		 * @return the parent sibling up
+		 */
 		public SortedTreeNode getParentSiblingUp() {
 
 			SortedTreeNode parent = (SortedTreeNode) this.getParent();
@@ -932,6 +1197,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Gets the available storages DM.
+	 *
+	 * @return the available storages DM
+	 */
 	public DualListModel<DBStorageType> getAvailableStoragesDM() {
 		if (availableStoragesDM == null) {
 			List<DBStorageType> perksSource = new ArrayList<>();
@@ -948,10 +1218,20 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return availableStoragesDM;
 	}
 
+	/**
+	 * Sets the available storages DM.
+	 *
+	 * @param availableStoragesDM the new available storages DM
+	 */
 	public void setAvailableStoragesDM(DualListModel<DBStorageType> availableStoragesDM) {
 		this.availableStoragesDM = availableStoragesDM;
 	}
 
+	/**
+	 * Gets the storage types list.
+	 *
+	 * @return the storage types list
+	 */
 	public List<DBStorageType> getStorageTypesList() {
 		ArrayList<DBStorageType> arrayList = new ArrayList<>(availableStoragesDM.getSource());
 		arrayList.addAll(availableStoragesDM.getTarget());
@@ -959,7 +1239,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 *  Add CET and its CFTs to selected module
+	 * Add CET and its CFTs to selected module.
 	 */
 	public void addToModuleForCET() {
 		if (entity != null && !getMeveoModule().equals(entity)) {
@@ -991,6 +1271,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		super.delete(customEntityId);
 	}
 
+	/**
+	 * Delete given entities.
+	 *
+	 * @param entities the entities to delete
+	 * @throws Exception the exception
+	 */
 	public void deleteMany(List<CustomizedEntity> entities) throws Exception {
 		if (entities == null || entities.isEmpty()) {
 			messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
@@ -1007,19 +1293,37 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	/**
+	 * Gets the selected customized entities.
+	 *
+	 * @return the selected customized entities
+	 */
 	public List<CustomizedEntity> getSelectedCustomizedEntities() {
 		return selectedCustomizedEntities;
 	}
 
+	/**
+	 * Sets the selected customized entities.
+	 *
+	 * @param selectedCustomizedEntities the new selected customized entities
+	 */
 	public void setSelectedCustomizedEntities(List<CustomizedEntity> selectedCustomizedEntities) {
 		this.selectedCustomizedEntities = selectedCustomizedEntities;
 	}
 
+	/**
+	 * Reset mutation.
+	 */
 	public void resetMutation() {
 		mutation = new Mutation();
 		parameters = null;
 	}
 
+	/**
+	 * Gets the parameters.
+	 *
+	 * @return the parameters
+	 */
 	public List<Map<String, String>> getParameters() {
 		if (CollectionUtils.isEmpty(parameters)) {
 			if (mutation.getParameters() != null) {
@@ -1037,6 +1341,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		return parameters;
 	}
 
+	/**
+	 * Sets the parameters.
+	 *
+	 * @param parameters the parameters
+	 */
 	public void setParameters(List<Map<String, String>> parameters) {
 		this.parameters = parameters;
 	}
