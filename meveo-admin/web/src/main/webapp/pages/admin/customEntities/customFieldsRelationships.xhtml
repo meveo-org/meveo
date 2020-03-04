@@ -58,7 +58,7 @@
                         <f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />
                     </h:link>
                     <h:outputText value="#{entity.referenceEntityClazzCetCode}"
-                                  rendered="#{node.type == 'field' and entity.entityClazz == null}" />
+                                  rendered="#{node.type == 'field' and entity.entityClazz != null and customFieldTemplateBean.getCetId(entity.entityClazz) == null}" />
                 </p:column>
                 <p:column
                         headerText="#{messages['customFieldTemplate.primitiveType']}"
