@@ -581,7 +581,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
                 customEntityCategory.setName(dto.getCustomEntityCategoryCode());
                 try {
-                    customEntityCategoryService.create(customEntityCategory);
+                    customEntityCategoryService.createInNewTx(customEntityCategory);
+                    // customEntityCategoryService.flush();
                 } catch (BusinessException e) {
                     log.error("Cannot create category", e);
                 }
