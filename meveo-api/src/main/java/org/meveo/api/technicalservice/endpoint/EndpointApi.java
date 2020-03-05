@@ -593,6 +593,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	}
 
+	/**
+	 * Generates the request schema of an endpoint
+	 * 
+	 * @param code code of the endpoint
+	 * @return request schema of the given endpoint
+	 */
 	public String requestSchema(@NotNull String code) {
 		
 		Endpoint endpoint = endpointService.findByCode(code);
@@ -600,6 +606,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointRequestSchemaService.generateRequestSchema(endpoint);
 	}
 
+	/**
+	 * Generates the response schema of an endpoint
+	 * 
+	 * @param code code of the endpoint
+	 * @return response schema of the given endpoint
+	 */
 	public String responseSchema(@NotNull String code) {
 
 		Endpoint endpoint = endpointService.findByCode(code);

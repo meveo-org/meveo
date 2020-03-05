@@ -5,10 +5,12 @@ import java.util.Objects;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
@@ -17,9 +19,15 @@ import org.meveo.service.script.ScriptUtils;
 import org.meveo.util.ClassUtils;
 
 /**
+ * Service class for generating the request and response schema of an endpoint.
+ * This service is used by Swagger to generate a complete endpoint js interface
+ * that will be consume by the frontend application.
+ * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 6.9.0
  * @version 6.9.0
+ * @see Endpoint
+ * @see SwaggerDocService
  */
 @Stateless
 public class EndpointSchemaService {
@@ -30,6 +38,12 @@ public class EndpointSchemaService {
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
 
+	/**
+	 * Generates the request schema of a given endpoint.
+	 * 
+	 * @param endpoint the endpoint
+	 * @return request schema of the given endpoint
+	 */
 	public String generateRequestSchema(Endpoint endpoint) {
 
 		EndpointSchema requestSchema = new EndpointSchema();
@@ -60,6 +74,15 @@ public class EndpointSchemaService {
 		return endpointSchemaGeneratorService.generateSchema("endpoint", requestSchema);
 	}
 
+	/**
+	 * Creates the endpoint body parameter that will later be converted into schema.
+	 * 
+	 * @param service            the script
+	 * @param tsParameterMapping endpoint parameter
+	 * @return the created endpoint parameter
+	 * @see ScriptInstance
+	 * @see EndpointParameter
+	 */
 	private EndpointParameter buildBodyParameterSchema(Function service, TSParameterMapping tsParameterMapping) {
 
 		EndpointParameter result = null;
@@ -83,6 +106,12 @@ public class EndpointSchemaService {
 		return result;
 	}
 
+	/**
+	 * Generates the response schema of a given endpoint.
+	 * 
+	 * @param endpoint the endpoint
+	 * @return response schema of the given endpoint
+	 */
 	public String generateResponseSchema(Endpoint endpoint) {
 
 		EndpointSchema responseSchema = new EndpointSchema();
@@ -93,6 +122,13 @@ public class EndpointSchemaService {
 		return endpointSchemaGeneratorService.generateSchema("endpoint", responseSchema);
 	}
 
+	/**
+	 * Creates the endpoint response as endpoint parameter that will later be
+	 * converted to schema.
+	 * 
+	 * @return the created endpoint parameter
+	 * @see EndpointParameter
+	 */
 	private EndpointParameter buildResponseSchema(Endpoint endpoint) {
 
 		EndpointParameter result = null;
@@ -119,6 +155,15 @@ public class EndpointSchemaService {
 		return result;
 	}
 
+	/**
+	 * Utility method to create a primitive endpoint parameter from a given name and
+	 * type.
+	 * 
+	 * @param parameterName     name of the parameter
+	 * @param parameterDataType type of the parameter
+	 * @return created endpoint parameter
+	 * @see EndpointParameter
+	 */
 	public EndpointParameter buildPrimitiveDataType(String parameterName, String parameterDataType) {
 
 		EndpointParameter result = new EndpointParameter();
@@ -128,6 +173,13 @@ public class EndpointSchemaService {
 		return result;
 	}
 
+	/**
+	 * Utility method to create a object endpoint parameter from a given name.
+	 * 
+	 * @param parameterName name of the parameter
+	 * @return created endpoint parameter
+	 * @see EndpointParameter
+	 */
 	private EndpointParameter buildObjectResponse(String parameterName) {
 
 		EndpointParameter result = new EndpointParameter();
@@ -137,6 +189,14 @@ public class EndpointSchemaService {
 		return result;
 	}
 
+	/**
+	 * Utility method to create an endpoint parameter from a given cet.
+	 * 
+	 * @param cet the custom entity template
+	 * @return created endpoint parameter
+	 * @see EndpointParameter
+	 * @see CustomEntityTemplate
+	 */
 	private EndpointParameter cetToModel(CustomEntityTemplate cet) {
 
 		EndpointParameter result = new EndpointParameter();

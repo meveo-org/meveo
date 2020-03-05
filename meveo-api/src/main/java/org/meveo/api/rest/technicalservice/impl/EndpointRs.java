@@ -62,7 +62,7 @@ import io.swagger.annotations.ApiParam;
 @Path("/endpoint")
 @DeclareRoles({ "endpointManagement" })
 @RolesAllowed({ "endpointManagement" })
-@Api("Endpoint")
+@Api("EndpointRs")
 public class EndpointRs extends BaseRs {
 
 	@EJB
@@ -176,14 +176,28 @@ public class EndpointRs extends BaseRs {
 		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
 	}
 	
+	/**
+	 * Generates and returns the request schema of a given endpoint.
+	 * 
+	 * @param code code of the endpoint
+	 * @return request schema of the given endpoint
+	 */
 	@GET
 	@Path("/schema/{code}/request")
+	@ApiOperation(value = "Generates and returns the request schema of a given endpoint.")
 	public String requestSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 		return endpointApi.requestSchema(code);
 	}
 	
+	/**
+	 * Generates and returns the response schema of a given endpoint.
+	 * 
+	 * @param code code of the endpoint
+	 * @return response schema of the given endpoint
+	 */
 	@GET
 	@Path("/schema/{code}/response")
+	@ApiOperation(value = "Generates and returns the response schema of a given endpoint.")
 	public String responseSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 		return endpointApi.responseSchema(code);
 	}
