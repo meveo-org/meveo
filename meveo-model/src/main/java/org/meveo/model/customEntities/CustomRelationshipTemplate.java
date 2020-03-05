@@ -79,11 +79,11 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     private String name;
     
     @ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "START_NODE_ID")
+	@JoinColumn(name = "START_NODE_ID", nullable = false)
     private CustomEntityTemplate startNode;
     
     @ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "END_NODE_ID")
+	@JoinColumn(name = "END_NODE_ID", nullable = false)
     private CustomEntityTemplate  endNode;
     
     @Enumerated(EnumType.STRING)

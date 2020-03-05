@@ -37,4 +37,12 @@
 			]]>
 		</sql>
 	</changeSet>
+	
+	<changeSet id="start and end nodes required on CRT" author="Clément Bareth">
+		<delete tableName="cust_crt">
+			<where>start_node_id is NULL OR end_node_id is NULL</where>
+		</delete>
+		<addNotNullConstraint tableName="cust_crt" columnName="start_node_id"/>
+		<addNotNullConstraint tableName="cust_crt" columnName="end_node_id"/>
+	</changeSet>
 </databaseChangeLog>
