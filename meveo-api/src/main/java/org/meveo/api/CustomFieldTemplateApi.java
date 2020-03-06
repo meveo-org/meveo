@@ -402,7 +402,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         	CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getRelationship());
 			cft.setRelationship(crt);
 
-        } else if(dto.getRelationshipName() != null) {
+        } else if(dto.getRelationshipName() != null && dto.getEntityClazzCetCode() != null) {
             // Old api support - find relationship that has same source / target than entity_clazz and same name, or create one
         	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(appliesTo);
         	CustomRelationshipTemplate crt;
