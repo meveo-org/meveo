@@ -509,16 +509,21 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 * @return the relationship name
 	 */
     public String getRelationshipName() {
-		return relationship != null ? relationship.getName() : relationshipName;
+    	if(relationshipName != null) {
+    		return relationshipName;
+    		
+    	} else if(relationship != null) {
+    		return relationship.getName();
+    	}
+    	
+    	return null;
 	}
 
     /**
-	 * Sets the relationship name.
+	 * Sets the relationship name that links current CET to target CET or the current CET to the target Binary
 	 *
-	 * @param relationshipName Name of the relationship that links current CET to target CET
-	 * @deprecated Use {@link #setRelationship(CustomRelationshipTemplate)}
+	 * @param relationshipName Name of the relationship 
 	 */
-    @Deprecated
 	public void setRelationshipName(String relationshipName) {
 		this.relationshipName = relationshipName;
 	}

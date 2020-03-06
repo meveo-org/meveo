@@ -635,7 +635,7 @@
 								label="#{messages['customFieldTemplate.relationshipCode']}"
 								fieldId="relationship"
 								field="relationship" required="true" componentWidth="100"
-								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and (customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY)}">
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY}">
 							
 								<p:selectOneMenu id="relationship"
 									value="#{customFieldTemplateBean.entity.relationship}" required="true">
@@ -647,6 +647,12 @@
 								</p:selectOneMenu>
 									
 							</hftl:decorateFormField>
+							
+							<hftl:formField label="#{messages['customFieldTemplate.relationshipName']}"
+								field="relationshipName"
+								required="true"
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY}" />
+								
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField

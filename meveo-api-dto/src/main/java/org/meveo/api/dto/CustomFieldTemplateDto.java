@@ -393,7 +393,6 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 	 *
 	 * @param relationshipName the new relationship name
 	 */
-    @Deprecated
 	public void setRelationshipName(String relationshipName) {
 		this.relationshipName = relationshipName;
 	}

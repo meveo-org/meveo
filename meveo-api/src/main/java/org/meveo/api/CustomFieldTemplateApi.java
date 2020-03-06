@@ -416,6 +416,10 @@ public class CustomFieldTemplateApi extends BaseApi {
 				cft.setRelationship(crt);
         	}
         }
+        
+        if(dto.getRelationshipName() != null && dto.getFieldType() == CustomFieldTypeEnum.BINARY) {
+        	cft.setRelationshipName(dto.getRelationshipName());
+        }
 
         if (dto.getDefaultValue() != null) {
             cft.setDefaultValue(dto.getDefaultValue());
