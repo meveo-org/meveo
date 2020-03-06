@@ -6,7 +6,7 @@ It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence 
 
 Installation
 ------------
-You can build the war and deploy on wildfly 10 after configuring keycloack, postgres, infinispan, neo4j(optional), elasticsearch(optional),...
+You can build the war and deploy on wildfly 15 after configuring keycloack, postgres, infinispan, neo4j(optional), elasticsearch(optional),...
 
 Or simply execute the docker images from docker hub.
 
