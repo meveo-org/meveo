@@ -348,7 +348,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
 			final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
-
+			if(result == null) {
+				throw new NoSuchRecordException("No results for query " + graphQlQuery);
+			}
+			
 			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(cet.getCode());
 			values = values != null ? values : new ArrayList<>();
 
@@ -619,7 +622,11 @@ public class CrossStorageService implements CustomPersistenceService {
 			
 			log.error("Can't create or update data in SQL", e);
 			
-			throw new RuntimeException(e);
+			if(e instanceof RuntimeException) {
+				throw (RuntimeException) e;
+			} else {
+				throw new RuntimeException(e);
+			}
 		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
@@ -783,13 +790,20 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		if (sqlUUID != null) {
+			
+			cei.setUuid(sqlUUID);
 
 			// Update binaries
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 
 				Map<String, Object> existingBinariesField = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID, binariesFieldsToFetch);
-				fileSystemService.updateBinaries(repository, cei.getUuid(), cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), existingBinariesField);
+				fileSystemService.updateBinaries(repository, 
+						cei.getUuid(), 
+						cei.getCet(), 
+						binariesInSql, 
+						cei.getCfValuesAsValues(), 
+						existingBinariesField);
 
 			}
 

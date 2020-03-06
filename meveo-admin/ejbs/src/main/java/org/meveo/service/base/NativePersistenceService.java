@@ -1381,6 +1381,8 @@ public class NativePersistenceService extends BaseService {
 			listVal = (List) value;
 		} else if (value instanceof Map) {
 			stringVal = JacksonUtil.toString(value);
+		} else if (value instanceof File) {
+			stringVal = ((File) value).getAbsolutePath();
 		} else {
 			throw new ValidationException("Unrecognized data type for value " + value + " type " + value.getClass());
 		}

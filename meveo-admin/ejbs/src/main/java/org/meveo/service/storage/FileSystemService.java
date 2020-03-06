@@ -295,7 +295,13 @@ public class FileSystemService {
      * @return the persisted binaries by custom field templates
      */
     @SuppressWarnings("unchecked")
-	public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, String uuid, CustomEntityTemplate cet, Collection<CustomFieldTemplate> fields, Map<String, Object> values, Map<String, Object> previousValues) throws IOException, BusinessApiException {
+	public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, 
+			String uuid, 
+			CustomEntityTemplate cet, 
+			Collection<CustomFieldTemplate> fields, 
+			Map<String, Object> values, 
+			Map<String, Object> previousValues) throws IOException, BusinessApiException {
+    	
         Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
         for (CustomFieldTemplate field : fields) {
         	

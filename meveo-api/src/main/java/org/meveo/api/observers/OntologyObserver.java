@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,6 +78,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.utils.Log;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -731,7 +733,8 @@ public class OntologyObserver {
                 continue;
             }
             try {
-                Class clazz;
+                Class<?> clazz;
+                
                 try {
                     URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
                     clazz = classLoader.loadClass(className);
@@ -739,11 +742,14 @@ public class OntologyObserver {
                     clazz = Class.forName(className);
                 }
 
-                try {
-                    String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
-                    if (location.startsWith("file:")) {
+                CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+                if(codeSource != null) {
+					String location = codeSource.getLocation().getFile();
+                    
+					if (location.startsWith("file:")) {
                         location = location.substring(5);
                     }
+					
                     if (location.endsWith("!/")) {
                         location = location.substring(0, location.length() - 2);
                     }
@@ -755,12 +761,13 @@ public class OntologyObserver {
                             }
                         }
                     }
-
-                } catch (Exception e) {
                 }
+
             } catch (Exception e) {
+            	Log.error("Error supplementing class path", e);
             }
         }
+        
         return files;
     }
 

@@ -16,6 +16,9 @@
 
 package org.meveo.persistence.neo4j.service.graphql;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -101,8 +104,11 @@ public class GraphQLService {
      * Update the IDL for every neo4j repositories
      */
     public void updateIDL() {
+    	Instant start = Instant.now();
+    	log.debug("Computing IDL ...");
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
+    	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
 
         final List<String> neo4jConfigurations = entityManagerWrapper.getEntityManager()
                 .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
@@ -125,8 +131,11 @@ public class GraphQLService {
      * @param neo4jConfiguration Repository to update
      */
     public void updateIDL(String neo4jConfiguration) {
+    	Instant start = Instant.now();
+    	log.debug("Computing IDL ...");
         final Collection<GraphQLEntity> entities = getEntities();
         String idl = getIDL(entities);
+    	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
         List<String> missingEntities = validateIdl(idl);
         if (CollectionUtils.isEmpty(missingEntities)) {
             neo4jDao.updateIDL(neo4jConfiguration, idl);
@@ -434,7 +443,8 @@ public class GraphQLService {
                         break;
                     case ENTITY:
                         if (StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
-                            throw new NullPointerException("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                            log.warn("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                            continue;
                         }
 
                         graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
@@ -442,7 +452,8 @@ public class GraphQLService {
                         break;
                     case BINARY:
                         if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
-                            throw new NullPointerException("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                            log.warn("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                            continue;
                         }
 
                         graphQLField.setFieldType(Neo4JConstants.FILE_LABEL);
