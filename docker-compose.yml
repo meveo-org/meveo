@@ -1,0 +1,34 @@
+version: '3'
+
+volumes:
+  postgres_data:
+      driver: local
+  keycloak_data:
+      driver: local
+
+services:
+  postgres:
+      image: manaty/postgres-meveo
+      container_name: postgres
+      restart: unless-stopped
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: meveo
+        POSTGRES_USER: meveo
+        POSTGRES_PASSWORD: meveo
+      ports:
+        - 5432:5432
+  meveo:
+      image: manaty/wildfly-meveo
+      container_name: meveo
+      volumes:
+        - keycloak_data:/opt/jboss/wildfly/standalone/data/keycloakdb
+        #- $PWD/meveo_deployments:/opt/jboss/wildfly/standalone/deployments    # if host system is Linux
+        #- d:/meveo_deployments:/opt/jboss/wildfly/standalone/deployments       # if host system is Windows
+      environment:
+        JAVA_OPTS: -server -Xms1024m -Xmx2048m -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true
+      ports:
+        - 8080:8080
+      depends_on:
+        - postgres
