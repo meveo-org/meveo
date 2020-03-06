@@ -22,6 +22,14 @@ and run
 
 then meveo is running on https://localhost:8080/meveo
 
+Debug
+-----
+
+If you encounter some bug and want to check the logs (assuming you deployed from docker compose like above) then execute 
+
+docker logs -f meveo
+
+
 Documentation
 -------------
 You can find documentation at https://meveo.org for the backend, https://front.meveo.org for the frontend framework and https://frontend.meveo.org for a demo of all the web components.
