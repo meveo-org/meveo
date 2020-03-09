@@ -202,16 +202,32 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) throws IllegalArgumentException {
+	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) {
 		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
 		// Set budget variables
 		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
 		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
-
+		
 		// Assign path parameters
-		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
-			parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+		List<String> missingPathParameters = new ArrayList<>();
+
+		if (pathParameters.isEmpty() && !endpoint.getPathParameters().isEmpty()) {
+			missingPathParameters.addAll(endpoint.getPathParameters().stream().map(EndpointPathParameter::toString).collect(Collectors.toList()));
+			
+		} else {
+			for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+				if (pathParameters.get(pathParameter.getPosition()) != null) {
+					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+
+				} else {
+					missingPathParameters.add(pathParameter.toString());
+				}
+			}
+		}
+		
+		if (!missingPathParameters.isEmpty()) {
+			throw new IllegalArgumentException("The following path parameters must be specified [" + String.join(",", missingPathParameters) + "]");
 		}
 
 		// Assign query or post parameters
