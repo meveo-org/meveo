@@ -988,7 +988,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				if (val != null && !val.isEmpty()) {
 					neo4JUuid = cei.getUuid();
 				} else {
-					neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J, true));
+					neo4JUuid = neo4jService.findNodeId(repository.getNeo4jConfiguration().getCode(), cet, filterValues(valuesFilters, cet, DBStorageType.NEO4J, false));
 				}
 
 				if (uuid != null && neo4JUuid != null && !uuid.equals(neo4JUuid)) {
@@ -1180,6 +1180,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	private void createCetReference(Repository repository, Map<String, Object> updatedValues, CustomFieldTemplate customFieldTemplate, CustomEntityTemplate referencedCet) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 		List<Object> entitiesToCreate = new ArrayList<>();
 		final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
+		final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
 		if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
 			Collection<?> collectionValue = (Collection<? extends Map<String, Object>>) fieldValue;
@@ -1188,7 +1189,19 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 		
 		} else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-			entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
+			Collection fieldValueCol = (Collection) fieldValue;
+			if(!fieldValueCol.isEmpty()) {
+				// Only references are passed so the entities are already created
+				if(fieldValueCol.iterator().next() instanceof EntityReferenceWrapper) {
+					Collection<EntityReferenceWrapper> entityReferences = (Collection<EntityReferenceWrapper>) fieldValueCol;
+					List<EntityRef> entityRefs = entityReferences.stream()
+							.map(EntityRef::new)
+							.collect(Collectors.toList());
+					createdEntityReferences.addAll(entityRefs);
+				} else {
+					entitiesToCreate.addAll((Collection<? extends Map<String, Object>>) fieldValue);
+				}
+			}
 		
 		} else if (fieldValue instanceof Map) {
 			entitiesToCreate.add(fieldValue);
@@ -1197,10 +1210,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
 		
 		} else if (fieldValue instanceof EntityReferenceWrapper) {
-			updatedValues.put(customFieldTemplate.getCode(), ((EntityReferenceWrapper) fieldValue).getUuid());
+			EntityReferenceWrapper entityReferenceWrapper = (EntityReferenceWrapper) fieldValue;
+			updatedValues.put(customFieldTemplate.getCode(), entityReferenceWrapper.getUuid());
+			createdEntityReferences.add(new EntityRef(entityReferenceWrapper));
 		}
-
-		final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
 		for (Object e : entitiesToCreate) {
 			if (e instanceof Map) {

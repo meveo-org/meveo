@@ -185,7 +185,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.createIndex(repositoryCode, label, MEVEO_UUID);
+                neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
             }
         }
     }
@@ -211,7 +211,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.removeIndex(repositoryCode, label, MEVEO_UUID);
+                neo4jDao.dropUniqueConstraint(repositoryCode, label, MEVEO_UUID);
             }
         }
     }

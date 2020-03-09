@@ -45,4 +45,32 @@
 		<addNotNullConstraint tableName="cust_crt" columnName="start_node_id"/>
 		<addNotNullConstraint tableName="cust_crt" columnName="end_node_id"/>
 	</changeSet>
+	
+	<changeSet id="Cascade delete crt" author="Clément Bareth">
+		<dropForeignKeyConstraint baseTableName="cust_crt" constraintName="fk_cust_crt_start_node"/>
+		<dropForeignKeyConstraint baseTableName="cust_crt" constraintName="fk_cust_crt_end_node"/>
+		<dropForeignKeyConstraint baseTableName="crm_custom_field_tmpl" constraintName="fk_cft_crt"/>
+		<addForeignKeyConstraint constraintName="fk_cust_crt_start_node" 
+			referencedTableName="cust_cet" 
+			baseColumnNames="start_node_id" 
+			baseTableName="cust_crt" 
+			onDelete="CASCADE"
+			referencedColumnNames="id"/>
+		<addForeignKeyConstraint constraintName="fk_cust_crt_end_node" 
+			referencedTableName="cust_cet" 
+			baseColumnNames="end_node_id" 
+			baseTableName="cust_crt" 
+			onDelete="CASCADE"
+			referencedColumnNames="id"/>
+		<addForeignKeyConstraint constraintName="fk_cft_crt" 
+			referencedTableName="cust_crt" 
+			baseColumnNames="crt_id" 
+			baseTableName="crm_custom_field_tmpl" 
+			onDelete="SET NULL"
+			referencedColumnNames="id"/>
+	</changeSet>
+	
+	<changeSet id="Add uk on cust_cei(uuid)" author="Clément Bareth">
+		<addUniqueConstraint columnNames="uuid" tableName="cust_cei" constraintName="uk_cust_cei_uuid"/>
+	</changeSet>
 </databaseChangeLog>
