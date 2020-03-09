@@ -34,7 +34,9 @@ public class EndpointSchema {
 			endpointParameters = new HashMap<>();
 		}
 
-		endpointParameters.put(key, value);
+		if (key != null) {
+			endpointParameters.put(key, value);
+		}
 	}
 
 	/**
