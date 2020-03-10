@@ -55,7 +55,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
-	
+
 	/**
 	 * Object being customized in case customization corresponds to a non
 	 * CustomEntityTemplate class instance
@@ -162,7 +162,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public List<CustomEntityCategory> getCustomEntityCategories() {
 		return customEntityCategories;
 	}
-	
+
 	/**
 	 * Gets the table name if store in SQL.
 	 *
@@ -173,9 +173,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 * Is entity being customized is a Custom entity template and will be stored as a separate table.
+	 * Is entity being customized is a Custom entity template and will be stored as
+	 * a separate table.
 	 *
-	 * @return True if entity being customized is a Custom entity template and will be stored as a separate table
+	 * @return True if entity being customized is a Custom entity template and will
+	 *         be stored as a separate table
 	 */
 	public boolean isCustomTable() {
 		return isCustomEntityTemplate() && entity != null && entity.getSqlStorageConfiguration() != null && entity.getSqlStorageConfiguration().isStoreAsTable();
@@ -212,7 +214,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				} else {
 					List<CustomEntityTemplate> customEntityTemplates = new ArrayList<>();
 					customEntityTemplates.add(customEntityTemplate);
-					listMap.put(null, customEntityTemplates);
+					listMap.put(resourceBundle.getString("menu.uncategorized"), customEntityTemplates);
 				}
 			}
 		}
@@ -221,7 +223,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 * Prepare to show entity customization for a particular class - To be used from GUI action button/link.
+	 * Prepare to show entity customization for a particular class - To be used from
+	 * GUI action button/link.
 	 *
 	 * @param entityClassName Entity class
 	 */
@@ -236,7 +239,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	/**
-	 * Construct customizedEntity instance which is a representation of customizable class (e.g. Customer)
+	 * Construct customizedEntity instance which is a representation of customizable
+	 * class (e.g. Customer)
 	 *
 	 * @return the {@link CustomizedEntity} implementation
 	 * @throws ClassNotFoundException if customized entity is not on class path
@@ -325,7 +329,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			}
 		}
 
-		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), CustomEntityTemplate.class.isAssignableFrom(entityClass) ? entity.getName() : "Custom fields", true);
+		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(),
+				CustomEntityTemplate.class.isAssignableFrom(entityClass) ? entity.getName() : "Custom fields", true);
 
 		// Append actions into the hierarchy of tabs and fieldgroups
 		Map<String, EntityCustomAction> customActions = entityActionScriptService.findByAppliesTo(cetPrefix);
@@ -587,7 +592,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			boolean moved = false;
 			if (node.getType().equals(GroupedCustomFieldTreeItemType.field.name()) || node.getType().equals(GroupedCustomFieldTreeItemType.action.name())) {
 				SortedTreeNode siblingDown = node.getSiblingDown();
-				if (siblingDown != null && !(siblingDown.getType().equals(GroupedCustomFieldTreeItemType.field.name()) || siblingDown.getType().equals(GroupedCustomFieldTreeItemType.action.name()))) {
+				if (siblingDown != null && !(siblingDown.getType().equals(GroupedCustomFieldTreeItemType.field.name())
+						|| siblingDown.getType().equals(GroupedCustomFieldTreeItemType.action.name()))) {
 					parent.getChildren().remove(currentIndex);
 					siblingDown.getChildren().add(0, node);
 					moved = true;
@@ -640,8 +646,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 			} else if (sortedNode.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
 				if (!sortedNode.getParent().getType().equals(GroupedCustomFieldTreeItemType.root.name())) {
-					currentPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + sortedNode.getParent().getData() + ":" + ((SortedTreeNode) sortedNode.getParent()).getIndexInParent()
-							+ ";";
+					currentPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + sortedNode.getParent().getData() + ":"
+							+ ((SortedTreeNode) sortedNode.getParent()).getIndexInParent() + ";";
 				}
 				currentPosition = currentPosition + GroupedCustomFieldTreeItemType.fieldGroup.positionTag + ":" + sortedNode.getData() + ":" + sortedNode.getIndexInParent();
 
@@ -681,7 +687,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 					}
 
 				} else if (sortedChildNode.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
-					String childGroupPosition = currentPosition + ";" + GroupedCustomFieldTreeItemType.fieldGroup + ":" + sortedChildNode.getData() + ":" + sortedChildNode.getIndexInParent();
+					String childGroupPosition = currentPosition + ";" + GroupedCustomFieldTreeItemType.fieldGroup + ":" + sortedChildNode.getData() + ":"
+							+ sortedChildNode.getIndexInParent();
 					for (TreeNode childNode : sortedChildNode.getChildren()) {
 						SortedTreeNode sortedChildChildNode = (SortedTreeNode) childNode;
 
@@ -739,7 +746,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	/**
 	 * Sets the custom entity template unique constraint.
 	 *
-	 * @param customEntityTemplateUniqueConstraint the new custom entity template unique constraint
+	 * @param customEntityTemplateUniqueConstraint the new custom entity template
+	 *                                             unique constraint
 	 */
 	public void setCustomEntityTemplateUniqueConstraint(CustomEntityTemplateUniqueConstraint customEntityTemplateUniqueConstraint) {
 		this.customEntityTemplateUniqueConstraint = customEntityTemplateUniqueConstraint;
@@ -803,7 +811,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		String message = "customFieldInstance.childEntity.save.successful";
 		messages.info(new BundleKey("messages", message));
 	}
-
 
 	/**
 	 * Gets the graphql query field.
@@ -1058,14 +1065,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		public String getGuiPositionForField() {
 
 			if (getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
-				return GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";" + GroupedCustomFieldTreeItemType.field.positionTag + ":"
-						+ getChildCount();
+				return GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";"
+						+ GroupedCustomFieldTreeItemType.field.positionTag + ":" + getChildCount();
 
 			} else if (getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
 				String guiPosition = GroupedCustomFieldTreeItemType.fieldGroup.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";"
 						+ GroupedCustomFieldTreeItemType.field.positionTag + ":" + getChildCount();
 				if (getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
-					guiPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getParent().getData() + ":" + getParent().getParent().getChildren().indexOf(getParent()) + ";" + guiPosition;
+					guiPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getParent().getData() + ":" + getParent().getParent().getChildren().indexOf(getParent())
+							+ ";" + guiPosition;
 				}
 				return guiPosition;
 			}
@@ -1080,14 +1088,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		public String getGuiPositionForAction() {
 
 			if (getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
-				return GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";" + GroupedCustomFieldTreeItemType.action.positionTag + ":"
-						+ getChildCount();
+				return GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";"
+						+ GroupedCustomFieldTreeItemType.action.positionTag + ":" + getChildCount();
 
 			} else if (getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())) {
 				String guiPosition = GroupedCustomFieldTreeItemType.fieldGroup.positionTag + ":" + getData() + ":" + getParent().getChildren().indexOf(this) + ";"
 						+ GroupedCustomFieldTreeItemType.action.positionTag + ":" + getChildCount();
 				if (getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name())) {
-					guiPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getParent().getData() + ":" + getParent().getParent().getChildren().indexOf(getParent()) + ";" + guiPosition;
+					guiPosition = GroupedCustomFieldTreeItemType.tab.positionTag + ":" + getParent().getData() + ":" + getParent().getParent().getChildren().indexOf(getParent())
+							+ ";" + guiPosition;
 				}
 				return guiPosition;
 			}
@@ -1104,7 +1113,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return !(getIndexInParent() == 0 && (this.getType().equals(GroupedCustomFieldTreeItemType.tab.name())
 					|| (this.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name()) && ((SortedTreeNode) this.getParent()).getIndexInParent() == 0)
 					|| ((this.getType().equals(GroupedCustomFieldTreeItemType.field.name()) || this.getType().equals(GroupedCustomFieldTreeItemType.action.name()))
-					&& this.getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name()) && ((SortedTreeNode) this.getParent()).getIndexInParent() == 0)));
+							&& this.getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name()) && ((SortedTreeNode) this.getParent()).getIndexInParent() == 0)));
 
 		}
 
@@ -1118,9 +1127,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return !(isLast() && (this.getType().equals(GroupedCustomFieldTreeItemType.tab.name())
 					|| (this.getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name()) && ((SortedTreeNode) this.getParent()).isLast())
 					|| ((this.getType().equals(GroupedCustomFieldTreeItemType.field.name()) || this.getType().equals(GroupedCustomFieldTreeItemType.action.name()))
-					&& this.getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name()) && ((SortedTreeNode) this.getParent()).isLast())
+							&& this.getParent().getType().equals(GroupedCustomFieldTreeItemType.tab.name()) && ((SortedTreeNode) this.getParent()).isLast())
 					|| (this.getType().equals(GroupedCustomFieldTreeItemType.field.name()) && this.getParent().getType().equals(GroupedCustomFieldTreeItemType.fieldGroup.name())
-					&& !((SortedTreeNode) this.getParent()).canMoveDown())));
+							&& !((SortedTreeNode) this.getParent()).canMoveDown())));
 
 		}
 
@@ -1350,7 +1359,3 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		this.parameters = parameters;
 	}
 }
-
-
-
-

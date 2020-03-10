@@ -73,4 +73,15 @@
 	<changeSet id="Add uk on cust_cei(uuid)" author="Clément Bareth">
 		<addUniqueConstraint columnNames="uuid" tableName="cust_cei" constraintName="uk_cust_cei_uuid"/>
 	</changeSet>
+	
+	<changeSet id="#4127 - Add CET CET roles to meveo admin" author="Edward P. Legaspi">
+		<insert tableName="adm_user_role">
+			<column name="user_id" value="-1"></column>
+			<column name="role_id" value="-3"></column>
+		</insert>
+		<insert tableName="adm_user_role">
+			<column name="user_id" value="-1"></column>
+			<column name="role_id" value="-4"></column>
+		</insert>
+	</changeSet>
 </databaseChangeLog>
