@@ -111,10 +111,37 @@ public class CustomFieldInstanceService extends BaseService {
     private Repository repository;
 
     /**
+     * Find a entity of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
+     *
+     * @param classNameAndCode Classname to match. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;:"
+     * @param code    Filter by entity code
+     * @return A BusinessEntity
+     */
+    @SuppressWarnings("unchecked")
+    public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String code) {
+        Query query = null;
+        if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+            query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) =:code");
+            query.setParameter("cetCode", cetCode);
+        } else {
+            query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
+        }
+
+        query.setParameter("code", code.toLowerCase());
+        List<BusinessEntity> entities = query.getResultList();
+        if (entities.size() > 0) {
+            return entities.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Find a list of entities of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
      *
      * @param classNameAndCode Classname to match. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;:"
-     * @param wildcode         Filter by entity code
+     * @param code         Filter by entity code
      * @return A list of entities
      */
     @SuppressWarnings("unchecked") // TODO review location
