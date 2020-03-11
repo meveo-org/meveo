@@ -112,7 +112,7 @@
         	required="#{cft.valueRequired and !hasInheritedValue}" 
         	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
         	placeholder="#{cft.description}"
-            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" 
+            converter="entityReferenceValueConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e"
             itemLabel="#{not empty e.code ? e.code : e.uuid}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
@@ -125,7 +125,6 @@
             <p:column width="50" headerText="#{messages['BusinessEntity.description']}">
                 <h:outputText value="#{e.description}" />
             </p:column>
-            <o:converter converterId="omnifaces.ListConverter" list="#{customFieldDataEntryBean.availableEntities}" />
         </p:autoComplete>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">
