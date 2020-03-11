@@ -540,17 +540,17 @@ public class JSONSchemaGenerator {
 		} else {
 			final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(refCode);
 			// Do not make a reference in case of a primitive entity
-			if (customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			if (customEntityTemplate != null && customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 				field.setMaxValue(customEntityTemplate.getNeo4JStorageConfiguration().getMaxValue());
 				switch (customEntityTemplate.getNeo4JStorageConfiguration().getPrimitiveType()) {
-				case STRING:
-					return createStringSchema(field);
-				case DATE:
-					return createStringSchema(field);
-				case LONG:
-					return createLongSchema(field);
-				case DOUBLE:
-					return createNumberSchema(field);
+					case STRING:
+						return createStringSchema(field);
+					case DATE:
+						return createStringSchema(field);
+					case LONG:
+						return createLongSchema(field);
+					case DOUBLE:
+						return createNumberSchema(field);
 				}
 			} else {
 				result.refValue(DEFINITIONS_PREFIX + refCode);

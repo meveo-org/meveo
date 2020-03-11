@@ -2,6 +2,7 @@ package org.meveo.api;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +15,13 @@ import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -31,9 +34,17 @@ import com.google.gson.reflect.TypeToken;
  * @author Rachid AITYAAZZA
  **/
 @Stateless
-public class CustomRelationshipTemplateApi extends BaseApi {
+public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshipTemplate, CustomRelationshipTemplateDto> {
 
-    @Inject
+    /**
+	 * Instantiates a new CustomRelationshipTemplateApi
+	 */
+	public CustomRelationshipTemplateApi() {
+		super(CustomRelationshipTemplate.class, CustomRelationshipTemplateDto.class);
+	}
+
+
+	@Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
     
     @Inject
@@ -232,6 +243,38 @@ public class CustomRelationshipTemplateApi extends BaseApi {
 
 
     }
+
+	@Override
+	public CustomRelationshipTemplateDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		return findCustomRelationshipTemplate(code);
+	}
+
+	@Override
+	public CustomRelationshipTemplate createOrUpdate(CustomRelationshipTemplateDto dtoData) throws MeveoApiException, BusinessException {
+		createOrUpdateCustomRelationshipTemplate(dtoData);
+		return customRelationshipTemplateService.findByCode(dtoData.getCode());
+	}
+
+	@Override
+	public CustomRelationshipTemplateDto toDto(CustomRelationshipTemplate entity) {
+		Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values();
+		return CustomRelationshipTemplateDto.toDTO(entity, cfts);
+	}
+
+	@Override
+	public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+		return CustomRelationshipTemplateDto.fromDTO(dto, null);
+	}
+
+	@Override
+	public IPersistenceService<CustomRelationshipTemplate> getPersistenceService() {
+		return customRelationshipTemplateService;
+	}
+
+	@Override
+	public boolean exists(CustomRelationshipTemplateDto dto) {
+		return customRelationshipTemplateService.findByCode(dto.getCode()) != null;
+	}
 
    
 }
