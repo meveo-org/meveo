@@ -68,13 +68,13 @@
         <c:if test="#{not empty menu.key}">
             <p:submenu label="#{menu.key}" styleClass="menuScrollClass">
                     <c:forEach items="#{menu.value}" var="cet">
-                        <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+                        <!--<c:if test="#{currentUser.hasRole(cet.readPermission) }">-->
                             <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
                             <p:menuitem id="cet_#{cetIndex}" outcome="customEntities" value="#{cet.name}">
                                 <f:param name="cet" value="#{cet.code}"/>
                             </p:menuitem>
                             <c:set var="cetIndex" value="#{cetIndex + 1}" />
-                        </c:if>
+                        <!--</c:if>-->
                     </c:forEach>
             </p:submenu>
         </c:if>
@@ -82,13 +82,13 @@
     <c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}" var="menu">
         <c:if test="#{empty menu.key}">
             <c:forEach items="#{menu.value}" var="cet">
-                <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+                <!--<c:if test="#{currentUser.hasRole(cet.readPermission) }">-->
                     <c:set var="storeAsTable" value="#{cet.sqlStorageConfiguration != null and cet.sqlStorageConfiguration.storeAsTable}" />
                     <p:menuitem id="cet_#{cetIndex}" outcome="customEntities" value="#{cet.name}">
                         <f:param name="cet" value="#{cet.code}"></f:param>
                     </p:menuitem>
                     <c:set var="cetIndex" value="#{cetIndex + 1}" />
-                </c:if>
+                <!--</c:if>-->
             </c:forEach>
         </c:if>
     </c:forEach>
@@ -212,7 +212,7 @@
 
     <c:set var="cetIndex" value="0"/>
     <c:forEach items="#{customEntityTemplateBean.cetConfigurations}" var="cet">
-        <c:if test="#{currentUser.hasRole(cet.readPermission) }">
+        <!--<c:if test="#{currentUser.hasRole(cet.readPermission) }">-->
             <p:submenu outcome="customEntities" label="#{cet.entityReference.labelCet}">
                 <c:set var="cetIndexSub" value="0"/>
                 <p:menuitem outcome="customEntities" value ="#{cet.code}" rendered="#{cet.entityReference.displaySub}">
@@ -226,6 +226,6 @@
                 </c:forEach>
             </p:submenu>
             <c:set var="cetIndex" value="#{cetIndex + 1}" />
-        </c:if>
+        <!--</c:if>-->
     </c:forEach>
 </ui:composition>

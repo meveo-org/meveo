@@ -104,7 +104,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);
 
-		if (!StringUtils.isBlank(uuid)) {
+		if (!StringUtils.isBlank(uuid) && !uuid.equals("null")) {
 			try {
 				Map<String, Object> cfValues = crossStorageService.find(repository, customEntityTemplate, uuid, true);
 
@@ -245,6 +245,40 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		}
 		
 		return repository;
+	}
+
+	public String getCeiCode(Map<String, Object> getMapValues) {
+		if (getMapValues != null) {
+			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
+				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
+				return cei.getCode();
+			}
+		}
+
+		return null;
+	}
+
+
+	public String getCeiUuid(Map<String, Object> getMapValues) {
+		if (getMapValues != null) {
+			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
+				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
+				return cei.getUuid();
+			}
+		}
+
+		return null;
+	}
+
+	public String getCetCode(Map<String, Object> getMapValues) {
+		if (getMapValues != null) {
+			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
+				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
+				return cei.getCetCode();
+			}
+		}
+
+		return null;
 	}
 
 	public void setRepository(Repository repository) {
