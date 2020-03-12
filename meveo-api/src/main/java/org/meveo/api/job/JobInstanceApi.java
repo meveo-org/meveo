@@ -23,9 +23,14 @@ import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.job.Job;
+import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
 
+/**
+ * @author Edward P. Legaspi
+ * @version 6.9.0
+ */
 @Stateless
 public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
@@ -41,6 +46,9 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private JobExecutionService jobExecutionService;
 
     public JobInstance create(JobInstanceDto postData) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(postData.getJobTemplate()) || StringUtils.isBlank(postData.getCode())) {
@@ -139,6 +147,11 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
             throw new EntityDoesNotExistsException(JobInstance.class, jobInstanceCode);
         }
 
+		// need to cancel existing attached timer
+		if ((jobInstance.getTimerEntity() != null && !jobInstance.getTimerEntity().getCode().equals(postData.getTimerCode()))) {
+			jobInstanceService.scheduleUnscheduleJob(jobInstance.getId());
+		}
+		
         Job job = jobInstanceService.getJobByName(postData.getJobTemplate());
         JobCategoryEnum jobCategory = job.getJobCategory();
 

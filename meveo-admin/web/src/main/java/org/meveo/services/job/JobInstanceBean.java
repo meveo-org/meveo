@@ -12,7 +12,6 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
-import org.meveo.admin.action.admin.custom.CustomFieldDataEntryBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.JobRunningStatusEnum;
@@ -22,8 +21,8 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
@@ -45,13 +44,9 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     private JobExecutionService jobExecutionService;
 
     @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
-
-    @Inject
-    private CustomFieldDataEntryBean customFieldDataEntryBean;
-
-    @Inject
     private JobCacheContainerProvider jobCacheContainerProvider;
+    
+    private TimerEntity prevTimerEntity;
 
     public JobInstanceBean() {
         super(JobInstance.class);
@@ -59,7 +54,11 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     @Override
     public JobInstance initEntity() {
-        super.initEntity();
+        entity = super.initEntity();
+        
+		if (entity.getTimerEntity() != null) {
+			prevTimerEntity = entity.getTimerEntity();
+		}
 
         try {
             refreshCustomFieldsAndActions();
@@ -120,11 +119,18 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         return getEditViewName();
     }
 
-    @Override
-    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        super.saveOrUpdate(killConversation);
-        return getEditViewName();
-    }
+	@Override
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+
+		// need to cancel existing attached timer
+		if (prevTimerEntity != entity.getTimerEntity()) {
+			jobInstanceService.scheduleUnscheduleJob(entity.getId());
+		}
+
+		super.saveOrUpdate(killConversation);
+
+		return getEditViewName();
+	}
 
     @Override
     protected String getListViewName() {
