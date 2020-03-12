@@ -21,7 +21,6 @@ package org.meveo.model;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.apache.commons.lang3.StringUtils;
@@ -57,6 +56,10 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     }
 
     public void setCode(String code) {
+    	if(code == null) {
+    		throw new IllegalArgumentException("Code can't be null !");
+    	}
+    	
         this.code = code;
     }
 

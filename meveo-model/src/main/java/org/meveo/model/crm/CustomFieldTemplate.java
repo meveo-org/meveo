@@ -97,8 +97,12 @@ import org.meveo.model.shared.DateUtils;
 @NamedQueries({
         @NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
         @NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
-        @NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
-                @QueryHint(name = "org.hibernate.cacheable", value = "true") }),
+        @NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", 
+	        query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", 
+	        hints = {
+//	                @QueryHint(name = "org.hibernate.cacheable", value = "true") 
+	                }
+	        ),
         @NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
                 @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
@@ -146,12 +150,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Column(name = "field_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    @NotNull
     private CustomFieldTypeEnum fieldType;
 
     @Column(name = "applies_to", nullable = false, length = 100)
     @Size(max = 100)
-    @NotNull
     private String appliesTo;
 
     @Type(type = "numeric_boolean")
@@ -579,6 +581,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 * @param appliesTo the new applies to
 	 */
     public void setAppliesTo(String appliesTo) {
+    	if(appliesTo == null) {
+    		throw new IllegalArgumentException("Applies to query can't be null !");
+    	}
+    	
         this.appliesTo = appliesTo;
     }
 
