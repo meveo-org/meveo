@@ -540,7 +540,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		}
         
         // Neo4J configuration if defined
-        if(dto.getNeo4jStorageConfiguration() != null) {
+        if(dto.getNeo4jStorageConfiguration() != null && dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
             if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
             	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();

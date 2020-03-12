@@ -78,7 +78,17 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         if (!EntityCustomizationUtils.validateOntologyCode(crt.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+        
+        if(crt.getStartNode() == null) {
+        	throw new IllegalArgumentException("Can't create relation " + crt.getCode() + ": start node can't be null");
+        }
+        
+        if(crt.getEndNode() == null) {
+        	throw new IllegalArgumentException("Can't create relation " + crt.getCode() + ": end node can't be null");
+        }
+        
         super.create(crt);
+        
         try {
             permissionService.createIfAbsent("modify", crt.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent("read", crt.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
