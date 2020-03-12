@@ -1098,6 +1098,10 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     public Map<String, Object> replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> values){
+    	if(values == null) {
+    		values = new HashMap<>();
+    	}
+    	
         for(CustomFieldTemplate cft : cfts){
             final Object tempVal = values.remove(cft.getDbFieldname());
             if(tempVal != null){

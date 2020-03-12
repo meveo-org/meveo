@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -428,6 +429,11 @@ public class CustomFieldInstanceService extends BaseService {
 	public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
 
         log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
+        
+        CustomEntityTemplate cet = null;
+        if(entity instanceof CustomEntityInstance) {
+        	cet = ((CustomEntityInstance) entity).getCet();
+        }
 
         // Can not set the value if field is versionable without a date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
@@ -482,7 +488,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
-
+						fetchCode(cft, (String) value, entityReferenceWrapper);
 					}
 
 					if (entityReferenceWrapper.getUuid() != null) {
@@ -504,6 +510,9 @@ public class CustomFieldInstanceService extends BaseService {
 
 							} else if (item instanceof String) {
 								itemWrapper.setUuid((String) item);
+								
+								// Try to fetch code
+								fetchCode(cft, (String) item, itemWrapper);
 
 							}
 
@@ -2420,6 +2429,31 @@ public class CustomFieldInstanceService extends BaseService {
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
             setCFValue(entity, cetField.getKey(), value);
+		}
+	}
+	
+	/**
+	 * Try to fetch the code of the referenced entity if exists. If cft is null, will do nothing.
+	 * 
+	 * Note : silently fails if error occurs
+	 * 
+	 * @param cft     The cft corresponding to the 'code' field
+	 * @param uuid    Uuid of the referenced entity
+	 * @param wrapper reference wrapper object to update
+	 */
+	private void fetchCode(CustomFieldTemplate cft, String uuid, EntityReferenceWrapper wrapper) {
+		try {
+			
+			String appliesTo = CustomEntityTemplate.getAppliesTo(cft.getEntityClazzCetCode());
+			CustomFieldTemplate codeCft = cfTemplateService.findByCodeAndAppliesTo("code", appliesTo);
+			if(codeCft != null) {
+				CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+				Map<String, Object> result = crossStorageService.find(repository, refCet, uuid, Collections.singletonList("code"), false);
+				wrapper.setCode((String) result.get("code")); 
+			}
+			
+		} catch (Exception e) {
+			//NOOP
 		}
 	}
 }

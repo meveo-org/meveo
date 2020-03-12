@@ -211,7 +211,9 @@ public class CrossStorageService implements CustomPersistenceService {
 				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 					final Map<String, Object> customTableValue = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, sqlFields);
 					replaceKeys(cet, sqlFields, customTableValue);
-					values.putAll(customTableValue);
+					if(customTableValue != null) {
+						values.putAll(customTableValue);
+					}
 				} else {
 					final CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
 					if (cei == null) {

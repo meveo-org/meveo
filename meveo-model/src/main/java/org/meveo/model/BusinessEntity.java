@@ -56,10 +56,6 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     }
 
     public void setCode(String code) {
-    	if(code == null) {
-    		throw new IllegalArgumentException("Code can't be null !");
-    	}
-    	
         this.code = code;
     }
 
