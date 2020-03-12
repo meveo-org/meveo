@@ -28,6 +28,10 @@ import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Named
 @ViewScoped
 public class JobInstanceBean extends CustomFieldBean<JobInstance> {
@@ -218,8 +222,13 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("executionResults");
+        return Arrays.asList("timerEntity", "executionResults");
     }
+    
+	@Override
+	protected List<String> getListFieldsToFetch() {
+		return Arrays.asList("timerEntity");
+	}
     
     @Override
     public void enable() {    	
