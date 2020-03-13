@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
-import org.meveo.commons.utils.FileUtils;
+import org.apache.tika.Tika;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.storage.Repository;
 import org.slf4j.Logger;
@@ -164,7 +164,8 @@ public class BinaryStoragePathParam {
 
 		if(this.contentType == null) {
 			try {
-				String mimeType = Files.probeContentType(file.toPath());
+				Tika tika = new Tika();
+				String mimeType = tika.detect(file);
 				this.setContentType(mimeType);
 			} catch (IOException e) {
 				logger.warn("Cannot determine content type", e);

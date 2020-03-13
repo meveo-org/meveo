@@ -11,6 +11,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
 import org.apache.commons.lang.reflect.FieldUtils;
@@ -92,7 +94,7 @@ public class MeveoModuleItemInstaller {
         if (!installed) {
         	
         	try {
-        	
+        		
 	            ModuleScriptInterface moduleScript = null;
 	            if (meveoModule.getScript() != null) {
 	                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
@@ -101,16 +103,25 @@ public class MeveoModuleItemInstaller {
 	            unpackAndInstallModuleItems(meveoModule, moduleDto);
 	
 	            meveoModule.setInstalled(true);
-	            
-	            transaction.begin();
-	            meveoModule = meveoModuleService.update(meveoModule);
-	            transaction.commit();
+//	            transaction.commit();
+//	            transaction.begin();
+// 	            meveoModule = meveoModuleService.update(meveoModule);
+//	            transaction.commit();
 	
 	            if (moduleScript != null) {
 	                moduleScriptService.postInstallModule(moduleScript, meveoModule);
 	            }
             
         	} catch(Exception e) {
+        		
+        		try {
+					if(transaction.getStatus() != Status.STATUS_NO_TRANSACTION) {
+						transaction.rollback();
+					}
+				} catch (Exception e1) {
+	            	throw new BusinessException(e1);
+				}
+        		
             	this.meveoModuleService.uninstall(meveoModule);
             	throw new BusinessException(e);
             }
@@ -220,7 +231,11 @@ public class MeveoModuleItemInstaller {
 		    transaction.commit();
 		    
 		} catch (ClassNotFoundException e1) {
+			transaction.rollback();
 			throw new BusinessException(e1);
+		} catch (Exception e) {
+			transaction.rollback();
+			throw e;
 		}
 	}
 	

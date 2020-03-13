@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -391,7 +392,10 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
-
+		if("null".equals(values.get(FIELD_ID))) {
+			values.remove(FIELD_ID);
+		}
+		
 		if (tableName == null) {
 			throw new BusinessException("Table name must not be null");
 		}
@@ -1324,8 +1328,39 @@ public class NativePersistenceService extends BaseService {
 		// A list is expected as value. If value is not a list, parse value as comma
 		// separated string and convert each value separately
 		if (expectedList) {
-			if (value instanceof List || value instanceof Set || value.getClass().isArray()) {
+			if(value instanceof Collection) {
+				Collection<?> collectionValue = (Collection<?>) value;
+				
+				// Convert entity references wrapper list to list of string
+				{
+					List<String> entityReferences = collectionValue.stream()
+						.filter(EntityReferenceWrapper.class::isInstance)
+						.map(EntityReferenceWrapper.class::cast)
+						.map(EntityReferenceWrapper::getUuid)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toList());
+					
+					if(!entityReferences.isEmpty()) {
+						return entityReferences;
+					}
+				}
+				
+				// Convert entity references wrapper list to list of long
+				{ 
+					List<Long> entityReferences = collectionValue.stream()
+							.filter(EntityReferenceWrapper.class::isInstance)
+							.map(EntityReferenceWrapper.class::cast)
+							.map(EntityReferenceWrapper::getId)
+							.filter(Objects::nonNull)
+							.collect(Collectors.toList());
+					
+					if(!entityReferences.isEmpty()) {
+						return entityReferences;
+					}
+				}
+				
 				return value;
+				
 			} else if (value instanceof String) {
 				try {
 					// First try to parse json
@@ -1381,6 +1416,8 @@ public class NativePersistenceService extends BaseService {
 			listVal = (List) value;
 		} else if (value instanceof Map) {
 			stringVal = JacksonUtil.toString(value);
+		} else if (value instanceof File) {
+			stringVal = ((File) value).getAbsolutePath();
 		} else {
 			throw new ValidationException("Unrecognized data type for value " + value + " type " + value.getClass());
 		}

@@ -7,18 +7,12 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpStatus;
-import org.meveo.api.swagger.SwaggerDocService;
-import org.meveo.api.swagger.SwaggerHelperService;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptUtils;
-
-import io.swagger.models.Response;
-import io.swagger.models.Swagger;
-import io.swagger.util.Json;
+import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
 
 /**
  * This service is use to build the endpoint interface from a template file. The
@@ -26,20 +20,17 @@ import io.swagger.util.Json;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class ESGeneratorService {
 
 	@Inject
-	private SwaggerDocService swaggerDocService;
-
-	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
 
 	@Inject
-	private SwaggerHelperService swaggerHelperService;
-	
+	private EndpointSchemaService endpointSchemaService;
+
 	/**
 	 * Generates an endpoint interface in js code using a template file.
 	 * 
@@ -74,19 +65,16 @@ public class ESGeneratorService {
 			endpointJSInterface.setCet(true);
 		}
 
-		Swagger swaggerDoc = swaggerDocService.generateOpenApiJson(baseUrl, endpoint);
-		Response response = swaggerDoc.getResponses().get("" + HttpStatus.SC_OK);
-
-		endpointJSInterface.setResponseSchema(Json.pretty(response.getResponseSchema()));
+		endpointJSInterface.setResponseSchema(endpointSchemaService.generateResponseSchema(endpoint));
 
 		try {
 			if (endpoint.getMethod() == EndpointHttpMethod.GET) {
-				endpointJSInterface.setRequestSchema(Json.pretty(swaggerHelperService.getGetPathParamaters(swaggerDoc.getPaths())));
+				endpointJSInterface.setRequestSchema(endpointSchemaService.generateRequestSchema(endpoint));
 				endpointJSInterface
 						.setTemplate(FileUtils.readFileToString(new File(ESGenerator.class.getClassLoader().getResource("endpoint-js-template/get-template.js").getFile())));
 
 			} else if (endpoint.getMethod() == EndpointHttpMethod.POST) {
-				endpointJSInterface.setRequestSchema(Json.pretty(swaggerHelperService.getPostPathParamaters(swaggerDoc.getPaths())));
+				endpointJSInterface.setRequestSchema(endpointSchemaService.generateRequestSchema(endpoint));
 				endpointJSInterface
 						.setTemplate(FileUtils.readFileToString(new File(ESGenerator.class.getClassLoader().getResource("endpoint-js-template/post-template.js").getFile())));
 			}

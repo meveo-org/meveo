@@ -148,10 +148,10 @@ public interface ModuleRs extends IBaseRs {
 	 * @param remove Whether to remove elements
 	 * @return Request processing status
 	 */
-	@GET
+	@GET //TODO: change to "DELETE" method
 	@Path("/uninstall")
 	@ApiOperation(value = "Uninstall meveo module")
-	ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code,
+	ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code, //TODO: change to "path param"
 			@QueryParam("remove") @ApiParam("Whether to remove elements") @DefaultValue("false") boolean remove);
 
 	/**

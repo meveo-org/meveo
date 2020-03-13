@@ -609,6 +609,7 @@ public class Neo4jDao {
         } catch (Exception e) {
             transaction.failure();
             LOGGER.error("Error while merging Neo4J nodes.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues, e);
+            throw new RuntimeException(e);
         } finally {
             // End session and transaction
             transaction.close();

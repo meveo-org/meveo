@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import org.meveo.commons.utils.CustomDateSerializer;
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.commons.utils.StringUtils;
@@ -25,6 +23,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.shared.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.LinkedTreeMap;
@@ -402,6 +403,11 @@ public class CustomFieldValue implements Serializable {
                 listMapValue.add((Map<?, ?>) listItem);
             }
 
+        } else if(BusinessEntity.class.isAssignableFrom(itemClass)) {
+            listEntityValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+                listEntityValue.add(new EntityReferenceWrapper((BusinessEntity) listItem));
+            }
         } else {
     	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
         }

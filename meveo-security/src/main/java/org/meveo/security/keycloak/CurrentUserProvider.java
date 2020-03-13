@@ -170,8 +170,6 @@ public class CurrentUserProvider {
         		Role.class)
         		.getResultList();
         
-        System.out.println("Duration : " + (System.currentTimeMillis() - start));
-
         // User was forced authenticated, so need to lookup the rest of user information
         if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
             user = new MeveoUserKeyCloakImpl(ctx, 

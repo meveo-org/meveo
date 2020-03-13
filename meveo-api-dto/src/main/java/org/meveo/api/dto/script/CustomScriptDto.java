@@ -24,7 +24,7 @@ public abstract class CustomScriptDto extends FunctionDto {
 
 	/** The type. */
 	@XmlElement
-	private ScriptSourceTypeEnum type;
+	private ScriptSourceTypeEnum type = ScriptSourceTypeEnum.JAVA;
 
 	/** The script. */
 	@XmlElement(required = true)

@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -91,6 +93,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return (List<CustomFieldTemplate> ) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
             return null;
+        } catch (Exception e) {
+        	log.error("Failed to retrieve custom field templates", e);
+        	return null;
         }
     }
 
@@ -147,12 +152,18 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public Map<String, CustomFieldTemplate> findByAppliesToNoCache(String appliesTo) {
 
-        List<CustomFieldTemplate> values = getEntityManager().createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
-            .setParameter("appliesTo", appliesTo).getResultList();
+    	try {
+	        List<CustomFieldTemplate> values = getEntityManager()
+	        		.createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
+	        		.setParameter("appliesTo", appliesTo).getResultList();
+	
+	        Map<String, CustomFieldTemplate> cftMap = values.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+	        return cftMap;
 
-        Map<String, CustomFieldTemplate> cftMap = values.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
-
-        return cftMap;
+    	} catch (Exception e) {
+        	log.error("Failed to retrieve custom field templates", e);
+        	return new HashMap<>();
+    	}
     }
 
     /**
@@ -209,11 +220,19 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public CustomFieldTemplate findByCodeAndAppliesToNoCache(String code, String appliesTo) {
 
         try {
-            return getEntityManager().createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class).setParameter("code", code)
-                .setParameter("appliesTo", appliesTo).getSingleResult();
+            return getEntityManager()
+            		// .createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class)
+            		.createQuery("FROM CustomFieldTemplate where code=:code and appliesTo=:appliesTo", CustomFieldTemplate.class)
+            		.setParameter("code", code)
+            		.setParameter("appliesTo", appliesTo)
+            		.getSingleResult();
+            
         } catch (NoResultException e) {
             return null;
-        }
+        } catch (Exception e) {
+        	log.error("Failed to retrieve custom field template", e);
+        	return null;
+    	}
     }
 
     @Override
@@ -344,7 +363,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
 		// CF applies to a CET
-		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+		if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
@@ -361,7 +380,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			}
 
 		// CF Applies to a CRT
-		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+		} else if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
 			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);

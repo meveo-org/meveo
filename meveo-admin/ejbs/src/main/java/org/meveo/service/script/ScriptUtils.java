@@ -41,7 +41,7 @@ import com.github.javaparser.javadoc.JavadocBlockTag;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * 
  * @see ScriptInstance
- * @version 6.8.0
+ * @version 6.9.0
  */
 public class ScriptUtils {
 
@@ -229,6 +229,7 @@ public class ScriptUtils {
 
 	public static String findScriptVariableType(Function function, String variableName) {
 
+		String result = "object";
 		if (function instanceof CustomScript) {
 			CustomScript customScript = (CustomScript) function;
 			CompilationUnit compilationUnit;
@@ -246,13 +247,13 @@ public class ScriptUtils {
 				Optional<Accessor> returnMethod = getters.stream().filter(e -> e.getName().equals(variableName)).findAny();
 
 				if (returnMethod.isPresent()) {
-					return returnMethod.get().getType();
+					result = returnMethod.get().getType().toLowerCase();
 				}
 
 			} catch (Exception e) {
 			}
 		}
 
-		return "Object";
+		return result;
 	}
 }

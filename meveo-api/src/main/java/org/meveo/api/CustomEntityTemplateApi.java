@@ -540,7 +540,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		}
         
         // Neo4J configuration if defined
-        if(dto.getNeo4jStorageConfiguration() != null) {
+        if(dto.getNeo4jStorageConfiguration() != null && dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
             if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
             	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
@@ -581,7 +581,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
                 customEntityCategory.setName(dto.getCustomEntityCategoryCode());
                 try {
-                    customEntityCategoryService.create(customEntityCategory);
+                    customEntityCategoryService.createInNewTx(customEntityCategory);
+                    // customEntityCategoryService.flush();
                 } catch (BusinessException e) {
                     log.error("Cannot create category", e);
                 }

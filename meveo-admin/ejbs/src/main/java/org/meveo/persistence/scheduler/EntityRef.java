@@ -16,6 +16,7 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.storage.Repository;
 
 import com.google.common.base.Objects;
@@ -27,7 +28,9 @@ public class EntityRef {
     private String label;
     private Repository repository;
 
-    public EntityRef() {
+    public EntityRef(EntityReferenceWrapper wrapper) {
+    	this.uuid = wrapper.getUuid();
+    	this.label = wrapper.getClassnameCode();
     }
 
     public EntityRef(String uuid, String label) {

@@ -555,7 +555,7 @@
 							label="#{messages['customFieldTemplate.identifier']}"
 							field="identifier" isMessage="true" componentWidth="8"
 							allowEdit="false" actionListenerBean="#{customFieldTemplateBean}"
-							listenerUpdate="@this relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields listValuesField fieldTypeId"
+							listenerUpdate="@this relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields listValuesField fieldTypeId"
 							actionListenerMethod="resetFieldType" />
 					</h:panelGroup>
 
@@ -564,9 +564,8 @@
 							<hftl:formField
 								label="#{messages['customFieldTemplate.fieldType']}"
 								field="fieldType" required="true" componentWidth="30"
-								actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
-								listenerUpdate="binaryCFT listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
+								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
 								onEventComplete="PF('cftDialog').initPosition()"
 								rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
 								
@@ -585,7 +584,7 @@
 									<f:attribute name="GenericEnumConverter.enumType"
 										value="CustomFieldTypeEnum" />
 									<p:ajax
-										update="listValuesField relationshipName defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields"
+										update="listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields"
 										listener="#{customFieldTemplateBean.updateDefaultValues}"
 										event="change" />
 								</p:selectOneMenu>
@@ -626,16 +625,34 @@
 								isAutocomplete="true"
 								autocompleteMethod="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.CHILD_ENTITY?'autocompleteClassNamesCEIOnly':'autocompleteClassNames'}"
 								newLine="true" componentWidth="100"
-								listenerUpdate="childEntityFields"
+								listenerUpdate="childEntityFields relationshipPanel"
 								actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="resetChildEntityFields"
 								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.CHILD_ENTITY}" />
 						</h:panelGroup>
-						<h:panelGroup id="relationshipName">
-							<hftl:formField
-								label="#{messages['customFieldTemplate.relationshipName']}"
-								field="relationshipName" required="true" componentWidth="30"
-								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and (customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY)}" />
+						<h:panelGroup id="relationshipPanel">
+							<hftl:decorateFormField
+								label="#{messages['customFieldTemplate.relationshipCode']}"
+								fieldId="relationship"
+								field="relationship" required="true" componentWidth="100"
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY}">
+							
+								<p:selectOneMenu id="relationship"
+									value="#{customFieldTemplateBean.entity.relationship}" required="true">
+									<f:selectItems
+										value="#{customFieldTemplateBean.availableRelationships}"
+										var="elem" itemValue="#{elem}"
+										itemLabel="#{elem.code}" />
+									<hftl:objectConverter/>
+								</p:selectOneMenu>
+									
+							</hftl:decorateFormField>
+							
+							<hftl:formField label="#{messages['customFieldTemplate.relationshipName']}"
+								field="relationshipName"
+								required="true"
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.BINARY}" />
+								
 						</h:panelGroup>
 						<h:panelGroup id="displayFormat">
 							<hftl:formField
@@ -933,7 +950,7 @@
 					<h:panelGroup id="storages">
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customFieldTemplate.storages']}">
 							<p:pickList id="pickList" value="#{customFieldTemplateBean.storagesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
-								<p:ajax event="transfer" listener="#{customFieldTemplateBean.onChangeAvailableStorages()}" update="relationshipName"/>
+								<p:ajax event="transfer" listener="#{customFieldTemplateBean.onChangeAvailableStorages()}" update="relationshipPanel"/>
 								<o:converter converterId="omnifaces.ListConverter" list="#{customFieldTemplateBean.storageTypesList}" />
 							</p:pickList>
 						</hftl:decorateFormField>

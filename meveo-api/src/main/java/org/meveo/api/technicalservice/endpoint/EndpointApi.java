@@ -64,6 +64,7 @@ import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
+import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
 
 import io.swagger.util.Json;
 
@@ -73,7 +74,7 @@ import io.swagger.util.Json;
  * @author clement.bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 01.02.2019
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
@@ -92,6 +93,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	@Inject
 	private SwaggerDocService swaggerDocService;
+	
+	@Inject
+	private EndpointSchemaService endpointRequestSchemaService;
 	
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -198,16 +202,32 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) throws IllegalArgumentException {
+	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) {
 		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
 		// Set budget variables
 		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
 		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
-
+		
 		// Assign path parameters
-		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
-			parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+		List<String> missingPathParameters = new ArrayList<>();
+
+		if (pathParameters.isEmpty() && !endpoint.getPathParameters().isEmpty()) {
+			missingPathParameters.addAll(endpoint.getPathParameters().stream().map(EndpointPathParameter::toString).collect(Collectors.toList()));
+			
+		} else {
+			for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+				if (pathParameters.get(pathParameter.getPosition()) != null) {
+					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
+
+				} else {
+					missingPathParameters.add(pathParameter.toString());
+				}
+			}
+		}
+		
+		if (!missingPathParameters.isEmpty()) {
+			throw new IllegalArgumentException("The following path parameters must be specified [" + String.join(",", missingPathParameters) + "]");
 		}
 
 		// Assign query or post parameters
@@ -587,5 +607,31 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	    return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
 	
+	}
+
+	/**
+	 * Generates the request schema of an endpoint
+	 * 
+	 * @param code code of the endpoint
+	 * @return request schema of the given endpoint
+	 */
+	public String requestSchema(@NotNull String code) {
+		
+		Endpoint endpoint = endpointService.findByCode(code);
+		
+		return endpointRequestSchemaService.generateRequestSchema(endpoint);
+	}
+
+	/**
+	 * Generates the response schema of an endpoint
+	 * 
+	 * @param code code of the endpoint
+	 * @return response schema of the given endpoint
+	 */
+	public String responseSchema(@NotNull String code) {
+
+		Endpoint endpoint = endpointService.findByCode(code);
+
+		return endpointRequestSchemaService.generateResponseSchema(endpoint);
 	}
 }

@@ -1,16 +1,16 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -116,6 +116,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
+					
 				}
 
 			} catch (EntityDoesNotExistsException | BusinessException e) {
@@ -147,14 +148,30 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		String result = getListViewName();
 
-		boolean isNew = StringUtils.isBlank(uuid);
+		boolean isNew = StringUtils.isBlank(uuid) || "null".equals(uuid);
 
 		try {
 
 			Map<String, List<CustomFieldValue>> cfValues = customFieldDataEntryBean.getFieldValueHolderByUUID(entity.getUuid()).getValuesByCode();
 			
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
-			entity.setCfValues(new CustomFieldValues(cfValues));
+			CustomFieldValues customFieldValues = new CustomFieldValues(cfValues);
+			
+			// Handle list of entity references
+			cfValues.forEach((code, cfValue) -> {
+				List<Object> listValue = cfValue.stream()
+					.filter(cfv -> cfv.getMapValuesForGUI() != null)
+					.flatMap(cfv -> cfv.getMapValuesForGUI().stream())
+					.filter(map -> map.size() == 1 && map.containsKey("value"))
+					.map(map -> map.get("value"))
+					.collect(Collectors.toList());
+				
+				if(!listValue.isEmpty()) {
+					customFieldValues.setValue(code, listValue);
+				}
+			});
+			
+			entity.setCfValues(customFieldValues);
 			
 			crossStorageService.createOrUpdate(repository, entity);
 

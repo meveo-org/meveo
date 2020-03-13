@@ -60,6 +60,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -98,6 +99,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private Neo4jService neo4jService;
+	
+	@Inject
+	private JSONSchemaGenerator jsonSchemaGenerator;
 
     private static boolean useCETCache = true;
 
@@ -560,5 +564,14 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		}
 
 		return false;
+	}
+	
+
+	
+	public String requestSchema(String code) {
+		
+		CustomEntityTemplate cet = findByCode(code);
+//		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
+		return null;
 	}
 }

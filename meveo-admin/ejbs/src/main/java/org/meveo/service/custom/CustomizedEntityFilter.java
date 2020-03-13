@@ -19,7 +19,7 @@ public class CustomizedEntityFilter {
 	 * 1 - true
 	 * 2 - no
 	 */
-	private String primitiveEntity;
+	private String primitiveEntity = "0";
 	private Long cecId;
 
 	public String getEntityName() {
