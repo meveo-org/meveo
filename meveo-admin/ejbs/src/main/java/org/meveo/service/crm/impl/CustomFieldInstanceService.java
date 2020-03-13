@@ -514,7 +514,9 @@ public class CustomFieldInstanceService extends BaseService {
 								// Try to fetch code
 								fetchCode(cft, (String) item, itemWrapper);
 
-							}
+							} else if (item instanceof EntityReferenceWrapper) {
+                                itemWrapper = (EntityReferenceWrapper) item;
+                            }
 
 							entityReferences.add(itemWrapper);
 						}

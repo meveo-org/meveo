@@ -1,12 +1,10 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -21,6 +19,8 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -264,37 +264,51 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		return repository;
 	}
 
-	public String getCeiCode(Map<String, Object> getMapValues) {
-		if (getMapValues != null) {
-			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
-				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
-				return cei.getCode();
-			}
+	public String getCeiCode(CustomEntityInstance cei) {
+		if (cei != null) {
+			return cei.getCode();
 		}
-
 		return null;
 	}
 
 
-	public String getCeiUuid(Map<String, Object> getMapValues) {
-		if (getMapValues != null) {
-			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
-				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
-				return cei.getUuid();
-			}
+	public String getCeiUuid(CustomEntityInstance cei) {
+		if (cei != null) {
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(cei.getCode());
+			return customEntityInstance.getUuid();
 		}
-
 		return null;
 	}
 
-	public String getCetCode(Map<String, Object> getMapValues) {
-		if (getMapValues != null) {
-			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
-				CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
-				return cei.getCetCode();
-			}
+	public String getCetCode(CustomEntityInstance cei) {
+		if (cei != null) {
+			return cei.getCetCode();
 		}
+		return null;
+	}
 
+	public String getCeiCode(BusinessEntity businessEntity) {
+		if (businessEntity != null) {
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
+			return customEntityInstance.getCode();
+		}
+		return null;
+	}
+
+
+	public String getCeiUuid(BusinessEntity businessEntity) {
+		if (businessEntity != null) {
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
+			return customEntityInstance.getUuid();
+		}
+		return null;
+	}
+
+	public String getCetCode(BusinessEntity businessEntity) {
+		if (businessEntity != null) {
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
+			return customEntityInstance.getCetCode();
+		}
 		return null;
 	}
 
