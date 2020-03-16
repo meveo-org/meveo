@@ -38,14 +38,14 @@
 			<hftl:searchField label="#{messages['enableEntity.disabled']}"
 				field="disabled" />
 			<ui:define name="buttons">
-				<p:panel id="customButtons" styleClass="search-panel-actions" style="padding-left: 0px;">
+				<p:panel id="customButtons" styleClass="search-panel-actions"
+					style="padding-left: 0px;">
 					<p:button value="#{messages['commons.new']}"
 						outcome="#{customEntityInstanceListBean.newViewName}"
 						rendered="#{customEntityInstanceListBean.repository != null}">
 						<f:param name="cid"
 							value="#{javax.enterprise.context.conversation.id}" />
 						<f:param name="edit" value="true" />
-						<f:param name="uuid" value="#{entity.uuid}" />
 						<f:param name="cet"
 							value="#{customEntityInstanceListBean.customEntityTemplateCode}" />
 						<f:param name="repo"
@@ -76,92 +76,85 @@
 		</h:form>
 
 		<p:outputPanel id="contentBody">
-			<p:panel width="100" rendered="#{customEntityInstanceListBean.repository != null}">
-				
-			<h:form prependId="false">
-				<p:dataTable id="results_panel"
-					value="#{customEntityInstanceListBean.nativeDataModel}"
-					var="entity" 
-					lazy="true" 
-					widgetVar="ctTable"
-					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-					currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
-					paginator="true" 
-					rows="10" 
-					rowsPerPageTemplate="10,15,20,50"
-					resizableColumns="true" 
-					styleClass="custom-grid" 
-					reflow="true"
-					editable="false" 
-					rowSelectMode="checkbox"
-					selection="#{customEntityInstanceListBean.selectedValues}"
-					rowIndexVar="rowIdx">
+			<p:panel width="100"
+				rendered="#{customEntityInstanceListBean.repository != null}">
 
-					<p:column id="multiSelect" selectionMode="multiple" width="4%"
-						exportable="false" toggleable="false" selectRow="false" />
+				<h:form prependId="false">
+					<p:dataTable id="results_panel"
+						value="#{customEntityInstanceListBean.nativeDataModel}"
+						var="entity" lazy="true" widgetVar="ctTable"
+						paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
+						paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
+						resizableColumns="true" styleClass="custom-grid" reflow="true"
+						editable="false" rowSelectMode="checkbox"
+						selection="#{customEntityInstanceListBean.selectedValues}"
+						rowIndexVar="rowIdx">
 
-					<p:column headerText="uuid" selectRow="false">
-						<h:outputText value="#{entity['uuid']}" />
+						<p:column id="multiSelect" selectionMode="multiple" width="4%"
+							exportable="false" toggleable="false" selectRow="false" />
 
-					</p:column>
+						<p:column headerText="uuid" selectRow="false">
+							<h:outputText value="#{entity['uuid']}" />
+						</p:column>
 
-					<p:column headerText="#{messages['BusinessEntity.code']}">
-						<h:outputText value="#{entity['code']}" styleClass="field-value">
-						</h:outputText>
-					</p:column>
+						<p:column headerText="#{messages['BusinessEntity.code']}">
+							<h:outputText value="#{entity['code']}" styleClass="field-value">
+							</h:outputText>
+						</p:column>
 
-					<p:column headerText="#{messages['BusinessEntity.description']}">
-						<h:outputText value="#{entity['description']}"
-							styleClass="field-value">
-						</h:outputText>
-					</p:column>
+						<p:column headerText="#{messages['BusinessEntity.description']}">
+							<h:outputText value="#{entity['description']}"
+								styleClass="field-value">
+							</h:outputText>
+						</p:column>
 
-					<p:column headerText="#{messages['commons.actions']}"
-						exportable="false" selectRow="false">
-						<p:tooltip for="editlink" value="#{messages['commons.edit']}"
-							showEffect="slide" hideEffect="slide" />
-						<p:button id="editlink"
-							outcome="#{customEntityInstanceListBean.getEditViewName()}"
-							icon="ui-icon-document">
-							<f:param name="edit" value="true" />
-							<f:param name="cid"
-								value="#{javax.enterprise.context.conversation.id}" />
-							<f:param name="uuid" value="#{entity.uuid}" />
-							<f:param name="cet"
-								value="#{customEntityInstanceListBean.customEntityTemplateCode}" />
-							<f:param name="repo"
-								value="#{customEntityInstanceListBean.repository.code}" />
-						</p:button>
+						<p:column headerText="#{messages['commons.actions']}"
+							exportable="false" selectRow="false">
+							<p:tooltip for="editlink" value="#{messages['commons.edit']}"
+								showEffect="slide" hideEffect="slide" />
+							<p:button id="editlink"
+								outcome="#{customEntityInstanceListBean.getEditViewName()}"
+								icon="ui-icon-document">
+								<f:param name="edit" value="true" />
+								<f:param name="cid"
+									value="#{javax.enterprise.context.conversation.id}" />
+								<f:param name="uuid" value="#{entity.uuid}" />
+								<f:param name="cet"
+									value="#{customEntityInstanceListBean.customEntityTemplateCode}" />
+								<f:param name="repo"
+									value="#{customEntityInstanceListBean.repository.code}" />
+							</p:button>
 
-						<p:remoteCommand id="remoteDeleteButton"
-							actionListener="#{customEntityInstanceBean.delete}"
-							name="doDelete" update="contentBody" />
-						<p:tooltip for="deletelink" value="#{messages['commons.delete']}"
-							showEffect="slide" hideEffect="slide" />
-						<p:commandButton id="deletelink" immediate="true"
-							icon="ui-icon-trash" oncomplete="doDelete()">
-							<f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />
-							<f:param name="cet" value="#{customEntityInstanceListBean.customEntityTemplate.code}" />
-							<f:setPropertyActionListener
-								target="#{customEntityInstanceBean.uuid}" value="#{entity.uuid}" />
-							<f:setPropertyActionListener
-								target="#{customEntityInstanceBean.repositoryCode}"
-								value="#{customEntityInstanceListBean.repository.code}" />
-							<f:setPropertyActionListener
-								target="#{customEntityInstanceBean.customEntityTemplateCode}"
-								value="#{customEntityInstanceListBean.customEntityTemplate.code}" />
-							<p:confirm header="#{messages['commons.confirmationHeader']}"
-								message="#{messages['commons.confirmDelete']}"
-								icon="ui-icon-alert" />
-						</p:commandButton>
-					</p:column>
-				</p:dataTable>
-			</h:form>
-				
+							<p:remoteCommand id="remoteDeleteButton"
+								actionListener="#{customEntityInstanceBean.delete}"
+								name="doDelete" update="contentBody" />
+							<p:tooltip for="deletelink" value="#{messages['commons.delete']}"
+								showEffect="slide" hideEffect="slide" />
+							<p:commandButton id="deletelink" immediate="true"
+								icon="ui-icon-trash" oncomplete="doDelete()">
+								<f:param name="cid"
+									value="#{javax.enterprise.context.conversation.id}" />
+								<f:param name="cet"
+									value="#{customEntityInstanceListBean.customEntityTemplate.code}" />
+								<f:setPropertyActionListener
+									target="#{customEntityInstanceBean.uuid}"
+									value="#{entity.uuid}" />
+								<f:setPropertyActionListener
+									target="#{customEntityInstanceBean.repositoryCode}"
+									value="#{customEntityInstanceListBean.repository.code}" />
+								<f:setPropertyActionListener
+									target="#{customEntityInstanceBean.customEntityTemplateCode}"
+									value="#{customEntityInstanceListBean.customEntityTemplate.code}" />
+								<p:confirm header="#{messages['commons.confirmationHeader']}"
+									message="#{messages['commons.confirmDelete']}"
+									icon="ui-icon-alert" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</h:form>
 			</p:panel>
-			
 		</p:outputPanel>
-		
 
 	</ui:define>
 

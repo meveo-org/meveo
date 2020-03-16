@@ -1,24 +1,22 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.crm.custom.CustomFieldValue;
@@ -103,7 +101,8 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);
-
+		entity.setCet(customEntityTemplate);
+		
 		if (!StringUtils.isBlank(uuid)) {
 			try {
 				Map<String, Object> cfValues = crossStorageService.find(repository, customEntityTemplate, uuid, true);
