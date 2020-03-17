@@ -314,6 +314,11 @@
 			<artifactId>js</artifactId>
 			<version>19.2.0.1</version>
 		</dependency>
+		<dependency>
+		    <groupId>io.undertow</groupId>
+		    <artifactId>undertow-servlet</artifactId>
+		    <scope>provided</scope>
+		</dependency>
 
 	</dependencies>
 	<profiles>

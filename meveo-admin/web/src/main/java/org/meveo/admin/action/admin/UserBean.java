@@ -18,6 +18,29 @@
  */
 package org.meveo.admin.action.admin;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.faces.event.ActionEvent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -37,7 +60,6 @@ import org.meveo.model.admin.User;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -45,25 +67,24 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.git.RSAKeyPair;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.*;
-
-import javax.annotation.PostConstruct;
-import javax.faces.event.ActionEvent;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.DualListModel;
+import org.primefaces.model.StreamedContent;
+import org.primefaces.model.TreeNode;
+import org.primefaces.model.UploadedFile;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create, edit,
  * view, delete operations). It works with Manaty custom JSF components.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @since 6.9.0
+ * @version 6.9.0
  */
 @Named
 @ViewScoped
@@ -749,4 +770,9 @@ public class UserBean extends CustomFieldBean<User> {
     public void setConfirmPassphrase(String confirmPassphrase) {
         this.confirmPassphrase = confirmPassphrase;
     }
+    
+	public long getFileLimitUploadSize() {
+
+		return Long.parseLong(paramBeanFactory.getInstance().getProperty("meveo.fileUpload.limitInMb", "50")) * 1000000;
+	}
 }

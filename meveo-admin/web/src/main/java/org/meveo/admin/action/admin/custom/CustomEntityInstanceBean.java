@@ -109,6 +109,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);
+		entity.setCet(customEntityTemplate);
 
 		if (!StringUtils.isBlank(uuid) && !uuid.equals("null")) {
 			try {

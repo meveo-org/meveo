@@ -142,7 +142,7 @@
 				</p:selectBooleanCheckbox>
                 <p:fileUpload fileUploadListener="#{userBean.handleFileUpload}"
                      multiple="true" mode="advanced" dragDropSupport="true"
-                     fileLimit="5" update=":fileExplorer" styleClass="TexAlCenter"/>
+                     fileLimit="5" update=":fileExplorer" styleClass="TexAlCenter" sizeLimit="#{userBean.getFileLimitUploadSize()}" />
              </h:form>
 
 			<p:dialog widgetVar="addFileToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
