@@ -551,7 +551,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return converted;
     }
     
-	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
+	public boolean hasReferenceJpaEntity(String cetCode) {
+        CustomEntityTemplate cet = findByCode(cetCode);
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		if (cfts.size() > 0) {

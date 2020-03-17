@@ -70,7 +70,15 @@
                             <hftl:customFieldValueMuteField edit="false" id="cfValue_out" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />
                         </f:facet>
                         <f:facet name="input">
-                            <hftl:customFieldValueMuteField edit="true" id="cfValue_in" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />
+                            <h:link outcome="referenceCEI" value="#{customEntityInstanceBean.getCeiCode(cft, mapValues)}" target="_blank">
+                                <f:param name="uuid" value="#{customEntityInstanceBean.getCeiUuid(cft, mapValues)}"/>
+                                <f:param name="cet" value="#{customEntityInstanceBean.getCetCode(cft, mapValues)}"/>
+                                <f:param name="repo" value="#{customEntityInstanceBean.repositoryCode}"/>
+                                <f:param name="tab" value="#{customEntityInstanceBean.activeTab}"/>
+                                <!--<f:param name="backView" value="customizedEntities" />-->
+                                <f:param name="cid" value="#{javax.enterprise.context.conversation.id}"/>
+                            </h:link>
+                            <!--<hftl:customFieldValueMuteField edit="true" id="cfValue_in" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />-->
                         </f:facet>
                     </p:cellEditor>
                 </p:column>
