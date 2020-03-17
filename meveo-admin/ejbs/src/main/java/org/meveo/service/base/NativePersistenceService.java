@@ -244,6 +244,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
 		
+		if(queryValues.isEmpty()) {
+			throw new IllegalArgumentException("Query values should not be empty");
+		}
+		
 		StringBuilder q = new StringBuilder();
 		q.append("SELECT uuid FROM {h-schema}" + tableName + " as a\n");
 		

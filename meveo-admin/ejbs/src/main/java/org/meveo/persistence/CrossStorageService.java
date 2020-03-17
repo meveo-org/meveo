@@ -77,7 +77,8 @@ import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.8.0
+ * @author clement.bareth
+ * @version 6.9.0
  */
 @Stateless
 @LocalBean
@@ -128,6 +129,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param uuid           UUID of the entity
 	 * @param withReferences Whether to fetch entity references
 	 * @return list of matching entities
+	 * @throws EntityDoesNotExistsException if entity can't be found
 	 */
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, boolean withReferences) throws EntityDoesNotExistsException {
 		return find(repository, cet, uuid, null, true);
@@ -142,6 +144,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param fetchFields          Fields to select
 	 * @param withEntityReferences Whether to fetch entity references
 	 * @return list of matching entities
+	 * @throws EntityDoesNotExistsException if entity does not exist
 	 */
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, List<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
 		if (uuid == null) {
@@ -261,6 +264,17 @@ public class CrossStorageService implements CustomPersistenceService {
 		return values;
 	}
 
+	/**
+	 * Completed the data spread across multiple storage
+	 * 
+	 * @param data the actual data
+	 * @param repository the repository to get data from
+	 * @param cet data type
+	 * @param uuid id of the record
+	 * @param selectFields the field to fetch
+	 * @return the data completed
+	 * @throws EntityDoesNotExistsException if data with given id can't be found
+	 */
 	public Map<String, Object> getMissingData(Map<String, Object> data, Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> selectFields) throws EntityDoesNotExistsException {
 		List<String> actualFetchField = new ArrayList<>(selectFields);
 		actualFetchField.removeAll(data.keySet());
@@ -281,6 +295,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param cet                     Template of the entities to retrieve
 	 * @param paginationConfiguration Pagination and filters
 	 * @return list of matching entities
+	 * @throws EntityDoesNotExistsException if data with given id can't be found
 	 */
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
@@ -366,11 +381,11 @@ public class CrossStorageService implements CustomPersistenceService {
 
 					// Flatten primitive types and Binary values (singleton maps with only "value"
 					// and optionally "meveo_uuid" attribute)
-					if (mapValue instanceof Map && ((Map) mapValue).size() == 1 && ((Map) mapValue).containsKey("value")) {
-						Object value = ((Map) mapValue).get("value");
+					if (mapValue instanceof Map && ((Map<?, ?>) mapValue).size() == 1 && ((Map<?, ?>) mapValue).containsKey("value")) {
+						Object value = ((Map<?, ?>) mapValue).get("value");
 						resultMap.put(key, value);
-					} else if (mapValue instanceof Map && ((Map) mapValue).size() == 2 && ((Map) mapValue).containsKey("value") && ((Map) mapValue).containsKey("meveo_uuid")) {
-						Object value = ((Map) mapValue).get("value");
+					} else if (mapValue instanceof Map && ((Map<?, ?>) mapValue).size() == 2 && ((Map<?, ?>) mapValue).containsKey("value") && ((Map<?, ?>) mapValue).containsKey("meveo_uuid")) {
+						Object value = ((Map<?, ?>) mapValue).get("value");
 						resultMap.put(key, value);
 					}
 				});
@@ -424,6 +439,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 	}
 
+	/**
+	 * Count the number of record for a given pagination
+	 * 
+	 * @param repository              the repository
+	 * @param cet                     the data type
+	 * @param paginationConfiguration the pagination
+	 * @return the number of record
+	 */
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 
 		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
@@ -834,6 +857,11 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * Update an entity instance
 	 *
 	 * @param repository Repository code
+	 * @param ceiToUpdate the instance to be updated
+	 * @throws BusinessException if error occures
+	 * @throws IOException  if a binary can't be updated
+	 * @throws BusinessApiException  if error occures
+	 * @throws EntityDoesNotExistsException if the data does not exist yet
 	 */
 	public void update(Repository repository, CustomEntityInstance ceiToUpdate) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 
@@ -942,6 +970,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		return null;
 	}
 
+	/**
+	 * Retrieve the uuid of an entity
+	 * 
+	 * @param repository repository where the entity is stored
+	 * @param cei the instance holding values to get id from
+	 * @return the id corresponding to the values
+	 */
 	public String findEntityId(Repository repository, CustomEntityInstance cei) {
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
@@ -954,14 +989,26 @@ public class CrossStorageService implements CustomPersistenceService {
 				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 				try {
 					if(cei.getUuid() != null) {
-						customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
-						uuid = cei.getUuid();
+						Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
+						if(values != null) {
+							uuid = cei.getUuid();
+						}
 					}
 				} catch (EntityDoesNotExistsException e) {}
 				
 				if(uuid == null) {
 					Map<String, CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cei.getCet().getAppliesTo());
-					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), dbTablename, filterValues(valuesFilters, cet, DBStorageType.SQL, true), cfts.values());
+					cfts.values().stream()
+						.filter(CustomFieldTemplate::isUnique)
+						.findAny()
+						.orElseThrow(() -> new IllegalArgumentException("Can't retrieve SQL record by values if no unique fields are defined"));
+					
+					Map<String, Object> uniqueValues = filterValues(valuesFilters, cet, DBStorageType.SQL, true);
+					if(uniqueValues.isEmpty()) {
+						throw new IllegalArgumentException("No unique values provided");
+					}
+					
+					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), dbTablename, uniqueValues, cfts.values());
 				}
 				
 			} else {
@@ -1014,6 +1061,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param valuesFilters Filter on entity's values
 	 * @param cet           Template of the entity
 	 * @return UUID of the entity or nul if it was'nt found
+	 * @throws BusinessException if error happens
 	 */
 	public String findEntityId(Repository repository, Map<String, Object> valuesFilters, CustomEntityTemplate cet) throws BusinessException {
 		CustomEntityInstance cei = new CustomEntityInstance();
@@ -1030,6 +1078,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param repository Repository
 	 * @param cet        Template of the entity
 	 * @param uuid       UUID of the entity
+	 * @throws BusinessException if error happens
 	 */
 	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
 		if (uuid == null) {
@@ -1060,6 +1109,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @param repository Repository
 	 * @param crt            Template of the relation
 	 * @param uuid           UUID of the relation
+	 * @throws BusinessException if error happens
 	 */
 	public void remove(Repository repository, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
@@ -1154,7 +1204,6 @@ public class CrossStorageService implements CustomPersistenceService {
 		}).collect(Collectors.toList());
 	}
 
-	@SuppressWarnings("unchecked")
 	private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		Map<String, Object> updatedValues = new HashMap<>(entityValues);
 
@@ -1179,6 +1228,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		return updatedValues;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void createCetReference(Repository repository, Map<String, Object> updatedValues, CustomFieldTemplate customFieldTemplate, CustomEntityTemplate referencedCet) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 		List<Object> entitiesToCreate = new ArrayList<>();
 		final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
@@ -1191,7 +1241,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 		
 		} else if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-			Collection fieldValueCol = (Collection) fieldValue;
+			Collection<EntityReferenceWrapper> fieldValueCol = (Collection<EntityReferenceWrapper>) fieldValue;
 			if(!fieldValueCol.isEmpty()) {
 				// Only references are passed so the entities are already created
 				if(fieldValueCol.iterator().next() instanceof EntityReferenceWrapper) {

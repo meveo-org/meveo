@@ -1,10 +1,12 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -20,6 +22,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
@@ -86,6 +89,8 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	@Inject @Cookie(name = "repository")
 	private String repositoryCode;
 
+	private Map<String, CustomFieldTemplate> customFieldTemplates;
+
 	public CustomEntityInstanceBean() {
 		super(CustomEntityInstance.class);
 	}
@@ -100,6 +105,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		repository = repositoryService.findByCode(repositoryCode);
 
 		customEntityTemplate = cacheContainerProvider.getCustomEntityTemplate(customEntityTemplateCode);
+		customFieldTemplates = cacheContainerProvider.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
 
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);
@@ -264,52 +270,58 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		return repository;
 	}
 
-	public String getCeiCode(CustomEntityInstance cei) {
-		if (cei != null) {
-			return cei.getCode();
+	public String getCeiCode(CustomFieldTemplate cft, Map<String, Object> getMapValues) {
+		if (getMapValues != null) {
+			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
+				if(ceiMap.getValue() instanceof EntityReferenceWrapper) {
+					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
+					return wrapper.getCode();
+				}
+				
+				BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
+				return cei.getCode();
+			}
 		}
+
 		return null;
 	}
 
-
-	public String getCeiUuid(CustomEntityInstance cei) {
-		if (cei != null) {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(cei.getCode());
-			return customEntityInstance.getUuid();
+	
+	public String getCeiUuid(CustomFieldTemplate customFieldTemplate, Map<String, Object> getMapValues) {
+		if (getMapValues != null) {
+			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
+				if(ceiMap.getValue() instanceof CustomEntityInstance) {
+					CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
+					return cei.getUuid();
+					
+				} else if(ceiMap.getValue() instanceof BusinessEntity){
+					BusinessEntity be = (BusinessEntity) ceiMap.getValue();
+					if(be.getCode() != null) {
+						CustomEntityInstance cei = new CustomEntityInstance();
+						cei.setCode(be.getCode());
+						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
+						cei.setCet(customEntityTemplateService.findByCode(cei.getCetCode()));
+						
+						CustomFieldValues values = new CustomFieldValues();
+						values.setValue("code", be.getCode());
+						cei.setCfValues(values);
+						
+						return crossStorageService.findEntityId(repository, cei);
+					}
+					
+				} else if(ceiMap.getValue() instanceof EntityReferenceWrapper) {
+					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
+					return wrapper.getUuid();
+				}
+				
+			}
 		}
+
 		return null;
 	}
 
-	public String getCetCode(CustomEntityInstance cei) {
-		if (cei != null) {
-			return cei.getCetCode();
-		}
-		return null;
-	}
-
-	public String getCeiCode(BusinessEntity businessEntity) {
-		if (businessEntity != null) {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
-			return customEntityInstance.getCode();
-		}
-		return null;
-	}
-
-
-	public String getCeiUuid(BusinessEntity businessEntity) {
-		if (businessEntity != null) {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
-			return customEntityInstance.getUuid();
-		}
-		return null;
-	}
-
-	public String getCetCode(BusinessEntity businessEntity) {
-		if (businessEntity != null) {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(businessEntity.getCode());
-			return customEntityInstance.getCetCode();
-		}
-		return null;
+	public String getCetCode(CustomFieldTemplate cft, Map<String, Object> getMapValues) {
+		return cft.getEntityClazzCetCode();
 	}
 
 	public void setRepository(Repository repository) {
