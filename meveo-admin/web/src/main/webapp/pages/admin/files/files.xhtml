@@ -13,6 +13,7 @@
 	<ui:define name="metadata">
 		<f:metadata>
 			<f:event type="preRenderView" listener="#{userBean.init}" />
+			<f:viewParam name="folder" value="#{userBean.initialFolder}" />
 		</f:metadata>
 	</ui:define>
 

@@ -18,5 +18,6 @@ package org.meveo.model.git;
 
 public enum  GitActionType {
     READ,
-    WRITE
+    WRITE,
+    GET
 }

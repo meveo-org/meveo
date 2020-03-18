@@ -67,6 +67,7 @@ public class MeveoGitServlet extends GitServlet {
     static {
         SERVICE_ROLE_MAPPING.put("git-upload-pack", GitActionType.READ);
         SERVICE_ROLE_MAPPING.put("git-receive-pack", GitActionType.WRITE);
+        SERVICE_ROLE_MAPPING.put("GET", GitActionType.GET);
     }
 	
     @Inject
@@ -140,6 +141,8 @@ public class MeveoGitServlet extends GitServlet {
         	service = req.getQueryString().replaceAll(".*service=([\\w-]+).*", "$1");
         } else if (req.getRequestURI().matches(".*(git-.*-pack).*")){
         	service = req.getRequestURI().replaceAll(".*(git-.*-pack).*", "$1");
+        } else {
+        	service = req.getMethod();
         }
 
         String code = req.getRequestURL().toString().replaceAll(".*/git/([^/]+).*", "$1");
@@ -155,22 +158,40 @@ public class MeveoGitServlet extends GitServlet {
         	return;
         }
         
-        switch (gitActionType) {
-            case READ: authorized = GitHelper.hasReadRole(currentUser, gitRepository);
-                break;
-
-            case WRITE: authorized = GitHelper.hasWriteRole(currentUser, gitRepository);
-                break;
-
-            default:
-                authorized = false;
-                log.error("Unmapped service type {}", service);
-                break;
+        if(gitActionType == null) {
+        	authorized = false;
+        } else {
+        
+	        switch (gitActionType) {
+	        	case GET:
+	            case READ: authorized = GitHelper.hasReadRole(currentUser, gitRepository);
+	                break;
+	
+	            case WRITE: authorized = GitHelper.hasWriteRole(currentUser, gitRepository);
+	                break;
+	
+	            default:
+	                authorized = false;
+	                log.error("Unmapped service type {}", service);
+	                break;
+	        }
+        
         }
-
+        
         if(!authorized) {
             res.setStatus(403);
-            sendErrorToClient(res, new Exception("You are not authorized to execute this action"));
+        	if(gitActionType == GitActionType.GET) {
+        		try {
+					req.getRequestDispatcher("/errors/403.xhtml")
+						.forward(req, res);
+					
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+        		
+        	} else {
+        		sendErrorToClient(res, new Exception("You are not authorized to execute this action"));
+        	}
             return;
         }
 
@@ -178,7 +199,13 @@ public class MeveoGitServlet extends GitServlet {
         FakeServletResponse fakeServletResponse = new FakeServletResponse(res);
 
         try {
-            super.service(req, res);
+        	// Return the file list
+        	if(gitActionType == GitActionType.GET) {
+        		req.getRequestDispatcher("/pages/admin/files/files.xhtml?folder=git" + req.getPathInfo())
+        			.forward(req, res);
+        	} else {
+        		super.service(req, res);
+        	}
 
         } catch(Exception e) {
             log.error("Git error", e);
@@ -211,13 +238,17 @@ public class MeveoGitServlet extends GitServlet {
         }
 
         if(res.getStatus() != 500) {
-            ServletOutputStream outputStream = res.getOutputStream();
-            for (Integer b : fakeServletResponse.getLines()) {
-                outputStream.write(b);
-            }
-
-            outputStream.flush();
-            outputStream.close();
+        	try {
+	            ServletOutputStream outputStream = res.getOutputStream();
+	            for (Integer b : fakeServletResponse.getLines()) {
+	                outputStream.write(b);
+	            }
+	
+	            outputStream.flush();
+	            outputStream.close();
+        	} catch (IllegalStateException e) {
+        		
+        	}
 
         } else {
             // Read the output stream and send error to the git client

@@ -69,6 +69,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
+import org.omnifaces.cdi.Param;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -115,13 +116,17 @@ public class UserBean extends CustomFieldBean<User> {
     @Inject
     private MeveoModuleService meveoModuleService;
 
+    private String selectedFolder;
+    
+    private String initialFolder;
+    
     private DualListModel<Role> rolesDM;
 
     private TreeNode userGroupRootNode;
 
     private TreeNode userGroupSelectedNode;
     private String providerFilePath;
-    private String selectedFolder;
+
     private boolean currentDirEmpty;
     private String selectedFileName;
     private String newFilename;
@@ -373,8 +378,20 @@ public class UserBean extends CustomFieldBean<User> {
     public boolean hasSelectedFolder() {
         return !StringUtils.isBlank(selectedFolder);
     }
+    
+    public void setInitialFolder(String initialFolder) {
+    	if(this.initialFolder == null && this.selectedFolder == null) {
+        	initialFolder = initialFolder.replace("/", File.separator);
+    		this.initialFolder = initialFolder;
+    		setSelectedFolder(initialFolder);
+    	}
+	}
 
-    public void setSelectedFolder(String selectedFolder) {
+	public String getInitialFolder() {
+		return initialFolder;
+	}
+
+	public void setSelectedFolder(String selectedFolder) {
         setSelectedFileName(null);
         if (selectedFolder == null) {
             log.debug("setSelectedFolder to null");
