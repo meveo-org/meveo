@@ -380,7 +380,7 @@ public class UserBean extends CustomFieldBean<User> {
     }
     
     public void setInitialFolder(String initialFolder) {
-    	if(this.initialFolder == null && this.selectedFolder == null) {
+    	if(this.initialFolder == null && initialFolder != null && this.selectedFolder == null) {
         	initialFolder = initialFolder.replace("/", File.separator);
     		this.initialFolder = initialFolder;
     		setSelectedFolder(initialFolder);
