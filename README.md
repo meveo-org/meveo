@@ -57,6 +57,14 @@ then the followinf wildfly cli command (with the correct domain name instead of 
 
     bin/jboss-cli.sh --connect --commands="/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=redirect-socket,value=proxy-https)"
 
+then restart the meveo container
+
+    docker restart meveo
+
+Once meveo is started, you can check that by displaying the logs should and check that they display
+
+    INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0051: Admin console listening on...
+
 meveo admin console should be accessible at https://mydomain.org
 
  
