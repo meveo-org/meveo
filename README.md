@@ -4,69 +4,13 @@ Meveo
 Meveo is a platform that allow to develop and execute enterprise back and front applications
 It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence : AGPLv3.0
 
-Local Installation
--------------------
-You can build the war and deploy on wildfly 15 after configuring keycloack, postgres, infinispan, neo4j(optional), elasticsearch(optional),...
+Installation : https://github.com/meveo-org/install
 
-Or simply execute the docker images from docker hub.
+Backend documentation https://meveo.org 
 
-For a simple postgres localhost deployment:
+Frontend framework  https://front.meveo.org
 
-make sure you have docker and docker-compose installed
-
-put the file https://raw.githubusercontent.com/meveo-org/meveo/master/docker-compose.yml on some directory
-
-and run
-
-'docker-compose up -d'
-
-then meveo is running on https://localhost:8080/meveo
-
-Installation with embedded keycloack and nginx
-----------------------------------------------
-Let assume you want to deploy meveo on a domain https://mydomain.org, that you already have a linux server with 4Go of Ram a public IP and that your domain DNS configuration correctly route to your public IP.
-
-Let assume that you also have an ssl certificate in the form of 2 files certificate.crt and certificate.key (you might have to merge the crt files into one if several are provided, for instance you should concatenate certificate.crt and ca-bundled.crt provided by sslforfree)
-
-Make sure you have docker and docker compose installed.
-
-put the file https://raw.githubusercontent.com/meveo-org/meveo/master/install/nginx-keycloack/docker-compose-nginx.yml on some directory and rename it docker-compose.yml
-
-put the file https://raw.githubusercontent.com/meveo-org/meveo/master/install/nginx-keycloack/nginx.conf in /root/nginx/ (update the docker-compose.yml file if you want to use another directory)
-
-put the certificate.crt and certificate.key files in /root/nginx/ssl/ (update the docker-compose.yml file if you want to use another directory)
-
-start meveo,postgres and nginx by running 
-
-    docker-compose up -d
-in the directory containing the docker-compose.yml file
-
-Enter the meveo container to execute some bash command by running 
-
-    docker exec -it meveo bash
-then the followinf wildfly cli command (with the correct domain name instead of "mydomain.org")
-
-
-    bin/jboss-cli.sh --connect --commands="/system-property=meveo.keycloak.url:write-attribute(name=value,value=https://mydomain.org/auth)"
-
-    bin/jboss-cli.sh --connect --commands="/system-property=meveo.keycloak.fixed-hostname:write-attribute(name=value, value=mydomain.org)"
-
-    bin/jboss-cli.sh --connect --commands="/socket-binding-group=standard-sockets/socket-binding=proxy-https:add(port=443)"
-
-    bin/jboss-cli.sh --connect --commands="/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=proxy-address-forwarding,value=true)"
-
-    bin/jboss-cli.sh --connect --commands="/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=redirect-socket,value=proxy-https)"
-
-then restart the meveo container
-
-    docker restart meveo
-
-Once meveo is started, you can check that by displaying the logs should and check that they display
-
-    INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0051: Admin console listening on...
-
-meveo admin console should be accessible at https://mydomain.org
-
+Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
  
 Debug
 -----
@@ -127,7 +71,3 @@ Finally, apply the change of docker-compose file.
     $ sudo docker-compose up -d
 This command will recreate the meveo container. and developer can see the log file in the specified location on host system.
 
-
-Documentation
--------------
-You can find documentation at https://meveo.org for the backend, https://front.meveo.org for the frontend framework and https://frontend.meveo.org for a demo of all the web components.
