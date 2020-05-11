@@ -9,6 +9,8 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
 
+import java.util.Map;
+
 
 /**
  * This job is made to create MeasuredValue of some MeasurableQuantity whose code is given as parameter The JPA query to execute is stored in the MeasurableQuantity, and we assume
@@ -21,7 +23,7 @@ public class DWHQueryJob extends Job {
     private DWHQueryBean dwhQueryBean;
 
     @Override
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         dwhQueryBean.executeQuery(result, jobInstance.getParametres());
     }
 

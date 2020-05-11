@@ -122,9 +122,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         technicalService.getExtendedServices().clear();
         if(postData.getExtendedServices() != null) {
         	for(String serviceCode : postData.getExtendedServices()) {
-        		TechnicalService extendedService = persistenceService.findByCode(serviceCode);
+        		TechnicalService extendedService = persistenceService.findServiceByCode(serviceCode);
         		if(extendedService != null) {
         			technicalService.getExtendedServices().add(extendedService);
+        		} else {
+        			throw new IllegalArgumentException("Can't find extended service " + serviceCode);
         		}
         	}
         }

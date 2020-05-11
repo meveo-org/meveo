@@ -1,5 +1,5 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	
+    xmlns:p="http://primefaces.org/ui"	
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
@@ -15,7 +15,14 @@
 	</ui:define>
 
 	<ui:define name="body">
-
+		<h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.application']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.currencies']}" outcome="currencies" />
+            </p:breadCrumb>
+        </h:form>
+        
 		<hftl:searchPanel label="#{messages['currency.search']}" columns="3"
 			backingBean="#{currencyListBean}">
 			<hftl:searchField label="#{messages['currency.code']}"

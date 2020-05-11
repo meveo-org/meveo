@@ -37,15 +37,17 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("EntityCustomAction")
+@ModuleItemOrder(70)
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })
 @Table(name = "crm_custom_action", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "applies_to" }))

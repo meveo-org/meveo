@@ -38,6 +38,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,6 +90,17 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         return MEVEO_DIR;
     }
 
+    @RequirePermission(value = DefaultPermission.GIT_READ, orRole = DefaultRole.GIT_ADMIN)
+    public void createGitMeveoFolder(GitRepository gitRepository) throws BusinessException {
+        File dir = GitHelper.getRepositoryDir(currentUser, gitRepository.getCode());
+        if(dir.exists() && new File(dir, ".git").exists()) {
+            return;
+        }
+
+        dir.mkdirs();
+        gitClient.createGitMeveoFolder(gitRepository, dir);
+    }
+
     @Override
 	@RequirePermission(value = DefaultPermission.GIT_READ, orRole = DefaultRole.GIT_ADMIN)
     public GitRepository findByCode(String code) {
@@ -97,7 +109,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         if (repository != null && !GitHelper.hasReadRole(currentUser, repository)) {
             throw new UserNotAuthorizedException(currentUser.getUserName());
         }
-        setBranchInformation(repository);
+        //setBranchInformation(repository);
 
         return repository;
     }

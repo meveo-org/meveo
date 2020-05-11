@@ -19,12 +19,17 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.ejb.Stateless;
@@ -36,7 +41,9 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -46,6 +53,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -58,20 +66,23 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.jobs.JobExecutionResultImpl;
+import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.module.*;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
+import org.meveo.service.job.JobExecutionService;
+import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
 
-
 /**
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.9.0
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -84,6 +95,12 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private MeveoModuleItemService meveoModuleItemService;
+
+    @Inject
+    private JobInstanceService jobInstanceService;
+
+    @Inject
+    private JobExecutionService jobExecutionService;
 
     /**
      * import module from remote meveo instance.
@@ -183,20 +200,40 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         }
     }
 
+    /**
+     * Uninstall the module and disables it items
+     * 
+     * @param module the module to uninstall
+     * @return the uninstalled module
+     * @throws BusinessException if an error occurs
+     */
     public MeveoModule uninstall(MeveoModule module) throws BusinessException {
         return uninstall(module, false, false);
     }
 
-    public MeveoModule uninstall(MeveoModule module, boolean remove) throws BusinessException {
-        return uninstall(module, false, remove);
+	/**
+	 * Uninstall the module and disables it items
+	 * 
+	 * @param module      the module to uninstall
+	 * @param removeItems if true, module items will be deleted and not disabled
+	 * @return the uninstalled module
+	 * @throws BusinessException if an error occurs
+	 */
+    public MeveoModule uninstall(MeveoModule module, boolean removeItems) throws BusinessException {
+        return uninstall(module, false, removeItems);
     }
 
+	/**
+	 * Uninstall the module and disables it items
+	 * 
+	 * @param module      the module to uninstall
+	 * @param childModule whether the module is a child module
+	 * @param removeItems if true, module items will be deleted and not disabled
+	 * @return the uninstalled module
+	 * @throws BusinessException if an error occurs
+	 */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean remove) throws BusinessException {
-
-//        if (!module.isInstalled()) {
-//            throw new BusinessException("Module is not installed");
-//        }
+    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean removeItems) throws BusinessException {
 
         ModuleScriptInterface moduleScript = null;
         if (module.getScript() != null) {
@@ -218,7 +255,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
             try {
                 if (itemEntity instanceof MeveoModule) {
-                    uninstall((MeveoModule) itemEntity, true, remove);
+                    uninstall((MeveoModule) itemEntity, true, removeItems);
                 } else {
 
                     // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
@@ -234,7 +271,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                         continue;
                     }
 
-                    if(remove) {
+                    if(removeItems) {
                         persistenceServiceForItem.remove(itemEntity);
                     } else {
                         persistenceServiceForItem.disable(itemEntity);
@@ -257,8 +294,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
         // Otherwise mark it uninstalled and clear module items
         } else {
+            MeveoModule moduleUpdated = module;
             module.setInstalled(false);
-            MeveoModule moduleUpdated = update(module);
+            
+            /* In case the module is uninstalled because of installation failure
+               and that the module is not inserted in db we should not update its persistent state */
+            if(getEntityManager().contains(module)) {
+            	moduleUpdated = update(module);
+            }
             
             getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
             	.setParameter("meveoModule", module)
@@ -453,4 +496,272 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		q.executeUpdate();
 	}
 
+	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
+        entity = findById(entity.getId());
+        ModuleRelease moduleRelease = new ModuleRelease();
+        moduleRelease.setCode(entity.getCode());
+        moduleRelease.setDescription(entity.getDescription());
+        moduleRelease.setLicense(entity.getLicense());
+        moduleRelease.setLogoPicture(entity.getLogoPicture());
+        moduleRelease.setScript(entity.getScript());
+        moduleRelease.setCurrentVersion(entity.getCurrentVersion());
+        moduleRelease.setMeveoVersionBase(entity.getMeveoVersionBase());
+        moduleRelease.setMeveoVersionCeiling(entity.getMeveoVersionCeiling());
+        moduleRelease.setModuleSource(entity.getModuleSource());
+        moduleRelease.setInDraft(false);
+        if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
+            Set<String> moduleFiles = new HashSet<>();
+            for (String moduleFile : entity.getModuleFiles()) {
+                moduleFiles.add(moduleFile);
+            }
+            moduleRelease.setModuleFiles(moduleFiles);
+        }
+        if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
+            List<MeveoModuleDependency> dependencies = new ArrayList<>();
+            for (MeveoModuleDependency moduleDependency : entity.getModuleDependencies()) {
+                dependencies.add(moduleDependency);
+            }
+            moduleRelease.setModuleDependencies(dependencies);
+        }
+        if (CollectionUtils.isNotEmpty(entity.getModuleItems())) {
+            List<ModuleReleaseItem> moduleReleaseItems = new ArrayList<>();
+            for (MeveoModuleItem meveoModuleItem : entity.getModuleItems()) {
+                ModuleReleaseItem moduleReleaseItem = new ModuleReleaseItem();
+                moduleReleaseItem.setAppliesTo(meveoModuleItem.getAppliesTo());
+                moduleReleaseItem.setItemClass(meveoModuleItem.getItemClass());
+                moduleReleaseItem.setItemEntity(meveoModuleItem.getItemEntity());
+                moduleReleaseItem.setItemCode(meveoModuleItem.getItemCode());
+                moduleReleaseItem.setModuleRelease(moduleRelease);
+                moduleReleaseItems.add(moduleReleaseItem);
+            }
+            moduleRelease.setModuleItems(moduleReleaseItems);
+        } else if (!StringUtils.isBlank(entity.getModuleSource())) {
+            ModuleReleaseDto moduleReleaseDto = JacksonUtil.fromString(entity.getModuleSource(), ModuleReleaseDto.class);
+            moduleReleaseDto.setCurrentVersion(entity.getCurrentVersion());
+            moduleReleaseDto.setInDraft(false);
+
+            if (CollectionUtils.isNotEmpty(moduleReleaseDto.getModuleFiles())) {
+                moduleReleaseDto.getModuleFiles().clear();
+            }
+            if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
+                for (String moduleFile : entity.getModuleFiles()) {
+                    moduleReleaseDto.getModuleFiles().add(moduleFile);
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(moduleReleaseDto.getModuleDependencies())) {
+                moduleReleaseDto.getModuleDependencies().clear();
+            }
+            if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
+                for (MeveoModuleDependency dependency : entity.getModuleDependencies()) {
+                    moduleReleaseDto.addModuleDependency(dependency);
+                }
+            }
+            moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
+        }
+        entity.setInstalled(false);
+        entity.setCurrentVersion(nextVersion);
+        moduleRelease.setMeveoModule(entity);
+        entity.getReleases().add(moduleRelease);
+        this.update(entity);
+    }
+
+	/**
+	 * Retrieves if a function JMeter tests run successfully.
+	 * 
+	 * @param codeScript code of a function
+	 * @return true if there are no error
+	 */
+	public boolean checkTestSuites(String codeScript) {
+
+		JobInstance jobInstance = jobInstanceService.findByCode("FunctionTestJob_" + codeScript);
+		JobExecutionResultImpl result = jobExecutionService.findLastExecutionByInstance(jobInstance);
+		if (result != null && result.getNbItemsProcessedWithError() > Long.valueOf("0")) {
+			return false;
+		}
+
+		return true;
+	}
+
+    @Override
+    public MeveoModule update(MeveoModule entity) throws BusinessException {
+	    MeveoModule meveoModule = findById(entity.getId());
+	    Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
+            for (MeveoModuleDependency meveoModuleDependency : entity.getModuleDependencies()) {
+                moduleDependencies.add(meveoModuleDependency);
+            }
+        }
+
+        if(meveoModule.getModuleDependencies() != null) {
+	    meveoModule.getModuleDependencies().clear();
+        }
+        Set<String> moduleFiles = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
+            for (String moduleFile : entity.getModuleFiles()) {
+                moduleFiles.add(moduleFile);
+            }
+        }
+
+        if(meveoModule.getModuleFiles() != null) {
+            meveoModule.getModuleFiles().clear();
+        }
+        Set<MeveoModuleItem> moduleItems = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(entity.getModuleItems())) {
+            for (MeveoModuleItem meveoModuleItem : entity.getModuleItems()) {
+                moduleItems.add(meveoModuleItem);
+            }
+        }
+
+        if(meveoModule.getModuleItems() != null) {
+            meveoModule.getModuleItems().clear();
+        }
+        
+        Set<MeveoModulePatch> modulePatches = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(entity.getPatches())) {
+            for (MeveoModulePatch meveoModulePatch : entity.getPatches()) {
+                modulePatches.add(meveoModulePatch);
+            }
+        }
+
+        if(meveoModule.getPatches() != null) {
+           meveoModule.getPatches().clear();
+        }
+
+	    meveoModule.setDescription(entity.getDescription());
+        meveoModule.setLicense(entity.getLicense());
+        meveoModule.setLogoPicture(entity.getLogoPicture());
+	    meveoModule.setCurrentVersion(entity.getCurrentVersion());
+        meveoModule.setMeveoVersionBase(entity.getMeveoVersionBase());
+        meveoModule.setMeveoVersionCeiling(entity.getMeveoVersionCeiling());
+        meveoModule.setModuleSource(entity.getModuleSource());
+        if (CollectionUtils.isNotEmpty(moduleItems)) {
+            for (MeveoModuleItem meveoModuleItem : moduleItems) {
+                meveoModule.getModuleItems().add(meveoModuleItem);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(moduleFiles)) {
+            for (String moduleFile : moduleFiles) {
+                meveoModule.getModuleFiles().add(moduleFile);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(moduleDependencies)) {
+            for (MeveoModuleDependency moduleDependency : moduleDependencies) {
+                meveoModule.getModuleDependencies().add(moduleDependency);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(modulePatches)) {
+            for (MeveoModulePatch modulePatch : modulePatches) {
+                meveoModule.getPatches().add(modulePatch);
+            }
+        }
+        return super.update(meveoModule);
+    }
+
+    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) {
+        MeveoModule meveoModule = findByCode(code);
+        if (currentVersion.equals(meveoModule.getCurrentVersion())) {
+            return meveoModule;
+        }
+        if (CollectionUtils.isNotEmpty(meveoModule.getReleases())) {
+            for (ModuleRelease moduleRelease : meveoModule.getReleases()) {
+                if (currentVersion.equals(moduleRelease.getCurrentVersion())) {
+                    MeveoModule module = new MeveoModule();
+                    module.setCode(moduleRelease.getCode());
+                    module.setDescription(moduleRelease.getDescription());
+                    module.setScript(moduleRelease.getScript());
+                    module.setCurrentVersion(moduleRelease.getCurrentVersion());
+                    module.setMeveoVersionBase(moduleRelease.getMeveoVersionBase());
+                    module.setMeveoVersionCeiling(moduleRelease.getMeveoVersionCeiling());
+                    module.setModuleSource(moduleRelease.getModuleSource());
+                    if (CollectionUtils.isNotEmpty(moduleRelease.getModuleFiles())) {
+                        Set<String> moduleFiles = new HashSet<>();
+                        for (String moduleFile : moduleRelease.getModuleFiles()) {
+                            moduleFiles.add(moduleFile);
+                        }
+                        module.setModuleFiles(moduleFiles);
+                    }
+                    if (CollectionUtils.isNotEmpty(moduleRelease.getModuleDependencies())) {
+                        Set<MeveoModuleDependency> dependencies = new HashSet<>();
+                        for (MeveoModuleDependency moduleDependency : moduleRelease.getModuleDependencies()) {
+                            dependencies.add(moduleDependency);
+                        }
+                        module.setModuleDependencies(dependencies);
+                    }
+                    if (CollectionUtils.isNotEmpty(moduleRelease.getModuleItems())) {
+                        Set<MeveoModuleItem> meveoModuleItems = new HashSet<>();
+                        for (ModuleReleaseItem releaseItem : moduleRelease.getModuleItems()) {
+                            MeveoModuleItem item = new MeveoModuleItem();
+                            item.setAppliesTo(releaseItem.getAppliesTo());
+                            item.setItemClass(releaseItem.getItemClass());
+                            item.setItemEntity(releaseItem.getItemEntity());
+                            item.setItemCode(releaseItem.getItemCode());
+                            item.setMeveoModule(module);
+                            meveoModuleItems.add(item);
+                        }
+                        module.setModuleItems(meveoModuleItems);
+                    }
+                    return module;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Integer findLaterNearestVersion(List<Integer> versions, Integer version) {
+
+	    List<Integer> versionList = new ArrayList<>();
+	    for (Integer versionRelease : versions) {
+	        if (versionRelease > version) {
+	            versionList.add(versionRelease);
+            }
+        }
+
+        Integer laterVersion = getClosestVersion(versionList, version);
+	    return laterVersion;
+    }
+
+    public Integer findEarlierNearestVersion(List<Integer> versions, Integer version) {
+
+        List<Integer> versionList = new ArrayList<>();
+        for (Integer versionRelease : versions) {
+            if (versionRelease < version) {
+                versionList.add(versionRelease);
+            }
+        }
+
+        Integer earlierVersion = getClosestVersion(versionList, version);
+        return earlierVersion;
+    }
+
+    public Integer getClosestVersion(List<Integer> versions, Integer version) {
+
+        if (versions.size() < 1)
+            return null;
+        if (versions.size() == 1) {
+            return versions.get(0);
+        }
+        Integer closestValue = versions.get(0);
+        Integer leastDistance = Math.abs(versions.get(0) - version);
+        for (int i = 0; i < versions.size(); i++) {
+            int currentDistance = Math.abs(versions.get(i) - version);
+            if (currentDistance < leastDistance) {
+                closestValue = versions.get(i);
+                leastDistance = currentDistance;
+            }
+        }
+        return closestValue;
+    }
+
+    public void removeFilesIfModuleIsDeleted(List<String> moduleFiles) throws IOException {
+        for (String moduleFile : moduleFiles) {
+            String path = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode()) + File.separator + moduleFile;
+            File file = new File(path);
+            if (file.exists() && file.isDirectory()) {
+                FileUtils.deleteDirectory(file);
+            } else if (file.exists()) {
+                file.delete();
+            }
+        }
+    }
 }

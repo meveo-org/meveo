@@ -7,7 +7,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "cat_business_serv_model")
-public class BusinessServiceModel extends MeveoModule {
+public class BusinessServiceModel extends MeveoModule{
 
     private static final long serialVersionUID = 683873220792653929L;
 

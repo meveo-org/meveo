@@ -1,7 +1,16 @@
 package org.meveo.service.crm.impl;
 
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -9,7 +18,18 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.everit.json.schema.*;
+import org.everit.json.schema.ArraySchema;
+import org.everit.json.schema.CombinedObjectSchema;
+import org.everit.json.schema.CombinedSchema;
+import org.everit.json.schema.EnumSchema;
+import org.everit.json.schema.FormatValidator;
+import org.everit.json.schema.NumberSchema;
+import org.everit.json.schema.ObjectSchema;
+import org.everit.json.schema.ReferenceSchema;
+import org.everit.json.schema.ReferenceViewSchema;
+import org.everit.json.schema.RelationSchema;
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.json.schema.RootCombinedSchema;
@@ -26,13 +46,29 @@ import org.meveo.model.persistence.DBStorageType;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.9.0
  **/
 @Stateless
 public class JSONSchemaGenerator {
 
+	public static final FormatValidator DATE_TIME_FORMAT = FormatValidator.forFormat("date-time");
+	public static final String JSON_SCHEMA_VERSION = "http://json-schema.org/draft-07/schema";
+	public static final String DEFINITIONS_PREFIX = "#/definitions/";
+
 	@Inject
-	CustomFieldsCacheContainerProvider cache;
+	private CustomFieldsCacheContainerProvider cache;
+
+	abstract static class CustomTemplateProcessor {
+		abstract String code();
+
+		abstract CustomTemplateProcessor parentTemplate();
+
+		abstract Map<String, CustomFieldTemplate> fields();
+
+		abstract ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs);
+
+		abstract ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies);
+	}
 
 	public String generateSchema(String schemaLocation, boolean activeTemplatesOnly, String categoryCode) {
 		Map<String, Schema> processed = new HashMap<>();
@@ -44,10 +80,7 @@ public class JSONSchemaGenerator {
 		// Relationship templates
 		processCustomRelationshipTemplates(schemaLocation, activeTemplatesOnly, primary, processed, categoryCode);
 
-		RootCombinedSchema.Builder builder = RootCombinedSchema
-				.builder()
-				.specificationVersion(JSON_SCHEMA_VERSION)
-				;
+		RootCombinedSchema.Builder builder = RootCombinedSchema.builder().specificationVersion(JSON_SCHEMA_VERSION);
 
 		processed.forEach((k, v) -> builder.addDefinition(k, v, primary.contains(k)));
 
@@ -65,10 +98,7 @@ public class JSONSchemaGenerator {
 		// Entity templates
 		processCustomEntityTemplates(schemaLocation, activeTemplatesOnly, primary, processed, categoryCode);
 
-		RootCombinedSchema.Builder builder = RootCombinedSchema
-				.builder()
-				.specificationVersion(JSON_SCHEMA_VERSION)
-				;
+		RootCombinedSchema.Builder builder = RootCombinedSchema.builder().specificationVersion(JSON_SCHEMA_VERSION);
 
 		processed.forEach((k, v) -> builder.addDefinition(k, v, primary.contains(k)));
 
@@ -86,10 +116,7 @@ public class JSONSchemaGenerator {
 		// Relationship templates
 		processCustomRelationshipTemplates(schemaLocation, activeTemplatesOnly, primary, processed, categoryCode);
 
-		RootCombinedSchema.Builder builder = RootCombinedSchema
-				.builder()
-				.specificationVersion(JSON_SCHEMA_VERSION)
-				;
+		RootCombinedSchema.Builder builder = RootCombinedSchema.builder().specificationVersion(JSON_SCHEMA_VERSION);
 
 		processed.forEach((k, v) -> builder.addDefinition(k, v, primary.contains(k)));
 
@@ -102,11 +129,11 @@ public class JSONSchemaGenerator {
 
 	private void processCustomEntityTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
 		Collection<CustomEntityTemplate> templates = cache.getCustomEntityTemplates();
-		if(activeTemplatesOnly){
+		if (activeTemplatesOnly) {
 			templates = templates.stream().filter(CustomEntityTemplate::isActive).collect(Collectors.toList());
 		}
 
-		if(!StringUtils.isBlank(categoryCode)){
+		if (!StringUtils.isBlank(categoryCode)) {
 			templates = templates.stream()
 					.filter(item -> StringUtils.isEmpty(categoryCode) || item.getCustomEntityCategory() != null && categoryCode.equals(item.getCustomEntityCategory().getCode()))
 					.collect(Collectors.toList());
@@ -114,31 +141,26 @@ public class JSONSchemaGenerator {
 
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
 
-		final List<String> templatesCodes = templates
-				.stream()
-				.map(CustomEntityTemplate::getCode)
-				.collect(Collectors.toList());
+		final List<String> templatesCodes = templates.stream().map(CustomEntityTemplate::getCode).collect(Collectors.toList());
 		primary.addAll(templatesCodes);
 	}
 
 	private void processCustomRelationshipTemplates(String schemaLocation, boolean activeTemplatesOnly, Set<String> primary, Map<String, Schema> processed, String categoryCode) {
 		Collection<CustomRelationshipTemplate> templates = cache.getCustomRelationshipTemplates();
-		if(activeTemplatesOnly){
+		if (activeTemplatesOnly) {
 			templates = templates.stream().filter(CustomRelationshipTemplate::isActive).collect(Collectors.toList());
 		}
 
-		if(!StringUtils.isBlank(categoryCode)){
+		if (!StringUtils.isBlank(categoryCode)) {
 			templates = templates.stream()
-					.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode())) || (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
+					.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode()))
+							|| (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
 					.collect(Collectors.toList());
 		}
 
 		templates.forEach(t -> createSchema(schemaLocation, processorOf(t), processed));
 
-		final List<String> templatesCodes = templates
-				.stream()
-				.map(CustomRelationshipTemplate::getCode)
-				.collect(Collectors.toList());
+		final List<String> templatesCodes = templates.stream().map(CustomRelationshipTemplate::getCode).collect(Collectors.toList());
 		primary.addAll(templatesCodes);
 	}
 
@@ -172,6 +194,16 @@ public class JSONSchemaGenerator {
 		return out.toString();
 	}
 
+	public ObjectSchema createSchemaOfCet(String schemaLocation, CustomEntityTemplate cet) {
+
+		CustomTemplateProcessor template = processorOf(cet);
+		Map<String, Schema> processed = new HashMap<>();
+		ObjectSchema root = createSchema(schemaLocation, template, processed);
+		processed.remove(template.code());
+
+		return root;
+	}
+
 	private ObjectSchema createSchema(String schemaLocation, CustomTemplateProcessor template, Map<String, Schema> processed) {
 		Set<String> ownRefs = new HashSet<>();
 		ObjectSchema result = buildSchema(schemaLocation, template, ownRefs);
@@ -180,10 +212,10 @@ public class JSONSchemaGenerator {
 		return result;
 	}
 
-	private ObjectSchema buildSchema(String schemaLocation, CustomTemplateProcessor template, Set<String> allRefs) {
+	public ObjectSchema buildSchema(String schemaLocation, CustomTemplateProcessor template, Set<String> allRefs) {
 		ObjectSchema.Builder result = template.createJsonSchemaBuilder(schemaLocation, allRefs);
 		Map<String, CustomFieldTemplate> fields = template.fields();
-		if(fields != null) {
+		if (fields != null) {
 			fields.forEach((key, field) -> {
 				result.addPropertySchema(key, createFieldSchema(schemaLocation, template, field, allRefs).build());
 				if (field.isValueRequired()) {
@@ -193,11 +225,10 @@ public class JSONSchemaGenerator {
 		}
 
 		// If has super template
-		if(template.parentTemplate() != null){
+		if (template.parentTemplate() != null) {
 			ReferenceSchema.Builder referenceSchema = ReferenceSchema.builder();
 			referenceSchema.refValue(DEFINITIONS_PREFIX + template.parentTemplate().code());
-			final CombinedSchema combinedSchema = CombinedSchema.allOf(Collections.singletonList(referenceSchema.build()))
-					.build();
+			final CombinedSchema combinedSchema = CombinedSchema.allOf(Collections.singletonList(referenceSchema.build())).build();
 			return CombinedObjectSchema.Factory.get(result, combinedSchema);
 		}
 
@@ -207,131 +238,132 @@ public class JSONSchemaGenerator {
 	private Schema.Builder<?> createFieldSchema(String schemaLocation, CustomTemplateProcessor template, CustomFieldTemplate field, Set<String> allRefs) {
 		Schema.Builder<?> result;
 		switch (field.getStorageType()) {
-			case SINGLE:
-				switch (field.getFieldType()) {
-					case DATE:   result = createDateSchema(field); break;
-					case ENTITY: result = createReferenceSchema(field, allRefs); break;
+		case SINGLE:
+			switch (field.getFieldType()) {
+			case DATE:
+				result = createDateSchema(field);
+				break;
+			case ENTITY:
+				result = createReferenceSchema(field, allRefs);
+				break;
 //					case CHILD_ENTITY:
-					//TODO: Handle this case
+			// TODO: Handle this case
 //						throw new IllegalStateException(
 //							"Child entity type of field supports only list of entities" +
 //							": field = " + field +
 //							", storageType = " + field.getStorageType()
 //						);
-					case TEXT_AREA:
-					case EMBEDDED_ENTITY:
-					case STRING:  result = createStringSchema(field); break;
-					case LIST:    result = createEnumSchema(field); break;
-					case LONG:    result = createLongSchema(field); break;
-					case DOUBLE:  result = createNumberSchema(field); break;
-					case MULTI_VALUE:
-						throw new IllegalStateException(
-								"Multi-value type of field supports only matrix storage" +
-										": field = " + field +
-										", storageType = " + field.getStorageType()
-						);
-					default:
-						result = createStringSchema(field); break;
-				}
+			case TEXT_AREA:
+			case EMBEDDED_ENTITY:
+			case STRING:
+				result = createStringSchema(field);
 				break;
 			case LIST:
-				result = createArraySchema(field, createElementSchema(schemaLocation, template, field, allRefs).build());
+				result = createEnumSchema(field);
 				break;
-			case MAP:
-				CustomFieldMapKeyEnum mapKeyType = field.getMapKeyType();
-				switch (mapKeyType) {
-					case STRING:
-					case RON:
-						String propertyNamePattern = mapKeyType == CustomFieldMapKeyEnum.RON ?
-								"^(\\d+)?\\.\\.(\\d+)?$" : "^.*$";
-						result = ObjectSchema
-								.builder()
-								.requiresObject(true)
-								.patternProperty(propertyNamePattern, createElementSchema(schemaLocation, template, field, allRefs).build());
-						break;
-					default:
-						if (!mapKeyType.isKeyUse()) {
-							throw new  IllegalStateException(
-									"Field has invalid mapKey type (not for key use)" +
-											": field = " + field +
-											", storageType = " + field.getStorageType() +
-											", mapKeyType = " + mapKeyType
-							);
-						} else {
-							throw new  IllegalStateException(
-									"Field has unsupported mapKey type" +
-											": field = " + field +
-											", storageType = " + field.getStorageType() +
-											", mapKeyType = " + mapKeyType
-							);
-						}
-				}
+			case LONG:
+				result = createLongSchema(field);
 				break;
-			case MATRIX:
-				result = createArraySchema(field, createMatrixSchema(schemaLocation, field, template, allRefs).build()); break;
+			case DOUBLE:
+				result = createNumberSchema(field);
+				break;
+			case MULTI_VALUE:
+				throw new IllegalStateException("Multi-value type of field supports only matrix storage" + ": field = " + field + ", storageType = " + field.getStorageType());
 			default:
-				throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
+				result = createStringSchema(field);
+				break;
+			}
+			break;
+		case LIST:
+			result = createArraySchema(field, createElementSchema(schemaLocation, template, field, allRefs).build());
+			break;
+		case MAP:
+			CustomFieldMapKeyEnum mapKeyType = field.getMapKeyType();
+			switch (mapKeyType) {
+			case STRING:
+			case RON:
+				String propertyNamePattern = mapKeyType == CustomFieldMapKeyEnum.RON ? "^(\\d+)?\\.\\.(\\d+)?$" : "^.*$";
+				result = ObjectSchema.builder().requiresObject(true).patternProperty(propertyNamePattern, createElementSchema(schemaLocation, template, field, allRefs).build());
+				break;
+			default:
+				if (!mapKeyType.isKeyUse()) {
+					throw new IllegalStateException("Field has invalid mapKey type (not for key use)" + ": field = " + field + ", storageType = " + field.getStorageType()
+							+ ", mapKeyType = " + mapKeyType);
+				} else {
+					throw new IllegalStateException(
+							"Field has unsupported mapKey type" + ": field = " + field + ", storageType = " + field.getStorageType() + ", mapKeyType = " + mapKeyType);
+				}
+			}
+			break;
+		case MATRIX:
+			result = createArraySchema(field, createMatrixSchema(schemaLocation, field, template, allRefs).build());
+			break;
+		default:
+			throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
 		}
 		if (field.getIndexType() != null) {
 			result.indexType(field.getIndexType().name());
 		}
-		result
-				.readOnly(!field.isAllowEdit())
-				.nullable(!field.isValueRequired())
-				.versionable(field.isVersionable())
+		result.readOnly(!field.isAllowEdit()).nullable(!field.isValueRequired()).versionable(field.isVersionable())
 
 		;
-		result = result
-				.id(field.getAppliesTo() + '_' + field.getCode())
-				.title(template.code() + "." + field.getCode())
-				.description(field.getDescription())
-				.storages(buildDBStorageType(field.getStorages()))
-				.schemaLocation(schemaLocation);
-		
+		result = result.id(field.getAppliesTo() + '_' + field.getCode()).title(template.code() + "." + field.getCode()).description(field.getDescription())
+				.storages(buildDBStorageType(field.getStorages())).schemaLocation(schemaLocation);
+
 		if (field.getIndexType() != null) {
 			result = result.indexType(field.getIndexType().name());
 		}
-		
+
 		return result;
 	}
 
 	private Schema.Builder<?> createElementSchema(String schemaLocation, CustomTemplateProcessor template, CustomFieldTemplate field, Set<String> allRefs) {
 		Schema.Builder<?> result;
 		switch (field.getFieldType()) {
-			case DATE:   result = createDateSchema(field); break;
-			case ENTITY:
-			case CHILD_ENTITY:
-				result = createReferenceSchema(field, allRefs); break;
-			// throw new IllegalStateException("Child entity type of field supports only list of entities: field = " + field + ", storageType = " + field.getStorageType());
-			case TEXT_AREA:
-			case STRING:  result = createStringSchema(field); break;
-			case LIST:    result = createEnumSchema(field); break;
-			case LONG:    result = createLongSchema(field); break;
-			case DOUBLE:  result = createNumberSchema(field); break;
-			case MULTI_VALUE:
-				throw new IllegalStateException("Multi-value type of field supports only matrix: field = " + field + ", storageType = " + field.getStorageType());
-			default:
-				result = createStringSchema(field); break;
+		case DATE:
+			result = createDateSchema(field);
+			break;
+		case ENTITY:
+		case CHILD_ENTITY:
+			result = createReferenceSchema(field, allRefs);
+			break;
+		// throw new IllegalStateException("Child entity type of field supports only
+		// list of entities: field = " + field + ", storageType = " +
+		// field.getStorageType());
+		case TEXT_AREA:
+		case STRING:
+			result = createStringSchema(field);
+			break;
+		case LIST:
+			result = createEnumSchema(field);
+			break;
+		case LONG:
+			result = createLongSchema(field);
+			break;
+		case DOUBLE:
+			result = createNumberSchema(field);
+			break;
+		case MULTI_VALUE:
+			throw new IllegalStateException("Multi-value type of field supports only matrix: field = " + field + ", storageType = " + field.getStorageType());
+		default:
+			result = createStringSchema(field);
+			break;
 		}
 		return result
-				//.readOnly(!field.isAllowEdit())
-				//.nullable(!field.isValueRequired())
-				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element")
-				.title(template.code() + "." + field.getCode() + " Element")
-				//.description(field.getDescription())
-				.schemaLocation(schemaLocation)
-				;
+				// .readOnly(!field.isAllowEdit())
+				// .nullable(!field.isValueRequired())
+				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element").title(template.code() + "." + field.getCode() + " Element")
+				// .description(field.getDescription())
+				.schemaLocation(schemaLocation);
 	}
 
 	private Schema.Builder<ObjectSchema> createMatrixSchema(String schemaLocation, CustomFieldTemplate field, CustomTemplateProcessor template, Set<String> allRefs) {
 		ObjectSchema.Builder result = ObjectSchema.builder();
-		result
-				.requiresObject(true)
-				//.readOnly(!field.isAllowEdit())
-				//.nullable(!field.isValueRequired())
-				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element")
-				.title(template.code() + "." + field.getCode() + " Element")
-				//.description(field.getDescription())
+		result.requiresObject(true)
+				// .readOnly(!field.isAllowEdit())
+				// .nullable(!field.isValueRequired())
+				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element").title(template.code() + "." + field.getCode() + " Element")
+				// .description(field.getDescription())
 				.schemaLocation(schemaLocation);
 
 		ObjectSchema.Builder keyBuilder = ObjectSchema.builder();
@@ -340,70 +372,68 @@ public class JSONSchemaGenerator {
 			if (c.getKeyType() == CustomFieldMapKeyEnum.RON) {
 				b.pattern("^(\\d+)?\\.\\.(\\d+)?$");
 			}
-			b
-					.id(field.getAppliesTo() + '_' + field.getCode() + "_key_" + c.getCode())
-					.title(template.code() + "." + field.getCode() + " Key column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
-					.schemaLocation(schemaLocation)
-					.nullable(false)
-			;
+			b.id(field.getAppliesTo() + '_' + field.getCode() + "_key_" + c.getCode())
+					.title(template.code() + "." + field.getCode() + " Key column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel()).schemaLocation(schemaLocation)
+					.nullable(false);
 			keyBuilder.addPropertySchema(c.getCode(), b.build());
 			keyBuilder.addRequiredProperty(c.getCode());
 		};
-		field.getMatrixColumns()
-				.stream()
-				.filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_KEY)
-				.sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition))
-				.forEach(keyColumnProcessor)
-		;
+		field.getMatrixColumns().stream().filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_KEY).sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition))
+				.forEach(keyColumnProcessor);
 
 		result.addPropertySchema("key", keyBuilder.build());
 
 		Schema.Builder<?> valueBuilder;
 		switch (field.getFieldType()) {
-			case DATE:   valueBuilder = createDateSchema(field); break;
-			case ENTITY: valueBuilder = createReferenceSchema(field, allRefs); break;
+		case DATE:
+			valueBuilder = createDateSchema(field);
+			break;
+		case ENTITY:
+			valueBuilder = createReferenceSchema(field, allRefs);
+			break;
 //			case CHILD_ENTITY:  TODO: handle this case
 //				throw new IllegalStateException("Child entity type of field supports only list of entities: field = " + field + ", storageType = " + field.getStorageType());
-			case TEXT_AREA:
-			case STRING:  valueBuilder = createStringSchema(field); break;
-			case LIST:    valueBuilder = createEnumSchema(field); break;
-			case LONG:    valueBuilder = createLongSchema(field); break;
-			case DOUBLE:  valueBuilder = createNumberSchema(field); break;
-			case MULTI_VALUE:
-				ObjectSchema.Builder valuesBuilder = ObjectSchema.builder();
-				Consumer<CustomFieldMatrixColumn> valueColumnProcessor = c -> {
-					Schema.Builder<?> b;
-					switch (c.getKeyType()) {
-						case DOUBLE:
-							b = NumberSchema.builder().requiresNumber(true); break;
-						case LONG:
-							b = NumberSchema.builder().requiresInteger(true); break;
-						default:
-							b = StringSchema.builder().requiresString(true);
-					}
-					b
-							.id(field.getAppliesTo() + '_' + field.getCode() + "_value_" + c.getCode())
-							.title(template.code() + "." + field.getCode() + " Value column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
-							.schemaLocation(schemaLocation)
-					;
-					valuesBuilder.addPropertySchema(c.getCode(), b.build());
-				};
-				field.getMatrixColumns()
-						.stream()
-						.filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_VALUE)
-						.sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition))
-						.forEach(valueColumnProcessor)
-				;
-				valueBuilder = valuesBuilder;
-				break;
-			default:
-				valueBuilder = createStringSchema(field); break;
+		case TEXT_AREA:
+		case STRING:
+			valueBuilder = createStringSchema(field);
+			break;
+		case LIST:
+			valueBuilder = createEnumSchema(field);
+			break;
+		case LONG:
+			valueBuilder = createLongSchema(field);
+			break;
+		case DOUBLE:
+			valueBuilder = createNumberSchema(field);
+			break;
+		case MULTI_VALUE:
+			ObjectSchema.Builder valuesBuilder = ObjectSchema.builder();
+			Consumer<CustomFieldMatrixColumn> valueColumnProcessor = c -> {
+				Schema.Builder<?> b;
+				switch (c.getKeyType()) {
+				case DOUBLE:
+					b = NumberSchema.builder().requiresNumber(true);
+					break;
+				case LONG:
+					b = NumberSchema.builder().requiresInteger(true);
+					break;
+				default:
+					b = StringSchema.builder().requiresString(true);
+				}
+				b.id(field.getAppliesTo() + '_' + field.getCode() + "_value_" + c.getCode())
+						.title(template.code() + "." + field.getCode() + " Value column " + c.getCode() + " @ " + c.getPosition() + " - " + c.getLabel())
+						.schemaLocation(schemaLocation);
+				valuesBuilder.addPropertySchema(c.getCode(), b.build());
+			};
+			field.getMatrixColumns().stream().filter(c -> c.getColumnUse() == CustomFieldColumnUseEnum.USE_VALUE)
+					.sorted(Comparator.comparingInt(CustomFieldMatrixColumn::getPosition)).forEach(valueColumnProcessor);
+			valueBuilder = valuesBuilder;
+			break;
+		default:
+			valueBuilder = createStringSchema(field);
+			break;
 		}
-		valueBuilder
-				.id(field.getAppliesTo() + '_' + field.getCode() + "_value")
-				.title(template.code() + "." + field.getCode() + " Value")
-				.schemaLocation(schemaLocation)
-		;
+		valueBuilder.id(field.getAppliesTo() + '_' + field.getCode() + "_value").title(template.code() + "." + field.getCode() + " Value").schemaLocation(schemaLocation);
 
 		result.addPropertySchema("value", valueBuilder.build());
 		result.addRequiredProperty("key");
@@ -454,6 +484,11 @@ public class JSONSchemaGenerator {
 		}
 		if (null != field.getMinValue()) {
 			result.minLength(field.getMinValue().intValue());
+
+		} else {
+			if (field.isValueRequired()) {
+				result.minLength(1);
+			}
 		}
 		return result.requiresString(true);
 	}
@@ -474,7 +509,7 @@ public class JSONSchemaGenerator {
 			result.defaultValue(defaultValue);
 		}
 		@SuppressWarnings("unchecked")
-		final Map<Object, String> enumKeyVal = (Map<Object, String>)(Map<?, String>)field.getListValues();
+		final Map<Object, String> enumKeyVal = (Map<Object, String>) (Map<?, String>) field.getListValues();
 		if (null != enumKeyVal) {
 			result.possibleValues(enumKeyVal.keySet());
 		}
@@ -487,10 +522,10 @@ public class JSONSchemaGenerator {
 		if (null != defaultValue) {
 			result.defaultValue(defaultValue);
 		}
-		return result
-				.allItemSchema(arrayElementSchema)
-				.requiresArray(true)
-				.uniqueItems(true);
+		if(field.isValueRequired()) {
+			result.minItems(1);
+		}
+		return result.allItemSchema(arrayElementSchema).requiresArray(true).uniqueItems(true);
 	}
 
 	private Schema.Builder<?> createReferenceSchema(CustomFieldTemplate field, Set<String> allRefs) {
@@ -505,7 +540,7 @@ public class JSONSchemaGenerator {
 		} else {
 			final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(refCode);
 			// Do not make a reference in case of a primitive entity
-			if(customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			if (customEntityTemplate != null && customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 				field.setMaxValue(customEntityTemplate.getNeo4JStorageConfiguration().getMaxValue());
 				switch (customEntityTemplate.getNeo4JStorageConfiguration().getPrimitiveType()) {
 					case STRING:
@@ -539,45 +574,25 @@ public class JSONSchemaGenerator {
 			}
 
 			@Override
-			CustomTemplateProcessor parentTemplate(){
+			CustomTemplateProcessor parentTemplate() {
 				return entityTemplate.getSuperTemplate() != null ? processorOf(entityTemplate.getSuperTemplate()) : null;
 			}
 
 			@Override
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
-				return (ObjectSchema.Builder) ObjectSchema.builder()
-						.requiresObject(true)
-						.id(entityTemplate.getCode())
-						.title(entityTemplate.getName())
-						.description(entityTemplate.getDescription())
-						.storages(buildDBStorageType(entityTemplate.getAvailableStorages()))
-						.schemaLocation(schemaLocation)
-						;
+				return (ObjectSchema.Builder) ObjectSchema.builder().requiresObject(true).id(entityTemplate.getCode()).title(entityTemplate.getName())
+						.description(entityTemplate.getDescription()).storages(buildDBStorageType(entityTemplate.getAvailableStorages())).schemaLocation(schemaLocation);
 			}
 
 			@Override
 			ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies) {
-				RootObjectSchema.Builder builder = RootObjectSchema
-						.builder()
-						.copyOf(original)
-						.specificationVersion(JSON_SCHEMA_VERSION)
-						;
+				RootObjectSchema.Builder builder = RootObjectSchema.builder().copyOf(original).specificationVersion(JSON_SCHEMA_VERSION);
 
 				dependencies.forEach(builder::addDefinition);
 				return builder;
 			}
 
 		};
-	}
-
-	private List<String> buildDBStorageType(List<DBStorageType> dbStorageTypes) {
-		List<String> dbStorageTypeAsString = new ArrayList<>();
-		if(dbStorageTypes != null){
-			for (DBStorageType dbStorageType : dbStorageTypes) {
-				dbStorageTypeAsString.add(dbStorageType.name());
-			}
-		}
-		return dbStorageTypeAsString;
 	}
 
 	private CustomTemplateProcessor processorOf(CustomRelationshipTemplate relationshipTemplate) {
@@ -594,20 +609,15 @@ public class JSONSchemaGenerator {
 			}
 
 			@Override
-			CustomTemplateProcessor parentTemplate(){
+			CustomTemplateProcessor parentTemplate() {
 				return null;
 			}
 
 			@Override
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
-				RelationSchema.Builder result = RelationSchema.builder()
-						.requiresRelation(true)
-						.id(relationshipTemplate.getCode())
-						.title(relationshipTemplate.getName())
-						.description(relationshipTemplate.getDescription())
-						.storages(buildDBStorageType(relationshipTemplate.getAvailableStorages()))
-						.schemaLocation(schemaLocation)
-						;
+				RelationSchema.Builder result = RelationSchema.builder().requiresRelation(true).id(relationshipTemplate.getCode()).title(relationshipTemplate.getName())
+						.description(relationshipTemplate.getDescription()).storages(buildDBStorageType(relationshipTemplate.getAvailableStorages()))
+						.schemaLocation(schemaLocation);
 
 				CustomEntityTemplate node;
 
@@ -627,19 +637,14 @@ public class JSONSchemaGenerator {
 
 			@Override
 			ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies) {
-				RootRelationSchema.Builder builder = RootRelationSchema
-						.builder()
-						.copyOf((RelationSchema)original)
-						.specificationVersion(JSON_SCHEMA_VERSION)
-						;
+				RootRelationSchema.Builder builder = RootRelationSchema.builder().copyOf((RelationSchema) original).specificationVersion(JSON_SCHEMA_VERSION);
 
 				dependencies.forEach(builder::addDefinition);
 				return builder;
 			}
 
 			private ReferenceSchema createReference(CustomEntityTemplate node) {
-				ReferenceSchema.Builder r = ReferenceSchema.builder()
-						.refValue(DEFINITIONS_PREFIX + node.getCode());
+				ReferenceSchema.Builder r = ReferenceSchema.builder().refValue(DEFINITIONS_PREFIX + node.getCode());
 				return r.build();
 			}
 
@@ -647,19 +652,11 @@ public class JSONSchemaGenerator {
 			private ReferenceViewSchema createReference_obsolete(CustomEntityTemplate node, String nodeKeys) {
 				List<String> actualKeys;
 				if (nodeKeys != null) {
-					actualKeys = Arrays.asList( nodeKeys.split(",") );
+					actualKeys = Arrays.asList(nodeKeys.split(","));
 				} else {
-					actualKeys = processorOf(node)
-							.fields()
-							.values()
-							.stream()
-							.filter(CustomFieldTemplate::isUnique)
-							.map(BusinessEntity::getCode)
-							.collect(Collectors.toList())
-					;
+					actualKeys = processorOf(node).fields().values().stream().filter(CustomFieldTemplate::isUnique).map(BusinessEntity::getCode).collect(Collectors.toList());
 				}
-				ReferenceViewSchema.Builder r = ReferenceViewSchema.builder()
-						.refValue(DEFINITIONS_PREFIX + node.getCode());
+				ReferenceViewSchema.Builder r = ReferenceViewSchema.builder().refValue(DEFINITIONS_PREFIX + node.getCode());
 				actualKeys.forEach(p -> r.addRefProperty(p.trim()));
 				return r.build();
 			}
@@ -667,15 +664,14 @@ public class JSONSchemaGenerator {
 		};
 	}
 
-	abstract static class CustomTemplateProcessor {
-		abstract String code();
-		abstract CustomTemplateProcessor parentTemplate();
-		abstract Map<String, CustomFieldTemplate> fields();
-		abstract ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs);
-		abstract ObjectSchema.Builder toRootJsonSchema(ObjectSchema original, Map<String, Schema> dependencies);
+	private List<String> buildDBStorageType(List<DBStorageType> dbStorageTypes) {
+		List<String> dbStorageTypeAsString = new ArrayList<>();
+		if (dbStorageTypes != null) {
+			for (DBStorageType dbStorageType : dbStorageTypes) {
+				dbStorageTypeAsString.add(dbStorageType.name());
+			}
+		}
+		return dbStorageTypeAsString;
 	}
 
-	private static final FormatValidator DATE_TIME_FORMAT = FormatValidator.forFormat("date-time");
-	private static final String JSON_SCHEMA_VERSION = "http://json-schema.org/draft-07/schema";
-	private static final String DEFINITIONS_PREFIX = "#/definitions/";
 }

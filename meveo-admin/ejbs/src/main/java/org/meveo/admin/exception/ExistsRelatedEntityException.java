@@ -8,6 +8,10 @@ public class ExistsRelatedEntityException extends BusinessException {
         super(message);
     }
 
+    public ExistsRelatedEntityException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public ExistsRelatedEntityException() {
     }
 }

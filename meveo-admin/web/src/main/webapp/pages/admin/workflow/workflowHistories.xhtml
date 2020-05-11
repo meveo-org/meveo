@@ -14,14 +14,15 @@
             updateField=":searchForm:workflowId">
         </hftl:entityPopup>
 
-        <h:form id="crumbmenuForm">
-            <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-                <p:menuitem outcome="workflowHistory" value="#{messages['menu.workflowHistory']}" />
-            </p:breadCrumb>
-        </h:form>
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem outcome="workflowHistory"
+					value="#{messages['menu.workflowHistory']}" />
+			</p:breadCrumb>
+		</h:form>
 
-        <hftl:searchPanel backingBean="#{workflowHistoryListBean}" renderNewButton="false">
+		<hftl:searchPanel backingBean="#{workflowHistoryListBean}" renderNewButton="false">
             <hftl:searchField label="#{messages['workflow.title']}" id="workflowId" field="workflow" valueLabelField="code" popup="true" popupId="workflowPopup" />
             <hftl:searchField label="#{messages['workflowHistory.actionDate']}" field="actionDate" />
             <hftl:searchField label="#{messages['dunningPlanTransition.fromStatus']}" field="fromStatus" />

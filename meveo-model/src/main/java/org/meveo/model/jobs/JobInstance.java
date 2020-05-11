@@ -45,15 +45,19 @@ import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.EnableBusinessCFEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
 /**
  * The Class JobInstance.
  *
  * @author Said Ramli
- * @lastModifiedVersion 5.1
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @since 5.1
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("JobInstance")
+@ModuleItemOrder(102)
 @CustomFieldEntity(cftCodePrefix = "JOB", cftCodeFields = "jobTemplate")
 @ExportIdentifier({ "code" })
 @Table(name = "meveo_job_instance", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -339,8 +343,8 @@ public class JobInstance extends EnableBusinessCFEntity {
      */
     @Override
     public String toString() {
-        return String.format("JobInstance [%s, jobTemplate=%s, parametres=%s, jobCategoryEnum=%s, timerEntity=%s,  followingJob=%s]", super.toString(), jobTemplate, parametres,
-                jobCategoryEnum, timerEntity, followingJob != null ? followingJob.getCode() : null);
+        return String.format("JobInstance [%s, jobTemplate=%s, parametres=%s, jobCategoryEnum=%s,  followingJob=%s]", super.toString(), jobTemplate, parametres,
+                jobCategoryEnum, followingJob != null ? followingJob.getCode() : null);
     }
 
     /**

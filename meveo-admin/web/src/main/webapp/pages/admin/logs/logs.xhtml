@@ -1,20 +1,20 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:p="http://primefaces.org/ui"
-	xmlns:hftl="http://hftl.org"
+	xmlns:p="http://primefaces.org/ui" xmlns:hftl="http://hftl.org"
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	template="/layout/template.xhtml">
-	
+
 	<ui:define name="head">
-		<h:outputScript name="js/highlight.js" library="layout"/>
-		<h:outputStylesheet library="css" name="highlight.css"/>
+		<h:outputScript name="js/highlight.js" library="layout" />
+		<h:outputStylesheet library="css" name="highlight.css" />
 	</ui:define>
-	
+
 	<ui:define name="body">
-	
+		<!-- Remove the white space in the header -->
+		<hftl:emptyTag></hftl:emptyTag>
+
 		<script id="refreshLogScript">
 
 			// Append new content to existing one and scroll to bottom
@@ -38,53 +38,69 @@
 				document.body.style["padding-bottom"] = "0px";
 	        });
 		</script>
-	
+
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-				<p:menuitem value="#{messages['menu.logs']}" disabled="true"/>
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.logs']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.logExplorer']}" disabled="true" />
 			</p:breadCrumb>
 		</h:form>
 
 		<p:panel id="logPanel">
-		
-			<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
-			
+
+			<p:growl id="growl" showDetail="true" sticky="false"
+				autoUpdate="true" />
+
 			<div id="actions" class="flex-container">
 				<h:form id="config" styleClass="inline-form">
-					<p:outputLabel for="logFile" value="#{messages['logs.viewer.logFile']}"/>
-					<p:inputText id="logFile" value="#{logViewerBean.logFile}" disabled="#{logViewerBean.initialized}"/>
-					
-					<p:outputLabel for="offset" value="#{messages['logs.viewer.offset']}"/>
-					<p:inputText id="offset" value="#{logViewerBean.offset}" disabled="#{logViewerBean.initialized}"/>
-					
-					<p:commandButton id="read" update="@form" 
+					<p:outputLabel for="logFile"
+						value="#{messages['logs.viewer.logFile']}" />
+					<p:inputText id="logFile" value="#{logViewerBean.logFile}"
+						disabled="#{logViewerBean.initialized}" />
+
+					<p:outputLabel for="offset"
+						value="#{messages['logs.viewer.offset']}" />
+					<p:inputText id="offset" value="#{logViewerBean.offset}"
+						disabled="#{logViewerBean.initialized}" />
+
+					<p:commandButton id="read" update="@form"
 						value="#{logViewerBean.initialized ?  messages['logs.viewer.refresh'] : messages['logs.viewer.read']}"
 						disabled="#{!logViewerBean.paused}"
-						actionListener="#{logViewerBean.read}" oncomplete="updateLogs(xhr, status, args)"/>
-					
-					<p:commandButton id="pause" update="refresh @form" value="#{messages['logs.viewer.pause']}" rendered="#{!logViewerBean.paused}" actionListener="#{logViewerBean.stop}"/>
-					<p:commandButton id="start" update="refresh @form" value="#{messages['logs.viewer.start']}" oncomplete="updateLogs(xhr, status, args); PF('poll').start();" actionListener="#{logViewerBean.start}" rendered="#{logViewerBean.paused}"/>
+						actionListener="#{logViewerBean.read}"
+						oncomplete="updateLogs(xhr, status, args)" />
+
+					<p:commandButton id="pause" update="refresh @form"
+						value="#{messages['logs.viewer.pause']}"
+						rendered="#{!logViewerBean.paused}"
+						actionListener="#{logViewerBean.stop}" />
+					<p:commandButton id="start" update="refresh @form"
+						value="#{messages['logs.viewer.start']}"
+						oncomplete="updateLogs(xhr, status, args); PF('poll').start();"
+						actionListener="#{logViewerBean.start}"
+						rendered="#{logViewerBean.paused}" />
 				</h:form>
 			</div>
-		
-			<p:panel  id="refresh">
-				<p:poll id="refreshLogsPoll" interval="1" delay="10000" autoStart="false"
-						widgetVar="poll"
-						async="true" listener="#{logViewerBean.read}" stop="#{logViewerBean.paused}" 
-						oncomplete="updateLogs(xhr, status, args)" />
+
+			<p:panel id="refresh">
+				<p:poll id="refreshLogsPoll" interval="1" delay="10000"
+					autoStart="false" widgetVar="poll" async="true"
+					listener="#{logViewerBean.read}" stop="#{logViewerBean.paused}"
+					oncomplete="updateLogs(xhr, status, args)" />
 			</p:panel>
-			
+
 			<div class="container">
-				<pre style="height: 58vh; display: flex; margin-top: 0px; margin-bottom: 0px;">
-					<code class="accesslogs" id="logsValue" style="font-size: 16px; resize: vertical; border: 1px solid black; max-width: 98vw; width: 98vw;"></code>
+				<pre
+					style="height: 58vh; display: flex; margin-top: 0px; margin-bottom: 0px;">
+					<code class="accesslogs" id="logsValue"
+						style="overflow: scroll; overlfow-y:auto; font-size: 16px; resize: vertical; border: 1px solid black; max-width: 98vw; width: 98vw;"></code>
 				</pre>
 			</div>
-		
+
 		</p:panel>
-		
+
 
 	</ui:define>
-	
+
 
 </ui:composition>

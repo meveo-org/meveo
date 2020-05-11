@@ -19,11 +19,14 @@
     <p:tooltip for="ESSearch">#{help['menu.fullTextSearch.search']}</p:tooltip>
 
 	<c:set var="cetIndex" value="0" />
-	<c:forEach items="#{customEntityTemplateBean.listAll()}" var="cet">
-		<c:if test="#{currentUser.hasRole(cet.readPermission) }">
-			<p:tooltip for="cet_#{cetIndex}" value="#{cet.description}" />
-			<c:set var="cetIndex" value="#{cetIndex + 1}" />
-		</c:if>
+	<c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}"
+		var="mapCet">
+		<c:forEach items="#{mapCet.value}" var="cet">
+			<c:if test="#{currentUser.hasRole(cet.readPermission) }">
+				<p:tooltip for="cet_#{cetIndex}" value="#{cet.description}" />
+				<c:set var="cetIndex" value="#{cetIndex + 1}" />
+			</c:if>
+		</c:forEach>
 	</c:forEach>
 
 	<div class="Container">

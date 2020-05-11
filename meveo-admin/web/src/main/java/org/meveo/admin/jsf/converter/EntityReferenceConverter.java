@@ -15,11 +15,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 
 import com.google.common.cache.CacheBuilder;
@@ -43,13 +42,11 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
 
-	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
-
 	private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
 	private volatile Map<String, Map<String, Object>> valuesMap = new HashMap<>();
 
+	@Inject
 	private Repository repository;
 
 	@Override
@@ -61,14 +58,18 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 	@Override
 	public String getAsString(FacesContext context, UIComponent component, Object uuid) {
 		CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
-		repository = (Repository) component.getAttributes().get("repository");
 
 		// This converter only applies on entity references
 		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
 			return null;
 		}
-
-		String stringUuid = (String) uuid;
+		String stringUuid = null;
+		if (uuid instanceof EntityReferenceWrapper) {
+			EntityReferenceWrapper entityReferenceWrapper = (EntityReferenceWrapper) uuid;
+			return entityReferenceWrapper.getCode();
+		} else {
+			stringUuid = (String) uuid;
+		}
 
 		LoadingCache<String, String> cetCache = cacheMap.computeIfAbsent(field.getEntityClazzCetCode(), cetCode -> {
 			return CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES)
@@ -94,7 +95,6 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 					.collect(Collectors.toList());
 
 			String sqlConfigurationCode = repository != null ? repository.getSqlConfigurationCode() : null;
-			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
 			final Map<String, Object> values = customTableService.findById(sqlConfigurationCode, cetCode, uuid);
 
 			valuesMap.computeIfAbsent(cetCode, (k) -> new HashMap<>()).put(uuid, values);

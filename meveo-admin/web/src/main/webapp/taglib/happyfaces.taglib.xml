@@ -8,6 +8,10 @@
 
     <namespace>http://hftl.org</namespace>
 
+	<tag>
+        <tag-name>emptyTag</tag-name>
+        <source>emptyTag.xhtml</source>
+    </tag>
     <tag>
         <tag-name>dataList</tag-name>
         <source>dataList.xhtml</source>

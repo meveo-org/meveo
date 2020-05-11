@@ -2,6 +2,7 @@ package org.meveo.service.filter.processor;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 
 import org.meveo.admin.exception.FilterException;
@@ -32,15 +33,15 @@ public class DateProcessor extends PrimitiveFilterProcessor {
 
             ParamBean parameters = paramBeanFactory.getInstance();
             String strDateValue = condition.getOperand().substring(PREFIX.length());
-            Date dateValue = null;
+            Instant dateValue = null;
 
             SimpleDateFormat sdf = new SimpleDateFormat(parameters.getDateFormat());
             try {
-                dateValue = sdf.parse(strDateValue);
+                dateValue = sdf.parse(strDateValue).toInstant();
             } catch (ParseException e) {
                 try {
                     sdf = new SimpleDateFormat(parameters.getDateTimeFormat());
-                    dateValue = sdf.parse(strDateValue);
+                    dateValue = sdf.parse(strDateValue).toInstant();
                 } catch (ParseException e1) {
                     throw new FilterException(e1.getMessage());
                 }
@@ -51,7 +52,7 @@ public class DateProcessor extends PrimitiveFilterProcessor {
         }
     }
 
-    protected void buildQuery(FilteredQueryBuilder queryBuilder, PrimitiveFilterCondition condition, Date dateValue) {
+    protected void buildQuery(FilteredQueryBuilder queryBuilder, PrimitiveFilterCondition condition, Instant dateValue) {
         if ("=".equals(condition.getOperator())) {
             queryBuilder.addCriterionDateTruncatedToDay(condition.getFieldName(), dateValue);
         } else if (">=".equals(condition.getOperator())) {

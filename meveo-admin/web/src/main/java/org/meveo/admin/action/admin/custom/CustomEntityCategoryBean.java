@@ -8,8 +8,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ConstraintViolationException;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.service.base.MeveoExceptionMapper;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.primefaces.model.TreeNode;
@@ -76,8 +78,19 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	}
 
 	public String deleteRelatedCETsByCategory() throws BusinessException {
-		customEntityTemplateService.removeCETsByCategoryId(entity.getId());
-		super.delete(entity.getId());
+		try {
+			customEntityTemplateService.removeCETsByCategoryId(entity.getId());
+			super.delete(entity.getId());
+			
+		} catch(Exception exception) {
+			BusinessException be = MeveoExceptionMapper.translatePersistenceException(exception, getEntityClassName(), String.valueOf(entity.getId()));
+			if (be != null && be instanceof ConstraintViolationException) {
+				messages.error("Can't remove category " + entity.getCode()
+					+ " because one of its sub-elements is referenced somewhere else");
+        	} else
+        		messages.error(exception.getMessage());
+		}
+		
 		return back();
 	}
 

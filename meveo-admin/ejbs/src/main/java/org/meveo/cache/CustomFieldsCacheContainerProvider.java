@@ -523,6 +523,15 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         lock.lock();
         try {
             cfMaps = cftsByAppliesTo.get(key);
+            if(cfMaps == null) {
+            	// Handle case insensitivity
+            	for(CacheKeyStr cacheKey : cftsByAppliesTo.keySet()) {
+            		if(cacheKey.getKey().toUpperCase().equals(appliesTo.toUpperCase())) {
+            			cfMaps = cftsByAppliesTo.get(cacheKey);
+            			break;
+            		}
+            	}
+            }
         } finally {
             lock.unlock();
         }

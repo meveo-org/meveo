@@ -92,6 +92,10 @@ public class JobInstanceService extends BusinessService<JobInstance> {
      * @param job job to be registered.
      */
     private void registerJob(Job job) {
+    	
+    	if(job == null) {
+    		return;
+    	}
 
         boolean clearTimers = false;
         synchronized (jobTimers) {

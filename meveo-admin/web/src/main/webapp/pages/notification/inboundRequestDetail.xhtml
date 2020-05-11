@@ -12,7 +12,8 @@
     <ui:define name="body">
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.notifications']}" disabled="true" />
                     <p:menuitem outcome="inboundRequests" value="#{messages['menu.inboundRequests']}" />
 				<p:menuitem value="#{messages['commons.new']} #{messages['menu.inboundRequest']}"
 					disabled="true" rendered="#{inboundRequestBean.entity.transient}" />
@@ -21,8 +22,7 @@
 					disabled="true" rendered="#{!inboundRequestBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
-        <hftl:formPanel id="inboundRequestForm" label="#{messages['menu.inboundRequest']}" backingBean="#{inboundRequestBean}" columns="2"
-            showEditButton="false" edit="false">
+        <hftl:formPanel id="inboundRequestForm" label="#{messages['menu.inboundRequest']}" backingBean="#{inboundRequestBean}" columns="2">
 
             <hftl:formField label="#{messages['entity.code']}" field="code" />
 			<hftl:formField label="#{messages['enableEntity.disabled']}" allowEdit="false" doNotShowOnNew="true"

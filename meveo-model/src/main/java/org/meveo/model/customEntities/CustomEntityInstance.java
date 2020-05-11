@@ -33,18 +33,20 @@ import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 /**
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.7.0
+ * @lastModifiedVersion 6.9.0
  */
 @Entity
 @ObservableEntity
 @Cacheable
 @ModuleItem("CustomEntityInstance")
+@ModuleItemOrder(50)
 @CustomFieldEntity(cftCodePrefix = "CE", cftCodeFields = "cetCode")
 @ExportIdentifier({ "code", "cetCode" })
 @Table(name = "cust_cei", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "cet_code" }))

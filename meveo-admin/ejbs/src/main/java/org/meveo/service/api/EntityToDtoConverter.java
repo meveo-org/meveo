@@ -1,5 +1,6 @@
 package org.meveo.service.api;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
@@ -192,7 +194,9 @@ public class EntityToDtoConverter {
         if (value instanceof String) {
             dto.setStringValue((String) value);
         } else if (value instanceof Date) {
-            dto.setDateValue((Date) value);
+            dto.setDateValue(((Date) value).toInstant());
+        } else if(value instanceof Instant) {
+        	dto.setDateValue((Instant) value);
         } else if (value instanceof Long) {
             dto.setLongValue((Long) value);
         } else if (value instanceof Double) {
@@ -216,8 +220,8 @@ public class EntityToDtoConverter {
         CustomFieldDto dto = customFieldToDTO(cfCode, cfValue.getValue(), isChildEntityTypeField);
         dto.setCode(cfCode);
         if (cfValue.getPeriod() != null) {
-            dto.setValuePeriodStartDate(cfValue.getPeriod().getFrom());
-            dto.setValuePeriodEndDate(cfValue.getPeriod().getTo());
+            dto.setValuePeriodStartDateFromDatePeriod(cfValue.getPeriod().getFrom());
+            dto.setValuePeriodEndDateFromDatePeriod(cfValue.getPeriod().getTo());
         }
 
         if (cfValue.getPriority() > 0) {

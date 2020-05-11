@@ -39,7 +39,7 @@ public class FtpAdapterJob extends Job {
 
     @Override
     @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         String distDirectory = null;
         String remoteServer = null;
         int remotePort = 21;

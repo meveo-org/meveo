@@ -12,10 +12,16 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.jobs.JobInstance;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("JobTrigger")
+@ModuleItemOrder(103)
 @Table(name="adm_notif_job")
 public class JobTrigger extends Notification {
 	

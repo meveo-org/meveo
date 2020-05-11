@@ -17,9 +17,7 @@
  */
 package org.meveo.api.rest.module.impl;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
@@ -30,8 +28,6 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -50,7 +46,8 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 /**
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
@@ -58,7 +55,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
     @Inject
     private MeveoModuleApi moduleApi;
-
+    
     @Context
     private HttpServletResponse httpServletResponse;
 
@@ -87,10 +84,10 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public ActionStatus delete(String code) {
+    public ActionStatus delete(String code, boolean deleteFiles) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {
-            moduleApi.delete(code);
+            moduleApi.delete(code, deleteFiles);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -242,5 +239,17 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     @Override
     public File export(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
     	return moduleApi.exportModules(modulesCode, exportFormat);
+    }
+
+    @Override
+    public ActionStatus release(String moduleCode, String nextVersion) {
+        ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
+        try {
+            moduleApi.release(moduleCode, nextVersion);
+        } catch (Exception e) {
+            processException(e, result);
+        }
+
+        return result;
     }
 }

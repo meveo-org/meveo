@@ -12,6 +12,7 @@
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.users']}" disabled="true" />
 				<p:menuitem outcome="roles" value="#{messages['menu.userRoles']}" />
 				<p:menuitem value="#{messages['role.new']}" disabled="true" rendered="#{userRoleBean.entity.transient}" />
 				<p:menuitem value="#{messages['role.editView']} - #{userRoleBean.entity.name}" disabled="true" rendered="#{!userRoleBean.entity.transient}" />

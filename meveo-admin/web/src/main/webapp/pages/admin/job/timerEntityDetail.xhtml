@@ -15,9 +15,12 @@
 	<ui:define name="body">
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-					<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-					<p:menuitem outcome="timerEntities" value="#{messages['menu.timerEntities']}" />
-				<p:menuitem value="#{messages['commons.new']} #{messages['timer.panel']}"
+				<p:menuitem value="#{messages['menu.configuration']}"
+					disabled="true" />
+				<p:menuitem outcome="timerEntities"
+					value="#{messages['menu.timerEntities']}" />
+				<p:menuitem
+					value="#{messages['commons.new']} #{messages['timer.panel']}"
 					disabled="true" rendered="#{timerEntityBean.entity.transient}" />
 				<p:menuitem
 					value="#{messages['timer.panel']} - #{timerEntityBean.entity.code}"

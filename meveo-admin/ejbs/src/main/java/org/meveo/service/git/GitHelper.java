@@ -47,6 +47,7 @@ public class GitHelper {
      */
     public static String getGitDirectory(MeveoUser currentUser) {
         String rootDir = ParamBean.getInstance().getChrootDir(currentUser != null ? currentUser.getProviderCode() : null);
+        new File(rootDir + GIT_DIR).mkdirs();
         return rootDir + GIT_DIR;
     }
 

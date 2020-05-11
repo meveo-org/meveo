@@ -18,6 +18,7 @@ package org.meveo.service.script.test;
 
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -35,7 +36,7 @@ public class FunctionTestJob extends Job {
     private JMeterService jMeterService;
 
     @Override
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         final String code = jobInstance.getParametres();
 
         try {

@@ -6,6 +6,8 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -16,15 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import org.meveo.commons.utils.CustomDateSerializer;
+import org.meveo.commons.utils.CustomInstantSerializer;
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.LinkedTreeMap;
@@ -97,8 +101,8 @@ public class CustomFieldValue implements Serializable {
      * Date type value
      */
     @JsonProperty("date")
-    @JsonSerialize(using = CustomDateSerializer.class)
-    private Date dateValue;
+    @JsonSerialize(using = CustomInstantSerializer.class)
+    private Instant dateValue;
 
     /**
      * Long type value
@@ -260,12 +264,28 @@ public class CustomFieldValue implements Serializable {
         this.stringValue = stringValue;
     }
 
-    public Date getDateValue() {
+    public Instant getDateValue() {
         return dateValue;
     }
 
-    public void setDateValue(Date dateValue) {
+    public void setDateValue(Instant dateValue) {
         this.dateValue = dateValue;
+    }
+    
+    public void setDateValueOld(Date dateValue) {
+    	if(dateValue != null) {
+    		this.dateValue = dateValue.toInstant();
+    	} else {
+    		this.dateValue = null;
+    	}
+    }
+    
+    public Date getDateValueOld() {
+    	if(dateValue != null) {
+    		return Date.from(dateValue);
+    	}
+    	
+    	return null;
     }
 
     public Long getLongValue() {
@@ -402,6 +422,11 @@ public class CustomFieldValue implements Serializable {
                 listMapValue.add((Map<?, ?>) listItem);
             }
 
+        } else if(BusinessEntity.class.isAssignableFrom(itemClass)) {
+            listEntityValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+                listEntityValue.add(new EntityReferenceWrapper((BusinessEntity) listItem));
+            }
         } else {
     	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
         }
@@ -571,7 +596,7 @@ public class CustomFieldValue implements Serializable {
 
         switch (fieldType) {
         case DATE:
-            dateValue = (Date) value;
+            dateValue = value instanceof Date ? ((Date) value).toInstant() : (Instant) value;
             break;
 
         case DOUBLE:
@@ -756,8 +781,11 @@ public class CustomFieldValue implements Serializable {
 
                 Object value = valueInfo.get(MAP_VALUE);
                 if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-
-                    value = sdf.format(value);
+                	if(value instanceof Date) {
+                		value = sdf.format(value);
+                	} else {
+                		value = DateTimeFormatter.ofPattern(dateFormat).format((Instant) value);
+                	}
                 } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY && value != null) {
                     value = ((BusinessEntity) value).getCode();
 
@@ -979,7 +1007,7 @@ public class CustomFieldValue implements Serializable {
 
             Class itemClass = null;
             if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-                itemClass = Date.class;
+                itemClass = Instant.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                 itemClass = Double.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY || cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
@@ -1271,12 +1299,22 @@ public class CustomFieldValue implements Serializable {
         listDoubleValue = null;
         listEntityValue = null;
         fileValue = null;
-
+        
         if (value instanceof Date) {
-            dateValue = (Date) value;
+            dateValue = ((Date) value).toInstant();
 
-        } else if (value instanceof BigDecimal) {
+        } else if(value instanceof Instant) {
+        	dateValue = (Instant) value;
+        
+    	} else if (value instanceof BigDecimal) {
             doubleValue = ((BigDecimal) value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            
+            // Handle serialized Instant objects
+        	try {
+        		dateValue = JacksonUtil.convert(value, Instant.class);
+        	} catch(Exception e) {
+        		// NOOP
+        	}
 
         } else if (value instanceof Double) {
             doubleValue = (Double) value;
@@ -1424,9 +1462,15 @@ public class CustomFieldValue implements Serializable {
         try {
 
             if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !cft.getFieldType().isStoredSerialized()) {
-                if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-                    return DateUtils.formatDateWithPattern((Date) valueToConvert, DateUtils.DATE_TIME_PATTERN);
-                } else {
+                // Date type
+            	if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
+                	if(valueToConvert instanceof Date) {
+                		return DateUtils.formatDateWithPattern((Date) valueToConvert, DateUtils.DATE_TIME_PATTERN);
+                	} else {
+                		return DateTimeFormatter.ofPattern(DateUtils.DATE_TIME_PATTERN).format((Instant) valueToConvert);
+                	}
+                	
+            	} else {
                     return valueToConvert.toString();
                 }
             } else {

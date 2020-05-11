@@ -38,9 +38,15 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("TimerEntity")
+@ModuleItemOrder(101)
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_timer", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_timer_seq"), })

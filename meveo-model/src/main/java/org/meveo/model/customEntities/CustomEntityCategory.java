@@ -17,24 +17,29 @@
  */
 package org.meveo.model.customEntities;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.annotation.ImportOrder;
 
 /**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.9.0
  */
 @Entity
 @ModuleItem("CustomEntityCategory")
+@ModuleItemOrder(0)
 @Cacheable
 @ImportOrder(1)
 @ExportIdentifier({ "code" })

@@ -56,10 +56,12 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
     @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "Start node code")
+    @JsonProperty("startNodeCode")
     private String startNodeCode;
 
     @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "End node code")
+    @JsonProperty("endNodeCode")
     private String endNodeCode;
 
     @XmlAttribute()
@@ -305,6 +307,15 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
         if (crtToUpdate != null) {
             crt = crtToUpdate;
         }
+        
+        if(dto.getStartNodeCode() == null) {
+        	throw new IllegalArgumentException("Start node can't be null");
+        }
+        
+        if(dto.getEndNodeCode() == null) {
+        	throw new IllegalArgumentException("End node can't be null");
+        }
+        
         crt.setCode(dto.getCode());
         crt.setName(dto.getName());
         crt.setDescription(dto.getDescription());

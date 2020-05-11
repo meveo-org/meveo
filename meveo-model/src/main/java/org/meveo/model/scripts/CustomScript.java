@@ -1,26 +1,37 @@
 package org.meveo.model.scripts;
 
-import com.thoughtworks.xstream.annotations.XStreamConverter;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.hibernate.annotations.Type;
-import org.meveo.commons.utils.XStreamCDATAConverter;
-import org.meveo.model.ExportIdentifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.annotations.Type;
+import org.meveo.commons.utils.XStreamCDATAConverter;
+import org.meveo.model.ExportIdentifier;
+
+import com.thoughtworks.xstream.annotations.XStreamConverter;
+
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ **/
 @ExportIdentifier({ "code"})
 @MappedSuperclass
 public abstract class CustomScript extends Function {
 
-    private static Logger logger = LoggerFactory.getLogger(CustomScript.class);
     private static final long serialVersionUID = 8176170199770220430L;
 
     public static final String TYPE = "Script";
@@ -54,12 +65,12 @@ public abstract class CustomScript extends Function {
     @Column(name = "getters", columnDefinition = "text")
     private List<Accessor> getters = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @JoinTable(name="meveo_script_inputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
     @Column(name="script_input")
     private Set<String> scriptInputs = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @JoinTable(name="meveo_script_outputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
     @Column(name="script_output")
     private Set<String> scriptOutputs = new HashSet<>();
@@ -79,7 +90,11 @@ public abstract class CustomScript extends Function {
     }
 
     public List<Accessor> getSetters() {
-        return setters != null ? setters : new ArrayList<>();
+    	return setters;
+    }
+    
+    public List<Accessor> getSettersNullSafe() {
+      return setters != null ? setters : new ArrayList<>();
     }
 
     public void setSetters(List<Accessor> setters) {

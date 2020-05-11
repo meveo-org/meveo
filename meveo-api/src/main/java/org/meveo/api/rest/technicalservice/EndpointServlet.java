@@ -18,9 +18,7 @@ package org.meveo.api.rest.technicalservice;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -33,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
@@ -41,6 +40,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
@@ -130,6 +130,27 @@ public class EndpointServlet extends HttpServlet {
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
+        // Check if a required parameter is missing at endpoint execution
+        if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+            List<TSParameterMapping> requiredParameters = new ArrayList<>();
+            for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+                if (tsParameterMapping.isValueRequired() && tsParameterMapping.getDefaultValue() == null) {
+                    requiredParameters.add(tsParameterMapping);
+                }
+            }
+            
+            if (CollectionUtils.isNotEmpty(requiredParameters)) {
+                for (TSParameterMapping param : requiredParameters) {
+                    final String parameterName = param.getEndpointParameter().getParameter();
+                	if(!endpointExecution.getParameters().containsKey(parameterName)) {
+	                    endpointExecution.getResp().setStatus(400);
+						endpointExecution.getResp().getWriter().println("Parameter '" + parameterName + "' is missing");
+		                return;
+                	}
+                }
+            }
+        }
+
         // If endpoint security is enabled, check if user has right to access that particular endpoint
         boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
         if (endpointSecurityEnabled && endpoint != null && !endpointApi.isUserAuthorized(endpoint)) {
@@ -198,7 +219,7 @@ public class EndpointServlet extends HttpServlet {
 
         // Endpoint is called with wrong method
         if (endpoint.getMethod() != endpointExecution.getMethod()) {
-            endpointExecution.getResp().setStatus(400);
+            endpointExecution.getResp().setStatus(405);
             endpointExecution.getResp().getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
             return;
         }

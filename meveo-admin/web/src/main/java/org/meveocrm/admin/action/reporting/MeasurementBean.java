@@ -21,6 +21,7 @@ package org.meveocrm.admin.action.reporting;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -352,7 +353,7 @@ public class MeasurementBean extends BaseBean<MeasuredValue> {
             for (int i = 0; i < daysInMonth; i++) {
                 String dateCol = StringUtils.leftPad(StringUtils.leftPad(String.valueOf(String.valueOf(i + 1)), 2, '0') + "/" + String.valueOf(cal.get(Calendar.MONTH) + 1), 2, '0')
                         + "/" + String.valueOf(cal.get(Calendar.YEAR));
-                Date date = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).parse(dateCol);
+                Instant date = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).parse(dateCol).toInstant();
                 MeasuredValue mv = measuredValueService.getByDate(date, period, measurableQuantity);
                 if (mv == null) {
                     mv = new MeasuredValue();

@@ -1,5 +1,6 @@
 package org.meveocrm.services.dwh;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,7 +28,7 @@ public class MeasuredValueService extends PersistenceService<MeasuredValue> {
      * @param mq MeasurableQuantity
      * @return MeasuredValue
      */
-    public MeasuredValue getByDate(Date date, MeasurementPeriodEnum period, MeasurableQuantity mq) {
+    public MeasuredValue getByDate(Instant date, MeasurementPeriodEnum period, MeasurableQuantity mq) {
         return getByDate(getEntityManager(), date, period, mq);
     }
 
@@ -38,7 +39,7 @@ public class MeasuredValueService extends PersistenceService<MeasuredValue> {
      * @param mq MeasurableQuantity
      * @return MeasuredValue
      */
-    public MeasuredValue getByDate(EntityManager em, Date date, MeasurementPeriodEnum period, MeasurableQuantity mq) {
+    public MeasuredValue getByDate(EntityManager em, Instant date, MeasurementPeriodEnum period, MeasurableQuantity mq) {
         MeasuredValue result = null;
         // QueryBuilder queryBuilder = new QueryBuilder(MeasuredValue.class, " m ");
         // queryBuilder.addCriterionDate("m.date", date);

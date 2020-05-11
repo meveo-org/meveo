@@ -16,9 +16,29 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import java.io.IOException;
+import java.util.List;
+
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
@@ -27,18 +47,9 @@ import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-import java.util.List;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * Rest endpoint for managing service endpoints
@@ -46,12 +57,12 @@ import java.util.List;
  * @author clement.bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
  * @since 04.02.2019
- * @version 6.5.0
+ * @version 6.9.0
  */
 @Path("/endpoint")
 @DeclareRoles({ "endpointManagement" })
 @RolesAllowed({ "endpointManagement" })
-@Api("Endpoint")
+@Api("EndpointRs")
 public class EndpointRs extends BaseRs {
 
 	@EJB
@@ -106,20 +117,6 @@ public class EndpointRs extends BaseRs {
 	}
 
 	/**
-	 * Get script of a {@link Endpoint}
-	 *
-	 * @param code Code of the {@link Endpoint} to get script
-	 */
-	@GET
-	@Path("/{code}.js")
-    @Cache(maxAge = 86400)
-	@Produces("application/javascript")
-	@ApiOperation(value = " Get script of the endpoint")
-	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code) throws EntityDoesNotExistsException, IOException {
-		return endpointApi.getEndpointScript(uriContextInfo.getBaseUri().toString(), code);
-	}
-
-	/**
 	 * Find a {@link Endpoint} by code
 	 *
 	 * @param code Code of the {@link Endpoint} to find
@@ -153,6 +150,20 @@ public class EndpointRs extends BaseRs {
 	}
 
 	/**
+	 * Get script of a {@link Endpoint}
+	 *
+	 * @param code Code of the {@link Endpoint} to get script
+	 */
+	@GET
+	@Path("/{code}.js")
+    @Cache(maxAge = 86400)
+	@Produces("application/javascript")
+	@ApiOperation(value = " Get script of the endpoint")
+	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code) throws EntityDoesNotExistsException, IOException {
+		return endpointApi.getEndpointScript(uriContextInfo.getBaseUri().toString(), code);
+	}
+
+	/**
 	 * Generate open api json of a {@link Endpoint}
 	 *
 	 * @param code Code of the {@link Endpoint} to generate open api json
@@ -163,6 +174,32 @@ public class EndpointRs extends BaseRs {
 	public Response generateOpenApiJson(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 
 		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
+	}
+	
+	/**
+	 * Generates and returns the request schema of a given endpoint.
+	 * 
+	 * @param code code of the endpoint
+	 * @return request schema of the given endpoint
+	 */
+	@GET
+	@Path("/schema/{code}/request")
+	@ApiOperation(value = "Generates and returns the request schema of a given endpoint.")
+	public String requestSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+		return endpointApi.requestSchema(code);
+	}
+	
+	/**
+	 * Generates and returns the response schema of a given endpoint.
+	 * 
+	 * @param code code of the endpoint
+	 * @return response schema of the given endpoint
+	 */
+	@GET
+	@Path("/schema/{code}/response")
+	@ApiOperation(value = "Generates and returns the response schema of a given endpoint.")
+	public String responseSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+		return endpointApi.responseSchema(code);
 	}
 
 }

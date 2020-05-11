@@ -78,7 +78,7 @@ public class CustomTableImportJob extends Job {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         try {
             Long nbRuns;
             Long waitingMillis;

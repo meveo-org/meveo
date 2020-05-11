@@ -70,7 +70,19 @@
                             <hftl:customFieldValueMuteField edit="false" id="cfValue_out" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />
                         </f:facet>
                         <f:facet name="input">
-                            <hftl:customFieldValueMuteField edit="true" id="cfValue_in" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />
+                        	<c:if test="#{cft.fieldType == CustomFieldTypeEnum.ENTITY}">
+	                            <h:link outcome="referenceCEI" value="#{customEntityInstanceBean.getCeiCode(cft, mapValues)}" target="_blank">
+	                                <f:param name="uuid" value="#{customEntityInstanceBean.getCeiUuid(cft, mapValues)}"/>
+	                                <f:param name="cet" value="#{customEntityInstanceBean.getCetCode(cft, mapValues)}"/>
+	                                <f:param name="repo" value="#{customEntityInstanceBean.repositoryCode}"/>
+	                                <f:param name="tab" value="#{customEntityInstanceBean.activeTab}"/>
+	                                <!--<f:param name="backView" value="customizedEntities" />-->
+	                                <f:param name="cid" value="#{javax.enterprise.context.conversation.id}"/>
+	                            </h:link>
+                            </c:if>
+                            <c:if test="#{cft.fieldType ne CustomFieldTypeEnum.ENTITY}">
+                            	<hftl:customFieldValueMuteField edit="true" id="cfValue_in" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />
+                            </c:if>
                         </f:facet>
                     </p:cellEditor>
                 </p:column>
@@ -116,9 +128,14 @@
                         </c:if>
 
                         <c:if test="#{empty(popupWidgetVar) and edit and !disabled}">
-                            <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this addNewFields" update="#{idPrefix}_customFields_map_omitFromSubmit"
-                                action="#{customFieldDataEntryBean.addValueToMap(cfValueHolder, field, cft)}">
+                            <p:commandButton value="#{messages['commons.addNew']}" 
+                            				partialSubmit="false" 
+                            				process="@this addNewFields"
+                            				update="#{idPrefix}_customFields_map_omitFromSubmit"
+                                			action="#{customFieldDataEntryBean.addValueToMap(cfValueHolder, field, cft)}">
                                 <p:resetInput target="addNewFields" />
+
+
                             </p:commandButton>
                         </c:if>
 

@@ -21,6 +21,7 @@
             <module name="org.keycloak.keycloak-adapter-core"/>
             <module name="org.keycloak.keycloak-core"/>
             <module name="org.jboss.vfs"/>
+            <module name="org.dom4j" export="true"/>
         </dependencies>
     </deployment>
 </jboss-deployment-structure>

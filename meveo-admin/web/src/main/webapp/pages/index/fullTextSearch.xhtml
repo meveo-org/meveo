@@ -10,8 +10,16 @@
     </ui:define>
 
     <ui:define name="body">
+    
+    	<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.search']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.fullTextSearch']}" disabled="true" />
+			</p:breadCrumb>
+		</h:form>
 
-        <hftl:decorateFormPanel label="#{messages['indexing.fullTextPanel']}">
+        <hftl:decorateFormPanel>
             <ui:define name="fields">
                 <hftl:decorateFormField fieldId="ftField" label="#{messages['indexing.fullTextField']}">
                     <h:inputText id="ftField" value="#{fullTextSearchBean.filters['fullText']}" size="50" maxlength="100" />

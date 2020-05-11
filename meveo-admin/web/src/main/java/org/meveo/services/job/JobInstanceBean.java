@@ -1,18 +1,14 @@
 package org.meveo.services.job;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
-import org.meveo.admin.action.admin.custom.CustomFieldDataEntryBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.JobRunningStatusEnum;
@@ -22,12 +18,17 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
+import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Named
 @ViewScoped
 public class JobInstanceBean extends CustomFieldBean<JobInstance> {
@@ -41,13 +42,14 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     private JobExecutionService jobExecutionService;
 
     @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
-
-    @Inject
-    private CustomFieldDataEntryBean customFieldDataEntryBean;
-
-    @Inject
     private JobCacheContainerProvider jobCacheContainerProvider;
+
+    @Inject
+    protected CustomFieldInstanceService customFieldInstanceService;
+    
+    private TimerEntity prevTimerEntity;
+
+    private List<Map<String, Object>> overrideParams;
 
     public JobInstanceBean() {
         super(JobInstance.class);
@@ -55,13 +57,30 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     @Override
     public JobInstance initEntity() {
-        super.initEntity();
+        entity = super.initEntity();
+        
+		if (entity.getTimerEntity() != null) {
+			prevTimerEntity = entity.getTimerEntity();
+		}
 
         try {
             refreshCustomFieldsAndActions();
         } catch (BusinessException e) {
         }
 
+        if (entity.getId() != null && overrideParams == null) {
+            Map<String, Object> context = (Map<String, Object>) customFieldInstanceService.getCFValue(entity, "ScriptingJob_variables");
+            if (context != null && !context.isEmpty()) {
+                overrideParams = new ArrayList<>();
+                hasParams = true;
+                for (Map.Entry<String, Object> entry : context.entrySet()) {
+                    Map<String, Object> param = new HashMap<>();
+                    param.put("key", entry.getKey());
+                    param.put("value", entry.getValue());
+                    overrideParams.add(param);
+                }
+            }
+        }
         return entity;
     }
 
@@ -94,7 +113,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     public String execute() {
         try {
-            jobExecutionService.manualExecute(entity);
+            jobExecutionService.manualExecute(entity, null);
             messages.info(new BundleKey("messages", "info.entity.executed"), entity.getJobTemplate());
         } catch (Exception e) {
             messages.error(new BundleKey("messages", "error.execution"));
@@ -102,6 +121,23 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         }
 
         return getEditViewName();
+    }
+
+    public String executeWithParameters() {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(overrideParams)) {
+                params = new HashMap<>();
+                for (Map<String, Object> param : overrideParams) {
+                    params.put((String)param.get("key"), param.get("value"));
+                }
+            }
+            jobExecutionService.manualExecute(entity, params);
+            messages.info(new BundleKey("messages", "info.entity.executed"), entity.getJobTemplate());
+        } catch (Exception e) {
+            messages.error(new BundleKey("messages", "error.execution"));
+        }
+        return null;
     }
     
     public String stop() {
@@ -116,11 +152,18 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         return getEditViewName();
     }
 
-    @Override
-    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        super.saveOrUpdate(killConversation);
-        return getEditViewName();
-    }
+	@Override
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+
+		// need to cancel existing attached timer
+		if (prevTimerEntity != entity.getTimerEntity()) {
+			jobInstanceService.scheduleUnscheduleJob(entity.getId());
+		}
+
+		super.saveOrUpdate(killConversation);
+
+		return getEditViewName();
+	}
 
     @Override
     protected String getListViewName() {
@@ -215,11 +258,20 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         createMissingCustomFieldTemplates();
         customFieldDataEntryBean.refreshFieldsAndActions(entity);
     }
-    
+
+    public List<Map<String, Object>> getOverrideParams() {
+        return overrideParams;
+    }
+
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("executionResults");
+        return Arrays.asList("timerEntity", "executionResults");
     }
+    
+	@Override
+	protected List<String> getListFieldsToFetch() {
+		return Arrays.asList("timerEntity");
+	}
     
     @Override
     public void enable() {    	
@@ -232,5 +284,9 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     	super.disable();
     	initEntity();
     }
-    
+
+    @Override
+    public boolean isHasParams() {
+        return hasParams;
+    }
 }

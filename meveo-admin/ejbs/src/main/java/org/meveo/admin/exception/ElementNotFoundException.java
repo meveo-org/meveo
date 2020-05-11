@@ -29,4 +29,8 @@ public class ElementNotFoundException extends BusinessException {
     public ElementNotFoundException(String code, String elementName) {
         super(elementName + " with code=" + code + " not found");
     }
+
+	public ElementNotFoundException(String code, String elementName, Throwable cause) {
+        super(elementName + " with code=" + code + " not found", cause);
+	}
 }

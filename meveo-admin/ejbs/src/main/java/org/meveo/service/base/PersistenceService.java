@@ -25,6 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -59,8 +60,8 @@ import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
-import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.jpa.EntityManagerWrapper;
+import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessCFEntity;
@@ -427,7 +428,20 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
         return entity;
     }
-
+    
+    /**
+     * Persist an entity in a separated transaction.
+     * 
+     * @param e Entity to persist.
+     * 
+     * @throws BusinessException business exception.
+     */
+    @JpaAmpNewTx
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void createInNewTx(E e) throws BusinessException {
+    	create(e);
+    }
+    
     /**
      * @see org.meveo.service.base.local.IPersistenceService#create(org.meveo.model.IEntity)
      */
@@ -815,7 +829,9 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                         } else if (filterValue instanceof Number) {
                             queryBuilder.addCriterion("a." + fieldName, " >= ", filterValue, true);
                         } else if (filterValue instanceof Date) {
-                            queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Date) filterValue);
+                            queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+                        } else if (filterValue instanceof Instant) {
+                            queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Instant) filterValue);
                         }
 
                         // if ranged search - field value in between from - to values. Specifies "to" value: e.g field.value<=value
@@ -826,7 +842,9 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                         } else if (filterValue instanceof Number) {
                             queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, true);
                         } else if (filterValue instanceof Date) {
-                            queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Date) filterValue);
+                            queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+                        } else if (filterValue instanceof Instant) {
+                            queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Instant) filterValue);
                         }
 
                         // Value is in field value (list)
@@ -1024,7 +1042,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
                             }
 
                         } else if (filterValue instanceof Date) {
-                            queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Date) filterValue);
+                            queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+
+                        } else if (filterValue instanceof Instant) {
+                            queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Instant) filterValue);
 
                         } else if (filterValue instanceof Number) {
                             queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
@@ -1134,4 +1155,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         }
         return (List<Map<String, Object>>) q.list();
     }
+    
+ 
 }

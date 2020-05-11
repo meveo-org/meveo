@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
-import javax.ejb.Timeout;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
@@ -117,14 +115,8 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	 */
 	public boolean testConnection(SqlConfiguration sqlConfiguration) {
 
-		boolean result = false;
-		Session session = sqlConnectionProvider.testSession(sqlConfiguration);
-		if (session != null) {
-			result = true;
-			session.close();
-		}
 
-		return result;
+		return sqlConnectionProvider.testSession(sqlConfiguration);
 	}
 
 	/**

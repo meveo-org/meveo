@@ -1,5 +1,6 @@
 package org.meveo.model.dwh;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -9,8 +10,6 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -22,9 +21,15 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("MeasurableQuantity")
+@ModuleItemOrder(206)
 @Cacheable
 @ExportIdentifier({ "code"})
 @Table(name = "dwh_measurable_quant", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
@@ -76,9 +81,8 @@ public class MeasurableQuantity extends BusinessEntity {
 	@Column(name = "measurement_period")
 	private MeasurementPeriodEnum measurementPeriod;
 	
-	@Column(name = "last_measure_date")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date lastMeasureDate;
+	@Column(name = "last_measure_date", columnDefinition = "TIMESTAMP")
+	private Instant lastMeasureDate;
 
 	public String getTheme() {
 		return theme;
@@ -144,11 +148,11 @@ public class MeasurableQuantity extends BusinessEntity {
 		this.measurementPeriod = measurementPeriod;
 	}
 
-	public Date getLastMeasureDate() {
+	public Instant getLastMeasureDate() {
 		return lastMeasureDate;
 	}
 
-	public void setLastMeasureDate(Date lastMeasureDate) {
+	public void setLastMeasureDate(Instant lastMeasureDate) {
 		this.lastMeasureDate = lastMeasureDate;
 	}
 
@@ -172,11 +176,12 @@ public class MeasurableQuantity extends BusinessEntity {
 	        return calendar.getTime();
 	}
 	
-	public Date getNextMeasureDate(){
+	public Instant getNextMeasureDate(){
         GregorianCalendar calendar = new GregorianCalendar();
         Date result = new Date();
-        if(lastMeasureDate!=null){
-        	calendar.setTime(lastMeasureDate);
+        if(lastMeasureDate != null){
+        	calendar.setTime(Date.from(lastMeasureDate));
+        	
 	        switch(measurementPeriod){
 		        case DAILY:
 		        	calendar.add(java.util.Calendar.DAY_OF_MONTH, 1);
@@ -191,14 +196,16 @@ public class MeasurableQuantity extends BusinessEntity {
 		        	calendar.add(java.util.Calendar.YEAR, 1);
 		        	break;
 		    }
-	        result=calendar.getTime();
+	        
+	        result = calendar.getTime();
 	    }
-        return result;
+        
+        return result.toInstant();
 	}
 	
 	public void increaseMeasureDate(){
-		if(lastMeasureDate==null){
-			lastMeasureDate= new Date();
+		if(lastMeasureDate == null){
+			lastMeasureDate= Instant.now();
 		} else {
 			lastMeasureDate = getNextMeasureDate();
 		}

@@ -11,7 +11,7 @@
     <ui:define name="body">
             <h:form id="crumbmenuForm">
                 <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                    <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
                     <p:menuitem outcome="meveoModules" value="#{messages['menu.meveoModules']}" />
                 </p:breadCrumb>
             </h:form>
@@ -23,6 +23,9 @@
             <hftl:searchField label="#{messages['meveoModule.license']}" field="license" />
         </hftl:searchPanel>
 
+        <p:messages id="messages">
+            <p:autoUpdate />
+        </p:messages>
         <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{meveoModuleListBean}" exportXlsxButton="false" exportToCsv="false" exportToJson="true" exportToXml="false">
             <hftl:column label="#{messages['BusinessEntity.code']}" field="code" useCustomIdParam="true"/>
             <hftl:column label="#{messages['BusinessEntity.description']}" field="description" />
@@ -34,13 +37,21 @@
                     <f:attribute name="width" value="30"></f:attribute>
                 </h:graphicImage>
             </p:column>
+            <hftl:column label="#{messages['meveoModule.currentVersion']}" field="currentVersion" />
             <hftl:column label="#{messages['meveoModule.license']}" field="license.label" isMessage="true" />
             <p:column headerText="#{messages['commons.status']}">
                 <h:outputText value="#{messages[!entity.installed?'meveoModule.downloaded':entity.active?'meveoModule.installedAndEnabled':'meveoModule.installedAndDisabled']}"
                     rendered="#{entity.downloaded}" />
                 <h:outputText value="#{messages[entity.active?'enableEntity.active':'enableEntity.disabled']}" rendered="#{!entity.downloaded}" />
             </p:column>
-            <hftl:actionsColumn useCustomIdParam="true" permission="#{currentUser.hasRole('administrationManagement')}" renderEnableLink="false" />
+            <hftl:actionsColumn useCustomIdParam="true" permission="#{currentUser.hasRole('administrationManagement')}" renderEnableLink="false" renderDeleteLink="false">
+                <ui:define name="actionButtons">
+                    <p:commandButton id="deleteModule" immediate="true" icon="ui-icon-trash" oncomplete="PF('deleteDialog').show();" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" update=":deleteDialog">
+                        <f:setPropertyActionListener target="#{meveoModuleListBean.entity}" value="#{entity}" />
+                        <f:setPropertyActionListener target="#{meveoModuleListBean.deleteFiles}" value="#{!entity.isInDraft}" />
+                    </p:commandButton>
+                </ui:define>
+            </hftl:actionsColumn>
             <ui:define name="add-on-buttons">
                 <p:commandButton id="downloadMeveoModuleButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.downloadAndInstallModules']}"
                     update=":#{p:component('meveoModulesDialog')}" oncomplete="PF('meveoModulesDialog').show()">
@@ -125,6 +136,22 @@
                     <p:commandButton id="confirmKo" value="#{messages['action.cancel']}" onclick="PF('meveoModuleDialog').hide();PF('meveoModulesDialog').show()" type="button" />
                 </ui:define>
             </hftl:decorateFormPanel>
+        </p:dialog>
+        <p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="150" width="400">
+            <h:form id="deleteDialogForm">
+                <h:panelGrid id="deleteFile" columns="1">
+                    #{messages['commons.confirmDelete']}
+                    <hftl:decorateFormField label="#{messages['meveoModule.deleteFiles']}" fieldId="deleteFiles" componentWidth="70">
+                        <p:selectBooleanCheckbox id="deleteFiles" value="#{meveoModuleListBean.deleteFiles}" >
+                            <p:ajax event="change" update=":deleteDialogForm:deleteFile" />
+                        </p:selectBooleanCheckbox>
+                    </hftl:decorateFormField>
+                </h:panelGrid>
+                <h:panelGroup layout="block" styleClass="form-panel-actions">
+                    <p:commandButton action="#{meveoModuleListBean.deleteModuleFile()}" immediate="true" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
+                    <p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" onclick="PF('deleteDialog').hide();" />
+                </h:panelGroup>
+            </h:form>
         </p:dialog>
     </ui:define>
 </ui:composition>

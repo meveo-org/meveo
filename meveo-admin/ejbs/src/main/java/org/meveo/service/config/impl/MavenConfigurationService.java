@@ -4,7 +4,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Resource;
@@ -33,13 +39,7 @@ import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
-import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.FileUtils;
@@ -57,6 +57,8 @@ import org.meveo.model.storage.RemoteRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
+import org.meveo.service.aether.ConsoleRepositoryListener;
+import org.meveo.service.aether.ManualRepositorySystemFactory;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -331,11 +333,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public RepositorySystem newRepositorySystem() {
-		DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-		locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-		locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-		locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-		return locator.getService(RepositorySystem.class);
+		return ManualRepositorySystemFactory.newRepositorySystem();
 	}
 
 	public RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
@@ -344,6 +342,9 @@ public class MavenConfigurationService implements Serializable {
 		LocalRepository localRepo = new LocalRepository(getM2FolderPath());
 		session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
 
+		// session.setTransferListener( new ConsoleTransferListener() );
+        session.setRepositoryListener( new ConsoleRepositoryListener() );
+        
 		return session;
 	}
 

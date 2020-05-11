@@ -1,9 +1,6 @@
 package org.meveo.model.crm.custom;
 
-import java.util.Date;
-import java.util.Map;
-
-import org.meveo.model.crm.EntityReferenceWrapper;
+import java.time.Instant;
 
 public enum PrimitiveTypeEnum {
 
@@ -15,7 +12,7 @@ public enum PrimitiveTypeEnum {
     /**
      * Date value
      */
-    DATE(Date.class, CustomFieldTypeEnum.DATE),
+    DATE(Instant.class, CustomFieldTypeEnum.DATE),
 
     /**
      * Long value

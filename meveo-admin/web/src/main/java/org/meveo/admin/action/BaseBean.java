@@ -20,7 +20,6 @@
 package org.meveo.admin.action;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +33,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -49,6 +50,7 @@ import org.infinispan.Cache;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ConstraintViolationException;
 import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -72,6 +74,8 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.PermissionService;
+import org.meveo.service.api.EntityHelperBean;
+import org.meveo.service.base.MeveoExceptionMapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.filter.FilterService;
 import org.meveo.service.index.ElasticClient;
@@ -95,9 +99,9 @@ import com.lapis.jsfexporter.csv.CSVExportOptions;
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
  *
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- *
+ * @version 6.9.0
  */
 @Named
 @ViewScoped
@@ -146,6 +150,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     /** Class of backing bean. */
     private Class<T> clazz;
 
+    protected boolean hasParams = false;
+
     /**
      * Request parameter. Should form be displayed in create/edit or view mode
      */
@@ -159,6 +165,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private MeveoModuleService meveoModuleService;
+    
+    @Inject
+    private EntityHelperBean entityHelper;
+    
     private String partOfModules;
 
     /**
@@ -386,14 +396,18 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
         String message = entity.isTransient() ? "save.successful" : "update.successful";
-
-        entity = saveOrUpdate(entity);
-
-        if (killConversation) {
-            endConversation();
+        
+        try {
+            entity = saveOrUpdate(entity);
+            messages.info(new BundleKey("messages", message));
+            if (killConversation) {
+                endConversation();
+            }
+        } catch (Exception e){ 
+        	messages.error("Entity can't be saved. Please retry.");
+        	log.error("Can't update entity", e);
         }
 
-        messages.info(new BundleKey("messages", message));
         return back();
     }
 
@@ -431,11 +445,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * @throws BusinessException
      */
     protected T saveOrUpdate(T entity) throws BusinessException {
-        if (entity.isTransient()) {
-            getPersistenceService().create(entity);
+        IPersistenceService<T> persistenceService = getPersistenceService();
+		if (entity.isTransient()) {
+            persistenceService.create(entity);
 
         } else {
-            entity = getPersistenceService().update(entity);
+            entity = persistenceService.update(entity);
         }
 
         objectId = (Long) entity.getId();
@@ -628,23 +643,29 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             return true;
 
         } catch (Exception e) {
-            Throwable cause = e;
-            while (cause != null) {
-
-                if (cause instanceof org.hibernate.exception.ConstraintViolationException) {
-
-                    String referencedBy = findReferencedByEntities(clazz, id);
-                    log.info("Delete was unsuccessful because entity is used by other entities {}", referencedBy);
-
+        	BusinessException be = MeveoExceptionMapper.translatePersistenceException(e, clazz.getName(), String.valueOf(id));
+        	if (be!= null) {
+        		if (be instanceof ConstraintViolationException ) {
+                    String referencedBy = null;
+                    
+                    try { 
+                    	referencedBy = entityHelper.findReferencedByEntities(clazz, id);
+                    	log.info("Delete was unsuccessful because entity is used by other entities {}", referencedBy);
+                    } catch (Exception ex) {
+                    	log.error("Can't find related entities", ex);
+                    }
+                    
                     if (referencedBy != null) {
                         messages.error(new BundleKey("messages", "error.delete.entityUsedWDetails"), code == null ? "" : code, referencedBy);
                     } else {
                         messages.error(new BundleKey("messages", "error.delete.entityUsed"));
                     }
+                    
                     FacesContext.getCurrentInstance().validationFailed();
                     return false;
                 }
-                cause = cause.getCause();
+                
+                throw be;
             }
 
             throw e;
@@ -662,6 +683,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * @throws Exception general exception
      */
     @ActionMethod
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void deleteMany() throws Exception {
 
         if (selectedEntities == null || selectedEntities.isEmpty()) {
@@ -701,7 +723,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      */
     public Map<String, Object> getFilters() {
         if (filters == null) {
-            filters = new HashMap<String, Object>();
+            filters = new HashMap<>();
         }
         return filters;
     }
@@ -711,7 +733,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      */
     public void clean() {
         dataModel = null;
-        filters = new HashMap<String, Object>();
+        filters = new HashMap<>();
         listFilter = null;
     }
 
@@ -1279,61 +1301,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     }
 
     /**
-     * Find entities that reference a given class and ID
-     *
-     * @param id Record identifier
-     * @return A concatinated list of entities (humanized classnames and their codes) E.g. Customer Account: first ca, second ca, third ca; Customer: first customer, second
-     *         customer
-     */
-    @SuppressWarnings("rawtypes")
-    private String findReferencedByEntities(Class<T> entityClass, Long id) {
-
-        T referencedEntity = getPersistenceService().getEntityManager().getReference(entityClass, id);
-
-        int totalMatched = 0;
-        String matchedEntityInfo = null;
-        Map<Class, List<Field>> classesAndFields = ReflectionUtils.getClassesAndFieldsOfType(entityClass);
-
-        for (Entry<Class, List<Field>> classFieldInfo : classesAndFields.entrySet()) {
-
-            boolean isBusinessEntity = BusinessEntity.class.isAssignableFrom(classFieldInfo.getKey());
-
-            String sql = "select " + (isBusinessEntity ? "code" : "id") + " from " + classFieldInfo.getKey().getName() + " where ";
-            boolean fieldAddedToSql = false;
-            for (Field field : classFieldInfo.getValue()) {
-                // For now lets ignore list type fields
-                if (field.getType() == entityClass) {
-                    sql = sql + (fieldAddedToSql ? " or " : " ") + field.getName() + "=:id";
-                    fieldAddedToSql = true;
-                }
-            }
-
-            if (fieldAddedToSql) {
-
-                List entitiesMatched = getPersistenceService().getEntityManager().createQuery(sql).setParameter("id", referencedEntity).setMaxResults(10).getResultList();
-                if (!entitiesMatched.isEmpty()) {
-
-                    matchedEntityInfo = (matchedEntityInfo == null ? "" : matchedEntityInfo + "; ") + ReflectionUtils.getHumanClassName(classFieldInfo.getKey().getSimpleName())
-                            + ": ";
-                    boolean first = true;
-                    for (Object entityIdOrCode : entitiesMatched) {
-                        matchedEntityInfo += (first ? "" : ", ") + entityIdOrCode;
-                        first = false;
-                    }
-
-                    totalMatched += entitiesMatched.size();
-                }
-            }
-
-            if (totalMatched > 10) {
-                break;
-            }
-        }
-
-        return matchedEntityInfo;
-    }
-
-    /**
      * Get rows per page from meveo-rows-page-cache cache
      *
      */
@@ -1365,5 +1332,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         rowsByClassForUser.put(clazzName, rows);
 
         cacheNumberRow.put(username, rowsByClassForUser);
+    }
+
+    public boolean isHasParams() {
+        return hasParams;
     }
 }

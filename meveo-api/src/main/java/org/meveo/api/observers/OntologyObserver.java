@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,10 +78,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.utils.Log;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
  *
+ * @since 6.0.13
+ * @version 6.9.0
  * @author Clément Bareth
  */
 @Singleton
@@ -207,6 +211,7 @@ public class OntologyObserver {
      *
      * @param cet The updated {@link CustomEntityTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
+     * @throws BusinessException if an error happen during the creation of the related files
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws
@@ -308,7 +313,7 @@ public class OntologyObserver {
 
         File schemaFile = new File(crtDir, crt.getCode() + ".json");
         if (schemaFile.exists()) {
-            throw new BusinessException("Schema for CRT " + crt.getCode() + " already exists");
+        	schemaFile.delete();
         }
 
         FileUtils.write(schemaFile, templateSchema);
@@ -322,6 +327,7 @@ public class OntologyObserver {
      *
      * @param crt The updated {@link CustomRelationshipTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
+     * @throws BusinessException if an error happen during the creation of the related files
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
@@ -370,6 +376,7 @@ public class OntologyObserver {
      *
      * @param cft The created {@link CustomFieldTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
+     * @throws BusinessException if an error happen during the creation of the related files
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomFieldTemplate cft) throws IOException, BusinessException {
@@ -445,6 +452,7 @@ public class OntologyObserver {
      *
      * @param cft The updated {@link CustomFieldTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
+     * @throws BusinessException if an error happen during the creation of the related files
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomFieldTemplate cft) throws IOException, BusinessException {
@@ -467,21 +475,9 @@ public class OntologyObserver {
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
+                listFile = updateCetFiles(cet, classDir, schemaFile, javaFile);
+
                 listFile.add(schemaFile);
-                final String templateSchema = getTemplateSchema(cet);
-                FileUtils.write(schemaFile, templateSchema);
-
-                if (javaFile.exists()) {
-                    javaFile.delete();
-                    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
-                    FileUtils.write(javaFile, compilationUnit.toString());
-                    listFile.add(javaFile);
-
-                    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
-                    FileUtils.write(classFile, compilationUnit.toString());
-                    compileClassJava(classDir, compilationUnit.toString(), classFile);
-
-                }
 
                 gitClient.commitFiles(
                         meveoRepository,
@@ -521,9 +517,11 @@ public class OntologyObserver {
      * and commit it in the meveo directory
      *
      * @param cft The removed {@link CustomFieldTemplate}
+     * @throws IOException if we can't create or delete related files
+     * @throws BusinessException if we can't create or update related file contents
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void cftRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomFieldTemplate cft) throws BusinessException {
+    public void cftRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomFieldTemplate cft) throws BusinessException, IOException {
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if (cet == null) {
@@ -542,30 +540,17 @@ public class OntologyObserver {
 
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
-            File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
-
-                if (javaFile.exists()) {
-                    javaFile.delete();
-                }
-
-                if (classFile.exists()) {
-                    classFile.delete();
-                }
+                updateCetFiles(cet, classDir, schemaFile, javaFile);
 
                 gitClient.commitFiles(
                         meveoRepository,
-                        Collections.singletonList(schemaFile),
+                        Arrays.asList(schemaFile, javaFile),
                         "Remove property " + cft.getCode() + " of CET " + cet.getCode()
                 );
 
-                gitClient.commitFiles(
-                        meveoRepository,
-                        Collections.singletonList(javaFile),
-                        "Remove property " + cft.getCode() + " of CET " + cet.getCode()
-                );
             }
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
@@ -603,8 +588,10 @@ public class OntologyObserver {
      * <li>If cet file has been modified, re-compile it</li>
      * <li>If cet file has been deleted, remove the JPA entity</li>
      * </ul>
+     * @param commitEvent the data of the received commit
+     * @throws BusinessException if cets files can't be updated
+     * @throws MeveoApiException if cets can't be updated
      */
-    @SuppressWarnings("unchecked")
     public void onCETsChanged(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, MeveoApiException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
@@ -615,7 +602,7 @@ public class OntologyObserver {
                     String[] cetFileName = fileName.split("\\.");
                     String code = cetFileName[0];
                     CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(code);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
                     File cetFile = new File(repositoryDir, modifiedFile);
                     if (customEntityTemplate == null) {
                         String absolutePath = cetFile.getAbsolutePath();
@@ -632,7 +619,17 @@ public class OntologyObserver {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * When a commit concerning crt is received :
+     * <ul>
+     * <li>If crt file has been created, create the JPA entity</li>
+     * <li>If crt file has been modified, re-compile it</li>
+     * <li>If crt file has been deleted, remove the JPA entity</li>
+     * </ul>
+     * @param commitEvent the data of the received commit
+     * @throws BusinessException if crts files can't be updated
+     * @throws MeveoApiException if crt can't be updated
+     */
     public void onCRTsChanged(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, MeveoApiException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
@@ -662,20 +659,7 @@ public class OntologyObserver {
         }
     }
     
-	public String findCetJsonSchema(CustomEntityTemplate cet) throws IOException {
-
-		final File cetDir = getCetDir();
-
-		if (!cetDir.exists()) {
-			return "";
-		}
-
-		File schemaFile = new File(cetDir, cet.getCode() + ".json");
-
-		return FileUtils.readFileToString(schemaFile, StandardCharsets.UTF_8);
-	}
-
-    public void compileClassJava(File classDir, String compilationUnit, File classFile) {
+    private void compileClassJava(File classDir, String compilationUnit, File classFile) {
 
         try {
             List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
@@ -731,7 +715,8 @@ public class OntologyObserver {
                 continue;
             }
             try {
-                Class clazz;
+                Class<?> clazz;
+                
                 try {
                     URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
                     clazz = classLoader.loadClass(className);
@@ -739,11 +724,14 @@ public class OntologyObserver {
                     clazz = Class.forName(className);
                 }
 
-                try {
-                    String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
-                    if (location.startsWith("file:")) {
+                CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+                if(codeSource != null) {
+					String location = codeSource.getLocation().getFile();
+                    
+					if (location.startsWith("file:")) {
                         location = location.substring(5);
                     }
+					
                     if (location.endsWith("!/")) {
                         location = location.substring(0, location.length() - 2);
                     }
@@ -755,17 +743,18 @@ public class OntologyObserver {
                             }
                         }
                     }
-
-                } catch (Exception e) {
                 }
+
             } catch (Exception e) {
+            	Log.error("Error supplementing class path", e);
             }
         }
+        
         return files;
     }
 
     private File getCetDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
         return new File(repositoryDir, "custom/entities");
     }
 
@@ -789,4 +778,27 @@ public class OntologyObserver {
         final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
         return classDir;
     }
+    
+    /*
+     * @return the list of updated files
+     */
+	private List<File> updateCetFiles(CustomEntityTemplate cet, final File classDir, File schemaFile, File javaFile) throws IOException {
+		List<File> listFile = new ArrayList<>();
+		final String templateSchema = getTemplateSchema(cet);
+		FileUtils.write(schemaFile, templateSchema);
+
+		if (javaFile.exists()) {
+		    javaFile.delete();
+		    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+		    FileUtils.write(javaFile, compilationUnit.toString());
+		    listFile.add(javaFile);
+
+		    File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+		    FileUtils.write(classFile, compilationUnit.toString());
+		    compileClassJava(classDir, compilationUnit.toString(), classFile);
+
+		}
+		
+		return listFile;
+	}
 }

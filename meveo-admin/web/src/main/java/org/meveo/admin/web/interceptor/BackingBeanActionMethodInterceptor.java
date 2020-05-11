@@ -16,7 +16,10 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.ValidationException;
+import org.meveo.api.exception.DeleteReferencedEntityException;
+import org.meveo.service.base.MeveoExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,36 +60,38 @@ public class BackingBeanActionMethodInterceptor implements Serializable {
             String message = e.getMessage();
             String messageKey = null;
             boolean validation = false;
-            Throwable cause = e;
-            while (cause != null) {
-
-                if (cause instanceof SQLException || cause instanceof BusinessException) {
-                    message = cause.getMessage();
-                    if (cause instanceof ValidationException) {
-                        validation = true;
-                        messageKey = ((ValidationException) cause).getMessageKey();
-                    }
-                    break;
-
-                } else if (cause instanceof ConstraintViolationException) {
-
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("Invalid values passed: ");
-                    for (ConstraintViolation<?> violation : ((ConstraintViolationException) cause).getConstraintViolations()) {
-                        builder.append(String.format("    %s.%s: value '%s' - %s;", violation.getRootBeanClass().getSimpleName(), violation.getPropertyPath().toString(),
-                            violation.getInvalidValue(), violation.getMessage()));
-                    }
-                    message = builder.toString();
-                    break;
-
-                } else if (cause instanceof org.hibernate.exception.ConstraintViolationException) {
-                    log.error("Delete was unsuccessful because entity is already in use.");
-                    messageKey = "error.delete.entityUsed";
-                    break;
-                }
-                cause = cause.getCause();
+            BusinessException be = MeveoExceptionMapper.translatePersistenceException(e, null, null);
+            if (be != null && be instanceof org.meveo.admin.exception.ConstraintViolationException) {
+            	message = be.getMessage();
+                log.error("Delete was unsuccessful because entity is already in use.");
+                messageKey = "error.delete.entityUsed";
+            } else {
+	            Throwable cause = e;
+	            while (cause != null) {
+	
+	                if (cause instanceof SQLException || cause instanceof BusinessException) {
+	                    message = cause.getMessage();
+	                    if (cause instanceof ValidationException) {
+	                        validation = true;
+	                        messageKey = ((ValidationException) cause).getMessageKey();
+	                    }
+	                    break;
+	
+	                } else if (cause instanceof ConstraintViolationException) {
+	
+	                    StringBuilder builder = new StringBuilder();
+	                    builder.append("Invalid values passed: ");
+	                    for (ConstraintViolation<?> violation : ((ConstraintViolationException) cause).getConstraintViolations()) {
+	                        builder.append(String.format("    %s.%s: value '%s' - %s;", violation.getRootBeanClass().getSimpleName(), violation.getPropertyPath().toString(),
+	                            violation.getInvalidValue(), violation.getMessage()));
+	                    }
+	                    message = builder.toString();
+	                    break;
+	
+	                } 
+	                cause = cause.getCause();
+	            }
             }
-
             messages.clear();
 
             if (validation && messageKey != null) {

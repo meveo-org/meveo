@@ -1,6 +1,6 @@
 package org.meveo.api;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
@@ -18,6 +18,7 @@ import org.meveo.model.IEntity;
  * @param <E> Entity class
  * @param <T> Dto class
  */
+@SuppressWarnings("rawtypes")
 public interface ApiVersionedService<E extends IEntity, T extends BaseEntityDto> {
 
     /**
@@ -33,7 +34,7 @@ public interface ApiVersionedService<E extends IEntity, T extends BaseEntityDto>
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
      */
-    public T find(String code, Date validFrom, Date validTo) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException;
+    public T find(String code, Instant validFrom, Instant validTo) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException;
 
     /**
      * Find entity identified by code. Return null if not found
@@ -47,7 +48,7 @@ public interface ApiVersionedService<E extends IEntity, T extends BaseEntityDto>
      * @throws MissingParameterException A parameter, necessary to find an entity, was not provided
      * @throws MeveoApiException Any other exception is wrapped to MeveoApiException
      */
-    public T findIgnoreNotFound(String code, Date validFrom, Date validTo) throws MissingParameterException, InvalidParameterException, MeveoApiException;
+    public T findIgnoreNotFound(String code, Instant validFrom, Instant validTo) throws MissingParameterException, InvalidParameterException, MeveoApiException;
 
     /**
      * Create or update an entity from DTO.

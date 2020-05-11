@@ -11,10 +11,15 @@
     </ui:define>
 
     <ui:define name="body">
+    	<h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.storages']}" disabled="true" />
+                <p:menuitem value="#{messages['maven.configuration']}" disabled="true" />
+            </p:breadCrumb>
+        </h:form>
+    
         <p:panel>
-            <f:facet name="header">
-                <h:outputText value="#{messages['maven.configuration']}"/>
-            </f:facet>
             <h:form id="mavenConfigurationForm">
                 <p:messages id="messages"/>
                 <h:panelGrid columns="1">
@@ -37,7 +42,7 @@
                             <p:column styleClass="actions-column" headerText="#{messages['commons.actions']}"
                                       width="40">
                                 <p:commandButton
-                                        action="#{mavenConfigurationBean.removeRemoteRepository(remoteRepository)}"
+                                        action="#{mavenConfigurationBean.removeRemoteRepository(remoteRepository)}" rendered="#{!(remoteRepository.code eq 'maven central')}"
                                         icon="ui-icon-trash" update="@form :mavenConfigurationForm:mavenConfigurationPanel" immediate="true">
                                 </p:commandButton>
                             </p:column>

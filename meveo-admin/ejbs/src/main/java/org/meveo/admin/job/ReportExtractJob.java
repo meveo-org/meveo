@@ -32,7 +32,7 @@ public class ReportExtractJob extends Job {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         reportingJobBean.execute(result, jobInstance);
     }
 

@@ -50,6 +50,14 @@ public class TSParameterMapping {
     @Column(name = "default_value")
     private String defaultValue;
 
+	/**
+	 * When this value is set to true, the min length of string and array objects
+	 * must be set to 1 by default or they should not be null.
+	 */
+    @Type(type = "numeric_boolean")
+    @Column(name = "value_required")
+    private boolean valueRequired;
+
     public EndpointParameter getEndpointParameter() {
         return endpointParameter;
     }
@@ -80,5 +88,23 @@ public class TSParameterMapping {
 
     public void setMultivalued(boolean multivalued) {
         this.multivalued = multivalued;
+    }
+
+	/**
+	 * Retrieves the boolean value of whether this parameter is required.
+	 * 
+	 * @return true if this parameter is required
+	 */
+    public boolean isValueRequired() {
+        return valueRequired;
+    }
+
+	/**
+	 * Sets whether this parameter is required or not.
+	 * 
+	 * @param valueRequired boolean value
+	 */
+    public void setValueRequired(boolean valueRequired) {
+        this.valueRequired = valueRequired;
     }
 }

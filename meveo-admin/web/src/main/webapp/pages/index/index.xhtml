@@ -3,8 +3,16 @@
     xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" template="/layout/template.xhtml">
 
     <ui:define name="body">
+    
+    	<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.search']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.fullTextSearch.index']}" disabled="true" />
+			</p:breadCrumb>
+		</h:form>
 
-        <hftl:decorateFormPanel formId="reindexForm" label="#{messages['indexing.indexPanel']}">
+        <hftl:decorateFormPanel formId="reindexForm">
             <ui:define name="fields">
 
                 <h:panelGroup rendered="#{!indexingBean.enabled}">

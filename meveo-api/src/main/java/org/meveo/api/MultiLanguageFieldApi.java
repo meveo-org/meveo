@@ -337,8 +337,8 @@ public class MultiLanguageFieldApi extends BaseApi {
                 if (validityField != null) {
                     DatePeriod validity = (DatePeriod) FieldUtils.readField(entity, "validity", true);
                     if (validity != null) {
-                        messageDto.setValidFrom(validity.getFrom());
-                        messageDto.setValidTo(validity.getTo());
+                        messageDto.setValidFrom(Date.from(validity.getFrom()));
+                        messageDto.setValidTo(Date.from(validity.getTo()));
                     }
                 }
             } catch (IllegalAccessException e) {

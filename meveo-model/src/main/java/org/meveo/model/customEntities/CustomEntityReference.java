@@ -3,6 +3,7 @@ package org.meveo.model.customEntities;
 import org.hibernate.annotations.*;
 import org.meveo.model.AuditableEntity;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
 import javax.persistence.*;
 import javax.persistence.CascadeType;
@@ -13,9 +14,12 @@ import javax.persistence.Table;
 
 /**
  * Created by Hien.Bach
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("CustomEntityReference")
+@ModuleItemOrder(30)
 @Cacheable
 @Table(name = "cet_ref")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {

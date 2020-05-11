@@ -7,10 +7,15 @@
         </f:metadata>
     </ui:define>
     <ui:define name="body">
+    	<h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.settings']}" disabled="true" />
+                <p:menuitem value="#{messages['mailer.mailerConfig']}" disabled="true" />
+            </p:breadCrumb>
+        </h:form>
+        
         <p:panel>
-            <f:facet name="header">
-                <h:outputText value="#{messages['mailer.mailerConfig']}" />
-            </f:facet>
             <h:form id="form">
                 <p:messages/>
                 <p:fieldset legend="Coordinates">

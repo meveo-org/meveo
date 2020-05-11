@@ -1,9 +1,11 @@
 package org.meveo.service.crm.impl;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -48,6 +50,8 @@ import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
@@ -111,10 +115,37 @@ public class CustomFieldInstanceService extends BaseService {
     private Repository repository;
 
     /**
+     * Find a entity of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
+     *
+     * @param classNameAndCode Classname to match. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;:"
+     * @param code    Filter by entity code
+     * @return A BusinessEntity
+     */
+    @SuppressWarnings("unchecked")
+    public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String code) {
+        Query query = null;
+        if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+            query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) =:code");
+            query.setParameter("cetCode", cetCode);
+        } else {
+            query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
+        }
+
+        query.setParameter("code", code.toLowerCase());
+        List<BusinessEntity> entities = query.getResultList();
+        if (entities.size() > 0) {
+            return entities.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Find a list of entities of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
      *
      * @param classNameAndCode Classname to match. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;:"
-     * @param wildcode         Filter by entity code
+     * @param code         Filter by entity code
      * @return A list of entities
      */
     @SuppressWarnings("unchecked") // TODO review location
@@ -401,11 +432,21 @@ public class CustomFieldInstanceService extends BaseService {
 	public CustomFieldValue setCFValue(ICustomFieldEntity entity, String cfCode, Object value) throws BusinessException {
 
         log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
+        
+        CustomEntityTemplate cet = null;
+        if(entity instanceof CustomEntityInstance) {
+        	cet = ((CustomEntityInstance) entity).getCet();
+        }
 
         // Can not set the value if field is versionable without a date
         CustomFieldTemplate cft = cfTemplateService.findByCodeAndAppliesTo(cfCode, entity);
         if (cft == null) {
             throw new BusinessException("Custom field template with code " + cfCode + " not found found for entity " + entity);
+        }
+        
+        // Handle serialized map values
+        if(cft.getStorageType() == CustomFieldStorageTypeEnum.MAP && value instanceof String) {
+        	value = JacksonUtil.fromString((String) value, Map.class);
         }
 
         if (cft.isVersionable()) {
@@ -427,6 +468,19 @@ public class CustomFieldInstanceService extends BaseService {
         if (cfValue == null) {
         	
         	if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+        		/* Don't wrap primitive entity references */
+        		if(cft.getStorages().contains(DBStorageType.NEO4J)) {
+        			String cetCode = cft.getEntityClazzCetCode();
+        			CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cetCode);
+        			if(refCet == null) {
+        				throw new org.meveo.exceptions.EntityDoesNotExistsException(CustomEntityTemplate.class, cetCode);
+        			}
+        			
+        			if(refCet.getNeo4JStorageConfiguration() != null && refCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+        				return entity.getCfValuesNullSafe().setValue(cfCode, value);
+        			}
+        		}
+        		
         		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
     			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
     			
@@ -455,8 +509,10 @@ public class CustomFieldInstanceService extends BaseService {
 
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
-
-					}
+						fetchCode(cft, (String) value, entityReferenceWrapper);
+					} else if (value instanceof EntityReferenceWrapper) {
+					    entityReferenceWrapper = (EntityReferenceWrapper) value;
+                    }
 
 					if (entityReferenceWrapper.getUuid() != null) {
 						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
@@ -477,8 +533,13 @@ public class CustomFieldInstanceService extends BaseService {
 
 							} else if (item instanceof String) {
 								itemWrapper.setUuid((String) item);
+								
+								// Try to fetch code
+								fetchCode(cft, (String) item, itemWrapper);
 
-							}
+							} else if (item instanceof EntityReferenceWrapper) {
+                                itemWrapper = (EntityReferenceWrapper) item;
+                            }
 
 							entityReferences.add(itemWrapper);
 						}
@@ -590,7 +651,10 @@ public class CustomFieldInstanceService extends BaseService {
             if (value == null && cft.getDefaultValue() == null) {
                 return null;
             }
-            entity.getCfValuesNullSafe().setValue(cfCode, new DatePeriod(valueDateFrom, valueDateTo), valuePriority, value);
+            entity.getCfValuesNullSafe().setValue(cfCode,
+            		new DatePeriod(valueDateFrom.toInstant(), valueDateTo.toInstant()),
+            		valuePriority,
+            		value);
 
             // Existing CF value found. Update with new value or NULL value only if cft.defaultValue is present
         } else if (value != null || (value == null && cft.getDefaultValue() != null)) {
@@ -1355,7 +1419,7 @@ public class CustomFieldInstanceService extends BaseService {
      */
     private void triggerEndPeriodEvent(ICustomFieldEntity entity, String cfCode, DatePeriod period) {
 
-        if (period != null && period.getTo() != null && period.getTo().before(new Date())) {
+        if (period != null && period.getTo() != null && period.getTo().isBefore(Instant.now())) {
             CFEndPeriodEvent event = new CFEndPeriodEvent(entity, cfCode, period, currentUser.getProviderCode());
             cFEndPeriodEventProducer.fire(event);
 
@@ -1371,7 +1435,7 @@ public class CustomFieldInstanceService extends BaseService {
 
             log.debug("Creating timer for triggerEndPeriodEvent for Custom field value {} with expiration={}", event, period.getTo());
 
-            timerService.createSingleActionTimer(period.getTo(), timerConfig);
+            timerService.createSingleActionTimer(Date.from(period.getTo()), timerConfig);
         }
     }
 
@@ -2393,6 +2457,31 @@ public class CustomFieldInstanceService extends BaseService {
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
             setCFValue(entity, cetField.getKey(), value);
+		}
+	}
+	
+	/**
+	 * Try to fetch the code of the referenced entity if exists. If cft is null, will do nothing.
+	 * 
+	 * Note : silently fails if error occurs
+	 * 
+	 * @param cft     The cft corresponding to the 'code' field
+	 * @param uuid    Uuid of the referenced entity
+	 * @param wrapper reference wrapper object to update
+	 */
+	private void fetchCode(CustomFieldTemplate cft, String uuid, EntityReferenceWrapper wrapper) {
+		try {
+			
+			String appliesTo = CustomEntityTemplate.getAppliesTo(cft.getEntityClazzCetCode());
+			CustomFieldTemplate codeCft = cfTemplateService.findByCodeAndAppliesTo("code", appliesTo);
+			if(codeCft != null) {
+				CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+				Map<String, Object> result = crossStorageService.find(repository, refCet, uuid, Collections.singletonList("code"), false);
+				wrapper.setCode((String) result.get("code")); 
+			}
+			
+		} catch (Exception e) {
+			//NOOP
 		}
 	}
 }

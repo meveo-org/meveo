@@ -1,11 +1,6 @@
 package org.meveo.api.rest.admin;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -75,5 +70,11 @@ public interface FilesRs extends IBaseRs {
 	@Path("/downloadFile")
 	@ApiOperation(value = "Download file")
 	ActionStatus downloadFile(@QueryParam("file") @ApiParam("File to be downloaded") String file);
+
+	@PUT
+	@Path("/renameFolder")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation(value = "Rename folder")
+	ActionStatus renameFolder(@FormParam("oldFolder") @ApiParam("Old folder") String oldFolder,@FormParam("newFolder") @ApiParam("New folder") String newFolder);
 
 }

@@ -1,15 +1,26 @@
 package org.meveo.model.jaxb.customer;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.meveo.api.dto.CustomFieldValueDto;
 import org.meveo.api.dto.EntityReferenceDto;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
-
-import javax.xml.bind.annotation.*;
-import java.util.*;
-import java.util.Map.Entry;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "customField")
@@ -34,7 +45,7 @@ public class CustomField {
     protected String stringValue;
 
     @XmlElement
-    protected Date dateValue;
+    protected Instant dateValue;
 
     @XmlElement
     protected Long longValue;
@@ -84,7 +95,21 @@ public class CustomField {
         return dto;
     }
 
-    public String getCode() {
+    /**
+	 * @param to
+	 */
+	private void setValuePeriodEndDate(Instant to) {
+		setValuePeriodEndDate(Date.from(to));
+	}
+
+	/**
+	 * @param from
+	 */
+	private void setValuePeriodStartDate(Instant from) {
+		setValuePeriodStartDate(Date.from(from));		
+	}
+
+	public String getCode() {
         return code;
     }
 
@@ -100,11 +125,11 @@ public class CustomField {
         this.stringValue = stringValue;
     }
 
-    public Date getDateValue() {
+    public Instant getDateValue() {
         return dateValue;
     }
 
-    public void setDateValue(Date dateValue) {
+    public void setDateValue(Instant dateValue) {
         this.dateValue = dateValue;
     }
 

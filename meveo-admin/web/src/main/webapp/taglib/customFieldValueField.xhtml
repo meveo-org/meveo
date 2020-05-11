@@ -72,7 +72,7 @@
         <h:outputText value="#{field.dateValue}" styleClass="field-value" rendered="#{! edit or disabled}">
             <f:convertDateTime type="date" pattern="#{datePattern}" />
         </h:outputText>
-        <p:calendar showButtonPanel="true" pattern="#{datePattern}" value="#{field.dateValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}"
+        <p:calendar showButtonPanel="true" pattern="#{datePattern}" value="#{field.dateValueOld}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}"
             label="#{cft.description}" placeholder="#{cft.description}"/>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.DOUBLE}">
@@ -112,12 +112,12 @@
         	required="#{cft.valueRequired and !hasInheritedValue}" 
         	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
         	placeholder="#{cft.description}"
-            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e" 
+            converter="entityReferenceValueConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e"
             itemLabel="#{not empty e.code ? e.code : e.uuid}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
             <p:column width="50" headerText="UUID">
-                <h:outputText value="#{e.uuid.substring(0,5)}" />
+                <h:outputText value="#{not empty e.code ? e.code : e.uuid.substring(0,5)}" />
             </p:column>
             <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
                 <h:outputText value="#{e.code}" />
@@ -125,7 +125,6 @@
             <p:column width="50" headerText="#{messages['BusinessEntity.description']}">
                 <h:outputText value="#{e.description}" />
             </p:column>
-            <o:converter converterId="omnifaces.ListConverter" list="#{customFieldDataEntryBean.availableEntities}" />
         </p:autoComplete>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">

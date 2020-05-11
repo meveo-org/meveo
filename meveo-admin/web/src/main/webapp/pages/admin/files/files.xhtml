@@ -1,76 +1,78 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:s="http://jboss.org/seam/faces"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
-	xmlns:h="http://xmlns.jcp.org/jsf/html" 
-	xmlns:hftl="http://hftl.org"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
-	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:o="http://omnifaces.org/ui"
-	xmlns:of="http://omnifaces.org/functions" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
- 	template="/layout/template.xhtml">
- 	
- 
+	xmlns:of="http://omnifaces.org/functions"
+	template="/layout/template.xhtml" xmlns:p="http://primefaces.org/ui">
+
 	<ui:define name="metadata">
 		<f:metadata>
 			<f:event type="preRenderView" listener="#{userBean.init}" />
+			<f:viewParam name="folder" value="#{userBean.initialFolder}" />
 		</f:metadata>
 	</ui:define>
 
-	<ui:define name="body">
-            <h:form id="crumbmenuForm">
-                <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-                    <p:menuitem outcome="fileExplorer" value="#{messages['menu.fileExplorer']}" />
-                </p:breadCrumb>
-            </h:form>   
-		<p:dialog modal="true" widgetVar="statusDialog" header="Status"
-			draggable="false" closable="false" resizable="false">
-			<p:graphicImage value="/img/ajaxloadingbar.gif" />
-		</p:dialog>
+	<p:dialog modal="true" widgetVar="statusDialog" header="Status"
+		draggable="false" closable="false" resizable="false">
+		<p:graphicImage value="/img/ajaxloadingbar.gif" />
+	</p:dialog>
 
-		<p:panel id="fileExplorer">
-			
-			<f:facet name="header">
-				<h:outputText value="#{messages['menu.fileExplorer']}" />
-			</f:facet>
-			
+	<ui:define name="body">
+		<!-- Remove the white space in the header -->
+		<hftl:emptyTag></hftl:emptyTag>
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem outcome="fileExplorer"
+					value="#{messages['menu.fileExplorer']}" />
+			</p:breadCrumb>
+		</h:form>
+
+		<p:panel id="fileExplorer" style="width: 100%">
 			<h:form>
- 				<p:growl id="messages" showDetail="true" />
-				<p:dataTable var="file" value="#{userBean.fileList}" sortBy="#{file.name}" resizableColumns="true">
-				    <f:facet name="header">
-				    	<p:spacer width="8" />
-				    	<p:commandButton icon="fa fa-level-up" value="Up"
-				    		rendered="#{userBean.hasSelectedFolder()}" 
-				    		action="#{userBean.setSelectedFolder('..')}" 
-				    		update=":fileExplorer" />
-			    		<p:spacer width="8" />
-				    	<h:outputText value="#{messages['fileExplorer.currentDirectory']}: #{userBean.selectedFolder}" 
-				    		rendered="#{userBean.hasSelectedFolder()}"/>
-				    </f:facet>
-				    <p:column headerText="#{messages['fileExplorer.fileName']}" sortBy="#{file.name}">
+				<p:growl id="messages" showDetail="true" />
+				<p:dataTable var="file" value="#{userBean.fileList}"
+					sortBy="#{file.name}" resizableColumns="true">
+					<f:facet name="header">
+						<p:spacer width="8" />
+						<p:commandButton icon="fa fa-level-up" value="Up"
+							rendered="#{userBean.hasSelectedFolder()}"
+							action="#{userBean.setSelectedFolder('..')}"
+							update=":fileExplorer" />
+						<p:spacer width="8" />
+						<h:outputText
+							value="#{messages['fileExplorer.currentDirectory']}: #{userBean.selectedFolder}"
+							rendered="#{userBean.hasSelectedFolder()}" />
+					</f:facet>
+					<p:column headerText="#{messages['fileExplorer.fileName']}"
+						sortBy="#{file.name}">
 						<p:commandLink action="#{userBean.setSelectedFolder(file.name)}"
-							rendered="#{file.isDirectory()}"
-							update=":fileExplorer">
+							rendered="#{file.isDirectory()}" update=":fileExplorer">
 							<i class="fa fa-folder-o fa-2x"></i>
 							<p:spacer width="8" />
 							<h:outputText value='#{file.name}' />
 						</p:commandLink>
 						<p:commandLink action="#{userBean.setSelectedFileName(file.name)}"
-							rendered="#{!file.isDirectory()}"
-							update=":fileExplorer">
+							rendered="#{!file.isDirectory()}" update=":fileExplorer">
 							<i class="fa fa-file-#{userBean.getFileType(file.name)}-o fa-2x"></i>
 							<p:spacer width="8" />
 							<h:outputText value='#{file.name}' />
 						</p:commandLink>
-				    </p:column>
-				 
-				    <p:column headerText="#{messages['fileExplorer.fileDate']}" sortBy="#{file.lastModified()}">
-				        <h:outputText value="#{file.lastModified()}">
-				        	<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
-				        </h:outputText>
-				    </p:column>
+					</p:column>
+
+					<p:column headerText="#{messages['fileExplorer.fileDate']}"
+						sortBy="#{file.lastModified()}">
+						<h:outputText value="#{file.lastModified()}">
+							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+						</h:outputText>
+					</p:column>
 				</p:dataTable>
-				<p:panel rendered="#{userBean.selectedFileName!=null}" id="fileManageForm">
+				<p:panel rendered="#{userBean.selectedFileName!=null}"
+					id="fileManageForm">
          			#{userBean.selectedFileName}
 					<p:commandButton value="#{messages['fileExplorer.download']}"
 						icon="ui-icon-arrowthick-1-s" ajax="false">
@@ -89,82 +91,122 @@
 							value="#{javax.enterprise.context.conversation.id}" />
 					</p:commandButton>
 				</p:panel>
-				<p:panel id="downloadZipfile" rendered="#{userBean.selectedFileName==null}">
-					<p:commandButton value="#{messages['fileExplore.downloadZipfile']}" icon="ui-icon-arrowthick-1-s" ajax="false">
-                  		<p:fileDownload value="#{userBean.downloadZipFile}"/>
+				<p:panel id="downloadZipfile"
+					rendered="#{userBean.selectedFileName==null}">
+					<p:commandButton value="#{messages['fileExplore.downloadZipfile']}"
+						icon="ui-icon-arrowthick-1-s" ajax="false">
+						<p:fileDownload value="#{userBean.downloadZipFile}" />
 						<f:param name="cid"
 							value="#{javax.enterprise.context.conversation.id}" />
 					</p:commandButton>
 				</p:panel>
 			</h:form>
 
-			<h:form rendered="#{userBean.canUserUpdateEntity()}">
-				<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
-								 update="addFileToModuleForm" oncomplete="PF('addFileToModuleDlg').show()">
+			<h:form id="renameFolder"
+					rendered="#{userBean.selectedFolder!=null and userBean.canUserUpdateEntity()}">
+				<p:growl id="mess" showDetail="true" />
+				<p:selectBooleanCheckbox id="renameDir"
+										 value="#{userBean.selectedDir}"
+										 itemLabel="#{messages['fileExplorer.renameFolder']}"
+										 styleClass="Padding10">
+					<p:ajax event="change" update=":renameFolder"/>
+				</p:selectBooleanCheckbox>
+				<p:inputText id="newFolderName" value="#{userBean.newFolderName}"
+							 rendered="#{userBean.selectedDir and userBean.canUserUpdateEntity()}"/>
+				<p:commandButton value="#{messages['fileExplorer.renameFolder']}"
+								 action="#{userBean.renameFolder()}" update=":fileExplorer"
+								 rendered="#{userBean.selectedDir and userBean.canUserUpdateEntity()}">
+					<f:param name="cid"
+							 value="#{javax.enterprise.context.conversation.id}"/>
 				</p:commandButton>
 			</h:form>
-			
-			<h:form rendered="#{userBean.selectedFileName!=null and userBean.canUserUpdateEntity()}">
-                 <p:inputText id="newFilename" value="#{userBean.newFilename}"/>
-                 <p:commandButton value="#{messages['fileExplorer.renameFile']}"
-                         action="#{userBean.renameFile()}"
-                         update=":fileExplorer">
-                         <f:param name="cid"
-                             value="#{javax.enterprise.context.conversation.id}" />
-                     </p:commandButton>
-             </h:form>
-             
-             <h:form rendered="#{userBean.selectedFileName==null and userBean.canUserUpdateEntity()}">
-                 <p:inputText id="dirName" value="#{userBean.directoryName}"/>
-                 <p:commandButton value="#{messages['fileExplorer.createDirectory']}"
-                         action="#{userBean.createDirectory()}"
-                         update=":fileExplorer">
-                         <f:param name="cid"
-                             value="#{javax.enterprise.context.conversation.id}" />
-                     </p:commandButton>
-             </h:form>
-             
-             <h:form rendered="#{userBean.currentDirEmpty and userBean.canUserUpdateEntity()}">
-                 <p:commandButton value="#{messages['fileExplorer.deleteDirectory']}"
-                         action="#{userBean.deleteDirectory()}"
-                         update=":fileExplorer">
-                         <p:confirm header="Confirmation"
-                             message="#{messages['fileExplorer.deleteDirectoryConfirm']}"
-                             icon="ui-icon-alert" />
-                         <f:param name="cid"
-                             value="#{javax.enterprise.context.conversation.id}" />
-                     </p:commandButton>
-             </h:form>
-             
-             <h:form rendered="#{userBean.selectedFileName==null and userBean.canUserUpdateEntity()}">
-				<p:selectBooleanCheckbox id="autoUnzip" value="#{userBean.autoUnzipped}"  itemLabel="#{messages['fileExplore.unzipAutomately']}" styleClass="Padding10">
-					<p:ajax/>
-				</p:selectBooleanCheckbox>
-                <p:fileUpload fileUploadListener="#{userBean.handleFileUpload}"
-                     multiple="true" mode="advanced" dragDropSupport="true"
-                     fileLimit="5" update=":fileExplorer" styleClass="TexAlCenter"/>
-             </h:form>
 
-			<p:dialog widgetVar="addFileToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+			<h:form rendered="#{userBean.canUserUpdateEntity()}">
+				<p:commandButton value="#{messages['commons.addToModule']}"
+					icon="ui-icon-newwin"
+					actionListener="#{meveoModuleBean.initializeModules()}"
+					update="addFileToModuleForm"
+					oncomplete="PF('addFileToModuleDlg').show()">
+				</p:commandButton>
+			</h:form>
+
+			<h:form
+				rendered="#{userBean.selectedFileName!=null and userBean.canUserUpdateEntity()}">
+				<p:inputText id="newFilename" value="#{userBean.newFilename}" />
+				<p:commandButton value="#{messages['fileExplorer.renameFile']}"
+					action="#{userBean.renameFile()}" update=":fileExplorer">
+					<f:param name="cid"
+						value="#{javax.enterprise.context.conversation.id}" />
+				</p:commandButton>
+			</h:form>
+
+			<h:form
+				rendered="#{userBean.selectedFileName==null and userBean.canUserUpdateEntity()}">
+				<p:inputText id="dirName" value="#{userBean.directoryName}" />
+				<p:commandButton value="#{messages['fileExplorer.createDirectory']}"
+					action="#{userBean.createDirectory()}" update=":fileExplorer">
+					<f:param name="cid"
+						value="#{javax.enterprise.context.conversation.id}" />
+				</p:commandButton>
+			</h:form>
+
+			<h:form
+				rendered="#{userBean.selectedFolder!=null and userBean.canUserUpdateEntity()}">
+				<p:commandButton value="#{messages['fileExplorer.deleteDirectory']}"
+					action="#{userBean.deleteDirectory()}" update=":fileExplorer">
+					<p:confirm header="Confirmation"
+						message="#{messages['fileExplorer.deleteDirectoryConfirm']}"
+						icon="ui-icon-alert" />
+					<f:param name="cid"
+						value="#{javax.enterprise.context.conversation.id}" />
+				</p:commandButton>
+			</h:form>
+
+			<h:form
+				rendered="#{userBean.selectedFileName==null and userBean.canUserUpdateEntity()}">
+				<p:selectBooleanCheckbox id="autoUnzip"
+					value="#{userBean.autoUnzipped}"
+					itemLabel="#{messages['fileExplore.unzipAutomately']}"
+					styleClass="Padding10">
+					<p:ajax />
+				</p:selectBooleanCheckbox>
+				<p:fileUpload fileUploadListener="#{userBean.handleFileUpload}"
+					multiple="true" mode="advanced" dragDropSupport="true"
+					fileLimit="5" update=":fileExplorer" styleClass="TexAlCenter"
+					sizeLimit="#{userBean.getFileLimitUploadSize()}" />
+			</h:form>
+
+			<p:dialog widgetVar="addFileToModuleDlg" header="Select Module"
+				dynamic="true" modal="true" styleClass="form-dialog"
+				closeOnEscape="true" width="90%" appendTo="@(body)">
 				<h:form id="addFileToModuleForm">
 					<p:growl id="message" showDetail="true" />
 					<h:panelGroup layout="block" styleClass="search-panel">
 						<p:outputPanel styleClass="search-panel-fields">
-							<p:inputText id="moduleCode" value="#{meveoModuleBean.moduleCode}">
+							<p:inputText id="moduleCode"
+								value="#{meveoModuleBean.moduleCode}">
 								<c:if test="#{not empty converter}">
 									<f:converter converterId="#{converter}" />
 								</c:if>
 							</p:inputText>
 						</p:outputPanel>
 						<h:panelGroup layout="block" styleClass="search-panel-actions">
-							<p:commandButton id="buttonOneSearch" process="@this,addFileToModuleForm" partialSubmit="true" action="#{meveoModuleBean.searchModules}" value="#{messages['commons.search']}" update="@form" />
-							<p:commandButton id="buttonOneClear" process="@this" action="#{meveoModuleBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+							<p:commandButton id="buttonOneSearch"
+								process="@this,addFileToModuleForm" partialSubmit="true"
+								action="#{meveoModuleBean.searchModules}"
+								value="#{messages['commons.search']}" update="@form" />
+							<p:commandButton id="buttonOneClear" process="@this"
+								action="#{meveoModuleBean.clean}"
+								value="#{messages['commons.clean']}" update="@form" />
 						</h:panelGroup>
 					</h:panelGroup>
 
-					<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{userBean.meveoModule}"
-								 rowKey="#{e.id}" lazy="#{lazy}">
-						<p:column selectionMode="single" style="width:16px;text-align:center"/>
+					<p:dataTable id="resultModuleTable" var="e" paginator="true"
+						resizableColumns="true" value="#{meveoModuleBean.meveoModules}"
+						rows="10" selection="#{userBean.meveoModule}" rowKey="#{e.id}"
+						lazy="#{lazy}">
+						<p:column selectionMode="single"
+							style="width:16px;text-align:center" />
 						<p:column>
 							<f:facet name="header">
 								<h:outputText value="#{messages['BusinessEntity.code']}" />
@@ -178,14 +220,17 @@
 							<h:outputText value="#{e['description']}" />
 						</p:column>
 						<f:facet name="footer">
-							<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
-											 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form :addFileToModuleForm:message"
-											 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addFileToModuleDlg').hide()"
-											 action="#{userBean.addFileToModule}">
+							<p:commandButton
+								value="#{messages['meveoModuleItem.addToModule']}"
+								process="@form @parent" partialSubmit="true"
+								partialSubmitFilter=":not([name*='omitFromSubmit'])"
+								update="@form :addFileToModuleForm:message"
+								oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addFileToModuleDlg').hide()"
+								action="#{userBean.addFileToModule}">
 								<p:resetInput target="@form" />
 							</p:commandButton>
-							<p:commandButton value="#{messages['commons.close']}" update="@form"
-											 oncomplete="PF('addFileToModuleDlg').hide()">
+							<p:commandButton value="#{messages['commons.close']}"
+								update="@form" oncomplete="PF('addFileToModuleDlg').hide()">
 								<p:resetInput target="@form" />
 							</p:commandButton>
 						</f:facet>

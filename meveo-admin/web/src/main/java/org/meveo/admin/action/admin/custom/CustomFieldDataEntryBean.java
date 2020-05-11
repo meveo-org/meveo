@@ -223,10 +223,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @return Custom field information
 	 */
 	public GroupedCustomField getGroupedFieldTemplates(ICustomFieldEntity entity) {
-
 		if (entity == null) {
 			return null;
 		}
+		
 		if (!groupedFieldTemplates.containsKey(entity.getUuid())) {
 			initFields(entity);
 		}
@@ -503,7 +503,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 			} else {
 				cfValue = entityValueHolder.getValuePeriod(cft, periodStartDate, periodEndDate, false, false);
 				if (cfValue != null && cfValue.getPeriod() != null) {
-					strictMatch = cfValue.getPeriod().isCorrespondsToPeriod(periodStartDate, periodEndDate, true);
+					strictMatch = cfValue.getPeriod().isCorrespondsToPeriod(
+							periodStartDate.toInstant(), 
+							periodEndDate.toInstant(), 
+							true
+						);
 				}
 			}
 
@@ -1488,11 +1492,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			if (customFieldValue.getListValue() != null) {
 				for (Object listItem : customFieldValue.getListValue()) {
 					Map<String, Object> listEntry = new HashMap<String, Object>();
-					if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-						listEntry.put(CustomFieldValue.MAP_VALUE, deserializeEntityReferenceForGUI((EntityReferenceWrapper) listItem));
-					} else {
-						listEntry.put(CustomFieldValue.MAP_VALUE, listItem);
-					}
+					listEntry.put(CustomFieldValue.MAP_VALUE, listItem);
 					listOfMapValues.add(listEntry);
 				}
 			}
@@ -1507,11 +1507,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 				for (Entry<String, Object> mapInfo : ((Map<String, Object>) customFieldValue.getMapValue()).entrySet()) {
 					Map<String, Object> listEntry = new HashMap<String, Object>();
 					listEntry.put(CustomFieldValue.MAP_KEY, mapInfo.getKey());
-					if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-						listEntry.put(CustomFieldValue.MAP_VALUE, deserializeEntityReferenceForGUI((EntityReferenceWrapper) mapInfo.getValue()));
-					} else {
-						listEntry.put(CustomFieldValue.MAP_VALUE, mapInfo.getValue());
-					}
+					listEntry.put(CustomFieldValue.MAP_VALUE, mapInfo.getValue());
 					listOfMapValues.add(listEntry);
 				}
 			}

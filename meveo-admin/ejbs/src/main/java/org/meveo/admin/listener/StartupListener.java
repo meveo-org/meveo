@@ -30,17 +30,18 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
-import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clément Bareth
- * @version 6.7.0
+ * @version 6.9.0
  */
 @Startup
 @Singleton
@@ -59,14 +60,14 @@ public class StartupListener {
 	private GitRepositoryService gitRepositoryService;
 
 	@Inject
+	private RemoteRepositoryService remoteRepositoryService;
+
+	@Inject
 	private Logger log;
 
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper entityManagerWrapper;
-	
-	@Inject
-	private PermissionService permissionService;
 
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
@@ -113,15 +114,35 @@ public class StartupListener {
 						GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword()
 					);
 					
-					log.info("Created Meveo git repository");
+					log.info("Created Meveo GIT repository");
 					
 					
 				} catch (BusinessException e) {
-					log.error("Cannot create Meveo git repository", e);
+					log.error("Cannot create Meveo GIT repository", e);
 				}
 				
 			} else {
-				GitRepositoryService.MEVEO_DIR = meveoRepo;
+				log.info("Meveo GIT repository already created");
+				try {
+					GitRepositoryService.MEVEO_DIR = meveoRepo;
+					gitRepositoryService.createGitMeveoFolder(meveoRepo);
+				} catch (BusinessException e) {
+					log.error("Cannot create Meveo Git folder", e);
+				}
+			}
+
+			try {
+				// Create default maven repository
+				RemoteRepository remoteRepository = remoteRepositoryService.findByCode("maven central");
+				if (remoteRepository == null) {
+					remoteRepository = new RemoteRepository();
+					remoteRepository.setCode("maven central");
+					remoteRepository.setUrl("https://repo1.maven.org/maven2/");
+					remoteRepositoryService.create(remoteRepository);
+					log.info("Created default maven repository");
+				}
+			} catch (BusinessException e) {
+				log.error("Cannot create default maven repository", e);
 			}
 			
 			log.info("Thank you for running Meveo Community code.");

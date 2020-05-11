@@ -1,6 +1,7 @@
 package org.meveocrm.admin.action.reporting;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 
 public class StatModel {
@@ -8,7 +9,7 @@ public class StatModel {
 	private String description;
 	private Double value;
 	private Double difference;
-	private Date lastUpdated;
+	private Instant lastUpdated;
 
 	public String getDescription() {
 		return description;
@@ -34,11 +35,11 @@ public class StatModel {
 		this.difference = difference;
 	}
 
-	public Date getLastUpdated() {
+	public Instant getLastUpdated() {
 		return lastUpdated;
 	}
 
-	public void setLastUpdated(Date lastUpdated) {
+	public void setLastUpdated(Instant lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 

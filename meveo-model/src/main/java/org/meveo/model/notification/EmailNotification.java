@@ -32,10 +32,16 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.admin.User;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("EmailNotification")
+@ModuleItemOrder(203)
 @Table(name="adm_notif_email")
 public class EmailNotification extends Notification {
 	

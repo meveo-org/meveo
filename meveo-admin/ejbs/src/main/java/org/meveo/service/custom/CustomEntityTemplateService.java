@@ -20,8 +20,15 @@
 package org.meveo.service.custom;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -37,12 +44,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.api.dto.CustomEntityTemplateDto;
-import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -65,7 +71,7 @@ import com.google.common.collect.Lists;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.8.0
+ * @lastModifiedVersion 6.9.0
  */
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
@@ -93,6 +99,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private Neo4jService neo4jService;
+    
+    @Inject
+    private CustomEntityCategoryService customEntityCategoryService;
 
     private static boolean useCETCache = true;
 
@@ -115,12 +124,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     public static File getClassesDir(MeveoUser currentUser) {
         return new File(getClassesDirectory(currentUser));
     }
-
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void createInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
-    	create(cet);
-    }
     
+    @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void removeInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
     	remove(cet);
@@ -128,11 +133,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
+    	
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+        
         ParamBean paramBean = paramBeanFactory.getInstance();
+		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
+        	cet.setCustomEntityCategory(customEntityCategoryService.refreshOrRetrieve(cet.getCustomEntityCategory()));
+        }
+        
         super.create(cet);
+        
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -209,13 +221,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
-        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+        
+    	if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+    	
         ParamBean paramBean = paramBeanFactory.getInstance();
 
         /* Update */
 
+		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
+			cet.setCustomEntityCategory(customEntityCategoryService.refreshOrRetrieve(cet.getCustomEntityCategory()));
+        }
+        
         CustomEntityTemplate cetUpdated = super.update(cet);
 
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -542,7 +560,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return converted;
     }
     
-	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
+	public boolean hasReferenceJpaEntity(String cetCode) {
+        CustomEntityTemplate cet = findByCode(cetCode);
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		if (cfts.size() > 0) {
@@ -554,5 +573,14 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		}
 
 		return false;
+	}
+	
+
+	
+	public String requestSchema(String code) {
+		
+//		CustomEntityTemplate cet = findByCode(code);
+//		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
+		return null;
 	}
 }

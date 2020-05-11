@@ -21,9 +21,11 @@ package org.meveo.model.shared;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +73,22 @@ public class DateUtils {
 
         return result;
     }
+    
+    public static String formatDateWithPattern(Instant value, String pattern) {
+        if (value == null) {
+            return "";
+        }
+        String result = null;
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+
+        try {
+            result = sdf.format(value);
+        } catch (Exception e) {
+            result = "";
+        }
+
+        return result;
+    }
 
     /**
      * Evaluates a date inside a pre-determined delimiters in a string.
@@ -101,7 +119,7 @@ public class DateUtils {
         return gc.getTime();
     }
 
-    public static Date parseDateWithPattern(String dateValue, String pattern) {
+    public static Instant parseDateWithPattern(String dateValue, String pattern) {
         if (dateValue == null || dateValue.trim().length() == 0) {
             return null;
         }
@@ -114,7 +132,7 @@ public class DateUtils {
         } catch (Exception e) {
             result = null;
         }
-        return result;
+        return result.toInstant();
     }
 
     public static boolean isDateTimeWithinPeriod(Date date, Date periodStart, Date periodEnd) {
@@ -569,7 +587,7 @@ public class DateUtils {
      * @param checkEnd Second period end date
      * @return True if period is within another period
      */
-    public static boolean isPeriodsOverlap(Date periodStart, Date periodEnd, Date checkStart, Date checkEnd) {
+    public static boolean isPeriodsOverlap(Instant periodStart, Instant periodEnd, Instant checkStart, Instant checkEnd) {
 
         // Logger log = LoggerFactory.getLogger(DateUtils.class);
         if ((checkStart == null && checkEnd == null) || (periodStart == null && periodEnd == null)) {
@@ -619,19 +637,27 @@ public class DateUtils {
         return !dateToCheck.before(startDate) && !dateToCheck.after(endDate);
     }
 
-    public static String formatToSireneDatePattern(String date, String pattern){
-        if (date != null && date.length() >= 8) {
-            Date parsedDate=DateUtils.parseDateWithPattern(date, pattern);
-            return DateUtils.formatDateWithPattern(parsedDate, "dd/MM/yyyy");
-        }
-        return date;
+    /**
+     * @param startDate
+     * @param endDate
+     * @param newDate
+     * @param newDate2
+     * @return
+     */
+    public static boolean isPeriodsOverlap(Date startDate, Date endDate, Date newDate, Date newDate2) {
+        Instant startInstant = Optional.ofNullable(startDate)
+            .map(Date::toInstant)
+            .orElse(null);
+        Instant endInstant = Optional.ofNullable(endDate)
+            .map(Date::toInstant)
+            .orElse(null);
+        Instant newInstant = Optional.ofNullable(newDate)
+            .map(Date::toInstant)
+            .orElse(null);
+        Instant newInstant2 = Optional.ofNullable(newDate2)
+            .map(Date::toInstant)
+            .orElse(null);
+        return isPeriodsOverlap(startInstant, endInstant, newInstant, newInstant2);
     }
 
-    public static String formatFromSireneDatePattern(String date, String targetPattern){
-        if (date != null && date.length() >= 8) {
-            Date parsedDate=DateUtils.parseDateWithPattern(date, "dd/MM/yyyy");
-            return DateUtils.formatDateWithPattern(parsedDate,targetPattern );
-        }
-        return date;
-    }
 }

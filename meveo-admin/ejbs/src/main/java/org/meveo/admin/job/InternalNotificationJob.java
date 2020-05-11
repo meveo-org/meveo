@@ -49,7 +49,7 @@ public class InternalNotificationJob extends Job {
     private CustomFieldInstanceService customFieldInstanceService;
 
     @Override
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         String filterCode = (String) customFieldInstanceService.getCFValue(jobInstance, "InternalNotificationJob_filterCode");
         String notificationCode = (String) customFieldInstanceService.getCFValue(jobInstance, "InternalNotificationJob_notificationCode");
         internalNotificationJobBean.execute(filterCode, notificationCode, result);

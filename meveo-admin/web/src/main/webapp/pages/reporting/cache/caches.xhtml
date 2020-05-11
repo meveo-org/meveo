@@ -1,50 +1,75 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml"  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
-    xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
 
-    <f:metadata>
-        <!-- 		<f:event type="preRenderView" listener="#{cacheBean.preRenderView}" /> -->
-    </f:metadata>
+	<f:metadata>
+		<!-- 		<f:event type="preRenderView" listener="#{cacheBean.preRenderView}" /> -->
+	</f:metadata>
 
 
-    <ui:define name="body">
-        <p:panel  header="#{messages['cache.caches']}">
-            <p:messages />
+	<ui:define name="body">
+		<!-- Remove the white space in the header -->
+		<hftl:emptyTag></hftl:emptyTag>
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.execution']}" disabled="true" />
+				<p:menuitem outcome="fileExplorer"
+					value="#{messages['cache.caches']}" />
+			</p:breadCrumb>
+		</h:form>
 
-            <h:form id="formId">
-                <p:dataTable id="datatable_caches" var="cacheInfo" value="#{cacheBean.summaryOfCaches}" paginator="true" rows="10" resizableColumns="true"
-                    paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="5,10,15"
-                    lazy="false" styleClass="custom-grid" rowIndexVar="rowIndex">
-                    <p:column headerText="#{messages['cache.name']}" sortBy="#{cacheInfo['name']}">
-                        <h:link outcome="cacheDetail" value="#{cacheInfo['name']}">
-                            <f:param name="cacheName" value="#{cacheInfo['name']}" />
-                        </h:link>
-                    </p:column>
-                    <p:column headerText="#{messages['cache.itemsInCache']}">
-                        <h:outputText value="#{cacheInfo['count']}" />
-                    </p:column>
-                    <p:column style="width: 100px;" headerText="#{messages['commons.actions']}">
-                        <!--                         <p:tooltip for="viewlink" value="#{messages['commons.view']}" showEffect="slide" hideEffect="slide" /> -->
-                        <!--                         <p:button id="viewlink" outcome="cacheDetail" icon="ui-icon-search"> -->
-                        <!--                             <f:param name="cacheName" value="#{cacheInfo['name']}" /> -->
-                        <!--                         </p:button> -->
+		<p:panel>
+			<p:messages />
 
-                        <p:tooltip for="refreshlink" value="#{messages['cache.reload']}" showEffect="slide" hideEffect="slide" />
-                        <p:commandButton id="refreshlink" icon="ui-icon-refresh" action="#{cacheBean.refresh(cacheInfo['name'])}" update=":formId" >
-                            <p:confirm header="" message="#{messages['cache.confirmReload']}"/>
-                        </p:commandButton>
+			<h:form id="formId">
+				<p:dataTable id="datatable_caches" var="cacheInfo"
+					value="#{cacheBean.summaryOfCaches}" paginator="true" rows="10"
+					resizableColumns="true"
+					paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+					rowsPerPageTemplate="5,10,15" lazy="false" styleClass="custom-grid"
+					rowIndexVar="rowIndex">
+					<p:column headerText="#{messages['cache.name']}"
+						sortBy="#{cacheInfo['name']}">
+						<h:link outcome="cacheDetail" value="#{cacheInfo['name']}">
+							<f:param name="cacheName" value="#{cacheInfo['name']}" />
+						</h:link>
+					</p:column>
+					<p:column headerText="#{messages['cache.itemsInCache']}">
+						<h:outputText value="#{cacheInfo['count']}" />
+					</p:column>
+					<p:column style="width: 100px;"
+						headerText="#{messages['commons.actions']}">
+						<!--                         <p:tooltip for="viewlink" value="#{messages['commons.view']}" showEffect="slide" hideEffect="slide" /> -->
+						<!--                         <p:button id="viewlink" outcome="cacheDetail" icon="ui-icon-search"> -->
+						<!--                             <f:param name="cacheName" value="#{cacheInfo['name']}" /> -->
+						<!--                         </p:button> -->
 
-                    </p:column>
-                </p:dataTable>
+						<p:tooltip for="refreshlink" value="#{messages['cache.reload']}"
+							showEffect="slide" hideEffect="slide" />
+						<p:commandButton id="refreshlink" icon="ui-icon-refresh"
+							action="#{cacheBean.refresh(cacheInfo['name'])}" update=":formId">
+							<p:confirm header="" message="#{messages['cache.confirmReload']}" />
+						</p:commandButton>
 
-                <p:commandButton value="#{messages['commons.refresh']}" update=":formId" />
+					</p:column>
+				</p:dataTable>
 
-                <p:commandButton value="#{messages['cache.reload']}" action="#{cacheBean.refresh(null)}" update=":formId">
-                    <p:confirm header="" message="#{messages['cache.confirmReloadAll']}"/>
-                </p:commandButton>
+				<p:commandButton value="#{messages['commons.refresh']}"
+					update=":formId" />
 
-            </h:form>
-        </p:panel>
-    </ui:define>
+				<p:commandButton value="#{messages['cache.reload']}"
+					action="#{cacheBean.refresh(null)}" update=":formId">
+					<p:confirm header=""
+						message="#{messages['cache.confirmReloadAll']}" />
+				</p:commandButton>
+
+			</h:form>
+		</p:panel>
+	</ui:define>
 
 </ui:composition>

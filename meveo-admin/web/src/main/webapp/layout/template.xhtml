@@ -1,16 +1,26 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
 <h:head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
-	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" />
+	<meta
+		content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+		name="viewport" />
 	<title>Meveo Platform</title>
-	
-	<link rel="stylesheet" type="text/css" href="#{request.contextPath}/stylesheet/theme.css" />
-	<link rel="stylesheet" type="text/css" href="#{request.contextPath}/stylesheet/main.css" />
-	<link rel="stylesheet" type="text/css" href="#{request.contextPath}/stylesheet/custom.css" />
-	<link rel="stylesheet" type="text/css" href="#{request.contextPath}/stylesheet/tree-lib.css" />
+
+	<link rel="stylesheet" type="text/css"
+		href="#{request.contextPath}/stylesheet/theme.css" />
+	<link rel="stylesheet" type="text/css"
+		href="#{request.contextPath}/stylesheet/main.css" />
+	<link rel="stylesheet" type="text/css"
+		href="#{request.contextPath}/stylesheet/custom.css" />
+	<link rel="stylesheet" type="text/css"
+		href="#{request.contextPath}/stylesheet/tree-lib.css" />
 
 	<ui:insert name="head" />
 
@@ -24,7 +34,7 @@
 
 <h:body styleClass="FixedTopBar MeveoMegaMenu">
 
-	<f:view  locale="#{localeSelector.currentLocale}">
+	<f:view locale="#{localeSelector.currentLocale}">
 
 		<ui:insert name="metadata" />
 
@@ -47,7 +57,8 @@
 					});
 				</script>
 
-		<p:ajaxStatus style="width:64px;height:64px;position:fixed;right:5px;bottom:5px">
+		<p:ajaxStatus
+			style="width:64px;height:64px;position:fixed;right:5px;bottom:5px">
 			<f:facet name="start">
 				<h:graphicImage library="img" name="loading.gif" />
 			</f:facet>
@@ -57,9 +68,12 @@
 			</f:facet>
 		</p:ajaxStatus>
 
-		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" closeOnEscape="true">
-			<p:commandButton value="#{messages['commons.yes']}" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
-			<p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade"
+			closeOnEscape="true">
+			<p:commandButton value="#{messages['commons.yes']}" type="button"
+				styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+			<p:commandButton value="#{messages['commons.no']}" type="button"
+				styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
 		</p:confirmDialog>
 
 	</f:view>

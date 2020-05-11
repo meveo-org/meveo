@@ -21,17 +21,15 @@ package org.meveo.admin.action.admin.module;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -55,6 +53,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -62,6 +61,7 @@ import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.util.PersistenceUtils;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.CroppedImage;
@@ -75,8 +75,8 @@ import org.primefaces.model.TreeNode;
  *
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.9.0
  */
 
 public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudBean<T, MeveoModuleDto> {
@@ -100,11 +100,13 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     protected CustomFieldTemplateService customFieldTemplateService;
 
     private BusinessEntity moduleItemEntity;
+    private MeveoModule moduleDependencyEntity;
     private TreeNode root;
     protected MeveoInstance meveoInstance;
     private CroppedImage croppedImage;
     private String tmpPicture;
     private boolean remove = false;
+    private boolean deleteFiles;
 
     public GenericModuleBean() {
 
@@ -458,6 +460,22 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         }
     }
 
+    @ActionMethod
+    public String deleteModuleFile() throws BusinessException, IOException {
+        MeveoModule module = meveoModuleService.findById(entity.getId());
+        List<String> pathFiles = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(module.getModuleFiles())) {
+            for (String moduleFile : module.getModuleFiles()) {
+                pathFiles.add(moduleFile);
+            }
+        }
+        delete();
+        if (CollectionUtils.isNotEmpty(pathFiles) && deleteFiles) {
+            meveoModuleService.removeFilesIfModuleIsDeleted(pathFiles);
+        }
+        return getListViewName();
+    }
+
     /**
      * clean uploaded picture
      */
@@ -563,6 +581,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     @SuppressWarnings("unchecked")
     public void install() {
         entity = (T) install(entity);
+        // fix lazy load issue
+        init();
+        entity = initEntity();
     }
 
     public MeveoModule install(MeveoModule module) {
@@ -577,7 +598,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
 
             MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
-
+            if (module.getScript() != null) {
+                boolean checkTestSuits = meveoModuleService.checkTestSuites(module.getScript().getCode());
+                if (!checkTestSuits && module.getIsInDraft()) { 
+                    messages.error(new BundleKey("messages", "meveoModule.warningWhenInstallingModule"));  
+                }
+                if (!checkTestSuits && !module.getIsInDraft()) { 
+                    return null;  
+                }
+            }
             module = moduleApi.install(moduleDto);
             messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
 
@@ -612,5 +641,41 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     public void removeFileFromModule(String item) {
         entity.removeModuleFile(item);
+        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
     }
+    
+    public void removeModuleDependency(MeveoModuleDependency dependency) {
+        entity.removeModuleDependency(dependency);
+        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+    }
+
+ 
+
+	public void setMeveoModule(MeveoModule meveoModule) {
+	
+	}
+ 
+	public MeveoModule getModuleDependencyEntity() {
+		return moduleDependencyEntity;
+	}
+
+    public void setModuleDependencyEntity(MeveoModule dependencyEntity) {
+        if (dependencyEntity != null && !entity.equals(dependencyEntity)) {
+            dependencyEntity = meveoModuleService.findById(dependencyEntity.getId(), Arrays.asList("patches", "releases", "moduleDependencies"));
+            MeveoModuleDependency meveoDependency = new MeveoModuleDependency(dependencyEntity.getCode(), dependencyEntity.getDescription(), dependencyEntity.getCurrentVersion());
+            if (!entity.getModuleDependencies().contains(meveoDependency)) {
+                entity.addModuleDependency(meveoDependency);
+            }
+            moduleDependencyEntity = dependencyEntity;
+        }
+    }
+
+    public boolean isDeleteFiles() {
+       return deleteFiles;
+    }
+
+    public void setDeleteFiles(boolean deleteFiles) {
+        this.deleteFiles = deleteFiles;
+    }
+    
 }

@@ -10,21 +10,23 @@
     <ui:define name="body">
             <h:form id="crumbmenuForm">
                 <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.notifications']}" disabled="true" />
                     <p:menuitem outcome="inboundRequests" value="#{messages['menu.inboundRequests']}" />
                 </p:breadCrumb>
             </h:form>
         <!-- ===================================== SEARCH CRITERIA ZONE ================================= -->
 
-        <hftl:searchPanel label="#{messages['menu.inboundRequests']}" columns="2" backingBean="#{inboundRequestListBean}" renderNewButton="false">
+        <hftl:searchPanel label="#{messages['menu.inboundRequests']}" columns="2" backingBean="#{inboundRequestListBean}" renderNewButton="true">
             <hftl:searchField label="#{messages['commons.date']}" field="auditable" childField="created" />
             <hftl:searchField label="#{messages['inboundRequest.remoteAddress']}" field="remoteAddr" />
         </hftl:searchPanel>
 
         <!-- ===================================== SEARCH RESULTS ======================================= -->
 
-        <hftl:dataList backingBean="#{inboundRequestListBean}" exportButton="false" exportToCsv="true" fileName="InboundRequests" importCsv="true" importStrategy="true" sortBy="auditable.created" sortOrder="DESCENDING">    
-            <p:column headerText="#{messages['inboundRequest.remoteAddress']}" width="20%">
+        <hftl:dataList backingBean="#{inboundRequestListBean}" exportButton="false" exportToCsv="true" fileName="InboundRequests" importCsv="true" importStrategy="true" sortBy="auditable.created" sortOrder="DESCENDING">
+			<hftl:column label="#{messages['BusinessEntity.code']}" field="code"  exportable="true"/>
+			<p:column headerText="#{messages['inboundRequest.remoteAddress']}">
                 <h:link value="#{entity.remoteAddr}" outcome="inboundRequestDetail">
                     <f:param name="objectId" value="#{entity.id}" />
                 </h:link>
@@ -33,22 +35,21 @@
             <hftl:column label="#{messages['inboundRequest.remotePort']}" field="remotePort" />
             <hftl:column label="#{messages['inboundRequest.protocol']}" field="protocol" />
             <hftl:column label="#{messages['inboundRequest.pathInfo']}" field="pathInfo" />
-<!-- 			<hftl:column label="#{messages['BusinessEntity.code']}" field="code" style="display:none" exportable="true"/> -->
-<!-- 			<hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.scheme']}" field="scheme" style="display:none" exportable="true"/> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.contentType']}" field="contentType" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.contentLength']}" field="contentLength" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.method']}" field="method" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.authType']}" field="authType" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.requestUri']}" field="requestURI" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.parameters']}" field="encodedParams" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.cookies']}" field="encodedCookies" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.headers']}" field="encodedHeaders" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.responseContentType']}" field="responseContentType" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.responseEncoding']}" field="responseEncoding" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.responseCookies']}" field="encodedRespCookies"  style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['inboundRequest.responseHeaders']}" field="encodedRespHeaders" style="display:none" exportable="true" /> -->
-<!-- 			<hftl:column label="#{messages['tradingLanguage.updated']}" field="auditable.updated" style="display:none" exportable="true"/> -->
+			<hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true"  exportable="true" />
+			<hftl:column label="#{messages['inboundRequest.scheme']}" field="scheme"  exportable="true"/>
+			<hftl:column label="#{messages['inboundRequest.contentType']}" field="contentType"  exportable="true" />
+<!-- 			<hftl:column label="#{messages['inboundRequest.contentLength']}" field="contentLength"  exportable="true" /> -->
+			<hftl:column label="#{messages['inboundRequest.method']}" field="method"  exportable="true" />
+			<hftl:column label="#{messages['inboundRequest.authType']}" field="authType"  exportable="true" />
+<!-- 			<hftl:column label="#{messages['inboundRequest.requestUri']}" field="requestURI"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.parameters']}" field="encodedParams"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.cookies']}" field="encodedCookies"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.headers']}" field="encodedHeaders"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.responseContentType']}" field="responseContentType"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.responseEncoding']}" field="responseEncoding"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.responseCookies']}" field="encodedRespCookies"   exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['inboundRequest.responseHeaders']}" field="encodedRespHeaders"  exportable="true" /> -->
+<!-- 			<hftl:column label="#{messages['tradingLanguage.updated']}" field="auditable.updated"  exportable="true"/> -->
             <hftl:actionsColumn renderEditLink="false" permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" />
         </hftl:dataList>
     </ui:define>

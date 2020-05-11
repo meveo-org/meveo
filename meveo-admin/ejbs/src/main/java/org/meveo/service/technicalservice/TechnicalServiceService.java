@@ -302,6 +302,13 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 
 	@Override
 	public void remove(T executable) throws BusinessException {
+		// Check that there are no other technical service inheriting from it
+		List<String> children = getChildrenServices(executable);
+		if(!children.isEmpty()) {
+			throw new IllegalArgumentException("Can't remove service " + executable.getCode()
+					+ " because following services inherit from it: " + children);
+		}
+		
 		super.remove(executable);
 	}
 
@@ -402,5 +409,21 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
             qb.addCriterion("service.auditable.created", ">=", sinceDate, true);
         }
         return qb;
+    }
+    
+    /**
+     * Return the services that inherit from the given service
+     * 
+     * @param parentService the parent service
+     * @return the children services
+     */
+    public List<String> getChildrenServices(T parentService) {
+    	final String query = "SELECT service.code FROM " + TechnicalService.class.getName() + " as service \n"
+    			+ "WHERE :parentService MEMBER OF service.extendedServices";
+    	
+    	return getEntityManager().createQuery(query, String.class)
+    			.setParameter("parentService", parentService)
+    			.getResultList();
+    	
     }
 }

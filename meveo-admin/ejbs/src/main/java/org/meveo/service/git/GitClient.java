@@ -765,4 +765,24 @@ public class GitClient {
         return modifiedFiles;
     }
 
+    protected void createGitMeveoFolder(GitRepository gitRepository, File repoDir) throws BusinessException {
+        MeveoUser user = currentUser.get();
+        keyLock.lock(gitRepository.getCode());
+        try (Git git = Git.init().setDirectory(repoDir).call()){
+            // Init repo with a dummy commit
+            new File(repoDir, "README.md").createNewFile();
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage("First commit")
+                    .setAuthor(user.getUserName(), user.getMail())
+                    .setCommitter(user.getUserName(), user.getMail())
+                    .call();
+        } catch (GitAPIException | IOException e) {
+            repoDir.delete();
+            throw new BusinessException("Error initating repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
+    }
+
 }

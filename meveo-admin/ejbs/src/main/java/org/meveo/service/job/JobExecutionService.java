@@ -28,6 +28,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -46,8 +47,7 @@ import org.meveo.service.base.PersistenceService;
  * 
  * @author Edward P. Legaspi
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @version 6.9.0
  */
 @Stateless
 public class JobExecutionService extends PersistenceService<JobExecutionResultImpl> {
@@ -148,9 +148,9 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
      * @param params Parameters to pass to job execution
      * @throws BusinessException business exception
      */
-    private void executeJobWithParameters(JobInstance jobInstance, Map<Object, Object> params) throws BusinessException {
+    private void executeJobWithParameters(JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         Job job = jobInstanceService.getJobByName(jobInstance.getJobTemplate());
-        job.execute(jobInstance, null);
+        job.execute(jobInstance, null, params);
     }
 
     /**
@@ -161,10 +161,10 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
      */
     @Asynchronous
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    public void manualExecute(JobInstance jobInstance) throws BusinessException {
+    public void manualExecute(JobInstance jobInstance, Map<String, Object> context) throws BusinessException {
         log.info("Manual execute a job {} of type {}", jobInstance.getCode(), jobInstance.getJobTemplate());
         try {
-            executeJobWithParameters(jobInstance, null);
+            executeJobWithParameters(jobInstance, context);
         } catch (Exception e) {
             log.error("Failed to manually execute a job {} of type {}", jobInstance.getCode(), jobInstance.getJobTemplate(), e);
             throw e;
@@ -188,7 +188,7 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
             create(jobExecutionResult);
 
             Job job = jobInstanceService.getJobByName(jobInstance.getJobTemplate());
-            job.executeInNewTrans(jobInstance, jobExecutionResult);
+            job.executeInNewTrans(jobInstance, jobExecutionResult, null);
 
             log.debug("Job execution result ID for job {} of type {} is {}", jobInstance, jobInstance.getJobTemplate(), jobExecutionResult.getId());
             return jobExecutionResult.getId();
@@ -206,7 +206,7 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
      * @param params Parameters (currently not used)
      * @throws BusinessException Any exception
      */
-    public void executeJob(JobInstance jobInstance, Map<Object, Object> params) throws BusinessException {
+    public void executeJob(JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         log.info("Execute a job {}  of type {} with parameters {} ", jobInstance, jobInstance.getJobTemplate(), params);
         executeJobWithParameters(jobInstance, params);
     }
@@ -278,7 +278,7 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
         if (jobName != null) {
             qb.addSqlCriterion("t.jobInstance in :jis", "jis", jobInstances);
         }
-        qb.addCriterionDateRangeToTruncatedToDay("t.startDate", date);
+        qb.addCriterionDateRangeToTruncatedToDay("t.startDate", date.toInstant());
         int itemsDeleted = qb.getQuery(getEntityManager()).executeUpdate();
 
         log.info("Removed {} job execution history which start date is older then a {} date ", itemsDeleted, date);
@@ -364,15 +364,22 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
     }
 
     /**
-     * Finds the last job execution result by a given job instance.
-     * @param jobInstance JobInstance filter
-     * @return last job execution result
-     */
-    public JobExecutionResultImpl findLastExecutionByInstance(JobInstance jobInstance) {
-        QueryBuilder qb = new QueryBuilder(JobExecutionResultImpl.class, "j");
-        qb.addCriterionEntity("jobInstance", jobInstance);
-        qb.addOrderCriterionAsIs("startDate", false);
+	 * Finds the last job execution result by a given job instance.
+	 * 
+	 * @param jobInstance JobInstance filter
+	 * @return last job execution result
+	 */
+	@SuppressWarnings("unchecked")
+	public JobExecutionResultImpl findLastExecutionByInstance(JobInstance jobInstance) {
+		QueryBuilder qb = new QueryBuilder(JobExecutionResultImpl.class, "j");
+		qb.addCriterionEntity("jobInstance", jobInstance);
+		qb.addOrderCriterionAsIs("startDate", false);
 
-        return (JobExecutionResultImpl) qb.getQuery(getEntityManager()).setMaxResults(1).getResultList().get(0);
-    }
+		List<JobExecutionResultImpl> list = qb.getQuery(getEntityManager()).setMaxResults(1).getResultList();
+		if (CollectionUtils.isNotEmpty(list)) {
+			return (JobExecutionResultImpl) qb.getQuery(getEntityManager()).setMaxResults(1).getResultList().get(0);
+		} else {
+			return null;
+		}
+	}
 }

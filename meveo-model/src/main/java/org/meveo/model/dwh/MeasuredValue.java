@@ -1,6 +1,7 @@
 package org.meveo.model.dwh;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -44,10 +45,9 @@ public class MeasuredValue extends BaseEntity {
 	@Column(name = "measurement_period")
 	private MeasurementPeriodEnum measurementPeriod;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "date")
+	@Column(name = "date", columnDefinition = "TIMESTAMP")
 	@XmlTransient
-	private Date date;
+	private Instant date;
 
 	@Column(name = "dimension_1", length = 255)
     @Size(max = 255)
@@ -95,11 +95,11 @@ public class MeasuredValue extends BaseEntity {
 		this.measurementPeriod = measurementPeriod;
 	}
 
-	public Date getDate() {
+	public Instant getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(Instant date) {
 		this.date = date;
 	}
 

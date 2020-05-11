@@ -40,15 +40,12 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
-import org.meveo.model.persistence.sql.SqlStorageConfigurationDto;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -57,7 +54,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -86,10 +83,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
-    
-    @Inject
-    private CustomTableCreatorService customTableCreatorService;
-
+   
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
@@ -144,7 +138,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-            customEntityTemplateService.createInNewTransaction(cet);
+            customEntityTemplateService.create(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -540,7 +534,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		}
         
         // Neo4J configuration if defined
-        if(dto.getNeo4jStorageConfiguration() != null) {
+        if(dto.getNeo4jStorageConfiguration() != null && dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
             if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
             	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
@@ -580,12 +574,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 customEntityCategory = new CustomEntityCategory();
                 customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
                 customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-                try {
-                    customEntityCategoryService.create(customEntityCategory);
-                } catch (BusinessException e) {
-                    log.error("Cannot create category", e);
-                }
+                customEntityCategoryService.updateAudit(customEntityCategory);
+//                try {
+//                    customEntityCategoryService.createInNewTx(customEntityCategory);
+//                    // customEntityCategoryService.flush();
+//                } catch (BusinessException e) {
+//                    log.error("Cannot create category", e);
+//                }
             }
+            
             cet.setCustomEntityCategory(customEntityCategory);
         }
 

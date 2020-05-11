@@ -2,7 +2,12 @@ package org.meveo.admin.job.dwh;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -28,7 +33,13 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.service.job.JobExecutionService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
-import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
 
 @Stateless
@@ -128,12 +139,12 @@ public class DWHQueryBean {
         try {
 
             if (mq.getLastMeasureDate() == null) {
-                mq.setLastMeasureDate(mq.getPreviousDate(toDate));
+                mq.setLastMeasureDate(mq.getPreviousDate(toDate).toInstant());
             }
 
             List<Object> results = new ArrayList<>();   // List of query results
 
-            if (mq.getNextMeasureDate().before(toDate)) {
+            if (mq.getNextMeasureDate().isBefore(toDate.toInstant())) {
 
                 // Execute and get results of sql query if defined
                 if (!StringUtils.isBlank(mq.getSqlQuery())) {
@@ -208,7 +219,7 @@ public class DWHQueryBean {
         for (Object res : results) {
             MeasurementPeriodEnum mve = (mq.getMeasurementPeriod() != null) ? mq.getMeasurementPeriod() : MeasurementPeriodEnum.DAILY;
             BigDecimal value;
-            Date date = mq.getLastMeasureDate();
+            Instant date = mq.getLastMeasureDate();
             String dimension1 = mq.getDimension1();
             String dimension2 = mq.getDimension2();
             String dimension3 = mq.getDimension3();
@@ -219,7 +230,7 @@ public class DWHQueryBean {
                 int i = 1;
                 if (resTab.length > i) {
                     try {
-                        date = (Date) resTab[1];
+                        date = (Instant) resTab[1];
                         i++;
                     } catch (Exception e) {}
                     if (resTab.length > i) {
@@ -241,7 +252,9 @@ public class DWHQueryBean {
             } else {
                 value = new BigDecimal("" + res);
             }
-            date = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
+            date = date instanceof Instant ? ((Instant) date).truncatedTo(ChronoUnit.DAYS)
+            								: DateUtils.truncate(date, Calendar.DAY_OF_MONTH).toInstant();
+            
             MeasuredValue mv = mvService.getByDate(em, date, mve, mq);
             if (mv == null) {
                 mv = new MeasuredValue();

@@ -10,14 +10,8 @@
     </ui:define>
 
     <ui:define name="body">
-        <h:form id="crumbmenuForm">
-            <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-                <p:menuitem outcome="endpoint" value="#{messages['enpoint.endpoint']}" />
-                <p:menuitem value="#{endpointBean.entity.code}" />
-            </p:breadCrumb>
-        </h:form>
-        <hftl:entityPopup id="searchFuncionPopup"
+
+		<hftl:entityPopup id="searchFuncionPopup"
                           header="#{messages['endpoint.search.endpoint.service']}"
                           backingBean="#{functionBean}"
                           searchField1Label="#{messages['BusinessEntity.code']}"
@@ -32,7 +26,22 @@
                           selectionListenerMethod="onFunctionChange"
                           updateField=":endpointForm:serviceId :endpointForm:serviceId_text :endpointForm:functionInputs :endpointForm:pathParameters :endpointForm:parametersMapping :endpointForm:endpointUrl :endpointForm:endpoint-technical-configuration">
         </hftl:entityPopup>
-        <hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" showAddModuleButton="true" backingBean="#{endpointBean}">
+        
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem outcome="endpoint"
+					value="#{messages['menu.endpoint']}" />
+				<p:menuitem
+					value="#{messages['commons.new']} #{messages['endpoint.panel']}"
+					disabled="true" rendered="#{endpointBean.entity.transient}" />
+				<p:menuitem
+					value="#{messages['endpoint.panel']} - #{endpointBean.entity.code}"
+					disabled="true" rendered="#{!endpointBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
+		
+		<hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" showAddModuleButton="true" backingBean="#{endpointBean}">
             <h:panelGrid columns="5">
                 <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true" validateUnique="true" listenerUpdate=":endpointForm:endpointUrl"/>
                 <hftl:formField id="serviceId" label="#{messages['endpoint.code']}" 
@@ -86,6 +95,9 @@
                             </p:column>
                             <p:column headerText="#{messages['endpoint.parameters.mapping.default']}">
                                 <h:inputText value="#{item.defaultValue}" size="40"/>
+                            </p:column>
+                            <p:column headerText="#{messages['endpoint.parameters.mapping.valueRequired']}">
+                                <h:selectBooleanCheckbox value="#{item.valueRequired}" style="width:200px" />
                             </p:column>
                         </p:dataTable>
                     </hftl:decorateFormField>

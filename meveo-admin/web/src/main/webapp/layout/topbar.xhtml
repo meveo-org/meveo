@@ -1,10 +1,14 @@
-<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
-
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
 	<div id="topbar-wrapper" class="clearfix">
 		<div id="layout-topbar" class="pull-left">
-			<a href="#{request.contextPath}" id="logo-wrapper"> <h:graphicImage name="logo.png" library="img" />
+			<a href="#{request.contextPath}" id="logo-wrapper"> <h:graphicImage
+					name="logo.png" library="img" />
 			</a>
 		</div>
 
@@ -18,13 +22,18 @@
 					<li><c:if test="#{currentUser.authenticated}">
 							<a href="#" id="menu1"><i class="fa fa-2x fa-cog"></i></a>
 							<ul style="display: none; z-index: 1">
-								<li><h:commandLink id="logout" action="#{authenticationProvider.logout}" value="#{messages['menutop.logout']}" /></li>
-								<li><h:link outcome="/index.html" value="#{messages['menutop.changePassword']}" rendered="" styleClass="headerLink" immediate="true" /></li>
+								<li><h:commandLink id="logout"
+										action="#{authenticationProvider.logout}"
+										value="#{messages['menutop.logout']}" /></li>
+								<li><h:link outcome="/index.html"
+										value="#{messages['menutop.changePassword']}" rendered=""
+										styleClass="headerLink" immediate="true" /></li>
 							</ul>
 						</c:if></li>
 					<li><a href="#" id="menu2"><i class="fa fa-2x fa-question"></i></a>
 						<ul style="display: none; z-index: 1">
-							<li><p:link outcome="about" value="#{messages['menu.aboutUs']}"></p:link></li>
+							<li><p:link outcome="about"
+									value="#{messages['menu.aboutUs']}"></p:link></li>
 						</ul></li>
 
 				</ul>
@@ -54,15 +63,21 @@
 						})
 			</script>
 			<div class="FRight">
-				<ul id="user-info" class="ListNoStyle Padding10" style="margin: 0 40px 0 0;">
+				<ul id="user-info" class="ListNoStyle Padding10"
+					style="margin: 0 40px 0 0;">
 					<li class="Fs14 FontBold">#{currentUser.fullNameOrUserName}</li>
 					<li class="Fs12 FontBold">#{appProvider.description}</li>
 				</ul>
 			</div>
-			<c:if test="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
+			<c:if
+				test="#{currentUser.hasRole('marketingCatalogVisualization')  or currentUser.hasRole('marketingCatalogManager') }">
 				<div class="search-wrapper">
-					<p:inputText id="globalFullTextSearch" value="#{fullTextSearchBean.filters['fullText']}" placeholder="#{messages['commons.search']}" />
-					<p:commandLink id="doGlobalFullTextSearch" styleClass="Padding5 fa fa-search" action="mm_fullTextSearch" process="globalFullTextSearch @this" />
+					<p:inputText id="globalFullTextSearch"
+						value="#{fullTextSearchBean.filters['fullText']}"
+						placeholder="#{messages['commons.search']}" />
+					<p:commandLink id="doGlobalFullTextSearch"
+						styleClass="Padding5 fa fa-search" action="mm_fullTextSearch"
+						process="globalFullTextSearch @this" />
 
 				</div>
 				<p:defaultCommand target="doGlobalFullTextSearch" />
@@ -71,7 +86,9 @@
 		<!-- / topbar-wrapper -->
 	</div>
 
-	<div id="#{facesContext.viewRoot.renderKitId eq 'PRIMEFACES_MOBILE' ? 'layout-menu-cover' : 'top-menu-cover'}" class="FLeft">
+	<div
+		id="#{facesContext.viewRoot.renderKitId eq 'PRIMEFACES_MOBILE' ? 'layout-menu-cover' : 'top-menu-cover'}"
+		class="FLeft">
 		<c:if test="#{!hideNavigation}">
 			<ui:include src="/layout/navigation.xhtml" />
 		</c:if>

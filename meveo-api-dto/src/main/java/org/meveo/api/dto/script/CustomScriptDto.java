@@ -9,6 +9,8 @@ import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * The Class CustomScriptDto.
  *
@@ -24,7 +26,7 @@ public abstract class CustomScriptDto extends FunctionDto {
 
 	/** The type. */
 	@XmlElement
-	private ScriptSourceTypeEnum type;
+	private ScriptSourceTypeEnum type = ScriptSourceTypeEnum.JAVA;
 
 	/** The script. */
 	@XmlElement(required = true)
@@ -99,6 +101,7 @@ public abstract class CustomScriptDto extends FunctionDto {
 	 *
 	 * @return true, if is code only
 	 */
+	@JsonIgnore
 	public boolean isCodeOnly() {
 		return StringUtils.isBlank(script);
 	}

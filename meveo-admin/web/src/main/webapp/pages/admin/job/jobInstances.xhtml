@@ -12,7 +12,7 @@
     	<p:importEnum type="org.meveo.cache.JobRunningStatusEnum" var="JobRunningStatusEnum" />
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
 				<p:menuitem outcome="jobInstances" value="#{messages['menu.jobInstances']}" />
 			</p:breadCrumb>
 		</h:form>     
@@ -39,7 +39,6 @@
                 </p:column>
                 <hftl:column label="#{messages['timer.jobName']}" field="jobTemplate" />
                 <hftl:column label="#{messages['job.category']}" field="jobCategoryEnum" />
-                <hftl:column label="#{messages['timer.schedule']}" field="timerEntity.code" />
                 <hftl:column label="#{messages['timer.active']}" field="disabled" isDisabledMessage="true"/>
                 <p:column headerText="#{messages['timer.isRunning']}">
                     <h:outputText styleClass="ui-icon ui-icon-circle-check" title="#{messages['timer.isRunning.this']}" rendered="#{jobInstanceListBean.isTimerRunning(entity)== JobRunningStatusEnum.RUNNING_THIS}" />

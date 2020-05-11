@@ -173,23 +173,23 @@ public class EndpointService extends BusinessService<Endpoint> {
     public Endpoint update(Endpoint entity) throws BusinessException {
         Endpoint endpoint = findById(entity.getId());
         String oldEndpointPermission = getEndpointPermission(endpoint);
-        endpoint.getPathParameters().clear();
-        endpoint.getParametersMapping().clear();
-
-        flush();
-
-        endpoint.getPathParameters().addAll(entity.getPathParameters());
-        endpoint.getParametersMapping().addAll(entity.getParametersMapping());
-        endpoint.setJsonataTransformer(entity.getJsonataTransformer());
-        endpoint.setMethod(entity.getMethod());
-        endpoint.setService(entity.getService());
-        endpoint.setSynchronous(entity.isSynchronous());
-        endpoint.setCode(entity.getCode());
-        endpoint.setDescription(entity.getDescription());
-        endpoint.setReturnedVariableName(entity.getReturnedVariableName());
-        endpoint.setSerializeResult(entity.isSerializeResult());
-        endpoint.setContentType(entity.getContentType());
-        endpoint.setRoles(entity.getRoles());
+//        endpoint.getPathParameters().clear();
+//        endpoint.getParametersMapping().clear();
+//
+//        flush();
+//
+//        endpoint.getPathParameters().addAll(entity.getPathParameters());
+//        endpoint.getParametersMapping().addAll(entity.getParametersMapping());
+//        endpoint.setJsonataTransformer(entity.getJsonataTransformer());
+//        endpoint.setMethod(entity.getMethod());
+//        endpoint.setService(entity.getService());
+//        endpoint.setSynchronous(entity.isSynchronous());
+//        endpoint.setCode(entity.getCode());
+//        endpoint.setDescription(entity.getDescription());
+//        endpoint.setReturnedVariableName(entity.getReturnedVariableName());
+//        endpoint.setSerializeResult(entity.isSerializeResult());
+//        endpoint.setContentType(entity.getContentType());
+//        endpoint.setRoles(entity.getRoles());
 
         super.update(endpoint);
 

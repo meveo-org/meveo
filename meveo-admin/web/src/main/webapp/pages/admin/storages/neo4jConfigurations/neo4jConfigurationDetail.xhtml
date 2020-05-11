@@ -10,7 +10,7 @@
     <ui:define name="body">
         <h:form id="crumbmenuForm">
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
 				<p:menuitem value="#{messages['menu.storages']}" disabled="true" />
                 <p:menuitem outcome="neo4jConfigurations" value="#{messages['repository.neo4jConfiguration']}" />
                 <p:menuitem value="#{messages['commons.new']} #{messages['repository.neo4jConfiguration']}" disabled="true" rendered="#{neo4jConfigurationBean.entity.transient}" />

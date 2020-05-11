@@ -39,7 +39,7 @@ import io.swagger.models.properties.StringProperty;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class SwaggerHelperService {
@@ -221,4 +221,6 @@ public class SwaggerHelperService {
 
 		return new ArrayList<>();
 	}
+	
+	
 }

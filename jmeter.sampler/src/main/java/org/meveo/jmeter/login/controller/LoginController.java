@@ -16,9 +16,20 @@
 
 package org.meveo.jmeter.login.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.swing.JOptionPane;
+
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.MainFrame;
 import org.meveo.jmeter.function.FunctionManager;
@@ -30,14 +41,9 @@ import org.meveo.jmeter.login.model.HostConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.io.*;
-import java.text.Collator;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class LoginController {
 
@@ -73,7 +79,7 @@ public class LoginController {
             return OBJECT_MAPPER.readValue(storedHostsFile, new TypeReference<List<Host>>() {});
         } catch (IOException e) {
             LOG.error("Can't retrieve stored hosts", e);
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
     }
 

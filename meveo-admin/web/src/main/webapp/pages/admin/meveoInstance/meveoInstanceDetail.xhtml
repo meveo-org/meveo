@@ -11,7 +11,7 @@
     	<p:messages id="messages" />
         <h:form id="crumbmenuForm">
             <p:breadCrumb homeDisplay="text" id="crumbmenu">
-                <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                <p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
                 <p:menuitem outcome="meveoInstances" value="#{messages['menu.meveoInstance']}" />
                 <p:menuitem value="#{messages['commons.new']} #{messages['meveoInstance.panel']}" disabled="true" rendered="#{meveoInstanceBean.entity.transient}" />
                 <p:menuitem value="#{messages['meveoInstance.panel']} - #{meveoInstanceBean.entity.code}" disabled="true" rendered="#{!meveoInstanceBean.entity.transient}" />

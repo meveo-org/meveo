@@ -17,6 +17,7 @@
  */
 package org.meveo.model.crm;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -56,9 +57,11 @@ import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.catalog.Calendar;
@@ -72,17 +75,21 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.shared.DateUtils;
 
 /**
+ * Represent a custom field, either related to a {@link CustomEntityTemplate} or a {@link CustomFieldEntity}, via the {@link #appliesTo} field
+ *
  * @author clement.bareth
  * @author akadid abdelmounaim
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.8.0
- **/
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("CustomFieldTemplate")
+@ModuleItemOrder(20)
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })
 @ObservableEntity
@@ -93,37 +100,63 @@ import org.meveo.model.shared.DateUtils;
 @NamedQueries({
         @NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
         @NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
-        @NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
-                @QueryHint(name = "org.hibernate.cacheable", value = "true") }),
+        @NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", 
+	        query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", 
+	        hints = {
+//	                @QueryHint(name = "org.hibernate.cacheable", value = "true") 
+	                }
+	        ),
         @NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
                 @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
 
     private static final long serialVersionUID = -1403961759495272885L;
 
+    /** The default max length string. */
     public static long DEFAULT_MAX_LENGTH_STRING = 255L;
 
+    /** The entity reference classname cetcode separator. */
     public static String ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR = " - ";
 
+    /**
+     * Grouped customField tree item type.
+     */
     public enum GroupedCustomFieldTreeItemType {
 
-        root(null), tab("tab"), fieldGroup("fieldGroup"), field("field"), action("action");
+    	/** As root. */
+    	root(null),
+    	
+    	/** As tab. */
+    	tab("tab"),
+    	
+    	/** As field group. */
+    	fieldGroup("fieldGroup"), 
+    	
+    	/** As field. */
+    	field("field"), 
+    	
+    	/** As action. */
+    	action("action");
 
-        public String positionTag;
+    	/** Position tag. */
+    	public String positionTag;
 
-        GroupedCustomFieldTreeItemType(String tag) {
-            this.positionTag = tag;
-        }
+    	/**
+		 * Instantiates a new grouped custom field tree item type.
+		 *
+		 * @param tag the tag
+		 */
+	    GroupedCustomFieldTreeItemType(String tag) {
+    		this.positionTag = tag;
+    	}
     }
 
     @Column(name = "field_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    @NotNull
     private CustomFieldTypeEnum fieldType;
 
     @Column(name = "applies_to", nullable = false, length = 100)
     @Size(max = 100)
-    @NotNull
     private String appliesTo;
 
     @Type(type = "numeric_boolean")
@@ -156,9 +189,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "calendar_id")
     private Calendar calendar;
-
-    // @Column(name = "cache_value_for")
-    // private Integer cacheValueTimeperiod;
 
     @Column(name = "default_value", length = 250)
     @Size(max = 250)
@@ -228,8 +258,20 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Size(max = 2000)
     private String applicableOnEl;
     
+    /**
+     * @apiNote Use {@link #relationship} instead
+     */
     @Column(name = "relationship_name", updatable = false)
     private String relationshipName;
+    
+    /**
+     * Relationship that links the current entity and the target entity.
+     * Required in case of Neo4J storage and {@link CustomFieldTypeEnum#ENTITY} type.
+     * Replacement for {@link #relationshipName}
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "crt_id")
+    private CustomRelationshipTemplate relationship;
 
     /**
      * Child entity fields to display as summary. Field names are separated by a comma.
@@ -287,9 +329,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @ColumnDefault("0")
     private boolean identifier;
 
-    /**
-     * Storage where the cft value will be stored
-     */
+    /** Storage where the cft value will be stored. */
     @Column(name = "storages", columnDefinition = "TEXT")
     @Type(type = "jsonList")
     List<DBStorageType> storages = new ArrayList<>();
@@ -354,18 +394,38 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Transient
 	private boolean hasReferenceJpaEntity = false;
 
+    /**
+	 * Checks if is whether the binaries will be accessible through the file explorer.
+	 *
+	 * @return the whether the binaries will be accessible through the file explorer
+	 */
     public boolean isSaveOnExplorer() {
         return saveOnExplorer;
     }
 
+    /**
+	 * Sets the whether the binaries will be accessible through the file explorer.
+	 *
+	 * @param saveOnExplorer the new whether the binaries will be accessible through the file explorer
+	 */
     public void setSaveOnExplorer(boolean saveOnExplorer) {
         this.saveOnExplorer = saveOnExplorer;
     }
 
+    /**
+	 * Gets the storage where the cft value will be stored.
+	 *
+	 * @return the storage where the cft value will be stored
+	 */
     public List<DBStorageType> getStorages() {
         return storages == null ? new ArrayList<>() : storages;
     }
 
+    /**
+	 * Sets the storage where the cft value will be stored.
+	 *
+	 * @param storages the new storage where the cft value will be stored
+	 */
     public void setStorages(List<DBStorageType> storages) {
         this.storages = storages;
     }
@@ -412,58 +472,157 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return 0;
     }
 
+    /**
+	 * Checks if is whether the field will appear in the listing of custom table.
+	 *
+	 * @return the whether the field will appear in the listing of custom table
+	 */
     public boolean isSummary() {
         return summary;
     }
 
+    /**
+	 * Sets the whether the field will appear in the listing of custom table.
+	 *
+	 * @param summary the new whether the field will appear in the listing of custom table
+	 */
     public void setSummary(boolean summary) {
         this.summary = summary;
     }
 
+    /**
+	 * Checks if is whether we can use this field as the identifier of the entity.
+	 *
+	 * @return the whether we can use this field as the identifier of the entity
+	 */
     public boolean isIdentifier() {
         return identifier;
     }
 
+    /**
+	 * Sets the whether we can use this field as the identifier of the entity.
+	 *
+	 * @param identifier the new whether we can use this field as the identifier of the entity
+	 */
     public void setIdentifier(boolean identifier) {
         this.identifier = identifier;
     }
 
+    /**
+	 * Gets the relationship name.
+	 *
+	 * @return the relationship name
+	 */
     public String getRelationshipName() {
-		return relationshipName;
+    	if(relationshipName != null) {
+    		return relationshipName;
+    		
+    	} else if(relationship != null) {
+    		return relationship.getName();
+    	}
+    	
+    	return null;
 	}
 
+    /**
+	 * Sets the relationship name that links current CET to target CET or the current CET to the target Binary
+	 *
+	 * @param relationshipName Name of the relationship 
+	 */
 	public void setRelationshipName(String relationshipName) {
 		this.relationshipName = relationshipName;
 	}
+	
+	/**
+	 * Gets the relationship that links the current entity and the target entity.
+	 *
+	 * @return the relationship that links the current entity and the target entity
+	 */
+	public CustomRelationshipTemplate getRelationship() {
+		return relationship;
+	}
 
+	/**
+	 * Sets the relationship that links the current entity and the target entity.
+	 *
+	 * @param relationship the new relationship that links the current entity and the target entity
+	 */
+	public void setRelationship(CustomRelationshipTemplate relationship) {
+		this.relationship = relationship;
+	}
+
+	/**
+	 * Gets the field type.
+	 *
+	 * @return the field type
+	 */
 	public CustomFieldTypeEnum getFieldType() {
         return fieldType;
     }
 
+    /**
+	 * Sets the field type.
+	 *
+	 * @param fieldType the new field type
+	 */
     public void setFieldType(CustomFieldTypeEnum fieldType) {
         this.fieldType = fieldType;
     }
     
+    /**
+	 * Gets the applies to.
+	 *
+	 * @return the applies to
+	 */
     public String getAppliesTo() {
         return appliesTo;
     }
 
+    /**
+	 * Sets the applies to.
+	 *
+	 * @param appliesTo the new applies to
+	 */
     public void setAppliesTo(String appliesTo) {
+    	if(appliesTo == null) {
+    		throw new IllegalArgumentException("Applies to query can't be null !");
+    	}
+    	
         this.appliesTo = appliesTo;
     }
 
+    /**
+	 * Checks if is value required.
+	 *
+	 * @return true, if is value required
+	 */
     public boolean isValueRequired() {
         return valueRequired;
     }
 
+    /**
+	 * Sets the value required.
+	 *
+	 * @param valueRequired the new value required
+	 */
     public void setValueRequired(boolean valueRequired) {
         this.valueRequired = valueRequired;
     }
 
+    /**
+	 * Gets the list values.
+	 *
+	 * @return the list values
+	 */
     public Map<String, String> getListValues() {
         return listValues;
     }
 
+    /**
+	 * Gets the list values sorted.
+	 *
+	 * @return the list values sorted
+	 */
     public Map<String, String> getListValuesSorted() {
         if (listValues != null && !listValues.isEmpty()) {
             Comparator<String> dropdownListComparator = (s1, s2) -> {
@@ -482,18 +641,36 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return listValues;
     }
 
+    /**
+	 * Sets the list values.
+	 *
+	 * @param listValues the list values
+	 */
     public void setListValues(Map<String, String> listValues) {
         this.listValues = listValues;
     }
 
+    /**
+	 * Gets the matrix columns.
+	 *
+	 * @return the matrix columns
+	 */
     public List<CustomFieldMatrixColumn> getMatrixColumns() {
         return matrixColumns;
     }
 
+    /**
+	 * Sets the matrix columns.
+	 *
+	 * @param matrixColumns the new matrix columns
+	 */
     public void setMatrixColumns(List<CustomFieldMatrixColumn> matrixColumns) {
         this.matrixColumns = matrixColumns;
     }
 
+    /**
+	 * Adds the matrix key column.
+	 */
     public void addMatrixKeyColumn() {
         CustomFieldMatrixColumn column = new CustomFieldMatrixColumn();
         column.setColumnUse(CustomFieldColumnUseEnum.USE_KEY);
@@ -502,6 +679,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         matrixKeyColumns = null;
     }
 
+    /**
+	 * Adds the matrix value column.
+	 */
     public void addMatrixValueColumn() {
         CustomFieldMatrixColumn column = new CustomFieldMatrixColumn();
         column.setColumnUse(CustomFieldColumnUseEnum.USE_VALUE);
@@ -510,6 +690,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         matrixValueColumns = null;
     }
 
+    /**
+	 * Removes the matrix column.
+	 *
+	 * @param columnToRemove the column to remove
+	 */
     public void removeMatrixColumn(CustomFieldMatrixColumn columnToRemove) {
         this.matrixColumns.remove(columnToRemove);
         matrixKeyColumns = null;
@@ -558,62 +743,137 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return matrixColumnNames;
     }
 
+    /**
+	 * Sets whether the field is versionable.
+	 *
+	 * @param versionable true if the field is versionable
+	 */
     public void setVersionable(boolean versionable) {
         this.versionable = versionable;
     }
 
+    /**
+	 * Checks if is versionable.
+	 *
+	 * @return true, if is versionable
+	 */
     public boolean isVersionable() {
         return versionable;
     }
 
+    /**
+	 * Gets the calendar.
+	 *
+	 * @return the calendar
+	 */
     public Calendar getCalendar() {
         return calendar;
     }
 
+    /**
+	 * Sets the calendar.
+	 *
+	 * @param calendar the new calendar
+	 */
     public void setCalendar(Calendar calendar) {
         this.calendar = calendar;
     }
 
+    /**
+	 * Gets the default value.
+	 *
+	 * @return the default value
+	 */
     public String getDefaultValue() {
         return defaultValue;
     }
 
+    /**
+	 * Sets the default value.
+	 *
+	 * @param defaultValue the new default value
+	 */
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
     }
 
+    /**
+	 * Checks if is use inherited as default value.
+	 *
+	 * @return true, if is use inherited as default value
+	 */
     public boolean isUseInheritedAsDefaultValue() {
         return useInheritedAsDefaultValue;
     }
 
+    /**
+	 * Sets the use inherited as default value.
+	 *
+	 * @param useInheritedAsDefaultValue the new use inherited as default value
+	 */
     public void setUseInheritedAsDefaultValue(boolean useInheritedAsDefaultValue) {
         this.useInheritedAsDefaultValue = useInheritedAsDefaultValue;
     }
 
+    /**
+	 * Gets the reference to an entity.
+	 *
+	 * @return the reference to an entity
+	 */
     public String getEntityClazz() {
         return entityClazz;
     }
 
+    /**
+	 * Sets the reference to an entity.
+	 *
+	 * @param entityClazz the new reference to an entity
+	 */
     public void setEntityClazz(String entityClazz) {
         this.entityClazz = entityClazz;
     }
 
+    /**
+	 * Gets the entity clazz cet code.
+	 *
+	 * @return the entity clazz cet code
+	 */
     public String getEntityClazzCetCode() {
         return CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
 
+    /**
+	 * Gets the primitive type.
+	 *
+	 * @return the primitive type
+	 */
     public PrimitiveTypeEnum getPrimitiveType() {
         return primitiveType;
     }
 
+    /**
+	 * Sets the primitive type.
+	 *
+	 * @param primitiveType the new primitive type
+	 */
     public void setPrimitiveType(PrimitiveTypeEnum primitiveType) {
         this.primitiveType = primitiveType;
     }
 
+    /**
+	 * Gets the reference entity clazz cet code.
+	 *
+	 * @return the reference entity clazz cet code
+	 */
     public String getReferenceEntityClazzCetCode() {
         return "Reference to "+ CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
 
+    /**
+	 * Gets the reference entity class name.
+	 *
+	 * @return the reference entity class name
+	 */
     public String getReferenceEntityClassName() {
         return CustomFieldTemplate.retrieveClassName(entityClazz);
     }
@@ -650,6 +910,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return entityClazz;
     }
 
+    /**
+	 * Gets the default value converted.
+	 *
+	 * @return the default value converted
+	 */
     public Object getDefaultValueConverted() {
         if (defaultValue == null) {
         	return null;
@@ -672,46 +937,83 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return null;
     }
 
+    /**
+	 * Gets the storage type.
+	 *
+	 * @return the storage type
+	 */
     public CustomFieldStorageTypeEnum getStorageType() {
         return storageType;
     }
 
+    /**
+	 * Sets the storage type.
+	 *
+	 * @param storageType the new storage type
+	 */
     public void setStorageType(CustomFieldStorageTypeEnum storageType) {
         this.storageType = storageType;
     }
 
+    /**
+	 * Gets the map key type.
+	 *
+	 * @return the map key type
+	 */
     public CustomFieldMapKeyEnum getMapKeyType() {
         return mapKeyType;
     }
 
+    /**
+	 * Sets the map key type.
+	 *
+	 * @param mapKeyType the new map key type
+	 */
     public void setMapKeyType(CustomFieldMapKeyEnum mapKeyType) {
         this.mapKeyType = mapKeyType;
     }
 
+    /**
+	 * Checks if is trigger end period event.
+	 *
+	 * @return true, if is trigger end period event
+	 */
     public boolean isTriggerEndPeriodEvent() {
         return triggerEndPeriodEvent;
     }
 
+    /**
+	 * Sets the trigger end period event.
+	 *
+	 * @param triggerEndPeriodEvent the new trigger end period event
+	 */
     public void setTriggerEndPeriodEvent(boolean triggerEndPeriodEvent) {
         this.triggerEndPeriodEvent = triggerEndPeriodEvent;
     }
 
-    // public Integer getCacheValueTimeperiod() {
-    // return cacheValueTimeperiod;
-    // }
-    //
-    // public void setCacheValueTimeperiod(Integer cacheValueTimeperiod) {
-    // this.cacheValueTimeperiod = cacheValueTimeperiod;
-    // }
-
+    /**
+	 * Gets the where field should be displayed.
+	 *
+	 * @return the where field should be displayed
+	 */
     public String getGuiPosition() {
         return guiPosition;
     }
 
+    /**
+	 * Sets the where field should be displayed.
+	 *
+	 * @param guiPosition the new where field should be displayed
+	 */
     public void setGuiPosition(String guiPosition) {
         this.guiPosition = guiPosition;
     }
 
+    /**
+	 * Gets the gui position parsed.
+	 *
+	 * @return the gui position parsed
+	 */
     public Map<String, String> getGuiPositionParsed() {
 
         if (guiPosition == null) {
@@ -737,58 +1039,110 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return parsedInfo;
     }
 
+    /**
+	 * Checks if is allow edit.
+	 *
+	 * @return true, if is allow edit
+	 */
     public boolean isAllowEdit() {
         return allowEdit;
     }
 
+    /**
+	 * Sets the allow edit.
+	 *
+	 * @param allowEdit the new allow edit
+	 */
     public void setAllowEdit(boolean allowEdit) {
         this.allowEdit = allowEdit;
     }
 
+    /**
+	 * Checks if is hide on new.
+	 *
+	 * @return true, if is hide on new
+	 */
     public boolean isHideOnNew() {
         return hideOnNew;
     }
 
+    /**
+	 * Sets the hide on new.
+	 *
+	 * @param hideOnNew the new hide on new
+	 */
     public void setHideOnNew(boolean hideOnNew) {
         this.hideOnNew = hideOnNew;
     }
 
+    /**
+	 * Gets the max value.
+	 *
+	 * @return the max value
+	 */
     public Long getMaxValue() {
         return maxValue;
     }
 
+    /**
+	 * Sets the max value.
+	 *
+	 * @param maxValue the new max value
+	 */
     public void setMaxValue(Long maxValue) {
         this.maxValue = maxValue;
     }
 
+    /**
+	 * Gets the min value.
+	 *
+	 * @return the min value
+	 */
     public Long getMinValue() {
         return minValue;
     }
 
+    /**
+	 * Sets the min value.
+	 *
+	 * @param minValue the new min value
+	 */
     public void setMinValue(Long minValue) {
         this.minValue = minValue;
     }
 
+    /**
+	 * Gets the reg exp.
+	 *
+	 * @return the reg exp
+	 */
     public String getRegExp() {
         return regExp;
     }
 
+    /**
+	 * Sets the reg exp.
+	 *
+	 * @param regExp the new reg exp
+	 */
     public void setRegExp(String regExp) {
         this.regExp = regExp;
     }
 
-    // public boolean isCacheValue() {
-    // return cacheValue;
-    // }
-    //
-    // public void setCacheValue(boolean cacheValue) {
-    // this.cacheValue = cacheValue;
-    // }
-
+    /**
+	 * Gets the applicable on el.
+	 *
+	 * @return the applicable on el
+	 */
     public String getApplicableOnEl() {
         return applicableOnEl;
     }
 
+    /**
+	 * Sets the applicable on el.
+	 *
+	 * @param applicableOnEl the new applicable on el
+	 */
     public void setApplicableOnEl(String applicableOnEl) {
         this.applicableOnEl = applicableOnEl;
     }
@@ -819,10 +1173,20 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         } else return appliesTo.equals(other.getAppliesTo());
     }
 
+    /**
+	 * Gets the child entity fields to display as summary.
+	 *
+	 * @return the child entity fields to display as summary
+	 */
     public String getChildEntityFields() {
         return childEntityFields;
     }
 
+    /**
+	 * Gets the child entity fields as list.
+	 *
+	 * @return the child entity fields as list
+	 */
     public String[] getChildEntityFieldsAsList() {
         if (childEntityFields != null) {
             return childEntityFields.split("\\|");
@@ -830,56 +1194,121 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return new String[0];
     }
 
+    /**
+	 * Sets the child entity fields to display as summary.
+	 *
+	 * @param childEntityFields the new child entity fields to display as summary
+	 */
     public void setChildEntityFields(String childEntityFields) {
         this.childEntityFields = childEntityFields;
     }
 
+    /**
+	 * Sets the child entity fields as list.
+	 *
+	 * @param cheFields the new child entity fields as list
+	 */
     public void setChildEntityFieldsAsList(List<String> cheFields) {
         this.childEntityFields = StringUtils.concatenate("|", cheFields);
     }
 
+    /**
+	 * Gets the if and how custom field value should be indexed in Elastic Search.
+	 *
+	 * @return the if and how custom field value should be indexed in Elastic Search
+	 */
     public CustomFieldIndexTypeEnum getIndexType() {
         return indexType;
     }
 
+    /**
+	 * Sets the if and how custom field value should be indexed in Elastic Search.
+	 *
+	 * @param indexType the new if and how custom field value should be indexed in Elastic Search
+	 */
     public void setIndexType(CustomFieldIndexTypeEnum indexType) {
         this.indexType = indexType;
     }
     
+    /**
+	 * Checks if is visible on UI.
+	 *
+	 * @return true, if is visible on UI
+	 */
     public boolean isVisibleOnUI() {
         return allowEdit;
     }
 
+    /**
+	 * Gets the tags assigned to custom field template.
+	 *
+	 * @return the tags assigned to custom field template
+	 */
     public String getTags() {
         return tags;
     }
 
+    /**
+	 * Sets the tags assigned to custom field template.
+	 *
+	 * @param tags the new tags assigned to custom field template
+	 */
     public void setTags(String tags) {
         this.tags = tags;
     }
 
     
     
+    /**
+	 * Checks if is unique.
+	 *
+	 * @return true, if is unique
+	 */
     public boolean isUnique() {
 		return unique;
 	}
 
+	/**
+	 * Sets the unique.
+	 *
+	 * @param unique the new unique
+	 */
 	public void setUnique(boolean unique) {
 		this.unique = unique;
 	}
 
+	/**
+	 * Checks if is filter.
+	 *
+	 * @return true, if is filter
+	 */
 	public boolean isFilter() {
 		return filter;
 	}
 
+	/**
+	 * Sets the filter.
+	 *
+	 * @param filter the new filter
+	 */
 	public void setFilter(boolean filter) {
 		this.filter = filter;
 	}
 
+	/**
+	 * Gets the expression separator.
+	 *
+	 * @return the expression separator
+	 */
 	public String getExpressionSeparator() {
 		return expressionSeparator;
 	}
 
+	/**
+	 * Sets the expression separator.
+	 *
+	 * @param expressionSeparator the new expression separator
+	 */
 	public void setExpressionSeparator(String expressionSeparator) {
 		this.expressionSeparator = expressionSeparator;
 	}
@@ -923,10 +1352,20 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return null;
     }
 
+    /**
+	 * Gets the description I 18 n.
+	 *
+	 * @return the description I 18 n
+	 */
     public Map<String, String> getDescriptionI18n() {
         return descriptionI18n;
     }
 
+    /**
+	 * Sets the description I 18 n.
+	 *
+	 * @param descriptionI18n the description I 18 n
+	 */
     public void setDescriptionI18n(Map<String, String> descriptionI18n) {
         this.descriptionI18n = descriptionI18n;
     }
@@ -945,13 +1384,13 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Get description in a given language. Will return default description if not found for the language
-     * 
-     * @param language language code
-     * @return descriptionI18n value or instantiated descriptionI18n field value
-     * @author akadid abdelmounaim
-     * @lastModifiedVersion 5.0
-     */
+	 * Get description in a given language. Will return default description if not found for the language
+	 *
+	 * @author akadid abdelmounaim
+	 * @param language language code
+	 * @return descriptionI18n value or instantiated descriptionI18n field value
+	 * @lastModifiedVersion 5.0
+	 */
     public String getDescription(String language) {
 
         if (language == null || descriptionI18n == null || descriptionI18n.isEmpty()) {
@@ -967,10 +1406,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Get a list of matrix columns used as key columns
-     * 
-     * @return A list of matrix columns where isKeyColumn = true
-     */
+	 * Get a list of matrix columns used as key columns.
+	 *
+	 * @return A list of matrix columns where isKeyColumn = true
+	 */
     public List<CustomFieldMatrixColumn> getMatrixKeyColumns() {
 
         if (matrixKeyColumns != null) {
@@ -981,10 +1420,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Extract codes of matrix columns used as key columns into a sorted list by column index
-     * 
-     * @return A list of matrix column codes
-     */
+	 * Extract codes of matrix columns used as key columns into a sorted list by column index.
+	 *
+	 * @return A list of matrix column codes
+	 */
     public List<String> getMatrixKeyColumnCodes() {
 
         List<String> matrixColumnNames = null;
@@ -998,10 +1437,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Get a list of matrix columns used as value columns
-     * 
-     * @return A list of matrix columns where isKeyColumn = false
-     */
+	 * Get a list of matrix columns used as value columns.
+	 *
+	 * @return A list of matrix columns where isKeyColumn = false
+	 */
     public List<CustomFieldMatrixColumn> getMatrixValueColumns() {
 
         if (matrixValueColumns != null) {
@@ -1014,10 +1453,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Extract codes of matrix columns used as value columns into a sorted list by column index
-     * 
-     * @return A list of matrix column codes
-     */
+	 * Extract codes of matrix columns used as value columns into a sorted list by column index.
+	 *
+	 * @return A list of matrix column codes
+	 */
     public List<String> getMatrixValueColumnCodes() {
 
         List<String> matrixColumnNames = null;
@@ -1031,12 +1470,12 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Parse multi-value value from string to a map of values
-     * 
-     * @param multiValue Multi-value value as string
-     * @param appendToMap Map to append values to. If not provided a new map will be instantiated.
-     * @return Map of values (or same as appendToMap if provided)
-     */
+	 * Parse multi-value value from string to a map of values.
+	 *
+	 * @param multiValue  Multi-value value as string
+	 * @param appendToMap Map to append values to. If not provided a new map will be instantiated.
+	 * @return Map of values (or same as appendToMap if provided)
+	 */
     public Map<String, Object> deserializeMultiValue(String multiValue, Map<String, Object> appendToMap) {
 
         // DO NOT REMOVE - Initialize matrixValueColumns field
@@ -1071,11 +1510,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     }
 
     /**
-     * Serialize multi-value from a map of values to a string
-     * 
-     * @param mapValues Map of values
-     * @return A string with concatenated values
-     */
+	 * Serialize multi-value from a map of values to a string.
+	 *
+	 * @param mapValues Map of values
+	 * @return A string with concatenated values
+	 */
     public String serializeMultiValue(Map<String, Object> mapValues) {
 
         // DO NOT REMOVE - Initialize matrixValueColumns field
@@ -1105,54 +1544,119 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return valBuilder.toString();
     }
 
+    /**
+	 * Gets the display format for Date type only.
+	 *
+	 * @return the display format for Date type only
+	 */
     public String getDisplayFormat() {
         return displayFormat;
     }
 
+    /**
+	 * Sets the display format for Date type only.
+	 *
+	 * @param displayFormat the new display format for Date type only
+	 */
     public void setDisplayFormat(String displayFormat) {
         this.displayFormat = displayFormat;
     }
 
+	/**
+	 * Gets the list of content types.
+	 *
+	 * @return the list of content types
+	 */
 	public List<String> getContentTypes() {
 		return contentTypes;
 	}
 
+	/**
+	 * Sets the list of content types.
+	 *
+	 * @param contentTypes the new list of content types
+	 */
 	public void setContentTypes(List<String> contentTypes) {
 		this.contentTypes = contentTypes;
 	}
 
+	/**
+	 * Gets the list of file extensions.
+	 *
+	 * @return the list of file extensions
+	 */
 	public List<String> getFileExtensions() {
 		return fileExtensions;
 	}
 
+	/**
+	 * Sets the list of file extensions.
+	 *
+	 * @param fileExtensions the new list of file extensions
+	 */
 	public void setFileExtensions(List<String> fileExtensions) {
 		this.fileExtensions = fileExtensions;
 	}
 
+	/**
+	 * Gets the supports EL variables.
+	 *
+	 * @return the supports EL variables
+	 */
 	public String getFilePath() {
 		return filePath;
 	}
 
+	/**
+	 * Sets the supports EL variables.
+	 *
+	 * @param filePath the new supports EL variables
+	 */
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
 
+	/**
+	 * Gets the content type.
+	 *
+	 * @return the content type
+	 */
 	public String getContentType() {
 		return contentType;
 	}
 
+	/**
+	 * Sets the content type.
+	 *
+	 * @param contentType the new content type
+	 */
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
 
+	/**
+	 * Gets the file extension.
+	 *
+	 * @return the file extension
+	 */
 	public String getFileExtension() {
 		return fileExtension;
 	}
 
+	/**
+	 * Sets the file extension.
+	 *
+	 * @param fileExtension the new file extension
+	 */
 	public void setFileExtension(String fileExtension) {
 		this.fileExtension = fileExtension;
 	}
 
+	/**
+	 * Adds the content type.
+	 *
+	 * @param ct the ct
+	 */
 	public void addContentType(String ct) {
 		if (getContentTypes() == null) {
 			contentTypes = new ArrayList<>();
@@ -1161,6 +1665,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		contentTypes.add(ct);
 	}
 
+	/**
+	 * Adds the file extension.
+	 *
+	 * @param fe the fe
+	 */
 	public void addFileExtension(String fe) {
 		if (getFileExtensions() == null) {
 			fileExtensions = new ArrayList<>();
@@ -1169,22 +1678,47 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		fileExtensions.add(fe);
 	}
 
+	/**
+	 * Gets the maximum size in kb.
+	 *
+	 * @return the maximum size in kb
+	 */
 	public Long getMaxFileSizeAllowedInKb() {
 		return maxFileSizeAllowedInKb;
 	}
 
+	/**
+	 * Sets the maximum size in kb.
+	 *
+	 * @param maxFileSizeAllowedInKb the new maximum size in kb
+	 */
 	public void setMaxFileSizeAllowedInKb(Long maxFileSizeAllowedInKb) {
 		this.maxFileSizeAllowedInKb = maxFileSizeAllowedInKb;
 	}
 
+	/**
+	 * Gets the max file size allowed in bytes.
+	 *
+	 * @return the max file size allowed in bytes
+	 */
 	public Long getMaxFileSizeAllowedInBytes() {
 		return maxFileSizeAllowedInKb != null ? maxFileSizeAllowedInKb * 1000 : 0L;
 	}
 
+    /**
+	 * Checks if is sql storage.
+	 *
+	 * @return true, if is sql storage
+	 */
     public boolean isSqlStorage() {
         return storages != null && storages.contains(DBStorageType.SQL);
     }
 
+    /**
+	 * Gets the samples.
+	 *
+	 * @return the samples
+	 */
     public List<String> getSamples() {
     	if(samples == null) {
     		this.samples = new ArrayList<>();
@@ -1193,6 +1727,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return samples;
     }
 
+    /**
+	 * Sets the samples.
+	 *
+	 * @param samples the new samples
+	 */
     public void setSamples(List<String> samples) {
     	if(samples == null && this.samples == null) {
     		samples = new ArrayList<>();
@@ -1203,6 +1742,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     	}
     }
 
+    /**
+	 * Gets the new list value.
+	 *
+	 * @return the new list value
+	 */
     public List<?> getNewListValue() {
 		if (storageType != CustomFieldStorageTypeEnum.LIST) {
 			return null;
@@ -1212,7 +1756,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		case BOOLEAN:
 			return new ArrayList<Boolean>();
 		case DATE:
-			return new ArrayList<Date>();
+			return new ArrayList<Instant>();
 		case DOUBLE:
 			return new ArrayList<Double>();
 		case EXPRESSION:
@@ -1227,11 +1771,22 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		}
 	}
 
+	/**
+	 * Checks for reference jpa entity.
+	 *
+	 * @return true, if successful
+	 */
 	public boolean hasReferenceJpaEntity() {
 		return hasReferenceJpaEntity;
 	}
 
+	/**
+	 * Sets the checks for reference jpa entity.
+	 *
+	 * @param hasReferenceJpaEntity the new checks for reference jpa entity
+	 */
 	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
 		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
 	}
+	
 }

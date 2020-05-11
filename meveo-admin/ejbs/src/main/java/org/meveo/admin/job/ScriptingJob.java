@@ -39,13 +39,16 @@ public class ScriptingJob extends Job {
     @Override
     @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         String scriptCode = null;
         try {
             scriptCode = ((EntityReferenceWrapper) customFieldInstanceService.getCFValue(jobInstance, "ScriptingJob_script")).getCode();
             Map<String, Object> context = (Map<String, Object>) customFieldInstanceService.getCFValue(jobInstance, "ScriptingJob_variables");
+            if (params != null) {
+                context = params;
+            }
             if (context == null) {
-                context = new HashMap<String, Object>();
+                context = new HashMap<>();
             }
             scriptingJobBean.init(result, scriptCode, context);
             scriptingJobBean.execute(result, scriptCode, context);

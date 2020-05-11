@@ -24,6 +24,7 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 
 import javax.persistence.*;
@@ -33,11 +34,13 @@ import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
 /**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.9.0
  */
 @Entity
 @ModuleItem("CounterTemplate")
+@ModuleItemOrder(208)
 @Cacheable
 @ObservableEntity
 @ExportIdentifier({ "code"})

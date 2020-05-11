@@ -108,7 +108,7 @@ public interface ModuleRs extends IBaseRs {
 	@DELETE
 	@Path("/{code}")
 	@ApiOperation(value = "Remove meveo module by code")
-	ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code);
+	ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code,@QueryParam("deleteFiles") @ApiParam("Delete the module files") @DefaultValue("false") boolean deleteFiles);
 
 	/**
 	 * List all Meveo's modules
@@ -148,10 +148,10 @@ public interface ModuleRs extends IBaseRs {
 	 * @param remove Whether to remove elements
 	 * @return Request processing status
 	 */
-	@GET
+	@GET //TODO: change to "DELETE" method
 	@Path("/uninstall")
 	@ApiOperation(value = "Uninstall meveo module")
-	ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code,
+	ActionStatus uninstall(@QueryParam("code") @ApiParam("Code of the meveo module") String code, //TODO: change to "path param"
 			@QueryParam("remove") @ApiParam("Whether to remove elements") @DefaultValue("false") boolean remove);
 
 	/**
@@ -271,4 +271,14 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/export")
 	@ApiOperation(value = "Export to a file")
 	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws Exception;
+
+	/**
+	 * Release a Meveo module
+	 *
+	 * @return Request processing status
+	 */
+	@POST
+	@Path("/release/{code}/{nextVersion}")
+	@ApiOperation(value = "release meveo module by code")
+	ActionStatus release(@PathParam("code") @ApiParam("Code of the module") String moduleCode, @PathParam("nextVersion") @ApiParam("next version meveo module") String nextVersion);
 }

@@ -36,8 +36,8 @@ import org.primefaces.model.CroppedImage;
  * 
  * @author Tyshan(tyshan@manaty.net)
  * @author Wassim Drira
- * @lastModifiedVersion 5.0
- * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  */
 
 public class ModuleUtil {
@@ -146,5 +146,9 @@ public class ModuleUtil {
         imageOutput.write(croppedImage.getBytes(), 0, croppedImage.getBytes().length);
         imageOutput.flush();
         imageOutput.close();
+    }
+    
+    public static String getModuleItemName(Class<?> dto) {
+    	return dto.getSimpleName().substring(0, dto.getSimpleName().lastIndexOf("Dto"));
     }
 }

@@ -85,7 +85,7 @@ public class FlatFileProcessingJob extends Job {
     @SuppressWarnings("unchecked")
     @Override
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         try {
             String mappingConf = null;
             String inputDir = null;

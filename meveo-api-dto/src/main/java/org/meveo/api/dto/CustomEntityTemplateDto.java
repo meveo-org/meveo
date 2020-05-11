@@ -14,6 +14,7 @@ import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -62,6 +63,8 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     private List<CustomFieldTemplateDto> fields;
 
     /** The actions. */
+    @JsonProperty("actions")
+    @JsonAlias("action")
     @XmlElementWrapper(name = "actions")
     @XmlElement(name = "action")
     @ApiModelProperty("List of entity custom actions information")

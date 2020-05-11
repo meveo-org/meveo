@@ -1,20 +1,20 @@
 package org.meveo.api.module;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
-import javax.transaction.UserTransaction;
 
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.ModuleUtil;
 import org.meveo.api.ApiService;
 import org.meveo.api.ApiUtils;
 import org.meveo.api.ApiVersionedService;
@@ -31,6 +31,7 @@ import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.DatePeriod;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.catalog.ServiceTemplate;
@@ -47,11 +48,17 @@ import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.slf4j.Logger;
 
+/**
+ * Meveo module installer.
+ *
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Stateless
-@TransactionManagement(TransactionManagementType.BEAN)
+//@TransactionManagement(TransactionManagementType.BEAN)
 public class MeveoModuleItemInstaller {
 	
-    protected static final ConcurrentHashMap<String, Class<?>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Class<?>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
 	
     @Inject
     private CustomFieldTemplateApi customFieldTemplateApi;
@@ -71,8 +78,8 @@ public class MeveoModuleItemInstaller {
     @Inject
     private ServiceTemplateService serviceTemplateService;
     
-    @Resource
-    private UserTransaction transaction;
+    @EJB
+    private MeveoModuleItemInstaller meveoModuleItemInstaller;
     
     public MeveoModule install(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 
@@ -92,36 +99,30 @@ public class MeveoModuleItemInstaller {
         if (!installed) {
         	
         	try {
-        	
+        		
 	            ModuleScriptInterface moduleScript = null;
 	            if (meveoModule.getScript() != null) {
 	                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
 	            }
-	
+	            
 	            unpackAndInstallModuleItems(meveoModule, moduleDto);
 	
 	            meveoModule.setInstalled(true);
-	            
-	            transaction.begin();
-	            meveoModule = meveoModuleService.update(meveoModule);
-	            transaction.commit();
 	
 	            if (moduleScript != null) {
 	                moduleScriptService.postInstallModule(moduleScript, meveoModule);
 	            }
             
         	} catch(Exception e) {
-            	this.meveoModuleService.uninstall(meveoModule);
             	throw new BusinessException(e);
             }
 
         }
-        
 
         return meveoModule;
     }
-    
-    private void unpackAndInstallBSMItems(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
+
+	private void unpackAndInstallBSMItems(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
         ServiceTemplate serviceTemplate = serviceTemplateService.findByCode(bsmDto.getServiceTemplate().getCode());
         bsm.setServiceTemplate(serviceTemplate);
     }
@@ -139,7 +140,6 @@ public class MeveoModuleItemInstaller {
 		Class<? extends BaseEntityDto> dtoClass;
 		
 		try {
-			transaction.begin();
 			dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
 			BaseEntityDto dto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
 		
@@ -165,12 +165,7 @@ public class MeveoModuleItemInstaller {
 		        } else {
 
 		            String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
-		            
-//	                        MODULE_ITEM_TYPES.values().stream()
-//	                        	.filter(entityClass::equals)
-//	                        	.findFirst()
-//	                        	.orElseThrow(() -> );
-		            
+		            	            
 		            Class<?> entityClass = MODULE_ITEM_TYPES.get(moduleItemName);
 		            
 		            if(entityClass == null) {
@@ -217,45 +212,81 @@ public class MeveoModuleItemInstaller {
 		        throw e;
 		    }
 		    
-		    transaction.commit();
-		    
 		} catch (ClassNotFoundException e1) {
 			throw new BusinessException(e1);
+		} catch (Exception e) {
+			throw e;
 		}
 	}
 	
-    @SuppressWarnings("rawtypes")
-	private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+	public List<MeveoModuleItemDto> getSortedModuleItems(List<MeveoModuleItemDto> moduleItems) {
+
+		Comparator<MeveoModuleItemDto> comparator = new Comparator<MeveoModuleItemDto>() {
+
+			@Override
+			public int compare(MeveoModuleItemDto o1, MeveoModuleItemDto o2) {
+				String m1;
+				String m2;
+				try {
+					m1 = ModuleUtil.getModuleItemName(Class.forName(o1.getDtoClassName()));
+					m2 = ModuleUtil.getModuleItemName(Class.forName(o2.getDtoClassName()));
+
+					Class<?> entityClass1 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
+					Class<?> entityClass2 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
+
+					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
+					ModuleItemOrder sortOrder2 = entityClass2.getAnnotation(ModuleItemOrder.class);
+
+					return sortOrder1.value() - sortOrder2.value();
+
+				} catch (ClassNotFoundException e) {
+					return 0;
+				}
+			}
+		};
+
+		moduleItems.sort(comparator);
+
+		return moduleItems;
+	}
+	
+    private void unpackAndInstallModuleItems(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
         if (moduleDto.getModuleItems() != null) {
             meveoModule.getModuleItems().clear();
             
-            /* To avoid conflict we should first create CET, then their fields, so we need to separate them and sort them */
-            for(MeveoModuleItemDto moduleItemDto :  new ArrayList<>(moduleDto.getModuleItems())) {
-            	if(moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
-            		CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
-            		for(CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
-            			MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
-            			cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
-            			cftModuleItem.setDtoData(cftData);
-            			moduleDto.getModuleItems().add(cftModuleItem);
-            			
-            			cet.getFields().remove(cftData);
-            			moduleItemDto.setDtoData(cet);
-            		}
-            	}
-            }
+            Collections.sort(moduleDto.getModuleItems());
             
-            for (MeveoModuleItemDto moduleItemDto : moduleDto.getModuleItems()) {
-            	try {
-					unpackAndInstallModuleItem(meveoModule, moduleItemDto);
+            /* To avoid conflict we should first create CET, then their fields, so we need to separate them and sort them */
+			for (MeveoModuleItemDto moduleItemDto : new ArrayList<>(moduleDto.getModuleItems())) {
+				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+					CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
+					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+						cftModuleItem.setDtoData(cftData);
+						moduleDto.getModuleItems().add(cftModuleItem);
+
+						cet.getFields().remove(cftData);
+						moduleItemDto.setDtoData(cet);
+					}
+				}
+			}
+
+			// we need to sort the module items because of dependency hierarchy
+			// each item is annotated with @ModuleItemSort
+			List<MeveoModuleItemDto> sortedModuleItems = getSortedModuleItems(moduleDto.getModuleItems());
+			
+			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
+				try {
+					meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto);
 				} catch (Exception e) {
-					if(e instanceof EJBException) {
+					if (e instanceof EJBException) {
 						throw new BusinessException(((EJBException) e).getCausedByException());
 					}
-					
+
 					throw new BusinessException(e);
 				}
-            }
+			}
         }
 
         // Converting subclasses of MeveoModuleDto class

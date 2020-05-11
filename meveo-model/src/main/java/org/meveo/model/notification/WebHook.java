@@ -20,13 +20,15 @@ import javax.validation.constraints.Size;
 
 import org.apache.commons.codec.binary.Base64;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
 /**
  * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("WebHook")
+@ModuleItemOrder(201)
 @Table(name = "adm_notif_webhooks")
 public class WebHook extends Notification {
 

@@ -185,7 +185,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.createIndex(repositoryCode, label, MEVEO_UUID);
+                neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
             }
         }
     }
@@ -211,7 +211,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.removeIndex(repositoryCode, label, MEVEO_UUID);
+                neo4jDao.dropUniqueConstraint(repositoryCode, label, MEVEO_UUID);
             }
         }
     }
@@ -642,6 +642,14 @@ public class Neo4jService implements CustomPersistenceService {
         if (customRelationshipTemplate == null) {
             log.error("Can't find CRT with code {}", crtCode);
             throw new ElementNotFoundException(crtCode, CustomRelationshipTemplate.class.getName());
+        }
+
+        /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
+        if (customRelationshipTemplate.getStartNode().getPrePersistScript() != null) {
+            scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
+        }
+        if (customRelationshipTemplate.getEndNode().getPrePersistScript() != null) {
+            scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
         }
 
         /* Recuperation of the custom fields of the CRT */
@@ -1169,9 +1177,7 @@ public class Neo4jService implements CustomPersistenceService {
                             if (valueToCheck instanceof Integer) {
                                 stringValue = ((Integer) valueToCheck).toString();
                             } else if (valueToCheck instanceof Map) {
-                                GsonBuilder builder = new GsonBuilder();
-                                Gson gson = builder.create();
-                                String mapToJson = gson.toJson(valueToCheck).replaceAll("'", "’").replaceAll("\"", "");
+                                String mapToJson = JacksonUtil.toString(valueToCheck);
                                 convertedFields.put(cft.getCode(), mapToJson);
                                 continue;
                             } else {

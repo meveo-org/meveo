@@ -62,7 +62,7 @@ public class SqlConfigurationBean extends BaseCrudBean<SqlConfiguration, SqlConf
 
 	public boolean testConnection() {
 
-		if (provider.testSession(entity) != null) {
+		if (provider.testSession(entity) ) {
 			messages.info(new BundleKey("messages", "sqlConfiguration.connection.ok"));
 
 		} else {

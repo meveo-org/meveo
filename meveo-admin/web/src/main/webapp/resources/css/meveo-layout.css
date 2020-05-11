@@ -50,11 +50,11 @@
 /* MeveoMega Menu */
 /*Layout Menu Cover */
 .MeveoMegaMenu #layout-menu-cover {
-	overflow: hidden;
-	/*margin: 0 -25px 0px -25px;*/
+	overflow: visible;
+	margin: 0 -25px 0px -25px;
 	clear: both;
 	height: 0;
-	/*display: block;*/
+	display: block;
 }
 
 .MeveoMegaMenu #layout-menu-cover.active {

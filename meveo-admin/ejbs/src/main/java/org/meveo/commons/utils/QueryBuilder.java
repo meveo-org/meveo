@@ -19,6 +19,7 @@
 package org.meveo.commons.utils;
 
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +33,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -564,12 +564,12 @@ public class QueryBuilder {
      * @param value date value
      * @return instance of QueryBuilder.
      */
-    public QueryBuilder addCriterionDateTruncatedToDay(String field, Date value) {
+    public QueryBuilder addCriterionDateTruncatedToDay(String field, Instant value) {
         if (StringUtils.isBlank(value)) {
             return this;
         }
         Calendar c = Calendar.getInstance();
-        c.setTime(value);
+        c.setTime(Date.from(value));
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
@@ -591,12 +591,12 @@ public class QueryBuilder {
      * @param valueFrom date value
      * @return instance of QueryBuilder.
      */
-    public QueryBuilder addCriterionDateRangeFromTruncatedToDay(String field, Date valueFrom) {
+    public QueryBuilder addCriterionDateRangeFromTruncatedToDay(String field, Instant valueFrom) {
         if (StringUtils.isBlank(valueFrom)) {
             return this;
         }
         Calendar calFrom = Calendar.getInstance();
-        calFrom.setTime(valueFrom);
+        calFrom.setTime(Date.from(valueFrom));
         calFrom.set(Calendar.HOUR_OF_DAY, 0);
         calFrom.set(Calendar.MINUTE, 0);
         calFrom.set(Calendar.SECOND, 0);
@@ -613,12 +613,12 @@ public class QueryBuilder {
      * @param valueTo date value.
      * @return instance of QueryBuilder
      */
-    public QueryBuilder addCriterionDateRangeToTruncatedToDay(String field, Date valueTo) {
+    public QueryBuilder addCriterionDateRangeToTruncatedToDay(String field, Instant valueTo) {
         if (StringUtils.isBlank(valueTo)) {
             return this;
         }
         Calendar calTo = Calendar.getInstance();
-        calTo.setTime(valueTo);
+        calTo.setTime(Date.from(valueTo));
         calTo.add(Calendar.DATE, 1);
         calTo.set(Calendar.HOUR_OF_DAY, 0);
         calTo.set(Calendar.MINUTE, 0);

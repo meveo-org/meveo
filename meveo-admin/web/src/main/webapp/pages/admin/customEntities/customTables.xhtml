@@ -23,8 +23,10 @@
 		</f:metadata>
 	</ui:define>
 
-	<ui:define name="body">
+	<o:importConstants
+		type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
 
+	<ui:define name="body">
 		<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
 
 		<ui:include
@@ -138,7 +140,6 @@
 									</ul>
 								</div>
 							</div>
-
 						</h:panelGroup>
 						<h:panelGroup rendered="#{customTableBean.importFuture.isDone()}">
 							<div class="ui-messages ui-widget">
@@ -172,25 +173,6 @@
 				</h:panelGroup>
 			</h:form>
 		</h:panelGroup>
-
-		<o:importConstants
-			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
-
-		<h:form>
-			<p:panel styleClass="form-panel">
-				<hftl:decorateFormField fieldId="repository"
-					label="#{messages['binary.repository']}">
-					<p:selectOneMenu id="repository"
-						value="#{customTableBean.repository}">
-						<f:selectItem itemLabel="" itemValue="#{null}" />
-						<f:selectItems var="e" itemValue="#{e}" itemLabel="#{e.code}"
-							value="#{repositoryBean.listAll()}"></f:selectItems>
-						<hftl:objectConverter />
-						<p:ajax update="contentBody"></p:ajax>
-					</p:selectOneMenu>
-				</hftl:decorateFormField>
-			</p:panel>
-		</h:form>
 
 		<hftl:searchPanel backingBean="#{customTableBean}"
 			renderNewButton="false" ajaxUpdateIds=":ctForm:ctSearchResults">
@@ -243,10 +225,28 @@
 			</c:forEach>
 		</hftl:searchPanel>
 
+		<h:form>
+			<p:panel styleClass="form-panel">
+				<hftl:decorateFormField fieldId="repository"
+					label="#{messages['binary.repository']}">
+					<p:selectOneMenu id="repository"
+						value="#{customTableBean.repository}">
+						<f:selectItem itemLabel="" itemValue="#{null}" />
+						<f:selectItems var="e" itemValue="#{e}" itemLabel="#{e.code}"
+							value="#{repositoryBean.listAll()}"></f:selectItems>
+						<hftl:objectConverter />
+						<p:ajax update="contentBody"
+							listener="#{customTableBean.handleRepositoryChangeEvent}">
+						</p:ajax>
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+			</p:panel>
+		</h:form>
+
 		<p:outputPanel id="contentBody">
 			<p:panel width="100" rendered="#{customTableBean.repository != null}">
-				<!--  Datatable -->
 
+				<!--  Datatable -->
 				<ui:include
 					src="/pages/admin/customEntities/customTables/customTableDatatable.xhtml">
 					<ui:param name="popupMode" value="false" />
@@ -288,7 +288,6 @@
 									onstart="PF('importDialog').hide()"
 									oncomplete="PF('fileUploadWidget').reset(); PF('fileUploadWidget').reset();"
 									rendered="#{customTableBean.importFuture ==null or customTableBean.importFuture.isDone()}" />
-
 							</hftl:decorateFormField>
 						</ui:define>
 					</hftl:decorateFormPanel>

@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,7 +70,7 @@ public class CustomFieldDto {
 	/** The date value. */
 	@XmlElement
 	@ApiModelProperty("Date value")
-	protected Date dateValue;
+	protected Instant dateValue;
 
 	/** The long value. */
 	@XmlElement
@@ -162,7 +163,7 @@ public class CustomFieldDto {
 	 *
 	 * @return the date value
 	 */
-	public Date getDateValue() {
+	public Instant getDateValue() {
 		return dateValue;
 	}
 
@@ -171,7 +172,7 @@ public class CustomFieldDto {
 	 *
 	 * @param dateValue the new date value
 	 */
-	public void setDateValue(Date dateValue) {
+	public void setDateValue(Instant dateValue) {
 		this.dateValue = dateValue;
 	}
 
@@ -493,5 +494,23 @@ public class CustomFieldDto {
 		sb.append(", indexType=").append(indexType);
 		sb.append('}');
 		return sb.toString();
+	}
+
+	/**
+	 * @param from
+	 */
+	public void setValuePeriodStartDateFromDatePeriod(Instant from) {
+		if (from != null) {
+			setValuePeriodStartDate(Date.from(from));
+		}
+	}
+
+	/**
+	 * @param to
+	 */
+	public void setValuePeriodEndDateFromDatePeriod(Instant to) {
+		if (to != null) {
+			setValuePeriodEndDate(Date.from(to));
+		}
 	}
 }

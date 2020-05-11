@@ -57,6 +57,14 @@ public class JSONSchemaIntoJavaClassParser {
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
         if (classDeclaration != null) {
             Collection<FieldDeclaration> fds = new ArrayList<>();
+            FieldDeclaration field = new FieldDeclaration();
+            VariableDeclarator variable = new VariableDeclarator();
+            variable.setName("uuid");
+            variable.setType("String");
+            field.setModifiers(Modifier.Keyword.PRIVATE);
+            field.addVariable(variable);
+            classDeclaration.addMember(field);
+            ((ArrayList<FieldDeclaration>) fds).add(field);
             if (jsonMap.containsKey("storages")) {
                 compilationUnit.addImport("org.meveo.model.persistence.DBStorageType");
                 FieldDeclaration fd = new FieldDeclaration();
@@ -104,18 +112,18 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setType("Map<String, String>");
                         } else if (values.get("type").equals("number")) {
                             vd.setType("Long");
-                        } else if ((values.get("format")!= null )) {
+                        } else if ((values.get("format") != null)) {
                             if (values.get("format").equals("date-time")) {
-                                compilationUnit.addImport("java.util.Date");
-                                vd.setType("Date");
+                                compilationUnit.addImport("java.time.Instant");
+                                vd.setType("Instant");
                             }
                         } else {
                             String type = (String) values.get("type");
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);
                             vd.setType(type);
                         }
-                        
-                    } else if(values.get("$ref") != null) {
+
+                    } else if (values.get("$ref") != null) {
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
@@ -123,7 +131,7 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setType(name);
                         }
                     }
-                    
+
                     fd.addVariable(vd);
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
                     if (values.get("nullable").equals(false)) {

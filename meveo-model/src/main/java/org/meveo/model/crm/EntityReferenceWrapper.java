@@ -1,6 +1,7 @@
 package org.meveo.model.crm;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.BusinessEntity;
@@ -54,6 +55,18 @@ public class EntityReferenceWrapper implements Serializable {
         }
         code = entity.getCode();
         id = entity.getId();
+        
+        // Try to retrieve uuid of entity
+        try {
+	        Method getUuid = entity.getClass().getMethod("getUuid");
+	        uuid = (String) getUuid.invoke(entity);
+        } catch(Exception ignored) {
+        	//NOOP
+        }
+        
+        if(id == null && uuid == null) {
+        	uuid = code;
+        }
     }
 
     public EntityReferenceWrapper(String classname, String classnameCode, String code, Long id) {

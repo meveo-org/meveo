@@ -17,7 +17,16 @@
  */
 package org.meveo.api.rest.technicalservice.impl;
 
-import org.apache.commons.collections.CollectionUtils;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.RequestScoped;
+import javax.interceptor.Interceptors;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+
 import org.jboss.resteasy.core.ServerResponse;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.TechnicalServiceApi;
@@ -34,15 +43,6 @@ import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.technicalservice.TechnicalServiceRs;
 import org.meveo.model.technicalservice.TechnicalService;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.RequestScoped;
-import javax.interceptor.Interceptors;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author Clément Bareth
@@ -121,21 +121,18 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService,
     }
 
     @Override
-    public Response list(TechnicalServiceFilters filters, Date sinceDate) {
-        ServerResponse response = new ServerResponse();
-
+    public ListTechnicalServiceResponse list(TechnicalServiceFilters filters, Date sinceDate) {
+    	
+    	ListTechnicalServiceResponse response = new ListTechnicalServiceResponse();
         TechnicalServicesDto technicalServicesDto;
         if (sinceDate == null) {
             technicalServicesDto = tsApi.list(filters);
         } else {
             technicalServicesDto = tsApi.findByNewerThan(filters, sinceDate);
         }
-        if(technicalServicesDto != null && CollectionUtils.isNotEmpty(technicalServicesDto.geTechnicalServiceDtos())) {
-            response.setEntity(technicalServicesDto);
-            response.setStatus(200);
-        } else {
-            response.setStatus(304);
-        }
+        
+        response.setConnectors(technicalServicesDto);
+        
         return response;
     }
 

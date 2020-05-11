@@ -18,9 +18,20 @@
  */
 package org.meveo.model.scripts;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NotFound;
@@ -28,14 +39,19 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.security.Role;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("ScriptInstance")
+@ModuleItemOrder(60)
 @ObservableEntity
-@Cacheable
 @Table(name = "meveo_script_instance")
 @GenericGenerator(
         name = "ID_GENERATOR",
@@ -63,12 +79,12 @@ public class ScriptInstance extends CustomScript {
     private Set<Role> sourcingRoles = new HashSet<>();
 
     @NotFound(action = NotFoundAction.IGNORE)
-    @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<MavenDependency> mavenDependencies = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "meveo_script_instance_script_instance", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "child_script_instance_id"))
-    private Set<ScriptInstance> importScriptInstances = new HashSet<ScriptInstance>();
+    private Set<ScriptInstance> importScriptInstances = new HashSet<>();
 
     /**
      * @return the executionRoles

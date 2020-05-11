@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -20,7 +21,6 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import javax.persistence.Entity;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -867,7 +867,7 @@ public abstract class BaseApi {
         return persistenceService;
     }
 
-    protected void saveImage(IEntity entity, String imagePath, String imageData) throws IOException, MeveoApiException {
+	protected void saveImage(IEntity<?> entity, String imagePath, String imageData) throws IOException, MeveoApiException {
 
         // No image to save
         if (StringUtils.isBlank(imageData)) {
@@ -880,7 +880,7 @@ public abstract class BaseApi {
         }
 
         try {
-            ImageUploadEventHandler<IEntity> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
+            ImageUploadEventHandler<IEntity<?>> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
             String filename = imageUploadEventHandler.saveImage(entity, imagePath, Base64.decodeBase64(imageData));
             if (filename != null) {
                 ((IImageUpload) entity).setImagePath(filename);
@@ -892,9 +892,9 @@ public abstract class BaseApi {
         }
     }
 
-    protected void deleteImage(IEntity entity) throws InvalidImageData {
+    protected void deleteImage(IEntity<?> entity) throws InvalidImageData {
         try {
-            ImageUploadEventHandler<IEntity> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
+            ImageUploadEventHandler<IEntity<?>> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
             imageUploadEventHandler.deleteImage(entity);
         } catch (AccessDeniedException e1) {
             throw new InvalidImageData("Failed deleting image. Access is denied: " + e1.getMessage());
@@ -1127,7 +1127,7 @@ public abstract class BaseApi {
                     return new Date(numberVal.longValue());
                 } else if (stringVal != null) {
                     // first try with date and time and then only with date format
-                    Date date = DateUtils.parseDateWithPattern(stringVal, DateUtils.DATE_TIME_PATTERN);
+                    Instant date = DateUtils.parseDateWithPattern(stringVal, DateUtils.DATE_TIME_PATTERN);
                     if (date == null) {
                         date = DateUtils.parseDateWithPattern(stringVal, DateUtils.DATE_PATTERN);
                     }

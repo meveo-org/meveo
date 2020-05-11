@@ -1,15 +1,16 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
 
-import org.meveo.jpa.CurrentRepositoryProvider;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -18,18 +19,26 @@ import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.util.Faces;
 import org.primefaces.model.LazyDataModel;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Named
 @ViewScoped
 public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	private static final long serialVersionUID = 2227098775326177111L;
 
+	private List<CustomFieldTemplate> customFieldTemplateList = new ArrayList<>();
+	private List<CustomFieldTemplate> summaryFields;
+	private List<CustomFieldTemplate> filterFields;
+
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
 
 	private List<Map<String, Object>> selectedValues;
 
 	public void initialize() {
-		
+
 		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
 
 		if (customEntityTemplate.getSqlStorageConfigurationNullSafe().isStoreAsTable()) {
@@ -41,7 +50,28 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 			Table table = CustomEntityInstance.class.getAnnotation(Table.class);
 			customTableName = table.name();
 		}
-		
+
+		// Get fields and sort them by GUI order
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+		if (cfts != null) {
+			GroupedCustomField groupedCFTAndActions = new GroupedCustomField(cfts.values(), "Custom fields", true);
+			List<GroupedCustomField> groupedCustomFields = groupedCFTAndActions.getChildren();
+			if (groupedCustomFields != null) {
+				int i = 0;
+				for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
+					List<CustomFieldTemplate> list = new ArrayList<>();
+					if (groupedCustomField != null) {
+						CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
+						list.add(cft);
+					}
+					i++;
+					customFieldTemplateList.addAll(list);
+				}
+			}
+
+			summaryFields = customFieldTemplateList.stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
+			filterFields = customFieldTemplateList.stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
+		}
 	}
 
 	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
@@ -87,6 +117,13 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		return nativeDataModel;
 	}
 
+	@Override
+	public void clean() {
+
+		super.clean();
+		nativeDataModel = null;
+	}
+
 	public void handleRepositoryChangeEvent() {
 		dataModel = null;
 		filters = null;
@@ -108,5 +145,29 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	public void setNativeDataModel(LazyDataModel<Map<String, Object>> nativeDataModel) {
 		this.nativeDataModel = nativeDataModel;
+	}
+
+	public List<CustomFieldTemplate> getSummaryFields() {
+		return summaryFields;
+	}
+
+	public void setSummaryFields(List<CustomFieldTemplate> summaryFields) {
+		this.summaryFields = summaryFields;
+	}
+
+	public List<CustomFieldTemplate> getFilterFields() {
+		return filterFields;
+	}
+
+	public void setFilterFields(List<CustomFieldTemplate> filterFields) {
+		this.filterFields = filterFields;
+	}
+
+	public List<CustomFieldTemplate> getCustomFieldTemplateList() {
+		return customFieldTemplateList;
+	}
+
+	public void setCustomFieldTemplateList(List<CustomFieldTemplate> customFieldTemplateList) {
+		this.customFieldTemplateList = customFieldTemplateList;
 	}
 }

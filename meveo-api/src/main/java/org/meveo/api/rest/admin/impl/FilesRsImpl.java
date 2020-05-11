@@ -143,4 +143,17 @@ public class FilesRsImpl extends BaseRs implements FilesRs {
 		return result;
 	}
 
+	@Override
+	public ActionStatus renameFolder(String oldFolder, String newFolder) {
+		ActionStatus result = new ActionStatus();
+
+		try {
+			filesApi.renameFolder(oldFolder, newFolder);
+		} catch (Exception e) {
+			processException(e, result);
+		}
+
+		return result;
+	}
+
 }

@@ -166,7 +166,7 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
 	@Path("/")
 	@GET
 	@ApiOperation(value = "List technical service")
-	Response list(@Form @ApiParam("Technical service filters information") TechnicalServiceFilters filters,
+	ListTechnicalServiceResponse list(@Form @ApiParam("Technical service filters information") TechnicalServiceFilters filters,
 			@HeaderParam("If-Modified-Since") @ApiParam("Since date") Date sinceDate);
 
 	/**

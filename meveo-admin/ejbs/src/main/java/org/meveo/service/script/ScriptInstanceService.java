@@ -20,13 +20,15 @@
 package org.meveo.service.script;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
-import javax.transaction.Transactional;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
@@ -41,6 +43,10 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ **/
 @FunctionServiceFor(ScriptInstance.TYPE)
 @Stateless
 @Default
@@ -219,9 +225,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         return scriptInterfaces;
     }
 
-    @Override
-    @Transactional
-    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
-        return super.update(executable);
-    }
+//    @Override
+//    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
+//        // executable = refreshOrRetrieve(executable);
+//        return super.update(executable);
+//    }
 }

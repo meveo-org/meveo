@@ -124,13 +124,17 @@
 		</p:commandButton>
 
 		<p:commandButton id="ExecuteButtonAjax"
-						 rendered="#{ cc.attrs.execute  and cc.attrs.edit and empty(cc.attrs.updateConfirmationMessage) and cc.attrs.ajaxSubmit and !empty(cc.attrs.backingBean.objectId) and cc.attrs.backingBean.canUserUpdateEntity()}"
+						 rendered="#{ !cc.attrs.backingBean.hasParams and cc.attrs.execute  and cc.attrs.edit and empty(cc.attrs.updateConfirmationMessage) and cc.attrs.ajaxSubmit and !empty(cc.attrs.backingBean.objectId) and cc.attrs.backingBean.canUserUpdateEntity()}"
 						 value="#{cc.attrs.executeLabel}" oncomplete="$('html,body').scrollTop(0);"
 						 action="#{cc.attrs.backingBean.execute()}"
 						 process="@this #{cc.attrs.submitPartialProcess!=null?cc.attrs.submitPartialProcess:'@form'}" partialSubmit="#{cc.attrs.submitPartialProcess !=null}" partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" update="#{cc.attrs.submitUpdate}">
 			<f:param name="edit" value="#{cc.attrs.edit}" />
 		</p:commandButton>
-
+		<p:commandButton id="ExecuteDialogButton"
+						rendered="#{cc.attrs.backingBean.hasParams and cc.attrs.execute  and cc.attrs.edit and empty(cc.attrs.updateConfirmationMessage) and cc.attrs.ajaxSubmit and !empty(cc.attrs.backingBean.objectId) and cc.attrs.backingBean.canUserUpdateEntity()}"
+						value="#{cc.attrs.executeLabel}" oncomplete="PF('executeDialog').show()">
+			<f:param name="edit" value="#{cc.attrs.edit}" />
+		</p:commandButton>
 		<p:commandButton id="StopButtonAjax"
 						 rendered="#{ cc.attrs.stop  and cc.attrs.edit and empty(cc.attrs.updateConfirmationMessage) and cc.attrs.ajaxSubmit and !empty(cc.attrs.backingBean.objectId) and cc.attrs.backingBean.canUserUpdateEntity()}"
 						 value="#{cc.attrs.stopLabel}" oncomplete="$('html,body').scrollTop(0);"
@@ -258,6 +262,28 @@
 			</h:form>
 		</p:dialog>
 
+		<p:dialog widgetVar="executeDialog" header="#{messages['jobInstance.overrideParams']}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="40%" appendTo="@(body)">
+			<h:form id="executeDialogForm">
+				<p:dataTable id="customParamsDataTable" value="#{jobInstanceBean.overrideParams}" resizableColumns="true" var="mapValues" paginator="false" styleClass="custom-grid" reflow="true">
+					<p:column headerText="#{messages['commons.key']}">
+						<p:inputText value="#{mapValues['key']}" size="30" maxlength="100"/>
+					</p:column>
+					<p:column headerText="#{messages['commons.value']}">
+						<p:inputText value="#{mapValues['value']}" size="40" maxlength="100"/>
+					</p:column>
+					<f:facet name="footer">
+						<p:commandButton value="#{messages['action.execute']}" process="@form @parent" partialSubmit="true"
+										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update=":formId"
+										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('executeDialog').hide()"
+										 action="#{jobInstanceBean.executeWithParameters()}">
+						</p:commandButton>
+						<p:commandButton value="#{messages['commons.close']}" update="@form"
+										 oncomplete="PF('executeDialog').hide()">
+						</p:commandButton>
+					</f:facet>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
 	</h:panelGroup>
 </cc:implementation>
 

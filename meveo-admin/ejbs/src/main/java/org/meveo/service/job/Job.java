@@ -96,7 +96,7 @@ public abstract class Job {
      * @throws BusinessException business exception
      */
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void execute(JobInstance jobInstance, JobExecutionResultImpl executionResult) throws BusinessException {
+    public void execute(JobInstance jobInstance, JobExecutionResultImpl executionResult, Map<String, Object> params) throws BusinessException {
 
         auditOrigin.setAuditOrigin(ChangeOriginEnum.JOB);
         auditOrigin.setAuditOriginName(jobInstance.getJobTemplate() + "/" + jobInstance.getCode());
@@ -113,7 +113,7 @@ public abstract class Job {
                     customFieldInstanceService.getCFValue(jobInstance, "nbRuns", false));
 
             try {
-                execute(executionResult, jobInstance);
+                execute(executionResult, jobInstance, params);
                 executionResult.close();
 
                 log.trace("Job {} of type {} executed. Persisting job execution results", jobInstance.getCode(), jobInstance.getJobTemplate());
@@ -155,9 +155,9 @@ public abstract class Job {
      */
     @Asynchronous
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    public void executeInNewTrans(JobInstance jobInstance, JobExecutionResultImpl result) throws BusinessException {
+    public void executeInNewTrans(JobInstance jobInstance, JobExecutionResultImpl result, Map<String, Object> params) throws BusinessException {
 
-        execute(jobInstance, result);
+        execute(jobInstance, result, params);
     }
 
     /**
@@ -167,7 +167,7 @@ public abstract class Job {
      * @param jobInstance Job instance to execute
      * @throws BusinessException Any exception
      */
-    protected abstract void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException;
+    protected abstract void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException;
 
     /**
      * Canceling timers associated to this job implmenentation- solves and issue when server is restarted and wildlfy data directory contains previously active timers.

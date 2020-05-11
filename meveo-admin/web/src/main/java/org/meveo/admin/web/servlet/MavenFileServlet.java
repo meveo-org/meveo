@@ -2,13 +2,19 @@ package org.meveo.admin.web.servlet;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.zip.GZIPOutputStream;
 
 import javax.inject.Inject;
@@ -19,6 +25,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -150,10 +157,26 @@ public class MavenFileServlet extends HttpServlet {
 			if (!MavenConfigurationService.CLASSPATH_REFERENCE.get().contains(file.getAbsolutePath())) {
 				File deployDir = realFile.getParentFile();
 				String nameWarDir = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + ".war";
-				String pathFile = deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir + File.separator + "WEB-INF" + File.separator + "lib";
-				//file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
-				file = new File(pathFile, file.getName());
-				if (!MavenConfigurationService.CLASSPATH_REFERENCE.get().contains(file.getAbsolutePath())) {
+				File warDir = new File(deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir);
+				if(warDir.isDirectory()) {
+					String pathFile = deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir + File.separator + "WEB-INF" + File.separator + "lib";
+					//file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
+					file = new File(pathFile, file.getName());
+				} else {
+					// If archive is zipped, extract the file to the .m2 directory
+					try (JarFile wf = new JarFile(warDir)) {
+						JarEntry jarEntry = wf.getJarEntry("WEB-INF/lib/" + file.getName());
+						try(InputStream is = wf.getInputStream(jarEntry)) {
+							file = new File(userPath, URLDecoder.decode(requestedFile, "UTF-8"));
+							if(!file.getParentFile().exists()) {
+								file.getParentFile().mkdirs();
+							}
+							FileUtils.copyInputStreamToFile(is, file);
+						}
+					}
+				}
+
+				if (!file.exists()) {
 					// Do your thing if the file appears to be non-existing.
 					// Throw an exception, or send 404, or show default/warning page, or just ignore
 					// it.

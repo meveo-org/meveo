@@ -10,7 +10,8 @@
     <ui:define name="body">
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.notifications']}" disabled="true" />
 				<p:menuitem outcome="webHooks" value="#{messages['menu.webHooks']}" />
 				<p:menuitem value="#{messages['commons.new']} #{messages['menu.webHook']}"
 					disabled="true" rendered="#{webHookBean.entity.transient}" />

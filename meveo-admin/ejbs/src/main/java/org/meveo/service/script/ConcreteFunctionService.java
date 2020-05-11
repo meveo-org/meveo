@@ -25,18 +25,15 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.persistence.Query;
 
-import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.commons.utils.FilteredQueryBuilder;
-import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.filter.Filter;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionServiceLiteral;
 import org.meveo.model.scripts.test.ExpectedOutput;
 
 /**
  * @author clement.bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  */
 @Default
 @Stateless
@@ -83,8 +80,9 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 
 	@SuppressWarnings("unchecked")
 	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
+		
 		final Function function = findByCode(executableCode);
-		getEntityManager().detach(function);
+//		getEntityManager().detach(function);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
 		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();

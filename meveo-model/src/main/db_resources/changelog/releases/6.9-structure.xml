@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+	<changeSet id="#4079 - generated relationship should refer to a CustomRelationshipTemplate" author="Clément Bareth">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="crt_id" type="bigint">
+				<constraints foreignKeyName="fk_cft_crt" references="cust_crt(id)" />
+			</column>
+		</addColumn>
+		<!-- Update CFTs that already refers a CRT name -->
+		<sql><![CDATA[
+			UPDATE 
+				crm_custom_field_tmpl AS cft
+			SET 
+				crt_id = crt.id
+			FROM 
+				cust_crt AS crt 
+					INNER JOIN cust_cet AS cet_source 
+						ON cet_source.id = crt.start_node_id
+					INNER JOIN cust_cet AS cet_target
+						ON cet_target.id = crt.end_node_id
+				
+			WHERE cft.relationship_name = crt.name
+			AND cft.entity_clazz <> ''
+			AND (
+				cft.entity_clazz = 'org.meveo.model.customEntities.CustomEntityTemplate - ' || cet_source.code
+				OR cft.entity_clazz = 'org.meveo.model.customEntities.CustomEntityTemplate - ' || cet_target.code
+			)
+			]]>
+		</sql>
+	</changeSet>
+
+	<changeSet id="start and end nodes required on CRT" author="Clément Bareth">
+		<delete tableName="cust_crt">
+			<where>start_node_id is NULL OR end_node_id is NULL</where>
+		</delete>
+		<addNotNullConstraint tableName="cust_crt" columnName="start_node_id"/>
+		<addNotNullConstraint tableName="cust_crt" columnName="end_node_id"/>
+	</changeSet>
+
+
+
+	<changeSet id="#4059" author="Mbarek">
+	<createTable tableName="meveo_module_dependency">
+		<column name="id" type="bigint" autoIncrement="${id.auto}">
+			<constraints nullable="false" primaryKey="true"
+				primaryKeyName="meveo_module_dependency_pkey" />
+		</column>
+		<column name="version" type="int4" />
+		<column name="code" type="varchar(255)" />
+		<column name="description" type="varchar(255)" />
+		<column name="current_version" type="varchar(255)">
+			<constraints nullable="false" />
+		</column>
+		<column name="module_id" type="bigint" />
+	</createTable>
+	<createSequence
+		sequenceName="meveo_module_dependency_seq" startValue="1" />
+	<addForeignKeyConstraint
+		baseColumnNames="module_id" baseTableName="meveo_module_dependency"
+		constraintName="fk_meveo_module_dependency_meveo_module"
+		deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+		onUpdate="NO ACTION" referencedColumnNames="id"
+		referencedTableName="meveo_module" />
+     </changeSet>
+
+    <changeSet author="phubach" id="ticket_4052">
+        <addColumn tableName="meveo_module">
+            <column name="current_version" type="varchar(50)"/>
+        </addColumn>
+        <addColumn tableName="meveo_module">
+            <column name="is_in_draft" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+        <createSequence sequenceName="module_release_seq" startValue="1" />
+        <createSequence sequenceName="module_release_item_seq" startValue="1" />
+        <createTable tableName="meveo_module_release">
+            <column name="id" type="bigint" autoIncrement="${id.auto}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="meveo_module_release_pkey" />
+            </column>
+            <column name="version" type="int4" />
+            <column name="logo_picture" type="varchar(100)" />
+            <column name="module_source" type="text" />
+            <column name="script_instance_id" type="bigint" />
+            <column name="meveo_module_id" type="bigint" />
+            <column name="module_license" type="varchar(20)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <createTable tableName="module_release_item">
+            <column name="id" type="bigint" autoIncrement="${id.auto}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="module_release_item_pkey" />
+            </column>
+            <column name="version" type="int4" />
+
+            <column name="module_id" type="bigint" />
+            <column name="applies_to" type="varchar(100)" />
+            <column name="item_type" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+            <column name="item_code" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="valid_from" type="DATETIME" />
+            <column name="valid_to" type="DATETIME" />
+            <column name="module_release_id" type="bigint" />
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="meveo_module_id" baseTableName="meveo_module_release" constraintName="fk_meveo_module_release_meveo_module" deferrable="false" initiallyDeferred="false"
+                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="meveo_module" />
+        <addForeignKeyConstraint baseColumnNames="module_release_id" baseTableName="module_release_item" constraintName="fk_module_release_item_meveo_module" deferrable="false" initiallyDeferred="false"
+                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="meveo_module_release" />
+    </changeSet>
+    <changeSet author="phubach" id="installed">
+        <addColumn tableName="meveo_module_release">
+            <column name="installed" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="meveoVersion" author="Hien Bach">
+        <addColumn tableName="meveo_module">
+            <column name="meveo_version" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="releaseVersion" author="Hien Bach">
+        <addColumn tableName="meveo_module_release">
+            <column name="release_version" type="varchar(50)" />
+        </addColumn>
+    </changeSet>
+    <changeSet id="module" author="Hien Bach">
+        <addColumn tableName="meveo_module_release">
+            <column name="code" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>    
+    <changeSet id="#4051 - Meveo module update"
+		author="Edward P. Legaspi">
+		<createTable tableName="meveo_module_patch">
+			<column name="meveo_module_id" type="bigint"></column>
+			<column name="script_instance_id" type="bigint"></column>
+			<column name="execution_mode" type="VARCHAR(25)"></column>
+			<column name="source_version" type="VARCHAR(25)"></column>
+			<column name="target_version" type="VARCHAR(25)"></column>
+		</createTable>
+
+		<addPrimaryKey tableName="meveo_module_patch"
+			columnNames="meveo_module_id, script_instance_id, source_version, target_version" />
+		<addForeignKeyConstraint
+			constraintName="fk_meveo_module_patch_module"
+			referencedTableName="meveo_module" baseColumnNames="meveo_module_id"
+			baseTableName="meveo_module_patch" referencedColumnNames="id" />
+		<addForeignKeyConstraint
+			constraintName="fk_meveo_module_patch_script"
+			referencedTableName="meveo_script_instance"
+			baseColumnNames="script_instance_id"
+			baseTableName="meveo_module_patch" referencedColumnNames="id" />
+	</changeSet>
+    <changeSet id="delete_meveo_version" author="Hien Bach">
+        <dropColumn tableName="meveo_module" columnName="meveo_version"/>
+    </changeSet>
+    <changeSet id="#4049_meveo_version" author="Hien Bach">
+        <addColumn tableName="meveo_module">
+            <column name="meveo_version_base" type="varchar(50)"/>
+            <column name="meveo_version_ceiling" type="varchar(50)"/>
+        </addColumn>
+        <addColumn tableName="meveo_module_release">
+            <column name="meveo_version_base" type="varchar(50)"/>
+            <column name="meveo_version_ceiling" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
+    
+    <changeSet id="Cascade delete crt" author="Clément Bareth">
+	<dropForeignKeyConstraint
+		baseTableName="cust_crt" constraintName="fk_cust_crt_start_node" />
+	<dropForeignKeyConstraint
+		baseTableName="cust_crt" constraintName="fk_cust_crt_end_node" />
+	<dropForeignKeyConstraint
+		baseTableName="crm_custom_field_tmpl" constraintName="fk_cft_crt" />
+	<addForeignKeyConstraint
+		constraintName="fk_cust_crt_start_node" referencedTableName="cust_cet"
+		baseColumnNames="start_node_id" baseTableName="cust_crt"
+		onDelete="CASCADE" referencedColumnNames="id" />
+	<addForeignKeyConstraint
+		constraintName="fk_cust_crt_end_node" referencedTableName="cust_cet"
+		baseColumnNames="end_node_id" baseTableName="cust_crt"
+		onDelete="CASCADE" referencedColumnNames="id" />
+	<addForeignKeyConstraint
+		constraintName="fk_cft_crt" referencedTableName="cust_crt"
+		baseColumnNames="crt_id" baseTableName="crm_custom_field_tmpl"
+		onDelete="SET NULL" referencedColumnNames="id" />
+</changeSet>
+
+	<changeSet id="Add uk on cust_cei(uuid)"
+		author="Clément Bareth">
+		<addUniqueConstraint columnNames="uuid"
+			tableName="cust_cei" constraintName="uk_cust_cei_uuid" />
+	</changeSet>
+
+	<changeSet id="#4127 - Add CET CET roles to meveo admin"
+		author="Edward P. Legaspi" failOnError="false">
+		<preConditions onError="MARK_RAN" onFail="MARK_RAN">
+			<sqlCheck expectedResult="0">
+				SELECT COUNT(*) FROM adm_user_role
+				WHERE user_id = '-1' AND role_id = '-3'
+			</sqlCheck>
+			<sqlCheck expectedResult="0">
+				SELECT COUNT(*) FROM adm_user_role
+				WHERE user_id = '-1' AND role_id = '-4'
+			</sqlCheck>
+		</preConditions>
+		<insert tableName="adm_user_role">
+			<column name="user_id" value="-1"></column>
+			<column name="role_id" value="-3"></column>
+		</insert>
+		<insert tableName="adm_user_role">
+			<column name="user_id" value="-1"></column>
+			<column name="role_id" value="-4"></column>
+		</insert>
+	</changeSet>
+
+	<changeSet id="#4111" author="Hien Bach">
+		<addColumn tableName="service_parameter_mapping">
+			<column name="value_required" type="${type.boolean}"
+				defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#4051 - Add description to module release" author="Edward P. Legaspi">
+		<addColumn tableName="meveo_module_release">
+			<column name="description" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
+
+    <changeSet id="#4060" author="phubach">
+        <addColumn tableName="meveo_module_release">
+            <column name="is_in_draft" type="${type.boolean}" defaultValueNumeric="0">
+                <constraints nullable="false" />
+            </column>
+            <column name="current_version" type="varchar(50)" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="delete_release_version" author="phubach">
+		<dropColumn tableName="meveo_module_release" columnName="release_version"/>
+    </changeSet>
+    
+    <changeSet id="meveo_function - add null check on disabled column" author="Clément Bareth">
+		<addNotNullConstraint tableName="meveo_function" columnName="disabled" defaultNullValue="1"/>
+	</changeSet>
+
+	<changeSet id="set default current version module" author="Phu Bach">
+		<sql>update meveo_module set current_version='1.0.0' where current_version is NULL</sql>
+	</changeSet>
+	
+	<changeSet id="#4192 - Remove patch execution_mode" author="EdwardPLegaspi">
+		<dropColumn tableName="meveo_module_patch" columnName="execution_mode"/>
+	</changeSet>
+	
+	<changeSet id="Remove useless meveo_script_instance columns" author="Clément Bareth">
+		<dropColumn tableName="meveo_script_instance" columnName="version"/>
+		<dropColumn tableName="meveo_script_instance" columnName="disabled"/>
+		<dropColumn tableName="meveo_script_instance" columnName="description"/>
+		<dropColumn tableName="meveo_script_instance" columnName="creator"/>
+		<dropColumn tableName="meveo_script_instance" columnName="updater"/>
+	</changeSet>
+</databaseChangeLog>

@@ -183,4 +183,31 @@ public class FilesApi extends BaseApi {
         return true;
     }
 
+    public void renameFolder(String oldFolder, String newFolder) throws BusinessApiException {
+        if (oldFolder != null && newFolder != null) {
+            String folderPath = getProviderRootDir() + File.separator + oldFolder;
+            File currentFolder = new File(folderPath);
+            if (!currentFolder.exists() && !currentFolder.isDirectory()) {
+                throw new BusinessApiException("Folder " + currentFolder.getPath() + " does not exists");
+            }
+            String[] data = oldFolder.split("\\\\");
+            StringBuilder path = new StringBuilder(File.separator);
+            if (data.length > 2) {
+                for (int i = 1; i < data.length - 1; i++) {
+                    path.append(data[i]).append(File.separator);
+                }
+                newFolder = path.toString() + newFolder;
+            }
+            String newFolderPath = getProviderRootDir() + File.separator + newFolder;
+            File newDir = new File(newFolderPath);
+            if (!newDir.exists()) {
+                if (!currentFolder.renameTo(newDir)) {
+                    throw new BusinessApiException("Cannot rename "  + currentFolder.getPath() + " to " + newDir.getPath());
+                }
+            } else {
+                throw new BusinessApiException("Folder "  + newDir.getPath() + " already exists in file explorer");
+            }
+        }
+    }
+
 }

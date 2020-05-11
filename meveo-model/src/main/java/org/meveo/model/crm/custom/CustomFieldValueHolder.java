@@ -184,7 +184,7 @@ public class CustomFieldValueHolder implements Serializable {
     public CustomFieldValue getValuePeriod(CustomFieldTemplate cft, Date startDate, Date endDate, boolean strictMatch, Boolean createIfNotFound) {
         CustomFieldValue cfValueFound = null;
         for (CustomFieldValue cfValue : valuesByCode.get(cft.getCode())) {
-            if (cfValue.getPeriod() != null && cfValue.getPeriod().isCorrespondsToPeriod(startDate, endDate, strictMatch)) {
+            if (cfValue.getPeriod() != null && cfValue.getPeriod().isCorrespondsToPeriod(startDate.toInstant(), endDate.toInstant(), strictMatch)) {
                 if (cfValueFound == null || cfValueFound.getPriority() < cfValue.getPriority()) {
                     cfValueFound = cfValue;
                 }

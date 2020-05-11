@@ -11,6 +11,8 @@ import javax.ejb.Startup;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.jms.JMSException;
+import javax.jms.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -92,6 +94,10 @@ public class SQLConnectionProvider {
 	}
 
 	public org.hibernate.Session getSession(String sqlConfigurationCode) {
+		
+		if(sqlConfigurationCode == null) {
+			throw new NullPointerException("sqlConfigurationCode is null");
+		}
 
 		SqlConfiguration sqlConfiguration = getSqlConfiguration(sqlConfigurationCode);
 
@@ -123,17 +129,22 @@ public class SQLConnectionProvider {
 		}
 	}
 
-	public org.hibernate.Session testSession(SqlConfiguration sqlConfiguration) {
-
+	public boolean testSession(SqlConfiguration sqlConfiguration) {
+		Session session = null;
 		try {
 			SessionFactory sessionFactory = buildSessionFactory(sqlConfiguration);
 			synchronized (this) {
-				return sessionFactory.openSession();
+				return (sessionFactory.openSession() != null);
 			}
 
 		} catch (Exception e) {
 			log.warn("Can't connect to sql configuration with code={}, url={}, error={}", sqlConfiguration.getCode(), sqlConfiguration.getUrl(), e.getCause());
-			return null;
+			return false;
+		} finally {
+			try {
+				if (session != null)
+					session.close();
+			} catch (JMSException ignored) {}
 		}
 	}
 

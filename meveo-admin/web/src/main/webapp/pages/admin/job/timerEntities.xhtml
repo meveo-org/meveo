@@ -16,13 +16,13 @@
 
 	<ui:define name="body">
 		
-			<h:form id="crumbmenuForm">
-				<p:breadCrumb homeDisplay="text" id="crumbmenu">
-					<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
-					<p:menuitem outcome="timerEntities"
-						value="#{messages['menu.timerEntities']}" />
-				</p:breadCrumb>
-			</h:form>
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+				<p:menuitem outcome="timerEntities"
+					value="#{messages['menu.timerEntities']}" />
+			</p:breadCrumb>
+		</h:form>
 		
 		<hftl:searchPanel columns="3" label="#{messages['timers.page.title']}"
 			backingBean="#{timerEntityListBean}">

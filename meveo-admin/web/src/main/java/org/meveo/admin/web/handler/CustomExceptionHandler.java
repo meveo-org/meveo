@@ -50,7 +50,7 @@ public class CustomExceptionHandler extends ExceptionHandlerWrapper {
                 if(throwable instanceof NonexistentConversationException || throwable instanceof ViewExpiredException) {
                 	ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
                     ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
-                }else {
+                } else {
                 	log.error("Exception", throwable);
                 }
 

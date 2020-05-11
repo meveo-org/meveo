@@ -51,6 +51,13 @@ public class TSParameterMappingDto implements Serializable {
     @JsonProperty(required = true)
     private String defaultValue;
 
+    /**
+	 * When this value is set to true, the min length of string and array objects
+	 * must be set to 1 by default or they should not be null.
+	 */
+    @JsonProperty
+    protected Boolean valueRequired = false;
+
     public String getServiceParameter() {
         return serviceParameter;
     }
@@ -81,5 +88,23 @@ public class TSParameterMappingDto implements Serializable {
 
     public void setMultivalued(String multivalued) {
         this.multivalued = multivalued;
+    }
+
+	/**
+	 * Retrieves the boolean value of whether this parameter is required.
+	 * 
+	 * @return true if this parameter is required
+	 */
+    public Boolean getValueRequired() {
+        return valueRequired;
+    }
+
+	/**
+	 * Sets whether this parameter is required or not.
+	 * 
+	 * @param valueRequired boolean value
+	 */
+    public void setValueRequired(Boolean valueRequired) {
+        this.valueRequired = valueRequired;
     }
 }

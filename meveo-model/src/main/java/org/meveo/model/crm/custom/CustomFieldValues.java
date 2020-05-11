@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +88,9 @@ public class CustomFieldValues implements Serializable {
                 
                 // If value was found, add it to the values map
                 if (valueFound != null) {
-                	if(valueFound.getValue() != null) {
+                    if (valueFound.getEntityReferenceValueForGUI() != null && valueFound.getEntityReferenceValueForGUI() instanceof CustomEntityInstance) {
+                        values.put(cfCode, valueFound.getEntityReferenceValueForGUI());
+                    } else if(valueFound.getValue() != null) {
                         values.put(cfCode, valueFound.getValue());
                 	} else if(valueFound.getListValue() != null) {
                 		values.put(cfCode, valueFound.getListValue());

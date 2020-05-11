@@ -14,7 +14,7 @@
 		<p:importEnum type="org.meveo.cache.JobRunningStatusEnum" var="JobRunningStatusEnum" />
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-				<p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
 				<p:menuitem outcome="jobInstances" value="#{messages['menu.jobInstances']}" />
 				<p:menuitem value="#{messages['commons.new']} #{messages['jobInstance.title']}" disabled="true" rendered="#{jobInstanceBean.entity.transient}" />
 				<p:menuitem value="#{messages['jobInstance.title']} - #{jobInstanceBean.entity.code}" disabled="true" rendered="#{!jobInstanceBean.entity.transient}" />

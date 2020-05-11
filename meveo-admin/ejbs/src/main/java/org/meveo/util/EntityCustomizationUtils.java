@@ -48,6 +48,10 @@ public class EntityCustomizationUtils {
      * @return Entity code part of "appliesTo" value
      */
     public static String getEntityCode(String appliesTo) {
+    	if(appliesTo == null) {
+    		return null;
+    	}
+    	
         int pos = appliesTo.indexOf("_");
         if (pos > 0) {
             return appliesTo.substring(pos + 1);

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -39,7 +40,7 @@ public class MeasurableQuantityAggregationJob extends Job {
 
     @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
     @Override
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
 
         StringBuilder report = new StringBuilder();
         if (jobInstance.getParametres() != null && !jobInstance.getParametres().isEmpty()) {
@@ -70,7 +71,7 @@ public class MeasurableQuantityAggregationJob extends Job {
                 MeasuredValue mv = new MeasuredValue();
                 mv.setMeasurableQuantity(mq);
                 mv.setMeasurementPeriod(mq.getMeasurementPeriod());
-                mv.setDate(sdf.parse(mvObject[0] + ""));
+                mv.setDate(sdf.parse(mvObject[0] + "").toInstant());
                 mv.setValue(new BigDecimal(mvObject[1] + ""));
                 mvService.create(mv);
             }

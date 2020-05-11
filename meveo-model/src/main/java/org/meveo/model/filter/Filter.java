@@ -37,14 +37,16 @@ import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.9.0
  **/
 @Entity
 @ModuleItem("Filter")
+@ModuleItemOrder(202)
 @Cacheable
 @ExportIdentifier({ "code"})
 @CustomFieldEntity(cftCodePrefix = "FILTER", cftCodeFields = "code", isManuallyManaged = false)

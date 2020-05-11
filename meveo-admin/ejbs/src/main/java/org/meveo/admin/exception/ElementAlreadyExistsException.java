@@ -31,6 +31,10 @@ public class ElementAlreadyExistsException extends BusinessException {
 	public ElementAlreadyExistsException(String code, String elementName) {
 		super(elementName+" already exist code="+code);
 	}
+
+	public ElementAlreadyExistsException(String code, String elementName, Throwable e) {
+		super(elementName+" already exist code="+code, e);
+	}
 	
 
 	

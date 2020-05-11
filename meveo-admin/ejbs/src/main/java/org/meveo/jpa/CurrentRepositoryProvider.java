@@ -12,19 +12,27 @@ import javax.inject.Named;
 
 import org.meveo.model.storage.Repository;
 import org.meveo.service.storage.RepositoryService;
+import org.slf4j.Logger;
 
 /**
+ * Provider used to set current user repository for a given session
+ * Mainly used in GUI.
  * 
  * @author clement.bareth
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.9.0
  */
 @SessionScoped
 @Named
 public class CurrentRepositoryProvider implements Serializable {
 	
+	private static final long serialVersionUID = -1161560465567580602L;
+
 	@Inject
 	private RepositoryService repositoryService;
+
+	@Inject
+	private Logger log;
 	
 	private Repository repository;
 
@@ -35,8 +43,7 @@ public class CurrentRepositoryProvider implements Serializable {
 
 	public void setRepository(Repository repository) {
 		this.repository = repository;
+		log.info("Setting current repository to {}", repository.getCode());
 	}
-	
-	
 	
 }

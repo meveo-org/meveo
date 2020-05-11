@@ -3,6 +3,7 @@ package org.meveo.api.dto.module;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.ModuleLicenseEnum;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,7 +31,7 @@ import io.swagger.annotations.ApiModelProperty;
  * 
  * @author andrius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "Module")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -69,6 +71,39 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@XmlElement(name = "moduleFiles")
 	@ApiModelProperty("The module files")
 	private List<String> moduleFiles;
+	
+	
+	/** The module dependencies. */
+	@ApiModelProperty("List of module dependencies information")
+	@XmlElementWrapper(name = "moduleDependencies")
+	@XmlElement(name = "moduleDependencies")
+	@JsonProperty("moduleDependencies")
+	private List<ModuleDependencyDto> moduleDependencies;
+	
+
+	/** The current version. */
+	@ApiModelProperty("The current version")
+	private String currentVersion = "1.0.0";
+	
+	/** is in draft */
+	@ApiModelProperty("is in draft")
+	private boolean isInDraft = true;
+
+	/** The meveo version base. */
+	@ApiModelProperty("The meveo version base")
+	@Pattern(regexp = "^(?<major>\\d+\\.)?(?<minor>\\d+\\.)?(?<patch>\\*|\\d+)$")
+	private String meveoVersionBase;
+
+	/** The meveo version ceiling. */
+	@ApiModelProperty("The meveo version ceiling")
+	@Pattern(regexp = "^(?<major>\\d+\\.)?(?<minor>\\d+\\.)?(?<patch>\\*|\\d+)$")
+	private String meveoVersionCeiling;
+	 
+	@ApiModelProperty("List of patch linked to this module")
+	@XmlElementWrapper(name = "patches")
+	@XmlElement(name = "patch")
+	@JsonProperty("patches")
+	private List<MeveoModulePatchDto> patches;
 
 	/**
 	 * Instantiates a new meveo module dto.
@@ -87,11 +122,14 @@ public class MeveoModuleDto extends BaseDataModelDto {
 		this.logoPicture = meveoModule.getLogoPicture();
 		this.moduleItems = new ArrayList<>();
 		this.moduleFiles = new ArrayList<>();
+		this.moduleDependencies=new ArrayList<>();
+		this.currentVersion = meveoModule.getCurrentVersion();
+		this.isInDraft=meveoModule.getIsInDraft();
 		if (meveoModule.getScript() != null) {
 			this.setScript(new ScriptInstanceDto(meveoModule.getScript(), meveoModule.getScript().getScript()));
 		}
 	}
-
+	
 	/**
 	 * Gets the license.
 	 *
@@ -204,6 +242,80 @@ public class MeveoModuleDto extends BaseDataModelDto {
 			moduleFiles.add(path);
 		}
 	}
+	
+	
+
+	public List<ModuleDependencyDto> getModuleDependencies() {
+		return moduleDependencies;
+	}
+
+	public void setModuleDependencies(List<ModuleDependencyDto> moduleDependencies) {
+		this.moduleDependencies = moduleDependencies;
+	}
+	
+	/**
+	 * Adds the module dependency. 
+	 */
+	public void addModuleDependency(MeveoModuleDependency dependency) {
+		ModuleDependencyDto moduleDependencyDto = new ModuleDependencyDto(dependency.getCode(),dependency.getDescription(),dependency.getCurrentVersion());
+		if (!moduleDependencies.contains(moduleDependencyDto)) {
+			moduleDependencies.add(moduleDependencyDto);
+		}
+	}
+
+	/**
+	 * Gets the current version.
+	 *
+	 * @return the current version
+	 */
+	public String getCurrentVersion() {
+		return currentVersion;
+	}
+
+	/**
+	 * Sets the current version.
+	 *
+	 * @param currentVersion the new current version
+	 */
+	public void setCurrentVersion(String currentVersion) {
+		this.currentVersion = currentVersion;
+	}
+
+	/**
+	 * Gets the meveo version base.
+	 *
+	 * @return the meveo version base
+	 */
+	public String getMeveoVersionBase() {
+		return meveoVersionBase;
+	}
+
+	/**
+	 * Sets the meveo version base.
+	 *
+	 * @param meveoVersionBase the new meveo version base
+	 */
+	public void setMeveoVersionBase(String meveoVersionBase) {
+		this.meveoVersionBase = meveoVersionBase;
+	}
+
+	/**
+	 * Gets the meveo version ceiling.
+	 *
+	 * @return the meveo version ceiling
+	 */
+	public String getMeveoVersionCeiling() {
+		return meveoVersionCeiling;
+	}
+
+	/**
+	 * Sets the meveo version ceiling.
+	 *
+	 * @param meveoVersionCeiling the new meveo version ceiling
+	 */
+	public void setMeveoVersionCeiling(String meveoVersionCeiling) {
+		this.meveoVersionCeiling = meveoVersionCeiling;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -232,7 +344,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	public void setScript(ScriptInstanceDto script) {
 		this.script = script;
 	}
-
+ 
 	/**
 	 * Checks if is code only.
 	 *
@@ -246,7 +358,23 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@Override
 	public String toString() {
 		final int maxLen = 10;
-		return String.format("ModuleDto [code=%s, license=%s, description=%s, logoPicture=%s, logoPictureFile=%s, moduleItems=%s, script=%s, moduleFiles=%s]", getCode(), license, getDescription(),
-				logoPicture, logoPictureFile, moduleItems != null ? moduleItems.subList(0, Math.min(moduleItems.size(), maxLen)) : null, script, moduleFiles);
+		return String.format("ModuleDto [code=%s, license=%s, description=%s, logoPicture=%s, logoPictureFile=%s, isInDraft, moduleItems=%s, script=%s, moduleFiles=%s, moduleDependencies=%s]", getCode(), license, getDescription(),
+				logoPicture, logoPictureFile,isInDraft, moduleItems != null ? moduleItems.subList(0, Math.min(moduleItems.size(), maxLen)) : null, script, moduleFiles,moduleDependencies);
+	}
+
+	public List<MeveoModulePatchDto> getPatches() {
+		return patches;
+	}
+
+	public void setPatches(List<MeveoModulePatchDto> patches) {
+		this.patches = patches;
+	}
+
+	public boolean isInDraft() {
+		return isInDraft;
+	}
+
+	public void setInDraft(boolean isInDraft) {
+		this.isInDraft = isInDraft;
 	}
 }

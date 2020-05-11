@@ -22,7 +22,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -34,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -243,6 +246,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
 		
+		if(queryValues.isEmpty()) {
+			throw new IllegalArgumentException("Query values should not be empty");
+		}
+		
 		StringBuilder q = new StringBuilder();
 		q.append("SELECT uuid FROM {h-schema}" + tableName + " as a\n");
 		
@@ -391,7 +398,10 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
-
+		if("null".equals(values.get(FIELD_ID))) {
+			values.remove(FIELD_ID);
+		}
+		
 		if (tableName == null) {
 			throw new BusinessException("Table name must not be null");
 		}
@@ -1035,7 +1045,9 @@ public class NativePersistenceService extends BaseService {
 					} else if (filterValue instanceof Number) {
 						queryBuilder.addCriterion("a." + fieldName, " >= ", filterValue, true);
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Date) filterValue);
+						queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+					}  else if (filterValue instanceof Instant) {
+						queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Instant) filterValue);
 					}
 
 					// if ranged search - field value in between from - to values. Specifies "to"
@@ -1047,7 +1059,9 @@ public class NativePersistenceService extends BaseService {
 					} else if (filterValue instanceof Number) {
 						queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, true);
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Date) filterValue);
+						queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+					} else if (filterValue instanceof Instant) {
+						queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Instant) filterValue);
 					}
 
 					// Value is in field value (list)
@@ -1178,7 +1192,10 @@ public class NativePersistenceService extends BaseService {
 						}
 
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Date) filterValue);
+						queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+
+					} else if (filterValue instanceof Instant) {
+						queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Instant) filterValue);
 
 					} else if (filterValue instanceof Number) {
 						queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
@@ -1324,8 +1341,39 @@ public class NativePersistenceService extends BaseService {
 		// A list is expected as value. If value is not a list, parse value as comma
 		// separated string and convert each value separately
 		if (expectedList) {
-			if (value instanceof List || value instanceof Set || value.getClass().isArray()) {
+			if(value instanceof Collection) {
+				Collection<?> collectionValue = (Collection<?>) value;
+				
+				// Convert entity references wrapper list to list of string
+				{
+					List<String> entityReferences = collectionValue.stream()
+						.filter(EntityReferenceWrapper.class::isInstance)
+						.map(EntityReferenceWrapper.class::cast)
+						.map(EntityReferenceWrapper::getUuid)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toList());
+					
+					if(!entityReferences.isEmpty()) {
+						return entityReferences;
+					}
+				}
+				
+				// Convert entity references wrapper list to list of long
+				{ 
+					List<Long> entityReferences = collectionValue.stream()
+							.filter(EntityReferenceWrapper.class::isInstance)
+							.map(EntityReferenceWrapper.class::cast)
+							.map(EntityReferenceWrapper::getId)
+							.filter(Objects::nonNull)
+							.collect(Collectors.toList());
+					
+					if(!entityReferences.isEmpty()) {
+						return entityReferences;
+					}
+				}
+				
 				return value;
+				
 			} else if (value instanceof String) {
 				try {
 					// First try to parse json
@@ -1381,12 +1429,18 @@ public class NativePersistenceService extends BaseService {
 			listVal = (List) value;
 		} else if (value instanceof Map) {
 			stringVal = JacksonUtil.toString(value);
+		} else if (value instanceof File) {
+			stringVal = ((File) value).getAbsolutePath();
 		} else {
 			throw new ValidationException("Unrecognized data type for value " + value + " type " + value.getClass());
 		}
 
 		try {
 			if (targetClass == String.class) {
+				if(value instanceof Map) {
+					return stringVal;
+				}
+				
 				if (stringVal != null || listVal != null) {
 					return value;
 				} else {
@@ -1410,7 +1464,7 @@ public class NativePersistenceService extends BaseService {
 					// Use provided date patterns or try default patterns if they were not provided
 					if (datePatterns != null) {
 						for (String datePattern : datePatterns) {
-							Date date = DateUtils.parseDateWithPattern(stringVal, datePattern);
+							Instant date = DateUtils.parseDateWithPattern(stringVal, datePattern);
 							if (date != null) {
 								return date;
 							}
@@ -1418,7 +1472,7 @@ public class NativePersistenceService extends BaseService {
 					} else {
 
 						// first try with date and time and then only with date format
-						Date date = DateUtils.parseDateWithPattern(stringVal, DateUtils.DATE_TIME_PATTERN);
+						Instant date = DateUtils.parseDateWithPattern(stringVal, DateUtils.DATE_TIME_PATTERN);
 						if (date == null) {
 							date = DateUtils.parseDateWithPattern(stringVal, paramBean.getDateTimeFormat());
 						}
@@ -1536,6 +1590,10 @@ public class NativePersistenceService extends BaseService {
 			Date date = (Date) value;
 			ps.setDate(parameterIndex, new java.sql.Date(date.getTime()));
 
+		} else if(value instanceof Instant)  { 
+			Instant instant = (Instant) value;
+			ps.setTimestamp(parameterIndex, new Timestamp(instant.toEpochMilli()));
+			
 		} else if (value instanceof Long) {
 			ps.setLong(parameterIndex, (Long) value);
 

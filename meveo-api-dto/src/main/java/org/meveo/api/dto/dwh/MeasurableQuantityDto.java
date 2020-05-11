@@ -1,5 +1,6 @@
 package org.meveo.api.dto.dwh;
 
+import java.time.Instant;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -7,7 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.commons.utils.CustomDateSerializer;
+import org.meveo.commons.utils.CustomInstantSerializer;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.dwh.MeasurableQuantity;
 import org.meveo.model.dwh.MeasurementPeriodEnum;
@@ -73,9 +74,9 @@ public class MeasurableQuantityDto extends BusinessEntityDto {
 	private MeasurementPeriodEnum measurementPeriod;
 
 	/** The last measure date. */
-	@JsonSerialize(using = CustomDateSerializer.class)
+	@JsonSerialize(using = CustomInstantSerializer.class)
 	@ApiModelProperty("The last measure date")
-	private Date lastMeasureDate;
+	private Instant lastMeasureDate;
 
 	/**
 	 * Checks if is code only.
@@ -290,7 +291,7 @@ public class MeasurableQuantityDto extends BusinessEntityDto {
 	 *
 	 * @return the last measure date
 	 */
-	public Date getLastMeasureDate() {
+	public Instant getLastMeasureDate() {
 		return lastMeasureDate;
 	}
 
@@ -299,7 +300,7 @@ public class MeasurableQuantityDto extends BusinessEntityDto {
 	 *
 	 * @param lastMeasureDate the new last measure date
 	 */
-	public void setLastMeasureDate(Date lastMeasureDate) {
+	public void setLastMeasureDate(Instant lastMeasureDate) {
 		this.lastMeasureDate = lastMeasureDate;
 	}
 

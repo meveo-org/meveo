@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -44,6 +45,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.persistence.DBStorageType;
@@ -52,12 +54,15 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**
+ * The Class CustomEntityTemplate.
+ *
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("CustomEntityTemplate")
+@ModuleItemOrder(10)
 @Cacheable
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cet", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
@@ -114,7 +119,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(cascade = { CascadeType.PERSIST })
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
@@ -128,6 +133,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
 
+	/**
+	 * Instantiates it if null.
+	 *
+	 * @return the {@link SQLStorageConfiguration}
+	 */
 	public SQLStorageConfiguration getSqlStorageConfigurationNullSafe() {
 
 		if (sqlStorageConfiguration == null) {
@@ -137,6 +147,12 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return sqlStorageConfiguration;
 	}
 
+	
+	/**
+	 * Gets the sql storage configuration.
+	 *
+	 * @return the sql storage configuration
+	 */
 	public SQLStorageConfiguration getSqlStorageConfiguration() {
 		if (availableStorages != null && availableStorages.contains(DBStorageType.SQL)) {
 			return sqlStorageConfiguration;
@@ -145,6 +161,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return null;
 	}
 
+	/**
+	 * Gets the neo 4 J storage configuration.
+	 *
+	 * @return the neo 4 J storage configuration
+	 */
 	public Neo4JStorageConfiguration getNeo4JStorageConfiguration() {
 		if (availableStorages != null && availableStorages.contains(DBStorageType.NEO4J)) {
 			return neo4JStorageConfiguration;
@@ -153,34 +174,74 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return null;
 	}
 
+	/**
+	 * Sets the neo 4 J storage configuration.
+	 *
+	 * @param neo4jStorageConfiguration the new neo 4 J storage configuration
+	 */
 	public void setNeo4JStorageConfiguration(Neo4JStorageConfiguration neo4jStorageConfiguration) {
 		neo4JStorageConfiguration = neo4jStorageConfiguration;
 	}
 
+	/**
+	 * Sets the sql storage configuration.
+	 *
+	 * @param sqlStorageConfiguration the new sql storage configuration
+	 */
 	public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
 		this.sqlStorageConfiguration = sqlStorageConfiguration;
 	}
 
+	/**
+	 * Gets the list of storages where the custom fields can be stored.
+	 *
+	 * @return the list of storages where the custom fields can be stored
+	 */
 	public List<DBStorageType> getAvailableStorages() {
 		return availableStorages;
 	}
 
+	/**
+	 * Sets the list of storages where the custom fields can be stored.
+	 *
+	 * @param availableStorages the new list of storages where the custom fields can be stored
+	 */
 	public void setAvailableStorages(List<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
 	}
 
+	/**
+	 * Gets the script to execute before persisting the entity.
+	 *
+	 * @return the script to execute before persisting the entity
+	 */
 	public ScriptInstance getPrePersistScript() {
 		return prePersistScript;
 	}
 
+	/**
+	 * Sets the script to execute before persisting the entity.
+	 *
+	 * @param prePersistScript the new script to execute before persisting the entity
+	 */
 	public void setPrePersistScript(ScriptInstance prePersistScript) {
 		this.prePersistScript = prePersistScript;
 	}
 
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Sets the name.
+	 *
+	 * @param name the new name
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -190,14 +251,30 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return CFT_PREFIX + "_" + getCode();
 	}
 
+	/**
+	 * Gets the applies to.
+	 *
+	 * @param code the code
+	 * @return the applies to
+	 */
 	public static String getAppliesTo(String code) {
 		return CFT_PREFIX + "_" + code;
 	}
 
+	/**
+	 * Gets the read permission.
+	 *
+	 * @return the read permission
+	 */
 	public String getReadPermission() {
 		return CustomEntityTemplate.getReadPermission(code);
 	}
 
+	/**
+	 * Gets the modify permission.
+	 *
+	 * @return the modify permission
+	 */
 	public String getModifyPermission() {
 		return CustomEntityTemplate.getModifyPermission(code);
 	}
@@ -207,54 +284,118 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return StringUtils.compare(name, cet1.getName());
 	}
 
+	/**
+	 * Gets the read permission.
+	 *
+	 * @param code the code
+	 * @return the read permission
+	 */
 	public static String getReadPermission(String code) {
 		return "CE_" + code + "-read";
 	}
 
+	/**
+	 * Gets the modify permission.
+	 *
+	 * @param code the code
+	 * @return the modify permission
+	 */
 	public static String getModifyPermission(String code) {
 		return "CE_" + code + "-modify";
 	}
 
+	/**
+	 * Gets the code from applies to.
+	 *
+	 * @param appliesTo the applies to
+	 * @return the code from applies to
+	 */
 	public static String getCodeFromAppliesTo(String appliesTo) {
+		if(appliesTo == null) 
+			return null;
+		
+		if(!appliesTo.startsWith("CE_")) {
+			return null;
+		}
+		
 		return appliesTo.substring(3);
 	}
 
+	/**
+	 * Gets the template that current template inherits from.
+	 *
+	 * @return the template that current template inherits from
+	 */
 	public CustomEntityTemplate getSuperTemplate() {
 		return superTemplate;
 	}
 
+	/**
+	 * Sets the template that current template inherits from.
+	 *
+	 * @param superTemplate the new template that current template inherits from
+	 */
 	public void setSuperTemplate(CustomEntityTemplate superTemplate) {
 		this.superTemplate = superTemplate;
 	}
 
+	/**
+	 * Gets the sub templates.
+	 *
+	 * @return the sub templates
+	 */
 	public List<CustomEntityTemplate> getSubTemplates() {
 		return subTemplates;
 	}
 
+	/**
+	 * Sets the sub templates.
+	 *
+	 * @param subTemplates the new sub templates
+	 */
 	public void setSubTemplates(List<CustomEntityTemplate> subTemplates) {
 		this.subTemplates = subTemplates;
 	}
 
+	/**
+	 * Gets the entity reference.
+	 *
+	 * @return the entity reference
+	 */
 	public CustomEntityReference getEntityReference() {
 		return entityReference;
 	}
 
+	/**
+	 * Sets the entity reference.
+	 *
+	 * @param entityReference the new entity reference
+	 */
 	public void setEntityReference(CustomEntityReference entityReference) {
 		this.entityReference = entityReference;
 	}
 
+	/**
+	 * Gets the custom Entity Category.
+	 *
+	 * @return the custom Entity Category
+	 */
 	public CustomEntityCategory getCustomEntityCategory() {
 		return customEntityCategory;
 	}
 
+	/**
+	 * Sets the custom Entity Category.
+	 *
+	 * @param customEntityCategory the new custom Entity Category
+	 */
 	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
 		this.customEntityCategory = customEntityCategory;
 	}
 
 	/**
-	 * /!\ The subTemplates field should have been fetch, will raise an exception
-	 * otherwise
-	 * 
+	 * /!\ The subTemplates field should have been fetch, will raise an exception otherwise.
+	 *
 	 * @return the cet with all of its descendance
 	 */
 	public List<CustomEntityTemplate> descendance() {
@@ -267,6 +408,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	}
 
 	/**
+	 * Ascendance.
+	 *
 	 * @return the cet with all of its ascendances
 	 */
 	public List<CustomEntityTemplate> ascendance() {
@@ -278,12 +421,30 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return descendance;
 	}
 
+	/**
+	 * Checks for reference jpa entity.
+	 *
+	 * @return true, if successful
+	 */
 	public boolean hasReferenceJpaEntity() {
 		return hasReferenceJpaEntity;
 	}
 
+	/**
+	 * Sets the checks for reference jpa entity.
+	 *
+	 * @param hasReferenceJpaEntity the new checks for reference jpa entity
+	 */
 	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
 		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
+	}
+	
+	public boolean isStoreAsTable() {
+		if (getSqlStorageConfiguration() == null) {
+			return false;
+		}
+
+		return getSqlStorageConfiguration().isStoreAsTable();
 	}
 
 }

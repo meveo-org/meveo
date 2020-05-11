@@ -36,7 +36,6 @@ import java.util.List;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
  */
-@XmlRootElement(name = "Connectors")
 @XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel
 public class TechnicalServicesDto extends BusinessEntityDto {

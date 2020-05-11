@@ -51,8 +51,14 @@
                           style="width: 10%">
                     <h:outputText value="#{messages[entity.fieldType.label]}"
                                   rendered="#{node.type == 'field' and entity.entityClazz == null}" />
+                    <h:link outcome="referenceCET" value="#{entity.referenceEntityClazzCetCode}" rendered="#{node.type == 'field' and entity.entityClazz != null and customFieldTemplateBean.getCetId(entity.entityClazz) != null}" target="_blank">
+                        <f:param name="entityClass" value="#{entity.referenceEntityClassName}" />
+                        <f:param name="cetId" value="#{customFieldTemplateBean.getCetId(entity.entityClazz)}" />
+                        <!--<f:param name="backView" value="customizedEntities" />-->
+                        <f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />
+                    </h:link>
                     <h:outputText value="#{entity.referenceEntityClazzCetCode}"
-                                  rendered="#{node.type == 'field' and entity.entityClazz != null}" />
+                                  rendered="#{node.type == 'field' and entity.entityClazz != null and customFieldTemplateBean.getCetId(entity.entityClazz) == null}" />
                 </p:column>
                 <p:column
                         headerText="#{messages['customFieldTemplate.primitiveType']}"

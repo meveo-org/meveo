@@ -7,6 +7,8 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.FileSerializer;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
@@ -35,6 +37,7 @@ public class JacksonUtil {
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.setSerializationInclusion(Include.NON_NULL);
+        om.registerModule(new JavaTimeModule());
 
         SimpleModule fileModule = new SimpleModule()
                 .addSerializer(File.class, new FileSerializer())

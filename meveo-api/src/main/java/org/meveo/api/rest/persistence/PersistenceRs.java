@@ -301,7 +301,7 @@ public class PersistenceRs {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "List post persistence")
+    @ApiOperation(value = "Persist many entities")
     public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException {
 
         // Deserialize binaries

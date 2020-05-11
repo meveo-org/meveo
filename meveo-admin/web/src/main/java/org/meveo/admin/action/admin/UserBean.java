@@ -18,6 +18,30 @@
  */
 package org.meveo.admin.action.admin;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.faces.event.ActionEvent;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -37,7 +61,6 @@ import org.meveo.model.admin.User;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -45,25 +68,24 @@ import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.git.RSAKeyPair;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.security.SecuredBusinessEntityService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.*;
-
-import javax.annotation.PostConstruct;
-import javax.faces.event.ActionEvent;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.DualListModel;
+import org.primefaces.model.StreamedContent;
+import org.primefaces.model.TreeNode;
+import org.primefaces.model.UploadedFile;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create, edit,
  * view, delete operations). It works with Manaty custom JSF components.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @since 6.9.0
+ * @version 6.9.0
  */
 @Named
 @ViewScoped
@@ -94,14 +116,19 @@ public class UserBean extends CustomFieldBean<User> {
     @Inject
     private MeveoModuleService meveoModuleService;
 
+    private String selectedFolder;
+    
+    private String initialFolder;
+    
     private DualListModel<Role> rolesDM;
 
     private TreeNode userGroupRootNode;
 
     private TreeNode userGroupSelectedNode;
     private String providerFilePath;
-    private String selectedFolder;
+
     private boolean currentDirEmpty;
+    private boolean selectedDir;
     private String selectedFileName;
     private String newFilename;
     private String directoryName;
@@ -114,6 +141,7 @@ public class UserBean extends CustomFieldBean<User> {
     private BaseBean<?> selectedAccountBean;
     private String passphrase;
     private String confirmPassphrase;
+    private String newFolderName;
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
@@ -352,8 +380,20 @@ public class UserBean extends CustomFieldBean<User> {
     public boolean hasSelectedFolder() {
         return !StringUtils.isBlank(selectedFolder);
     }
+    
+    public void setInitialFolder(String initialFolder) {
+    	if(this.initialFolder == null && initialFolder != null && this.selectedFolder == null) {
+        	initialFolder = initialFolder.replace("/", File.separator);
+    		this.initialFolder = initialFolder;
+    		setSelectedFolder(initialFolder);
+    	}
+	}
 
-    public void setSelectedFolder(String selectedFolder) {
+	public String getInitialFolder() {
+		return initialFolder;
+	}
+
+	public void setSelectedFolder(String selectedFolder) {
         setSelectedFileName(null);
         if (selectedFolder == null) {
             log.debug("setSelectedFolder to null");
@@ -376,16 +416,19 @@ public class UserBean extends CustomFieldBean<User> {
         buildFileList();
     }
 
-    private void buildFileList() {
-        String folder = getFilePath() + File.separator + (this.selectedFolder == null ? "" : this.selectedFolder);
-        File file = new File(folder);
-        log.debug("getFileList " + folder);
+	private void buildFileList() {
+		String folder = getFilePath() + File.separator + (this.selectedFolder == null ? "" : this.selectedFolder);
+		File file = new File(folder);
+		log.debug("getFileList {}", folder);
 
-        File[] files = file.listFiles();
+		File[] files = file.listFiles();
 
-        fileList = files == null ? new ArrayList<File>() : new ArrayList<File>(Arrays.asList(files));
-        currentDirEmpty = !StringUtils.isBlank(this.selectedFolder) && fileList.size() == 0;
-    }
+		List<String> hiddenFolders = Arrays.asList("imports", "invoices", "jasper");
+
+		fileList = files == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(files));
+		fileList = fileList.stream().filter(e -> !e.isDirectory() || (e.isDirectory() && !hiddenFolders.contains(e.getName()))).collect(Collectors.toList());
+		currentDirEmpty = !StringUtils.isBlank(this.selectedFolder) && fileList.isEmpty();
+	}
 
     public String getFileType(String fileName) {
         if (fileName != null && fileName.endsWith(".zip")) {
@@ -413,6 +456,14 @@ public class UserBean extends CustomFieldBean<User> {
 
     public void setNewFilename(String newFilename) {
         this.newFilename = newFilename;
+    }
+
+    public String getNewFolderName() {
+        return newFolderName;
+    }
+
+    public void setNewFolderName(String newFolderName) {
+        this.newFolderName = newFolderName;
     }
 
     public String getDirectoryName() {
@@ -485,18 +536,18 @@ public class UserBean extends CustomFieldBean<User> {
         }
     }
 
-    public void deleteDirectory() {
+    public void deleteDirectory() throws IOException {
         log.debug("deleteDirectory:" + selectedFolder);
-        if (currentDirEmpty) {
-            String filePath = getFilePath("");
-            File currentDir = new File(filePath);
-            if (currentDir.exists() && currentDir.isDirectory()) {
-                if (currentDir.delete()) {
-                    setSelectedFolder("..");
-                    createMissingDirectories();
-                    buildFileList();
-                }
-            }
+        String filePath = getFilePath("");
+        File currentDir = new File(filePath);
+        String[] nameDir = selectedFolder.split("\\\\");
+        String name = nameDir[nameDir.length - 1];
+        if (currentDir.exists() && currentDir.isDirectory()) {
+            org.apache.commons.io.FileUtils.deleteDirectory(currentDir);
+            setSelectedFolder("..");
+            createMissingDirectories();
+            buildFileList();
+            messages.info(new BundleKey("messages", "user.deleteDir.successful"), name);
         }
     }
 
@@ -511,6 +562,34 @@ public class UserBean extends CustomFieldBean<User> {
                     buildFileList();
                     selectedFileName = newFilename;
                     newFilename = "";
+                }
+            }
+        }
+    }
+
+    public void renameFolder() {
+        if (!StringUtils.isBlank(selectedFolder) && !StringUtils.isBlank(newFolderName)) {
+            String folderPath = getFilePath() + File.separator + selectedFolder;
+            String[] data = selectedFolder.split("\\\\");
+            String oldName = data[data.length - 1];
+            String newName = newFolderName;
+            StringBuilder path = new StringBuilder(File.separator);
+            if (data.length > 2) {
+                for (int i = 1; i < data.length - 1; i++) {
+                    path.append(data[i]).append(File.separator);
+                }
+                newFolderName = path.toString() + newFolderName;
+            }
+            String newFolderPath = getFilePath() + File.separator + newFolderName;
+            File currentFolder = new File(folderPath);
+            File newFolder = new File(newFolderPath);
+            if (currentFolder.exists() && currentFolder.isDirectory() && !newFolder.exists()) {
+                if (currentFolder.renameTo(newFolder)) {
+                    selectedFolder = newFolderName;
+                    buildFileList();
+                    newFolderName = "";
+                    selectedDir = false;
+                    messages.info(new BundleKey("messages", "fileExplorer.renameFolder.successful"), oldName, newName);
                 }
             }
         }
@@ -715,24 +794,28 @@ public class UserBean extends CustomFieldBean<User> {
 
     /**
      *  Add file/folder to selected module
+     * @throws BusinessException when adding a file to a module failed
      */
-    public void addFileToModule() {
-        if (!StringUtils.isBlank(selectedFileName)) {
-            String folder = this.selectedFolder == null ? "" : this.selectedFolder;
-            String fileName = folder + File.separator + selectedFileName;
-            MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
-            if (!module.getModuleFiles().contains(fileName)) {
-                module.addModuleFile(fileName);
-                messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFileName, module.getCode());
-            }
-        } else if (!StringUtils.isBlank(selectedFolder)) {
-            MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
-            if (!module.getModuleFiles().contains(selectedFolder)) {
-                module.addModuleFile(selectedFolder);
-                messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFolder, module.getCode());
-            }
-        }
-    }
+	public void addFileToModule() throws BusinessException {
+        MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+        module = meveoModuleService.refreshOrRetrieve(module);
+		if (!StringUtils.isBlank(selectedFileName)) {
+			String folder = this.selectedFolder == null ? "" : this.selectedFolder;
+			String fileName = folder + File.separator + selectedFileName;
+			if (!module.getModuleFiles().contains(fileName)) {
+				module.addModuleFile(fileName);
+				meveoModuleService.update(module);
+				messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFileName, module.getCode());
+			}
+
+		} else if (!StringUtils.isBlank(selectedFolder)) {
+			if (!module.getModuleFiles().contains(selectedFolder)) {
+				module.addModuleFile(selectedFolder);
+				meveoModuleService.update(module);
+				messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFolder, module.getCode());
+			}
+		}
+	}
 
     public String getPassphrase() {
         return passphrase;
@@ -749,4 +832,17 @@ public class UserBean extends CustomFieldBean<User> {
     public void setConfirmPassphrase(String confirmPassphrase) {
         this.confirmPassphrase = confirmPassphrase;
     }
+
+    public boolean isSelectedDir() {
+      return selectedDir;
+    }
+
+    public void setSelectedDir(boolean selectedDir) {
+        this.selectedDir = selectedDir;
+    }
+
+    public long getFileLimitUploadSize() {
+
+		return Long.parseLong(paramBeanFactory.getInstance().getProperty("meveo.fileUpload.limitInMb", "50")) * 1000000;
+	}
 }

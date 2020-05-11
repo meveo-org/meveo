@@ -26,8 +26,13 @@ import org.meveo.model.annotation.ImageType;
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("ServiceTemplate")
+@ModuleItemOrder(209)
 @ObservableEntity
 @Cacheable
 @CustomFieldEntity(cftCodePrefix = "SERVICE")

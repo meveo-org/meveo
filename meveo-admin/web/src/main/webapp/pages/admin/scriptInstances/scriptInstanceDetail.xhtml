@@ -10,11 +10,9 @@
     </ui:define>
 
     <ui:define name="body">
-    	<p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
-        <p:panel>
-		<h:form id="crumbmenuForm">
+    	<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
-                    <p:menuitem value="#{messages['menu.admin']}" disabled="true" />
+                    <p:menuitem value="#{messages['menu.services']}" disabled="true" />
                     <p:menuitem outcome="scriptInstances" value="#{messages['menu.scriptInstances']}" />
 				<p:menuitem value="#{messages['commons.new']} #{messages['scriptInstance.panel']}"
 					disabled="true" rendered="#{scriptInstanceBean.entity.transient}" />
@@ -23,9 +21,13 @@
 					disabled="true" rendered="#{!scriptInstanceBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
-            <a href='https://www.assembla.com/spaces/meveo-enterprise/wiki/Scripts' target='_blank'>Help ?</a>
-        </p:panel>
-        <hftl:formPanel label="#{messages['scriptInstance.panel']}" formId="scriptInstanceForm" backingBean="#{scriptInstanceBean}" showFormButtons="false">
+    
+<!--     	<p:panel> -->
+<!--             <a style="float: right" href='https://www.assembla.com/spaces/meveo-enterprise/wiki/Scripts' target='_blank'>Help ?</a> -->
+<!--         </p:panel> -->
+        
+        <p:growl id="growl" showDetail="true" sticky="false" autoUpdate="true" />
+        <hftl:formPanel formId="scriptInstanceForm" backingBean="#{scriptInstanceBean}" showFormButtons="false">
             <h:panelGroup rendered="#{scriptInstanceBean.entity.isError()}">
                 <div class="ui-messages ui-widget">
                     <div class="ui-messages-error ui-corner-all">

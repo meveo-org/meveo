@@ -19,6 +19,7 @@
 package org.meveo.model;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -26,7 +27,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.meveo.commons.utils.CustomDateSerializer;
+import org.meveo.commons.utils.CustomInstantSerializer;
 import org.meveo.model.shared.DateUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,20 +43,18 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @JsonSerialize(using = CustomDateSerializer.class)
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "start_date")
-    private Date from;
+    @JsonSerialize(using = CustomInstantSerializer.class)
+    @Column(name = "start_date", columnDefinition = "TIMESTAMP")
+    private Instant from;
 
-    @JsonSerialize(using = CustomDateSerializer.class)
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "end_date")
-    private Date to;
+    @JsonSerialize(using = CustomInstantSerializer.class)
+    @Column(name = "end_date", columnDefinition = "TIMESTAMP")
+    private Instant to;
 
     public DatePeriod() {
     }
 
-    public DatePeriod(Date from, Date to) {
+    public DatePeriod(Instant from, Instant to) {
         super();
         this.from = from;
         this.to = to;
@@ -71,19 +70,25 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
         }
     }
 
-    public Date getFrom() {
+    public DatePeriod(Date from, Date to) {
+        super();
+        this.from = from.toInstant();
+        this.to = to.toInstant();
+    }
+
+	public Instant getFrom() {
         return from;
     }
 
-    public void setFrom(Date from) {
+    public void setFrom(Instant from) {
         this.from = from;
     }
 
-    public Date getTo() {
+    public Instant getTo() {
         return to;
     }
 
-    public void setTo(Date to) {
+    public void setTo(Instant to) {
         this.to = to;
     }
 
@@ -93,8 +98,8 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
      * @param date Date to check
      * @return True/false
      */
-    public boolean isCorrespondsToPeriod(Date date) {
-        return (from == null || (date != null &&  date.compareTo(from) >= 0)) && (to == null || (date != null && date.before(to)));
+    public boolean isCorrespondsToPeriod(Instant date) {
+        return (from == null || (date != null &&  date.compareTo(from) >= 0)) && (to == null || (date != null && date.isBefore(to)));
     }
 
     /**
@@ -106,7 +111,7 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
      */
     public boolean isCorrespondsToPeriod(DatePeriod period, boolean strictMatch) {
         if (period == null) {
-            return isCorrespondsToPeriod(null, null, strictMatch);
+            return isCorrespondsToPeriod((Instant) null, null, strictMatch);
         } else {
             return isCorrespondsToPeriod(period.getFrom(), period.getTo(), strictMatch);
         }
@@ -120,7 +125,7 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
      * @param strictMatch True If dates match period start and end dates (strict match) or False when overlap period start and end dates (non-strict match)
      * @return True if current period object corresponds to give dates and strict matching type
      */
-    public boolean isCorrespondsToPeriod(Date checkFrom, Date checkTo, boolean strictMatch) {
+    public boolean isCorrespondsToPeriod(Instant checkFrom, Instant checkTo, boolean strictMatch) {
 
         if (strictMatch) {
             boolean match = (checkFrom == null && this.from == null) || (checkFrom != null && this.from != null && checkFrom.equals(this.from));
@@ -137,7 +142,7 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
      * @return True if start date is before end date or any of them is empty
      */
     public boolean isValid() {
-        return from == null || to == null || from.before(to);
+        return from == null || to == null || from.isBefore(to);
     }
 
     @Override
@@ -196,4 +201,22 @@ public class DatePeriod implements Comparable<DatePeriod>, Serializable {
 
         return isCorrespondsToPeriod((DatePeriod) other, true);
     }
+
+	/**
+	 * @param dateFrom
+	 * @param dateTo
+	 * @param strictMatch
+	 * @return
+	 */
+	public boolean isCorrespondsToPeriod(Date dateFrom, Date dateTo, boolean strictMatch) {
+		return isCorrespondsToPeriod(dateFrom.toInstant(), dateTo.toInstant(), strictMatch);
+	}
+
+	/**
+	 * @param date
+	 * @return
+	 */
+	public boolean isCorrespondsToPeriod(Date date) {
+		return isCorrespondsToPeriod(date.toInstant());
+	}
 }

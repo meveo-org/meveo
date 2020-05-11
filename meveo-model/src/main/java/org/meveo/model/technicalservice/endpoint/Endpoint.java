@@ -43,6 +43,7 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.scripts.Function;
@@ -52,8 +53,9 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 01.02.2019
- * @lastModifiedVersion 6.3.0
+ * @version 6.9.0
  */
 @Entity
 @Table(name = "service_endpoint")
@@ -74,6 +76,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
 @ModuleItem("Endpoint")
+@ModuleItemOrder(80)
 @ObservableEntity
 public class Endpoint extends BusinessEntity {
 

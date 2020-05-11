@@ -56,7 +56,7 @@ public class JobTriggerLauncher {
         
         try {
             log.info("launch jobTrigger:{}", jobTrigger);
-            HashMap<Object, Object> params = new HashMap<Object, Object>();
+            HashMap<String, Object> params = new HashMap<String, Object>();
             params.put("event", entityOrEvent);
             
             jobExecutionService.executeJob(jobInstanceService.retrieveIfNotManaged(jobTrigger.getJobInstance()), params);

@@ -36,16 +36,19 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.admin.User;
 import org.meveo.model.security.Role;
 
 /**
  * @author Clément Bareth
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @lastModifiedVersion 6.9.0
  */
 @Entity
 @Cacheable
 @ModuleItem("Chart")
+@ModuleItemOrder(205)
 @ExportIdentifier({ "code"})
 @Table(name = "dwh_chart", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @Inheritance(strategy = InheritanceType.JOINED)

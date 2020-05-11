@@ -5,22 +5,26 @@
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
-	xmlns:o="http://omnifaces.org/ui"
-	template="layout/template.xhtml" xmlns:hftl="http://hftl.org">
+	xmlns:o="http://omnifaces.org/ui" template="/layout/template.xhtml"
+	xmlns:hftl="http://hftl.org">
 
 	<ui:define name="body">
-	
-		<o:importConstants type="org.meveo.util.Version"/>
+
+		<o:importConstants type="org.meveo.util.Version" />
+
+		<hftl:emptyTag></hftl:emptyTag>
 
 		<div style="margin: auto; width: 500px; margin-top: 20px;">
 			<h1 class="TexAlCenter">Meveo Software</h1>
-			<hr style="width: 100%"/>
+			<hr style="width: 100%" />
 
 			<h:panelGrid columns="2" style="margin-top: 50px; width: 100%">
-				<h:outputText styleClass="Fs14" value="#{messages['meveoInstance.productVersion']}"/>
-				<h:outputText styleClass="Fs14" value="#{Version.appVersion}"/>
-				<h:outputText styleClass="Fs14" value="#{messages['meveoInstance.buildId']}"/>
-				<h:outputText styleClass="Fs14" value="#{Version.buildNumber}"/>
+				<h:outputText styleClass="Fs14"
+					value="#{messages['meveoInstance.productVersion']}" />
+				<h:outputText styleClass="Fs14" value="#{Version.appVersion}" />
+				<h:outputText styleClass="Fs14"
+					value="#{messages['meveoInstance.buildId']}" />
+				<h:outputText styleClass="Fs14" value="#{Version.buildNumber}" />
 			</h:panelGrid>
 
 		</div>

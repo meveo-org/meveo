@@ -48,9 +48,12 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import javax.tools.*;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -62,6 +65,7 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
@@ -69,7 +73,10 @@ import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
-import org.meveo.commons.utils.*;
+import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.MeveoFileUtils;
+import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
@@ -90,6 +97,8 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -107,6 +116,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
     public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
+    
+    private static Logger staticLogger = LoggerFactory.getLogger(CustomScriptService.class);
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -130,6 +141,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private MavenConfigurationService mavenConfigurationService;
+    
 
     private RepositorySystem defaultRepositorySystem;
 
@@ -223,6 +235,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     public ScriptInterface getExecutionEngine(String scriptCode, Map<String, Object> context) {
         T script = this.findByCode(scriptCode);
+        detach(script);
         return getExecutionEngine(script, context);
     }
 
@@ -233,7 +246,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
             // Call setters if those are provided
             if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                for (Accessor setter : script.getSetters()) {
+                for (Accessor setter : script.getSettersNullSafe()) {
                     Object setterValue = context.get(setter.getName());
                     if (setterValue != null) {
                         // In case the parameters are initialized by a get request, we might need to
@@ -309,6 +322,25 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             return false;
         }
     }
+    
+    private static void addJarsToClassPath(File directory) {
+        for (File file : directory.listFiles()) {
+            if (file.getName().endsWith(".jar")) {
+				try {
+					String canonicalPath = file.getCanonicalPath();
+					String classPath = CLASSPATH_REFERENCE.get();
+					classPath += canonicalPath + File.pathSeparator;
+					CLASSPATH_REFERENCE.set(classPath);
+					
+				} catch (IOException e) {
+					staticLogger.warn("Can't add jar file to class path", e);
+				}
+				
+            } else if(file.isDirectory()) {
+            	addJarsToClassPath(file);
+            }
+        }
+    }
 
     /**
      * Construct classpath for script compilation
@@ -322,11 +354,15 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     // Check if deploying an exploded archive or a compressed file
                     String thisClassfile = new Object() {}.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
 
+                    // Handle wildfly modules
+                    
+                    
                     File realFile = new File(thisClassfile);
 
                     // Was deployed as exploded archive
                     if (realFile.exists()) {
                         File deploymentDir = realFile.getParentFile();
+                        System.out.println("Deployment dir: " + deploymentDir.getAbsolutePath());
                         File[] files = deploymentDir.listFiles();
                         if (files != null) {
                             for (File file : files) {
@@ -406,11 +442,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         classpath = String.join(File.pathSeparator, classPathEntries);
 
                     }
-
+                    
                     CLASSPATH_REFERENCE.set(classpath);
+                    
+                	String cpt = System.getProperty("java.class.path");
+                	File wildflyFolder = new File(cpt).getParentFile();
+                	File moduleFolder = new File(wildflyFolder, "modules/system/layers/base");
+                	addJarsToClassPath(moduleFolder);
                 }
             }
-        }
+       }
+            
+        System.out.println("Final classpath : " + CLASSPATH_REFERENCE.get());
     }
 
     private void checkEndpoints(CustomScript scriptInstance, List<Accessor> setters) throws BusinessException {
@@ -521,52 +564,53 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 //        new File("$localRepoRoot.absolutePath/$pathToLocalArtifact")
 //    }
 
-    private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
+	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
 
-        Set<String> result = new HashSet<>();
-        List<String> repos = mavenConfigurationService.getMavenRepositories();
-        String m2FolderPath = mavenConfigurationService.getM2FolderPath();
+		Set<String> result = new HashSet<>();
+		List<String> repos = mavenConfigurationService.getMavenRepositories();
+		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
 
-        if (!StringUtils.isBlank(m2FolderPath)) {
-            File localRepository = new File(m2FolderPath);
-            List<RemoteRepository> remoteRepositories = repos.stream()
-                    .map(e -> new RemoteRepository.Builder(e, "default", e).build())
-                    .collect(Collectors.toList());
+		if (!StringUtils.isBlank(m2FolderPath)) {
+			String repoId = RandomStringUtils.randomAlphabetic(5);
+			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository.Builder(repoId, "default", e).build()).collect(Collectors.toList());
 
-//			Aether aether = new Aether(remoteRepositories, localRepository);
+			log.debug("found {} repositories", remoteRepositories.size());
 
-            if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
-                Set<ArtifactResult> artifacts = mavenDependencies.stream().map(e -> {
-                    try {
-                        // check if artifact exists in local repository
-                        CollectRequest theCollectRequest = new CollectRequest();
-                        DefaultArtifact defaultArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
-                        Dependency root = new Dependency(defaultArtifact, "COMPILE");
-                        theCollectRequest.setRoot(root);
+			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
+				Set<ArtifactResult> artifacts = mavenDependencies.stream().map(e -> {
+					try {
+						DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
 
-                        remoteRepositories.forEach(theCollectRequest::addRepository);
+						// check if artifact exists in local repository
+						CollectRequest collectRequest = new CollectRequest();
 
-                        DependencyFilter theDependencyFilter = DependencyFilterUtils.classpathFilter("COMPILE");
-                        DependencyRequest theDependencyRequest = new DependencyRequest(theCollectRequest, theDependencyFilter);
-                        DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-                        return dependencyResult.getArtifactResults();
-//						 aether.resolve(defaultArtifact, "compile");
+						Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
+						collectRequest.setRoot(root);
 
-                    } catch (DependencyResolutionException e1) {
-                        return null;    //TODO handle it
-                    }
-                }).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+						remoteRepositories.forEach(collectRequest::addRepository);
 
-                result = artifacts.stream()
-                        .filter(Objects::nonNull)
-                        .map(e -> {
-                            return e.getArtifact().getFile().getPath();
-                        }).collect(Collectors.toSet());
-            }
-        }
+						DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
+						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequest, classpathFlter);
+						DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
 
-        return result;
-    }
+						return dependencyResult.getArtifactResults();
+
+					} catch (DependencyResolutionException e1) {
+						log.error("Fail downloading dependencies {}", e1);
+						return null; // TODO handle it
+					}
+				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+
+				log.debug("found {} artifacts", artifacts.size());
+
+				result = artifacts.stream().filter(Objects::nonNull).map(e -> {
+					return e.getArtifact().getFile().getPath();
+				}).collect(Collectors.toSet());
+			}
+		}
+
+		return result;
+	}
 
     /**
      * Parse the java source code and extract getters and setters
@@ -807,7 +851,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	try {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + fileName + ".java");
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + fileName + ".java");
                 String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 Matcher matcher2 = pattern.matcher(content);
                 while (matcher2.find()) {
@@ -821,7 +865,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 
             } else {
                 String name = className.replace('.', '/');
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts/" + name + ".java");
+                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts/" + name + ".java");
                 if (file.exists()) {
                     ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
                     populateImportScriptInstance(scriptInstance, files);
@@ -869,17 +913,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
         if (result == null) {
-            T script = findByCode(scriptCode);
+        	List<String> fetchFields = Arrays.asList("mavenDependencies");
+            T script = findByCode(scriptCode, fetchFields);
             if (script == null) {
                 log.debug("ScriptInstance with {} does not exist", scriptCode);
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
+            
             compileScript(script, false);
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
             }
+            
             result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+            detach(script);
         }
 
         if (result == null) {
@@ -1007,7 +1055,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (modifiedFile.startsWith("scripts")) {
                     String scriptCode = modifiedFile.replaceAll("scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
                     File scriptFile = new File(repositoryDir, modifiedFile);
 
                     if (script == null && scriptFile.exists()) {
@@ -1047,7 +1095,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     private File findScriptFile(CustomScript scriptInstance) {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
         final File scriptDir = new File(repositoryDir, "/scripts");
         if (!scriptDir.exists()) {
             scriptDir.mkdirs();
@@ -1085,14 +1133,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     String className = matcher.group(1);
                     if (className.startsWith("org.meveo.model.customEntities")) {
                         String fileName = className.split("\\.")[4];
-                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(),"custom" + File.separator + "entities" + File.separator + fileName + ".java");
+                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/","custom" + File.separator + "entities" + File.separator + fileName + ".java");
                         String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                         matcher = pattern.matcher(content);
                         while (matcher.find()) {
                             String name = matcher.group(1);
                             if (name.startsWith("org.meveo.model.customEntities")) {
                                 String cetName = name.split("\\.")[4];
-                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "custom/entities/" + cetName + ".java");
+                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + cetName + ".java");
                                 files.add(cetFile);
                                 continue;
                             }
@@ -1104,7 +1152,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
                     for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
                         String path = instance.getCode().replace('.', '/');
-                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath(), "scripts" + File.separator + path + ".java");
+                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
                         if (fileImport.exists()) {
                             files.add(fileImport);
                         }

@@ -25,13 +25,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.EntityListDataModelPF;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.primefaces.model.DefaultTreeNode;
@@ -59,6 +62,14 @@ public class MeveoModuleListBean extends MeveoModuleBean {
     private TreeNode selectedModuleItems;
 
     private EntityListDataModelPF<MeveoModuleDto> moduleDtos = null;
+    
+	@Override
+	public void delete() throws BusinessException {
+		if(entity.isInstalled()) {
+			meveoModuleService.uninstall(entity, true);
+		}
+		meveoModuleService.remove(entity.getId());
+	}
 
     public EntityListDataModelPF<MeveoModuleDto> getModuleDtos() {
         return moduleDtos;

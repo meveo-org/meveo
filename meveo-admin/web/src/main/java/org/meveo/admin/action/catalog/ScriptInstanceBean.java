@@ -66,7 +66,6 @@ import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
-import org.reflections.Reflections;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -74,6 +73,9 @@ import com.github.javaparser.ast.CompilationUnit;
 /**
  * Standard backing bean for {@link ScriptInstance} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
  * create, edit, view, delete operations). It works with Manaty custom JSF components.
+ * 
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  */
 @Named
 @ViewScoped
@@ -274,7 +276,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
      */
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("executionRoles", "sourcingRoles");
+        return Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances", "scriptInputs", "scriptOutputs");
+    }
+    
+    @Override
+    protected List<String> getListFieldsToFetch() {
+    	return Arrays.asList("mavenDependencies", "importScriptInstances", "scriptInputs", "scriptOutputs");
     }
 
     @Override
@@ -286,6 +293,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         String code = entity.getCode();
+        
         if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             code = CustomScriptService.getFullClassname(entity.getScript());
 
@@ -294,13 +302,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 messages.error(new BundleKey("messages", "message.scriptInstance.classInvalid"), code);
                 return null;
             }
-        }
-
-        // check duplicate script
-        CustomScript scriptDuplicate = scriptInstanceService.findByCode(code); // genericScriptService
-        if (scriptDuplicate != null && !scriptDuplicate.getId().equals(entity.getId())) {
-            messages.error(new BundleKey("messages", "scriptInstance.scriptAlreadyExists"), code);
-            return null;
         }
 
         // Update roles
@@ -375,6 +376,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
 
         if (isUnique) {
+        	log.info("Not updating script {} because a maven dependency already exists with another version");
             return null;
         }
 
@@ -383,16 +385,18 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (CollectionUtils.isNotEmpty(importedScripts)) {
             getEntity().getImportScriptInstances().addAll(importedScripts);
         }
-        super.saveOrUpdate(false);
+        
+        super.saveOrUpdate(true);
 
-        String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&cid=" + conversation.getId();
+        String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
 
         return result;
     }
 
-    public String execute() {
-        scriptInstanceService.test(entity.getCode(), null);
-        return null;
+	public String execute() {
+    	scriptInstanceService.test(entity.getCode(), null);
+        endConversation();
+        return "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&";
     }
 
     @Override
@@ -453,7 +457,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public List<ScriptIO> getInputs() {
         if (CollectionUtils.isEmpty(inputs)) {
             if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                final List<Accessor> setters = entity.getSetters();
+                final List<Accessor> setters = entity.getSettersNullSafe();
                 if (CollectionUtils.isNotEmpty(setters)) {
                     for (Accessor accessor : setters) {
                         inputs.add(createIO(accessor.getName()));

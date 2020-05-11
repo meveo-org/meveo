@@ -32,7 +32,7 @@ public class FilteringJob extends Job {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NEVER)
-    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance) throws BusinessException {
+    protected void execute(JobExecutionResultImpl result, JobInstance jobInstance, Map<String, Object> params) throws BusinessException {
         filteringJobBean.execute(result, jobInstance);
     }
 

@@ -39,9 +39,15 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
+ */
 @Entity
 @ModuleItem("Workflow")
+@ModuleItemOrder(207)
 @Cacheable
 @ExportIdentifier({ "code"})
 @Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))

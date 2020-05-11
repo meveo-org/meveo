@@ -23,6 +23,7 @@ import org.meveo.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -125,7 +126,7 @@ public abstract class BaseRs implements IBaseRs {
      * @param status Status dto to update
      */
     protected void processException(Exception e, ActionStatus status) {
-
+    	
         if (e instanceof MeveoApiException) {
             status.setErrorCode(((MeveoApiException) e).getErrorCode());
             status.setStatus(ActionStatusEnum.FAIL);
@@ -135,6 +136,7 @@ public abstract class BaseRs implements IBaseRs {
             log.warn("Failed to execute API: {}", (StringUtils.isBlank(e.getMessage()) ? e : e.getMessage()));
 
             String message = e.getMessage();
+            
             MeveoApiErrorCodeEnum errorCode = e instanceof BusinessException ? MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION : MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION;
             Throwable cause = e;
 
@@ -142,6 +144,8 @@ public abstract class BaseRs implements IBaseRs {
             if (!(e instanceof BusinessException)) {
                 cause = e.getCause();
                 while (cause != null) {
+
+                    message = cause.getMessage();
 
                     if (cause instanceof SQLException || cause instanceof BusinessException || cause instanceof ConstraintViolationException) {
 
@@ -152,18 +156,22 @@ public abstract class BaseRs implements IBaseRs {
                             for (ConstraintViolation<?> cv : violations) {
                                 message += cv.getPropertyPath() + " " + cv.getMessage() + ",";
                             }
-                            message = message.substring(0, message.length() - 1);
                             errorCode = MeveoApiErrorCodeEnum.INVALID_PARAMETER;
                         } else {
-                            message = cause.getMessage();
                             errorCode = cause instanceof BusinessException ? MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION : MeveoApiErrorCodeEnum.GENERIC_API_EXCEPTION;
                         }
+                        
                         break;
                     }
+                    
+                    if(cause instanceof IllegalArgumentException) {
+                    	errorCode = MeveoApiErrorCodeEnum.INVALID_PARAMETER;
+                    	break;
+                    }
+                    
                     cause = cause.getCause();
                 }
             }
-
             status.setErrorCode(errorCode);
             status.setStatus(ActionStatusEnum.FAIL);
             status.setMessage(message);

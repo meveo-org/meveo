@@ -1,6 +1,6 @@
 package org.meveo.api;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -17,6 +17,7 @@ import org.meveo.model.IEntity;
  * @param <E> Entity class
  * @param <T> Dto class
  */
+@SuppressWarnings("rawtypes")
 public abstract class BaseCrudVersionedApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi implements ApiVersionedService<E, T> {
 
     /*
@@ -25,7 +26,7 @@ public abstract class BaseCrudVersionedApi<E extends IEntity, T extends BaseEnti
      * @see org.meveo.api.ApiVersionedService#findIgnoreNotFound(java.lang.String)
      */
     @Override
-    public T findIgnoreNotFound(String code, Date validFrom, Date validTo) throws MissingParameterException, InvalidParameterException, MeveoApiException {
+    public T findIgnoreNotFound(String code, Instant validFrom, Instant validTo) throws MissingParameterException, InvalidParameterException, MeveoApiException {
         try {
             return find(code, validFrom, validTo);
         } catch (EntityDoesNotExistsException e) {

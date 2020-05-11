@@ -40,7 +40,9 @@ public class RemoteRepositoryService extends PersistenceService<RemoteRepository
         qb.addCriterion("code", "=", code, false);
 
         try {
-            return (RemoteRepository) qb.getQuery(entityManager).getSingleResult();
+            return (RemoteRepository) qb.getQuery(entityManager)
+            		.setParameter("code", code)
+            		.getSingleResult();
         } catch (NoResultException e) {
             return null;
         }

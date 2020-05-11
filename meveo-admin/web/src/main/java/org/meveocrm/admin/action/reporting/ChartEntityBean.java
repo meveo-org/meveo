@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.enterprise.context.Dependent;
-import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -404,7 +403,7 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 		StatModel result = new StatModel();
 
 		result.setDescription("New Orders");
-		result.setLastUpdated(currentDate.getTime());
+		result.setLastUpdated(currentDate.getTime().toInstant());
 
 		return result;
 	}
@@ -416,7 +415,7 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 		StatModel result = new StatModel();
 
 		result.setDescription("Pending Orders");
-		result.setLastUpdated(Calendar.getInstance().getTime());
+		result.setLastUpdated(Calendar.getInstance().getTime().toInstant());
 
 		return result;
 	}
@@ -444,7 +443,7 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 		result.setValue(currentValue);
 		result.setDescription("Churn");
 		result.computeDifference(beforeValue);
-		result.setLastUpdated(currentDate.getTime());
+		result.setLastUpdated(currentDate.getTime().toInstant());
 		return result;
 	}
 
@@ -469,7 +468,7 @@ public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends 
 		result.setValue(currentValue);
 		result.setDescription("MRR");
 		result.computeDifference(beforeValue);
-		result.setLastUpdated(currentDate.getTime());
+		result.setLastUpdated(currentDate.getTime().toInstant());
 		return result;
 	}
 

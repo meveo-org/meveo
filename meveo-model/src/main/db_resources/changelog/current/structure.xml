@@ -1292,4 +1292,10 @@
             <column name="samples" type="text" defaultValue="[]"/>
         </addColumn>
     </changeSet>
+    
+   	<changeSet id="#4138 - Remove unused jobs" author="Edward P. Legaspi">
+		<delete tableName="meveo_job_instance">
+			<where>id IN (-1,-2,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-14,-15)</where>
+		</delete>
+	</changeSet>
 </databaseChangeLog>

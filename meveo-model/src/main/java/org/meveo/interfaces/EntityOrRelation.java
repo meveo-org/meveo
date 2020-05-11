@@ -121,9 +121,11 @@ public abstract class EntityOrRelation implements Serializable {
 
 	@JsonGetter("properties")
 	public Map<String, Object> getProperties() {
-		return this.properties.entrySet()
-				.stream()
-				.collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getValue()));
+		Map<String, Object> propertiesAsMap = new HashMap<>();
+		this.properties.entrySet()
+			.stream()
+			.forEach(entry -> propertiesAsMap.put(entry.getKey(), entry.getValue().getValue()));
+		 return propertiesAsMap;
 	}
 
 	@SuppressWarnings("unchecked")

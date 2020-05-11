@@ -4,7 +4,16 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import org.meveo.commons.utils.StringUtils;
@@ -15,7 +24,7 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
  * @lastModifiedVersion 6.5.0
  */
 @Entity
-@Table(name = "maven_dependency", uniqueConstraints={@UniqueConstraint(columnNames ={"group_id","artifact_id"})})
+@Table(name = "maven_dependency", uniqueConstraints = { @UniqueConstraint(columnNames = { "group_id", "artifact_id" }) })
 @IdClass(MavenDependencyPk.class)
 @EntityListeners(JPAtoCDIListener.class)
 public class MavenDependency implements Serializable {
@@ -84,8 +93,8 @@ public class MavenDependency implements Serializable {
 		StringBuilder coordinatesBuilder = new StringBuilder();
 		coordinatesBuilder.append(groupId != null ? groupId : "").append(":");
 		coordinatesBuilder.append(artifactId != null ? artifactId : "").append(":");
-		coordinatesBuilder.append(version != null ? version : "").append(":");
-		coordinatesBuilder.append(classifier != null ? classifier : "");
+		coordinatesBuilder.append(version != null ? version : "");
+		coordinatesBuilder.append(classifier != null ? ":" + classifier : "");
 		coordinates = coordinatesBuilder.toString();
 		return coordinates;
 	}

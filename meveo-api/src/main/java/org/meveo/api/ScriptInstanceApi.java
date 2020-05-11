@@ -1,6 +1,12 @@
 package org.meveo.api;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -32,8 +38,8 @@ import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  **/
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
@@ -41,40 +47,40 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
-    @Inject
-    private RoleService roleService;
+	@Inject
+	private RoleService roleService;
 
-    @Inject
+	@Inject
 	private MavenDependencyService mavenDependencyService;
 
-    public ScriptInstanceApi() {
-    	super(ScriptInstance.class, ScriptInstanceDto.class);
-    }
+	public ScriptInstanceApi() {
+		super(ScriptInstance.class, ScriptInstanceDto.class);
+	}
 
 	/**
 	 * @param code Optional. Filter on script code
-	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type and error.
+	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type
+	 *         and error.
 	 */
-	public List<ScriptInstanceDto> getScriptsForTreeView(String code){
+	public List<ScriptInstanceDto> getScriptsForTreeView(String code) {
 		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
 
-		if(code != null) {
+		if (code != null) {
 			query.append(" WHERE upper(s.code) LIKE :code");
 		}
 
-		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager()
-			.createQuery(query.toString(), ScriptInstanceDto.class);
+		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager().createQuery(query.toString(), ScriptInstanceDto.class);
 
-		if(code != null) {
+		if (code != null) {
 			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
 		}
 
 		return jpaQuery.getResultList();
 	}
 
-	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto)
-			throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
-		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
+		
+		List<ScriptInstanceErrorDto> result = new ArrayList<>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
 		if (scriptInstanceService.findByCode(scriptInstanceDto.getCode()) != null) {
@@ -84,6 +90,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
 
 		scriptInstanceService.create(scriptInstance);
+		scriptInstanceService.flush();
 
 		if (scriptInstance != null && scriptInstance.isError() != null && scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
@@ -91,27 +98,27 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				result.add(errorDto);
 			}
 		}
+		
 		return result;
 	}
 
 	public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
 
-		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+		List<ScriptInstanceErrorDto> result = new ArrayList<>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceDto.getCode());
-		scriptInstance.getMavenDependencies().clear();
-		scriptInstance.getImportScriptInstances().clear();
-		scriptInstanceService.flush();
+
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
+
 		} else if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
 			throw new MeveoApiException("User does not have a permission to update a given script");
 		}
 
-		scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
+		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
 
-		scriptInstance = scriptInstanceService.update(scriptInstance);
+		scriptInstanceService.update(scriptInstance);
 
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
@@ -129,22 +136,21 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 */
 	@Override
 	public ScriptInstanceDto find(String scriptInstanceCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+
 		ScriptInstanceDto scriptInstanceDtoResult = null;
+
 		if (StringUtils.isBlank(scriptInstanceCode)) {
 			missingParameters.add("scriptInstanceCode");
 			handleMissingParameters();
 		}
+
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptInstanceCode);
 		if (scriptInstance == null) {
 			throw new EntityDoesNotExistsException(ScriptInstance.class, scriptInstanceCode);
 		}
 
-		String source = scriptInstanceService.readScriptFile(scriptInstance);
+		scriptInstanceDtoResult = toDto(scriptInstance);
 
-		scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
-		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
-			scriptInstanceDtoResult.setScript("InvalidPermission");
-		}
 		return scriptInstanceDtoResult;
 	}
 
@@ -164,22 +170,23 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	public ScriptInstance createOrUpdate(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
 		createOrUpdateWithCompile(postData);
 
-		ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
-		return scriptInstance;
+		return scriptInstanceService.findByCode(postData.getCode());
 	}
 
 	public List<ScriptInstanceErrorDto> createOrUpdateWithCompile(ScriptInstanceDto postData) throws MeveoApiException, BusinessException {
 
-		List<ScriptInstanceErrorDto> result = new ArrayList<ScriptInstanceErrorDto>();
+		List<ScriptInstanceErrorDto> result;
 		checkDtoAndUpdateCode(postData);
 
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
 
 		if (scriptInstance == null) {
 			result = create(postData);
+
 		} else {
 			result = update(postData);
 		}
+
 		return result;
 	}
 
@@ -191,20 +198,20 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		handleMissingParameters();
 
-        if(dto.getType() == ScriptSourceTypeEnum.JAVA) {
-		String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
-		if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
-			throw new BusinessApiException("The code and the canonical script class name must be identical");
-		}
+		if (dto.getType() == ScriptSourceTypeEnum.JAVA) {
+			String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
+			if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
+				throw new BusinessApiException("The code and the canonical script class name must be identical");
+			}
 
-		// check script existed full class name in class path
-		if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
-			throw new InvalidParameterException("The class with such name already exists");
-		}
+			// check script existed full class name in class path
+			if (CustomScriptService.isOverwritesJavaClass(scriptCode)) {
+				throw new InvalidParameterException("The class with such name already exists");
+			}
 
-		dto.setCode(scriptCode);
+			dto.setCode(scriptCode);
+		}
 	}
-    }
 
 	/**
 	 * Convert ScriptInstanceDto to a ScriptInstance instance.
@@ -215,13 +222,13 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 * @return A new or updated ScriptInstance object
 	 * @throws EntityDoesNotExistsException entity does not exist exception.
 	 */
-	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstanceToUpdate) throws EntityDoesNotExistsException, BusinessException {
+	public ScriptInstance scriptInstanceFromDTO(ScriptInstanceDto dto, ScriptInstance scriptInstance) throws EntityDoesNotExistsException, BusinessException {
 
-		ScriptInstance scriptInstance = new ScriptInstance();
-		if (scriptInstanceToUpdate != null) {
-			scriptInstance = scriptInstanceToUpdate;
+		if (scriptInstance == null) {
+			scriptInstance = new ScriptInstance();
+			scriptInstance.setCode(dto.getCode());
 		}
-		scriptInstance.setCode(dto.getCode());
+
 		scriptInstance.setDescription(dto.getDescription());
 		scriptInstance.setScript(dto.getScript());
 		scriptInstance.setSamples(dto.getSamples());
@@ -229,6 +236,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		if (dto.getType() != null) {
 			scriptInstance.setSourceTypeEnum(dto.getType());
+
 		} else {
 			scriptInstance.setSourceTypeEnum(ScriptSourceTypeEnum.JAVA);
 		}
@@ -240,6 +248,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			}
 			scriptInstance.getExecutionRoles().add(role);
 		}
+
 		for (RoleDto roleDto : dto.getSourcingRoles()) {
 			Role role = roleService.findByName(roleDto.getName());
 			if (role == null) {
@@ -248,20 +257,20 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			scriptInstance.getSourcingRoles().add(role);
 		}
 
-        Set<MavenDependency> mavenDependencyList = new HashSet<>();
-        for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
-            MavenDependency mavenDependency = new MavenDependency();
-            mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
-            mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
-            mavenDependency.setVersion(mavenDependencyDto.getVersion());
-            mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
-            mavenDependency.setScript(scriptInstance);
-            mavenDependencyList.add(mavenDependency);
-        }
-        scriptInstance.getMavenDependencies().clear();
-        scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
+		Set<MavenDependency> mavenDependencyList = new HashSet<>();
+		for (MavenDependencyDto mavenDependencyDto : dto.getMavenDependencies()) {
+			MavenDependency mavenDependency = new MavenDependency();
+			mavenDependency.setGroupId(mavenDependencyDto.getGroupId());
+			mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
+			mavenDependency.setVersion(mavenDependencyDto.getVersion());
+			mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+			mavenDependency.setScript(scriptInstance);
+			mavenDependencyList.add(mavenDependency);
+		}
+		scriptInstance.getMavenDependencies().clear();
+		scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
 
-		if (mavenDependencyList != null) {
+		if (!mavenDependencyList.isEmpty()) {
 			Integer line = 1;
 			Map<String, Integer> map = new HashMap<>();
 			for (MavenDependency maven : mavenDependencyList) {
@@ -277,11 +286,12 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			line = 1;
 			for (MavenDependency maven : mavenDependencyList) {
 				if (!mavenDependencyService.validateUniqueFields(scriptInstance.getId(), maven.getGroupId(), maven.getArtifactId())) {
-                  throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
+					throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
 				}
 				line++;
 			}
 		}
+
 		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance);
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
 			scriptInstance.getImportScriptInstances().addAll(importedScripts);
@@ -289,36 +299,38 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		return scriptInstance;
 	}
-	
+
 	public String getScriptCodesAsJSON() {
 		return (String) scriptInstanceService.getEntityManager()
-			.createNativeQuery("SELECT cast(json_agg(code) as text) FROM meveo_script_instance " + 
-					"INNER JOIN meveo_function ON meveo_function.id = meveo_script_instance.id")
-			.getSingleResult();
+				.createNativeQuery("SELECT cast(json_agg(code) as text) FROM meveo_script_instance " + "INNER JOIN meveo_function ON meveo_function.id = meveo_script_instance.id")
+				.getSingleResult();
 	}
 
-    @Override
-	public ScriptInstanceDto toDto(ScriptInstance entity) {
-		// TODO Auto-generated method stub
-		return null;
+	@Override
+	public ScriptInstanceDto toDto(ScriptInstance scriptInstance) {
+
+		String source = scriptInstanceService.readScriptFile(scriptInstance);
+		scriptInstance = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
+		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
+		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
+			scriptInstanceDtoResult.setScript("InvalidPermission");
+		}
+
+		return scriptInstanceDtoResult;
 	}
 
 	@Override
 	public ScriptInstance fromDto(ScriptInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public IPersistenceService<ScriptInstance> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return scriptInstanceService;
 	}
 
 	@Override
 	public boolean exists(ScriptInstanceDto dto) {
-		// TODO Auto-generated method stub
 		return false;
 	}
-
 }

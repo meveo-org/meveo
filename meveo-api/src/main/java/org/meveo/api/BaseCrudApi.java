@@ -177,7 +177,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		return exportDtos(format, dtos);
 	}
 
-	private File exportDtos(ExportFormat format, List<T> dtos) throws IOException {
+	public File exportDtos(ExportFormat format, List<T> dtos) throws IOException {
 		if (format == null) {
 			throw new IllegalArgumentException("Format must be provided");
 		}
