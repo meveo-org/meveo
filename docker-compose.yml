@@ -30,10 +30,9 @@ services:
         - keycloak_data:/opt/jboss/wildfly/standalone/data/keycloakdb
         - meveo_data:/opt/jboss/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
-        #- $PWD/meveo_deployments:/opt/jboss/wildfly/standalone/deployments    # if host system is Linux
-        #- d:/meveo_deployments:/opt/jboss/wildfly/standalone/deployments       # if host system is Windows
-      environment:
-        JAVA_OPTS: -server -Xms1024m -Xmx2048m -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true
+      #environment:
+        #WILDFLY_CONSOLE_LOG_LEVEL: ERROR  # default: ERROR
+        #WILDFLY_SERVER_LOG_LEVEL: DEBUG    # default: INFO
       ports:
         - 8080:8080
       depends_on:
