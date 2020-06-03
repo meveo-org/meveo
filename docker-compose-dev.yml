@@ -31,8 +31,7 @@ services:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
-        #WILDFLY_CONSOLE_LOG_LEVEL: ERROR  # default: ERROR
-        WILDFLY_SERVER_LOG_LEVEL: DEBUG    # default: INFO
+        MEVEO_LOG_LEVEL: DEBUG    # default: INFO
       ports:
         - 8080:8080
       depends_on:
