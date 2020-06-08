@@ -1,0 +1,4 @@
+/socket-binding-group=standard-sockets/socket-binding=proxy-port:add(port="443")
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=redirect-socket,value="proxy-port")
+/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=proxy-address-forwarding, value="${env.WILDFLY_PROXY_ADDRESS_FORWARDING}")
+/subsystem=undertow/server=default-server/http-listener=default:undefine-attribute(name=enable-http2)
