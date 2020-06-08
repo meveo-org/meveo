@@ -11,7 +11,16 @@ Backend documentation https://meveo.org
 Frontend framework  https://front.meveo.org
 
 Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
- 
+
+Build docker image
+-----
+Run this command: 
+
+    $ sudo ./build_docker.sh 
+
+This script builds two docker images (postgres and meveo) with a tag 'local' for meveo environment. 
+This tag will be used in docker-compose.yml file.
+
 Debug
 -----
 
