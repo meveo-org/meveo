@@ -18,7 +18,7 @@ Run this command:
 
     $ sudo ./build_docker.sh 
 
-This script builds two docker images (postgres and meveo) with a tag 'local' for meveo environment. 
+This script builds two docker images (postgres and meveo) with a tag 'local' for meveo environment.
 This tag will be used in docker-compose.yml file.
 
 Debug
