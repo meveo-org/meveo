@@ -49,6 +49,13 @@ export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
 
 
+# Apply the template standalone.xml for meveo environment
+if [ -f ${JBOSS_HOME}/templates/standalone.xml ]; then
+    info "Apply the template standalone.xml for meveo environment"
+    cp -rf ${JBOSS_HOME}/templates/standalone.xml ${JBOSS_HOME}/standalone/configuration/standalone.xml
+else
+    ERROR=1; exit_with_error "No template configuration file : ${JBOSS_HOME}/templates/standalone.xml"
+fi
 
 # Configure standalone.xml
 if [ -f ${JBOSS_HOME}/cli/standalone-configuration.cli ]; then
@@ -77,7 +84,7 @@ system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
 
 # Check whether container has enough memory
 if [ ${system_memory_in_mb} -lt 1500 ]; then
-    ERROR=1; exit_with_error "Error: The container doesn't have enough memory. Needs at least 2 GB of memory. Currently the available memory is ${system_memory_in_mb} MB."
+    ERROR=1; exit_with_error "The container doesn't have enough memory. Needs at least 2 GB of memory. Currently the available memory is ${system_memory_in_mb} MB."
 fi
 
 if [ "${system_cpu_cores}" -lt "1" ]; then
@@ -104,7 +111,7 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
     JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XX:+AggressiveOpts -XshowSettings:vm -XX:+UseContainerSupport"
     JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=${JBOSS_MODULES_SYSTEM_PKGS} -Djava.awt.headless=true"
 else
-    echo "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
+    info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
 fi
 
 export JAVA_OPTS=$JAVA_OPTS

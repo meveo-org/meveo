@@ -81,7 +81,7 @@ RUN mkdir -p ${JBOSS_HOME}/standalone/data ${JBOSS_HOME}/meveodata /tmp/meveo/bi
     && mv ${JBOSS_HOME}/standalone/configuration/standalone.xml ${JBOSS_HOME}/standalone/configuration/standalone.xml.org
 
 ### For meveo configuration ###
-COPY --chown=jboss:jboss templates/standalone.xml ${JBOSS_HOME}/standalone/configuration/standalone.xml
+COPY --chown=jboss:jboss templates/standalone.xml ${JBOSS_HOME}/templates/standalone.xml
 COPY --chown=jboss:jboss templates/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 COPY --chown=jboss:jboss templates/profile.properties ${JBOSS_HOME}/standalone/configuration/profile.properties
 COPY --chown=jboss:jboss templates/postgresql ${JBOSS_HOME}/modules/system/layers/base/org/postgresql
