@@ -1,5 +1,49 @@
 language: java
+
 jdk: openjdk8
+
+services:
+  - docker
+
+env:
+  - SCM=scm:git:ssh://git@github.com:anaxdev/meveo.git
+  - POSTGRES_ADDR="localhost"
+  - POSTGRES_DB="meveo"
+  - POSTGRES_USER="meveo"
+  - POSTGRES_PASSWORD="meveo"
+  - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp_meveo"
+
+before_install:
+  - docker pull postgres:9.5.21
+  # Start the postgres container to create DB schemas
+  - docker run -d -p 5432:5432 --name ${POSTGRES_TMP_CONTAINER_NAME} -e POSTGRES_DB=${POSTGRES_DB} -e POSTGRES_USER=${POSTGRES_USER} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} postgres:9.5.21
+
+
 script:
-  - export SCM="scm:git:ssh://git@github.com:anaxdev/meveo.git"
-  - mvn clean package -Dscm.url=${SCM} -DskipTests
+  # Wait with timeout 30s until postgres is up
+  - |
+    timeout=30
+    counter=0
+    until docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} /usr/bin/pg_isready -h localhost -p 5432
+    do
+      if [ $counter -gt $timeout ]; then
+        echo "ERROR: timeout occurred after waiting $timeout seconds for postgres"
+        exit 1
+      else
+        echo "Waiting for postgres ..."
+        counter=$((counter+1))
+        sleep 1
+      fi
+    done
+
+  # Creating the database schema
+  - cd meveo-model && mvn liquibase:dropAll liquibase:update -Ddb.url=jdbc:postgresql://${POSTGRES_ADDR}/${POSTGRES_DB} -Ddb.username=${POSTGRES_USER} -Ddb.password=${POSTGRES_PASSWORD} -Prebuild
+
+  # Packaging meveo.war file
+  - cd .. && mvn clean package -Dscm.url=${SCM} -DskipTests
+
+  # Dump the database schema
+  - docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} pg_dump --no-owner -U ${POSTGRES_USER} ${POSTGRES_DB} > meveo.sql
+
+  # copy meveo.sql and meveo.war files into the docker image folder for meveo
+  - cp meveo.sql meveo-admin/web/target/meveo.war docker/
