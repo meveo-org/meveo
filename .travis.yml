@@ -36,6 +36,7 @@ script:
         sleep 1
       fi
     done
+    echo "postgres is up"
 
   # Creating the database schema
   - cd meveo-model && mvn liquibase:dropAll liquibase:update -Ddb.url=jdbc:postgresql://${POSTGRES_ADDR}/${POSTGRES_DB} -Ddb.username=${POSTGRES_USER} -Ddb.password=${POSTGRES_PASSWORD} -Prebuild
