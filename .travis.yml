@@ -6,6 +6,7 @@ services:
   - docker
 
 env:
+  global:
   - SCM=scm:git:ssh://git@github.com:anaxdev/meveo.git
   - POSTGRES_ADDR="localhost"
   - POSTGRES_DB="meveo"
