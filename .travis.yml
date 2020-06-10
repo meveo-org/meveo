@@ -1,7 +1,7 @@
 language: java
 
 os: linux
-dist: xenial
+dist: bionic
 jdk: openjdk8
 
 cache:
@@ -10,6 +10,12 @@ cache:
 
 services:
   - docker
+
+addons:
+  apt:
+    packages:
+# Install the latest Docker version (>= 19.03) in order to use BuildKit
+      - docker-ce
 
 env:
   global:
@@ -21,12 +27,6 @@ env:
   - POSTGRES_PASSWORD="meveo"
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
   - DOCKER_IMAGE_TAG="dev-latest-github"
-
-addons:
-  apt:
-    packages:
-# Install the latest Docker version (>= 19.03) in order to use BuildKit
-      - docker-ce
 
 before_install:
   - docker pull ${POSTGRES_IMG}
