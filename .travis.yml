@@ -38,8 +38,8 @@ before_install:
   # Pull the necessary docker images in advance
   - docker pull postgres:9.5.21
   - docker pull openjdk:8u242-jdk-slim-buster
-  - docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
-  - docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+  - if docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "postgres pulled up"; fi
+  - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
 
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432
