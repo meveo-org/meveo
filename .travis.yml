@@ -19,8 +19,8 @@ env:
   - POSTGRES_DB="meveo"
   - POSTGRES_USER="meveo"
   - POSTGRES_PASSWORD="meveo"
-  - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp_meveo"
-  - DOCKER_IMAGE_TAG="dev-latest-github"
+  - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
+  - DOCKER_IMAGE_TAG="test"
 
 before_install:
   - docker pull ${POSTGRES_IMG}
