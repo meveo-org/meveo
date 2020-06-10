@@ -17,7 +17,6 @@ env:
   - DOCKER_BUILDKIT=1
 
   # Some variables for the temporary postgres container
-  - POSTGRES_IMG="postgres:9.5.21"
   - POSTGRES_ADDR="localhost"
   - POSTGRES_DB="meveo"
   - POSTGRES_USER="meveo"
@@ -37,8 +36,10 @@ before_install:
   - docker version
 
   # Pull the necessary docker images in advance
-  - docker pull ${POSTGRES_IMG}
+  - docker pull postgres:9.5.21
   - docker pull openjdk:8u242-jdk-slim-buster
+  - docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+  - docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
 
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432
@@ -46,7 +47,7 @@ before_install:
     -e POSTGRES_DB=${POSTGRES_DB}
     -e POSTGRES_USER=${POSTGRES_USER}
     -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ${POSTGRES_IMG}
+    postgres:9.5.21
 
 
 # This skips the automatic installation of maven dependency libraries by travis.
