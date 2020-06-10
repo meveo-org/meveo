@@ -13,17 +13,22 @@ services:
 
 env:
   global:
-  - SCM="scm:git:ssh://git@github.com:anaxdev/meveo.git"
+  # To enable BuildKit, set the DOCKER_BUILDKIT environment variable to 1
+  - DOCKER_BUILDKIT=1
+
+  # Some variables for the temporary postgres container
   - POSTGRES_IMG="postgres:9.5.21"
   - POSTGRES_ADDR="localhost"
   - POSTGRES_DB="meveo"
   - POSTGRES_USER="meveo"
   - POSTGRES_PASSWORD="meveo"
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
+
+  # Image tag to build meveo docker image
   - DOCKER_IMAGE_TAG="dev-latest-github"
 
-before_install:
 
+before_install:
   # Install the latest Docker version (>= 19.03) in order to use BuildKit
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -42,16 +47,18 @@ before_install:
     -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ${POSTGRES_IMG}
 
+
 # This skips the automatic installation of maven dependency libraries by travis.
 # This would save the building time.
 install: skip
 
+
 before_script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
+
 script:
   - set -e
-
   # Wait with timeout 30s until postgres is up
   - |
     timeout=30
@@ -79,7 +86,7 @@ script:
       -Prebuild
 
   # Packaging meveo.war file
-  - cd .. && mvn clean package -Dscm.url=${SCM} -DskipTests
+  - cd .. && mvn clean package -Dscm.url="scm:git:ssh://git@github.com:anaxdev/meveo.git" -DskipTests
 
   # Dump the database schema
   - docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} pg_dump --no-owner -U ${POSTGRES_USER} ${POSTGRES_DB} > meveo.sql
@@ -88,12 +95,20 @@ script:
   - cp meveo.sql meveo-admin/web/target/meveo.war docker/
 
   # build a postgres image for meveo environment
-  - docker build -t manaty/postgres-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile.postgres ./docker
+  - docker build
+    --cache-from manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+    --tag manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+    --build-arg BUILDKIT_INLINE_CACHE=1
+    -f docker/Dockerfile.postgres ./docker
 
   # build a meveo image
-  - docker build -t manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile ./docker
+  - docker build
+    --cache-from manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+    --tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+    --build-arg BUILDKIT_INLINE_CACHE=1
+    -f docker/Dockerfile ./docker
+
 
 after_success:
   - docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
   - docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
-  
