@@ -11,12 +11,6 @@ cache:
 services:
   - docker
 
-addons:
-  apt:
-    packages:
-# Install the latest Docker version (>= 19.03) in order to use BuildKit
-      - docker-ce
-
 env:
   global:
   - SCM="scm:git:ssh://git@github.com:anaxdev/meveo.git"
@@ -29,7 +23,16 @@ env:
   - DOCKER_IMAGE_TAG="dev-latest-github"
 
 before_install:
+
+  # Install the latest Docker version (>= 19.03) in order to use BuildKit
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+
+  # Pull the necessary docker images in advance
   - docker pull ${POSTGRES_IMG}
+
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432
     --name ${POSTGRES_TMP_CONTAINER_NAME}
