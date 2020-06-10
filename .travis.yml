@@ -23,6 +23,8 @@ env:
 
 before_install:
   - docker pull postgres:9.5.21
+  - docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+  - docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432 --name ${POSTGRES_TMP_CONTAINER_NAME} -e POSTGRES_DB=${POSTGRES_DB} -e POSTGRES_USER=${POSTGRES_USER} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} postgres:9.5.21
 
