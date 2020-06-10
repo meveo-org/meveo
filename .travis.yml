@@ -88,7 +88,7 @@ script:
       -Prebuild
 
   # Packaging meveo.war file
-  - cd .. && mvn clean package -Dscm.url="scm:git:ssh://git@github.com:anaxdev/meveo.git" -DskipTests
+  - cd .. && mvn clean package -Dscm.url="scm:git:ssh://git@github.com:meveo-org/meveo.git" -DskipTests
 
   # Dump the database schema
   - docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} pg_dump --no-owner -U ${POSTGRES_USER} ${POSTGRES_DB} > meveo.sql
