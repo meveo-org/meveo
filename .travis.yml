@@ -22,10 +22,14 @@ env:
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
   - DOCKER_IMAGE_TAG="dev-latest-github"
 
+addons:
+  apt:
+    packages:
+# Install the latest Docker version (>= 19.03) in order to use BuildKit
+      - docker-ce
+
 before_install:
   - docker pull ${POSTGRES_IMG}
-  - docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
-  - docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432
     --name ${POSTGRES_TMP_CONTAINER_NAME}
@@ -34,7 +38,7 @@ before_install:
     -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ${POSTGRES_IMG}
 
-# This skip the automatic installation of maven dependency libraries by travis.
+# This skips the automatic installation of maven dependency libraries by travis.
 # This would save the building time.
 install: skip
 
@@ -86,9 +90,6 @@ script:
   - docker build -t manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile ./docker
 
 after_success:
-  - |
-    if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-      echo "Push docker images"
-      docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
-      docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
-    fi
+  - docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+  - docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+  
