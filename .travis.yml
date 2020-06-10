@@ -34,9 +34,12 @@ before_install:
     -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ${POSTGRES_IMG}
 
+# This skip the automatic installation of maven dependency libraries by travis.
+# This would save the building time.
+install: skip
+
 before_script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
 
 script:
   - set -e
@@ -81,7 +84,6 @@ script:
 
   # build a meveo image
   - docker build -t manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile ./docker
-
 
 after_success:
   - |
