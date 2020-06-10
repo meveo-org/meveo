@@ -1,5 +1,5 @@
 #FROM jboss/wildfly:15.0.1.Final
-FROM openjdk:8-jdk-slim-buster
+FROM openjdk:8u242-jdk-slim-buster
 
 
 ### ------------------------- base ------------------------- ###

@@ -38,7 +38,7 @@ before_install:
 
   # Pull the necessary docker images in advance
   - docker pull ${POSTGRES_IMG}
-  - docker pull openjdk:8-jdk-slim-buster
+  - docker pull openjdk:8u242-jdk-slim-buster
 
   # Start the postgres container to create DB schemas
   - docker run -d -p 5432:5432
