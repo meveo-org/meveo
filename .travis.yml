@@ -14,6 +14,7 @@ services:
 env:
   global:
   - SCM="scm:git:ssh://git@github.com:anaxdev/meveo.git"
+  - POSTGRES_IMG="postgres:9.5.21"
   - POSTGRES_ADDR="localhost"
   - POSTGRES_DB="meveo"
   - POSTGRES_USER="meveo"
@@ -22,14 +23,24 @@ env:
   - DOCKER_IMAGE_TAG="dev-latest-github"
 
 before_install:
-  - docker pull postgres:9.5.21
+  - docker pull ${POSTGRES_IMG}
   - docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
   - docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
   # Start the postgres container to create DB schemas
-  - docker run -d -p 5432:5432 --name ${POSTGRES_TMP_CONTAINER_NAME} -e POSTGRES_DB=${POSTGRES_DB} -e POSTGRES_USER=${POSTGRES_USER} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} postgres:9.5.21
+  - docker run -d -p 5432:5432
+    --name ${POSTGRES_TMP_CONTAINER_NAME}
+    -e POSTGRES_DB=${POSTGRES_DB}
+    -e POSTGRES_USER=${POSTGRES_USER}
+    -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ${POSTGRES_IMG}
+
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
 
 script:
+  - set -e
+
   # Wait with timeout 30s until postgres is up
   - |
     timeout=30
@@ -48,7 +59,13 @@ script:
     echo "postgres is up"
 
   # Creating the database schema
-  - cd meveo-model && mvn liquibase:dropAll liquibase:update -Ddb.url=jdbc:postgresql://${POSTGRES_ADDR}/${POSTGRES_DB} -Ddb.username=${POSTGRES_USER} -Ddb.password=${POSTGRES_PASSWORD} -Prebuild
+  - cd meveo-model &&
+    mvn liquibase:dropAll
+      liquibase:update
+      -Ddb.url=jdbc:postgresql://${POSTGRES_ADDR}/${POSTGRES_DB}
+      -Ddb.username=${POSTGRES_USER}
+      -Ddb.password=${POSTGRES_PASSWORD}
+      -Prebuild
 
   # Packaging meveo.war file
   - cd .. && mvn clean package -Dscm.url=${SCM} -DskipTests
@@ -59,15 +76,16 @@ script:
   # copy meveo.sql and meveo.war files into the docker image folder for meveo
   - cp meveo.sql meveo-admin/web/target/meveo.war docker/
 
+  # build a postgres image for meveo environment
+  - docker build -t manaty/postgres-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile.postgres ./docker
+
+  # build a meveo image
+  - docker build -t manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile ./docker
+
+
 after_success:
   - |
     if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
-      echo "Build docker images"
-      docker build -t manaty/postgres-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile.postgres ./docker
-      docker build -t manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} -f docker/Dockerfile ./docker
-
       echo "Push docker images"
       docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
       docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
