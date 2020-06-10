@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/anaxdev/meveo.svg?branch=master)](https://travis-ci.com/anaxdev/meveo)
+
 Meveo
 =====
 
