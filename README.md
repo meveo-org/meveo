@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/anaxdev/meveo.svg?branch=master)](https://travis-ci.com/anaxdev/meveo)
+[![Build Status](https://travis-ci.org/meveo-org/meveo.svg?branch=master)](https://travis-ci.org/meveo-org/meveo)
 
 Meveo
 =====
