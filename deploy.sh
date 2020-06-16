@@ -5,7 +5,7 @@ MVN_REPO_DIR="/opt/jboss/wildfly/meveodata/default/.m2/repository"
 MVN_CONF="/opt/jboss/wildfly/meveodata/default/.m2/settings.xml"
 MVN_EXEC="$HOME/bin/mvn"
 
-MEVEO_SOURCE_DIR="/opt/jboss/wildfly/meveodata/default/git/Meveo"
+MEVEO_SOURCE_DIR="/opt/jboss/wildfly/meveodata/default/git/meveo-source"
 MEVEO_DEPLOY_DIR="/opt/jboss/wildfly/standalone/deployments"
 
 # Create a custom conf file for maven
