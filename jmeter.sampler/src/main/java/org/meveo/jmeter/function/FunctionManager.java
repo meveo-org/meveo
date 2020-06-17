@@ -16,15 +16,35 @@
 
 package org.meveo.jmeter.function;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
@@ -46,18 +66,8 @@ import org.meveo.model.typereferences.GenericTypeReferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FunctionManager {
 
@@ -77,7 +87,7 @@ public class FunctionManager {
 
     private static String token = System.getProperty("token");
     private static String refresh_token;
-    private static CompletableFuture<List<FunctionDto>> functions;
+    private static CompletableFuture<List<String>> functions;
     private static CompletableFuture<List<TimerEntityDto>> timers;
 
     private static long loginTimeout;
@@ -95,6 +105,32 @@ public class FunctionManager {
             currentHost.setPortNumber(portNumber);
             currentHost.setHostName(hostName);
         }
+    }
+    
+    /**
+     * Retrieves the function with the given code
+     * 
+     * @param functionCode code of the function
+     * @return the function with the given code
+     */
+    public static FunctionDto getFunction(String functionCode) {
+        if(token == null){
+            throw new IllegalArgumentException("Authorization token must not be null");
+        }
+        
+        return doRequest(() -> {
+            String getUrl = getHostUri() + ENDPOINT_URL + "/" + functionCode;
+            HttpGet get = new HttpGet(getUrl);
+            setBearer(get);
+            return get;
+        }, responseData -> {
+            String result = IOUtils.toString(responseData.getContent(), StandardCharsets.UTF_8);
+            if (token != null) {
+                refreshTokenThread();
+            }
+            return OBJECT_MAPPER.readValue(result, FunctionDto.class);
+        }, "Error while retrieving function" + functionCode);
+        
     }
 
     public static CloseableHttpResponse test(String functionCode, Arguments arguments) {
@@ -206,10 +242,11 @@ public class FunctionManager {
         }, "Cannot log in", false);
     }
 
-    private static List<FunctionDto> download() {
+    @SuppressWarnings("unchecked")
+	private static List<String> download() {
 
         return doRequest(() -> {
-            HttpGet httpGet = new HttpGet(getHostUri() + ENDPOINT_URL);
+            HttpGet httpGet = new HttpGet(getHostUri() + ENDPOINT_URL + "?codeOnly=true");
             setBearer(httpGet);
             return httpGet;
         }, responseData -> {
@@ -217,7 +254,7 @@ public class FunctionManager {
             if (token != null) {
                 refreshTokenThread();
             }
-            return OBJECT_MAPPER.readValue(result, FunctionDto.DTO_LIST_TYPE_REF);
+            return (List<String>) OBJECT_MAPPER.readValue(result, List.class);
         }, "Error while retrieving functions from meveo");
 
     }
@@ -260,7 +297,10 @@ public class FunctionManager {
 
     }
 
-    public static List<FunctionDto> getFunctions() {
+    /**
+     * @return function codes
+     */
+    public static List<String> getFunctions() {
         try {
             if(functions == null) {
                 return  new ArrayList<>();

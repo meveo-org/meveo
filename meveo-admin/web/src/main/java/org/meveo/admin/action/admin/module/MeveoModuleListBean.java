@@ -31,10 +31,8 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.primefaces.model.DefaultTreeNode;
@@ -42,8 +40,8 @@ import org.primefaces.model.TreeNode;
 
 /**
  * @author Clément Bareth
- * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.9.0
  **/
 @Named
 @ConversationScoped
@@ -68,7 +66,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
 		if(entity.isInstalled()) {
 			meveoModuleService.uninstall(entity, true);
 		}
-		meveoModuleService.remove(entity.getId());
+		meveoModuleService.remove(entity);
 	}
 
     public EntityListDataModelPF<MeveoModuleDto> getModuleDtos() {
@@ -79,7 +77,8 @@ public class MeveoModuleListBean extends MeveoModuleBean {
         return selectedModuleDto;
     }
 
-    public void setSelectedModuleDto(MeveoModuleDto selectedModuleDto) {
+    @SuppressWarnings("unchecked")
+	public void setSelectedModuleDto(MeveoModuleDto selectedModuleDto) {
         this.selectedModuleDto = selectedModuleDto;
         selectedModuleItems = new DefaultTreeNode("Root");
         if (selectedModuleDto == null) {

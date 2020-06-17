@@ -17,94 +17,99 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
-import org.hibernate.annotations.Type;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
-import javax.persistence.*;
+import org.hibernate.annotations.Type;
 
 /**
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @since 01.02.2019
+ * @version 6.9.0
  */
 @Entity
 @Table(name = "service_parameter_mapping")
 public class TSParameterMapping {
 
-    @EmbeddedId
-    private EndpointParameter endpointParameter;
+	@EmbeddedId
+	private EndpointParameter endpointParameter;
 
-    /**
-     * Exposed name of the parameter
-     */
-    @Column(name = "parameter_name")
-    private String parameterName;
+	/**
+	 * Exposed name of the parameter
+	 */
+	@Column(name = "parameter_name")
+	private String parameterName;
 
-    @Column(name = "multivalued")
-    @Type(type = "numeric_boolean")
-    private boolean multivalued;
+	@Column(name = "multivalued")
+	@Type(type = "numeric_boolean")
+	private boolean multivalued;
 
-    /**
-     * Default value of the parameter
-     */
-    @Column(name = "default_value")
-    private String defaultValue;
+	/**
+	 * Default value of the parameter
+	 */
+	@Column(name = "default_value")
+	private String defaultValue;
 
 	/**
 	 * When this value is set to true, the min length of string and array objects
 	 * must be set to 1 by default or they should not be null.
 	 */
-    @Type(type = "numeric_boolean")
-    @Column(name = "value_required")
-    private boolean valueRequired;
+	@Type(type = "numeric_boolean")
+	@Column(name = "value_required")
+	private boolean valueRequired;
 
-    public EndpointParameter getEndpointParameter() {
-        return endpointParameter;
-    }
+	public EndpointParameter getEndpointParameter() {
+		return endpointParameter;
+	}
 
-    public void setEndpointParameter(EndpointParameter endpointParameter) {
-        this.endpointParameter = endpointParameter;
-    }
+	public void setEndpointParameter(EndpointParameter endpointParameter) {
+		this.endpointParameter = endpointParameter;
+	}
 
-    public String getParameterName() {
-        return parameterName;
-    }
+	public String getParameterName() {
+		return parameterName;
+	}
 
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
-    }
+	public void setParameterName(String parameterName) {
+		this.parameterName = parameterName;
+	}
 
-    public String getDefaultValue() {
-        return defaultValue;
-    }
+	public String getDefaultValue() {
+		return defaultValue;
+	}
 
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 
-    public boolean isMultivalued() {
-        return multivalued;
-    }
+	public boolean isMultivalued() {
+		return multivalued;
+	}
 
-    public void setMultivalued(boolean multivalued) {
-        this.multivalued = multivalued;
-    }
+	public void setMultivalued(boolean multivalued) {
+		this.multivalued = multivalued;
+	}
 
 	/**
 	 * Retrieves the boolean value of whether this parameter is required.
 	 * 
 	 * @return true if this parameter is required
 	 */
-    public boolean isValueRequired() {
-        return valueRequired;
-    }
+	public boolean isValueRequired() {
+		return valueRequired;
+	}
 
 	/**
 	 * Sets whether this parameter is required or not.
 	 * 
 	 * @param valueRequired boolean value
 	 */
-    public void setValueRequired(boolean valueRequired) {
-        this.valueRequired = valueRequired;
-    }
+	public void setValueRequired(boolean valueRequired) {
+		this.valueRequired = valueRequired;
+	}
 }

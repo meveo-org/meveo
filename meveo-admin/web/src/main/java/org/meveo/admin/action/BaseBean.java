@@ -403,6 +403,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             if (killConversation) {
                 endConversation();
             }
+            
         } catch (Exception e){ 
         	messages.error("Entity can't be saved. Please retry.");
         	log.error("Can't update entity", e);

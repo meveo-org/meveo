@@ -370,7 +370,7 @@ public class CustomTableCreatorService implements Serializable {
 			columnType = getColumnType(cft);
 
 		} catch (ClassNotFoundException e1) {
-			throw new IllegalArgumentException("Cannot get field type for entity with class or code " + cft.getEntityClazzCetCode());
+			throw new IllegalArgumentException("Cannot get field type for entity with class or code " + cft.getEntityClazzCetCode(), e1);
 		}
 
 		// Check if column type is handled
@@ -837,9 +837,7 @@ public class CustomTableCreatorService implements Serializable {
 
 		// Serialize the field if it is a list, but not a list of entity references
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-			if (cft.getFieldType() != CustomFieldTypeEnum.ENTITY) {
-				return "text";
-			}
+			return "text";
 		}
 
 		switch (fieldType) {

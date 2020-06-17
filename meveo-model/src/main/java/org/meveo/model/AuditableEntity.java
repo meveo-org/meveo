@@ -23,13 +23,16 @@ import javax.persistence.MappedSuperclass;
 
 import org.meveo.security.MeveoUser;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @MappedSuperclass
 public abstract class AuditableEntity extends BaseEntity implements IAuditable {
 
 	private static final long serialVersionUID = 1L;
 
 	@Embedded
-	private Auditable auditable;
+	@JsonIgnore
+	private Auditable auditable = new Auditable();
 
 	public AuditableEntity() {
 	}

@@ -75,8 +75,9 @@ import org.slf4j.Logger;
  * mavenRepositories - list of maven repositories
  * </pre>
  * 
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @since 6.5.0
+ * @version 6.9.0
  */
 @Singleton
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -192,9 +193,9 @@ public class MavenConfigurationService implements Serializable {
 
 			List<String> lines = new ArrayList<>();
 
-			createdBuffer.forEach(d -> lines.add("Add dependency " + d.getCoordinates()));
-			updatedBuffer.forEach(d -> lines.add("Update dependency " + d.getCoordinates()));
-			deletedBuffer.forEach(d -> lines.add("Delete dependency " + d.getCoordinates()));
+			createdBuffer.forEach(d -> lines.add("Add dependency " + d.getBuiltCoordinates()));
+			updatedBuffer.forEach(d -> lines.add("Update dependency " + d.getBuiltCoordinates()));
+			deletedBuffer.forEach(d -> lines.add("Delete dependency " + d.getBuiltCoordinates()));
 
 			StringBuilder message = new StringBuilder();
 
@@ -342,8 +343,7 @@ public class MavenConfigurationService implements Serializable {
 		LocalRepository localRepo = new LocalRepository(getM2FolderPath());
 		session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo));
 
-		// session.setTransferListener( new ConsoleTransferListener() );
-        session.setRepositoryListener( new ConsoleRepositoryListener() );
+        session.setRepositoryListener(new ConsoleRepositoryListener());
         
 		return session;
 	}
@@ -488,6 +488,22 @@ public class MavenConfigurationService implements Serializable {
 				}
 			}
 		} catch (IOException e) {
+		}
+	}
+	
+	/**
+	 * Create the default pom.xml file for the default Meveo git repository if it
+	 * does not exists.
+	 * 
+	 * @param repositoryCode code of the repository
+	 */
+	public void createDefaultPomFile(GitRepository repo) {
+
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repo.getCode());
+		File pomFile = new File(gitRepo.getPath() + File.separator + "pom.xml");
+
+		if (!pomFile.exists()) {
+			generatePom("Initialized default repository", repo);
 		}
 	}
 }

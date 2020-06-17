@@ -202,9 +202,16 @@
 						fileName="data" pageOnly="false" skipComponents="true"
 						selectionOnly="#{backingBean.selectedEntities.size()>0}" />
 				</p:commandButton>
-				<p:commandButton value="#{messages['commons.exportSelection']}"
-					type="button" rendered="#{backingBean.getBaseCrudApi() != null}"
-					onclick="PF('exportSelectionDialog').show()" />
+<!-- 				<p:commandButton value="#{messages['commons.exportSelection']}" -->
+<!-- 					type="button" rendered="#{backingBean.getBaseCrudApi() != null}" -->
+<!-- 					onclick="PF('exportSelectionDialog').show()" /> -->
+				<p:commandButton id="buttonSelectionExportJson"
+					rendered="#{backingBean.getBaseCrudApi() != null}"
+					value="#{messages['commons.exportSelection']}" ajax="false"
+					onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
+					<p:fileDownload id="exportFileDownload"
+						value="#{backingBean.exportJson()}" />
+				</p:commandButton>
 				<p:commandButton id="#{formId}buttonCsvExport"
 					value="#{messages['commons.exportCsv']}" ajax="false"
 					rendered="#{exportToCsv}">
@@ -239,7 +246,7 @@
 			<p:commandButton value="#{messages['commons.importCsv']}"
 				rendered="#{importCsv and backingBean.canUserUpdateEntity()}"
 				type="button" onclick="PF('csvDialog').show();" />
-			<p:commandButton value="#{messages['commons.importData']}"
+			<p:commandButton value="#{messages['action.import']} #{backingBean.entity.class.simpleName}"
 				id="#{formId}buttonImport" type="button"
 				onclick="PF('importDataDialog').show();" />
 

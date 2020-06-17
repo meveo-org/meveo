@@ -13,6 +13,8 @@ import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.WebHook;
 import org.meveo.model.notification.WebHookMethodEnum;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -24,6 +26,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @XmlRootElement(name = "WebhookNotification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("WebHookDto")
 public class WebHookDto extends NotificationDto {
 
@@ -76,7 +79,7 @@ public class WebHookDto extends NotificationDto {
 	 * Instantiates a new web hook dto.
 	 */
 	public WebHookDto() {
-
+		super();
 	}
 
 	/**

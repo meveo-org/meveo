@@ -42,6 +42,7 @@ public class EntityReferenceWrapper implements Serializable {
     private Long id;
 
     public EntityReferenceWrapper() {
+    	
     }
 
     public EntityReferenceWrapper(BusinessEntity entity) {

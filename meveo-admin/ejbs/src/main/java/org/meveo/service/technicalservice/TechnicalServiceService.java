@@ -20,9 +20,11 @@ package org.meveo.service.technicalservice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,9 +36,11 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LazyInitializationException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.InputMeveoProperty;
 import org.meveo.model.technicalservice.OutputMeveoProperty;
@@ -52,8 +56,29 @@ import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
  */
 public abstract class TechnicalServiceService<T extends TechnicalService> extends FunctionService<T, TechnicalServiceEngine<T>> {
 
+    @Override
+	public List<FunctionIO> getInputs(T function) {
+    	try {
+    		Hibernate.initialize(function.getDescriptions());
+    	} catch (LazyInitializationException e) {
+    		function.setDescriptions(description(function.getCode()));
+    	}
+    	
+		return super.getInputs(function);
+	}
 
-    /**
+	@Override
+	public List<FunctionIO> getOutputs(T function) {
+    	try {
+    		Hibernate.initialize(function.getDescriptions());
+    	} catch (LazyInitializationException e) {
+    		function.setDescriptions(description(function.getCode()));
+    	}
+    	
+		return super.getOutputs(function);
+	}
+
+	/**
 	 * Removes the description.
 	 *
 	 * @param serviceId id of the service to remove description
@@ -177,6 +202,26 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
         query.where(cb.equal(root.type(), getEntityClass()));
         return getEntityManager().createQuery(query).getResultList();
     }
+    
+    /**
+     * Retrieves the extended services for the given service
+     * 
+     * @param serviceCode the service to retrieve extended services from
+     * @return the services extended by the given service
+     */
+    @SuppressWarnings("unchecked")
+	public Set<TechnicalService> getExtendedServices(String serviceCode) {
+    	String query = "SELECT service.extendedServices FROM " + TechnicalService.class.getName() + " service \n"
+    				 + "WHERE service.code = :serviceCode";
+    	
+    	try {
+    		return (Set<TechnicalService>) getEntityManager().createQuery(query, Set.class)
+				.setParameter("serviceCode", serviceCode)
+    			.getSingleResult();
+    	} catch(NoResultException e) {
+    		return new HashSet<>();
+    	}
+    }
 
     /**
 	 * Retrieve the description for a particular technical service.
@@ -296,8 +341,13 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	public T update(T executable) throws BusinessException {
 		removeDescription(executable.getId());
     	retainInheritedDescriptions(executable, executable.getDescriptions());
-    	System.out.println(executable.getId() + " : " + executable.getDescriptions());
-		return super.update(executable);
+    	
+    	if(getEntityManager().contains(executable)) {
+    		super.updateNoMerge(executable);
+    		return executable;
+    	} else {
+    		return super.update(executable);
+    	}
 	}
 
 	@Override

@@ -155,7 +155,12 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                         }
                     }
                 }
-                persistedItems.add(new PersistedItem(itemToPersist, result.getBaseEntityUuid()));
+                
+                if(result != null) {
+                	persistedItems.add(new PersistedItem(itemToPersist, result.getBaseEntityUuid()));
+                } else {
+                	//LOGGER.warn("No persistence result from {}", itemToPersist);
+                }
             }
 
         }

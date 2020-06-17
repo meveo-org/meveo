@@ -9,6 +9,8 @@ import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.PieChart;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Part of the graphing classes that represents pie chart information.
  *
@@ -17,6 +19,7 @@ import org.meveo.model.dwh.PieChart;
  */
 @XmlRootElement(name = "PieChart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("PieChartDto")
 public class PieChartDto extends ChartDto {
 

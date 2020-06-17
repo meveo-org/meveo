@@ -49,12 +49,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessEntityException;
@@ -109,8 +103,14 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  * @author Clément Bareth
@@ -165,8 +165,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public MeveoModule install(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
 		if (meveoModule == null) {
-			meveoModuleApi.createInNewTx(moduleDto, false);
-			meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
+			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
 		meveoModuleItemInstaller.install(meveoModule, moduleDto);

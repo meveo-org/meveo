@@ -45,11 +45,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.Collator;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class FunctionManagerController extends MouseAdapter implements ActionListener {
 
@@ -75,10 +72,7 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
         JList list = (JList) evt.getSource();
         int index = list.locationToIndex(evt.getPoint());
         final String functionCode = (String) list.getModel().getElementAt(index);
-        final FunctionDto functionDto = FunctionManager.getFunctions().stream()
-                .filter(e -> e.getCode().equals(functionCode))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Can't find function " + functionCode));
+        final FunctionDto functionDto = FunctionManager.getFunction(functionCode);
 
         try {
             if (functionDto.getTestSuite() != null) {
@@ -130,14 +124,13 @@ public class FunctionManagerController extends MouseAdapter implements ActionLis
         dialog.setVisible(false);
     }
 
+    /**
+     * Populate the list of functions
+     */
     public void populateList() {
         CompletableFuture.runAsync(() -> {
             dialog.disableDialog();
-            final List<String> functionsCodes = FunctionManager.getFunctions().stream()
-                    .map(FunctionDto::getCode)
-                    .sorted(Collator.getInstance())
-                    .sorted(Comparator.comparingInt(String::length))
-                    .collect(Collectors.toList());
+            final List<String> functionsCodes = FunctionManager.getFunctions();
 
             dialog.populateList(functionsCodes);
             dialog.enableDialog();

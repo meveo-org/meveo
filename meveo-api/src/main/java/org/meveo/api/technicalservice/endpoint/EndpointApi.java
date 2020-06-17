@@ -117,7 +117,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throw new UserNotAuthorizedException();
 		}
 
-		return esGeneratorService.buildJSInterfaceFromTemplate(baseUrl, endpoint);
+		return esGeneratorService.buildJSInterface(baseUrl, endpoint);
 	}
 	
 	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {

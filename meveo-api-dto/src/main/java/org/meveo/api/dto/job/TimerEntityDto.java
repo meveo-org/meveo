@@ -9,6 +9,8 @@ import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.jobs.TimerEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -21,6 +23,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @XmlRootElement(name = "TimerEntity")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("TimerEntityDto")
 public class TimerEntityDto extends BusinessEntityDto {
 
@@ -66,6 +69,7 @@ public class TimerEntityDto extends BusinessEntityDto {
 	 * Instantiates a new timer entity dto.
 	 */
 	public TimerEntityDto() {
+		super();
 	}
 
 	/**

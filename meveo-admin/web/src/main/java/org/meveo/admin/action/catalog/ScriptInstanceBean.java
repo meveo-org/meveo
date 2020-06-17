@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -113,6 +115,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     private TreeNode selectedNode;
     
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void organizeImports() {
     	// Don't need to re-compile if compilation already has errors
     	if(entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
@@ -166,6 +169,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         resolvedErrors.forEach(entity.getScriptErrors()::remove);
     }
     
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void formatSourceCode() {
     	String sourceCode = entity.getScript();
         CompilationUnit compilationUnit;
@@ -294,6 +298,13 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         String code = entity.getCode();
         
+        // Update script references
+        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity().getScript());
+        getEntity().getImportScriptInstances().clear();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            getEntity().getImportScriptInstances().addAll(importedScripts);
+        }
+        
         if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             code = CustomScriptService.getFullClassname(entity.getScript());
 
@@ -303,18 +314,20 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 return null;
             }
         }
-
+        
         // Update roles
         getEntity().getExecutionRoles().clear();
         if (execRolesDM != null) {
             getEntity().getExecutionRoles().addAll(roleService.refreshOrRetrieve(execRolesDM.getTarget()));
         }
-
+        
         // Update roles
         getEntity().getSourcingRoles().clear();
         if (sourcRolesDM != null) {
             getEntity().getSourcingRoles().addAll(roleService.refreshOrRetrieve(sourcRolesDM.getTarget()));
         }
+        
+        // Update inputs
         if (CollectionUtils.isNotEmpty(inputs)) {
             List<String> scriptInputs = new ArrayList<>();
             for (ScriptIO scriptIO : inputs) {
@@ -325,7 +338,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 getEntity().getScriptInputs().addAll(scriptInputs);
             }
         }
-
+        
+        // Update outputs
         if (CollectionUtils.isNotEmpty(outputs)) {
             List<String> scriptOutputs = new ArrayList<>();
             for (ScriptIO scriptIO : outputs) {
@@ -336,7 +350,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 getEntity().getScriptOutputs().addAll(scriptOutputs);
             }
         }
-
+        
+        // Update maven dependencies
         if (CollectionUtils.isNotEmpty(mavenDependencies)) {
             Set<MavenDependency> scriptMavens = new HashSet<>();
             for (MavenDependency mavenDependency : mavenDependencies) {
@@ -347,7 +362,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             getEntity().getMavenDependencies().clear();
             getEntity().getMavenDependencies().addAll(scriptMavens);
         } else {
-            getEntity().getMavenDependencies().clear();
+        	getEntity().getMavenDependencies().clear();
         }
 
         boolean isUnique = false;
@@ -366,13 +381,16 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 line++;
             }
             line = 1;
+            
             for (MavenDependency maven : mavenDependencies) {
-                if (!mavenDependencyService.validateUniqueFields(entity.getId(), maven.getGroupId(), maven.getArtifactId())) {
+                if (!mavenDependencyService.validateUniqueFields(maven.getVersion(), maven.getGroupId(), maven.getArtifactId())) {
                     messages.error(new BundleKey("messages", "scriptInstance.error.unique"), line);
                     isUnique = true;
                 }
                 line++;
+
             }
+            
         }
 
         if (isUnique) {
@@ -380,12 +398,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             return null;
         }
 
-        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity());
-        getEntity().getImportScriptInstances().clear();
-        if (CollectionUtils.isNotEmpty(importedScripts)) {
-            getEntity().getImportScriptInstances().addAll(importedScripts);
-        }
-        
         super.saveOrUpdate(true);
 
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
@@ -529,7 +541,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public TreeNode computeRootNode() {
         Map<String, Object> filters = this.getFilters();
         String code = "";
-        boolean isExpand = false;
+        boolean isExpand = true;
         if (this.filters.containsKey("code")) {
             code = (String) filters.get("code");
         }
@@ -660,8 +672,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     }
 
     public void addMavenDependency() {
+    	if(mavenDependencies == null) {
+    		mavenDependencies = new ArrayList<>();
+    		entity.setMavenDependencies(new HashSet<>());
+    	}
+    	
         mavenDependency = new MavenDependency();
-        mavenDependency.setScript(entity);
         mavenDependencies.add(mavenDependency);
     }
 }

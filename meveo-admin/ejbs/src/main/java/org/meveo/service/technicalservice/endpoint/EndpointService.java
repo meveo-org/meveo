@@ -54,7 +54,7 @@ import org.meveo.service.git.MeveoRepository;
  * @author clement.bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 01.02.2019
- * @version 6.8.0
+ * @version 6.9.0
  */
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
@@ -171,27 +171,9 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     @Override
     public Endpoint update(Endpoint entity) throws BusinessException {
+    	
         Endpoint endpoint = findById(entity.getId());
         String oldEndpointPermission = getEndpointPermission(endpoint);
-//        endpoint.getPathParameters().clear();
-//        endpoint.getParametersMapping().clear();
-//
-//        flush();
-//
-//        endpoint.getPathParameters().addAll(entity.getPathParameters());
-//        endpoint.getParametersMapping().addAll(entity.getParametersMapping());
-//        endpoint.setJsonataTransformer(entity.getJsonataTransformer());
-//        endpoint.setMethod(entity.getMethod());
-//        endpoint.setService(entity.getService());
-//        endpoint.setSynchronous(entity.isSynchronous());
-//        endpoint.setCode(entity.getCode());
-//        endpoint.setDescription(entity.getDescription());
-//        endpoint.setReturnedVariableName(entity.getReturnedVariableName());
-//        endpoint.setSerializeResult(entity.isSerializeResult());
-//        endpoint.setContentType(entity.getContentType());
-//        endpoint.setRoles(entity.getRoles());
-
-        super.update(endpoint);
 
         keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
 
@@ -214,6 +196,8 @@ public class EndpointService extends BusinessService<Endpoint> {
         for (String compositeRole: entity.getRoles()) {
             keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
         }
+
+        super.updateNoMerge(entity);
         
         return entity;
     }
@@ -229,7 +213,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File createESFile(@Observes @Created Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        FileUtils.write(scriptFile, esGeneratorService.buildJSInterfaceFromTemplate(endpoint));
+        FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint));
         gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
         return scriptFile;
     }
@@ -245,7 +229,7 @@ public class EndpointService extends BusinessService<Endpoint> {
      */
     public File updateESFile(@Observes @Updated Endpoint endpoint) throws IOException, BusinessException {
         final File scriptFile = getScriptFile(endpoint);
-        String updatedScript = esGeneratorService.buildJSInterfaceFromTemplate(endpoint);
+        String updatedScript = esGeneratorService.buildJSInterface(endpoint);
 
         if(!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
             FileUtils.write(scriptFile, updatedScript);
@@ -269,10 +253,23 @@ public class EndpointService extends BusinessService<Endpoint> {
         return scriptFile.delete();
     }
 
-    private File getScriptFile(Endpoint endpoint) {
+    public File getScriptFile(Endpoint endpoint) {
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
         final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
         endpointDir.mkdirs();
         return new File(endpointDir, endpoint.getCode() + ".js");
     }
+
+    /**
+     * Checks if an endpoint interface is already created and pushed in git repository.
+     * @param endpoint endpoint to search
+     * @return true if endpoint interface exists
+     */
+	public boolean isEndpointScriptExists(Endpoint endpoint) {
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
+		File f = new File(endpointDir, endpoint.getCode() + ".js");
+
+		return f.exists() && !f.isDirectory();
+	}
 }

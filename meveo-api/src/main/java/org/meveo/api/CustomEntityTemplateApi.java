@@ -138,7 +138,24 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-            customEntityTemplateService.create(cet);
+			boolean withNewCategory = false;
+			if (dto.getCustomEntityCategoryCode() != null) {
+				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
+				if (customEntityCategory == null) {
+					withNewCategory = true;
+					customEntityCategory = new CustomEntityCategory();
+					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
+					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
+					customEntityTemplateService.createWithNewCategory(cet, customEntityCategory);
+				
+				} else {
+					cet.setCustomEntityCategory(customEntityCategory);
+				}
+			}
+
+			if (!withNewCategory) {
+				customEntityTemplateService.create(cet);
+			}
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -153,12 +170,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	            }
 	        }
         
-        } catch(Exception e) {
-        	// Delete CET if error occurs
-    		log.error("{} creation failed, rollback ...", cet);
-    		customEntityTemplateService.removeInNewTransaction(cet);
-        	throw e;
-        }
+		} catch (Exception e) {
+			// Delete CET if error occurs
+			log.error("Creation of cet={} failed with error={}", cet, e);
+			customEntityTemplateService.remove(cet);
+			throw e;
+		}
 
         return cet;
     }
@@ -219,7 +236,29 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         cet = fromDTO(dto, cet);
 
-        cet = customEntityTemplateService.update(cet);
+		boolean withNewCategory = false;
+		if (dto.getCustomEntityCategoryCode() != null) {
+			if (StringUtils.isBlank(dto.getCustomEntityCategoryCode())) {
+				cet.setCustomEntityCategory(null);
+
+			} else {
+				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
+				if (customEntityCategory == null) {
+					withNewCategory = true;
+					customEntityCategory = new CustomEntityCategory();
+					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
+					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
+					cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
+
+				} else {
+					cet.setCustomEntityCategory(customEntityCategory);
+				}
+			}
+		}
+
+		if (!withNewCategory) {
+			cet = customEntityTemplateService.update(cet);
+		}
 
         synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
 
@@ -436,7 +475,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		String entityClazz = cft.getEntityClazz();
 		if (!StringUtils.isBlank(entityClazz)) {
 			List<BusinessEntity> businessEntities = customFieldInstanceService
-					.findBusinessEntityForCFVByCode(entityClazz, wildcode);
+					.findBusinessEntityForCFVByCode(null, entityClazz, wildcode);
 			if (businessEntities != null) {
 				for (BusinessEntity be : businessEntities) {
 					result.add(new BusinessEntityDto(be));
@@ -568,23 +607,21 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	cet.setPrePersistScript(scriptInstance);
         }
 
-        if(dto.getCustomEntityCategoryCode() != null){
-            CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
-            if(customEntityCategory == null){
-                customEntityCategory = new CustomEntityCategory();
-                customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
-                customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-                customEntityCategoryService.updateAudit(customEntityCategory);
+//        if(dto.getCustomEntityCategoryCode() != null){
+//            CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
+//            if(customEntityCategory == null){
+//                customEntityCategory = new CustomEntityCategory();
+//                customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
+//                customEntityCategory.setName(dto.getCustomEntityCategoryCode());
 //                try {
-//                    customEntityCategoryService.createInNewTx(customEntityCategory);
-//                    // customEntityCategoryService.flush();
+//                    customEntityCategoryService.create(customEntityCategory);
 //                } catch (BusinessException e) {
 //                    log.error("Cannot create category", e);
 //                }
-            }
-            
-            cet.setCustomEntityCategory(customEntityCategory);
-        }
+//            }
+//            
+//            cet.setCustomEntityCategory(customEntityCategory);
+//        }
 
         return cet;
     }

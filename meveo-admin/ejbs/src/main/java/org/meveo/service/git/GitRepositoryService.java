@@ -16,11 +16,20 @@
 
 package org.meveo.service.git;
 
+import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.security.DefaultPermission;
@@ -33,20 +42,13 @@ import org.meveo.security.permission.Whitelist;
 import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
 
-import javax.ejb.Stateless;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * Persistence class for GitRepository
  *
  * @author Clement Bareth
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @since 6.4.0
+ * @version 6.9.0
  */
 @Stateless
 public class GitRepositoryService extends BusinessService<GitRepository> {
@@ -223,9 +225,11 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ }, orRole = DefaultRole.GIT_ADMIN)
-    public void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
+    public GitRepository create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
         gitClient.create(entity, failIfExist, username, password);
         super.create(entity);
+        
+        return entity;
     }
 
     private GitRepository setBranchInformation(GitRepository repository) {

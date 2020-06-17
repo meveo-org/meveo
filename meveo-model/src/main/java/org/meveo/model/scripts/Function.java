@@ -77,6 +77,13 @@ public class Function extends BusinessEntity {
 
 	public void setTestSuite(String testSuite) {
 		this.testSuite = testSuite;
+
+		if(this.testSuite != null) {
+			// Make sure the good functionCode is set
+			if(FunctionUtils.checkTestSuite(this.testSuite, code) != null) {
+				this.testSuite = FunctionUtils.replaceWithCorrectCode(this.testSuite, code);
+			}
+		}
 	}
 
 	public String getFunctionType() {

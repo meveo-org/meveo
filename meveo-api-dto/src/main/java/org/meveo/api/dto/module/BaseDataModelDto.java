@@ -20,7 +20,7 @@ abstract class BaseDataModelDto extends BusinessEntityDto implements IEntity<Lon
 	 * Instantiates a new base data model dto.
 	 */
 	public BaseDataModelDto() {
-
+		super();
 	}
 
 	/**

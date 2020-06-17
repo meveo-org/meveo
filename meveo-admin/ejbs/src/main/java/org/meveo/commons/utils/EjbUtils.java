@@ -76,6 +76,11 @@ public class EjbUtils {
      * 
      */
     public static Object getInterface(String nameEJB) throws NamingException {
+    	// Special cases handling
+    	if(nameEJB.equals("ScriptNotificationApi")) {
+    		nameEJB = "NotificationApi";
+    	}
+    	
         InitialContext ctx = null;
         if (System.getenv("JBOSS_HOST") != null) {
             logger.info(String.format("JBOSS_HOST=", System.getenv("JBOSS_HOST")));

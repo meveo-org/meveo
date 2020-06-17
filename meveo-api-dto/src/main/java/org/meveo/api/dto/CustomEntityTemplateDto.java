@@ -15,6 +15,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -26,10 +27,11 @@ import io.swagger.annotations.ApiModelProperty;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "CustomEntityTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class CustomEntityTemplateDto extends BaseEntityDto {
 
@@ -97,6 +99,13 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     
     @ApiModelProperty("List of samples")
     private List<String> samples = new ArrayList<>();
+    
+    /**
+     * Instantiates a new custom entity template dto.
+     */
+    public CustomEntityTemplateDto() {
+    	super();
+    }
 
     public List<DBStorageType> getAvailableStorages() {
         return availableStorages;
@@ -120,13 +129,6 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 
     public void setSqlStorageConfiguration(SQLStorageConfiguration sqlStorageConfiguration) {
         this.sqlStorageConfiguration = sqlStorageConfiguration;
-    }
-
-    /**
-     * Instantiates a new custom entity template dto.
-     */
-    public CustomEntityTemplateDto() {
-
     }
     
     public String getPrePersistScripCode() {

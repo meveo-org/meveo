@@ -14,6 +14,8 @@ import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * The Class NotificationDto.
  *
@@ -23,6 +25,7 @@ import org.meveo.model.notification.NotificationEventTypeEnum;
  */
 @XmlRootElement(name = "Notification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("NotificationDto")
 public class NotificationDto extends BusinessEntityDto {
 
@@ -63,7 +66,7 @@ public class NotificationDto extends BusinessEntityDto {
      * Instantiates a new notification dto.
      */
     public NotificationDto() {
-
+    	super();
     }
 
     /**

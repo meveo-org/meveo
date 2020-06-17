@@ -275,4 +275,40 @@
 		<dropColumn tableName="meveo_script_instance" columnName="creator"/>
 		<dropColumn tableName="meveo_script_instance" columnName="updater"/>
 	</changeSet>
+	
+	<changeSet id="#4283 - ManyToMany between scripts and maven dependencies" author="Clément Bareth">
+		<dropPrimaryKey tableName="maven_dependency"/>
+		<addPrimaryKey tableName="maven_dependency" columnNames="coordinates"/>
+		
+		<createTable tableName="adm_script_maven_dependency">
+			<column name="script_instance_id" type="bigint">
+				<constraints references="meveo_script_instance(id)" foreignKeyName="fk_script_id"/>
+			</column>
+			<column name="maven_coordinates" type="varchar(255)">
+				<constraints references="maven_dependency(coordinates)" foreignKeyName="fk_maven_dependency"/>
+			</column>
+		</createTable>
+		
+		<sql>
+			INSERT INTO adm_script_maven_dependency(script_instance_id, maven_coordinates)
+			SELECT md.script_id, md.coordinates
+			FROM maven_dependency as md
+		</sql>
+		
+		<dropColumn tableName="maven_dependency" columnName="script_id"/>
+	</changeSet>
+	
+	<changeSet id="#4252 - Add gitAdmin role to meveo.admin" author="EdwardPLegaspi">
+		<delete tableName="adm_user_role">
+			 <where>user_id=-1 AND role_id=-7</where>
+		</delete>
+		<insert tableName="adm_user_role">
+            <column name="user_id" valueNumeric="-1" />
+            <column name="role_id" valueNumeric="-7" />
+        </insert>
+	</changeSet>
+	
+	<changeSet id="Raise char limitation for crt code" author="Clément Bareth">
+		<modifyDataType tableName="cust_crt" columnName="code" newDataType="varchar(100)"/>
+	</changeSet>
 </databaseChangeLog>

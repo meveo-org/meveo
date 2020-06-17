@@ -14,6 +14,7 @@ import javax.inject.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -122,6 +123,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
+	}
+	
+	@Override
+	public CustomEntityTemplate initEntity() {
+		
+		CustomEntityTemplate entity = super.initEntity();
+		entity.getCustomEntityCategory();
+		return entity;
 	}
 
 	@Override
@@ -288,6 +297,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 
 	@Override
+	@ActionMethod
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 		
 		String editView = super.saveOrUpdate(killConversation);

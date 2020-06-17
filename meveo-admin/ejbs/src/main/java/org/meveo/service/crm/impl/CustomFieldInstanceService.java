@@ -2,17 +2,8 @@ package org.meveo.service.crm.impl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -60,6 +51,7 @@ import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,12 +96,15 @@ public class CustomFieldInstanceService extends BaseService {
     
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-    
+
     @Inject
     private CrossStorageService crossStorageService;
     
     @Inject
     private CustomEntityInstanceService customEntityInstanceService;
+
+    @Inject
+    private CustomTableService customTableService;
     
     @Inject
     private Repository repository;
@@ -122,17 +117,52 @@ public class CustomFieldInstanceService extends BaseService {
      * @return A BusinessEntity
      */
     @SuppressWarnings("unchecked")
-    public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String code) {
+    public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String value) {
         Query query = null;
         if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
             String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-            query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) =:code");
-            query.setParameter("cetCode", cetCode);
+            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+            if (!customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
+                query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) =:code");
+                query.setParameter("cetCode", cetCode);
+                CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(value);
+                if (customEntityInstance != null) {
+                    query.setParameter("code", customEntityInstance.getCode().toLowerCase());
+                } else {
+                    CustomEntityInstance entityInstance = customEntityInstanceService.findByUuid(cetCode, value);
+                    query.setParameter("code", entityInstance.getCode().toLowerCase());
+                }
+            } else {
+                BusinessEntity businessEntity = new BusinessEntity();
+                CustomEntityInstance cei = new CustomEntityInstance();
+                try {
+                    Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, value);
+                    if (objectMap != null && !objectMap.isEmpty()) {
+                        if (objectMap.get("code") != null) {
+                            cei.setCode((String) objectMap.get("code"));
+                        } else {
+                            cei.setCode(value);
+                        }
+                        cei.setCet(customEntityTemplate);
+                        cei.setUuid(value);
+                    } else {
+                        Map<String, Object> filters = new HashMap<>();
+                        filters.put("code", value);
+                        PaginationConfiguration paginationConfiguration = new PaginationConfiguration(0, 1000, filters, null, null, null, null, null);
+                        List<Map<String, Object>> list = customTableService.searchAndFetch("default", cetCode, paginationConfiguration);
+                        if (!list.isEmpty()) {
+                           cei = customEntityInstanceService.fromMap(customEntityTemplate, list.get(0));
+                        }
+                    }
+                    businessEntity = cei;
+                } catch (EntityDoesNotExistsException e) {}
+                return businessEntity;
+            }
         } else {
             query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
+            query.setParameter("code", value);
         }
 
-        query.setParameter("code", code.toLowerCase());
         List<BusinessEntity> entities = query.getResultList();
         if (entities.size() > 0) {
             return entities.get(0);
@@ -149,11 +179,11 @@ public class CustomFieldInstanceService extends BaseService {
      * @return A list of entities
      */
     @SuppressWarnings("unchecked") // TODO review location
-    public List<BusinessEntity> findBusinessEntityForCFVByCode(String classNameAndCode, String wildcode) {
+    public List<BusinessEntity> findBusinessEntityForCFVByCode(String customEntityTemplateCode, String classNameAndCode, String wildcode) {
         Query query = null;
-        
+
         List<BusinessEntity> entities = new ArrayList<>();
-        
+
         if(SqlConfiguration.DEFAULT_SQL_CONNECTION.equals(repository.getSqlConfigurationCode())) {
             if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
                 String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
@@ -167,19 +197,41 @@ public class CustomFieldInstanceService extends BaseService {
             query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
             entities = query.getResultList();
         }
- 
+
         if (entities.isEmpty() && classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
-        	String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-        	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-        	try {
-				List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
-				entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet,  m)).collect(Collectors.toList());
-					
-			} catch (EntityDoesNotExistsException e) {
-				log.error("Missing entity", e);
-			}
+            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+            try {
+                List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
+                entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet, m)).collect(Collectors.toList());
+                if (!entities.isEmpty() && customEntityTemplateCode != null) {
+                    CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
+                    Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+                    if (customFieldTemplates != null && !customFieldTemplates.isEmpty()) {
+                        for (CustomFieldTemplate customFieldTemplate : customFieldTemplates.values()) {
+                            if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && customFieldTemplate.getEntityClazz() != null && customFieldTemplate.getEntityClazz().equals(classNameAndCode)) {
+                                List<BusinessEntity> businessEntities = new ArrayList<>();
+                                for (BusinessEntity businessEntity : entities) {
+                                    if (businessEntity.getId() == null && ((CustomEntityInstance) businessEntity).getUuid() != null) {
+                                        if (businessEntity.getCode() == null) {
+                                            businessEntity.setCode(((CustomEntityInstance) businessEntity).getUuid());
+                                        }
+                                        ((CustomEntityInstance) businessEntity).setCetCode(cetCode);
+                                        businessEntities.add(businessEntity);
+                                    }
+                                }
+                                if (!businessEntities.isEmpty()) {
+                                    entities = businessEntities;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (EntityDoesNotExistsException e) {
+                log.error("Missing entity", e);
+            }
         }
-        
+
         return entities;
     }
 
@@ -519,7 +571,9 @@ public class CustomFieldInstanceService extends BaseService {
 
 					} else if (value instanceof Collection) {
 						List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
-						for (Object item : (Collection<?>) value) {
+						List<Map<String, Object>> entityValues = new ArrayList<>();
+						
+ 						for (Object item : (Collection<?>) value) {
 							EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
 							itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
 
@@ -529,6 +583,10 @@ public class CustomFieldInstanceService extends BaseService {
 								itemWrapper.setUuid((String) valueAsMap.get("uuid"));
 								if (itemWrapper.getUuid() == null) {
 									itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
+								}
+								
+								if(itemWrapper.getUuid() == null) {
+									entityValues.add(valueAsMap);
 								}
 
 							} else if (item instanceof String) {
@@ -541,12 +599,23 @@ public class CustomFieldInstanceService extends BaseService {
                                 itemWrapper = (EntityReferenceWrapper) item;
                             }
 
-							entityReferences.add(itemWrapper);
+							if(itemWrapper.getUuid() != null) {
+								entityReferences.add(itemWrapper);
+							}
 						}
 
-						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+						// If entity references list is empty, the entities referenced are probably being created
+						if(!entityReferences.isEmpty()) {
+							cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+						} else if (!entityValues.isEmpty()) {
+							cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityValues);
+						}
 					}
 				}
+
+				if (value instanceof CustomEntityInstance) {
+                    cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
+                }
         		
         	} else {
         		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
@@ -2458,6 +2527,7 @@ public class CustomFieldInstanceService extends BaseService {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
             setCFValue(entity, cetField.getKey(), value);
 		}
+		
 	}
 	
 	/**

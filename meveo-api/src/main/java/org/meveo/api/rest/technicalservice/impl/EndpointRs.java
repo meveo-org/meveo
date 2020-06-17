@@ -17,11 +17,13 @@
 package org.meveo.api.rest.technicalservice.impl;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
@@ -159,8 +161,9 @@ public class EndpointRs extends BaseRs {
     @Cache(maxAge = 86400)
 	@Produces("application/javascript")
 	@ApiOperation(value = " Get script of the endpoint")
-	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code) throws EntityDoesNotExistsException, IOException {
-		return endpointApi.getEndpointScript(uriContextInfo.getBaseUri().toString(), code);
+	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code, @Context HttpServletRequest servletRequest) throws EntityDoesNotExistsException, IOException {
+		final URI contextUri = URI.create(servletRequest.getRequestURL().toString()).resolve(servletRequest.getContextPath());
+		return endpointApi.getEndpointScript(contextUri.toString(), code);
 	}
 
 	/**
@@ -175,7 +178,7 @@ public class EndpointRs extends BaseRs {
 
 		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
 	}
-	
+
 	/**
 	 * Generates and returns the request schema of a given endpoint.
 	 * 
@@ -188,7 +191,7 @@ public class EndpointRs extends BaseRs {
 	public String requestSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
 		return endpointApi.requestSchema(code);
 	}
-	
+
 	/**
 	 * Generates and returns the response schema of a given endpoint.
 	 * 

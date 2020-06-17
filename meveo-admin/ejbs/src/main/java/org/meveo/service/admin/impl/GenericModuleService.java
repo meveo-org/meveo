@@ -18,8 +18,14 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -27,17 +33,26 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
+import org.meveo.model.ObservableEntity;
+import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 
@@ -46,6 +61,12 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+
+    @Inject
+    private ElasticClient elasticClient;
+
+    @EJB
+    private CustomFieldInstanceService customFieldInstanceService;
 
     @Inject
     protected EntityToDtoConverter entityToDtoConverter;
@@ -90,7 +111,15 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
                     sql = sql + " and mi.validity.to IS NULL";
                 }
             }
-            TypedQuery<BusinessEntity> query = getEntityManager().createQuery(sql, BusinessEntity.class);
+            
+            final TypedQuery<BusinessEntity> query;
+            try {
+            	query = getEntityManager().createQuery(sql, BusinessEntity.class);
+            } catch(Exception e) {
+            	log.error("Can't build the following query : {}", sql, e);
+            	return;
+            }
+            
             query.setParameter("code", item.getItemCode());
             if (addFromParam) {
                 query.setParameter("from", item.getValidity().getFrom());
@@ -218,14 +247,61 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
         return super.enable(module);
     }
+    
+	public List<MeveoModuleItem> getSortedModuleItems(Set<MeveoModuleItem> moduleItems) {
+
+		Comparator<MeveoModuleItem> comparator = new Comparator<MeveoModuleItem>() {
+
+			@Override
+			public int compare(MeveoModuleItem o1, MeveoModuleItem o2) {
+
+				ModuleItemOrder sortOrder1 = null;
+				ModuleItemOrder sortOrder2 = null;
+
+				if (o1.getClass().equals(MeveoModuleItem.class)) {
+					try {
+						Class<?> itemClass = Class.forName(o1.getItemClass());
+						sortOrder1 = itemClass.getAnnotation(ModuleItemOrder.class);
+					} catch (ClassNotFoundException e) {
+					}
+
+				} else {
+					sortOrder1 = o1.getClass().getAnnotation(ModuleItemOrder.class);
+				}
+
+				if (o2.getClass().equals(MeveoModuleItem.class)) {
+					try {
+						Class<?> itemClass = Class.forName(o2.getItemClass());
+						sortOrder2 = itemClass.getAnnotation(ModuleItemOrder.class);
+					} catch (ClassNotFoundException e) {
+					}
+
+				} else {
+					sortOrder2 = o2.getClass().getAnnotation(ModuleItemOrder.class);
+				}
+				
+				if (Objects.isNull(sortOrder1) || Objects.isNull(sortOrder2)) {
+					return 0;
+				}
+
+				return sortOrder2.value() - sortOrder1.value();
+			}
+		};
+
+		List<MeveoModuleItem> sortedList = new ArrayList<>(moduleItems);
+		sortedList.sort(comparator);
+
+		return sortedList;
+	}
 
     @SuppressWarnings("unchecked")
     @Override
-    public void remove(T module) throws BusinessException {
-
+    public void remove(MeveoModule module) throws BusinessException {
         // If module was downloaded, remove all submodules as well
         if (module.isDownloaded() && module.getModuleItems() != null) {
 
+        	//List<MeveoModuleItem> moduleItems = getSortedModuleItems(module.getModuleItems());
+        	
             for (MeveoModuleItem item : module.getModuleItems()) {
                 try {
                     if (MeveoModule.class.isAssignableFrom(Class.forName(item.getItemClass()))) {
@@ -239,7 +315,36 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
         }
 
-        super.remove(module);
+        if (module != null) {
+            getEntityManager().createNamedQuery("MeveoModule.deleteModule")
+                    .setParameter("id", module.getId())
+                    .setParameter("version", module.getVersion())
+                    .executeUpdate();
+
+            if (module instanceof BaseEntity && (module.getClass().isAnnotationPresent(ObservableEntity.class) || module.getClass().isAnnotationPresent(ModuleItem.class))) {
+                entityRemovedEventProducer.fire((BaseEntity) module);
+            }
+
+            // Remove entity from Elastic Search
+            if (BusinessEntity.class.isAssignableFrom(module.getClass())) {
+                elasticClient.remove((BusinessEntity) module);
+            }
+
+            // Remove custom field values from cache if applicable
+            if (module instanceof ICustomFieldEntity) {
+                customFieldInstanceService.removeCFValues((ICustomFieldEntity) module);
+            }
+
+            if (module instanceof IImageUpload) {
+                try {
+                    ImageUploadEventHandler<MeveoModule> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
+                    imageUploadEventHandler.deleteImage(module);
+                } catch (IOException e) {
+                    log.error("Failed deleting image file");
+                }
+            }
+        }
+
     }
     
     @SuppressWarnings("unchecked")

@@ -1322,7 +1322,23 @@ public class CrossStorageService implements CustomPersistenceService {
 				updatedValues.put(customFieldTemplate.getCode(), uuids);
 
 			} else if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !uuids.isEmpty()) {
-				updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
+				if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY && referencedCet.getSqlStorageConfiguration() != null) {
+					if (!referencedCet.isStoreAsTable()) {
+						CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(referencedCet.getCode(), uuids.get(0));
+						updatedValues.put(customFieldTemplate.getCode(), customEntityInstance);
+					} else {
+						Map<String, Object> map = customTableService.findById("default", referencedCet.getCode(), uuids.get(0));
+						if (map != null && !map.isEmpty()) {
+							if (map.get("code") == null) {
+								map.put("code", uuids.get(0));
+							}
+							CustomEntityInstance cei = customEntityInstanceService.fromMap(referencedCet, map);
+							updatedValues.put(customFieldTemplate.getCode(), cei);
+						}
+					}
+				}else {
+					updatedValues.put(customFieldTemplate.getCode(), uuids.get(0));
+				}
 			}
 
 		} else {

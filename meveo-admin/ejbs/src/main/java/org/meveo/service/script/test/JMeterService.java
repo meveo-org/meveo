@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.Context;
@@ -37,6 +38,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
 import org.meveo.service.script.ConcreteFunctionService;
+import org.meveo.service.script.DefaultFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -64,8 +66,8 @@ public class JMeterService {
     private String protocol = ParamBean.getInstance().getProperty("jmeter.server.protocol", null);
     private String portNumber = ParamBean.getInstance().getProperty("jmeter.server.portnumber", null);
 
-    @Inject
-    private ConcreteFunctionService concreteFunctionService;
+    @EJB
+    private DefaultFunctionService functionService;
     
     @Context
     private SecurityContext sc;
@@ -102,8 +104,8 @@ public class JMeterService {
         File logFile = File.createTempFile(functionCode, ".log");
 
         // Retrieve and create test file
-        final Function function = concreteFunctionService.findByCode(functionCode);
-        concreteFunctionService.detach(function);
+        final Function function = functionService.findByCode(functionCode);
+        functionService.detach(function);
 
         File jmxFile = File.createTempFile(functionCode, ".jmx");
 

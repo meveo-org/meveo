@@ -27,6 +27,8 @@ import java.util.*;
 
 /**
  * Created by Hien Bach.
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
  */
 @Named
 @ViewScoped
@@ -70,10 +72,22 @@ public class EndpointBean extends BaseBean<Endpoint> {
     @Override
     public Endpoint initEntity() {
         Endpoint endpoint = super.initEntity();
+        
         if (endpoint.getService() != null) {
             serviceCode = endpoint.getService().getCode();
         }
+        
         return endpoint;
+    }
+    
+    @Override
+    protected List<String> getFormFieldsToFetch() {
+    	return Arrays.asList("service", "service.scriptInputs", "service.scriptOutputs", "pathParameters", "parametersMapping", "roles");
+    }
+    
+    @Override
+    protected List<String> getListFieldsToFetch() {
+    	return Arrays.asList("service");
     }
 
     @Override
@@ -223,54 +237,62 @@ public class EndpointBean extends BaseBean<Endpoint> {
         this.rolesDM = rolesDM;
     }
 
-    @Override
-    public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        if (CollectionUtils.isNotEmpty(parameterMappings)) {
-            getEntity().getParametersMapping().clear();
-            getEntity().getParametersMapping().addAll(parameterMappings);
-        } else {
-            getEntity().getParametersMapping().clear();
-        }
-        if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
-            List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
-            EndpointPathParameter endpointPathParameter;
-            EndpointParameter endpointParameter;
-            for (String parameter : pathParametersDL.getTarget()) {
-                endpointPathParameter = new EndpointPathParameter();
-                endpointParameter = new EndpointParameter();
-                endpointParameter.setEndpoint(entity);
-                endpointParameter.setParameter(parameter);
-                endpointPathParameter.setEndpointParameter(endpointParameter);
-                endpointPathParameters.add(endpointPathParameter);
-            }
-            getEntity().getPathParameters().clear();
-            getEntity().getPathParameters().addAll(endpointPathParameters);
-        } else {
-            getEntity().getPathParameters().clear();
-        }
-        if (CollectionUtils.isNotEmpty(getEntity().getRoles())) {
-            getEntity().getRoles().clear();
-            getEntity().getRoles().addAll(rolesDM.getTarget());
-        } else {
-            getEntity().setRoles(rolesDM.getTarget());
-        }
+	@Override
+	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+		
+		if (CollectionUtils.isNotEmpty(parameterMappings)) {
+			entity.getParametersMapping().clear();
+			entity.getParametersMapping().addAll(parameterMappings);
+			
+		} else {
+			entity.getParametersMapping().clear();
+		}
+		
+		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
+			List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
+			EndpointPathParameter endpointPathParameter;
+			EndpointParameter endpointParameter;
+			for (String parameter : pathParametersDL.getTarget()) {
+				endpointPathParameter = new EndpointPathParameter();
+				endpointParameter = new EndpointParameter();
+				endpointParameter.setEndpoint(entity);
+				endpointParameter.setParameter(parameter);
+				endpointPathParameter.setEndpointParameter(endpointParameter);
+				endpointPathParameters.add(endpointPathParameter);
+			}
+			entity.getPathParameters().clear();
+			entity.getPathParameters().addAll(endpointPathParameters);
+			
+		} else {
+			entity.getPathParameters().clear();
+		}
+		
+		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+			entity.getRoles().clear();
+			entity.getRoles().addAll(rolesDM.getTarget());
+			
+		} else {
+			entity.setRoles(new HashSet<>(rolesDM.getTarget()));
+		}
 
-        boolean isError = false;
-        if (parameterMappings != null) {
-            for (TSParameterMapping param : parameterMappings) {
-                if (StringUtils.isBlank(param.getParameterName())) {
-                    if (param.getDefaultValue() == null) {
-                        messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
-                        isError = true;
-                    }
-                }
-            }
-        }
-        if (isError) {
-            return null;
-        }
-        return super.saveOrUpdate(killConversation);
-    }
+		boolean isError = false;
+		if (parameterMappings != null) {
+			for (TSParameterMapping param : parameterMappings) {
+				if (StringUtils.isBlank(param.getParameterName())) {
+					if (param.getDefaultValue() == null) {
+						messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"), param.getEndpointParameter().getParameter());
+						isError = true;
+					}
+				}
+			}
+		}
+		
+		if (isError) {
+			return null;
+		}
+		
+		return super.saveOrUpdate(killConversation);
+	}
 
     @Override
     public String getNewViewName() {

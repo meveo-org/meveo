@@ -57,6 +57,8 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             } else if (e instanceof EntityAlreadyExistsException || e instanceof org.meveo.api.exception.EntityAlreadyExistsException) {
                 return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
 
+            } else {
+            	log.error("Rest request failed", e);
             }
 
             return buildResponse(unwrapException(e), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);

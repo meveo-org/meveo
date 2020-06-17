@@ -58,29 +58,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	/** The script. */
 	@ApiModelProperty("Script instance information")
 	private ScriptInstanceDto script;
-
-	/** The module items. */
-	@ApiModelProperty("List of module items information")
-	@XmlElementWrapper(name = "moduleItems")
-	@XmlElement(name = "moduleItem")
-	@JsonProperty("moduleItems")
-	private List<MeveoModuleItemDto> moduleItems;
-
-	/** The module files. */
-	@XmlElementWrapper(name = "List of module files information")
-	@XmlElement(name = "moduleFiles")
-	@ApiModelProperty("The module files")
-	private List<String> moduleFiles;
 	
-	
-	/** The module dependencies. */
-	@ApiModelProperty("List of module dependencies information")
-	@XmlElementWrapper(name = "moduleDependencies")
-	@XmlElement(name = "moduleDependencies")
-	@JsonProperty("moduleDependencies")
-	private List<ModuleDependencyDto> moduleDependencies;
-	
-
 	/** The current version. */
 	@ApiModelProperty("The current version")
 	private String currentVersion = "1.0.0";
@@ -98,6 +76,20 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@ApiModelProperty("The meveo version ceiling")
 	@Pattern(regexp = "^(?<major>\\d+\\.)?(?<minor>\\d+\\.)?(?<patch>\\*|\\d+)$")
 	private String meveoVersionCeiling;
+
+	/** The module items. */
+	@ApiModelProperty("List of module items information")
+	@XmlElementWrapper(name = "moduleItems")
+	@XmlElement(name = "moduleItem")
+	@JsonProperty("moduleItems")
+	private List<MeveoModuleItemDto> moduleItems;
+		
+	/** The module dependencies. */
+	@ApiModelProperty("List of module dependencies information")
+	@XmlElementWrapper(name = "moduleDependencies")
+	@XmlElement(name = "moduleDependency")
+	@JsonProperty("moduleDependencies")
+	private List<ModuleDependencyDto> moduleDependencies;
 	 
 	@ApiModelProperty("List of patch linked to this module")
 	@XmlElementWrapper(name = "patches")
@@ -105,10 +97,18 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@JsonProperty("patches")
 	private List<MeveoModulePatchDto> patches;
 
+	/** The module files. */
+	@ApiModelProperty("The module files")
+	@XmlElementWrapper(name = "moduleFiles")
+	@XmlElement(name = "moduleFile")
+	@JsonProperty("moduleFiles")
+	private List<String> moduleFiles;
+
 	/**
 	 * Instantiates a new meveo module dto.
 	 */
 	public MeveoModuleDto() {
+		super();
 	}
 
 	/**

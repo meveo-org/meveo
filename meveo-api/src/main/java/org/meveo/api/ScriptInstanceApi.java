@@ -264,7 +264,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
 			mavenDependency.setVersion(mavenDependencyDto.getVersion());
 			mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
-			mavenDependency.setScript(scriptInstance);
 			mavenDependencyList.add(mavenDependency);
 		}
 		scriptInstance.getMavenDependencies().clear();
@@ -285,14 +284,20 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			}
 			line = 1;
 			for (MavenDependency maven : mavenDependencyList) {
-				if (!mavenDependencyService.validateUniqueFields(scriptInstance.getId(), maven.getGroupId(), maven.getArtifactId())) {
-					throw new BusinessException("GroupId and artifactId of maven dependency " + line + " must be unique");
+				if (!mavenDependencyService.validateUniqueFields(maven.getVersion(), maven.getGroupId(), maven.getArtifactId())) {
+					throw new BusinessException("Same artifact with other version already exist");
 				}
 				line++;
+				
+                MavenDependency existingDependency = mavenDependencyService.find(maven.getBuiltCoordinates());
+                if(existingDependency != null) {
+                	scriptInstance.getMavenDependencies().remove(existingDependency);
+                	scriptInstance.getMavenDependencies().add(existingDependency);
+                }
 			}
 		}
 
-		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance);
+		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance.getScript());
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
 			scriptInstance.getImportScriptInstances().addAll(importedScripts);
 		}
@@ -309,7 +314,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Override
 	public ScriptInstanceDto toDto(ScriptInstance scriptInstance) {
 
-		String source = scriptInstanceService.readScriptFile(scriptInstance);
+		String source = scriptInstance.getScript();
 		scriptInstance = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
 		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
 		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {

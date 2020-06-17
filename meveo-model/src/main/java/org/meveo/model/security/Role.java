@@ -2,19 +2,16 @@ package org.meveo.model.security;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.MapKey;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -32,6 +29,12 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.ExportIdentifier;
 
+/**
+ * Entity that represents system role.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
+ */
 @Entity
 @Cacheable
 @ExportIdentifier({ "name" })
@@ -42,7 +45,6 @@ import org.meveo.model.ExportIdentifier;
 			@NamedQuery(name = "Role.getAllRoles", query = "select r from org.meveo.model.security.Role r LEFT JOIN r.permissions p", hints = {
 	        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) 
 		})
-
 public class Role extends BaseEntity {
 
     private static final long serialVersionUID = -2309961042891712685L;

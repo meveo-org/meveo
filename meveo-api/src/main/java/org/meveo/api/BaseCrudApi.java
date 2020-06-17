@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -71,6 +73,18 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		super();
 		this.dtoClass = dtoClass;
 		this.jpaClass = jpaClass;
+	}
+	
+	/**
+	 * @return all entities
+	 */
+	@Transactional
+	public List<T> findAll() {
+		List<E> entities = getPersistenceService().list();
+		return entities == null ? new ArrayList<>() : 
+			entities.stream()
+				.map(this::toDto)
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -321,7 +335,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		}
 		
 		for (File importFile : files) {
-			if (importFile.getName().startsWith("export_") && importFile.getName().endsWith(".json")) {
+			if (importFile.getName().endsWith(".json")) {
 				FileInputStream inputStream = new FileInputStream(importFile);
 				importJSON(inputStream, overwrite);
 			}

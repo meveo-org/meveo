@@ -40,10 +40,6 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel("ModuleReleaseDto")
 public class ModuleReleaseDto {
 
-	/** The Constant serialVersionUID. */
-	private static final long serialVersionUID = 1L;
-
-
 	/** The code. */
 	@XmlAttribute(required = true)
 	@ApiModelProperty(required = true, value = "The module release code")
@@ -114,6 +110,7 @@ public class ModuleReleaseDto {
 	 * Instantiates a new meveo module dto.
 	 */
 	public ModuleReleaseDto() {
+		super();
 	}
 
 	/**

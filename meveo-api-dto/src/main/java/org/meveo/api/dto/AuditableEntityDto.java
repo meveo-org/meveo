@@ -2,6 +2,10 @@ package org.meveo.api.dto;
 
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.meveo.model.AuditableEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,8 +17,10 @@ import io.swagger.annotations.ApiModelProperty;
  * Contain the entity creation and modification dates.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
+@XmlTransient
+@XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel
 public class AuditableEntityDto extends BaseEntityDto {
 

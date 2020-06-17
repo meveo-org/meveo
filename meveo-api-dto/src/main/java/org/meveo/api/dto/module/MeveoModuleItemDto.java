@@ -1,42 +1,41 @@
 package org.meveo.api.dto.module;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityCategoryDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * An item can be a class, script, custom field, notification, etc inside meveo.
  *
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
-/**
- * 
- * @author clement.bareth
- * @since 
- * @version
- */
-/**
- * 
- * @author clement.bareth
- * @since 
- * @version
- */
-/**
- * 
- * @author clement.bareth
- * @since 
- * @version
- */
+@XmlRootElement(name = "MeveoModuleItem")
+@XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("MeveoModuleItemDto")
 public class MeveoModuleItemDto extends BaseEntityDto implements Comparable<MeveoModuleItemDto> {
 
 	private static final long serialVersionUID = -5514899106616353330L;
 
+	@XmlAttribute(required = true)
+	@ApiModelProperty(required = true, value = "Simple class name to of this module")
 	private String dtoClassName;
+
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "Linked list value representation of this object when module is uninstalled. Otherwise, it represents the object.")
 	private Object dtoData;
 
 	public MeveoModuleItemDto() {
@@ -99,22 +98,22 @@ public class MeveoModuleItemDto extends BaseEntityDto implements Comparable<Meve
 	@Override
 	public int compareTo(MeveoModuleItemDto o) {
 		// Categories should be created before entity templates
-    	if(this.dtoClassName.equals(CustomEntityTemplateDto.class.getName())) {
-    		if(o.dtoClassName.equals(CustomEntityCategoryDto.class.getName())) {
-    			return 1;
-    		}
-    	} else if(this.dtoClassName.equals(CustomEntityCategoryDto.class.getName())) {
-      		if(o.dtoClassName.equals(CustomEntityTemplateDto.class.getName())) {
-    			return -1;
-    		}
-    	}
-    	
+		if (this.dtoClassName.equals(CustomEntityTemplateDto.class.getName())) {
+			if (o.dtoClassName.equals(CustomEntityCategoryDto.class.getName())) {
+				return 1;
+			}
+		} else if (this.dtoClassName.equals(CustomEntityCategoryDto.class.getName())) {
+			if (o.dtoClassName.equals(CustomEntityTemplateDto.class.getName())) {
+				return -1;
+			}
+		}
+
 		return 0;
 	}
 
 	@Override
 	public String toString() {
-		return "MeveoModuleItemDto [dtoClassName=" + dtoClassName+"]";
+		return "MeveoModuleItemDto [dtoClassName=" + dtoClassName + "]";
 	}
 
 }

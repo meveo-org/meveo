@@ -29,8 +29,10 @@
                 <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" allowEdit="false"/>
                 <hftl:formField label="#{messages['businessEntity.description']}" field="description"/>
             </h:panelGrid>
-            <h:panelGrid columns="3">
-                <hftl:formField allowEdit="false" label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions actionButtons"/>
+            <h:panelGrid columns="1">
+            	<hftl:formField maxlength="255" allowEdit="false" label="#{messages['gitRepositories.remoteOrigin']}" field="remoteOrigin" listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions actionButtons"/>
+            </h:panelGrid>
+            <h:panelGrid columns="2">
                 <h:panelGroup id="defaultRemoteUsername">
                     <hftl:formField label="#{messages['gitRepositories.defaultRemoteUsername']}"
                                     field="defaultRemoteUsername" componentWidth="30"

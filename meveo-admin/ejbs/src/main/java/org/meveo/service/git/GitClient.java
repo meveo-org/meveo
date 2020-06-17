@@ -49,6 +49,7 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.SubmoduleConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -63,19 +64,17 @@ import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.security.DefaultPermission;
-import org.meveo.model.security.DefaultRole;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.security.permission.RequirePermission;
-import org.meveo.security.permission.Whitelist;
 import org.meveo.synchronization.KeyLock;
 
 /**
  * Git client class to manipulate repositories
  *
  * @author Clement Bareth
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @since 6.4.0
+ * @version 6.9.0
  */
 @ApplicationScoped
 public class GitClient {
@@ -144,7 +143,7 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be cloned or initiated
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      */
-    protected void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
+    public void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
         if (repoDir.exists() && failIfExist) {
@@ -161,7 +160,7 @@ public class GitClient {
                 final CloneCommand cloneCommand = Git.cloneRepository()
                         .setURI(gitRepository.getRemoteOrigin())
                         .setDirectory(repoDir);
-
+                cloneCommand.setCloneSubmodules(true);
                 if(gitRepository.getRemoteOrigin().startsWith("http")) {
                     CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
                     cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call().close();
@@ -385,16 +384,19 @@ public class GitClient {
 
         try (Git git = Git.open(repositoryDir)) {
             PullCommand pull = git.pull();
+            pull = pull.setRebase(true);
+            pull = pull.setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES);
 
-            if(gitRepository.getRemoteOrigin().startsWith("http")) {
-                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
-                pull.setCredentialsProvider(usernamePasswordCredentialsProvider);
-            } else {
-                SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
-                pull.setTransportConfigCallback(sshTransportConfigCallback);
-            }
-
-            pull.setRebase(true).call();
+			if (gitRepository.getRemoteOrigin().startsWith("http")) {
+				CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
+				pull = pull.setCredentialsProvider(usernamePasswordCredentialsProvider);
+			
+			} else {
+				SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
+				pull = pull.setTransportConfigCallback(sshTransportConfigCallback);
+			}
+			
+            pull.call();
 
             try (RevWalk rw = new RevWalk(git.getRepository())) {
                 ObjectId head = git.getRepository().resolve(Constants.HEAD);
@@ -408,6 +410,8 @@ public class GitClient {
                     }
                 }
             }
+            
+        	git.submoduleUpdate().call();
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 /**
@@ -37,6 +38,7 @@ public class EndpointJSInterface {
 	private String template;
 	private boolean isCet;
 	private EndpointHttpMethod httpMethod;
+	private String apiUrl;
 
 	public String build() {
 		StringBuilder sb = new StringBuilder(template);
@@ -46,6 +48,9 @@ public class EndpointJSInterface {
 		valuesMap.put("ENDPOINT_DESCRIPTION", endpointDescription);
 		valuesMap.put("REQUEST_SCHEMA", requestSchema);
 		valuesMap.put("RESPONSE_SCHEMA", responseSchema);
+		if (!StringUtils.isBlank(apiUrl)) {
+			valuesMap.put("API_BASE_URL", apiUrl);
+		}
 
 		StrSubstitutor sub = new StrSubstitutor(valuesMap);
 		sub.setVariablePrefix("#{");
@@ -107,5 +112,13 @@ public class EndpointJSInterface {
 
 	public void setHttpMethod(EndpointHttpMethod httpMethod) {
 		this.httpMethod = httpMethod;
+	}
+
+	public String getApiUrl() {
+		return apiUrl;
+	}
+
+	public void setApiUrl(String apiUrl) {
+		this.apiUrl = apiUrl;
 	}
 }

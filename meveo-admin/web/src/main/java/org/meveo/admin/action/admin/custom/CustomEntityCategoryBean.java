@@ -1,5 +1,6 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -16,6 +17,12 @@ import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.primefaces.model.TreeNode;
 
+/**
+ * Detail bean controller for {@linkplain CustomEntityCategory}.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
+ */
 @Named
 @ViewScoped
 public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCategory> {
@@ -78,19 +85,21 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 	}
 
 	public String deleteRelatedCETsByCategory() throws BusinessException {
+
 		try {
 			customEntityTemplateService.removeCETsByCategoryId(entity.getId());
 			super.delete(entity.getId());
-			
-		} catch(Exception exception) {
+
+		} catch (Exception exception) {
 			BusinessException be = MeveoExceptionMapper.translatePersistenceException(exception, getEntityClassName(), String.valueOf(entity.getId()));
 			if (be != null && be instanceof ConstraintViolationException) {
-				messages.error("Can't remove category " + entity.getCode()
-					+ " because one of its sub-elements is referenced somewhere else");
-        	} else
-        		messages.error(exception.getMessage());
+				messages.error("Can't remove category " + entity.getCode() + " because one of its sub-elements is referenced somewhere else");
+
+			} else {
+				messages.error(exception.getMessage());
+			}
 		}
-		
+
 		return back();
 	}
 
@@ -98,5 +107,15 @@ public class CustomEntityCategoryBean extends BackingCustomBean<CustomEntityCate
 		customEntityTemplateService.resetCategoryCETsByCategoryId(entity.getId());
 		super.delete(entity.getId());
 		return back();
+	}
+
+	@Override
+	protected List<String> getFormFieldsToFetch() {
+		return Arrays.asList("customEntityTemplates");
+	}
+
+	@Override
+	protected List<String> getListFieldsToFetch() {
+		return Arrays.asList("customEntityTemplates");
 	}
 }

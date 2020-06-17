@@ -646,13 +646,18 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 */
 	public List<BusinessEntity> autocompleteEntityForCFV(String wildcode) {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
+		if (entity instanceof CustomEntityInstance) {
+			CustomEntityInstance customEntityInstance = (CustomEntityInstance) entity;
+			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(customEntityInstance.getCetCode(), classname, wildcode);
+		} else {
+			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, wildcode);
+		}
 		return availableEntities;
 	}
 
 	public List<BusinessEntity> allEntityForCFV() {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, "");
+		return customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, "");
 	}
 
 	public List<BusinessEntity> getAvailableEntities() {
@@ -1323,7 +1328,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			List<Object> listValue = new ArrayList<Object>();
 			for (Map<String, Object> listItem : customFieldValue.getMapValuesForGUI()) {
-				if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+				if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY && !(listItem.get(CustomFieldValue.MAP_VALUE) instanceof EntityReferenceWrapper)) {
 					listValue.add(new EntityReferenceWrapper((BusinessEntity) listItem.get(CustomFieldValue.MAP_VALUE)));
 
 				} else {

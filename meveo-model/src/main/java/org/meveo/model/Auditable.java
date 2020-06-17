@@ -31,7 +31,7 @@ public class Auditable implements Serializable {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "created", nullable = false, updatable = false)
-	private Date created;
+	private Date created = new Date();
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "updated")
@@ -44,6 +44,7 @@ public class Auditable implements Serializable {
 	private String updater;
 
 	public Auditable() {
+		this.created = new Date();
 	}
 
 	public Auditable(MeveoUser creator) {

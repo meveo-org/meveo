@@ -105,7 +105,7 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 			BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
 			target.register(basicAuthentication);
 
-			Response response = target.request().post(Entity.entity(dto, MediaType.APPLICATION_XML));
+			Response response = target.request().post(Entity.entity(dto, MediaType.APPLICATION_JSON));
 			if (response.getStatus() != HttpURLConnection.HTTP_OK) {
 				if (response.getStatus() == HttpURLConnection.HTTP_UNAUTHORIZED || response.getStatus() == HttpURLConnection.HTTP_FORBIDDEN) {
 					throw new RemoteAuthenticationException("Http status " + response.getStatus() + ", info " + response.getStatusInfo().getReasonPhrase());

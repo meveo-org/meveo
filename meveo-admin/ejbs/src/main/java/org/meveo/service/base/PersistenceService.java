@@ -44,6 +44,7 @@ import javax.enterprise.context.Conversation;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
 import org.hibernate.SQLQuery;
@@ -88,9 +89,9 @@ import org.meveo.service.index.ElasticClient;
  *
  * @author Clément Bareth
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Wassim Drira
- * @lastModifiedVersion 6.3.0
+ * @version 6.9.0
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
     protected Class<E> entityClass;
@@ -285,20 +286,39 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         }
         return e;
     }
+    
+    /**
+     * Executes before disabling an entity
+     * @param entity the entity to disable
+     */
+    public void preDisable(E entity) {
+    	
+    	((EnableEntity) entity).setDisabled(true);
+        ((IAuditable) entity).updateAudit(currentUser);
+    }
 
     @Override
     public E disable(E entity) throws BusinessException {
-        if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
+        
+    	if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
             log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
-            ((EnableEntity) entity).setDisabled(true);
-            ((IAuditable) entity).updateAudit(currentUser);
+            preDisable(entity);
             entity = getEntityManager().merge(entity);
-            if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
-                entityDisabledEventProducer.fire((BaseEntity) entity);
-            }
+            postDisable(entity);
             log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
         }
         return entity;
+    }
+    
+    /**
+     * Executes after disabling the entity
+     * @param entity the entity to disable
+     */
+    public void postDisable(E entity) {
+    	
+    	if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+            entityDisabledEventProducer.fire((BaseEntity) entity);
+        }
     }
 
     /**
@@ -382,15 +402,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         query.setParameter("ids", ids);
         query.executeUpdate();
     }
-
-    /**
-     * @see org.meveo.service.base.local.IPersistenceService#update(org.meveo.model.IEntity)
-     */
-    @Override
-    public E update(E entity) throws BusinessException {
-        log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
-
-        beforeUpdateOrCreate(entity);
+    
+    private void preUpdate(E entity) throws BusinessException {
+    	
+    	beforeUpdateOrCreate(entity);
 
         if (entity instanceof IAuditable) {
             ((IAuditable) entity).updateAudit(currentUser);
@@ -405,6 +420,17 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         if (entity instanceof ICustomFieldEntity) {
             customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
         }
+    }
+
+    /**
+     * @see org.meveo.service.base.local.IPersistenceService#update(org.meveo.model.IEntity)
+     */
+    @Override
+    public E update(E entity) throws BusinessException {
+        
+    	log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+
+    	preUpdate(entity);
 
         try {
         	entity = getEntityManager().merge(entity);
@@ -414,20 +440,36 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         	} else {
             	throw new BusinessException(e);
         	}
-        }
+        }       
 
-        // Update entity in Elastic Search. ICustomFieldEntity is updated
-        // partially, as entity itself does not have Custom field values
-        if (entity instanceof BusinessCFEntity) {
-            elasticClient.partialUpdate((BusinessEntity) entity);
-        } else if (entity instanceof ISearchable) {
-            elasticClient.createOrFullUpdate((ISearchable) entity);
-        }
-
+        postUpdate(entity);
+        
         log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
         return entity;
     }
+    
+    public void updateNoMerge(E entity) throws BusinessException {
+    	
+    	log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+
+    	preUpdate(entity);     
+
+        postUpdate(entity);
+        
+        log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+    }
+    
+	private void postUpdate(E entity) {
+
+		// Update entity in Elastic Search. ICustomFieldEntity is updated
+		// partially, as entity itself does not have Custom field values
+		if (entity instanceof BusinessCFEntity) {
+			elasticClient.partialUpdate((BusinessEntity) entity);
+		} else if (entity instanceof ISearchable) {
+			elasticClient.createOrFullUpdate((ISearchable) entity);
+		}
+	}
     
     /**
      * Persist an entity in a separated transaction.
@@ -1156,5 +1198,55 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
         return (List<Map<String, Object>>) q.list();
     }
     
+	/**
+	 * Make sure that the entity is manage by the current session.
+	 * 
+	 * @param entity check if this entity belongs to the current session
+	 * @return managed entity
+	 */
+    public E reattach(E entity) {
+
+		if (getEntityManager().contains(entity)) {
+			return entity;
+
+		} else {
+			return getEntityManager().merge(entity);
+		}
+	}
+    
+	/**
+	 * Re-attach an unmodified entity into the session. It will lock nothing, but it
+	 * will get the entity from the session cache or (if not found there) read it
+	 * from the DB.
+	 * <p>
+	 * It's very useful to prevent LazyInitException when you are navigating
+	 * relations from an "old" (from the HttpSession for example) entities. You
+	 * first "re-attach" the entity.
+	 * </p>
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	public E lockAndReattach(E entity) {
+
+		getEntityManager().lock(entity, LockModeType.NONE);
+		return entity;
+	}
+	
+	public E refreshDetached(E entity) {
+
+		// Check for any OTHER instances already attached to the session since
+		// refresh will not work if there are any.
+		Session session = getEntityManager().unwrap(Session.class);
+		E attached = (E) session.load(getEntityClass(), entity.getId());
+		if (attached != entity) {
+			session.evict(attached);
+			session.lock(entity, LockModeType.NONE);
+		}
+
+		session.refresh(entity);
+		
+		return entity;
+	}
  
 }

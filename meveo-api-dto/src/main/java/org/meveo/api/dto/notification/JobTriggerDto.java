@@ -11,6 +11,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.model.notification.JobTrigger;
 import org.meveo.model.notification.Notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -23,6 +25,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @XmlRootElement(name = "JobTrigger")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("JobTriggerDto")
 public class JobTriggerDto extends NotificationDto {
 
@@ -78,7 +81,7 @@ public class JobTriggerDto extends NotificationDto {
 	 * Instantiates a new job trigger dto.
 	 */
 	public JobTriggerDto() {
-
+		super();
 	}
 
 	/**

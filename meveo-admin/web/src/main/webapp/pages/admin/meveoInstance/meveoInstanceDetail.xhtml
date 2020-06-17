@@ -28,8 +28,8 @@
 
         <hftl:formPanel id="formPanel" label="#{messages['meveoInstance.panel']}" formId="meveoInstanceForm" backingBean="#{meveoInstanceBean}" columns="1">
             <hftl:formField label="#{messages['meveoInstance.code']}" field="code" required="true" />
-            <hftl:formField label="#{messages['meveoInstance.url']}" field="url" required="true" size="255" componentWidth="125" />
-            <hftl:formField label="#{messages['businessEntity.description']}" field="description" />
+            <hftl:formField label="#{messages['businessEntity.description']}" field="description" newLine="true" size="75" />
+            <hftl:formField label="#{messages['meveoInstance.url']}" field="url" required="true" componentWidth="100" size="75" />
             <hftl:formField label="#{messages['meveoInstance.authUsername']}" field="authUsername" size="30" />
             <hftl:formField label="#{messages['meveoInstance.authPassword']}" field="authPassword" size="30" />
             

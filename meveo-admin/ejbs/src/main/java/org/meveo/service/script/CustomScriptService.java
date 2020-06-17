@@ -45,9 +45,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
@@ -69,7 +73,6 @@ import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
-import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
@@ -110,7 +113,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.8.0
+ * @lastModifiedVersion 6.9.0
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -467,9 +470,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
 
-        if (hasEndpoint) {
-            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
-        }
+//        if (hasEndpoint) {
+//            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
+//        }
     }
 
     private static String getFilePath(File jar) {
@@ -521,8 +524,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param testCompile Is it a compilation for testing purpose. Won't clear nor
      *                    overwrite existing compiled script cache.
      */
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
-
+    	
         final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -556,14 +560,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-//	private  File resolveInLocalRepo(DefaultArtifact artifact){
-//        LOG.debug("Trying to resolve $artifact in local repository...")
-//        def localRepoManager = new SimpleLocalRepositoryManager(localRepoRoot)
-//        def pathToLocalArtifact = localRepoManager.getPathForLocalArtifact(artifact)
-//        LOG.debug("pathToLocalArtifact: [$pathToLocalArtifact]")
-//        new File("$localRepoRoot.absolutePath/$pathToLocalArtifact")
-//    }
-
 	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
 
 		Set<String> result = new HashSet<>();
@@ -572,34 +568,51 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 		if (!StringUtils.isBlank(m2FolderPath)) {
 			String repoId = RandomStringUtils.randomAlphabetic(5);
-			List<RemoteRepository> remoteRepositories = repos.stream().map(e -> new RemoteRepository.Builder(repoId, "default", e).build()).collect(Collectors.toList());
+			List<RemoteRepository> remoteRepositories = repos.stream()
+					.map(e -> new RemoteRepository.Builder(repoId, "default", e)
+					.build())
+					.collect(Collectors.toList());
 
 			log.debug("found {} repositories", remoteRepositories.size());
 
 			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
 				Set<ArtifactResult> artifacts = mavenDependencies.stream().map(e -> {
+					DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
+					DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
+					Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
+
 					try {
-						DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
+						// check if artifact exists in local repository or in maven central
+						CollectRequest collectRequestLocal = new CollectRequest();
+						collectRequestLocal.setRoot(root);
 
-						// check if artifact exists in local repository
-						CollectRequest collectRequest = new CollectRequest();
-
-						Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
-						collectRequest.setRoot(root);
-
-						remoteRepositories.forEach(collectRequest::addRepository);
-
-						DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
-						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequest, classpathFlter);
+						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestLocal, classpathFlter);
 						DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-
+						
 						return dependencyResult.getArtifactResults();
 
 					} catch (DependencyResolutionException e1) {
-						log.error("Fail downloading dependencies {}", e1);
-						return null; // TODO handle it
+						
+						// If local repository resolution failed, try with remote
+						log.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
+						try {
+							CollectRequest collectRequestRemote = new CollectRequest();
+							collectRequestRemote.setRoot(root);
+							remoteRepositories.forEach(collectRequestRemote::addRepository);
+							
+							DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
+							DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
+							return dependencyResult.getArtifactResults();
+							
+						} catch (DependencyResolutionException e2) {
+							log.error("Fail downloading dependencies {}", e1);
+							return null; // TODO handle it
+						}
+
 					}
-				}).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+				}).filter(Objects::nonNull)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toSet());
 
 				log.debug("found {} artifacts", artifacts.size());
 
@@ -678,6 +691,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         script.setGetters(getters);
         script.setSetters(setters);
+
     }
 
 	/**
@@ -1052,10 +1066,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
-                if (modifiedFile.startsWith("scripts")) {
-                    String scriptCode = modifiedFile.replaceAll("scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
+                if (modifiedFile.startsWith("src/main/java/scripts")) {
+                    String scriptCode = modifiedFile.replaceAll("src/main/java/scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
                     File scriptFile = new File(repositoryDir, modifiedFile);
 
                     if (script == null && scriptFile.exists()) {
@@ -1074,8 +1088,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
                     } else if (script != null && scriptFile.exists()) {
                         // Scipt has been updated
+                    	script.setScript(readScriptFile(script));
+                        update(script);
                         compileScript(script, false);
-                        updateScript(script, readScriptFile(script));
                     }
                 }
             }
@@ -1083,7 +1098,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     private void updateScript(CustomScript scriptInstance, String script) {
-        getEntityManager().createNamedQuery("CustomScript.updateScript").setParameter("code", scriptInstance.getCode()).setParameter("script", script).executeUpdate();
+    	ScriptInstance customScript = getEntityManager().find(ScriptInstance.class, scriptInstance.getId());
+    	customScript.setScript(script);
+    	getEntityManager().merge(customScript);
     }
 
     private void buildScriptFile(File scriptFile, CustomScript scriptInstance) throws IOException {
@@ -1180,16 +1197,20 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return results;
     }
 
-    public List<ScriptInstance> populateImportScriptInstance(ScriptInstance instance) {
-        List<String> importedScripts = getImportScripts(instance.getScript());
-        instance.getImportScriptInstances().clear();
+    public List<ScriptInstance> populateImportScriptInstance(String script) {
+        List<String> importedScripts = getImportScripts(script);
         List<ScriptInstance> scriptInstances = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(importedScripts)) {
             for (String scriptCode : importedScripts) {
-                ScriptInstance scriptInstance = scriptInstanceService.findByCode(scriptCode);
-                if (scriptInstance != null) {
-                    scriptInstances.add(scriptInstance);
-                }
+            	String query = "FROM ScriptInstance si WHERE si.code = :scriptCode";
+            	Query q = getEntityManager().createQuery(query)
+        			.setParameter("scriptCode", scriptCode)
+            		.setFlushMode(FlushModeType.COMMIT);
+            	
+            	try {
+	                ScriptInstance scriptInstance = (ScriptInstance) q.getSingleResult();
+	                scriptInstances.add(scriptInstance);
+            	} catch(NoResultException e) {}
             }
         }
         return scriptInstances;

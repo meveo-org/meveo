@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -269,7 +270,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
      * Required in case of Neo4J storage and {@link CustomFieldTypeEnum#ENTITY} type.
      * Replacement for {@link #relationshipName}
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "crt_id")
     private CustomRelationshipTemplate relationship;
 

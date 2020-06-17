@@ -41,7 +41,7 @@
 			</p:breadCrumb>
 		</h:form>
 		
-		<hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" showAddModuleButton="true" backingBean="#{endpointBean}">
+		<hftl:formPanel formId = "endpointForm" label="#{messages['endpoint.panel']}" showAddModuleButton="true" backingBean="#{endpointBean}" killConversationOnSave="true">
             <h:panelGrid columns="5">
                 <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true" validateUnique="true" listenerUpdate=":endpointForm:endpointUrl"/>
                 <hftl:formField id="serviceId" label="#{messages['endpoint.code']}" 
@@ -52,7 +52,7 @@
                                 actionListenerBean="#{endpointBean}" actionListenerMethod="onFunctionChange"/>
                 <hftl:formField label="#{messages['endpoint.description']}" field="description" />
                 <hftl:decorateFormField field = "method" fieldId="method" componentWidth="100" label="#{messages['endpoint.method']}">
-                    <p:selectOneMenu id="method" value="#{endpointBean.entity.method}" style="width:150px;">
+                    <p:selectOneMenu id="method" value="#{endpointBean.entity.method}" style="width:150px;" required="true">
                         <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
                         <f:selectItem itemLabel="#{messages['endpoint.GET']}" itemValue="GET" />
                         <f:selectItem itemLabel="#{messages['endpoint.POST']}" itemValue="POST" />
@@ -113,8 +113,7 @@
 	                        <p:selectOneMenu id="returnedValueName" value="#{endpointBean.entity.returnedVariableName}" style="width:150px;" >
 	                            <f:selectItem itemLabel="#{messages['endpoint.selectMethod']}" itemValue="#{null}" noSelectionOption="true" />
 	                            <f:selectItems value="#{endpointBean.returnedVariableNames}" var="returnedVariableName" itemValue="#{returnedVariableName}" itemLabel="#{returnedVariableName}" />
-	                            <p:ajax listener="#{endpointBean.onFunctionChange}" update="serializeResult jsonataTransformerId" event="change" />
-<!-- 	                            <p:ajax update="jsonataTransformerId" event="change" /> -->
+	                            <p:ajax listener="#{endpointBean.onFunctionChange}" process="returnedValueNameId" update="serializeResult jsonataTransformerId" event="change" />
 	                        </p:selectOneMenu>
 	                    </hftl:decorateFormField>
 	                </h:panelGroup>

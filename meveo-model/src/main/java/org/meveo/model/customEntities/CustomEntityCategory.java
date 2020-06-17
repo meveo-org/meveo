@@ -17,9 +17,13 @@
  */
 package org.meveo.model.customEntities;
 
+import java.util.List;
+
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
@@ -35,7 +39,7 @@ import org.meveo.model.annotation.ImportOrder;
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clément Bareth
- * @lastModifiedVersion 6.9.0
+ * @version 6.9.0
  */
 @Entity
 @ModuleItem("CustomEntityCategory")
@@ -44,15 +48,44 @@ import org.meveo.model.annotation.ImportOrder;
 @ImportOrder(1)
 @ExportIdentifier({ "code" })
 @Table(name = "cust_cec", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
-@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @org.hibernate.annotations.Parameter(name = "sequence_name", value = "cust_cec_seq"), })
+@GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@org.hibernate.annotations.Parameter(name = "sequence_name", value = "cust_cec_seq"), })
 public class CustomEntityCategory extends BusinessEntity {
 
 	private static final long serialVersionUID = -4264545157890676607L;
-	
+
 	@Column(name = "name", length = 100, nullable = false)
 	@Size(max = 100)
 	@NotNull
 	private String name;
+
+	@OneToMany(mappedBy = "customEntityCategory", cascade = { CascadeType.MERGE })
+	private List<CustomEntityTemplate> customEntityTemplates;
+
+//	public void addCustomEntityTemplate(CustomEntityTemplate cet) {
+//		addCustomEntityTemplate(cet, true);
+//	}
+//
+//	public void addCustomEntityTemplate(CustomEntityTemplate cet, boolean isSet) {
+//
+//		if (getCustomEntityTemplates() != null) {
+//			if (getCustomEntityTemplates().contains(cet)) {
+//				getCustomEntityTemplates().set(getCustomEntityTemplates().indexOf(cet), cet);
+//
+//			} else {
+//				getCustomEntityTemplates().add(cet);
+//			}
+//
+//			if (isSet) {
+//				cet.setCustomEntityCategory(this, false);
+//			}
+//		}
+//	}
+//
+//	public void removeCustomEntityTemplate(CustomEntityTemplate cet) {
+//		getCustomEntityTemplates().remove(cet);
+//		cet.setCustomEntityCategory(null);
+//	}
 
 	public String getName() {
 		return name;
@@ -60,5 +93,13 @@ public class CustomEntityCategory extends BusinessEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public List<CustomEntityTemplate> getCustomEntityTemplates() {
+		return customEntityTemplates;
+	}
+
+	public void setCustomEntityTemplates(List<CustomEntityTemplate> customEntityTemplates) {
+		this.customEntityTemplates = customEntityTemplates;
 	}
 }

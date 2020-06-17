@@ -18,7 +18,9 @@
 package org.meveo.model.technicalservice.endpoint;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -30,6 +32,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
@@ -64,15 +67,14 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
         firstCollection = "pathParameters.endpointParameter.parameter",
         secondCollection = "parametersMapping.endpointParameter.parameter"
 )
-@NamedQuery(
-        name = "findByParameterName",
-        query = "SELECT e FROM Endpoint e " +
-                "INNER JOIN e.service as service " +
-                "LEFT JOIN e.pathParameters as pathParameter " +
-                "LEFT JOIN e.parametersMapping as parameterMapping " +
-                "WHERE service.code = :serviceCode " +
-                "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"
-)
+@NamedQueries({
+        @NamedQuery(name = "findByParameterName", query = "SELECT e FROM Endpoint e " +
+        "INNER JOIN e.service as service " +
+        "LEFT JOIN e.pathParameters as pathParameter " +
+        "LEFT JOIN e.parametersMapping as parameterMapping " +
+        "WHERE service.code = :serviceCode " +
+        "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"),
+        @NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId")})
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
 @ModuleItem("Endpoint")
@@ -82,16 +84,16 @@ public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @Fetch(value = FetchMode.SUBSELECT)
     @CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
     @Column(name = "role")
-    private List<String> roles = new ArrayList<>();
+    private Set<String> roles = new HashSet<>();
 
     /**
      * Technical service associated to the endpoint
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", updatable = false, nullable = false)
     private Function service;
 
@@ -114,14 +116,14 @@ public class Endpoint extends BusinessEntity {
     /**
      * Parameters that will be exposed in the endpoint path
      */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderColumn(name = "position")
     private List<EndpointPathParameter> pathParameters = new ArrayList<>();
 
     /**
      * Mapping of the parameters that are not defined as path parameters
      */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TSParameterMapping> parametersMapping = new ArrayList<>();
     
     /**
@@ -221,9 +223,9 @@ public class Endpoint extends BusinessEntity {
         this.parametersMapping = parametersMapping;
     }
 
-    public List<String> getRoles() { return roles; }
+    public Set<String> getRoles() { return roles; }
 
-    public void setRoles(List<String> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 
