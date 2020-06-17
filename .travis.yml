@@ -24,7 +24,7 @@ env:
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
 
   # Image tag to build meveo docker image
-  - DOCKER_IMAGE_TAG="dev-latest-github"
+  - DOCKER_IMAGE_TAG="dev-latest"
 
 
 before_install:
