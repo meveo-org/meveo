@@ -24,7 +24,7 @@ env:
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
 
   # Image tag to build meveo docker image
-  - DOCKER_IMAGE_TAG="dev-latest"
+  #- DOCKER_IMAGE_TAG="dev-latest" # This variable is configured in Travis Job
 
 
 before_install:
