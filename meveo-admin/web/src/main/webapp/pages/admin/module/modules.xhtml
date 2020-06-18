@@ -57,6 +57,7 @@
 	                <p:commandButton id="downloadMeveoModuleButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.downloadAndInstallModules']}"
 	                    update=":#{p:component('meveoModulesDialog')}" oncomplete="PF('meveoModulesDialog').show()">
 	                </p:commandButton>
+                    <p:button id="importFromFileButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.importFromInternalFile']}" outcome="fileExplorer"/>
 	            </ui:define>
 	        </hftl:dataList>
         </p:outputPanel>
