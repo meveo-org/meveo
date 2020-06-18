@@ -79,7 +79,8 @@ public class ScriptInstance extends CustomScript {
     private Set<Role> sourcingRoles = new HashSet<>();
 
     @NotFound(action = NotFoundAction.IGNORE)
-    @OneToMany(mappedBy = "script", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "adm_script_maven_dependency", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "maven_coordinates"))
     private Set<MavenDependency> mavenDependencies = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -135,4 +136,10 @@ public class ScriptInstance extends CustomScript {
     public void setImportScriptInstances(Set<ScriptInstance> importScriptInstances) {
         this.importScriptInstances = importScriptInstances;
     }
+
+	@Override
+	public String toString() {
+		return "ScriptInstance [code=" + code + ", description=" + description + ", id=" + id + "]";
+	}
+    
 }

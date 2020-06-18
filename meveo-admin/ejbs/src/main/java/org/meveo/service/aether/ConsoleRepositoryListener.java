@@ -10,114 +10,84 @@
  *******************************************************************************/
 package org.meveo.service.aether;
 
-import java.io.PrintStream;
-
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simplistic repository listener that logs events to the console.
  */
-public class ConsoleRepositoryListener
-    extends AbstractRepositoryListener
-{
+public class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
-    private PrintStream out;
+	private static Logger log = LoggerFactory.getLogger(ConsoleRepositoryListener.class);
 
-    public ConsoleRepositoryListener()
-    {
-        this( null );
-    }
+	public void artifactDeployed(RepositoryEvent event) {
+		log.debug("Deployed " + event.getArtifact() + " to " + event.getRepository());
+	}
 
-    public ConsoleRepositoryListener( PrintStream out )
-    {
-        this.out = ( out != null ) ? out : System.out;
-    }
+	public void artifactDeploying(RepositoryEvent event) {
+		log.debug("Deploying " + event.getArtifact() + " to " + event.getRepository());
+	}
 
-    public void artifactDeployed( RepositoryEvent event )
-    {
-        out.println( "Deployed " + event.getArtifact() + " to " + event.getRepository() );
-    }
+	public void artifactDescriptorInvalid(RepositoryEvent event) {
+		log.debug("Invalid artifact descriptor for " + event.getArtifact() + ": " + event.getException().getMessage());
+	}
 
-    public void artifactDeploying( RepositoryEvent event )
-    {
-        out.println( "Deploying " + event.getArtifact() + " to " + event.getRepository() );
-    }
+	public void artifactDescriptorMissing(RepositoryEvent event) {
+		log.debug("Missing artifact descriptor for " + event.getArtifact());
+	}
 
-    public void artifactDescriptorInvalid( RepositoryEvent event )
-    {
-        out.println( "Invalid artifact descriptor for " + event.getArtifact() + ": "
-            + event.getException().getMessage() );
-    }
+	public void artifactInstalled(RepositoryEvent event) {
+		log.debug("Installed " + event.getArtifact() + " to " + event.getFile());
+	}
 
-    public void artifactDescriptorMissing( RepositoryEvent event )
-    {
-        out.println( "Missing artifact descriptor for " + event.getArtifact() );
-    }
+	public void artifactInstalling(RepositoryEvent event) {
+		log.debug("Installing " + event.getArtifact() + " to " + event.getFile());
+	}
 
-    public void artifactInstalled( RepositoryEvent event )
-    {
-        out.println( "Installed " + event.getArtifact() + " to " + event.getFile() );
-    }
+	public void artifactResolved(RepositoryEvent event) {
+		log.debug("Resolved artifact " + event.getArtifact() + " from " + event.getRepository());
+	}
 
-    public void artifactInstalling( RepositoryEvent event )
-    {
-        out.println( "Installing " + event.getArtifact() + " to " + event.getFile() );
-    }
+	public void artifactDownloading(RepositoryEvent event) {
+		log.debug("Downloading artifact " + event.getArtifact() + " from " + event.getRepository());
+	}
 
-    public void artifactResolved( RepositoryEvent event )
-    {
-        out.println( "Resolved artifact " + event.getArtifact() + " from " + event.getRepository() );
-    }
+	public void artifactDownloaded(RepositoryEvent event) {
+		log.debug("Downloaded artifact " + event.getArtifact() + " from " + event.getRepository());
+	}
 
-    public void artifactDownloading( RepositoryEvent event )
-    {
-        out.println( "Downloading artifact " + event.getArtifact() + " from " + event.getRepository() );
-    }
+	public void artifactResolving(RepositoryEvent event) {
+		log.debug("Resolving artifact " + event.getArtifact());
+	}
 
-    public void artifactDownloaded( RepositoryEvent event )
-    {
-        out.println( "Downloaded artifact " + event.getArtifact() + " from " + event.getRepository() );
-    }
+	public void metadataDeployed(RepositoryEvent event) {
+		log.debug("Deployed " + event.getMetadata() + " to " + event.getRepository());
+	}
 
-    public void artifactResolving( RepositoryEvent event )
-    {
-        out.println( "Resolving artifact " + event.getArtifact() );
-    }
+	public void metadataDeploying(RepositoryEvent event) {
+		log.debug("Deploying " + event.getMetadata() + " to " + event.getRepository());
+	}
 
-    public void metadataDeployed( RepositoryEvent event )
-    {
-        out.println( "Deployed " + event.getMetadata() + " to " + event.getRepository() );
-    }
+	public void metadataInstalled(RepositoryEvent event) {
+		log.debug("Installed " + event.getMetadata() + " to " + event.getFile());
+	}
 
-    public void metadataDeploying( RepositoryEvent event )
-    {
-        out.println( "Deploying " + event.getMetadata() + " to " + event.getRepository() );
-    }
+	public void metadataInstalling(RepositoryEvent event) {
+		log.debug("Installing " + event.getMetadata() + " to " + event.getFile());
+	}
 
-    public void metadataInstalled( RepositoryEvent event )
-    {
-        out.println( "Installed " + event.getMetadata() + " to " + event.getFile() );
-    }
+	public void metadataInvalid(RepositoryEvent event) {
+		log.debug("Invalid metadata " + event.getMetadata());
+	}
 
-    public void metadataInstalling( RepositoryEvent event )
-    {
-        out.println( "Installing " + event.getMetadata() + " to " + event.getFile() );
-    }
+	public void metadataResolved(RepositoryEvent event) {
+		log.debug("Resolved metadata " + event.getMetadata() + " from " + event.getRepository());
+	}
 
-    public void metadataInvalid( RepositoryEvent event )
-    {
-        out.println( "Invalid metadata " + event.getMetadata() );
-    }
-
-    public void metadataResolved( RepositoryEvent event )
-    {
-        out.println( "Resolved metadata " + event.getMetadata() + " from " + event.getRepository() );
-    }
-
-    public void metadataResolving( RepositoryEvent event )
-    {
-        out.println( "Resolving metadata " + event.getMetadata() + " from " + event.getRepository() );
-    }
+	public void metadataResolving(RepositoryEvent event) {
+		log.debug("Resolving metadata " + event.getMetadata() + " from " + event.getRepository());
+	}
 
 }

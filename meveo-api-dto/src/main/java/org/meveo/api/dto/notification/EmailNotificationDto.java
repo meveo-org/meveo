@@ -13,6 +13,8 @@ import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.Notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Part of the notification package that handles email.
  *
@@ -21,6 +23,7 @@ import org.meveo.model.notification.Notification;
  */
 @XmlRootElement(name = "EmailNotification")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("EmailNotificationDto")
 public class EmailNotificationDto extends NotificationDto {
 
@@ -58,7 +61,7 @@ public class EmailNotificationDto extends NotificationDto {
      * Instantiates a new email notification dto.
      */
     public EmailNotificationDto() {
-
+    	super();
     }
 
     /**

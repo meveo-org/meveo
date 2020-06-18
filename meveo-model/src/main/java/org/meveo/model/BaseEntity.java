@@ -39,6 +39,8 @@ import org.meveo.model.persistence.JsonListType;
 import org.meveo.model.persistence.JsonSetType;
 import org.meveo.model.persistence.JsonStringType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Base class for all entity classes.
  */
@@ -57,12 +59,14 @@ public abstract class BaseEntity implements Serializable, IEntity<Long>, IJPAVer
     public static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Id
+    @JsonIgnore
     @GeneratedValue(generator = "ID_GENERATOR", strategy = GenerationType.AUTO)
     @Column(name = "id")
     @Access(AccessType.PROPERTY) // Access is set to property so a call to getId() wont trigger hibernate proxy loading
     protected Long id;
 
     @Version
+    @JsonIgnore
     @Column(name = "version")
     private Integer version;
 
@@ -87,6 +91,7 @@ public abstract class BaseEntity implements Serializable, IEntity<Long>, IJPAVer
     }
 
     @Override
+    @JsonIgnore
     public boolean isTransient() {
         return id == null;
     }

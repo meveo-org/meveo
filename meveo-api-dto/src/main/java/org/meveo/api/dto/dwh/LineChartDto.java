@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.LineChart;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -19,6 +21,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @XmlRootElement(name = "LineChart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("LineChartDto")
 public class LineChartDto extends ChartDto {
 

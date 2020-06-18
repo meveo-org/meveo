@@ -26,6 +26,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.validation.Valid;
@@ -189,6 +191,7 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 	 * @throws EntityDoesNotExistsException if the technical service to update does not exists
 	 * @throws BusinessException            if the technical service can't be updated
 	 */
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public T update(@Valid @NotNull D postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(postData.getName(), postData.getVersion());
         final T updatedService = updateService(technicalService, postData);
@@ -496,6 +499,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         final T service = technicalServiceService().findByCode(code);
         return toDto(service);
     }
+	
+	public D findWithDescriptions(String code) {
+        final T service = technicalServiceService().findByCode(code);
+        service.setDescriptions(persistenceService.description(code));
+        service.setExtendedServices(persistenceService.getExtendedServices(service.getCode()));
+        return toDto(service);
+	}
 
     @Override
     public D findIgnoreNotFound(String code) {
@@ -517,6 +527,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
             technicalService = persistenceService.findLatestByName(name)
                     .orElseThrow(() -> getEntityDoesNotExistsException(name));
         }
+        technicalService.setDescriptions(persistenceService.description(technicalService.getCode()));
+        technicalService.setExtendedServices(persistenceService.getExtendedServices(technicalService.getCode()));
         return technicalService;
     }
 

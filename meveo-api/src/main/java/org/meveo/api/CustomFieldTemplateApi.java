@@ -133,7 +133,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             throw new InvalidParameterException("appliesTo", appliesTo);
         }
 
-        if (customFieldTemplateService.findByCodeAndAppliesToNoCache(postData.getCode(), appliesTo) != null) {
+        if (customFieldTemplateService.exists(postData.getCode(), appliesTo)) {
             throw new EntityAlreadyExistsException(CustomFieldTemplate.class, postData.getCode());
         }
 
@@ -342,9 +342,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
         }
 
-        CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesToNoCache(postData.getCode(), appliesTo);
-
-        if (customFieldTemplate == null) {
+        if (!customFieldTemplateService.exists(postData.getCode(), appliesTo)) {
             create(postData, appliesTo);
         } else {
             update(postData, appliesTo);
@@ -581,7 +579,6 @@ public class CustomFieldTemplateApi extends BaseApi {
 			crt.setName(relationshipName);
 			crt.setStartNode(customEntityTemplateService.findByCode(sourceCet));
 			crt.setEndNode(customEntityTemplateService.findByCode(targetCet));
-			customRelationshipTemplateService.create(crt);
 		}
 		return crt;
 	}

@@ -16,6 +16,7 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +37,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+/**
+ * @author Clément Bareth * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
+ */
 @Singleton
 @Startup
 public class EndpointCacheContainer {
@@ -48,17 +54,29 @@ public class EndpointCacheContainer {
 
     private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
 
-    @PostConstruct
-    private void init() {
-        endpointLoadingCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(24, TimeUnit.HOURS)
-                .build(new CacheLoader<String, Endpoint>() {
-                    @Override
-                    public Endpoint load(String key) {
-                        return endpointService.findByCode(key);
-                    }
-                });
-    }
+	@PostConstruct
+	private void init() {
+		endpointLoadingCache = CacheBuilder.newBuilder() //
+				.expireAfterAccess(24, TimeUnit.HOURS) //
+				.build(new CacheLoader<String, Endpoint>() { //
+					@Override
+					public Endpoint load(String key) {
+						Endpoint result = endpointService.findByCode(
+                            key, 
+                            Arrays.asList("service"));
+						result.getService();
+						result.getRoles().forEach(r -> {
+						});
+						result.getPathParameters().forEach(e -> {
+						});
+						;
+						result.getParametersMapping().forEach(e -> {
+						});
+						;
+						return result;
+					}
+				});
+	}
 
     public PendingResult getPendingExecution(String key) {
         return pendingExecutions.get(key);

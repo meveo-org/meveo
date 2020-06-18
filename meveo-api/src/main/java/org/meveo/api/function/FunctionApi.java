@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.ws.rs.PathParam;
 
@@ -40,13 +40,15 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
 import org.meveo.service.script.ConcreteFunctionService;
+import org.meveo.service.script.DefaultFunctionService;
 import org.meveo.service.script.FunctionService;
 
 /**
+ * @author clement.bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @version 6.9.0
+ * @since 6.5.0
  */
-@Stateless
 public class FunctionApi {
 
     public static final String TEST_MODE = "test-mode";
@@ -59,18 +61,42 @@ public class FunctionApi {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+    
+    @EJB
+    private DefaultFunctionService defaultFunctionService;
 
     @Inject
     private TimerEntityService timerEntityService;
+    
+    /**
+     * @param code Function code
+     * @return the dto represenation of the function, or null if not found.
+     */
+    public FunctionDto find(String code) {
+    	Function function = concreteFunctionService.findByCode(code);
+    	if(function == null) {
+    		return null;
+    	}
+    	
+        final FunctionDto functionDto = new FunctionDto();
+        functionDto.setCode(function.getCode());
+        functionDto.setTestSuite(function.getTestSuite());
+        functionDto.setInputs(concreteFunctionService.getInputs(function));
+        functionDto.setOutputs(concreteFunctionService.getOutputs(function));
+        return functionDto;
+    }
 
+    /**
+     * @return the list of dto representation of the functions in databases
+     */
     public List<FunctionDto> list() {
         final List<Function> functions = concreteFunctionService.list();
         return functions.stream().map(e -> {
             final FunctionDto functionDto = new FunctionDto();
             functionDto.setCode(e.getCode());
             functionDto.setTestSuite(e.getTestSuite());
-            functionDto.setInputs(e.getInputs());
-            functionDto.setOutputs(e.getOutputs());
+            functionDto.setInputs(concreteFunctionService.getInputs(e));
+            functionDto.setOutputs(concreteFunctionService.getOutputs(e));
             return functionDto;
         }).collect(Collectors.toList());
     }
@@ -85,17 +111,16 @@ public class FunctionApi {
     }
 
     /**
-     * Update test suite and schedule or re-schedule execution
-     *
-     * @param functionCode Code of the function to update
-     * @param file Test Suite content
-     * @throws IOException if the file cannot be read
-     */
+	 * Update test suite and schedule or re-schedule execution
+	 *
+	 * @param functionCode Code of the function to update
+	 * @param file         Test Suite content
+	 * @throws BusinessException if an error occurs
+	 * @throws IOException       if the file cannot be read
+	 */
     public void updateTest(String functionCode, File file) throws BusinessException, IOException {
         final String testSuite = FileUtils.readFileToString(file, "UTF-8");
-        final Function function = concreteFunctionService.findByCode(functionCode);
-        function.setTestSuite(testSuite);
-        concreteFunctionService.update(function);
+        defaultFunctionService.updateTestSuite(functionCode, testSuite);
 
         final String testJobCode = getTestJobCode(functionCode);
         JobInstance jobInstance = jobService.findByCode(testJobCode);

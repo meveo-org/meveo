@@ -63,7 +63,7 @@ public class MavenDependencyDto extends BaseEntityDto {
 		this.setGroupId(mavenDependency.getGroupId());
 		this.setArtifactId(mavenDependency.getArtifactId());
 		this.setVersion(mavenDependency.getVersion());
-		this.setCoordinates(mavenDependency.getCoordinates());
+		this.setCoordinates(mavenDependency.getBuiltCoordinates());
 	}
 
 	public void setGroupId(String groupId) {

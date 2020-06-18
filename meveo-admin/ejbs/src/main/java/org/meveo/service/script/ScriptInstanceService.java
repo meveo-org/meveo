@@ -21,6 +21,7 @@ package org.meveo.service.script;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
+import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
@@ -39,6 +41,7 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.FunctionServiceFor;
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
@@ -51,8 +54,38 @@ import org.meveo.model.security.Role;
 @Stateless
 @Default
 public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
+	
+	@Inject
+	private MavenDependencyService mdService;
+	
+    @Override
+	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
+		super.beforeUpdateOrCreate(script);
+        
+        // Fetch maven dependencies
+        Set<MavenDependency> mavenDependencies = new HashSet<>();
+        for(MavenDependency md : script.getMavenDependencies()) {
+        	MavenDependency persistentMd = mdService.find(md.getBuiltCoordinates());
+        	if(persistentMd != null) {
+        		mavenDependencies.add(persistentMd);
+        	} else {
+        		getEntityManager().persist(md);
+        		mavenDependencies.add(md);
+        	}
+        }
+        script.setMavenDependencies(mavenDependencies);
+	}
+    
+	@Override
+	protected void afterUpdateOrCreate(ScriptInstance script) {
+		super.afterUpdateOrCreate(script);
+		
+		mdService.removeOrphans();
+	}
 
-    /**
+
+
+	/**
      * Get all ScriptInstances with error.
      *
      * @return list of custom script.
@@ -112,18 +145,32 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param context context used in execution of script.
      */
     public void test(String scriptCode, Map<String, Object> context) {
+    	String javaSrc;
+        
+        clearLogs(scriptCode);
         try {
-            clearLogs(scriptCode);
             ScriptInstance scriptInstance = findByCode(scriptCode);
             isUserHasExecutionRole(scriptInstance);
-            String javaSrc = scriptInstance.getScript();
+            javaSrc = scriptInstance.getScript();
             javaSrc = javaSrc.replaceAll("LoggerFactory.getLogger", "new org.meveo.service.script.RunTimeLogger(" + getClassName(javaSrc) + ".class,\"" + appProvider.getCode()
-                    + "\",\"" + scriptCode + "\",\"ScriptInstanceService\");//");
-            Class<ScriptInterface> compiledScript = compileJavaSource(javaSrc);
-            execute(compiledScript.newInstance(), context);
-
+            	+ "\",\"" + scriptCode + "\",\"ScriptInstanceService\");//");
+        } catch(Exception e) {
+        	log.error("Error retrieving script with code {} for test", scriptCode, e);
+        	return;
+        }
+        
+        Class<ScriptInterface> compiledScript;
+        try {
+        	compiledScript = compileJavaSource(javaSrc);
         } catch (Exception e) {
-            log.error("Script test failed", e);
+        	log.error("Can't compile script {} for test", scriptCode, e);
+        	return;
+        }
+            
+        try {
+            execute(compiledScript.newInstance(), context);
+        } catch (Exception e) {
+            log.error("Script test execution failed", e);
         }
     }
 

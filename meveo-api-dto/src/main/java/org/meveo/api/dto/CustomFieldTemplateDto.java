@@ -23,6 +23,7 @@ import org.meveo.model.persistence.DBStorageType;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -32,10 +33,11 @@ import io.swagger.annotations.ApiModelProperty;
  * The Class CustomFieldTemplateDto.
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "CustomFieldTemplate")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class CustomFieldTemplateDto extends BaseEntityDto {
 
@@ -302,7 +304,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * Instantiates a new custom field template dto.
      */
     public CustomFieldTemplateDto() {
-
+    	super();
     }
 
     /**

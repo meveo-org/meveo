@@ -35,6 +35,19 @@ public class RunTimeLogger implements org.slf4j.Logger {
         this.scriptCode = scriptCode;
         scriptService = (ScriptInstanceService) EjbUtils.getServiceInterface(scriptServiceName);
     }
+    
+	/**
+	 * 
+	 * @param clazz             class to log
+	 * @param providerCode      Provider code
+	 * @param scriptCode        code of script
+	 * @param scriptServiceName script service name
+	 */
+    public RunTimeLogger(Class<?> clazz, String providerCode, String scriptCode, String scriptServiceName) {
+        this.clazz = clazz;
+        this.scriptCode = scriptCode;
+        scriptService = (ScriptInstanceService) EjbUtils.getServiceInterface(scriptServiceName);
+    }
 
     /**
      * 

@@ -53,12 +53,16 @@ public class MeveoJmeterUtils {
         }
     }
 
+    /**
+     * Converts the function inputs into {@link Arguments}
+     * 
+     * @param code code of the function
+     * @return the {@link Arguments} for the function
+     */
     public static Arguments getDefaultInputs(String code) {
-        final List<Argument> collect = FunctionManager.getFunctions()
-                .stream()
-                .filter(functionDto -> functionDto.getCode().equals(code))
-                .map(FunctionDto::getInputs)
-                .flatMap(Collection::stream)
+    	FunctionDto functionDto = FunctionManager.getFunction(code);
+        final List<Argument> collect = functionDto.getInputs()
+        		.stream()
                 .map(functionIO -> new Argument(functionIO.getName(), null))
                 .collect(Collectors.toList());
 

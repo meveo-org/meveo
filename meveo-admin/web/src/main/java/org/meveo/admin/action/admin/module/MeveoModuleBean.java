@@ -36,6 +36,7 @@ import javax.inject.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
@@ -43,6 +44,7 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.export.ExportFormat;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.MeveoModulePatchApi;
 import org.meveo.api.module.ModuleReleaseApi;
@@ -69,6 +71,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  */
 @Named
 @ViewScoped
+@ViewBean
 public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	private static final long serialVersionUID = 1L;
@@ -118,6 +121,17 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	 */
 	public void initializeModules() {
 		meveoModules = meveoModuleService.findLikeWithCode(moduleCode);
+		if (!meveoModules.isEmpty()) {
+			List<MeveoModule> list = new ArrayList<>();
+			for (MeveoModule meveoModule : meveoModules) {
+				meveoModule = meveoModuleService.findById(meveoModule.getId(), getListFieldsToFetch());
+				if (!meveoModule.isDownloaded() || meveoModule.isInstalled()) {
+					list.add(meveoModule);
+				}
+			}
+			meveoModules.clear();
+			meveoModules = list;
+		}
 	}
 
 	public String getModuleCode() {
@@ -157,6 +171,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 //    	init();
 //    	initEntity();
 //    }
+	
+	public DefaultStreamedContent exportJson() throws IOException {
+		
+		setExportFormat(ExportFormat.JSON);
+		return export();
+	}
 
 	@Override
 	public DefaultStreamedContent export() throws IOException {
@@ -269,13 +289,13 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	}
 
 	@Override
-	protected List<String> getFormFieldsToFetch() {
-		return Arrays.asList("patches", "releases", "moduleDependencies", "moduleFiles");
+	public List<String> getFormFieldsToFetch() {
+		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("patches", "releases", "moduleDependencies", "moduleFiles");
+		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
 	}
 
 	@ActionMethod

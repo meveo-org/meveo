@@ -12,6 +12,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.crm.custom.EntityCustomAction;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Custom action.
  *
@@ -20,6 +22,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
  */
 @XmlRootElement(name = "EntityCustomAction")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class EntityCustomActionDto extends BaseEntityDto {
 

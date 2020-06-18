@@ -23,6 +23,7 @@ import java.util.List;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.FunctionUtils;
 import org.meveo.model.scripts.Sample;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -107,6 +108,13 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 
 	public void setTestSuite(String testSuite) {
 		this.testSuite = testSuite;
+
+		if(this.testSuite != null) {
+			// Make sure the good functionCode is set
+			if(FunctionUtils.checkTestSuite(this.testSuite, code) != null) {
+				this.testSuite = FunctionUtils.replaceWithCorrectCode(this.testSuite, code);
+			}
+		}
 	}
 
 	public List<Sample> getSamples() {

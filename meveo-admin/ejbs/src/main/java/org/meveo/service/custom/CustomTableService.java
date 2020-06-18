@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,7 +59,6 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -240,7 +238,6 @@ public class CustomTableService extends NativePersistenceService {
      * @param updateES should Elastic search be updated during record creation. If false, ES population must be done outside this call
      * @throws BusinessException General exception
      */
-	@JpaAmpNewTx
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createInNewTx(String sqlConnectionCode, CustomEntityTemplate cet, List<CustomEntityInstance> ceis, boolean updateES) throws BusinessException {
 

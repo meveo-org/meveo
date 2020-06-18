@@ -28,6 +28,7 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "endpoint_path_parameter")
+@NamedQuery(name = "deletePathParameterByEndpoint", query = "DELETE from EndpointPathParameter e WHERE e.endpointParameter.endpoint.id=:endpointId")
 public class EndpointPathParameter {
 
     @EmbeddedId

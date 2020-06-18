@@ -22,14 +22,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
@@ -37,6 +38,7 @@ import org.meveo.api.function.FunctionApi;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
+import org.meveo.service.script.ConcreteFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,7 @@ import io.swagger.annotations.ApiParam;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
  */
-@Stateless
+//@Stateless
 @Path("/function")
 @Api("FunctionRs")
 public class FunctionRs extends BaseRs {
@@ -60,11 +62,35 @@ public class FunctionRs extends BaseRs {
 
 	@Inject
 	private FunctionApi functionApi;
+	
+	@Inject
+	private ConcreteFunctionService functionService;
+	
+	/**
+	 * @param code the code of the function
+	 * @return the dto of the function
+	 */
+	@GET
+	@Path("/{code}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public FunctionDto getFunction(@PathParam("code") String code) {
+		return functionApi.find(code);
+	}
 
+	/**
+	 * @param codeOnly Whether to retrieve only codes
+	 * @return either all the functions or their codes
+	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<FunctionDto> getFunctions() {
-		return functionApi.list();
+	public Response getFunctions(@QueryParam("codeOnly") @ApiParam("Whether to retrieve only codes") boolean codeOnly) {
+		if(!codeOnly) {
+			return Response.ok(functionApi.list(), MediaType.APPLICATION_JSON)
+					.build();
+		} else {
+			return Response.ok(functionService.getCodes(), MediaType.APPLICATION_JSON)
+					.build();
+		}
 	}
 
 	@Path("/{code}/test")

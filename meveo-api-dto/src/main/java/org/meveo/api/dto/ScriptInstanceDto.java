@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.swagger.annotations.ApiModel;
@@ -15,6 +17,8 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * The Class ScriptInstanceDto.
  *
@@ -23,7 +27,8 @@ import org.meveo.model.security.Role;
  */
 @XmlRootElement(name = "ScriptInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
-@ApiModel
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("ScriptInstanceDto")
 public class ScriptInstanceDto extends CustomScriptDto {
 
     /** The Constant serialVersionUID. */
@@ -31,21 +36,29 @@ public class ScriptInstanceDto extends CustomScriptDto {
 
     /** The execution roles. */
     @ApiModelProperty("The execution roles.")
+    @XmlElementWrapper(name = "executionRoles")
+	@XmlElement(name = "executionRole")
     private List<RoleDto> executionRoles = new ArrayList<RoleDto>();
     
     /** The sourcing roles. */
     @ApiModelProperty("The sourcing roles")
+    @XmlElementWrapper(name = "sourcingRoles")
+	@XmlElement(name = "sourcingRole")
     private List<RoleDto> sourcingRoles = new ArrayList<RoleDto>();
 
     @ApiModelProperty("Whether the script has compilation errors")
     private Boolean error;
 
     /** The maven dependencies. */
+    @XmlElementWrapper(name = "mavenDependencies")
+	@XmlElement(name = "mavenDependency")
     @ApiModelProperty("The maven dependencies")
     private List<MavenDependencyDto> mavenDependencies = new ArrayList<>();
 
     /** The import script instances. */
     @ApiModelProperty("The import script instances")
+    @XmlElementWrapper(name = "importScriptInstances")
+	@XmlElement(name = "importScriptInstancy")
     private List<ScriptInstanceDto> importScriptInstances = new ArrayList<>();
 
     /**

@@ -68,12 +68,20 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
-import org.meveo.model.module.*;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
+import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.module.MeveoModulePatch;
+import org.meveo.model.module.ModuleRelease;
+import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.Function;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
+import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -101,6 +109,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private JobExecutionService jobExecutionService;
+
+    @Inject
+    private ConcreteFunctionService concreteFunctionService;
 
     /**
      * import module from remote meveo instance.
@@ -152,40 +163,46 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         }
     }
 
-    /**
-     * Publish meveo module with DTO items to remote meveo instance.
-     * 
-     * @param module meveo module
-     * @param meveoInstance meveo instance.
-     * @throws BusinessException business exception.
-     */
-    @SuppressWarnings("unchecked")
-    public void publishModule2MeveoInstance(MeveoModule module, MeveoInstance meveoInstance) throws BusinessException {
-        log.debug("export module {} to {}", module, meveoInstance);
-        final String url = "api/rest/module/createOrUpdate";
+	/**
+	 * Publish meveo module with DTO items to remote meveo instance.
+	 * 
+	 * @param module        meveo module
+	 * @param meveoInstance meveo instance.
+	 * @throws BusinessException business exception.
+	 */
+	@SuppressWarnings("unchecked")
+	public void publishModule2MeveoInstance(MeveoModule module, MeveoInstance meveoInstance) throws BusinessException {
+		log.debug("export module {} to {}", module, meveoInstance);
+		final String url = "api/rest/module/createOrUpdate";
 
-        try {
-            ApiService<MeveoModule, MeveoModuleDto> moduleApi = (ApiService<MeveoModule, MeveoModuleDto>) EjbUtils.getServiceInterface("MeveoModuleApi");
-            if(moduleApi == null){
-                throw new IllegalArgumentException("Cannot find api MeveoModuleApi bean");
-            }
+		// check if module is installed
+		if (!module.isInstalled()) {
+			throw new BusinessException("Only installed modules are allowed to be publish");
+		}
 
-            MeveoModuleDto moduleDto = moduleApi.find(module.getCode());
+		try {
+			ApiService<MeveoModule, MeveoModuleDto> moduleApi = (ApiService<MeveoModule, MeveoModuleDto>) EjbUtils.getServiceInterface("MeveoModuleApi");
+			if (moduleApi == null) {
+				throw new IllegalArgumentException("Cannot find api MeveoModuleApi bean");
+			}
 
-            Response response = meveoInstanceService.publishDto2MeveoInstance(url, meveoInstance, moduleDto);
-            ActionStatus actionStatus = response.readEntity(ActionStatus.class);
-            if (actionStatus == null) {
-                throw new BusinessException("Cannot read response status");
-            }
+			MeveoModuleDto moduleDto = moduleApi.find(module.getCode());
 
-            if (ActionStatusEnum.SUCCESS != actionStatus.getStatus()) {
-                throw new BusinessException("Code " + actionStatus.getErrorCode() + ", info " + actionStatus.getMessage());
-            }
-        } catch (Exception e) {
-            log.error("Error when export module {} to {}. Reason {}", module.getCode(), meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
-            throw new BusinessException("Fail to communicate " + meveoInstance.getCode() + ". Error " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
-        }
-    }
+			Response response = meveoInstanceService.publishDto2MeveoInstance(url, meveoInstance, moduleDto);
+			ActionStatus actionStatus = response.readEntity(ActionStatus.class);
+			if (actionStatus == null) {
+				throw new BusinessException("Cannot read response status");
+			}
+
+			if (ActionStatusEnum.SUCCESS != actionStatus.getStatus()) {
+				throw new BusinessException("Code " + actionStatus.getErrorCode() + ", info " + actionStatus.getMessage());
+			}
+		} catch (Exception e) {
+			log.error("Error when export module {} to {}. Reason {}", module.getCode(), meveoInstance.getCode(),
+					(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+			throw new BusinessException("Fail to communicate " + meveoInstance.getCode() + ". Error " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+		}
+	}
 
     @SuppressWarnings("unchecked")
     public List<MeveoModuleItem> findByCodeAndItemType(String code, String className) {
@@ -239,8 +256,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if (module.getScript() != null) {
             moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
         }
+        
+        List<MeveoModuleItem> moduleItems = getSortedModuleItems(module.getModuleItems());
 
-        for (MeveoModuleItem item : module.getModuleItems()) {
+        for (MeveoModuleItem item : moduleItems) {
             
             // check if moduleItem is linked to other active module
             if (isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
@@ -272,12 +291,29 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                     }
 
                     if(removeItems) {
-                        persistenceServiceForItem.remove(itemEntity);
-                    } else {
-                        persistenceServiceForItem.disable(itemEntity);
-                    }
+                        if (itemEntity instanceof Endpoint) {
+                            Endpoint endpoint = (Endpoint) itemEntity;
+                            if (CollectionUtils.isNotEmpty(endpoint.getPathParameters())) {
+                                getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
+                                        .setParameter("endpointId", endpoint.getId())
+                                        .executeUpdate();
+                            }
+                            Function service = concreteFunctionService.findById(endpoint.getService().getId());
+                            getEntityManager().createNamedQuery("Endpoint.deleteByService")
+                                    .setParameter("serviceId", service.getId())
+                                    .executeUpdate();
+                            
+                        } else {
+                            persistenceServiceForItem.remove(itemEntity);
+                        }
+                        
+					} else {
+						persistenceServiceForItem.preDisable(itemEntity);
+						itemEntity = getEntityManager().merge(itemEntity);
+					}
 
                 }
+                
             } catch (Exception e) {
                 log.error("Failed to uninstall/disable module item. Module item {}", item, e);
             }
@@ -299,6 +335,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             
             /* In case the module is uninstalled because of installation failure
                and that the module is not inserted in db we should not update its persistent state */
+            module = reattach(module);
             if(getEntityManager().contains(module)) {
             	moduleUpdated = update(module);
             }

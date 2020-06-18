@@ -48,11 +48,11 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -125,12 +125,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return new File(getClassesDirectory(currentUser));
     }
     
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void removeInNewTransaction(CustomEntityTemplate cet) throws BusinessException {
-    	remove(cet);
-    }
-    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
     	
@@ -138,11 +132,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         
-        ParamBean paramBean = paramBeanFactory.getInstance();
+		ParamBean paramBean = paramBeanFactory.getInstance();
 		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-        	cet.setCustomEntityCategory(customEntityCategoryService.refreshOrRetrieve(cet.getCustomEntityCategory()));
-        }
-        
+			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
+			cet.setCustomEntityCategory(cec);
+		}
+                
         super.create(cet);
         
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -230,9 +225,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         /* Update */
 
-		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			cet.setCustomEntityCategory(customEntityCategoryService.refreshOrRetrieve(cet.getCustomEntityCategory()));
-        }
+        if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
+			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
+			cet.setCustomEntityCategory(cec);
+		}
         
         CustomEntityTemplate cetUpdated = super.update(cet);
 
@@ -476,6 +472,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param categoryId
      */
     public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
+    	
         TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
         List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
         if (CollectionUtils.isNotEmpty(results)) {
@@ -582,5 +579,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 //		CustomEntityTemplate cet = findByCode(code);
 //		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
 		return null;
+	}
+
+	public void createWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
+
+		customEntityCategoryService.create(customEntityCategory);
+		cet.setCustomEntityCategory(customEntityCategory);
+		create(cet);
+	}
+
+	public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
+
+		customEntityCategoryService.create(customEntityCategory);
+		cet.setCustomEntityCategory(customEntityCategory);
+		return update(cet);
 	}
 }

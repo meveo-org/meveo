@@ -8,20 +8,27 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.filter.Filter;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * The Class FilterDto.
  *
  * @author Tyshan Shi
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "Filter")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class FilterDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
+    
+    public FilterDto() {
+    	super();
+    }
 
     /** Whether this filter is shared. */
     @ApiModelProperty("Whether this filter is shared")

@@ -10,6 +10,8 @@ import org.meveo.model.dwh.BarChart;
 import org.meveo.model.dwh.LegendPositionEnum;
 import org.meveo.model.dwh.OrientationEnum;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Part of the graphing classes that represents bar chart information.
  *
@@ -18,6 +20,7 @@ import org.meveo.model.dwh.OrientationEnum;
  */
 @XmlRootElement(name = "BarChart")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("BarChartDto")
 public class BarChartDto extends ChartDto {
 

@@ -55,7 +55,7 @@ import org.meveo.model.persistence.DBStorageType;
  */
 @Entity
 @ModuleItem("CustomRelationshipTemplate")
-@ModuleItemOrder(40)
+@ModuleItemOrder(11)
 @ExportIdentifier({ "code"})
 @Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",

@@ -19,25 +19,37 @@ package org.meveo.api.dto.technicalservice.endpoint;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
+ * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 01.02.2019
- * @version 6.5.0
+ * @version 6.9.0
  */
+@XmlRootElement(name = "Endpoint")
+@XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("EndpointDto")
 @NoIntersectionBetween(firstCollection = "parameterMappings.serviceParameter", secondCollection = "pathParameters")
 public class EndpointDto extends BusinessEntityDto implements Serializable {
 
@@ -80,7 +92,7 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
 
     @JsonProperty
     @ApiModelProperty("Roles")
-    private List<String> roles = new ArrayList<>();
+    private Set<String> roles = new HashSet<>();
 
     /**
      * JSONata query used to transform the result
@@ -109,6 +121,10 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     @JsonProperty
     @ApiModelProperty("Content type of the response")
     private String contentType;
+    
+    public EndpointDto() {
+    	super();
+    }
     
     public String getContentType() {
 		return contentType;
@@ -182,11 +198,11 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
         this.parameterMappings = parameterMappings;
     }
 
-    public List<String> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<String> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 }

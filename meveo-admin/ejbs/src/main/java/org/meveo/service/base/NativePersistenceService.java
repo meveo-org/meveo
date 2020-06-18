@@ -82,6 +82,8 @@ import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.MeveoParamBean;
 
@@ -127,6 +129,10 @@ public class NativePersistenceService extends BaseService {
 	@Updated
 	private Event<CustomTableRecord> customTableRecordUpdate;
 
+    @Inject
+    @Updated
+    private Event<CustomEntityInstance> customEntityInstanceUpdate;
+
 	@Inject
 	@Removed
 	private Event<CustomTableRecord> customTableRecordRemoved;
@@ -139,6 +145,12 @@ public class NativePersistenceService extends BaseService {
 	
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
+
+	@Inject
+    private CustomEntityInstanceService customEntityInstanceService;
+
+	@Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
 	/**
 	 * Return an entity manager for a current provider
@@ -367,6 +379,7 @@ public class NativePersistenceService extends BaseService {
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
 		convertedValues.put("uuid", cei.getUuid());
+		convertedValues = serializeValues(convertedValues, cftsMap);
 		
 		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
 	}
@@ -657,7 +670,10 @@ public class NativePersistenceService extends BaseService {
 		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		
-		final Map<String, Object> values = convertValue(sqlValues, cftsMap, removeNullValues, null);
+		final Map<String, Object> values = serializeValues(
+				convertValue(sqlValues, cftsMap, removeNullValues, null), 
+				cftsMap
+				);
 		
 		if (sqlValues.get(FIELD_ID) == null) {
 			throw new BusinessException("'uuid' field value not provided to update values in native table");
@@ -720,6 +736,10 @@ public class NativePersistenceService extends BaseService {
 			record.setCetCode(tableName);
 
 			customTableRecordUpdate.fire(record);
+
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(tableName), values);
+			customEntityInstance.setCetCode(tableName);
+			customEntityInstanceUpdate.fire(customEntityInstance);
 
 		} catch (Exception e) {
 			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);
@@ -1728,5 +1748,31 @@ public class NativePersistenceService extends BaseService {
 
         }
         return valuesConverted;
+    }
+    
+    protected Map<String, Object> serializeValues(Map<String, Object> values, Map<String, CustomFieldTemplate> fields) {
+    	Map<String, Object> serializedValues = new HashMap<>(values);
+    	
+    	values.forEach((k,v) -> {
+    		if(v instanceof Collection && !((Collection<?>) v).isEmpty()) {
+    			Collection<?> collection = (Collection<?>) v;
+    			Object firstItem = collection.iterator().next();
+    			
+    			if(firstItem instanceof EntityReferenceWrapper) {
+    				// Only store UUIDs
+    				List<String> uuids = collection.stream()
+    						.map(EntityReferenceWrapper.class::cast)
+    						.map(EntityReferenceWrapper::getUuid)
+    						.collect(Collectors.toList());
+    				serializedValues.put(k, uuids);
+    			}
+    			
+    		} else if(v instanceof EntityReferenceWrapper) {
+    			serializedValues.put(k, ((EntityReferenceWrapper) v).getUuid());
+    			
+    		}
+    	});
+    	
+    	return serializedValues;
     }
 }

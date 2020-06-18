@@ -83,6 +83,18 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     private void init() {
         useCFTCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCFT", "true"));
     }
+    
+    public boolean exists(String code, String appliesTo) {
+    	try { 
+    		return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
+    			+ "code = :code and applies_to = :appliesTo")
+    			.setParameter("code", code)
+    			.setParameter("appliesTo",appliesTo)
+    			.getSingleResult() != null;
+    	} catch (NoResultException e) {
+    		return false;
+    	}
+    }
 
     @SuppressWarnings("unchecked")
     public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {

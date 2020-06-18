@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -78,8 +79,17 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
     public NotificationBean() {
         super(ScriptNotification.class);
     }
+    
+    
 
     @Override
+	protected List<String> getFormFieldsToFetch() {
+		return Arrays.asList("function");
+	}
+
+
+
+	@Override
     protected IPersistenceService<ScriptNotification> getPersistenceService() {
         return notificationService;
     }

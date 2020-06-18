@@ -33,6 +33,8 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
@@ -68,6 +70,12 @@ public class StartupListener {
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper entityManagerWrapper;
+	
+	@Inject
+	private MavenConfigurationService mavenConfigurationService;
+	
+	@Inject
+	private GitClient gitClient;
 
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
@@ -105,31 +113,34 @@ public class StartupListener {
 			
 			// Create Meveo git repository
 			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
-			if(meveoRepo == null) {
+			if (meveoRepo == null) {
 				try {
-					gitRepositoryService.create(
-						GitRepositoryService.MEVEO_DIR, 
-						false,
-						GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
-						GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword()
-					);
-					
+					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR, //
+							false, //
+							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(), //
+							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
+
 					log.info("Created Meveo GIT repository");
-					
-					
+
 				} catch (BusinessException e) {
 					log.error("Cannot create Meveo GIT repository", e);
 				}
-				
+
 			} else {
 				log.info("Meveo GIT repository already created");
 				try {
 					GitRepositoryService.MEVEO_DIR = meveoRepo;
-					gitRepositoryService.createGitMeveoFolder(meveoRepo);
+					gitClient.create(GitRepositoryService.MEVEO_DIR, //
+							false, //
+							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(), //
+							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
 				} catch (BusinessException e) {
 					log.error("Cannot create Meveo Git folder", e);
 				}
 			}
+
+			// Create default pom file
+			mavenConfigurationService.createDefaultPomFile(meveoRepo);
 
 			try {
 				// Create default maven repository

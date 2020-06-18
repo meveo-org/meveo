@@ -18,24 +18,59 @@
  */
 package org.meveo.model.admin;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.model.*;
+import org.meveo.model.CustomFieldEntity;
+import org.meveo.model.EnableEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.*;
-
 /**
  * Entity that represents system user.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
  */
 @Entity
 @ObservableEntity

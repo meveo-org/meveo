@@ -133,7 +133,7 @@ public abstract class BaseRs implements IBaseRs {
             status.setMessage(e.getMessage());
 
         } else {
-            log.warn("Failed to execute API: {}", (StringUtils.isBlank(e.getMessage()) ? e : e.getMessage()));
+            log.warn("Failed to execute API", e);
 
             String message = e.getMessage();
             

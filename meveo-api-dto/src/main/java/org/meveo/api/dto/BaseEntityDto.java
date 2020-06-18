@@ -2,6 +2,10 @@ package org.meveo.api.dto;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.meveo.api.message.exception.InvalidDTOException;
 import org.meveo.model.BaseEntity;
 
@@ -15,10 +19,12 @@ import io.swagger.annotations.ApiModelProperty;
  * A base class for all API DTO classes
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  **/
+@XmlTransient
+@XmlAccessorType(XmlAccessType.FIELD)
 @JsonInclude(Include.NON_NULL)
-public abstract class BaseEntityDto implements Serializable {
+public class BaseEntityDto implements Serializable {
 
 	private static final long serialVersionUID = 4456089256601996946L;
 

@@ -25,6 +25,8 @@ import javax.validation.constraints.Size;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @lastModifiedVersion 6.3.0
@@ -41,6 +43,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     /**
      * Used to track if "Code" field value has changed. Value is populated on postLoad, postPersist and postUpdate JPA events
      */
+    @JsonIgnore
     @Transient
     protected String previousCode;
 
@@ -48,6 +51,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     @Size(max = 255)
     protected String description;
 
+    @JsonIgnore
     @Transient
     protected boolean appendGeneratedCode = false;
 
@@ -81,6 +85,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
         this.appendGeneratedCode = appendGeneratedCode;
     }
 
+    @JsonIgnore
     public String getDescriptionOrCode() {
         if (!StringUtils.isBlank(description)) {
             return description;
@@ -89,6 +94,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
         }
     }
 
+    @JsonIgnore
     public String getDescriptionAndCode() {
         if (!StringUtils.isBlank(description)) {
             return code + " - " + description;
@@ -102,6 +108,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
      * 
      * @return The parent entity.
      */
+    @JsonIgnore
     public BusinessEntity getParentEntity() {
         return null;
     }
@@ -111,6 +118,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
      * 
      * @return The parent entity's type.
      */
+    @JsonIgnore
     public Class<? extends BusinessEntity> getParentEntityType() {
         if (getParentEntity() != null) {
             return getParentEntity().getClass();
@@ -166,6 +174,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
      * 
      * @return True if current and previous "Code" field values DO NOT match
      */
+    @JsonIgnore
     public boolean isCodeChanged() {
         return !StringUtils.equals(code, previousCode);
     }

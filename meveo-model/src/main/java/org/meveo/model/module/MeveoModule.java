@@ -17,6 +17,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -53,18 +55,37 @@ import org.meveo.model.scripts.ScriptInstance;
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_module", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_module_seq"), })
+@NamedQueries({@NamedQuery(name = "MeveoModule.deleteModule", query = "DELETE from MeveoModule m where m.id=:id and m.version=:version")})
 @Inheritance(strategy = InheritanceType.JOINED)
 public class MeveoModule extends BusinessEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<MeveoModuleItem> moduleItems = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "module_files", joinColumns = { @JoinColumn(name = "module_id") })
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
+    /**
+     * A list of order items. Not modifiable once started processing.
+     */
+    @OneToMany(mappedBy = "meveoModule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ModuleRelease> releases = new HashSet<>();
+
+    @OneToMany(mappedBy = "meveoModule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
+    
+    /**
+     * Patches applied to install this module.
+     */
+	@OneToMany(mappedBy = "meveoModulePatchId.meveoModule", cascade = { CascadeType.REMOVE }, fetch = FetchType.LAZY)
+    private Set<MeveoModulePatch> patches = new HashSet<>();
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "script_instance_id")
+    private ScriptInstance script;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "module_license", nullable = false)
@@ -97,24 +118,6 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Type(type="numeric_boolean")
     @Column(name = "is_in_draft")
     private boolean isInDraft = true;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "script_instance_id")
-    private ScriptInstance script;
-    /**
-     * A list of order items. Not modifiable once started processing.
-     */
-    @OneToMany(mappedBy = "meveoModule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ModuleRelease> releases = new HashSet<>();
-
-    @OneToMany(mappedBy = "meveoModule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
-    
-    /**
-     * 
-     */
-	@OneToMany(mappedBy = "meveoModulePatchId.meveoModule", cascade = { CascadeType.REMOVE }, fetch = FetchType.LAZY)
-    private Set<MeveoModulePatch> patches = new HashSet<>();
 
     @PrePersist()
     @PreUpdate()

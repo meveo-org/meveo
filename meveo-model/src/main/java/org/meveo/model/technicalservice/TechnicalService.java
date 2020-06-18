@@ -18,6 +18,7 @@
 package org.meveo.model.technicalservice;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,11 @@ public class TechnicalService extends Function {
 	 */
     public void setDescriptions(Map<String, Description> descriptions) {
         this.descriptions = descriptions;
+    }
+    
+    public void setDescriptions(List<Description> descriptions) {
+    	this.descriptions = new HashMap<>();
+    	descriptions.forEach(d -> this.descriptions.put(d.getName(), d));
     }
 
     /**
@@ -174,8 +180,7 @@ public class TechnicalService extends Function {
 	 *
 	 * @param extendedServices the new inherited services
 	 */
-	@SuppressWarnings("unused")	/* Used by Hibernate */
-	private void setExtendedServices(Set<TechnicalService> extendedServices) {
+	public void setExtendedServices(Set<TechnicalService> extendedServices) {
 		this.extendedServices = extendedServices;
 	}
 

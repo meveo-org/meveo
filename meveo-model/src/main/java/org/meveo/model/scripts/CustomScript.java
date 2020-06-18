@@ -18,6 +18,8 @@ import javax.persistence.Transient;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
@@ -25,7 +27,7 @@ import org.meveo.model.ExportIdentifier;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 
 /**
- * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @version 6.9.0
  **/
 @ExportIdentifier({ "code"})
@@ -65,11 +67,13 @@ public abstract class CustomScript extends Function {
     @Column(name = "getters", columnDefinition = "text")
     private List<Accessor> getters = new ArrayList<>();
 
+    @Fetch(FetchMode.JOIN)
     @ElementCollection(fetch = FetchType.LAZY)
     @JoinTable(name="meveo_script_inputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
     @Column(name="script_input")
     private Set<String> scriptInputs = new HashSet<>();
 
+    @Fetch(FetchMode.JOIN)
     @ElementCollection(fetch = FetchType.LAZY)
     @JoinTable(name="meveo_script_outputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
     @Column(name="script_output")

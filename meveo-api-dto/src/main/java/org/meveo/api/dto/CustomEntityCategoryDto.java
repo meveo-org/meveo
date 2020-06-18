@@ -1,36 +1,36 @@
 package org.meveo.api.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import org.meveo.model.customEntities.CustomEntityCategory;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.meveo.model.customEntities.CustomEntityCategory;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "CustomEntityCategory")
 @XmlAccessorType(XmlAccessType.FIELD)
-@ApiModel
-public class CustomEntityCategoryDto extends BaseEntityDto {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("CustomEntityCategoryDto")
+public class CustomEntityCategoryDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6633504145323452803L;
-
-    @XmlAttribute(required = true)
-    @ApiModelProperty(required = true, value = "Code of the custom entity category")
-    private String code;
 
     @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "Name of the custom entity category")
     private String name;
     
     public CustomEntityCategoryDto() {
-    	
+    	super();
     }
 
     public CustomEntityCategoryDto(CustomEntityCategory e) {

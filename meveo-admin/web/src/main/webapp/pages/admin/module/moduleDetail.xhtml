@@ -18,31 +18,40 @@
 			widgetVar="dlg_addPatchPopup" dynamic="true" modal="true"
 			width="400px" styleClass="form-dialog" closeOnEscape="true"
 			appendTo="@(body)">
-			<hftl:formPanel entity="#{meveoModuleBean.newMeveoModulePatch}"
-				backingBean="#{meveoModuleBean}" showFormButtons="false">
-				<hftl:formField field="meveoModulePatchId"
-					childField="scriptInstance"
-					label="#{messages['meveoModule.patch.scriptInstance.code']}"
-					listBean="#{scriptInstanceListBean}" valueField="id"
-					valueLabelField="code" popup="false" />
-				<hftl:formField field="meveoModulePatchId"
-					childField="sourceVersion"
+			<h:form>
+				<hftl:decorateFormField id="patchScript"
+					label="#{messages['meveoModule.patch.scriptInstance.code']}">
+					<p:selectOneMenu id="patchScript"
+						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.scriptInstance}"
+						converter="omnifaces.SelectItemsConverter">
+						<f:selectItem itemLabel="#{messages['commons.select']}"
+							itemValue="#{null}" noSelectionOption="true" />
+						<f:selectItems value="#{scriptInstanceListBean.listActive()}"
+							var="e" itemLabel="#{e.code}" />
+					</p:selectOneMenu>
+				</hftl:decorateFormField>
+				<hftl:decorateFormField for="sourceVersion"
 					label="#{messages['meveoModule.patch.sourceVersion']}">
-					<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
-				</hftl:formField>
-				<hftl:formField field="meveoModulePatchId"
-					childField="targetVersion"
+					<p:inputText id="sourceVersion"
+						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.sourceVersion}">
+						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+					</p:inputText>
+				</hftl:decorateFormField>
+				<hftl:decorateFormField for="targetVersion"
 					label="#{messages['meveoModule.patch.targetVersion']}">
-					<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
-				</hftl:formField>
-				<ui:param name="buttons" value="true" />
-				<ui:define name="buttons">
+					<p:inputText id="targetVersion"
+						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.targetVersion}">
+						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+					</p:inputText>
+				</hftl:decorateFormField>
+				<h:panelGroup layout="block" styleClass="form-panel-actions"
+					id="formPanelActions">
 					<p:commandButton value="#{messages['action.add']}"
 						action="#{meveoModuleBean.addPatch}"
 						update="moduleForm:modulePatches @form moduleForm:messages"
 						onsuccess="PF('dlg_addPatchPopup').hide()" />
-				</ui:define>
-			</hftl:formPanel>
+				</h:panelGroup>
+			</h:form>
 		</p:dialog>
 
 		<p:dialog id="applyPatchPopup" header="#{messages['meveoModule.patch.upload']}"
@@ -130,7 +139,7 @@
 					<p:column headerText="#{messages['commons.actions']}" width="15%">
 						<p:commandButton icon="ui-icon-minus" partialSubmit="true"
 							immediate="true" update="moduleFilesId @form"
-							action="#{meveoModuleBean.removeFileFromModule(item)}" />
+							action="#{meveoModuleBean.removeFileFromModule(item)}" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
 					</p:column>
 				</p:dataTable>
 			</hftl:decorateFormField>
@@ -169,13 +178,13 @@
 					<p:column headerText="#{messages['commons.actions']}" width="15%">
 						<p:commandButton icon="ui-icon-minus" partialSubmit="true"
 							immediate="true" update="moduleForm:moduleDependencies @form"
-							action="#{meveoModuleBean.removeModuleDependency(dependency)}" />
+							action="#{meveoModuleBean.removeModuleDependency(dependency)}" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
 					</p:column>
 					<f:facet name="footer" layout="block">
 						<p:commandButton value="#{messages['meveoModuleDependency.add']}"
 							actionListener="#{meveoModuleBean.initializePatch}"
 							oncomplete="PF('dlg_searchModulePopup').show()"
-							icon="ui-icon-add" />
+							icon="ui-icon-add" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
 					</f:facet>
 				</p:dataTable>
 
@@ -214,12 +223,12 @@
 					<p:column headerText="#{messages['commons.actions']}" width="15%">
 						<p:commandButton icon="ui-icon-minus" partialSubmit="true"
 							immediate="true" update="moduleForm:modulePatches @form"
-							action="#{meveoModuleBean.removePatch(patch)}" />
+							action="#{meveoModuleBean.removePatch(patch)}" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
 					</p:column>
 					<f:facet name="footer" layout="block">
 						<p:commandButton value="#{messages['action.add']}" actionListener="#{meveoModuleBean.initializePatch}"
 							oncomplete="PF('dlg_addPatchPopup').show()" icon="ui-icon-add"
-							rendered="#{meveoModuleBean.entity.isInDraft}" />
+							rendered="#{meveoModuleBean.entity.isInDraft and (!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed)}" />
 					</f:facet>
 				</p:dataTable>
 			</hftl:decorateFormField>
@@ -290,7 +299,7 @@
                 </hf:formButtons>
 
                 <p:commandButton id="publishModuleButton" update=":#{p:component('publishModuleDialog')}" value="#{messages['meveoModule.publishModule']}"
-                    rendered="#{not meveoModuleBean.entity.transient}" oncomplete="PF('publishModuleDialog').show()" style="margin-top:10px">
+                    rendered="#{not meveoModuleBean.entity.transient and meveoModuleBean.entity.installed}" oncomplete="PF('publishModuleDialog').show()" style="margin-top:10px">
                     <f:setPropertyActionListener value="#{null}" target="#{meveoModuleBean.meveoInstance}" />
                 </p:commandButton>
                 <p:commandButton id="releaseModuleButton" update=":#{p:component('releaseModuleDialog')}" value="#{messages['meveoModule.releaseModule']}"

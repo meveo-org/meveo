@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
@@ -38,6 +40,8 @@ import org.meveo.model.IEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.FunctionUtils;
 import org.meveo.model.scripts.Sample;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.service.base.BusinessService;
@@ -60,7 +64,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     @Inject
     private JobInstanceService jobInstanceService;
-
+    
     /**
      * Parse parameters encoded in URL like style param=value&amp;param=value.
      *
@@ -128,6 +132,26 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     protected abstract String getCode(T executable);
 
+    /**
+     * Retrieve the function's inputs
+     * 
+     * @param function the function
+     * @return inputs of the function
+     */
+    public List<FunctionIO> getInputs(T function) {
+    	return function.getInputs();
+    }
+    
+    /**
+     * Retrieve the function's outputs
+     * 
+     * @param function the function
+     * @return outputs of the function
+     */
+    public List<FunctionIO> getOutputs(T function) {
+    	return function.getOutputs();
+    }
+    
     @Override
     public void create(T executable) throws BusinessException {
         validateAndSetCode(executable);
@@ -302,6 +326,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws InvalidPermissionException Insufficient access to run the script
      * @throws BusinessException          Any execution exception
      */
+    @TransactionAttribute(TransactionAttributeType.NEVER)
     public Map<String, Object> execute(String code, Map<String, Object> context) throws BusinessException {
         E engine = getExecutionEngine(code, context);
         return execute(engine, context);
@@ -344,5 +369,22 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
         return script.getSamples();
     }
+	
+	/**
+	 * Updates the test suite for the function with the given code
+	 * 
+	 * @param code      function code
+	 * @param testSuite test suite content
+	 */
+	public void updateTestSuite(String code, String testSuite) {
+		final String finalTestSuite = FunctionUtils.replaceWithCorrectCode(testSuite, code);
+		final String updateQuery = "UPDATE Function SET testSuite = :testSuite "
+								 + "WHERE code = :code";
+		
+		getEntityManager().createQuery(updateQuery)
+			.setParameter("testSuite", finalTestSuite)
+			.setParameter("code", code)
+			.executeUpdate();	
+	}
 
 }

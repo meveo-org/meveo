@@ -597,7 +597,14 @@ public class OntologyObserver {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
                 String[] cet = modifiedFile.split("/");
                 String fileName = cet[cet.length - 1];
-                String templateType = cet[cet.length - 2];
+                String templateType = null;
+				try {
+					templateType = cet[cet.length - 2];
+
+				} catch (ArrayIndexOutOfBoundsException e) {
+					LOGGER.debug("Not an entity {}", modifiedFile);
+				}
+                
                 if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json") && templateType.equals("entities")) {
                     String[] cetFileName = fileName.split("\\.");
                     String code = cetFileName[0];
@@ -635,7 +642,15 @@ public class OntologyObserver {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
                 String[] crt = modifiedFile.split("/");
                 String fileName = crt[crt.length - 1];
-                String templateType = crt[crt.length - 2];
+                
+                String templateType = null;
+				try {
+					templateType = crt[crt.length - 2];
+
+				} catch (ArrayIndexOutOfBoundsException e) {
+					LOGGER.debug("Not an entity {}", modifiedFile);
+				}
+				
                 if (!StringUtils.isBlank(fileName) && fileName.toLowerCase().endsWith("json") && templateType.equals("relationships")) {
                     String[] crtFileName = fileName.split("\\.");
                     String code = crtFileName[0];

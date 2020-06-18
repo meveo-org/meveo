@@ -119,7 +119,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(cascade = { CascadeType.PERSIST })
+	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
@@ -129,9 +129,36 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
-	
+
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
+
+//	void setCustomEntityCategory(CustomEntityCategory customEntityCategory, boolean isAdd) {
+//		
+//		this.customEntityCategory = customEntityCategory;
+//		if (customEntityCategory != null && isAdd) {
+//			customEntityCategory.addCustomEntityTemplate(this, false);
+//		}
+//	}
+
+	/**
+	 * Sets the custom Entity Category.
+	 *
+	 * @param customEntityCategory the new custom Entity Category
+	 */
+	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
+//		setCustomEntityCategory(customEntityCategory);
+		this.customEntityCategory = customEntityCategory;
+	}
+
+	/**
+	 * Gets the custom Entity Category.
+	 *
+	 * @return the custom Entity Category
+	 */
+	public CustomEntityCategory getCustomEntityCategory() {
+		return customEntityCategory;
+	}
 
 	/**
 	 * Instantiates it if null.
@@ -147,7 +174,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		return sqlStorageConfiguration;
 	}
 
-	
 	/**
 	 * Gets the sql storage configuration.
 	 *
@@ -204,7 +230,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Sets the list of storages where the custom fields can be stored.
 	 *
-	 * @param availableStorages the new list of storages where the custom fields can be stored
+	 * @param availableStorages the new list of storages where the custom fields can
+	 *                          be stored
 	 */
 	public void setAvailableStorages(List<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
@@ -222,7 +249,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Sets the script to execute before persisting the entity.
 	 *
-	 * @param prePersistScript the new script to execute before persisting the entity
+	 * @param prePersistScript the new script to execute before persisting the
+	 *                         entity
 	 */
 	public void setPrePersistScript(ScriptInstance prePersistScript) {
 		this.prePersistScript = prePersistScript;
@@ -311,13 +339,13 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * @return the code from applies to
 	 */
 	public static String getCodeFromAppliesTo(String appliesTo) {
-		if(appliesTo == null) 
+		if (appliesTo == null)
 			return null;
-		
-		if(!appliesTo.startsWith("CE_")) {
+
+		if (!appliesTo.startsWith("CE_")) {
 			return null;
 		}
-		
+
 		return appliesTo.substring(3);
 	}
 
@@ -376,25 +404,8 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	}
 
 	/**
-	 * Gets the custom Entity Category.
-	 *
-	 * @return the custom Entity Category
-	 */
-	public CustomEntityCategory getCustomEntityCategory() {
-		return customEntityCategory;
-	}
-
-	/**
-	 * Sets the custom Entity Category.
-	 *
-	 * @param customEntityCategory the new custom Entity Category
-	 */
-	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
-		this.customEntityCategory = customEntityCategory;
-	}
-
-	/**
-	 * /!\ The subTemplates field should have been fetch, will raise an exception otherwise.
+	 * /!\ The subTemplates field should have been fetch, will raise an exception
+	 * otherwise.
 	 *
 	 * @return the cet with all of its descendance
 	 */
@@ -438,7 +449,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
 		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
 	}
-	
+
 	public boolean isStoreAsTable() {
 		if (getSqlStorageConfiguration() == null) {
 			return false;

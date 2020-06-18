@@ -28,6 +28,7 @@
 			<property name="hibernate.c3p0.acquire_increment" value="5"></property>
 			<property name="hibernate.c3p0.timeout" value="1800"></property>
 			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property>
+			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/>
         </properties>
     </persistence-unit>
 
@@ -57,6 +58,8 @@
 			<property name="hibernate.c3p0.max_size" value="20"></property>
 			<property name="hibernate.c3p0.acquire_increment" value="5"></property>
 			<property name="hibernate.c3p0.timeout" value="1800"></property>
+			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property>
+			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/>
         </properties>
     </persistence-unit>
 

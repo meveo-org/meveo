@@ -11,22 +11,23 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * @author Rachid AITYAAZZA
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  **/
-@XmlRootElement(name = "CustomRelationshipTemplate")
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
@@ -54,14 +55,10 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     @ApiModelProperty("List of custom fields information")
     private List<CustomFieldTemplateDto> fields = new ArrayList<>();
 
-    @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "Start node code")
-    @JsonProperty("startNodeCode")
     private String startNodeCode;
 
-    @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "End node code")
-    @JsonProperty("endNodeCode")
     private String endNodeCode;
 
     @XmlAttribute()
@@ -116,7 +113,10 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     @XmlAttribute
     @ApiModelProperty("Name of graphQl type")
     private String graphQlTypeName;
-
+    
+    public CustomRelationshipTemplateDto() {
+    	super();
+    }
 
     // ------------------------------------------------- Setters and Getters ------------------------------------------
 
@@ -267,21 +267,21 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     /**
      * Convert CustomRelationshipTemplate instance to CustomRelationshipTemplateDto object including the fields and actions
      *
-     * @param cet       CustomRelationshipTemplate object to convert
+     * @param crt       CustomRelationshipTemplate object to convert
      * @param crtFields Fields (CustomFieldTemplate) that are part of CustomRelationshipTemplate
      * @return A CustomRelationshipTemplateDto object with fields set
      */
-    public static CustomRelationshipTemplateDto toDTO(CustomRelationshipTemplate cet, Collection<CustomFieldTemplate> crtFields) {
+    public static CustomRelationshipTemplateDto toDTO(CustomRelationshipTemplate crt, Collection<CustomFieldTemplate> crtFields) {
         CustomRelationshipTemplateDto dto = new CustomRelationshipTemplateDto();
-        dto.setCode(cet.getCode());
-        dto.setName(cet.getName());
-        dto.setDescription(cet.getDescription());
-        dto.setUnique(cet.isUnique());
-        dto.setSourceNamePlural(cet.getSourceNamePlural());
-        dto.setSourceNameSingular(cet.getSourceNameSingular());
-        dto.setTargetNamePlural(cet.getTargetNamePlural());
-        dto.setTargetNameSingular(cet.getTargetNameSingular());
-        dto.setGraphQlTypeName(cet.getGraphQlTypeName());
+        dto.setCode(crt.getCode());
+        dto.setName(crt.getName());
+        dto.setDescription(crt.getDescription());
+        dto.setUnique(crt.isUnique());
+        dto.setSourceNamePlural(crt.getSourceNamePlural());
+        dto.setSourceNameSingular(crt.getSourceNameSingular());
+        dto.setTargetNamePlural(crt.getTargetNamePlural());
+        dto.setTargetNameSingular(crt.getTargetNameSingular());
+        dto.setGraphQlTypeName(crt.getGraphQlTypeName());
         if (crtFields != null) {
             List<CustomFieldTemplateDto> fields = new ArrayList<>();
             for (CustomFieldTemplate cft : crtFields) {
@@ -289,9 +289,9 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
             }
             dto.setFields(fields);
         }
-        dto.setAvailableStorages(cet.getAvailableStorages());
-
-
+        dto.setAvailableStorages(crt.getAvailableStorages());
+        dto.setStartNodeCode(crt.getStartNode().getCode());
+        dto.setEndNodeCode(crt.getEndNode().getCode());
         return dto;
     }
 

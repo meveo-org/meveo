@@ -17,16 +17,19 @@
  */
 package org.meveo.service.script;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.scripts.FunctionServiceLiteral;
 import org.meveo.model.scripts.test.ExpectedOutput;
 
@@ -36,12 +39,13 @@ import org.meveo.model.scripts.test.ExpectedOutput;
  * @version 6.9.0
  */
 @Default
-@Stateless
-public class ConcreteFunctionService extends FunctionService<Function, ScriptInterface> {
+public class ConcreteFunctionService extends FunctionService<Function, ScriptInterface> implements Serializable {
+	
+	private static final long serialVersionUID = 6805848221588048249L;
 	
 	@Inject @Any
     private Instance<FunctionService<?, ?>> fnServiceInst;
-
+	
 	@Override
 	protected void afterUpdateOrCreate(Function executable) {}
 
@@ -53,6 +57,27 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 		return executable.getCode();
 	}
 	
+	/**
+	 * @return the codes of all the {@link Function} in database
+	 */
+	public List<String> getCodes() {
+		return this.getEntityManager().createQuery("SELECT code FROM Function", String.class)
+			.getResultList();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<FunctionIO> getInputs(Function function) {
+		FunctionService<Function, ScriptInterface> functionService = (FunctionService<Function, ScriptInterface>) getFunctionService(function.getCode());
+		return functionService.getInputs(function);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<FunctionIO> getOutputs(Function function) {
+		FunctionService<Function, ScriptInterface> functionService = (FunctionService<Function, ScriptInterface>) getFunctionService(function.getCode());
+		return functionService.getOutputs(function);
+	}
 
 	/**
 	 * Retrieve function class from its code and call corresponding service. When knowing type in advance, prefer use corresponding service.
@@ -98,6 +123,24 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	@Override
 	public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
 		return null;
+	}
+	
+	@Transactional
+	@Override
+	public long count() {
+		return super.count();
+	}
+	
+	@Transactional
+	@Override
+	public long count(PaginationConfiguration config) {
+		return super.count(config);
+	}
+	
+	@Transactional
+	@Override
+	public List<Function> list(PaginationConfiguration config) {
+		return super.list(config);
 	}
 
 }

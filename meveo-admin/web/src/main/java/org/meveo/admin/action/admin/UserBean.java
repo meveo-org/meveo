@@ -47,6 +47,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.CustomFieldBean;
+import org.meveo.admin.action.admin.module.MeveoModuleBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.UserApi;
@@ -115,6 +116,9 @@ public class UserBean extends CustomFieldBean<User> {
 
     @Inject
     private MeveoModuleService meveoModuleService;
+    
+    @Inject
+    private MeveoModuleBean meveoModuleBean;
 
     private String selectedFolder;
     
@@ -227,7 +231,7 @@ public class UserBean extends CustomFieldBean<User> {
         }
 
         if (this.getUserGroupSelectedNode() != null) {
-            UserHierarchyLevel userHierarchyLevel = (UserHierarchyLevel) this.getUserGroupSelectedNode().getData();
+            this.getUserGroupSelectedNode().getData();
         }
 
         getEntity().getRoles().clear();
@@ -644,7 +648,7 @@ public class UserBean extends CustomFieldBean<User> {
     }
 
     // Recursive function to create tree with node checked if selected
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes", "unchecked", "unused" })
     private TreeNode createTree(HierarchyLevel hierarchyLevel, TreeNode rootNode, UserHierarchyLevel selectedHierarchyLevel) {
         TreeNode newNode = new DefaultTreeNode(hierarchyLevel, rootNode);
         List<UserHierarchyLevel> subTree = new ArrayList<UserHierarchyLevel>(hierarchyLevel.getChildLevels());
@@ -748,7 +752,8 @@ public class UserBean extends CustomFieldBean<User> {
      * @param event
      * @throws BusinessException
      */
-    @ActionMethod
+    @SuppressWarnings("unlikely-arg-type")
+	@ActionMethod
     public void saveSecuredEntity(SelectEvent event) throws BusinessException, ELException {
         log.debug("saveSecuredEntity: {}", this.selectedEntity);
         if (this.selectedEntity != null) {
@@ -797,8 +802,7 @@ public class UserBean extends CustomFieldBean<User> {
      * @throws BusinessException when adding a file to a module failed
      */
 	public void addFileToModule() throws BusinessException {
-        MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
-        module = meveoModuleService.refreshOrRetrieve(module);
+		MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode(), meveoModuleBean.getFormFieldsToFetch());
 		if (!StringUtils.isBlank(selectedFileName)) {
 			String folder = this.selectedFolder == null ? "" : this.selectedFolder;
 			String fileName = folder + File.separator + selectedFileName;

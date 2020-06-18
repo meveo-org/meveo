@@ -24,6 +24,8 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ObservableEntity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +60,8 @@ public class GitRepository extends BusinessEntity {
     /**
      * (Optional) Remote origin url if the repository is hosted somewhere else than locally
      */
-    @Column(name = "remote_origin", updatable = false)
+    @Size(max = 255)
+    @Column(name = "remote_origin", updatable = false, length = 255)
     private String remoteOrigin;
 
     /**

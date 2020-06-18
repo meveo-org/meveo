@@ -15,7 +15,7 @@
         selection="#{backingBean.entity.script}" updateField=":moduleForm:script_entity">
     </hftl:entityPopup>
 
-    <hftl:genericEntityPopup id="addModuleItem" header="#{messages['meveoModuleItem.add.header']}" annotation="org.meveo.model.ModuleItem" selection="#{backingBean.moduleItemEntity}" updateField=":moduleForm:moduleItems" />
+    <hftl:genericEntityPopup id="addModuleItem" header="#{messages['meveoModuleItem.add.header']}" annotation="org.meveo.model.ModuleItem" selection="#{backingBean.moduleItemEntity}" updateField=":moduleForm:moduleItems :moduleForm:messages" />
 
     <p:dialog id="scriptDialog" header="#{messages['meveoModule.scriptHeader']}" modal="true" closeOnEscape="false" maximizable="true" closable="false" widgetVar="scriptDialog"
         width="90%" height="550px">

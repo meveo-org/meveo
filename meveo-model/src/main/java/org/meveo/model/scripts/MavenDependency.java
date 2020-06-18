@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
@@ -20,42 +21,40 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 /**
+ * @author clement.bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @version 6.9.0
  */
 @Entity
 @Table(name = "maven_dependency", uniqueConstraints = { @UniqueConstraint(columnNames = { "group_id", "artifact_id" }) })
-@IdClass(MavenDependencyPk.class)
 @EntityListeners(JPAtoCDIListener.class)
 public class MavenDependency implements Serializable {
 
 	private static final long serialVersionUID = 4010437441199195133L;
 
 	@Id
-	@ManyToOne(fetch = FetchType.LAZY, targetEntity = Function.class)
-	@JoinColumn(name = "script_id")
-	@SubTypeOf(ScriptInstance.class)
-	@NotNull
-	private Function script;
-
-	@Id
 	@Column(name = "coordinates")
 	private String coordinates;
 
-	@Column(name = "group_id", nullable = false)
+	@Column(name = "group_id", nullable = false, updatable = false)
 	@NotNull
 	private String groupId;
 
-	@Column(name = "artifact_id", nullable = false)
+	@Column(name = "artifact_id", nullable = false, updatable = false)
 	@NotNull
 	private String artifactId;
 
-	@Column(name = "version", nullable = false)
+	@Column(name = "version", nullable = false, updatable = false)
 	@NotNull
 	private String version;
 
-	@Column(name = "classifier")
+	@Column(name = "classifier", updatable = false)
 	private String classifier;
+	
+	@PrePersist
+	public void prePersist() {
+		this.coordinates = this.getBuiltCoordinates();
+	}
 
 	public String getGroupId() {
 		return groupId;
@@ -90,6 +89,10 @@ public class MavenDependency implements Serializable {
 	}
 
 	public String getCoordinates() {
+		return coordinates;
+	}
+	
+	public String getBuiltCoordinates() {
 		StringBuilder coordinatesBuilder = new StringBuilder();
 		coordinatesBuilder.append(groupId != null ? groupId : "").append(":");
 		coordinatesBuilder.append(artifactId != null ? artifactId : "").append(":");
@@ -103,27 +106,29 @@ public class MavenDependency implements Serializable {
 		this.coordinates = coordinates;
 	}
 
-	public Function getScript() {
-		return script;
-	}
-
-	public void setScript(Function script) {
-		this.script = script;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-		MavenDependency mavenDependency = (MavenDependency) o;
-		return Objects.equals(getCoordinates(), mavenDependency.getCoordinates()) && Objects.equals(getScript(), mavenDependency.getScript());
-	}
-
 	@Override
 	public int hashCode() {
-		return Objects.hash(getCoordinates(), getScript());
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((coordinates == null) ? 0 : coordinates.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MavenDependency other = (MavenDependency) obj;
+		if (coordinates == null) {
+			if (other.coordinates != null)
+				return false;
+		} else if (!coordinates.equals(other.coordinates))
+			return false;
+		return true;
 	}
 
 	public String toLocalM2Path(String m2Path) {
@@ -145,4 +150,10 @@ public class MavenDependency implements Serializable {
 
 		return sb.toString();
 	}
+
+	@Override
+	public String toString() {
+		return "MavenDependency [coordinates=" + coordinates + "]";
+	}
+	
 }

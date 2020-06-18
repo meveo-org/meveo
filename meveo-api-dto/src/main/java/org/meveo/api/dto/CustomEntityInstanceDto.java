@@ -11,16 +11,19 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 
 /**
  * The Class CustomEntityInstanceDto.
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.9.0
  */
 @XmlRootElement(name = "CustomEntityInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
 public class CustomEntityInstanceDto extends BaseEntityDto implements Serializable {
 
@@ -54,7 +57,7 @@ public class CustomEntityInstanceDto extends BaseEntityDto implements Serializab
      * Instantiates a new custom entity instance dto.
      */
     public CustomEntityInstanceDto() {
-
+    	super();
     }
 
     /**

@@ -1,5 +1,13 @@
 package org.meveo.admin.action.storage;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.action.admin.EntityPermissionBean;
@@ -19,15 +27,13 @@ import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 
-import javax.el.ELContext;
-import javax.el.ValueExpression;
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
+/**
+ * Controller for managing git repository model.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.9.0
+ * @see GitRepository
+ */
 @Named
 @ViewScoped
 public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepositoryDto> {

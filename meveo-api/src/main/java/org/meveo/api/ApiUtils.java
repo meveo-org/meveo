@@ -1,5 +1,8 @@
 package org.meveo.api;
 
+import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.literal.NamedLiteral;
+import javax.enterprise.inject.spi.CDI;
 import javax.persistence.Entity;
 
 import org.meveo.api.dto.BaseEntityDto;
@@ -60,6 +63,15 @@ public class ApiUtils {
         if (apiService == null) {
             apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api");
         }
+        
+        if(apiService == null) {
+	        NamedLiteral nl = NamedLiteral.of(entityClass.getSimpleName() + "Api");
+	        Instance<Object> selection = CDI.current().select(nl);
+	        if(selection.isResolvable()) {
+	        	apiService = (ApiService) selection.get();
+	        }
+        }
+        
         if (apiService == null && throwException) {
             throw new RuntimeException("Failed to find implementation of API service for class " + entityClass.getName());
         }

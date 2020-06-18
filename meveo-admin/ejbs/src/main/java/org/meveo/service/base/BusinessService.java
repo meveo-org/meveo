@@ -173,8 +173,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
         String query = "SELECT be.id FROM " + getEntityClass().getSimpleName() + " be WHERE be.code = :code";
 
+        Long id = null;
+        
         try {
-            return getEntityManager().createQuery(query, getEntityClass())
+            id = (Long) getEntityManager().createQuery(query, Long.class)
                     .setParameter("code", code)
                     .getSingleResult();
 
@@ -183,11 +185,13 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return null;
         } catch (NonUniqueResultException e) {
             log.error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
-            return getEntityManager().createQuery(query, getEntityClass())
+            id = (Long) getEntityManager().createQuery(query, Long.class)
                     .setParameter("code", code)
                     .getResultList()
                     .get(0);
         }
+        
+        return getEntityManager().getReference(entityClass, id);
     }
 
 }
