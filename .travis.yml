@@ -41,7 +41,7 @@ before_install:
   #- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "REAL_BRANCH=${REAL_BRANCH}, TRAVIS_BRANCH=${TRAVIS_BRANCH}, TAG=${TRAVIS_TAG} !!!"
 
-  - if [ "${REAL_BRANCH}" == "master" ]; then export DOCKER_IMAGE_TAG="latest-anax"; else export DOCKER_IMAGE_TAG="dev-anax"; fi
+  - if [ "${REAL_BRANCH}" == "master" ]; then export DOCKER_IMAGE_TAG="latest"; else export DOCKER_IMAGE_TAG="dev-latest"; fi
 
   - |
     echo "Checking if a CI run is needed post commit: ${TRAVIS_COMMIT_RANGE}"
