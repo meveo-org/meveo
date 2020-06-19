@@ -31,10 +31,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
-import org.meveo.service.custom.CustomEntityInstanceService;
-import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomizedEntity;
-import org.meveo.service.custom.CustomizedEntityService;
+import org.meveo.service.custom.*;
 import org.meveo.service.storage.RepositoryService;
 import org.omnifaces.cdi.Cookie;
 import org.slf4j.Logger;
@@ -65,7 +62,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	protected CustomEntityTemplateService customEntityTemplateService;
 
 	@Inject
-	private CustomFieldInstanceService customFieldInstanceService;
+	protected CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
 	protected RepositoryService repositoryService;

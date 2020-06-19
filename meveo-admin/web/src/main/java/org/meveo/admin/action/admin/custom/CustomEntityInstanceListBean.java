@@ -10,7 +10,9 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -129,6 +131,26 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		filters = null;
 		Faces.addResponseCookie("repository", getRepository().getCode(), Integer.MAX_VALUE);
 		repositoryProvider.setRepository(getRepository());
+	}
+
+	public void executeCustomAction(List<Map<String, Object>> selectedValues, EntityCustomAction action) {
+		try {
+			for (Map<String, Object> entity : selectedValues) {
+				CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+				if (!customEntityTemplate.isStoreAsTable()) {
+					customEntityInstance = customEntityInstanceService.findByUuid(customEntityTemplate.getCode(), entity.get("uuid").toString());
+				} else {
+					customEntityInstance.setCet(customEntityTemplate);
+					customEntityInstance.setCetCode(customEntityTemplate.getCode());
+					customEntityInstance.setUuid((String) entity.get("uuid"));
+					customEntityInstance.setCode((String) entity.get("code"));
+					customEntityInstance.setDescription((String) entity.get("description"));
+					customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entity);
+				}
+				customFieldDataEntryBean.executeCustomAction(customEntityInstance, action, null);
+			}
+			setSelectedValues(null);
+		} catch (BusinessException e) {}
 	}
 
 	public List<Repository> listRepositories() {
