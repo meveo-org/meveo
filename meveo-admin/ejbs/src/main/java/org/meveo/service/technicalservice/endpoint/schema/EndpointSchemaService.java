@@ -133,7 +133,7 @@ public class EndpointSchemaService {
 
 		EndpointParameter result = null;
 
-		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && endpoint.getService() instanceof CustomScript) {
+		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && CustomScript.class.isAssignableFrom(endpoint.getService().getClass())) {
 
 			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 
