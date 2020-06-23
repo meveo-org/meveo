@@ -780,7 +780,7 @@ public class OntologyObserver {
 
     private String getTemplateSchema(CustomEntityTemplate cet) {
         String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
-        return schema.replaceAll("\"\\$ref\".*:.*\"#/definitions/([^\"]+)\"", "\"\\$ref\": \"./$1\"");
+        return schema.replaceAll("#/definitions", ".");
 
     }
 
