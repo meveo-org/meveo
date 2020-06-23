@@ -197,7 +197,7 @@ public class EndpointService extends BusinessService<Endpoint> {
             keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
         }
 
-        super.updateNoMerge(entity);
+        super.update(entity);
         
         return entity;
     }
