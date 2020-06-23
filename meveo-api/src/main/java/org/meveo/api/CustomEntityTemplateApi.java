@@ -97,6 +97,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         handleMissingParameters();
 
+        if (dto.getCode().equalsIgnoreCase("case")) {
+            throw new IllegalArgumentException("Table name 'case' is a PostgresQL reserved keyword");
+        }
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());

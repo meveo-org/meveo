@@ -299,7 +299,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	@Override
 	@ActionMethod
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-		
+
+		if (entity.getCode().equalsIgnoreCase("case")) {
+			messages.error(new BundleKey("messages", "error.createCetWithCodeCase"));
+			return getBackViewSave();
+		}
 		String editView = super.saveOrUpdate(killConversation);
 		return editView;
 	}
