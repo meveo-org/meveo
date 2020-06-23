@@ -17,7 +17,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 
 /**
  * Parse a cet map into a java source code.
- * 
+ *
  * @author Edward P. Legaspi
  * @since 6.8.0
  * @version 6.8.0
@@ -106,6 +106,8 @@ public class JSONSchemaIntoJavaClassParser {
                                     typeItem = Character.toUpperCase(typeItem.charAt(0)) + typeItem.substring(1);
                                     vd.setType("List<" + typeItem + ">");
                                 }
+                            } else if (value.containsKey("enum")) {
+                                vd.setType("List<String>");
                             }
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
@@ -130,6 +132,8 @@ public class JSONSchemaIntoJavaClassParser {
                             compilationUnit.addImport("org.meveo.model.customEntities." + name);
                             vd.setType(name);
                         }
+                    } else if (values.get("enum") != null && values.get("type") == null) {
+                        vd.setType("String");
                     }
 
                     fd.addVariable(vd);
