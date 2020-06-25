@@ -99,7 +99,7 @@ public class JSONSchemaIntoJavaClassParser {
                                     }
                                 }
                             } else if (value.containsKey("type")) {
-                                if (value.get("type").equals("number")) {
+                                if (value.get("type").equals("number") || values.get("type").equals("integer")) {
                                     vd.setType("List<Long>");
                                 } else {
                                     String typeItem = (String) value.get("type");
@@ -112,8 +112,12 @@ public class JSONSchemaIntoJavaClassParser {
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
                             vd.setType("Map<String, String>");
-                        } else if (values.get("type").equals("number")) {
-                            vd.setType("Long");
+                        } else if (values.get("type").equals("number") || values.get("type").equals("integer")) {
+                            if (code.equals("count")) {
+                                vd.setType("Integer");
+                            } else {
+                                vd.setType("Long");
+                            }
                         } else if ((values.get("format") != null)) {
                             if (values.get("format").equals("date-time")) {
                                 compilationUnit.addImport("java.time.Instant");
