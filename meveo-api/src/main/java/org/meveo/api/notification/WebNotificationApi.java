@@ -1,59 +1,41 @@
 package org.meveo.api.notification;
 
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseCrudApi;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.api.dto.notification.WebNotificationDto;
-import org.meveo.api.exception.InvalidParameterException;
+import org.meveo.api.dto.response.PagingAndFiltering;
+import org.meveo.api.dto.response.notification.WebNotificationsResponseDto;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
-import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.notification.WebNotification;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.WebNotificationService;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ */
 @Stateless
-public class WebNotificationApi extends BaseCrudApi<WebNotification, WebNotificationDto> {
+public class WebNotificationApi extends NotificationApi<WebNotification, WebNotificationDto> {
 
+	@Inject
+	WebNotificationService webNotificationService;
 
-    @Inject
-    WebNotificationService webNotificationService;
+	public WebNotificationApi() {
+		super(WebNotification.class, WebNotificationDto.class);
+	}
 
-    public WebNotificationApi(){ super(WebNotification.class,WebNotificationDto.class);}
+	@Override
+	public IPersistenceService<WebNotification> getPersistenceService() {
+		return webNotificationService;
+	}
 
-    @Override
-    public WebNotificationDto toDto(WebNotification entity) {
-        return new WebNotificationDto(entity);
-    }
+	public WebNotificationsResponseDto list(PagingAndFiltering pagingAndFiltering) throws MeveoApiException {
 
-    @Override
-    public WebNotification fromDto(WebNotificationDto dto) throws EntityDoesNotExistsException {
-        WebNotification result = new WebNotification();
-        result.setDataEL(dto.getDataEL());
-        //TODO: finish this class
+		WebNotificationsResponseDto result = new WebNotificationsResponseDto();
+		result.setWebNotifications(listByPage(result, pagingAndFiltering));
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public IPersistenceService<WebNotification> getPersistenceService() {
-        return null;
-    }
-
-    @Override
-    public boolean exists(WebNotificationDto dto) {
-        return false;
-    }
-
-    @Override
-    public WebNotificationDto find(String code) throws org.meveo.api.exception.EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, EntityDoesNotExistsException {
-        return null;
-    }
-
-    @Override
-    public WebNotification createOrUpdate(WebNotificationDto dtoData) throws MeveoApiException, BusinessException {
-        return null;
-    }
 }

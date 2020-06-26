@@ -24,7 +24,8 @@ import org.meveo.service.notification.EmailNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNotificationDto> {
@@ -238,7 +239,7 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
 	}
 
 	@Override
-	public EmailNotification fromDto(EmailNotificationDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public EmailNotification fromDto(EmailNotificationDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -116,8 +116,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @author Wassim Drira
- * @lastModifiedVersion 6.9.0
+ * @version 6.10
  */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
@@ -745,7 +744,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
-	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public MeveoModule fromDto(MeveoModuleDto dto) throws MeveoApiException {
 		try {
 			MeveoModule meveoModule = new MeveoModule();
 			parseModuleInfoOnlyFromDto(meveoModule, dto);

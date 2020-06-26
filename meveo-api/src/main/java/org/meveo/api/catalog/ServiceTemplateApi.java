@@ -18,9 +18,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 /**
- * @author Edward P. Legaspi
  * @author akadid abdelmounaim
- * @lastModifiedVersion 5.0.1
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class ServiceTemplateApi extends BaseCrudApi<ServiceTemplate, ServiceTemplateDto> {
@@ -196,7 +196,7 @@ public class ServiceTemplateApi extends BaseCrudApi<ServiceTemplate, ServiceTemp
 
 
 	@Override
-	public ServiceTemplate fromDto(ServiceTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public ServiceTemplate fromDto(ServiceTemplateDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -38,15 +38,14 @@ import org.meveo.model.notification.StrategyImportTypeEnum;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.notification.NotificationService;
+import org.meveo.service.notification.ScriptNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 
 /**
- * @author Wassim Drira
- * @lastModifiedVersion 5.0
- *
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Named
 @ViewScoped
@@ -55,7 +54,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
     private static final long serialVersionUID = 6473465285480945644L;
 
     @Inject
-    private NotificationService notificationService;
+    private ScriptNotificationService notificationService;
 
     @Inject
     private ScriptInstanceService scriptInstanceService;

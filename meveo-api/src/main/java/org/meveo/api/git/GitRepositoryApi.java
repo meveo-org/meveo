@@ -16,6 +16,14 @@
 
 package org.meveo.api.git;
 
+import java.io.File;
+import java.io.InputStream;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
@@ -29,17 +37,11 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.io.File;
-import java.io.InputStream;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * API for managing git repositories
  * @author Clement Bareth
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDto> {
@@ -163,7 +165,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     }
 
     @Override
-    public GitRepository fromDto(GitRepositoryDto dto) throws EntityDoesNotExistsException {
+    public GitRepository fromDto(GitRepositoryDto dto) throws MeveoApiException {
         GitRepository entity = new GitRepository();
         entity.setRemoteOrigin(dto.getRemoteOrigin());
         entity.setCode(dto.getCode());
@@ -202,7 +204,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         return exists(dtoData) ? update(dtoData) : create(dtoData, true, null, null);
     }
 
-    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws BusinessException {
+    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws MeveoApiException, BusinessException {
         final GitRepository repository = fromDto(dtoData);
         gitRepositoryService.create(repository, failIfExist, username, password);
         return repository;

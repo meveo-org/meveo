@@ -19,6 +19,10 @@ import org.meveo.service.job.TimerEntityService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ */
 @Stateless
 public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 
@@ -144,7 +148,7 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 	}
 
 	@Override
-	public TimerEntity fromDto(TimerEntityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public TimerEntity fromDto(TimerEntityDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

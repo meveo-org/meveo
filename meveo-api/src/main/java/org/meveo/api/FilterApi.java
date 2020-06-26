@@ -16,6 +16,8 @@ import org.meveo.service.filter.FilterService;
 
 /**
  * @author Tyshan Shi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * 
  **/
 @Stateless
@@ -123,7 +125,7 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 	}
 
 	@Override
-	public Filter fromDto(FilterDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public Filter fromDto(FilterDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

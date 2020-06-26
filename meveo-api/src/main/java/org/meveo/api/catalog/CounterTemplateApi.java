@@ -19,7 +19,8 @@ import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class CounterTemplateApi extends BaseCrudApi<CounterTemplate, CounterTemplateDto> {
@@ -162,7 +163,7 @@ public class CounterTemplateApi extends BaseCrudApi<CounterTemplate, CounterTemp
 	}
 
 	@Override
-	public CounterTemplate fromDto(CounterTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public CounterTemplate fromDto(CounterTemplateDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

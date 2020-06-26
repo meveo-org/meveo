@@ -54,7 +54,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.9.0
+ * @version 6.10.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -758,7 +758,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	}
 
 	@Override
-	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws MeveoApiException {
 		return fromDTO(dto, null);
 	}
 
