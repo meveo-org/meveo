@@ -30,6 +30,7 @@ import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -1267,7 +1268,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		if (entity != null && !getMeveoModule().equals(entity)) {
 			Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 			BusinessEntity businessEntity = (BusinessEntity) entity;
-			MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+			MeveoModule module = meveoModuleService.findById(getMeveoModule().getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
 				module.addModuleItem(item);
@@ -1281,9 +1282,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				}
 			}
 			try {
-				meveoModuleService.update(module);
-			} catch (BusinessException e) {
-
+				if (!StringUtils.isBlank(module.getModuleSource())) {
+					module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+				}
+				meveoModuleService.mergeModule(module);
+				messages.info(new BundleKey("messages", "customizedEntities.addToModule.successfull"), module.getCode());
+			} catch (Exception e) {
+				messages.error(new BundleKey("messages", "customizedEntities.addToModule.error"), module.getCode());
 			}
 		}
 	}
