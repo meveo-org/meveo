@@ -36,6 +36,8 @@ before_install:
 
   - if [ "${REAL_BRANCH}" == "master" ]; then export DOCKER_IMAGE_TAG="latest"; else export DOCKER_IMAGE_TAG="${REAL_BRANCH//[ \/]/-}"; fi
 
+  - echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}"
+
   - |
     echo "Checking if a CI run is needed post commit: ${TRAVIS_COMMIT_RANGE}"
     if ! git diff --name-only ${TRAVIS_COMMIT_RANGE} | grep -qvE '(\.md$)|(\.png$)|(\.pdf$)|(\.html$)|^(LICENSE)|^(docs)/'
@@ -134,7 +136,7 @@ script:
   # Build a meveo image
   - docker build
     --cache-from manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
-    --tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAGDOCKER_IMAGE_TAG}
+    --tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
     --build-arg BUILDKIT_INLINE_CACHE=1
     -f docker/Dockerfile ./docker
 
