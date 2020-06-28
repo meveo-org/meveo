@@ -7,7 +7,7 @@ A Notification is associated to a type of event and a class and has an EL to fil
 It contains some parameters that are EL feeding a context, a script that is executed before the notification is sent.
 It can be associated to a counter that allow to limit the trigger rate.
 It is associated to a list of NofificationHistory for audit purpose.
-This entity is subclassed for extra parameters specific to [EmailNotification,...](../../../../../../../../../meveo-model/src/main/java/org/meveo/notification/)
+This entity is subclassed for extra parameters specific to [EmailNotification,...](../../../../../../../../..//meveo-model/src/main/java/org/meveo/model/notification/)
 
 Technically the events are [CDI events](https://docs.oracle.com/javaee/6/tutorial/doc/gkhic.html).
 An [observer](./DefaultObserver.java) has a set of methods that observes CDI event according
