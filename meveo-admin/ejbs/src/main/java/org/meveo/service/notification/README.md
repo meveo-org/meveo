@@ -51,7 +51,7 @@ url `/sse/register/<notificationCode>?filter=<filterEL>`
 where notificationCode is the code of the web notification
 and filterEL is a base64 encode EL that will be applied to context of the event prior to sending it.
 
-then it will receive all SSE events triggering the notification, with
+then [it will receive all SSE events](https://www.w3schools.com/html/html5_serversentevents.asp) triggering the notification, with
 ```
 id : either a UUID or a timestamp depending on the notification Id strategy
 event : code of the notification
