@@ -44,7 +44,7 @@ the object in the "event" variable and the params and script context in a "conte
 Note that the classes extending NotificationInstanceService ([EmailNotificationService](./EmailNotificationService.java),...) are used to persist the
 notifications both in datastore and cache and to handle their associated counter.
 
-##Web notification
+## Web notification
 
 when a web notification is created and active, the web clients can connect to its channel using the
 url `/sse/register/<notificationCode>?filter=<filterEL>`
