@@ -300,12 +300,27 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	@ActionMethod
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
-		if (entity.getCode().equalsIgnoreCase("case")) {
-			messages.error(new BundleKey("messages", "error.createCetWithCodeCase"));
-			return getBackViewSave();
+		String message = entity.isTransient() ? "save.successful" : "update.successful";
+
+		try {
+			entity = saveOrUpdate(entity);
+			messages.info(new BundleKey("messages", message));
+			if (killConversation) {
+				endConversation();
+			}
+			return getEditViewName();
+		} catch (IllegalArgumentException e) {
+			log.error("Entity can't be saved", e);
+			return back();
+		} catch (Exception e) {
+            log.error("Can't update entity", e);
+		    if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+                messages.error(new BundleKey("messages", "error.createCetWithCode"), entity.getCode());
+            } else {
+                messages.error("Entity can't be saved. Please retry.");
+            }
+			return back();
 		}
-		String editView = super.saveOrUpdate(killConversation);
-		return editView;
 	}
 
 	/**
