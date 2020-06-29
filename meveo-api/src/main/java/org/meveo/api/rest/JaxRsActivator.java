@@ -17,7 +17,7 @@ import org.meveo.api.rest.filter.RESTCorsResponseFilter;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.persistence.PersistenceRs;
 import org.meveo.api.rest.swagger.SwaggerApiDefinition;
-import org.meveo.service.communication.impl.SseManagerResource;
+import org.meveo.service.communication.impl.SseManager;
 import org.meveo.util.Version;
 import org.reflections.Reflections;
 
@@ -50,9 +50,9 @@ public class JaxRsActivator extends Application {
 			resources.add(SwaggerApiDefinition.class);
 			resources.add(GraphQLRs.class);
 			resources.add(CacheRs.class);
+            resources.add(SseManager.class);
 		}
 
-		resources.add(SseManagerResource.class);
 
 		MeveoBeanConfig beanConfig = new MeveoBeanConfig();
 		beanConfig.setSchemes(new String[] { "http", "https" });

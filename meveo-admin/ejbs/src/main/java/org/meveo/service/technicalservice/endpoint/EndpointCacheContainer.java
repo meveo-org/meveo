@@ -64,15 +64,15 @@ public class EndpointCacheContainer {
 						Endpoint result = endpointService.findByCode(
                             key, 
                             Arrays.asList("service"));
-						result.getService();
-						result.getRoles().forEach(r -> {
-						});
-						result.getPathParameters().forEach(e -> {
-						});
-						;
-						result.getParametersMapping().forEach(e -> {
-						});
-						;
+						if(result!=null) {
+                            result.getService();
+                            result.getRoles().forEach(r -> {
+                            });
+                            result.getPathParameters().forEach(e -> {
+                            });
+                            result.getParametersMapping().forEach(e -> {
+                            });
+                        }
 						return result;
 					}
 				});

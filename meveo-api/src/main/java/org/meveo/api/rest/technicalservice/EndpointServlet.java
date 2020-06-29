@@ -130,6 +130,12 @@ public class EndpointServlet extends HttpServlet {
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
+        if(endpoint==null){
+                endpointExecution.getResp().setStatus(404);
+                endpointExecution.getResp().getWriter().print("Endpoint not found");
+                return;
+        }
+
         // Check if a required parameter is missing at endpoint execution
         if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
             List<TSParameterMapping> requiredParameters = new ArrayList<>();
