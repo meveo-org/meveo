@@ -622,8 +622,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public MeveoModule update(MeveoModule entity) throws BusinessException {
-	    MeveoModule meveoModule = findById(entity.getId());
-	    Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
+	    MeveoModule meveoModule = updateModule(entity);
+        return super.update(meveoModule);
+    }
+
+    public MeveoModule mergeModule(MeveoModule entity) {
+	    MeveoModule meveoModule = updateModule(entity);
+	    return getEntityManager().merge(meveoModule);
+    }
+
+    private MeveoModule updateModule(MeveoModule entity) {
+        MeveoModule meveoModule = findById(entity.getId());
+        Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
             for (MeveoModuleDependency meveoModuleDependency : entity.getModuleDependencies()) {
                 moduleDependencies.add(meveoModuleDependency);
@@ -631,7 +641,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         }
 
         if(meveoModule.getModuleDependencies() != null) {
-	    meveoModule.getModuleDependencies().clear();
+            meveoModule.getModuleDependencies().clear();
         }
         Set<String> moduleFiles = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
@@ -653,7 +663,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if(meveoModule.getModuleItems() != null) {
             meveoModule.getModuleItems().clear();
         }
-        
+
         Set<MeveoModulePatch> modulePatches = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getPatches())) {
             for (MeveoModulePatch meveoModulePatch : entity.getPatches()) {
@@ -692,7 +702,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 meveoModule.getPatches().add(modulePatch);
             }
         }
-        return super.update(meveoModule);
+        return meveoModule;
     }
 
     public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) {
