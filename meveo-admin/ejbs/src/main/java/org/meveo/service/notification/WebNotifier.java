@@ -58,10 +58,10 @@ class WebNotifier {
             if(webNotif.getDataEL()!=null && !webNotif.getDataEL().isEmpty()) {
                 String dataEL_evaluated = evaluate(webNotif.getDataEL(), entityOrEvent, context);
                 log.debug("Evaluated dataEL_evaluated={}", dataEL_evaluated);
-                sseManager.sendMessage(id,webNotif.getCode(),webNotif.getDescription(),dataEL_evaluated,oContext);
+                sseManager.sendMessage(null, id,webNotif.getCode(),webNotif.getDescription(),dataEL_evaluated,oContext);
             } else {
                 //FIXME: serialize correctly entityOrEvent
-                sseManager.sendMessage(id,webNotif.getCode(),webNotif.getDescription(),entityOrEvent.toString(),oContext);
+                sseManager.sendMessage(null, id,webNotif.getCode(),webNotif.getDescription(),entityOrEvent.toString(),oContext);
             }
         } catch (Exception e) {
             try {
