@@ -255,8 +255,6 @@
 			<p:commandButton 
 				rendered="#{import and backingBean.canUserUpdateEntity()}"
 				value="#{messages['action.import']} #{backingBean.entity.class.simpleName}"
-			
-			<p:commandButton value="#{messages['action.import']} #{backingBean.entity.class.simpleName}"
 				id="#{formId}buttonImport" type="button"
 				onclick="PF('importDataDialog').show();" />
 
