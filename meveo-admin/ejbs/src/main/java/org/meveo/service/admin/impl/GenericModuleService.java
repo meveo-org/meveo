@@ -78,6 +78,9 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
     public void loadModuleItem(MeveoModuleItem item) throws BusinessException {
     	
         BusinessEntity entity = null;
+        if (item.getItemClass().startsWith("org.meveo.model.technicalservice.endpoint.Endpoint")) {
+            item.setItemClass("org.meveo.model.technicalservice.endpoint.Endpoint");
+        }
         if (CustomFieldTemplate.class.getName().equals(item.getItemClass()) && item.getAppliesTo() != null) {
             entity = customFieldTemplateService.findByCodeAndAppliesToNoCache(item.getItemCode(), item.getAppliesTo());
             if(entity != null && entity.getCode() == null) {
