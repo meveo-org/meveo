@@ -308,19 +308,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			if (killConversation) {
 				endConversation();
 			}
-			return getEditViewName();
-		} catch (IllegalArgumentException e) {
-			log.error("Entity can't be saved", e);
-			return back();
 		} catch (Exception e) {
-            log.error("Can't update entity", e);
 		    if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
-                messages.error(new BundleKey("messages", "error.createCetWithCode"), entity.getCode());
+                messages.error(new BundleKey("messages", "error.createCetWithKeyWord"), entity.getCode());
             } else {
                 messages.error("Entity can't be saved. Please retry.");
+                log.error("Can't update entity", e);
             }
-			return back();
 		}
+        return getEditViewName();
 	}
 
 	/**
