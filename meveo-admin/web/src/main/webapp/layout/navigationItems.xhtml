@@ -140,6 +140,10 @@
 			outcome="endpoint" />
 		<p:menuitem id="jobs" outcome="jobInstances"
 			value="#{messages['menu.jobs']}" />
+		<p:submenu id="tests" label="Tests">
+			<p:menuitem id="allTests" value="Functions tests" outcome="testResults"/>
+			<p:menuitem id="testsByCategory" value="Categories tests" outcome="categoryTests"/>
+		</p:submenu>
 		<p:menuitem id="crud_workflows" value="#{messages['menu.workflow']}"
 			outcome="workflows" />
 		<p:menuitem id="filters" outcome="filters"
