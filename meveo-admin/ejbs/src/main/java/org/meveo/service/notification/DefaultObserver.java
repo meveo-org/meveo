@@ -207,6 +207,7 @@ public class DefaultObserver {
             } else if (notif instanceof JobTrigger) {
                 MeveoUser lastCurrentUser = currentUser.unProxy();
                 jobTriggerLauncher.launch((JobTrigger) notif, entityOrEvent, lastCurrentUser);
+                
             } else if (notif instanceof WebNotification) {
                 MeveoUser lastCurrentUser = currentUser.unProxy();
                 webNotifier.sendMessage((WebNotification) notif, entityOrEvent, context,lastCurrentUser);

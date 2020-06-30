@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.Singleton;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -30,22 +35,23 @@ import org.slf4j.Logger;
 @Singleton
 public class SseManager {
 
-	private Map<String, Map<String, FilteringSink>> notifFilteringSinks = new HashMap<>();
+	@Inject
+	private Logger log;
 
 	@Inject
-	Logger log;
-
-	@Inject
-	WebNotificationService webNotificationService;
+	private WebNotificationService webNotificationService;
 
 	@Context
 	private Sse sse;
+
+	private Map<String, Map<String, FilteringSink>> notifFilteringSinks = new ConcurrentHashMap<>();
 
 	@GET
 	@Path("/register/{notif}")
 	@Produces(MediaType.SERVER_SENT_EVENTS)
 	public void register(@PathParam("notif") final String notif, @QueryParam("filter") String filterEL,
-						 @Context SseEventSink sink, @Context HttpServletRequest requestContext, @Context SecurityContext context) {
+			@Context SseEventSink sink, @Context HttpServletRequest requestContext, @Context SecurityContext context) {
+
 		String callerIp = requestContext.getRemoteAddr();
 		String userName = "";
 		if (context != null) {
@@ -68,23 +74,37 @@ public class SseManager {
 		if (!webNotification.isActive()) {
 			throw new IllegalStateException("web notification not active.");
 		}
+
 		Map<String, FilteringSink> filteringSinks = notifFilteringSinks.get(webNotification.getCode());
 		if (filteringSinks == null) {
 			filteringSinks = new HashMap<>();
 			notifFilteringSinks.put(webNotification.getCode(), filteringSinks);
 		}
 		FilteringSink filteringSink = new FilteringSink(callerIp, userName, filterEL, sink);
-		if (filteringSinks.containsKey(filteringSink.getKey())) {
-			log.info("the registration already exists for notif:" + notif + " and key " + filteringSink.getKey());
-		} else {
+		FilteringSink oldFilteringSink = filteringSinks.get(filteringSink.getKey());
+		if (oldFilteringSink == null) {
 			filteringSinks.put(filteringSink.getKey(), filteringSink);
+			log.debug("notif={} with key={} has been successfully registered", notif, filteringSink.getKey());
+
+		} else {
+			if (oldFilteringSink.isClosed()) {
+				filteringSinks.put(filteringSink.getKey(), filteringSink);
+				log.debug("notif={} with key={} has been successfully re-registered", notif, filteringSink.getKey());
+			}
 		}
+
+//		OutboundSseEvent.Builder eventBuilder = sse.newEventBuilder().name("create").data("hello world");
+//		eventBuilder.id("1");
+//		OutboundSseEvent event = eventBuilder.reconnectDelay(10000).build();
+//
+//		filteringSink.send(event);
+//		sink.close();
 	}
 
 	@POST
 	@Path("/publish/{notif}")
 	public void broadcast(@PathParam("notif") final String notif, String message,
-						  @Context HttpServletRequest requestContext, @Context SecurityContext securityContext) throws IOException {
+			@Context HttpServletRequest requestContext, @Context SecurityContext securityContext) throws IOException {
 
 		String callerIp = requestContext.getRemoteAddr();
 		String userName = "";
@@ -109,12 +129,14 @@ public class SseManager {
 		if (!webNotification.isPublicationAllowed()) {
 			throw new IllegalStateException("web notification do not allow publication.");
 		}
+
 		Map<Object, Object> context = new HashMap<>();
 		context.put("PUBLICATION_MESSAGE", message);
 		context.put("PUBLICATION_IP", callerIp);
 		context.put("PUBLICATION_AUTHOR", userName);
 		sendMessage("", webNotification.getCode(), "", message, context);
 	}
+
 	/**
 	 * This method broadcast a message to all clients that registered for the given
 	 * web notification code, and for wich the filter match the context
@@ -125,23 +147,25 @@ public class SseManager {
 	 * @param data
 	 * @param context
 	 */
-	public void sendMessage(String id, String name, String comment, String data,
-			Map<Object, Object> context) {
+	public void sendMessage(String id, String name, String comment, String data, Map<Object, Object> context) {
+
 		Map<String, FilteringSink> filteringSinks = notifFilteringSinks.get(name);
 		if (filteringSinks == null) {
 			log.debug("cannot send message to " + name + " as no one subscribed to it");
 			return;
 		}
+
 		Map<String, FilteringSink> closedSinks = new HashMap<>();
 		Map<String, FilteringSink> listeningSinks = new HashMap<>();
 		for (Map.Entry<String, FilteringSink> entry : filteringSinks.entrySet()) {
 			FilteringSink filteringSink = entry.getValue();
 			if (filteringSink.isClosed()) {
 				closedSinks.put(entry.getKey(), filteringSink);
-				
+
 			} else {
 				if (filteringSink.getfilterEL() == null || filteringSink.getfilterEL().isEmpty()) {
 					listeningSinks.put(entry.getKey(), filteringSink);
+
 				} else {
 					try {
 						Object res = MeveoValueExpressionWrapper.evaluateExpression(filteringSink.getfilterEL(),
@@ -150,7 +174,7 @@ public class SseManager {
 						if (result) {
 							listeningSinks.put(entry.getKey(), filteringSink);
 						}
-						
+
 					} catch (Exception e) {
 						throw new IllegalStateException(
 								"Expression " + filteringSink.getfilterEL() + " do not evaluate to boolean");
@@ -158,6 +182,7 @@ public class SseManager {
 				}
 			}
 		}
+
 		if (listeningSinks.size() > 0) {
 			OutboundSseEvent.Builder eventBuilder = sse.newEventBuilder().name(name).data(data);
 			if (id != null) {
@@ -172,31 +197,38 @@ public class SseManager {
 				if (!filteringSink.isClosed()) {
 					try {
 						filteringSink.send(event);
-					} catch(Exception e){
+
+					} catch (Exception e) {
 						e.printStackTrace();
 						log.error(e.getMessage());
 					}
+
 				} else {
 					closedSinks.put(entry.getKey(), filteringSink);
 				}
 			}
 		}
+
 		if (closedSinks.size() > 0) {
 			for (Map.Entry<String, FilteringSink> entry : closedSinks.entrySet()) {
+				entry.getValue().close();
 				filteringSinks.remove(entry.getKey());
 			}
 		}
 	}
 
 	public void removeNotification(String notificationCode) {
+
 		Map<String, FilteringSink> filteringSinks = notifFilteringSinks.get(notificationCode);
 		if (filteringSinks == null) {
 			log.debug("remove notification: no one was listening");
 			return;
 		}
+
 		for (Map.Entry<String, FilteringSink> entry : filteringSinks.entrySet()) {
 			FilteringSink filteringSink = entry.getValue();
 			if (!filteringSink.isClosed()) {
+				log.debug("closing sink {}", filteringSink.getKey());
 				filteringSink.close();
 			}
 		}
