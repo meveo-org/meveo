@@ -118,5 +118,12 @@ public class ParamActionBean implements Serializable {
         paramProperty.setValue(value);
         properties.add(paramProperty);
     }
+    
+    public String getProperty(String property) {
+    	return getProperties().stream().filter(e -> e.getKey().equals(property))
+	    	.map(e -> e.getValue())
+	    	.findFirst()
+	    	.orElse(null);
+    }
 
 }

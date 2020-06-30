@@ -1,0 +1,79 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+    xmlns:e="http://jboss.com/products/seam/excel" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:event type="preRenderView" listener="#{categoryTestBean.preRenderView}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem value="Tests"/>
+				<p:menuitem outcome="categoryTests" value="All tests" />
+			</p:breadCrumb>
+		</h:form>     
+        <hftl:searchPanel label="#{messages['jobInstance.search']}" 
+        	backingBean="#{testResultBean}" 
+        	ajaxUpdateIds="resultsDatatable"
+        	renderNewButton="false">
+        	
+        	<hftl:decorateFormField fieldId="active" label="Only active">
+	        	<p:selectBooleanCheckbox id="active" value="#{testResultBean.filters['active']}"/>
+        	</hftl:decorateFormField>
+        	
+        	<hftl:decorateFormField fieldId="category" label="Category">
+	        	<p:selectOneMenu id="category" value="#{testResultBean.category}">
+	        		<f:selectItem itemLabel="Choose category" itemValue="" />
+	        		<f:selectItems value="#{testResultBean.categoriesCodes}" />
+	        	</p:selectOneMenu>
+        	</hftl:decorateFormField>
+        	
+        	<hftl:decorateFormField fieldId="date" label="Date">
+        		<p:datePicker id="date" selectionMode="range" 
+        			value="#{testResultBean.filters['date']}" 
+        			readonlyInput="true"
+        			pattern="#{paramActionBean.getProperty('meveo.dateFormat')}"/>
+            </hftl:decorateFormField>
+        	
+        </hftl:searchPanel>
+        
+		
+        <h:panelGroup id="resultsDatatable">
+        
+            <p:outputPanel class="ui-panel" id="test_description">
+		        <p:outputPanel class="ui-panel-content">
+		        	<h1>#{testResultBean.category}</h1>
+		        	<h:outputText value="#{testResultBean.categoryDescription}"></h:outputText>
+	        	</p:outputPanel>
+	        </p:outputPanel>
+	        
+            <hftl:dataList backingBean="#{testResultBean}" 
+            			   resultsId="results" 
+            			   addToModule="false" 
+            			   sortBy="code"
+            			   importCsv="false">
+            			   
+                <p:column headerText="Code" sortBy="#{entity.functionCode}">
+                	<p:link outcome="jobInstanceDetail" value="#{entity.functionCode}">
+                		<f:param name="objectId" value="#{entity.id}"/>
+                	</p:link>
+                </p:column>
+                <p:column headerText="Date">
+                	<h:outputText  value="#{entity.lastExecutionDate}">
+                		<f:convertDateTime pattern="#{paramActionBean.getProperty('meveo.dateFormat')}"/>
+                	</h:outputText>
+                </p:column>
+                <hftl:column label="#ok" field="nbOk" />
+                <hftl:column label="#warnings" field="nbWarnings"/>
+                <hftl:column label="#ko" field="nbKo"/>
+                <p:column headerText="Stability" sortBy="#{entity.stable}">
+                	<h:outputText value="#{entity.isStable() ? 'Stable' : 'Unstable'}"/>
+                </p:column>
+            </hftl:dataList>
+        </h:panelGroup>
+    </ui:define>
+</ui:composition>
