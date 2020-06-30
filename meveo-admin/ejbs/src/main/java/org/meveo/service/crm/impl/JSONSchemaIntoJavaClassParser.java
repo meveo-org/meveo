@@ -99,8 +99,10 @@ public class JSONSchemaIntoJavaClassParser {
                                     }
                                 }
                             } else if (value.containsKey("type")) {
-                                if (value.get("type").equals("number") || values.get("type").equals("integer")) {
+                                if (value.get("type").equals("integer")) {
                                     vd.setType("List<Long>");
+                                } else if (value.get("type").equals("number")) {
+                                    vd.setType("List<Double>");
                                 } else {
                                     String typeItem = (String) value.get("type");
                                     typeItem = Character.toUpperCase(typeItem.charAt(0)) + typeItem.substring(1);
@@ -111,18 +113,40 @@ public class JSONSchemaIntoJavaClassParser {
                             }
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
-                            vd.setType("Map<String, String>");
-                        } else if (values.get("type").equals("number") || values.get("type").equals("integer")) {
+                            Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");
+                            Map<String, Object> properties = (Map<String, Object>) patternProperties.get("^.*$");
+                            if (properties.containsKey("$ref")) {
+                                String ref = (String) properties.get("$ref");
+                                if (ref != null) {
+                                    String[] data = ref.split("/");
+                                    if (data.length > 0) {
+                                        String name = data[data.length - 1];
+                                        compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        vd.setType("Map<String, " + name + ">");
+                                    }
+                                }
+                            } else if (properties.containsKey("type")) {
+                                if (properties.get("type").equals("string")) {
+                                    vd.setType("Map<String, String>");
+                                } else {
+                                    vd.setType("Map<String, Object>");
+                                }
+                            }
+                        } else if (values.get("type").equals("integer")) {
                             if (code.equals("count")) {
                                 vd.setType("Integer");
                             } else {
                                 vd.setType("Long");
                             }
+                        } else if (values.get("type").equals("number")) {
+                            vd.setType("Double");
                         } else if ((values.get("format") != null)) {
                             if (values.get("format").equals("date-time")) {
                                 compilationUnit.addImport("java.time.Instant");
                                 vd.setType("Instant");
                             }
+                        } else if (values.get("default") != null && (values.get("default").equals("true") || values.get("default").equals("false"))) {
+                            vd.setType("Boolean");
                         } else {
                             String type = (String) values.get("type");
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);

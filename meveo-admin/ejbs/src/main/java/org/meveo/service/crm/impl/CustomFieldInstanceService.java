@@ -2525,6 +2525,14 @@ public class CustomFieldInstanceService extends BaseService {
 
 		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
+			if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {
+			    if ((Integer) value == 1) {
+                    value = true;
+                } else {
+			        value = false;
+                }
+			}
+
             setCFValue(entity, cetField.getKey(), value);
 		}
 		
