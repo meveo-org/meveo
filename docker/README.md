@@ -64,7 +64,7 @@ The following environment variables can be redefined for meveo service
 | WILDFLY_LOG_CONSOLE_LEVEL | INFO | Wildfly console log level |
 | WILDFLY_LOG_FILE_LEVEL | INFO | Wildfly server log level (means server.log file) |
 | MEVEO_LOG_LEVEL | DEBUG | Meveo source log level |
-| WILDFLY_DEBUG_ENABLE | "false" | Add a debug option to Wildfly startup command ("true" or "false") |
+| WILDFLY_DEBUG_ENABLE | "false" | Add a debug option to Wildfly startup command ("true" or "false"). debug_enable could not be used with `JAVA_OPTS` together. If this value is `true`, `JAVA_OPTS` should be commented. |
 | WILDFLY_DEBUG_PORT | 9999 | Wildfly debug port |
-| JAVA_OPTS | -Xms1024m -Xmx2048m -XX:+UseContainerSupport -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m -XX:+AggressiveOpts -XshowSettings:vm -XX:+UseContainerSupport -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true | This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored. |
+| JAVA_OPTS | Many parameters.<br/>Need to look at code | This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored. |
 
