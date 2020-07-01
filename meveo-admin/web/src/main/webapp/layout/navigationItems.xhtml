@@ -134,6 +134,8 @@
 
 	<p:submenu id="services" label="#{messages['menu.services']}"
 		rendered="#{currentUser.hasRole('superAdminManagement') || currentUser.hasRole('administrationVisualization')}">
+		
+		<p:menuitem id="functionCategories" outcome="functionCategories" value="Function categories"/>
 		<p:menuitem id="scriptInstances" outcome="scriptInstances"
 			value="#{messages['menu.scriptInstances']}" />
 		<p:menuitem id="endpoint" value="#{messages['menu.endpoint']}"

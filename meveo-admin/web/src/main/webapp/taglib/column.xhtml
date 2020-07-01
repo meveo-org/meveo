@@ -267,7 +267,9 @@
                     <c:set var="valueId" value="#{valueId[valueIdVar]}" />
                 </c:forEach>
                 <h:link id="#{attrId}_message_link" value="#{valueField}" outcome="#{entityView}" onclick="if(this.disabled!=true){this.disabled=true;return true;} return false;">
-                    <f:param name="#{objectIdParamName}" value="#{valueId}" />
+                    <c:if test="#{not empty valueId}">
+                    	<f:param name="#{objectIdParamName}" value="#{valueId}" />
+                    </c:if>
                     <f:param name="edit" value="#{edit}" />
                     <c:if test="${propagateConversation}">
                         <f:param name="cid" value="#{javax.enterprise.context.conversation.id}" />

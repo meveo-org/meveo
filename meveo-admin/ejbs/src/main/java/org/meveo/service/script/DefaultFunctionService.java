@@ -30,6 +30,7 @@ public class DefaultFunctionService extends FunctionService<Function, ScriptInte
 				.setParameter("code", code)
 				.getSingleResult();
 	}
+	
 	public List<String> getCategoriesCodes() {
 		return getEntityManager().createQuery("SELECT DISTINCT(code) FROM FunctionCategory", String.class)
 				.getResultList();
