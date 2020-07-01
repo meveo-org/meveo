@@ -1,0 +1,48 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:p="http://primefaces.org/ui" xmlns:o="http://omnifaces.org/ui"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId"
+				value="#{functionCategoryBean.objectId}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.ontology']}" disabled="true" />
+				<p:menuitem outcome="functionCategories"
+					value="Function categories" />
+				<p:menuitem value="New function category"
+					disabled="true"
+					rendered="#{functionCategoryBean.entity.transient}" />
+				<p:menuitem
+					value="#{messages['customEntityCategory.editView']} - #{functionCategoryBean.entity.descriptionOrCode}"
+					disabled="true"
+					rendered="#{!functionCategoryBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
+		
+		<hftl:formPanel formId="cecForm"
+			backingBean="#{functionCategoryBean}"
+			showEnableDisableButton="true" showAddModuleButton="true"
+			showDeleteButton="true">
+
+			<h:panelGrid columns="3" width="60%">
+				<hftl:formField label="#{messages['BusinessEntity.code']}"
+					field="code" required="true" validateUnique="true" allowEdit="false"/>
+
+				<hftl:formField label="#{messages['BusinessEntity.description']}"
+					field="description" />
+			</h:panelGrid>
+		</hftl:formPanel>
+	</ui:define>
+
+</ui:composition>
