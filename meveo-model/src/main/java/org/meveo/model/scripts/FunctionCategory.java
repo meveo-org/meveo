@@ -20,4 +20,6 @@ public class FunctionCategory extends BusinessEntity {
 
 	private static final long serialVersionUID = 497594440733695092L;
 	
+	
+	
 }

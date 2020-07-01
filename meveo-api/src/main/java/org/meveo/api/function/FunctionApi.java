@@ -83,6 +83,9 @@ public class FunctionApi {
         functionDto.setTestSuite(function.getTestSuite());
         functionDto.setInputs(concreteFunctionService.getInputs(function));
         functionDto.setOutputs(concreteFunctionService.getOutputs(function));
+        if(function.getCategory() != null) {
+        	function.setCategory(function.getCategory());
+        }
         return functionDto;
     }
 
@@ -97,6 +100,9 @@ public class FunctionApi {
             functionDto.setTestSuite(e.getTestSuite());
             functionDto.setInputs(concreteFunctionService.getInputs(e));
             functionDto.setOutputs(concreteFunctionService.getOutputs(e));
+            if(e.getCategory() != null) {
+            	e.setCategory(e.getCategory());
+            }            
             return functionDto;
         }).collect(Collectors.toList());
     }
