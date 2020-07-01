@@ -13,7 +13,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ## Installation
 
-(Docker Installation)[./docker/README.md)
+[Docker Installation](./docker/README.md)
 
 
 ## Debugging
