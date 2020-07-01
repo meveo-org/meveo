@@ -114,4 +114,13 @@ public class Function extends BusinessEntity {
 	public void setSamples(List<Sample> samples) {
 		this.samples = samples;
 	}
+
+	public FunctionCategory getCategory() {
+		return category;
+	}
+
+	public void setCategory(FunctionCategory category) {
+		this.category = category;
+	}
+
 }

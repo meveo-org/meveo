@@ -47,6 +47,7 @@ import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
@@ -74,6 +75,9 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 
     @Inject
     private EndpointService endpointService;
+    
+    @Inject
+    private FunctionCategoryService fcService;
 
     private TechnicalServiceService<T> persistenceService;
 
@@ -99,6 +103,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         dto.setExtendedServices(
         		technicalService.getExtendedServices().stream().map(TechnicalService::getCode).collect(Collectors.toSet())	
 		);
+        
+        if(technicalService.getCategory() != null) {
+        	dto.setCategory(technicalService.getCategory().getCode());
+        }
+        
         return dto;
     }
 
@@ -131,6 +140,10 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         			throw new IllegalArgumentException("Can't find extended service " + serviceCode);
         		}
         	}
+        }
+        
+        if(postData.getCategory() != null) {
+        	technicalService.setCategory(fcService.findByCode(postData.getCategory()));
         }
         
         return technicalService;
