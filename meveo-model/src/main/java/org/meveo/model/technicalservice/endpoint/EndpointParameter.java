@@ -35,51 +35,54 @@ import javax.persistence.ManyToOne;
 @Embeddable
 public class EndpointParameter implements Serializable {
 
-    /**
-     * Endpoint associated to the parameter
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "endpoint_id")
-    private Endpoint endpoint;
+	private static final long serialVersionUID = 4736053515328740887L;
 
-    /**
-     * Input property of the technical service described by the endpoint
-     */
-    @Column(name = "parameter_id")
-    private String parameter;
+	/**
+	 * Endpoint associated to the parameter
+	 */
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "endpoint_id")
+	private Endpoint endpoint;
 
-    public Endpoint getEndpoint() {
-        return endpoint;
-    }
+	/**
+	 * Input property of the technical service described by the endpoint
+	 */
+	@Column(name = "parameter_id")
+	private String parameter;
 
-    public void setEndpoint(Endpoint endpoint) {
-        this.endpoint = endpoint;
-    }
+	public Endpoint getEndpoint() {
+		return endpoint;
+	}
 
-    public String getParameter() {
-        return parameter;
-    }
+	public void setEndpoint(Endpoint endpoint) {
+		this.endpoint = endpoint;
+	}
 
-    public void setParameter(String parameter) {
-        this.parameter = parameter;
-    }
+	public String getParameter() {
+		return parameter;
+	}
 
-    @Override
-    public String toString() {
-        return parameter;
-    }
+	public void setParameter(String parameter) {
+		this.parameter = parameter;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        EndpointParameter that = (EndpointParameter) o;
-        return Objects.equals(getEndpoint(), that.getEndpoint()) &&
-                Objects.equals(getParameter(), that.getParameter());
-    }
+	@Override
+	public String toString() {
+		return parameter;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getEndpoint(), getParameter());
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		EndpointParameter that = (EndpointParameter) o;
+		return Objects.equals(getEndpoint(), that.getEndpoint()) && Objects.equals(getParameter(), that.getParameter());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getEndpoint(), getParameter());
+	}
 }

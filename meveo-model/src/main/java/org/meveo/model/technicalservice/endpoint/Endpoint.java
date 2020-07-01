@@ -56,25 +56,18 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
- * @author Edward P. Legaspi | czetsuya@gmail.com
- * @since 01.02.2019
- * @version 6.9.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Entity
 @Table(name = "service_endpoint")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "increment")
-@NoIntersectionBetween(
-        firstCollection = "pathParameters.endpointParameter.parameter",
-        secondCollection = "parametersMapping.endpointParameter.parameter"
-)
-@NamedQueries({
-        @NamedQuery(name = "findByParameterName", query = "SELECT e FROM Endpoint e " +
-        "INNER JOIN e.service as service " +
-        "LEFT JOIN e.pathParameters as pathParameter " +
-        "LEFT JOIN e.parametersMapping as parameterMapping " +
-        "WHERE service.code = :serviceCode " +
-        "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"),
-        @NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId")})
+@NoIntersectionBetween(firstCollection = "pathParameters.endpointParameter.parameter", secondCollection = "parametersMapping.endpointParameter.parameter")
+@NamedQueries({ @NamedQuery(name = "findByParameterName", query = "SELECT e FROM Endpoint e "
+		+ "INNER JOIN e.service as service " + "LEFT JOIN e.pathParameters as pathParameter "
+		+ "LEFT JOIN e.parametersMapping as parameterMapping " + "WHERE service.code = :serviceCode "
+		+ "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"),
+		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId") })
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
 @ModuleItem("Endpoint")
@@ -84,74 +77,74 @@ public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @Fetch(value = FetchMode.SUBSELECT)
-    @CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
-    @Column(name = "role")
-    private Set<String> roles = new HashSet<>();
+	@ElementCollection(fetch = FetchType.LAZY)
+	@Fetch(value = FetchMode.SUBSELECT)
+	@CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
+	@Column(name = "role")
+	private Set<String> roles = new HashSet<>();
 
-    /**
-     * Technical service associated to the endpoint
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", updatable = false, nullable = false)
-    private Function service;
+	/**
+	 * Technical service associated to the endpoint
+	 */
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "service_id", updatable = false, nullable = false)
+	private Function service;
 
-    /**
-     * Whether the execution of the service will be syncrhonous.
-     * If asynchronous, and id of execution will be returned to the user.
-     */
-    @Type(type = "numeric_boolean")
-    @Column(name = "synchronous", nullable = false)
-    private boolean synchronous;
+	/**
+	 * Whether the execution of the service will be syncrhonous. If asynchronous,
+	 * and id of execution will be returned to the user.
+	 */
+	@Type(type = "numeric_boolean")
+	@Column(name = "synchronous", nullable = false)
+	private boolean synchronous;
 
-    /**
-     * Method used to access the endpoint.
-     * Conditionates the input format of the endpoint.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "method", nullable = false)
-    private EndpointHttpMethod method;
+	/**
+	 * Method used to access the endpoint. Conditionates the input format of the
+	 * endpoint.
+	 */
+	@Enumerated(EnumType.STRING)
+	@Column(name = "method", nullable = false)
+	private EndpointHttpMethod method;
 
-    /**
-     * Parameters that will be exposed in the endpoint path
-     */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderColumn(name = "position")
-    private List<EndpointPathParameter> pathParameters = new ArrayList<>();
+	/**
+	 * Parameters that will be exposed in the endpoint path
+	 */
+	@OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OrderColumn(name = "position")
+	private List<EndpointPathParameter> pathParameters = new ArrayList<>();
 
-    /**
-     * Mapping of the parameters that are not defined as path parameters
-     */
-    @OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TSParameterMapping> parametersMapping = new ArrayList<>();
-    
-    /**
-     * JSONata query used to transform the result
-     */
-    @Column(name = "jsonata_transformer")
-    private String jsonataTransformer;
-    
-    /**
-     * Context variable to be returned by the endpoint
-     */
-    @Column(name = "returned_variable_name")
-    private String returnedVariableName;
+	/**
+	 * Mapping of the parameters that are not defined as path parameters
+	 */
+	@OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<TSParameterMapping> parametersMapping = new ArrayList<>();
 
-    /**
-     * Context variable to be returned by the endpoint
-     */
-    @Type(type = "numeric_boolean")
-    @Column(name = "serialize_result", nullable = false)
-    private boolean serializeResult;
-    
-    /**
-     * Content type of the response
-     */
-    @Column(name = "content_type")
-    private String contentType;
-    
-    public String getContentType() {
+	/**
+	 * JSONata query used to transform the result
+	 */
+	@Column(name = "jsonata_transformer")
+	private String jsonataTransformer;
+
+	/**
+	 * Context variable to be returned by the endpoint
+	 */
+	@Column(name = "returned_variable_name")
+	private String returnedVariableName;
+
+	/**
+	 * Context variable to be returned by the endpoint
+	 */
+	@Type(type = "numeric_boolean")
+	@Column(name = "serialize_result", nullable = false)
+	private boolean serializeResult;
+
+	/**
+	 * Content type of the response
+	 */
+	@Column(name = "content_type")
+	private String contentType;
+
+	public String getContentType() {
 		return contentType;
 	}
 
@@ -160,14 +153,14 @@ public class Endpoint extends BusinessEntity {
 	}
 
 	public void setSerializeResult(boolean serializeResult) {
-        this.serializeResult = serializeResult;
-    }
+		this.serializeResult = serializeResult;
+	}
 
-    public boolean isSerializeResult() {
-        return serializeResult;
-    }
+	public boolean isSerializeResult() {
+		return serializeResult;
+	}
 
-    public String getReturnedVariableName() {
+	public String getReturnedVariableName() {
 		return returnedVariableName;
 	}
 
@@ -176,64 +169,83 @@ public class Endpoint extends BusinessEntity {
 	}
 
 	public String getJsonataTransformer() {
-        return jsonataTransformer;
-    }
+		return jsonataTransformer;
+	}
 
-    public void setJsonataTransformer(String jsonataTransformer) {
-        this.jsonataTransformer = jsonataTransformer;
-    }
+	public void setJsonataTransformer(String jsonataTransformer) {
+		this.jsonataTransformer = jsonataTransformer;
+	}
 
-    public Function getService() {
-        return service;
-    }
+	public Function getService() {
+		return service;
+	}
 
-    public void setService(Function service) {
-        this.service = service;
-    }
+	public void setService(Function service) {
+		this.service = service;
+	}
 
-    public boolean isSynchronous() {
-        return synchronous;
-    }
+	public boolean isSynchronous() {
+		return synchronous;
+	}
 
-    public void setSynchronous(boolean synchronous) {
-        this.synchronous = synchronous;
-    }
+	public void setSynchronous(boolean synchronous) {
+		this.synchronous = synchronous;
+	}
 
-    public EndpointHttpMethod getMethod() {
-        return method;
-    }
+	public EndpointHttpMethod getMethod() {
+		return method;
+	}
 
-    public void setMethod(EndpointHttpMethod method) {
-        this.method = method;
-    }
+	public void setMethod(EndpointHttpMethod method) {
+		this.method = method;
+	}
 
-    public List<EndpointPathParameter> getPathParameters() {
-        return pathParameters;
-    }
+	public List<EndpointPathParameter> getPathParameters() {
+		return pathParameters;
+	}
 
-    public void setPathParameters(List<EndpointPathParameter> pathParameters) {
-        this.pathParameters = pathParameters;
-    }
+	public void setPathParameters(List<EndpointPathParameter> pathParameters) {
+		this.pathParameters = pathParameters;
+	}
 
-    public List<TSParameterMapping> getParametersMapping() {
-        return parametersMapping;
-    }
+	public List<TSParameterMapping> getParametersMapping() {
+		return parametersMapping;
+	}
 
-    public void setParametersMapping(List<TSParameterMapping> parametersMapping) {
-        this.parametersMapping = parametersMapping;
-    }
+	public void setParametersMapping(List<TSParameterMapping> parametersMapping) {
+		this.parametersMapping = parametersMapping;
+	}
 
-    public Set<String> getRoles() { return roles; }
+	public Set<String> getRoles() {
+		return roles;
+	}
 
-    public void setRoles(Set<String> roles) {
-        this.roles = roles;
-    }
+	public void setRoles(Set<String> roles) {
+		this.roles = roles;
+	}
 
-    @Transient
-    public String getEndpointUrl() {
-        final StringBuilder endpointUrl = new StringBuilder("/rest/"+code);
-        pathParameters.forEach(endpointPathParameter -> endpointUrl.append("/{").append(endpointPathParameter).append("}"));
-        return endpointUrl.toString();
-    }
+	@Transient
+	public String getEndpointUrl() {
+		final StringBuilder endpointUrl = new StringBuilder("/rest/" + code);
+		pathParameters
+				.forEach(endpointPathParameter -> endpointUrl.append("/{").append(endpointPathParameter).append("}"));
+		return endpointUrl.toString();
+	}
+
+	public void addPathParameter(EndpointPathParameter endpointPathParameter) {
+		if (pathParameters == null) {
+			pathParameters = new ArrayList<EndpointPathParameter>();
+		}
+
+		pathParameters.add(endpointPathParameter);
+	}
+
+	public void addParametersMapping(TSParameterMapping e) {
+		if (parametersMapping == null) {
+			parametersMapping = new ArrayList<TSParameterMapping>();
+		}
+
+		parametersMapping.add(e);
+	}
 
 }

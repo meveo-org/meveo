@@ -42,9 +42,9 @@ import io.swagger.annotations.ApiModelProperty;
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
- * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * @since 01.02.2019
- * @version 6.9.0
  */
 @XmlRootElement(name = "Endpoint")
 @XmlAccessorType(XmlAccessType.FIELD)
