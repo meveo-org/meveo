@@ -1,6 +1,7 @@
 package org.meveo.admin.jsf.converter;
 
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessEntity;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 
@@ -49,6 +50,8 @@ public class EntityReferenceValueConverter implements Converter<Object>, Seriali
         String str = "";
         if (value instanceof BusinessEntity) {
             str = "" + ((BusinessEntity) value).getCode();
+        } else if (value instanceof BaseEntity) {
+            str = "" + ((BaseEntity) value).getId();
         }
         return str;
     }
