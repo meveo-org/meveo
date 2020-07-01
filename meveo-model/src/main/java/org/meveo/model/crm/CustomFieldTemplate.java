@@ -795,6 +795,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 * @param defaultValue the new default value
 	 */
     public void setDefaultValue(String defaultValue) {
+        if (StringUtils.isBlank(defaultValue) && fieldType == CustomFieldTypeEnum.BOOLEAN) {
+            defaultValue = "false";
+        }
         this.defaultValue = defaultValue;
     }
 
