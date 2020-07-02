@@ -240,6 +240,12 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 
         }
         
+        if(data.getCategory() != null) {
+        	service.setCategory(fcService.findByCode(data.getCategory()));
+        } else {
+        	service.setCategory(null);
+        }
+        
         return service;
     }
 
