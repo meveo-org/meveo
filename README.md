@@ -1,12 +1,9 @@
 [![Build Status](https://travis-ci.org/meveo-org/meveo.svg?branch=master)](https://travis-ci.org/meveo-org/meveo)
 
-Meveo
-=====
+# Meveo
 
 Meveo is a platform that allow to develop and execute enterprise back and front applications
 It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence : AGPLv3.0
-
-Installation : https://github.com/meveo-org/install
 
 Backend documentation https://meveo.org 
 
@@ -14,17 +11,12 @@ Frontend framework  https://front.meveo.org
 
 Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
 
-Build docker image
------
-Run this command: 
+## Installation
 
-    $ sudo ./build_docker.sh 
+[Docker Installation](./docker/README.md)
 
-This script builds two docker images (postgres and meveo) with a tag 'local' for meveo environment.
-This tag will be used in docker-compose.yml file.
 
-Debug
------
+## Debugging
 
 We have several methods to see meveo log. 
 
