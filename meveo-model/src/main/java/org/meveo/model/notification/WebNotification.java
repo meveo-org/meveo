@@ -52,11 +52,9 @@ public class WebNotification extends Notification {
 
 	@Override
 	public String toString() {
-		return String.format(
-				"WebNotification [name=%s, comment=%s, emails=%s,  dataEL=%s, idStrategy=%s,"
-						+ " publicationAllowed=%s, persistHistory=%s, notification=%s]",
-				getCode(), getDescription(), getDataEL(), getIdStrategy(), isPublicationAllowed(), isPersistHistory(),
-				super.toString());
+		return "WebNotification [idStrategy=" + idStrategy + ", dataEL=" + dataEL + ", publicationAllowed="
+				+ publicationAllowed + ", persistHistory=" + persistHistory + ", code=" + code + ", description="
+				+ description + "]";
 	}
 
 	public String getDataEL() {

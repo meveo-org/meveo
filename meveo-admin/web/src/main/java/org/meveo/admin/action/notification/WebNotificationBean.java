@@ -1,5 +1,8 @@
 package org.meveo.admin.action.notification;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -30,4 +33,8 @@ public class WebNotificationBean extends BaseNotificationBean<WebNotification> {
 		return webNotificationService;
 	}
 
+	@Override
+	protected List<String> getListFieldsToFetch() {
+		return Arrays.asList("function");
+	}
 }
