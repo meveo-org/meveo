@@ -111,13 +111,13 @@ public class Endpoint extends BusinessEntity {
 	 */
 	@OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@OrderColumn(name = "position")
-	private List<EndpointPathParameter> pathParameters = new ArrayList<>();
+	private List<EndpointPathParameter> pathParameters;
 
 	/**
 	 * Mapping of the parameters that are not defined as path parameters
 	 */
 	@OneToMany(mappedBy = "endpointParameter.endpoint", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<TSParameterMapping> parametersMapping = new ArrayList<>();
+	private List<TSParameterMapping> parametersMapping;
 
 	/**
 	 * JSONata query used to transform the result
@@ -200,12 +200,26 @@ public class Endpoint extends BusinessEntity {
 		this.method = method;
 	}
 
+	public List<EndpointPathParameter> getPathParametersNullSafe() {
+		if (pathParameters == null) {
+			pathParameters = new ArrayList<>();
+		}
+		return getPathParameters();
+	}
+
 	public List<EndpointPathParameter> getPathParameters() {
 		return pathParameters;
 	}
 
 	public void setPathParameters(List<EndpointPathParameter> pathParameters) {
 		this.pathParameters = pathParameters;
+	}
+
+	public List<TSParameterMapping> getParametersMappingNullSafe() {
+		if (parametersMapping == null) {
+			parametersMapping = new ArrayList<TSParameterMapping>();
+		}
+		return getParametersMapping();
 	}
 
 	public List<TSParameterMapping> getParametersMapping() {

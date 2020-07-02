@@ -40,7 +40,7 @@ import com.google.common.cache.LoadingCache;
 /**
  * @author Clément Bareth * 
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.9.0
+ * @version 6.10
  */
 @Singleton
 @Startup
@@ -67,10 +67,10 @@ public class EndpointCacheContainer {
 						result.getService();
 						result.getRoles().forEach(r -> {
 						});
-						result.getPathParameters().forEach(e -> {
+						result.getPathParametersNullSafe().forEach(e -> {
 						});
 						;
-						result.getParametersMapping().forEach(e -> {
+						result.getParametersMappingNullSafe().forEach(e -> {
 						});
 						;
 						return result;

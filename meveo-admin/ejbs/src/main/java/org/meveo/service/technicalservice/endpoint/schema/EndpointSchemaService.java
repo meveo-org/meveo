@@ -23,9 +23,9 @@ import org.meveo.util.ClassUtils;
  * This service is used by Swagger to generate a complete endpoint js interface
  * that will be consume by the frontend application.
  * 
- * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * @since 6.9.0
- * @version 6.9.0
  * @see Endpoint
  * @see SwaggerDocService
  */
@@ -50,9 +50,9 @@ public class EndpointSchemaService {
 		requestSchema.setName(endpoint.getCode() + "Request");
 		requestSchema.setDescription("Schema definition for " + endpoint.getCode());
 
-		if (!Objects.isNull(endpoint.getParametersMapping())) {
+		if (!Objects.isNull(endpoint.getParametersMappingNullSafe())) {
 
-			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 
 				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
 					// query

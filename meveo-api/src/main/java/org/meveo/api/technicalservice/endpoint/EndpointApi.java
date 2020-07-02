@@ -221,12 +221,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		// Assign path parameters
 		List<String> missingPathParameters = new ArrayList<>();
 
-		if (pathParameters.isEmpty() && !endpoint.getPathParameters().isEmpty()) {
-			missingPathParameters.addAll(endpoint.getPathParameters().stream().map(EndpointPathParameter::toString)
+		if (pathParameters.isEmpty() && !endpoint.getPathParametersNullSafe().isEmpty()) {
+			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream().map(EndpointPathParameter::toString)
 					.collect(Collectors.toList()));
 
 		} else {
-			for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+			for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
 				if (pathParameters.get(pathParameter.getPosition()) != null) {
 					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
 
@@ -242,7 +242,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 
 		// Assign query or post parameters
-		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 			Object parameterValue = execution.getParameters().get(tsParameterMapping.getParameterName());
 
 			// Use default value if parameter not provided
@@ -378,13 +378,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpoint = fromDto(endpointDto, endpoint);
 
 		if (endpointDto.getPathParameters() != null && !endpointDto.getPathParameters().isEmpty()) {
-			if (endpoint.getPathParameters() == null || endpoint.getPathParameters().isEmpty()) {
-				endpoint.getPathParameters().addAll(getEndpointPathParameters(endpointDto, endpoint));
+			if (endpoint.getPathParametersNullSafe() == null || endpoint.getPathParametersNullSafe().isEmpty()) {
+				endpoint.getPathParametersNullSafe().addAll(getEndpointPathParameters(endpointDto, endpoint));
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
 				endpointDto.getPathParameters().stream()
-						.filter(e -> finalEndpoint.getPathParameters().stream()
+						.filter(e -> finalEndpoint.getPathParametersNullSafe().stream()
 								.noneMatch(f -> e.contentEquals(f.getEndpointParameter().getParameter())))
 						.forEach(g -> {
 							EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
@@ -393,24 +393,24 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						});
 
 				List<EndpointPathParameter> toRemove = new ArrayList<EndpointPathParameter>();
-				endpoint.getPathParameters().stream()
+				endpoint.getPathParametersNullSafe().stream()
 						.filter(e -> endpointDto.getPathParameters().stream()
 								.noneMatch(f -> f.contentEquals(e.getEndpointParameter().getParameter())))
 						.forEach(g -> toRemove.add(g));
-				finalEndpoint.getPathParameters().removeAll(toRemove);
+				finalEndpoint.getPathParametersNullSafe().removeAll(toRemove);
 			}
 
 		} else {
-			endpoint.getPathParameters().clear();
+			endpoint.getPathParametersNullSafe().clear();
 		}
 
 		if (endpointDto.getParameterMappings() != null && !endpointDto.getParameterMappings().isEmpty()) {
-			if (endpoint.getParametersMapping() == null || endpoint.getParametersMapping().isEmpty()) {
-				endpoint.getParametersMapping().addAll(getParameterMappings(endpointDto, endpoint));
+			if (endpoint.getParametersMappingNullSafe() == null || endpoint.getParametersMappingNullSafe().isEmpty()) {
+				endpoint.getParametersMappingNullSafe().addAll(getParameterMappings(endpointDto, endpoint));
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
-				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMapping().stream()
+				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMappingNullSafe().stream()
 						.noneMatch(f -> e.getParameterName().contentEquals(f.getParameterName())
 								&& e.getServiceParameter().contentEquals(f.getEndpointParameter().getParameter())))
 						.forEach(g -> {
@@ -425,15 +425,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						});
 
 				List<TSParameterMapping> toRemove = new ArrayList<TSParameterMapping>();
-				endpoint.getParametersMapping().stream().filter(e -> endpointDto.getParameterMappings().stream()
+				endpoint.getParametersMappingNullSafe().stream().filter(e -> endpointDto.getParameterMappings().stream()
 						.noneMatch(f -> f.getParameterName().contentEquals(e.getParameterName())
 								&& f.getServiceParameter().contentEquals(e.getEndpointParameter().getParameter())))
 						.forEach(g -> toRemove.add(g));
-				finalEndpoint.getParametersMapping().removeAll(toRemove);
+				finalEndpoint.getParametersMappingNullSafe().removeAll(toRemove);
 			}
 
 		} else {
-			endpoint.getPathParameters().clear();
+			endpoint.getPathParametersNullSafe().clear();
 		}
 
 		endpointService.update(endpoint);
@@ -451,12 +451,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpointDto.setSerializeResult(endpoint.isSerializeResult());
 		List<String> pathParameterDtos = new ArrayList<>();
 		endpointDto.setPathParameters(pathParameterDtos);
-		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+		for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
 			pathParameterDtos.add(pathParameter.getEndpointParameter().getParameter());
 		}
 		List<TSParameterMappingDto> mappingDtos = new ArrayList<>();
 		endpointDto.setParameterMappings(mappingDtos);
-		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 			TSParameterMappingDto mappingDto = new TSParameterMappingDto();
 			mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
 			mappingDto.setValueRequired(tsParameterMapping.isValueRequired());
