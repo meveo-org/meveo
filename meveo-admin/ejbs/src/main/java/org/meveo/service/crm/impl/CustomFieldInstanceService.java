@@ -164,7 +164,10 @@ public class CustomFieldInstanceService extends BaseService {
                 businessEntity.setId(user.getId());
                 return businessEntity;
             } else if (classNameAndCode.equals(Provider.class.getName())) {
-                Provider provider = providerService.findById(Long.valueOf(value));
+                Provider provider = providerService.findByCode(value);
+                if (provider == null) {
+                  provider = providerService.findById(Long.valueOf(value));
+                }
                 BusinessEntity businessEntity = new BusinessEntity();
                 businessEntity.setCode(provider.getCode());
                 businessEntity.setId(provider.getId());
