@@ -24,6 +24,12 @@
             <hftl:searchField label="Code" field="category.code" />
             <hftl:searchField label="Stability" field="stable" />
             
+            <hftl:decorateFormField fieldId="includeDisabled" label="Include disabled test">
+	            <p:selectBooleanCheckbox
+	            	id="includeDisabled"
+	       			value="#{categoryTestBean.filters['includeDisabled']}"/>
+    		</hftl:decorateFormField>
+            
         </hftl:searchPanel>
 
 		

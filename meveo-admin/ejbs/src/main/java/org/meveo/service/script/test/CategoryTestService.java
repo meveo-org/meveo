@@ -56,6 +56,14 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 			typedQuery.setParameter("code", config.getFilters().get("category.code").toString().replace("*", "%"));
 		}
 		
+		if(config != null && config.getFilters().containsKey("includeDisabled")) {
+			if(((boolean) config.getFilters().containsKey("includeDisabled")) == false) {
+				query += "AND ji.disabled = false ";
+			}
+		} else {
+			query += "AND ji.disabled = false ";	// Don't include disabled if filter is not passed
+		}
+		
 		return typedQuery.getSingleResult();
 	}
 	
@@ -89,6 +97,14 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 		//  Filters 
 		if(config != null && config.getFilters().containsKey("category.code")) {
 			query += "AND fnCategory.code LIKE :code ";
+		}
+		
+		if(config != null && config.getFilters().containsKey("includeDisabled")) {
+			if(((boolean) config.getFilters().get("includeDisabled")) == false) {
+				query += "AND ji.disabled = false ";
+			}
+		} else {
+			query += "AND ji.disabled = false ";	// Don't include disabled if filter is not passed
 		}
 
 		query += "GROUP BY fnCategory";
