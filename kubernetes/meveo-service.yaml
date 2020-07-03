@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: E:\Programs\kompose\kompose.exe convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: meveo
+  name: meveo
+spec:
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  - name: "9990"
+    port: 9990
+    targetPort: 9990
+  - name: "9999"
+    port: 9999
+    targetPort: 9999
+  selector:
+    io.kompose.service: meveo
+status:
+  loadBalancer: {}

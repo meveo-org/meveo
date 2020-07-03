@@ -1,0 +1,1 @@
+kubectl apply -f  meveo-service.yaml,postgres-service.yaml,meveo-deployment.yaml,keycloak-data-persistentvolumeclaim.yaml,e-persistentvolumeclaim.yaml,meveo-binary-data-persistentvolumeclaim.yaml,meveo-networkpolicy.yaml,postgres-deployment.yaml,postgres-data-persistentvolumeclaim.yaml,meveo-networkpolicy.yaml
