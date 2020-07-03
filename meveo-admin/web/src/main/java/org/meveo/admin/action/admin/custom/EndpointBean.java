@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
@@ -81,9 +82,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	 */
 	@Override
 	public Endpoint initEntity() {
-		Endpoint endpoint = super.initEntity();
+		entity = super.initEntity();
 
-		return endpoint;
+		return entity;
 	}
 
 	@Override
@@ -106,34 +107,37 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		return endpointService;
 	}
 
-	public DualListModel<String> getDualListModel() {
+	public DualListModel<String> getPathParametersDL() {
+
 		List<String> perksTarget;
 		if (pathParametersDL == null) {
 			List<String> perksSource = new ArrayList<>();
 			if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
 				List<FunctionIO> functionIOList = entity.getService().getInputs();
-				Set<String> parameterSources = new HashSet<>();
+				Set<String> parameterTarget = new HashSet<>();
 				perksTarget = new ArrayList<>();
-				if (CollectionUtils.isNotEmpty(getEntity().getPathParametersNullSafe())) {
-					getEntity().getPathParametersNullSafe().stream()
+				if (entity.getPathParameters() != null && CollectionUtils.isNotEmpty(entity.getPathParameters())) {
+					entity.getPathParameters().stream()
 							.filter(item -> item != null && item.getEndpointParameter() != null)
-							.forEach(item -> parameterSources.add(item.getEndpointParameter().getParameter()));
+							.forEach(item -> parameterTarget.add(item.getEndpointParameter().getParameter()));
 				}
+
 				for (FunctionIO functionIO : functionIOList) {
-					if (!parameterSources.contains(functionIO.getName())) {
+					if (!parameterTarget.contains(functionIO.getName())) {
 						perksSource.add(functionIO.getName());
+
 					} else {
 						perksTarget.add(functionIO.getName());
 					}
 				}
 				pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
-				
+
 			} else {
 				perksTarget = new ArrayList<>();
 				pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
 			}
-			
-		} else if (getEntity().getService() != null && !getEntity().getService().getCode().equals(serviceCode)
+
+		} else if (entity.getService() != null && !entity.getService().getCode().equals(serviceCode)
 				&& CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
 			List<FunctionIO> functionIOList = entity.getService().getInputs();
 			List<String> perksSource = new ArrayList<>();
@@ -143,27 +147,29 @@ public class EndpointBean extends BaseBean<Endpoint> {
 			perksTarget = new ArrayList<>();
 			pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
 		}
+
 		return pathParametersDL;
 	}
 
-	public void setDualListModel(DualListModel<String> pathParametersDL) {
+	public void setPathParametersDL(DualListModel<String> pathParametersDL) {
 		this.pathParametersDL = pathParametersDL;
 	}
 
 	public List<TSParameterMapping> getParameterMappings() {
+
 		parameterMappings.clear();
 		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getSource())) {
 			TSParameterMapping tsParameterMapping;
 			EndpointParameter endpointParameter;
 			Map<String, TSParameterMapping> tsParameterMappingMap = new HashMap<>();
-			if (getEntity().getParametersMappingNullSafe() != null) {
-				getEntity().getParametersMappingNullSafe()
+			if (entity.getParametersMapping() != null) {
+				entity.getParametersMapping()
 						.forEach(item -> tsParameterMappingMap.put(item.getEndpointParameter().getParameter(), item));
 			}
 			for (String endpointPathParameter : pathParametersDL.getSource()) {
 				if (tsParameterMappingMap.containsKey(endpointPathParameter)) {
 					parameterMappings.add(tsParameterMappingMap.get(endpointPathParameter));
-					
+
 				} else {
 					tsParameterMapping = new TSParameterMapping();
 					endpointParameter = new EndpointParameter();
@@ -174,6 +180,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 				}
 			}
 		}
+
 		return parameterMappings;
 	}
 
@@ -205,7 +212,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	}
 
 	public String getEndpointUrl() {
-		endpointUrl = "/rest/" + getEntity().getCode();
+		endpointUrl = "/rest/" + entity.getCode();
 		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
 			pathParametersDL.getTarget()
 					.forEach(endpointPathParameter -> endpointUrl += "/{" + endpointPathParameter + "}");
@@ -220,8 +227,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 				List<FunctionIO> functionIOList = entity.getService().getOutputs();
 				functionIOList.forEach(item -> returnedVariableNames.add(item.getName()));
 			}
-			
-		} else if (getEntity().getService() != null && !getEntity().getService().getCode().equals(serviceCode)
+
+		} else if (entity.getService() != null && !entity.getService().getCode().equals(serviceCode)
 				&& CollectionUtils.isNotEmpty(entity.getService().getOutputs())) {
 			List<FunctionIO> functionIOList = entity.getService().getOutputs();
 			returnedVariableNames.clear();
@@ -240,8 +247,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 			List<String> perksSource = keycloakAdminClientService.getCompositeRolesByRealmClientId(
 					keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
 			List<String> perksTarget = new ArrayList<>();
-			if (getEntity().getRoles() != null) {
-				perksTarget.addAll(getEntity().getRoles());
+			if (entity.getRoles() != null) {
+				perksTarget.addAll(entity.getRoles());
 			}
 			perksSource.removeAll(perksTarget);
 			rolesDM = new DualListModel<>(perksSource, perksTarget);
@@ -255,60 +262,74 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		this.rolesDM = rolesDM;
 	}
 
+	private EndpointParameter buildEndpointParameter(Endpoint endpoint, String param) {
+		EndpointParameter endpointParameter = new EndpointParameter();
+		endpointParameter.setEndpoint(endpoint);
+		endpointParameter.setParameter(param);
+		return endpointParameter;
+	}
+
 	@Override
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
-//		if (CollectionUtils.isNotEmpty(parameterMappings)) {
-//			entity.getParametersMappingNullSafe().clear();
-//			entity.getParametersMappingNullSafe().addAll(parameterMappings);
-//
-//		} else {
-//			entity.getParametersMappingNullSafe().clear();
-//		}
-//
-//		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
-//			List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
-//			EndpointPathParameter endpointPathParameter;
-//			EndpointParameter endpointParameter;
-//			for (String parameter : pathParametersDL.getTarget()) {
-//				endpointPathParameter = new EndpointPathParameter();
-//				endpointParameter = new EndpointParameter();
-//				endpointParameter.setEndpoint(entity);
-//				endpointParameter.setParameter(parameter);
-//				endpointPathParameter.setEndpointParameter(endpointParameter);
-//				endpointPathParameters.add(endpointPathParameter);
-//			}
-//			entity.getPathParametersNullSafe().clear();
-//			entity.getPathParametersNullSafe().addAll(endpointPathParameters);
-//
-//		} else {
-//			entity.getPathParametersNullSafe().clear();
-//		}
-//
-//		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-//			entity.getRoles().clear();
-//			entity.getRoles().addAll(rolesDM.getTarget());
-//
-//		} else {
-//			entity.setRoles(new HashSet<>(rolesDM.getTarget()));
-//		}
-//
-//		boolean isError = false;
-//		if (parameterMappings != null) {
-//			for (TSParameterMapping param : parameterMappings) {
-//				if (StringUtils.isBlank(param.getParameterName())) {
-//					if (param.getDefaultValue() == null) {
-//						messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"),
-//								param.getEndpointParameter().getParameter());
-//						isError = true;
-//					}
-//				}
-//			}
-//		}
-//
-//		if (isError) {
-//			return null;
-//		}
+		if (CollectionUtils.isNotEmpty(parameterMappings)) {
+			final List<TSParameterMapping> entityParameterMappings = new ArrayList<>(entity.getParametersMappingNullSafe());
+			parameterMappings.stream().filter(e -> entityParameterMappings.stream().noneMatch(f -> e.equals(f)))
+					.collect(Collectors.toList()).forEach(g -> entity.getParametersMapping().add(g));
+			entityParameterMappings.stream().filter(e -> parameterMappings.stream().noneMatch(f -> e.equals(f)))
+					.collect(Collectors.toList()).forEach(g -> entity.getParametersMapping().remove(g));
+
+		} else {
+			entity.getParametersMappingNullSafe().clear();
+		}
+
+		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
+			final List<EndpointPathParameter> entityPathParameters = new ArrayList<>(entity.getPathParametersNullSafe());
+			pathParametersDL.getTarget().stream()
+					.filter(e -> entityPathParameters.stream()
+							.noneMatch(f -> e.equals(f.getEndpointParameter().getParameter())))
+					.collect(Collectors.toList()).forEach(g -> {
+						EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
+						endpointPathParameter.setEndpointParameter(buildEndpointParameter(entity, g));
+						entity.getPathParameters().add(endpointPathParameter);
+					});
+
+			entityPathParameters.stream()
+					.filter(e -> pathParametersDL.getTarget().stream()
+							.noneMatch(f -> e.getEndpointParameter().getParameter().equals(f)))
+					.collect(Collectors.toList()).forEach(g -> entity.getPathParameters().remove(g));
+
+		} else {
+			entity.getPathParametersNullSafe().clear();
+		}
+
+		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+			final List<String> entityRoles = new ArrayList<>(entity.getRolesNullSafe());
+			rolesDM.getTarget().stream().filter(e -> entityRoles.stream().noneMatch(f -> e.equals(f)))
+					.collect(Collectors.toList()).forEach(g -> entity.getRoles().add(g));
+			entityRoles.stream().filter(e -> rolesDM.getTarget().stream().noneMatch(f -> e.equals(f)))
+					.collect(Collectors.toList()).forEach(g -> entity.getRoles().remove(g));
+
+		} else {
+			entity.setRoles(rolesDM.getTarget());
+		}
+
+		boolean isError = false;
+		if (parameterMappings != null) {
+			for (TSParameterMapping param : parameterMappings) {
+				if (StringUtils.isBlank(param.getParameterName())) {
+					if (param.getDefaultValue() == null) {
+						messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"),
+								param.getEndpointParameter().getParameter());
+						isError = true;
+					}
+				}
+			}
+		}
+
+		if (isError) {
+			return null;
+		}
 
 		return super.saveOrUpdate(killConversation);
 	}

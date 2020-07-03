@@ -19,9 +19,7 @@ package org.meveo.api.dto.technicalservice.endpoint;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -92,7 +90,7 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
 
     @JsonProperty
     @ApiModelProperty("Roles")
-    private Set<String> roles = new HashSet<>();
+    private List<String> roles = new ArrayList<>();
 
     /**
      * JSONata query used to transform the result
@@ -198,11 +196,11 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
         this.parameterMappings = parameterMappings;
     }
 
-    public Set<String> getRoles() {
+    public List<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<String> roles) {
+    public void setRoles(List<String> roles) {
         this.roles = roles;
     }
 }

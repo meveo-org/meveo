@@ -18,9 +18,7 @@
 package org.meveo.model.technicalservice.endpoint;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -39,8 +37,6 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
@@ -77,11 +73,11 @@ public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@Fetch(value = FetchMode.SUBSELECT)
+	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
 	@Column(name = "role")
-	private Set<String> roles = new HashSet<>();
+	@OrderColumn(name = "pos")
+	private List<String> roles = new ArrayList<>();
 
 	/**
 	 * Technical service associated to the endpoint
@@ -230,11 +226,19 @@ public class Endpoint extends BusinessEntity {
 		this.parametersMapping = parametersMapping;
 	}
 
-	public Set<String> getRoles() {
+	public List<String> getRolesNullSafe() {
+		if (roles == null) {
+			roles = new ArrayList<>();
+		}
+
+		return getRoles();
+	}
+
+	public List<String> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(Set<String> roles) {
+	public void setRoles(List<String> roles) {
 		this.roles = roles;
 	}
 
