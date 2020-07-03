@@ -11,12 +11,15 @@ import javax.inject.Named;
 import javax.persistence.NoResultException;
 
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.scripts.FunctionCategory;
 import org.meveo.model.tests.TestResultDto;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.DefaultFunctionService;
 import org.meveo.service.script.test.TestResultService;
 import org.omnifaces.cdi.Param;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
 
 /**
  * 
@@ -47,6 +50,10 @@ public class TestResultBean extends BaseBean<TestResultDto> {
 	}
 
 	public String getCategoryDescription() {
+		if(categoryCode == null) {
+			category = null;
+		}
+		
 		if(categoryCode != null) {
 			if(category == null) {
 				try {
@@ -82,6 +89,16 @@ public class TestResultBean extends BaseBean<TestResultDto> {
 		super.search();
 	}
 	
+	@Override
+	public LazyDataModel<TestResultDto> getLazyDataModel() {
+		if(categoryCode != null) { 
+			this.getFilters().put("category", categoryCode);
+		}
+		
+		LazyDataModel<TestResultDto> lazyDataModel = super.getLazyDataModel();
+		return lazyDataModel;
+	}
+
 	public String getCategory() {
 		return categoryCode;
 	}
@@ -93,6 +110,16 @@ public class TestResultBean extends BaseBean<TestResultDto> {
 	@Override
 	protected IPersistenceService<TestResultDto> getPersistenceService() {
 		return trs;
+	}
+
+	@Override
+	protected String getDefaultSort() {
+		return "nbKo";
+	}
+
+	@Override
+	protected SortOrder getDefaultSortOrder() {
+		return SortOrder.DESCENDING;
 	}
 
 }

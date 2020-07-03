@@ -20,6 +20,7 @@ import org.meveo.model.IEntity;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.tests.TestResultDto;
 import org.meveo.service.base.local.IPersistenceService;
+import org.primefaces.model.SortOrder;
 
 /**
  * 
@@ -56,7 +57,7 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 				"AND fn.code = ji.parametres\r\n";
 		
 		//  Filters 
-		if(config != null && config.getFilters().containsKey("category.code")) {
+		if(config != null && config.getFilters().containsKey("category")) {
 			query += "AND fnCategory.code = :code ";
 		}
 		
@@ -74,12 +75,44 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 			}
 		}
 		
+		/*******************  Ordering ******************************/
+		String sortField = config.getSortField();
+		String order = null;
+		if(config.getOrdering() != SortOrder.ASCENDING) {
+			order = "ASC";
+		} else if(config.getOrdering() != SortOrder.DESCENDING) {
+			order = "DESC";
+		}
+
+		// Convert field
+		switch(sortField) {
+			case "functionCode":
+				sortField = "fn.code";
+				break;
+			case "stable" : 
+			case "nbKo" : 
+				sortField = "jeri.nbItemsProcessedWithError";
+				break;
+			case "nbWarnings":
+				sortField = "jeri.nbItemsProcessedWithWarning";
+				break;
+			case "nbOk" : 
+				sortField = "jeri.nbItemsCorrectlyProcessed";
+				break;
+			default:
+				sortField = null;
+		}
+		
+		if(sortField != null && order != null) {
+			query += "\nORDER BY " + sortField + " " + order;
+		}
+		
 		TypedQuery<TestResultDto> typedQuery = emWrapper.getEntityManager()
 				.createQuery(query, TestResultDto.class);
 		
 		//  Filters values 
-		if(config != null && config.getFilters().containsKey("category.code")) {
-			typedQuery.setParameter("code", config.getFilters().get("category.code"));
+		if(config != null && config.getFilters().containsKey("category")) {
+			typedQuery.setParameter("code", config.getFilters().get("category"));
 		}
 		
 		if(config != null && config.getFilters().get("date") != null) {
@@ -115,7 +148,7 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 				"AND fn.code = ji.parametres\r\n";
 		
 		//  Filters 
-		if(config != null && config.getFilters().containsKey("category.code")) {
+		if(config != null && config.getFilters().containsKey("category")) {
 			query += "AND fnCategory.code = :code ";
 		}
 		
@@ -123,8 +156,8 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 				.createQuery(query, Long.class);
 		
 		//  Filters values 
-		if(config != null && config.getFilters().containsKey("category.code")) {
-			typedQuery.setParameter("code", config.getFilters().get("category.code"));
+		if(config != null && config.getFilters().containsKey("category")) {
+			typedQuery.setParameter("code", config.getFilters().get("category"));
 		}
 		
 		return typedQuery.getSingleResult();

@@ -18,6 +18,7 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.IEntity;
 import org.meveo.model.tests.CategoryTest;
 import org.meveo.service.base.local.IPersistenceService;
+import org.primefaces.model.SortOrder;
 
 /**
  * 
@@ -66,8 +67,8 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 	public List<CategoryTest> list(PaginationConfiguration config) {
 		String query = "SELECT  new org.meveo.model.tests.CategoryTest(\r\n" + 
 				"            fnCategory,\r\n" + 
-				"            SUM(jeri.nbItemsCorrectlyProcessed),\r\n" + 
-				"            SUM(jeri.nbItemsProcessedWithError)\r\n" + 
+				"            SUM(jeri.nbItemsCorrectlyProcessed) as nbOk,\r\n" + 
+				"            SUM(jeri.nbItemsProcessedWithError) as nbKo\r\n" + 
 				"        )\r\n" + 
 				"\r\n" + 
 				"FROM \r\n" + 
@@ -91,6 +92,35 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 		}
 
 		query += "GROUP BY fnCategory";
+		
+		/*******************  Ordering ******************************/
+		String sortField = config.getSortField();
+		String order = null;
+		if(config.getOrdering() != SortOrder.ASCENDING) {
+			order = "ASC";
+		} else if(config.getOrdering() != SortOrder.DESCENDING) {
+			order = "DESC";
+		}
+
+		// Convert field
+		switch(sortField) {
+			case "code":
+				sortField = "fnCategory.code";
+				break;
+			case "stable" : 
+				sortField = "nbKo";
+				break;
+			case "nbKo" : 
+			case "nbOk" : 
+				break;
+			default:
+				sortField = null;
+		}
+		
+		if(sortField != null && order != null) {
+			query += "\nORDER BY " + sortField + " " + order;
+		}
+		
 		TypedQuery<CategoryTest> typedQuery = emWrapper.getEntityManager()
 				.createQuery(query, CategoryTest.class);
 		
