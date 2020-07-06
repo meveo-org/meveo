@@ -47,6 +47,7 @@ public class TestResultBean extends BaseBean<TestResultDto> {
 		super(TestResultDto.class);
 		
 		this.getFilters().put("active", true);
+		this.getFilters().put("history", "1");
 	}
 
 	public String getCategoryDescription() {
@@ -82,18 +83,13 @@ public class TestResultBean extends BaseBean<TestResultDto> {
 
 	@Override
 	public void search() {
-		if(categoryCode != null) { 
-			this.getFilters().put("category", categoryCode);
-		}
-		
+		this.getFilters().put("category", categoryCode);
 		super.search();
 	}
 	
 	@Override
 	public LazyDataModel<TestResultDto> getLazyDataModel() {
-		if(categoryCode != null) { 
-			this.getFilters().put("category", categoryCode);
-		}
+		this.getFilters().put("category", categoryCode);
 		
 		LazyDataModel<TestResultDto> lazyDataModel = super.getLazyDataModel();
 		return lazyDataModel;

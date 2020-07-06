@@ -1,6 +1,6 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
-    xmlns:e="http://jboss.com/products/seam/excel" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" 
+    xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
 
     <ui:define name="metadata">
         <f:metadata>
@@ -45,8 +45,12 @@
 		        		<f:param value="#{entity.category.code}" name="category"/>
 		        	</p:link>
                 </p:column>
-                <hftl:column label="#ok" field="nbOk" />
-                <hftl:column label="#ko" field="nbKo"/>
+                <p:column headerText="Success">
+                	<h:outputText value="#{entity.successPercentage} %"/>
+                </p:column>
+               <p:column headerText="Failure">
+                	<h:outputText value="#{entity.failurePercentage} %"/>
+                </p:column>
                 <p:column headerText="Stability" sortBy="#{entity.stable}">
                 	<h:outputText value = "#{entity.isStable() ? 'Stable' : 'Unstable'}"/>
                 </p:column>

@@ -50,6 +50,16 @@ public class CategoryTest implements IEntity<Long> {
 	public String getDescription() {
 		return category.getDescription();
 	}
+	
+	public long getSuccessPercentage() {
+		double l = ((double) nbOk) / (((double) nbOk)  + ((double) nbKo));
+		return Math.round(l * 100);
+	}
+	
+	public long getFailurePercentage() {
+		double l = ((double) nbKo) / (((double) nbOk)  + ((double) nbKo));
+		return Math.round(l * 100);
+	}
 
 	@Override
 	public Long getId() {

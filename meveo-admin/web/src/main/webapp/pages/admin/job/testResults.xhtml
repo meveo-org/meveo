@@ -32,11 +32,13 @@
 	        	</p:selectOneMenu>
         	</hftl:decorateFormField>
         	
-        	<hftl:decorateFormField fieldId="date" label="Date">
-        		<p:datePicker id="date" selectionMode="range" 
-        			value="#{testResultBean.filters['date']}" 
-        			readonlyInput="true"
-        			pattern="#{paramActionBean.getProperty('meveo.dateFormat')}"/>
+        	<hftl:decorateFormField fieldId="history" label="History">
+        		<p:selectOneMenu required="true" id="history" title="Display last executions" effect="fold" editable="true" value="#{testResultBean.filters['history']}">
+        			<f:selectItem itemValue="1" itemLabel="1"/>
+        			<f:selectItem itemValue="7" itemLabel="7"/>
+        			<f:selectItem itemValue="10" itemLabel="10"/>
+        			<f:selectItem itemValue="30" itemLabel="30"/>
+        		</p:selectOneMenu>
             </hftl:decorateFormField>
             
         </hftl:searchPanel>
@@ -54,7 +56,7 @@
             <hftl:dataList backingBean="#{testResultBean}" 
             			   resultsId="results" 
             			   addToModule="false" 
-            			   sortBy="nbKo"
+            			   sortBy="#{testResultBean.filters['history'] eq '1' ? 'nbKo' : 'endDate'}"
             			   importCsv="false">
             			   
                 <p:column headerText="Code" sortBy="#{entity.functionCode}">
@@ -62,7 +64,7 @@
                 		<f:param name="objectId" value="#{entity.id}"/>
                 	</p:link>
                 </p:column>
-                <p:column headerText="Date">
+                <p:column headerText="Date" sortBy="#{entity.endDate}">
                 	<h:outputText  value="#{entity.lastExecutionDate}">
                 		<f:convertDateTime pattern="#{paramActionBean.getProperty('meveo.dateFormat')}"/>
                 	</h:outputText>
