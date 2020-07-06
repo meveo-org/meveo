@@ -29,7 +29,7 @@
         noLinkToView - should field (in case of code field) not be displayed as a link to a detail view
         
     Additional attributes for text type fields
-        showTruncated - show truncated text in column and show full text when clicking on the text "..."  
+        showTruncated - show truncated text in column and show full text when clicking on the text "..."
         
     Additional attributes for list type fields
         valueLabelField - used along with isList="true". Specifies a name of a field in list value item.
@@ -220,7 +220,9 @@
 
                                 <f:facet name="inline">
                                     <p:scrollPanel mode="native" style="width:1000px;max-height:600px">
-                                        <h:outputText value="#{valueField.replaceAll('\\n','&lt;BR/&gt;')}" escape="false" />
+                                    	<pre style="white-space:pre-wrap">
+                                        	<h:outputText value="#{valueField}" escape="true" />
+                                        </pre>
                                     </p:scrollPanel>
                                 </f:facet>
                             </p:lightBox>
