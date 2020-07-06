@@ -97,7 +97,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         handleMissingParameters();
 
-
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
@@ -171,10 +170,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        }
         
 		} catch (Exception e) {
-			// Delete CET if error occurs
-			log.error("Creation of cet={} failed with error={}", cet, e);
-			customEntityTemplateService.remove(cet);
-			throw e;
+            if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+                throw new IllegalArgumentException(e.getMessage());
+            } else {
+                // Delete CET if error occurs
+                log.error("Creation of cet={} failed with error={}", cet, e);
+                customEntityTemplateService.remove(cet);
+                throw e;
+            }
 		}
 
         return cet;
