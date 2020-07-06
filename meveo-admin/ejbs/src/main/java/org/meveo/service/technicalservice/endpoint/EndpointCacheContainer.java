@@ -32,13 +32,14 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.slf4j.Logger;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /**
- * @author Clément Bareth * 
+ * @author Clément Bareth *
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @version 6.10
  */
@@ -46,13 +47,16 @@ import com.google.common.cache.LoadingCache;
 @Startup
 public class EndpointCacheContainer {
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, PendingResult> pendingExecutions;
+	@Inject
+	private Logger log;
 
-    @Inject
-    private EndpointService endpointService;
+	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
+	private Cache<String, PendingResult> pendingExecutions;
 
-    private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
+	@Inject
+	private EndpointService endpointService;
+
+	private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
 
 	@PostConstruct
 	private void init() {
@@ -61,9 +65,7 @@ public class EndpointCacheContainer {
 				.build(new CacheLoader<String, Endpoint>() { //
 					@Override
 					public Endpoint load(String key) {
-						Endpoint result = endpointService.findByCode(
-                            key, 
-                            Arrays.asList("service"));
+						Endpoint result = endpointService.findByCode(key, Arrays.asList("service"));
 						result.getService();
 						result.getRoles().forEach(r -> {
 						});
@@ -78,35 +80,36 @@ public class EndpointCacheContainer {
 				});
 	}
 
-    public PendingResult getPendingExecution(String key) {
-        return pendingExecutions.get(key);
-    }
+	public PendingResult getPendingExecution(String key) {
+		return pendingExecutions.get(key);
+	}
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
-    }
+	public void remove(String key) {
+		pendingExecutions.remove(key);
+	}
 
-    public void put(String key, PendingResult value){
-        pendingExecutions.put(key, value);
-    }
+	public void put(String key, PendingResult value) {
+		pendingExecutions.put(key, value);
+	}
 
-    public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
-        endpointLoadingCache.invalidate(endpoint.getCode());
-    }
+	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
+		endpointLoadingCache.invalidate(endpoint.getCode());
+	}
 
-    public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
-        endpointLoadingCache.put(endpoint.getCode(), endpoint);
-    }
+	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
+		log.debug("[CDI event] Updating endpoint cache with id={}", endpoint.getId());
+		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+	}
 
-    public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
-        endpointLoadingCache.put(endpoint.getCode(), endpoint);
-    }
+	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
+		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+	}
 
-    public Endpoint getEndpoint(String code){
-        try {
-            return endpointLoadingCache.getUnchecked(code);
-        } catch (CacheLoader.InvalidCacheLoadException e){
-            return null;
-        }
-    }
+	public Endpoint getEndpoint(String code) {
+		try {
+			return endpointLoadingCache.getUnchecked(code);
+		} catch (CacheLoader.InvalidCacheLoadException e) {
+			return null;
+		}
+	}
 }
