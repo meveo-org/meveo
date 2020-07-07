@@ -37,4 +37,9 @@ public class WebNotificationBean extends BaseNotificationBean<WebNotification> {
 	protected List<String> getListFieldsToFetch() {
 		return Arrays.asList("function");
 	}
+
+	@Override
+	protected List<String> getFormFieldsToFetch() {
+		return Arrays.asList("function");
+	}
 }
