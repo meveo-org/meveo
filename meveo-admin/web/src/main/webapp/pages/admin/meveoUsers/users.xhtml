@@ -32,7 +32,12 @@
 
 		<hftl:dataList label="#{messages['user.title']}"
 			backingBean="#{userListBean}" sortBy="userName">
-			<hftl:column label="#{messages['user.userName']}" field="userName" entityView="userDetail" valueIdField="id"/>
+			<p:column headerText="#{messages['user.userName']}">
+				<p:link outcome="userDetail" value="#{entity.userName}">
+					<f:param name="objectId" value="#{entity.id}"/>
+				</p:link>
+			</p:column>
+			
             <hftl:column label="#{messages['user.name']}" field="name.fullName"/>
             <hftl:column label="#{messages['user.userGroupLevel']}" field="userLevel.descriptionOrCode" sort="false"/>
 			<hftl:column label="#{messages['user.roles']}" field="roles"
