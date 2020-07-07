@@ -29,6 +29,13 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
 
+/**
+ * Job that executes a JMeter test suite
+ * 
+ * @author clement.bareth
+ * @since 6.5.0
+ * @version 6.10.0
+ */
 @Stateless
 public class FunctionTestJob extends Job {
 
@@ -43,7 +50,7 @@ public class FunctionTestJob extends Job {
             final TestResult sampleResults = jMeterService.executeTest(code);
             sampleResults.getSampleResults().forEach(sampleResult -> registerResult(result, sampleResult));
             
-            result.addReport("Response data : \n" + sampleResults.getResponsData());
+            result.addReport(" Response data : " + sampleResults.getResponsData() + "\n");
 
         } catch (IOException e) {
             result.registerError(e.toString());
@@ -54,9 +61,11 @@ public class FunctionTestJob extends Job {
     private void registerResult(JobExecutionResultImpl result, SampleResult sampleResult) {
         if (sampleResult.isSuccess()) {
             result.registerSucces();
-        } else {
-            result.registerError(sampleResult.getName() + " : " + sampleResult.getFailureMessage());
-        }
+        } else if(sampleResult.getFailureMessage() != null && sampleResult.getFailureMessage().startsWith("[WARN]")) {
+			result.registerWarning(sampleResult.getFailureMessage());
+    	} else {
+    		result.registerError(sampleResult.getName() + " : " + sampleResult.getFailureMessage());
+    	}
     }
 
     @Override
