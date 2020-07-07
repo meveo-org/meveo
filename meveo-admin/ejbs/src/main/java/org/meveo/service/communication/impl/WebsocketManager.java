@@ -43,7 +43,7 @@ public class WebsocketManager {
 		context.put("PUBLICATION_MESSAGE", message);
 		context.put("PUBLICATION_AUTHOR", session.getUserProperties().get("username"));
 		sendMessage("",(String)session.getUserProperties().get("notifname"),message,context);
-		return "to be implemented";
+		return "message sent";
     }
 
     @OnOpen

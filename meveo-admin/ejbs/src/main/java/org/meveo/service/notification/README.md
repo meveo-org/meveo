@@ -1,5 +1,19 @@
 # Notifications
 
+When an event is triggered,  an object, described in the following table, is attached to an event for use in notification scripts and EL expressions: 
+
+| Event type | Apply to | Description | Event object |
+|:----------- | :------ | :---------- | :----------- |
+| Created | Any Observable entity (i.e. class of org.meveo.model.* packages) | Fired when an entity is persisted in database (but before transaction is commited) | The entity persisted |
+| Disabled | Any Observable entity | Fired when an entity is disabled | The entity disabled |
+| Inbound request | Not applicable | Fired when an inbound request is received and before the response is produced | The inbound request entity |
+| Logged In | Not applicable | Fired when a user successfully loggedin | The user entity |
+| Processed | TBD | | |
+| Removed | Any Observable  entity | Fired when an entity is deleted from database (but before transaction is commited) | The deleted entity |
+| Terminated | Not implemented yet | | |
+| Updated | Any Observable  entity | Fired when an entity is updated in database (but before transaction is commited) | The entity updated|
+
+
 Notification allow to perform some action, e.g send a message, when some event is triggered
 e.g. when an entity is created.
 
@@ -71,3 +85,94 @@ To use websocket, the client connects to `/websocket/<notificationCode>?filter=<
 it will receive message triggered by the notification that match the filter in the form `{"id":<id>,"name":<notificationCode>,"data":<message>"}`
 all messages sent by the client are broadcasted to the other users connected to the notification by websocket if their
  filter match on the context with "PUBLICATION_MESSAGE" being the message sent and "PUBLICATION_AUTHOR" set to the username of the sender.
+ 
+ The filterEl has a context containing the following variables:
+ 
+ - event : the object or event triggering the notification
+ - all parameters of the notifications
+ 
+ 
+## Script notifications
+
+Notification executes a script in SYNCHRONOUS mode. Script must implement org.meveo.script.ScriptInterface. All init(), execute() and finalize() methods are called
+
+The following variables are available to the script methods:
+
+* parameters defined in Script parameters field indicating parameter name and value. Script parameter value is an EL expression with an event object, described in a section above, exposed as variable "event" and bean manager exposed as "manager" variable.
+
+Note: notification can be used to handle inbound requests, as script is executed and notification history is created SYNCHRONOUSLY from firing an event.
+
+## Webhooks
+
+Notification that calls a web URL in ASYNCHRONOUS mode. Headers and request parameters can be set indicating header or a request parameter name and a value. Header or a request parameter value is an EL expression with an event object, described in a section above, exposed as variable "event". Values are encoded in UTF-8.
+
+If username is set and not “Authorization”  header has been set, then username and password are used to create an HTTP Basic authentication “Authorization” header.
+
+A script can be executed AFTER a successful call to a web url (http response code 200).  Script must implement org.meveo.script.ScriptInterface.execute() method.
+
+The following variables are available to the script methods:
+
+* parameters defined in Script parameters field indicating parameter name and value. Script parameter value is an EL expression with an event object, described in a section above, exposed as variable "event". Web call response is exposed as variable "result" in both EL expression and script execution context.
+    web call response is available as variable "result"
+
+To limit the number of notification created in some time period, a counter (of type notification) can be associated to the notification.
+
+Note: script is executed ASYNCHRONOUSLY from firing an event.
+
+## Email notifications
+
+Notification sends an email in ASYNCHRONOUS mode. Most fields (subject, html body, text body, emailToEL) are EL expressions with an event object, described in a section above, exposed as variable "event".
+
+Notification executes a script in SYNCHRONOUS mode BEFORE the email is send. Script must implement org.meveo.script.ScriptInterface. All init(), execute() and finalize() methods are called.
+
+The following variables are available to the script methods:
+
+* parameters defined in Script parameters field indicating parameter name and value. Script parameter value is an EL expression with an event object, described in a section above, exposed as variable "event" and bean manager exposed as "manager" variable.
+
+To limit the number of notification created in some time period, a counter (of type notification) can be associated to the notification.
+
+## Job triggers
+
+Notifications that launch a job in ASYNCHRONOUS mode.
+
+Notification executes a script in SYNCHRONOUS mode BEFORE the job is launched. Script must implement org.meveo.script.ScriptInterface. All init(), execute() and finalize() methods are called.
+
+The following variables are available to the script methods:
+
+* parameters defined in Script parameters field indicating parameter name and value. Script parameter value is an EL expression with an event object, described in a section above, exposed as variable "event" and bean manager exposed as "manager" variable.
+
+ 
+## Inbound requests
+
+Notifications with event type filter as "Inbound request" handle any request made to "/inbound/..." path of Opencell application similarly to an event and handeled further by notification.
+
+Inbound request returns http response code 404 if no notification was matched.
+
+Inbound request considers to be processed and returns http response code of 200 if some notification was matched.
+
+InboundRequest type object is created from request information and is passed to a notification as event object. The following information is filled from JAVA Http servlet request object. For more details see http://docs.oracle.com/javaee/6/api/javax/servlet/http/HttpServletRequest.html.
+
+* content length - the length, in bytes, of the request body and made available by the input stream, or -1 if the length is not known
+* content type - the MIME type of the body of the request, or null if the type is not known
+* parameters - a map of request parameters. Multi-value parameter values are concatenated with "|" symbol.
+* protocol - the name and version of the protocol the request uses in the form protocol/majorVersion.minorVersion, for example, HTTP/1.1
+* scheme - the name of the scheme used to make this request, for example http or https
+* remote address - the Internet Protocol (IP) address of the client or last proxy that sent the request.
+* remote port - the Internet Protocol (IP) source port of the client or last proxy that sent the request
+* body - request body
+* method - http method with which this request was made, for example, GET, POST, or PUT
+* authentication type -  the name of the authentication scheme used
+* cookies - a map of cookies send with request
+* headers - a map of headers present in request
+* path info - any extra path information associated with the URL the client sent when it made this request. The extra path information follows the servlet path but precedes the query string and will start with a "/" character.
+* request URI -  the part of this request's URL from the protocol name up to the query string in the first line of the HTTP request
+
+The inbound request's response (part of http response code 200) can be enriched with the following information IF InboundRequest type object was exposed entirely as a script parameter:
+
+* response encoding - defaults to request character encoding value
+* response cookies - a map of additional cookies to return with response
+* response headers - a map of headers to return in response
+* response body - content to send as response body
+
+Note: Inbound request processing is available with Script type notifications ONLY.
+ 
