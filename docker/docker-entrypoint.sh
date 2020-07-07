@@ -142,7 +142,7 @@ fi
 
 BIND_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
-    BIND_OPTS="${BIND_OPTS} --debug ${WILDFLY_DEBUG_PORT}"
+    BIND_OPTS="${BIND_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi
 
 info "Starting Wildfly"
