@@ -105,12 +105,16 @@ public class ScriptInstanceDto extends CustomScriptDto {
                 importScriptInstances.add(new ScriptInstanceDto(script, script.getScript()));
             }
         }
+        
+        if(scriptInstance.getCategory() != null) {
+        	super.setCategory(scriptInstance.getCategory().getCode());
+        }
     }
 
 
     @Override
     public String toString() {
-        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", script=" + getScript() + ", executionRoles="
+        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", category=" + getCategory() + "script=" + getScript() + ", executionRoles="
                 + executionRoles + ", sourcingRoles=" + sourcingRoles + "]";
     }
 

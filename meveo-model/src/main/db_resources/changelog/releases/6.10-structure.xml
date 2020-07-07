@@ -8,10 +8,34 @@
 
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+	<changeSet id="#4284 - FunctionCategory" author="Clément Bareth">
+		<createTable tableName="function_category">
+			<column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="version" type="INT4" />
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="disabled" type="INT4"/>
+            <column name="updated" type="datetime"/>
+            <column name="creator" type="varchar(100)"/>
+            <column name="updater" type="varchar(100)"/>
+            <column name="description" type="varchar(255)"/>
+            <column name="code" type="varchar(255)"/>
+		</createTable>
+		<addColumn tableName="meveo_function">
+			<column name="category_id" type="bigint">
+				<constraints references="function_category(id)" foreignKeyName="fk_category_id"/>
+			</column>
+		</addColumn>
+	</changeSet>
 	
 	<changeSet id="#16 - Add order to endpoint roles" author="EdwardPLegaspi">
 		<addColumn tableName="service_endpoint_roles">
 			<column name="pos" type="int" defaultValueNumeric="0" defaultValue="0"></column>
 		</addColumn>
 	</changeSet>
+	
 </databaseChangeLog>

@@ -73,6 +73,12 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 	 */
 	@ApiModelProperty("Whether to generate outputs or not")
 	private Boolean generateOutputs = false;
+	
+	/**
+	 * Category the function belongs to
+	 */
+	@ApiModelProperty("Category the function belongs to")
+	private String category;
 
 	public FunctionDto() {
 
@@ -84,6 +90,14 @@ public class FunctionDto extends BusinessEntityDto implements Serializable {
 		this.generateOutputs = e.getGenerateOutputs();
 		this.inputs = e.getInputs();
 		this.outputs = e.getOutputs();
+	}
+	
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
 	}
 
 	public List<FunctionIO> getInputs() {
