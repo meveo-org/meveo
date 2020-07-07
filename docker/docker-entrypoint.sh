@@ -115,8 +115,8 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
         WILDFLY_CUSTOM_XMX="2048m"
     fi
     JAVA_OPTS="-Xms${WILDFLY_CUSTOM_XMS} -Xmx${WILDFLY_CUSTOM_XMX}"
-    JAVA_OPTS="${JAVA_OPTS} -XX:+UseContainerSupport -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
-    JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XX:+AggressiveOpts -XshowSettings:vm -XX:+UseContainerSupport"
+    JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
+    JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XshowSettings:vm"
     JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=${JBOSS_MODULES_SYSTEM_PKGS} -Djava.awt.headless=true"
 else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
