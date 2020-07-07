@@ -66,7 +66,7 @@ before_script:
 
   # Pull the necessary docker images in advance
   - docker pull postgres:9.5.21
-  - docker pull openjdk:8u242-jdk-slim-buster
+  - docker pull openjdk:11-jdk-slim-buster
   - if docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "postgres pulled up"; fi
   - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
 
