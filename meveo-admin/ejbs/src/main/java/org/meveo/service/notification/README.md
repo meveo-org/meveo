@@ -46,12 +46,14 @@ notifications both in datastore and cache and to handle their associated counter
 
 ## Web notification
 
-when a web notification is created and active, the web clients can connect to its channel using the
-url `/sse/register/<notificationCode>?filter=<filterEL>`
+when a web notification is created and active, the web clients can connect to its channel either using SSE or Websocket
+
+### SSE 
+To use Server Sent Event, the client send a GET request to the url `/sse/register/<notificationCode>?filter=<filterEL>`
 where notificationCode is the code of the web notification
 and filterEL is a base64 encode EL that will be applied to context of the event prior to sending it.
 
-then [it will receive all SSE events](https://www.w3schools.com/html/html5_serversentevents.asp) triggering the notification, with
+then [it will receive all SSE events](https://www.w3schools.com/html/html5_serversentevents.asp) triggered by the notification, with
 ```
 id : either a UUID or a timestamp depending on the notification Id strategy
 event : code of the notification
@@ -61,3 +63,11 @@ data : the notification data EL applied to the event context
 
 in order to send a message to the channel of the web notification (in case the web notification allow publication),
 a client can post a message (plain text body) to the url  `/sse/publish/<notificationCode>`
+The message will be broadcasted to the other users connected to the notification by SSE if their
+ filter match on the context with "PUBLICATION_MESSAGE" being the message sent and "PUBLICATION_AUTHOR" set to the username of the sender.
+
+### Websocket
+To use websocket, the client connects to `/websocket/<notificationCode>?filter=<filterEL>` 
+it will receive message triggered by the notification that match the filter in the form `{"id":<id>,"name":<notificationCode>,"data":<message>"}`
+all messages sent by the client are broadcasted to the other users connected to the notification by websocket if their
+ filter match on the context with "PUBLICATION_MESSAGE" being the message sent and "PUBLICATION_AUTHOR" set to the username of the sender.

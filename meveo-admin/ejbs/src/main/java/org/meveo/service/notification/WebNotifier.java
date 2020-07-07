@@ -16,6 +16,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.communication.impl.SseManager;
+import org.meveo.service.communication.impl.WebsocketManager;
 import org.slf4j.Logger;
 
 @Stateless
@@ -27,6 +28,9 @@ class WebNotifier {
 	@Inject
 	private SseManager sseManager;
 
+	@Inject
+	private WebsocketManager websocketManager;
+	
 	@Inject
 	private NotificationHistoryService notificationHistoryService;
 
@@ -54,17 +58,32 @@ class WebNotifier {
 		if (webNotif.getIdStrategy() == WebNotificationIdStrategyEnum.TIMESTAMP) {
 			id = "" + System.currentTimeMillis();
 		}
+		String data=entityOrEvent.toString();
+		//send SSE notif
 		try {
 			if (webNotif.getDataEL() != null && !webNotif.getDataEL().isEmpty()) {
-				String dataEL_evaluated = evaluate(webNotif.getDataEL(), entityOrEvent, context);
-				log.debug("Evaluated dataEL_evaluated={}", dataEL_evaluated);
-				sseManager.sendMessage(id, webNotif.getCode(), webNotif.getDescription(), dataEL_evaluated, oContext);
-
+				data = evaluate(webNotif.getDataEL(), entityOrEvent, context);
+				log.debug("Evaluated dataEL_evaluated={}", data);
+				sseManager.sendMessage(id, webNotif.getCode(), webNotif.getDescription(), data, oContext);
 			} else {
 				// FIXME: serialize correctly entityOrEvent
-				sseManager.sendMessage(id, webNotif.getCode(), webNotif.getDescription(), entityOrEvent.toString(),
+				sseManager.sendMessage(id, webNotif.getCode(), webNotif.getDescription(), data,
 						oContext);
 			}
+		} catch (Exception e) {
+			try {
+				log.debug("WebNotification business error : ", e);
+				notificationHistoryService.create(webNotif, entityOrEvent, e.getMessage(),
+						NotificationHistoryStatusEnum.FAILED);
+
+			} catch (BusinessException e2) {
+				log.error("Failed to create notification history", e2);
+			}
+		}
+		// then websocket notif
+		try {
+				websocketManager.sendMessage(id, webNotif.getCode(), data,
+						oContext);
 
 		} catch (Exception e) {
 			try {

@@ -6,7 +6,6 @@ import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventSink;
 
 /**
- * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.10.0
  */
 public class FilteringSink implements SseEventSink {

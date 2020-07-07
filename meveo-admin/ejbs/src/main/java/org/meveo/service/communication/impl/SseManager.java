@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.Singleton;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -132,14 +132,13 @@ public class SseManager {
 
 		Map<Object, Object> context = new HashMap<>();
 		context.put("PUBLICATION_MESSAGE", message);
-		context.put("PUBLICATION_IP", callerIp);
 		context.put("PUBLICATION_AUTHOR", userName);
 		sendMessage("", webNotification.getCode(), "", message, context);
 	}
 
 	/**
 	 * This method broadcast a message to all clients that registered for the given
-	 * web notification code, and for wich the filter match the context
+	 * web notification code, and for which the filter match the context
 	 * 
 	 * @param id
 	 * @param name
