@@ -7,6 +7,8 @@ import java.io.StringWriter;
 import java.net.URL;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
@@ -40,6 +42,9 @@ public class ESGeneratorService {
 	private EndpointService endpointService;
 
 	@Inject
+	private ESGeneratorService esGeneratorService;
+
+	@Inject
 	private Logger log;
 
 	/**
@@ -49,6 +54,19 @@ public class ESGeneratorService {
 	 * @see Endpoint
 	 * @return it returns the endpoint interface in js
 	 */
+	public String buildJSInterface(Long id) {
+		Endpoint endpoint = endpointService.findById(id);
+		return esGeneratorService.buildJSInterface(endpoint);
+	}
+
+	/**
+	 * Generates an endpoint interface in js code using a template file.
+	 * 
+	 * @param endpoint endpoint
+	 * @see Endpoint
+	 * @return it returns the endpoint interface in js
+	 */
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public String buildJSInterface(Endpoint endpoint) {
 		return buildJSInterface("", endpoint);
 	}
@@ -69,7 +87,8 @@ public class ESGeneratorService {
 		if (endpointService.isEndpointScriptExists(endpoint)) {
 			StringWriter writer = new StringWriter();
 			try {
-				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getScriptFile(endpoint))), writer);
+				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getScriptFile(endpoint))),
+						writer);
 
 			} catch (IOException e) {
 				log.error("Failed loading js template with error {}", e.getMessage());
@@ -100,7 +119,8 @@ public class ESGeneratorService {
 		endpointJSInterface.setHttpMethod(endpoint.getMethod());
 		endpointJSInterface.setApiUrl(baseUrl);
 
-		String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+		String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(),
+				endpoint.getReturnedVariableName());
 		CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
 		if (returnedCet != null) {
 			endpointJSInterface.setCet(true);
