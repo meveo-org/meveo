@@ -10,6 +10,7 @@ import javax.ejb.Stateless;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.scripts.FunctionCategory;
 import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.test.ExpectedOutput;
 
@@ -23,6 +24,17 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 @FunctionServiceFor(Function.UNKNOWN)
 @Stateless
 public class DefaultFunctionService extends FunctionService<Function, ScriptInterface> {
+		
+	public FunctionCategory findCategory(String code) {
+		return getEntityManager().createQuery("FROM FunctionCategory WHERE code = :code", FunctionCategory.class)
+				.setParameter("code", code)
+				.getSingleResult();
+	}
+	
+	public List<String> getCategoriesCodes() {
+		return getEntityManager().createQuery("SELECT DISTINCT(code) FROM FunctionCategory", String.class)
+				.getResultList();
+	}
 
 	@Override
 	protected void afterUpdateOrCreate(Function executable) {

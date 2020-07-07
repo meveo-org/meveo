@@ -1,0 +1,269 @@
+{
+    "realm" : "meveo",
+    "users" : [ {
+      "id" : "dc8ef105-cbb5-4b31-b55d-51777350c808",
+      "createdTimestamp" : 1493938719370,
+      "username" : "demo.classic",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : true,
+      "firstName" : "Gildarts",
+      "lastName" : "Clive",
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "x7Odlui0/oyIJHzUpuQy4rZ88sKZq+OrddmN4dJpronLAFktK1+Zku0rBcfm6TPWOiHWUIML1uEp21ss8ypGMA==",
+        "salt" : "iz8FZt9pnhPO2EZ4/O0ilA==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1513859002859,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "meveo-sc" : [ "customer" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "54552456-5fe2-4298-8648-d6b6d0f25bf3",
+      "createdTimestamp" : 1513335971330,
+      "username" : "demo.customercare",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "June",
+      "lastName" : "Carter",
+      "email" : "demo.customercare@meveosoft.com",
+      "attributes" : {
+        "locale" : [ "en" ]
+      },
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "hQo3SxABx6sYqEbfD5NH5xO9kc/kZXVDxErLAX03mFcoWBiMhbbUc3uy/Ls1d+FzU0PYVQbU1ZtbXczlGEvBLg==",
+        "salt" : "3DvASDtHsNwepJUMom1M0Q==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1513859018126,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "SUPER_ADMIN" ],
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "0e9b6fd7-2209-47f5-80cb-4ffdcb00f1ea",
+      "createdTimestamp" : 1493938865632,
+      "username" : "demo.selfcare.api",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : true,
+      "firstName" : "Api",
+      "lastName" : "User",
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "ri+O2IWqv1u0C17UCAMpxxdmMYdZMDHkJ4e3ReGfeviUgdxCi09DBNn2/3wlBkvU8F2BLnN2RT0LDvSRXzwI9A==",
+        "salt" : "j5mI0U4u0B95oQBPnMxCzA==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1513859034082,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "meveo-web" : [ "apiAccess" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "cb537414-5571-42c4-bc09-de5c82b7424c",
+      "createdTimestamp" : 1550575705639,
+      "username" : "jmeter",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "4JpEH/Wj7OvrrCAndsJ5llWpwNQKtQ1cvQAkBAzy9dW8yvqrjvrZb+BkG6h++dxgDDZUUq0lFh6t50DhCBhzrA==",
+        "salt" : "5DbqJMyd3fVWHJZMJd962A==",
+        "hashIterations" : 27500,
+        "counter" : 0,
+        "algorithm" : "pbkdf2-sha256",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1550575724865,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "meveo-web" : [ "apiAccess" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "71fff1ad-cd3a-4646-b882-5cfa0f6380a7",
+      "createdTimestamp" : 1508163776686,
+      "username" : "meveo.admin",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "attributes" : {
+        "locale" : [ "en" ]
+      },
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "tDWrS36RNogxaazQcJSKv3s+t57bH/At/sJebSxuIaKWLGx/dQBKyi2Co1T1eSKbkAhiAsdeAO0ojHEn/M+AWw==",
+        "salt" : "7wt1yK4dYGQNs+2MJ6ptCQ==",
+        "hashIterations" : 27500,
+        "counter" : 0,
+        "algorithm" : "pbkdf2-sha256",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1588071148523,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "offline_access", "CC_LEVEL_2", "SC_LEVEL_1", "uma_authorization", "PC_LEVEL_2", "CC_ADMIN", "PC_LEVEL_1", "PC_ADMIN", "CC_LEVEL_1", "SUPER_ADMIN" ],
+      "clientRoles" : {
+        "realm-management" : [ "view-authorization", "manage-authorization", "query-realms" ],
+        "meveo-sc" : [ "customer" ],
+        "meveo-web" : [ "creditNoteManagement", "administrateur", "endpointManagement", "creditNoteVisualization", "superAdministrateur", "missionManagement", "marketingManager" ],
+        "broker" : [ "read-token" ],
+        "account" : [ "view-profile", "manage-account" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "01722960-333e-42da-b0a6-c38a90604486",
+      "createdTimestamp" : 1508169455847,
+      "username" : "meveo.customercare",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "Johnny",
+      "lastName" : "Cash",
+      "email" : "meveo.customercare@meveosoft.com",
+      "attributes" : {
+        "locale" : [ "fr" ]
+      },
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "TEtEzt+6FlhQGyivdUIiCbMiAH+C9FdIPQsCvgj1AO4/wfb2lk0LcGE6PL6SExB8u3LJEIzPiTphFO78Cv96dA==",
+        "salt" : "GEC55mKzElr+F4RWTvqudA==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1513858967929,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "SUPER_ADMIN" ],
+      "clientRoles" : {
+        "meveo-web" : [ "creditNoteManagement", "creditNoteVisualization" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "ef2af823-8907-4fbd-80f3-c8a1c7a39279",
+      "createdTimestamp" : 1508163847002,
+      "username" : "meveo.marketingmanager",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "attributes" : {
+        "locale" : [ "en" ]
+      },
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "04b/EBIN5MI1IkI1kXi55T5yA0HWKrGxRE/zgXBr40ao64TsfCfLzs8VACCNyPStZ6ZTlLb8NBQVP3X1xylCSA==",
+        "salt" : "xGpiEdrRPOGRtBfnWUZOJQ==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1513859073868,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "meveo-web" : [ "userManagement", "marketingManager" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "2eeae71e-bd04-496c-9836-8a2a294a05af",
+      "createdTimestamp" : 1508163819959,
+      "username" : "meveo.superadmin",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "attributes" : {
+        "locale" : [ "en" ]
+      },
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "msFNGe7ZoxPVWphHNZ6GqVsjTSRfQb0T+LqajSflgMCk8YvFXHejH20bujrhbf6OdGHsAJr3UIF6oXpl5yETmw==",
+        "salt" : "esD2vD/vodUp0IL3f1WAiw==",
+        "hashIterations" : 27500,
+        "counter" : 0,
+        "algorithm" : "pbkdf2-sha256",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1583824436706,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "realm-management" : [ "view-realm", "view-clients", "manage-users", "view-users" ],
+        "meveo-web" : [ "superAdministrateur", "userManagement" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    }, {
+      "id" : "8cbd0e23-38e7-4292-940f-226907ec1de5",
+      "createdTimestamp" : 1511878669303,
+      "username" : "meveo.user",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : true,
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "GHwJKjWvl6JX4XP4M1BmAQ4aH0xgw3BSWOWZ4EK8oVCttJNwpCnRH4lEhDFhrJTonaH6+XBNUMo2AKV2trkzmA==",
+        "salt" : "aUl7zj83sAgYvjCITeom7g==",
+        "hashIterations" : 20000,
+        "counter" : 0,
+        "algorithm" : "pbkdf2",
+        "digits" : 0,
+        "period" : 0,
+        "createdDate" : 1511878678101,
+        "config" : { }
+      } ],
+      "disableableCredentialTypes" : [ "password" ],
+      "requiredActions" : [ ],
+      "clientRoles" : {
+        "realm-management" : [ "view-realm", "view-clients", "manage-users", "view-users" ],
+        "meveo-web" : [ "apiAccess" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    } ]
+  }

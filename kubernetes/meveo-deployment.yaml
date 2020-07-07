@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: E:\Programs\kompose\kompose.exe convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: meveo
+  name: meveo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: meveo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: E:\Programs\kompose\kompose.exe convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/meveo: "true"
+        io.kompose.service: meveo
+    spec:
+      containers:
+      - env:
+        - name: WILDFLY_DEBUG_ENABLE
+          value: "true"
+        image: manaty/wildfly-meveo:feature-16-ServerSentEvents
+        imagePullPolicy: ""
+        name: meveo
+        ports:
+        - containerPort: 8080
+        - containerPort: 9990
+        - containerPort: 9999
+        resources: {}
+        volumeMounts:
+        - mountPath: /opt/jboss/wildfly/standalone/data/keycloakdb
+          name: keycloak-data
+        - mountPath: /opt/jboss/wildfly/meveodata
+          name: e
+        - mountPath: /tmp/meveo/binary/storage
+          name: meveo-binary-data
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: keycloak-data
+        persistentVolumeClaim:
+          claimName: keycloak-data
+      - name: e
+        persistentVolumeClaim:
+          claimName: e
+      - name: meveo-binary-data
+        persistentVolumeClaim:
+          claimName: meveo-binary-data
+status: {}

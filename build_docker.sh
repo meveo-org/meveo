@@ -81,6 +81,8 @@ docker build -t ${DCK_IMAGE_REPO}/postgres-meveo:${DCK_IMAGE_TAG} -f docker/Dock
 echo "Build the meveo docker image"
 docker build -t ${DCK_IMAGE_REPO}/wildfly-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile ./docker
 
+rm -rf docker/meveo.sql
+rm -rf docker/meveo.war
 
 if [[ $(docker images -aq --filter dangling=true | wc -c) -ne 0 ]]; then
   echo "Remove the unused image"
