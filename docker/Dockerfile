@@ -67,6 +67,26 @@ RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/keycloak-ov
 ### ------------------------- Keycloak-4.8.3.Final - End -----------------------------###
 
 
+### ------------------------- Liquibase  -----------------------------###
+# Ref: https://github.com/liquibase/docker/blob/main/Dockerfile
+
+# Create a directory to install liquibase
+RUN mkdir /opt/jboss/liquibase
+WORKDIR /opt/jboss/liquibase
+
+# Latest Liquibase Release Version
+ARG LIQUIBASE_VERSION=3.10.0
+
+# Download, install, clean up
+RUN set -x \
+  && curl -L https://github.com/liquibase/liquibase/releases/download/v${LIQUIBASE_VERSION}/liquibase-${LIQUIBASE_VERSION}.tar.gz | tar -xzf -
+
+
+# RUN curl -o /liquibase/lib/<db platform>.jar <url to maven jar driver>
+RUN curl -o /opt/jboss/liquibase/lib/postgresql.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.12/postgresql-42.2.12.jar
+
+
+
 ### ------------------------- Postgresql module -----------------------------###
 
 WORKDIR ${JBOSS_HOME}
@@ -105,6 +125,9 @@ COPY --chown=jboss:jboss templates/standalone.xml ${JBOSS_HOME}/templates/standa
 COPY --chown=jboss:jboss templates/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 COPY --chown=jboss:jboss templates/profile.properties ${JBOSS_HOME}/standalone/configuration/profile.properties
 COPY --chown=jboss:jboss templates/keycloakdb ${JBOSS_HOME}/standalone/data/keycloakdb
+
+### Changelog files for Liquibase
+COPY --chown=jboss:jboss templates/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
 COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
