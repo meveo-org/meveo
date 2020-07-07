@@ -48,6 +48,7 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -810,5 +811,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 file.delete();
             }
         }
+    }
+
+    @Override
+    public MeveoModule findById(Long id, List<String> fetchFields, boolean refresh) {
+	    getEntityManager().clear();
+        return super.findById(id, fetchFields, refresh);
+    }
+
+    @Override
+    public List<MeveoModule> list(PaginationConfiguration config) {
+        getEntityManager().clear();
+        return super.list(config);
     }
 }
