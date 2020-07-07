@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<<<<<<< HEAD
 <!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and 
 	contributors. ~ ~ This program is free software: you can redistribute it 
 	and/or modify it under the terms of the ~ GNU Affero General Public License 
@@ -30,4 +31,39 @@
 		</createTable>
 	</changeSet>
 
+=======
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+	<changeSet id="#4284 - FunctionCategory" author="Clément Bareth">
+		<createTable tableName="function_category">
+			<column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="version" type="INT4" />
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="disabled" type="INT4"/>
+            <column name="updated" type="datetime"/>
+            <column name="creator" type="varchar(100)"/>
+            <column name="updater" type="varchar(100)"/>
+            <column name="description" type="varchar(255)"/>
+            <column name="code" type="varchar(255)"/>
+		</createTable>
+		<addColumn tableName="meveo_function">
+			<column name="category_id" type="bigint">
+				<constraints references="function_category(id)" foreignKeyName="fk_category_id"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+>>>>>>> refs/remotes/origin/develop
 </databaseChangeLog>

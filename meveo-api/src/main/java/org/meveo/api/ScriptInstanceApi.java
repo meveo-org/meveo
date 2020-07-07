@@ -34,6 +34,7 @@ import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
@@ -52,6 +53,9 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Inject
 	private MavenDependencyService mavenDependencyService;
+	
+	@Inject
+	private FunctionCategoryService fcService;
 
 	public ScriptInstanceApi() {
 		super(ScriptInstance.class, ScriptInstanceDto.class);
@@ -233,6 +237,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setScript(dto.getScript());
 		scriptInstance.setSamples(dto.getSamples());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
+		
+		if(dto.getCategory() != null) {
+			scriptInstance.setCategory(fcService.findByCode(dto.getCategory()));
+		}
 
 		if (dto.getType() != null) {
 			scriptInstance.setSourceTypeEnum(dto.getType());

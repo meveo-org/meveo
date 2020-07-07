@@ -265,7 +265,7 @@ A completely configured file is available for reference link:standalone.xml[here
 * Download the eclipse installer.
 * Run the installer and select the Eclipse for JavaEE developers.
 
-### Install JBoss Tools Plugin
+#### Install JBoss Tools Plugin
 
 * Run Eclipse IDE.
 * Open menu Help / Eclipse Marketplace.
@@ -273,7 +273,7 @@ A completely configured file is available for reference link:standalone.xml[here
 * Find JBoss Tools and click Install.
 * Don't install all the components, select or filter maven, egit and jboss as.
 
-### Add both the Keycloak and Wildfly Server for Debugging
+#### Add both the Keycloak and Wildfly Server for Debugging
 
 * Open the Server tab by clicking Window / Show View / Other and filter for server.
 * Select servers, a new tab should open.
@@ -287,7 +287,7 @@ A completely configured file is available for reference link:standalone.xml[here
 
 Now you can start running either the Keycloak and Wildfly server in debug mode by right clicking on it and selecting Debug. You can click the Debug icon too.
 
-### Cloning the Meveo Project
+#### Cloning the Meveo Project
 
 This is done inside Eclipse IDE. Since we have installed egit component from JBoss Tools plugin, we can use it to checkout from Github.
 
@@ -304,7 +304,35 @@ This is done inside Eclipse IDE. Since we have installed egit component from JBo
 * Meveo projects should be visible in your Package or Project explorer, whichever is open.
 * Now you can start coding.
 
-### Deploying Meveo to Wildfly
+#### Adding meveo-ejb as a Source Folder
+
+You should have already cloned the meveo project before proceeding with these steps.
+
+* Build the meveo parent project, disregard the errors for now.
+* Expand the meveo-admin-ejbs project.
+* Expand the target/generated-sources folder.
+* Right click on the java folder, choose Build Path and select Use as Source Folder.
+* The source target/generated-sources/java folder, should be added in the root of meveo-admin-ejbs project.
+
+#### Install the EGIT Plugin using JBoss Tools
+
+* In Eclipse select Help / Eclipse Marketplace.
+* In the Search / Find field, enter "JBoss Tools".
+* Click JBoss Tools.
+* Check the maven related features like JBoss Maven Integration.
+
+#### Install the EGIT Plugin
+
+This is another way to install the EGIT plugin in case for some reason that you don't want to use the JBoss Tools plugin.
+
+* In Eclipse select File / New / Others.
+* In the Wizards panel, filter for maven.
+* Select Check out Maven Projects from SCM.
+* In the next panel, in the lower right corner, click m2e Marketplace.
+* In the m2e Catalog panel, enter "m2e-egit" in the Find field and hit enter.
+* Checked the m2e-egit feature and click ok.
+
+#### Deploying Meveo to Wildfly
 
 * Open the server tab once again.
 * Select Add and Remove.

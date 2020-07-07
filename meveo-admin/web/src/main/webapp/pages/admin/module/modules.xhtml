@@ -27,7 +27,14 @@
             <p:autoUpdate />
         </p:messages>
         <p:outputPanel id="listOfModules">
-	        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{meveoModuleListBean}" exportXlsxButton="false" exportToCsv="false" exportToJson="true" exportToXml="false">
+	        <hftl:dataList label="#{messages['meveoModule.title']}" 
+	        	backingBean="#{meveoModuleListBean}" 
+	        	exportXlsxButton="false" 
+	        	exportToCsv="false" 
+	        	exportToJson="true"
+	        	import="true"
+	        	exportToXml="false">
+	        	
 	            <hftl:column label="#{messages['BusinessEntity.code']}" field="code" useCustomIdParam="true"/>
 	            <hftl:column label="#{messages['BusinessEntity.description']}" field="description" />
 	            <p:column headerText="#{messages['meveoModule.logo']}">

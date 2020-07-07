@@ -1402,13 +1402,15 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public int getCacheNumRows() {
         String username = currentUser.getUserName();
 
-        String clazzName = clazz.getName();
-        Map<String, Integer> numberRow = cacheNumberRow.get(username);
-        if (numberRow != null && numberRow.get(clazzName) != null) {
-            return numberRow.get(clazzName);
-        } else {
-            return 10;
+        if(clazz != null) {
+	        String clazzName = clazz.getName();
+	        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+	        if (numberRow != null && numberRow.get(clazzName) != null) {
+	            return numberRow.get(clazzName);
+	        }
         }
+        
+        return 10;
     }
 
     /**
