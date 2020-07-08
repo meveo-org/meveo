@@ -309,4 +309,10 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 		return emWrapper.getEntityManager();
 	}
 
+	@Override
+	public TestResultDto update(TestResultDto entity, boolean asyncEvent) throws BusinessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
