@@ -442,13 +442,13 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.1</version>
+					<version>3.8.1</version>
 					<configuration>
 						<compilerArgs>
 							<arg>-Xlint:unchecked</arg>
 						</compilerArgs>
-						<source>1.8</source>
-						<target>1.8</target>
+						<source>11</source>
+						<target>11</target>
 						<useIncrementalCompilation>false</useIncrementalCompilation>
 					</configuration>
 				</plugin>
