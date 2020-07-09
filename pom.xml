@@ -6,7 +6,7 @@
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-    <version>6.10.0-SNAPSHOT</version>
+	<version>6.10.0-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<env>dev</env>
@@ -368,8 +368,8 @@
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
-			    <groupId>com.fasterxml.jackson.datatype</groupId>
-			    <artifactId>jackson-datatype-jsr310</artifactId>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-jsr310</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
 			<dependency>
@@ -442,13 +442,13 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.1</version>
+					<version>3.8.1</version>
 					<configuration>
 						<compilerArgs>
 							<arg>-Xlint:unchecked</arg>
 						</compilerArgs>
-						<source>1.8</source>
-						<target>1.8</target>
+						<source>11</source>
+						<target>11</target>
 						<useIncrementalCompilation>false</useIncrementalCompilation>
 					</configuration>
 				</plugin>
@@ -457,7 +457,7 @@
 					<artifactId>jboss-as-maven-plugin</artifactId>
 					<version>7.5.Final</version>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -554,16 +554,16 @@
 				</property>
 			</activation>
 			<properties>
-                <db.driver>org.postgresql.Driver </db.driver>
-                <db.schema>public</db.schema>
-            </properties>
+				<db.driver>org.postgresql.Driver</db.driver>
+				<db.schema>public</db.schema>
+			</properties>
 			<dependencies>
 				<!-- Dependency for liquibase plugin -->
 				<dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>9.2-1002-jdbc4</version>
-                </dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+					<version>42.2.5</version>
+				</dependency>
 				<dependency>
 					<groupId>org.liquibase.ext</groupId>
 					<artifactId>liquibase-postgresql</artifactId>
@@ -588,7 +588,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line:
+				<!-- Properties for liquibase plugin. Can be passed from a command line: 
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.mariadb.jdbc.Driver</db.driver>
 				<db.url>jdbc:mariadb://localhost:3306/meveo</db.url>
@@ -613,7 +613,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line:
+				<!-- Properties for liquibase plugin. Can be passed from a command line: 
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.postgresql.Driver</db.driver>
 				<db.url>jdbc:postgresql://localhost/integrmeveo</db.url>
@@ -626,7 +626,7 @@
 				<dependency>
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
-					<version>9.2-1002-jdbc4</version>
+					<version>42.2.5</version>
 				</dependency>
 				<dependency>
 					<groupId>org.liquibase.ext</groupId>
@@ -651,7 +651,7 @@
 				</property>
 			</activation>
 			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line:
+				<!-- Properties for liquibase plugin. Can be passed from a command line: 
 					mvn -Ddb.schema=ten2 -->
 				<db.driver>org.postgresql.Driver </db.driver>
 				<db.url>jdbc:postgresql://localhost/meveo</db.url>

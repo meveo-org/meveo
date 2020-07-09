@@ -113,7 +113,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.9.0
+ * @version 6.10
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -298,7 +298,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-            for (Accessor getter : script.getGetters()) {
+            for (Accessor getter : script.getGettersNullSafe()) {
                 try {
                     Object getterValue = engine.getClass().getMethod(getter.getMethodName()).invoke(engine);
                     context.put(getter.getName(), getterValue);
@@ -547,7 +547,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script instanceof ScriptInstance) {
             ScriptInstance scriptInstance = (ScriptInstance) script;
 
-            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
+            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
 
             synchronized (CLASSPATH_REFERENCE) {
                 mavenDependencies.stream().forEach(location -> {
@@ -1166,8 +1166,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         continue;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
-                    for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
+                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstancesNullSafe())) {
+                    for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
                         String path = instance.getCode().replace('.', '/');
                         File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
                         if (fileImport.exists()) {

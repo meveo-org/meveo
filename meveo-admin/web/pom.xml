@@ -300,11 +300,10 @@
 			<version>19.2.0.1</version>
 		</dependency>
 		<dependency>
-		    <groupId>io.undertow</groupId>
-		    <artifactId>undertow-servlet</artifactId>
-		    <scope>provided</scope>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-servlet</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 	<profiles>
 		<profile>
@@ -336,9 +335,9 @@
 			</activation>
 		</profile>
 		<profile>
-			<!-- An optional Arquillian testing profile that executes tests in your
+			<!-- An optional Arquillian testing profile that executes tests in your 
 				JBoss AS instance -->
-			<!-- This profile will start a new JBoss AS instance, and execute the
+			<!-- This profile will start a new JBoss AS instance, and execute the 
 				test, shutting it down when done -->
 			<!-- Run with: mvn clean test -Parq-jbossas-managed -->
 			<id>arq-jbossas-managed</id>

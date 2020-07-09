@@ -32,4 +32,10 @@
 		</addColumn>
 	</changeSet>
 	
+	<changeSet id="#16 - Add order to endpoint roles" author="EdwardPLegaspi">
+		<addColumn tableName="service_endpoint_roles">
+			<column name="pos" type="int" defaultValueNumeric="0" defaultValue="0"></column>
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>
