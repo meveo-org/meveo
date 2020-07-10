@@ -91,7 +91,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.9.0
+ * @lastModifiedVersion 6.10
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -294,8 +294,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                     if(removeItems) {
                         if (itemEntity instanceof Endpoint) {
                             Endpoint endpoint = (Endpoint) itemEntity;
-                            if (CollectionUtils.isNotEmpty(endpoint.getPathParameters())) {
+                            if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
                                 getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
+                                        .setParameter("endpointId", endpoint.getId())
+                                        .executeUpdate();
+                            }
+                            if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+                                getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
                                         .setParameter("endpointId", endpoint.getId())
                                         .executeUpdate();
                             }

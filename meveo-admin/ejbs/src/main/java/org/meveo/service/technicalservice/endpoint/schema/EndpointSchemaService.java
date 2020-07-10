@@ -3,6 +3,8 @@ package org.meveo.service.technicalservice.endpoint.schema;
 import java.util.Objects;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.meveo.api.swagger.SwaggerDocService;
@@ -23,9 +25,9 @@ import org.meveo.util.ClassUtils;
  * This service is used by Swagger to generate a complete endpoint js interface
  * that will be consume by the frontend application.
  * 
- * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * @since 6.9.0
- * @version 6.9.0
  * @see Endpoint
  * @see SwaggerDocService
  */
@@ -44,6 +46,7 @@ public class EndpointSchemaService {
 	 * @param endpoint the endpoint
 	 * @return request schema of the given endpoint
 	 */
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public String generateRequestSchema(Endpoint endpoint) {
 
 		EndpointSchema requestSchema = new EndpointSchema();
@@ -59,7 +62,8 @@ public class EndpointSchemaService {
 					EndpointParameter param = new EndpointParameter();
 					param.setId(endpoint.getCode() + "_" + tsParameterMapping.getParameterName());
 					param.setName(tsParameterMapping.getParameterName());
-					param.setType(ScriptUtils.findScriptVariableType(endpoint.getService(), tsParameterMapping.getEndpointParameter().getParameter()));
+					param.setType(ScriptUtils.findScriptVariableType(endpoint.getService(),
+							tsParameterMapping.getEndpointParameter().getParameter()));
 					param.setDefaultValue(tsParameterMapping.getDefaultValue());
 					requestSchema.addEndpointParameter(tsParameterMapping.getParameterName(), param);
 
@@ -87,7 +91,8 @@ public class EndpointSchemaService {
 
 		EndpointParameter result = null;
 		String cetCode = tsParameterMapping.getEndpointParameter().getParameter();
-		String parameterDataType = ScriptUtils.findScriptVariableType(service, tsParameterMapping.getEndpointParameter().getParameter());
+		String parameterDataType = ScriptUtils.findScriptVariableType(service,
+				tsParameterMapping.getEndpointParameter().getParameter());
 
 		if (ClassUtils.isPrimitiveOrWrapperType(parameterDataType)) {
 			result = buildPrimitiveDataType(tsParameterMapping.getParameterName(), parameterDataType);
@@ -112,6 +117,7 @@ public class EndpointSchemaService {
 	 * @param endpoint the endpoint
 	 * @return response schema of the given endpoint
 	 */
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public String generateResponseSchema(Endpoint endpoint) {
 
 		EndpointSchema responseSchema = new EndpointSchema();
@@ -133,9 +139,11 @@ public class EndpointSchemaService {
 
 		EndpointParameter result = null;
 
-		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null && CustomScript.class.isAssignableFrom(endpoint.getService().getClass())) {
+		if (!StringUtils.isBlank(endpoint.getReturnedVariableName()) && endpoint.getService() != null
+				&& CustomScript.class.isAssignableFrom(endpoint.getService().getClass())) {
 
-			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
+			String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(),
+					endpoint.getReturnedVariableName());
 
 			if (ClassUtils.isPrimitiveOrWrapperType(returnedVariableType)) {
 				result = buildPrimitiveDataType(endpoint.getReturnedVariableName(), returnedVariableType);

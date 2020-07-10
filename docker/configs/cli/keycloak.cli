@@ -1,0 +1,11 @@
+# keycloak-wildfly-adapter
+/extension=org.keycloak.keycloak-adapter-subsystem:add
+/subsystem=keycloak:add
+/subsystem=security/security-domain=keycloak:add
+#/subsystem=security/security-domain=keycloak/authentication=classic:add
+#/subsystem=security/security-domain=keycloak/authentication=classic/login-module=keycloak-login-module:add(code="org.keycloak.adapters.jboss.KeycloakLoginModule",flag="required")
+/subsystem=security/security-domain=keycloak/authentication=classic:add(login-modules=[{code="org.keycloak.adapters.jboss.KeycloakLoginModule",flag="required"}])
+
+# keycloak-saml-wildfly-adapter
+/extension=org.keycloak.keycloak-saml-adapter-subsystem:add
+/subsystem=keycloak-saml:add
