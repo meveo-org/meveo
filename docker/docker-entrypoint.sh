@@ -57,6 +57,13 @@ export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
 
 
+# Reset standalone-full.xml file
+if [ -f ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org ]; then
+    cp -rf ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org ${JBOSS_HOME}/standalone/configuration/standalone-full.xml
+else
+    ERROR=1; exit_with_error "No default configuration file : ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org"
+fi
+
 # Configure standalone-full.xml
 if [ -f ${JBOSS_HOME}/cli/standalone-configuration.cli ]; then
     info "Configure standalone-full.xml"
