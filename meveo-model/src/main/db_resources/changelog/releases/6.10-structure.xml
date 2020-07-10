@@ -38,4 +38,16 @@
 		</addColumn>
 	</changeSet>
 	
+	<changeSet id="#48 - Drop unused roles" author="EdwardPLegaspi">
+		<delete tableName="adm_role_permission">
+			<where>role_id IN (-5, -6)</where>
+		</delete>
+		<delete tableName="adm_user_role">
+			<where>role_id IN (-5, -6)</where>
+		</delete>
+		<delete tableName="adm_role">
+			<where>id IN (-5, -6)</where>
+		</delete>
+	</changeSet>
+	
 </databaseChangeLog>
