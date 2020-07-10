@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 
@@ -45,6 +46,7 @@ public class EndpointRequest {
 	private HttpServletRequest httpServletRequest;
 	private String remainingPath;
 
+	@SuppressWarnings("unused")
 	public EndpointRequest(HttpServletRequest httpServletRequest, Endpoint endpoint) {
 		this.httpServletRequest = httpServletRequest;
 
@@ -52,13 +54,15 @@ public class EndpointRequest {
 		if (endpoint != null) {
 			remainingPath = httpServletRequest.getPathInfo();
 			remainingPath = remainingPath.replace("/" + endpoint.getCode(), "");
-			for (EndpointPathParameter p : endpoint.getPathParametersNullSafe()) {
-				final int slashIdx = remainingPath.indexOf("/");
-				if (remainingPath.substring(slashIdx + 1).contains("/")) {
-					final int secondSlashIdx = remainingPath.substring(slashIdx + 1).indexOf("/") + 1;
-					remainingPath = getRemainingPath().substring(secondSlashIdx);
-				} else {
-					remainingPath = remainingPath.substring(slashIdx);
+			if (!StringUtils.isBlank(remainingPath)) {
+				for (EndpointPathParameter p : endpoint.getPathParametersNullSafe()) {
+					final int slashIdx = remainingPath.indexOf("/");
+					if (remainingPath.substring(slashIdx + 1).contains("/")) {
+						final int secondSlashIdx = remainingPath.substring(slashIdx + 1).indexOf("/") + 1;
+						remainingPath = getRemainingPath().substring(secondSlashIdx);
+					} else {
+						remainingPath = remainingPath.substring(slashIdx);
+					}
 				}
 			}
 		}
