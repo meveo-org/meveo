@@ -29,6 +29,7 @@ services:
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
         WILDFLY_DEBUG_ENABLE: "false"    # default: false
+        #KEYCLOAK_URL: https://<keycloak-domain>/auth
       ports:
         - 8080:8080
       depends_on:
