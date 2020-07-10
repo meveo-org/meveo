@@ -295,7 +295,6 @@ public class PostgresReserverdKeywords {
 			"MORE",
 			"MOVE",
 			"MUMPS",
-			"NAME",
 			"NAMES",
 			"NATIONAL",
 			"NATURAL",

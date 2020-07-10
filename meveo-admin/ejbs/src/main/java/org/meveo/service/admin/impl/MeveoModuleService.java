@@ -298,6 +298,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                                         .setParameter("endpointId", endpoint.getId())
                                         .executeUpdate();
                             }
+                            if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+                                getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
+                                        .setParameter("endpointId", endpoint.getId())
+                                        .executeUpdate();
+                            }
                             Function service = concreteFunctionService.findById(endpoint.getService().getId());
                             getEntityManager().createNamedQuery("Endpoint.deleteByService")
                                     .setParameter("serviceId", service.getId())

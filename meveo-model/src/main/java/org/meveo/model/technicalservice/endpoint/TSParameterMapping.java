@@ -17,10 +17,7 @@
  */
 package org.meveo.model.technicalservice.endpoint;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.hibernate.annotations.Type;
 
@@ -34,6 +31,7 @@ import org.hibernate.annotations.Type;
  */
 @Entity
 @Table(name = "service_parameter_mapping")
+@NamedQuery(name = "TSParameterMapping.deleteByEndpoint", query = "DELETE from TSParameterMapping m WHERE m.endpointParameter.endpoint.id=:endpointId")
 public class TSParameterMapping {
 
 	@EmbeddedId
