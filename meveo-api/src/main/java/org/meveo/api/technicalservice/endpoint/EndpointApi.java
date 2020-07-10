@@ -221,9 +221,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		// Assign path parameters
 		List<String> missingPathParameters = new ArrayList<>();
 
+		if (pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
+			throw new IllegalArgumentException("Path parameters does not match with endpoint.");
+		}
+
 		if (pathParameters.isEmpty() && !endpoint.getPathParametersNullSafe().isEmpty()) {
-			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream().map(EndpointPathParameter::toString)
-					.collect(Collectors.toList()));
+			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream()
+					.map(EndpointPathParameter::toString).collect(Collectors.toList()));
 
 		} else {
 			for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
@@ -410,7 +414,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
-				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMappingNullSafe().stream()
+				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMappingNullSafe()
+						.stream()
 						.noneMatch(f -> e.getParameterName().contentEquals(f.getParameterName())
 								&& e.getServiceParameter().contentEquals(f.getEndpointParameter().getParameter())))
 						.forEach(g -> {
