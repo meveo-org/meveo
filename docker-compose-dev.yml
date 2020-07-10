@@ -3,8 +3,6 @@ version: '3'
 volumes:
   postgres_data:
       driver: local
-  keycloak_data:
-      driver: local
   meveo_data:
       driver: local
   meveo_binary_data:
@@ -27,7 +25,6 @@ services:
       image: manaty/wildfly-meveo:dev-latest
       container_name: meveo
       volumes:
-        - keycloak_data:/opt/jboss/wildfly/standalone/data/keycloakdb
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
