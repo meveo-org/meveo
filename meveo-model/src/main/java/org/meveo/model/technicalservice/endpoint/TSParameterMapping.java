@@ -26,8 +26,8 @@ import org.hibernate.annotations.Type;
  *
  * @author clement.bareth
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * @since 01.02.2019
- * @version 6.9.0
  */
 @Entity
 @Table(name = "service_parameter_mapping")

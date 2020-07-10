@@ -296,4 +296,10 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 		return emWrapper.getEntityManager();
 	}
 
+	@Override
+	public CategoryTest update(CategoryTest entity, boolean asyncEvent) throws BusinessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

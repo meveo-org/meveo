@@ -1,5 +1,5 @@
 # $WILDFLY_HOME/bin/jboss-cli.sh --file=/path/to/this/file.
-embed-server --server-config=standalone.xml
+embed-server --server-config=standalone-full.xml
 batch
 /subsystem=logging/periodic-rotating-file-handler=accesslog-handler:write-attribute(name="level", value="OFF")
 /subsystem=logging/periodic-rotating-file-handler=FILE:write-attribute(name="level", value="OFF")

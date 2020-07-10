@@ -23,6 +23,10 @@ import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ */
 public class ESGeneratorTest {
 
     private static final Endpoint getEndpoint = initGetEndpoint();
@@ -37,14 +41,14 @@ public class ESGeneratorTest {
         EndpointParameter first = new EndpointParameter();
         endpointPathParameter.setEndpointParameter(first);
         first.setParameter("first");
-        endpoint.getPathParameters().add(endpointPathParameter);
+        endpoint.getPathParametersNullSafe().add(endpointPathParameter);
 
         TSParameterMapping parameterMapping = new TSParameterMapping();
         EndpointParameter body = new EndpointParameter();
         body.setParameter("bodyParam1");
         parameterMapping.setParameterName("myFunctionParam");
         parameterMapping.setEndpointParameter(body);
-        endpoint.getParametersMapping().add(parameterMapping);
+        endpoint.getParametersMappingNullSafe().add(parameterMapping);
 
         return endpoint;
     }
@@ -58,21 +62,21 @@ public class ESGeneratorTest {
         EndpointParameter first = new EndpointParameter();
         endpointPathParameter.setEndpointParameter(first);
         first.setParameter("first");
-        endpoint.getPathParameters().add(endpointPathParameter);
+        endpoint.getPathParametersNullSafe().add(endpointPathParameter);
 
         TSParameterMapping parameterMapping = new TSParameterMapping();
         EndpointParameter body = new EndpointParameter();
         body.setParameter("bodyParam1");
         parameterMapping.setParameterName("myFunctionParam");
         parameterMapping.setEndpointParameter(body);
-        endpoint.getParametersMapping().add(parameterMapping);
+        endpoint.getParametersMappingNullSafe().add(parameterMapping);
 
         TSParameterMapping parameterMapping2 = new TSParameterMapping();
         EndpointParameter body2 = new EndpointParameter();
         body2.setParameter("bodyParam2");
         parameterMapping2.setParameterName("myFunctionParam2");
         parameterMapping2.setEndpointParameter(body2);
-        endpoint.getParametersMapping().add(parameterMapping2);
+        endpoint.getParametersMappingNullSafe().add(parameterMapping2);
 
         return endpoint;
     }

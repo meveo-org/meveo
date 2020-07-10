@@ -107,8 +107,6 @@ public class WarningAssertionGui extends AbstractAssertionGui {
 		WarningAssertion wa = (WarningAssertion) element;
 		regex.setText(wa.getRegex());
 		
-		log.info("Status code :", wa.getStatusCode());
-
 		if(wa.getStatusCode() != -1) {
 			code.setText(String.valueOf(wa.getStatusCode()));
 		} else {

@@ -17,94 +17,97 @@
  */
 package org.meveo.api.dto.technicalservice.endpoint;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.meveo.api.dto.technicalservice.InputPropertyDto;
-
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Configration of how a GET or POST parameter will be exposed
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 public class TSParameterMappingDto implements Serializable {
 
-    /**
-     * Technical service's parameter to map
-     */
-    @JsonProperty(required = true)
-    private String serviceParameter;
+	private static final long serialVersionUID = -8011884518495291872L;
 
-    /**
-     * Whether the parameter is multivalued
-     */
-    @JsonProperty(required = true)
-    private String multivalued;
+	/**
+	 * Technical service's parameter to map
+	 */
+	@JsonProperty(required = true)
+	private String serviceParameter;
 
-    /**
-     * Name of the parameter as exposed by the endpoint
-     */
-    @JsonProperty
-    private String parameterName;
+	/**
+	 * Whether the parameter is multivalued
+	 */
+	@JsonProperty(required = true)
+	private Boolean multivalued;
 
-    /**
-     * Default value to give to the parameter
-     */
-    @JsonProperty(required = true)
-    private String defaultValue;
+	/**
+	 * Name of the parameter as exposed by the endpoint
+	 */
+	@JsonProperty
+	private String parameterName;
 
-    /**
+	/**
+	 * Default value to give to the parameter
+	 */
+	@JsonProperty(required = true)
+	private String defaultValue;
+
+	/**
 	 * When this value is set to true, the min length of string and array objects
 	 * must be set to 1 by default or they should not be null.
 	 */
-    @JsonProperty
-    protected Boolean valueRequired = false;
+	@JsonProperty
+	protected Boolean valueRequired = false;
 
-    public String getServiceParameter() {
-        return serviceParameter;
-    }
+	public String getServiceParameter() {
+		return serviceParameter;
+	}
 
-    public void setServiceParameter(String serviceParameter) {
-        this.serviceParameter = serviceParameter;
-    }
+	public void setServiceParameter(String serviceParameter) {
+		this.serviceParameter = serviceParameter;
+	}
 
-    public String getParameterName() {
-        return parameterName;
-    }
+	public String getParameterName() {
+		return parameterName;
+	}
 
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
-    }
+	public void setParameterName(String parameterName) {
+		this.parameterName = parameterName;
+	}
 
-    public String getDefaultValue() {
-        return defaultValue;
-    }
+	public String getDefaultValue() {
+		return defaultValue;
+	}
 
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 
-    public String getMultivalued() {
-        return multivalued;
-    }
+	public Boolean getMultivalued() {
+		return multivalued == null ? false : multivalued;
+	}
 
-    public void setMultivalued(String multivalued) {
-        this.multivalued = multivalued;
-    }
+	public void setMultivalued(Boolean multivalued) {
+		this.multivalued = multivalued;
+	}
 
 	/**
 	 * Retrieves the boolean value of whether this parameter is required.
 	 * 
 	 * @return true if this parameter is required
 	 */
-    public Boolean getValueRequired() {
-        return valueRequired;
-    }
+	public Boolean getValueRequired() {
+		return valueRequired;
+	}
 
 	/**
 	 * Sets whether this parameter is required or not.
 	 * 
 	 * @param valueRequired boolean value
 	 */
-    public void setValueRequired(Boolean valueRequired) {
-        this.valueRequired = valueRequired;
-    }
+	public void setValueRequired(Boolean valueRequired) {
+		this.valueRequired = valueRequired;
+	}
 }

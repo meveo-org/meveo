@@ -1,0 +1,2 @@
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:remove
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=mail-smtp:add(host=smtp.gmail.com,port=465)
