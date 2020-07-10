@@ -35,7 +35,7 @@ WORKDIR /opt/jboss
 
 # Set the WILDFLY_VERSION env variable
 ENV WILDFLY_VERSION 18.0.1.Final
-ENV WILDFLY_SHA1=ef0372589a0f08c36b15360fe7291721a7e3f7d9
+ARG WILDFLY_SHA1=ef0372589a0f08c36b15360fe7291721a7e3f7d9
 ENV JBOSS_HOME /opt/jboss/wildfly
 
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
