@@ -96,7 +96,7 @@ WORKDIR ${JBOSS_HOME}
 
 ARG POSTGRESQL_VERSION=42.2.5
 
-COPY --chown=jboss:jboss templates/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+COPY --chown=jboss:jboss configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
 
 RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION}.jar \
     && mv postgresql-${POSTGRESQL_VERSION}.jar ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/ \
@@ -114,13 +114,13 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
     && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
 
 ### cli commands
-COPY --chown=jboss:jboss tools/cli ${JBOSS_HOME}/cli
+COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss templates/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 
 ### Changelog files for Liquibase
-COPY --chown=jboss:jboss templates/db_resources /opt/jboss/liquibase/db_resources
+COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
 COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
