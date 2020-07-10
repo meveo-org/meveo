@@ -77,8 +77,7 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 . In the left panel, hover on Master and click Add Realm.
 . In the right panel, click Select a file and choose `meveo-realm.json` file. [Meveo Realm](./src/main/resources/meveo-realm.json)
 . Click create. The Meveo realm should be created and it should now be the selected realm.
-. Back in the left panel, click Import / Select a file and select `meveo-users-0.json` file. [Meveo Users](./src/main/resources/meveo-users-0.json)
-. Hit import.
+. The default meveo clients, roles and users should be created as well.
 
 To check if meveo realm is correctly configured:
 
