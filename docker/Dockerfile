@@ -74,7 +74,7 @@ RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/adapters/sa
 # Ref: https://github.com/liquibase/docker/blob/main/Dockerfile
 
 # Create a directory to install liquibase
-RUN mkdir /opt/jboss/liquibase
+RUN mkdir -p /opt/jboss/liquibase
 WORKDIR /opt/jboss/liquibase
 
 # Latest Liquibase Release Version
