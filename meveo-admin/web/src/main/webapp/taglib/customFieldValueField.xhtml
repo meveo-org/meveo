@@ -113,7 +113,7 @@
         	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
         	placeholder="#{cft.description}"
             converter="entityReferenceValueConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e"
-            itemLabel="#{not empty e.code ? e.code : e.uuid}"
+            itemLabel="#{e.code}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
             <p:column width="50" headerText="UUID">

@@ -669,7 +669,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 * @return the cet id
 	 */
     public Long getCetId(String entityClazz) {
-        if (entityClazz.startsWith("org.meveo")) {
+        if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomFieldTemplate.retrieveCetCode(entityClazz));
             return cet.getId();
         }
