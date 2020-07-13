@@ -1,0 +1,55 @@
+# PostgreSQL Driver
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+    driver-name="postgresql", \
+    driver-module-name="org.postgresql", \
+    driver-class-name="org.postgresql.Driver", \
+    driver-xa-datasource-class-name="org.postgresql.xa.PGXADataSource" \
+)
+
+# Remove the example datasource
+#/subsystem=datasources/data-source=ExampleDS:remove
+
+# Add a meveo datasource
+xa-data-source add --name=meveo \
+    --jndi-name=java:jboss/datasources/MeveoAdminDatasource \
+    --enabled=true \
+    --use-java-context=true \
+    --spy=false \
+    --use-ccm=false \
+    --xa-datasource-properties=[ServerName=${meveo.admin.server.name},PortNumber=${meveo.admin.port.number},DatabaseName=${meveo.admin.database.name}] \
+    --driver-name=postgresql \
+    --min-pool-size=10 \
+    --max-pool-size=200 \
+    --pool-prefill=false \
+    --pool-use-strict-min=false \
+    --flush-strategy=FailingConnectionOnly \
+    --user-name=${meveo.admin.database.username} \
+    --password=${meveo.admin.database.password} \
+    --valid-connection-checker-class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker" \
+    --validate-on-match=true \
+    --background-validation=false \
+    --use-fast-fail=true \
+    --exception-sorter-class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter" \
+    --blocking-timeout-wait-millis=60000 \
+    --idle-timeout-minutes=15 \
+    --share-prepared-statements=true
+
+
+#/subsystem=datasources/xa-data-source=meveo:add( \
+#    driver-name="postgresql", \
+#    jndi-name="java:jboss/datasources/MeveoAdminDatasource", \
+#    user-name=${meveo.admin.database.username}, \
+#    password=${meveo.admin.database.password}, \
+#    min-pool-size=10, \
+#    max-pool-size=200, \
+#    pool-prefill=false, \
+#    enabled=false, \
+#    use-java-context=true \
+#)
+#/subsystem=datasources/xa-data-source=meveo/xa-datasource-properties=ServerName:add(value=${meveo.admin.server.name})
+#/subsystem=datasources/xa-data-source=meveo/xa-datasource-properties=PortNumber:add(value=${meveo.admin.port.number})
+#/subsystem=datasources/xa-data-source=meveo/xa-datasource-properties=DatabaseName:add(value=${meveo.admin.database.name})
+# Enable the datasource
+#xa-data-source enable --name=meveo
+# OR
+#/profile=full-ha/subsystem=datasources/xa-data-source=meveo:enable

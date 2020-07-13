@@ -59,6 +59,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * Header "Wait-For-Finish" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
  * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
@@ -131,9 +133,9 @@ public class EndpointServlet extends HttpServlet {
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
         // Check if a required parameter is missing at endpoint execution
-        if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+        if (CollectionUtils.isNotEmpty(endpoint.getParametersMappingNullSafe())) {
             List<TSParameterMapping> requiredParameters = new ArrayList<>();
-            for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+            for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
                 if (tsParameterMapping.isValueRequired() && tsParameterMapping.getDefaultValue() == null) {
                     requiredParameters.add(tsParameterMapping);
                 }

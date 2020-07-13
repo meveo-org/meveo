@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -30,7 +32,14 @@ public class Function extends BusinessEntity {
 
 	private static final long serialVersionUID = -1615762108685208441L;
 	
+	/**
+	* Default function type
+	*/
 	public static final String UNKNOWN = "Unknown";
+	
+	@ManyToOne(optional = true)
+	@JoinColumn(name = "category_id")
+	private FunctionCategory category;
 
 	@Column(name = "function_version")
 	private Integer functionVersion = 1;
@@ -105,4 +114,13 @@ public class Function extends BusinessEntity {
 	public void setSamples(List<Sample> samples) {
 		this.samples = samples;
 	}
+
+	public FunctionCategory getCategory() {
+		return category;
+	}
+
+	public void setCategory(FunctionCategory category) {
+		this.category = category;
+	}
+
 }

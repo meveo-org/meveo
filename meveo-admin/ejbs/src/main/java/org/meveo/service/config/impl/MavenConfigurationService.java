@@ -145,6 +145,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public void onDependencyUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated MavenDependency d) {
+		log.debug("[CDI event] on dependency update with id={}", d.getArtifactId());
 		if (!createdBuffer.contains(d)) {
 			updatedBuffer.add(d);
 		}

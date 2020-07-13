@@ -34,12 +34,13 @@ import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.10
  **/
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
@@ -52,6 +53,9 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Inject
 	private MavenDependencyService mavenDependencyService;
+	
+	@Inject
+	private FunctionCategoryService fcService;
 
 	public ScriptInstanceApi() {
 		super(ScriptInstance.class, ScriptInstanceDto.class);
@@ -233,6 +237,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setScript(dto.getScript());
 		scriptInstance.setSamples(dto.getSamples());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
+		
+		if(dto.getCategory() != null) {
+			scriptInstance.setCategory(fcService.findByCode(dto.getCategory()));
+		}
 
 		if (dto.getType() != null) {
 			scriptInstance.setSourceTypeEnum(dto.getType());
@@ -246,7 +254,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			if (role == null) {
 				throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
 			}
-			scriptInstance.getExecutionRoles().add(role);
+			scriptInstance.getExecutionRolesNullSafe().add(role);
 		}
 
 		for (RoleDto roleDto : dto.getSourcingRoles()) {
@@ -254,7 +262,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			if (role == null) {
 				throw new EntityDoesNotExistsException(Role.class, roleDto.getName(), "name");
 			}
-			scriptInstance.getSourcingRoles().add(role);
+			scriptInstance.getSourcingRolesNullSafe().add(role);
 		}
 
 		Set<MavenDependency> mavenDependencyList = new HashSet<>();
@@ -266,8 +274,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
 			mavenDependencyList.add(mavenDependency);
 		}
-		scriptInstance.getMavenDependencies().clear();
-		scriptInstance.getMavenDependencies().addAll(mavenDependencyList);
+		scriptInstance.getMavenDependenciesNullSafe().clear();
+		scriptInstance.getMavenDependenciesNullSafe().addAll(mavenDependencyList);
 
 		if (!mavenDependencyList.isEmpty()) {
 			Integer line = 1;
@@ -291,15 +299,15 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				
                 MavenDependency existingDependency = mavenDependencyService.find(maven.getBuiltCoordinates());
                 if(existingDependency != null) {
-                	scriptInstance.getMavenDependencies().remove(existingDependency);
-                	scriptInstance.getMavenDependencies().add(existingDependency);
+                	scriptInstance.getMavenDependenciesNullSafe().remove(existingDependency);
+                	scriptInstance.getMavenDependenciesNullSafe().add(existingDependency);
                 }
 			}
 		}
 
 		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance.getScript());
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
-			scriptInstance.getImportScriptInstances().addAll(importedScripts);
+			scriptInstance.getImportScriptInstancesNullSafe().addAll(importedScripts);
 		}
 
 		return scriptInstance;

@@ -2,7 +2,7 @@ language: java
 
 os: linux
 dist: bionic
-jdk: openjdk8
+jdk: openjdk11
 
 cache:
   directories:
@@ -31,7 +31,7 @@ env:
   - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
 
   # get all the branches referencing this commit
-  - REAL_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
+  #- REAL_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
 
   # or check if we are on a particular branch:
   #- IS_RELEASE=$(git ls-remote origin | grep "$TRAVIS_COMMIT\s\+refs/heads/release$"
@@ -39,9 +39,17 @@ env:
 
 before_install:
   #- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-  - echo "REAL_BRANCH=${REAL_BRANCH}, TRAVIS_BRANCH=${TRAVIS_BRANCH}, TAG=${TRAVIS_TAG} !!!"
+  - echo "TRAVIS_BRANCH=${TRAVIS_BRANCH}, TAG=${TRAVIS_TAG} !!!"
 
-  - if [ "${REAL_BRANCH}" == "master" ]; then export DOCKER_IMAGE_TAG="latest"; else export DOCKER_IMAGE_TAG="dev-latest"; fi
+  - |
+    if [ "${TRAVIS_BRANCH}" == "master" ]; then
+      export DOCKER_IMAGE_TAG="latest"
+    elif [ "${TRAVIS_BRANCH}" == "develop" ]; then
+      export DOCKER_IMAGE_TAG="dev-latest"
+    else
+      export DOCKER_IMAGE_TAG="${TRAVIS_BRANCH//[ \/]/-}"
+    fi
+    echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}"
 
   - |
     echo "Checking if a CI run is needed post commit: ${TRAVIS_COMMIT_RANGE}"
@@ -71,7 +79,7 @@ before_script:
 
   # Pull the necessary docker images in advance
   - docker pull postgres:9.5.21
-  - docker pull openjdk:8u242-jdk-slim-buster
+  - docker pull openjdk:11-jdk-slim-buster
   - if docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "postgres pulled up"; fi
   - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
 
