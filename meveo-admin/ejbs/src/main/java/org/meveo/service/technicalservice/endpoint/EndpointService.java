@@ -16,13 +16,10 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -32,11 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.Updated;
 import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
@@ -44,7 +37,6 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.base.BusinessService;
-import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 
@@ -59,217 +51,164 @@ import org.meveo.service.git.MeveoRepository;
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
 
-    public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
-    public static final String ENDPOINTS_CLIENT = "endpoints";
-    public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
-    public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
+	public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
+	public static final String ENDPOINTS_CLIENT = "endpoints";
+	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
+	public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
 
-    @Context
-    private HttpServletRequest request;
+	@Context
+	private HttpServletRequest request;
 
-    @Inject
-    @MeveoRepository
-    private GitRepository meveoRepository;
+	@EJB
+	private KeycloakAdminClientService keycloakAdminClientService;
 
-    @Inject
-    private GitClient gitClient;
+	@Inject
+	@MeveoRepository
+	private GitRepository meveoRepository;
 
-    @EJB
-    private KeycloakAdminClientService keycloakAdminClientService;
-    
-    @Inject
-    private ESGeneratorService esGeneratorService;
+	public static String getEndpointPermission(Endpoint endpoint) {
+		return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
+	}
 
-    public static String getEndpointPermission(Endpoint endpoint) {
-        return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
-    }
-    
-    /**
-     * Retrieve all endpoints associated to the given service
-     *
-     * @param code Code of the service
-     * @return All endpoints associated to the service with the provided code
-     */
-    public List<Endpoint> findByServiceCode(String code){
-        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<Endpoint> query = cb.createQuery(Endpoint.class);
-        Root<Endpoint> root = query.from(Endpoint.class);
-        final Join<Endpoint, Function> service = root.join("service");
-        query.where(cb.equal(service.get("code"), code));
-        return getEntityManager().createQuery(query).getResultList();
-    }
+	/**
+	 * Retrieve all endpoints associated to the given service
+	 *
+	 * @param code Code of the service
+	 * @return All endpoints associated to the service with the provided code
+	 */
+	public List<Endpoint> findByServiceCode(String code) {
+		CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+		CriteriaQuery<Endpoint> query = cb.createQuery(Endpoint.class);
+		Root<Endpoint> root = query.from(Endpoint.class);
+		final Join<Endpoint, Function> service = root.join("service");
+		query.where(cb.equal(service.get("code"), code));
+		return getEntityManager().createQuery(query).getResultList();
+	}
 
-    /**
-     * @param code  Code of the service associated to the endpoint
-     * @param parameterName Filter on endpoint's parameters names
-     * @return the filtered list of endpoints
-     */
-    public List<Endpoint> findByParameterName(String code, String parameterName){
-        return getEntityManager()
-                .createNamedQuery("findByParameterName", Endpoint.class)
-                .setParameter("serviceCode", code)
-                .setParameter("propertyName", parameterName)
-                .getResultList();
-    }
+	/**
+	 * @param code          Code of the service associated to the endpoint
+	 * @param parameterName Filter on endpoint's parameters names
+	 * @return the filtered list of endpoints
+	 */
+	public List<Endpoint> findByParameterName(String code, String parameterName) {
+		return getEntityManager().createNamedQuery("findByParameterName", Endpoint.class)
+				.setParameter("serviceCode", code).setParameter("propertyName", parameterName).getResultList();
+	}
 
-    /**
-     * Create a new endpoint in database. Also create associated client and roles in keycloak.
-     *
-     * @param entity Endpoint to create
-     */
-    @Override
-    public void create(Endpoint entity) throws BusinessException {
+	/**
+	 * Create a new endpoint in database. Also create associated client and roles in
+	 * keycloak.
+	 *
+	 * @param entity Endpoint to create
+	 */
+	@Override
+	public void create(Endpoint entity) throws BusinessException {
 
-        // Create client if not exitsts
-        keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+		// Create client if not exitsts
+		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-        String endpointPermission = getEndpointPermission(entity);
+		String endpointPermission = getEndpointPermission(entity);
 
-        // Create endpoint permission and add it to Execute_All_Endpoints composite
-        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
+		// Create endpoint permission and add it to Execute_All_Endpoints composite
+		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
-        // Create endpointManagement role in default client if not exists
-        KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-        keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
+		// Create endpointManagement role in default client if not exists
+		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+		keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
 
-        // Add endpoint role and selected composite roles
-        if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-            for (String compositeRole : entity.getRoles()) {
-                keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
-            }
-        }
+		// Add endpoint role and selected composite roles
+		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+			for (String compositeRole : entity.getRoles()) {
+				keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+						endpointPermission, compositeRole);
+			}
+		}
 
-        // Add Execute_All_Endpoints to endpointManagement composite if not already in
-        keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
-        
-        super.create(entity);
-    }
+		// Add Execute_All_Endpoints to endpointManagement composite if not already in
+		keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+				EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
 
-    /**
-     * Remove an endpoint from database. Also remove associated role in keycloak.
-     *
-     * @param entity Endpoint to remove
-     */
-    @Override
-    public void remove(Endpoint entity) throws BusinessException {
-        super.remove(entity);
-        String role = getEndpointPermission(entity);
-        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
-        if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-            for (String compositeRole : entity.getRoles()) {
-                keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
-            }
-        }
-        keycloakAdminClientService.removeRole(role);
-    }
+		super.create(entity);
+	}
 
-    /**
-     * Update an endpoint.
-     *
-     * @param entity Endpoint to update
-     * @return the updated endpoint
-     */
-    @Override
-    public Endpoint update(Endpoint entity) throws BusinessException {
-    	
-        Endpoint endpoint = findById(entity.getId());
-        String oldEndpointPermission = getEndpointPermission(endpoint);
+	/**
+	 * Remove an endpoint from database. Also remove associated role in keycloak.
+	 *
+	 * @param entity Endpoint to remove
+	 */
+	@Override
+	public void remove(Endpoint entity) throws BusinessException {
+		super.remove(entity);
+		String role = getEndpointPermission(entity);
+		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
+		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+			for (String compositeRole : entity.getRoles()) {
+				keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
+			}
+		}
+		keycloakAdminClientService.removeRole(role);
+	}
 
-        keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
+	/**
+	 * Update an endpoint.
+	 *
+	 * @param entity Endpoint to update
+	 * @return the updated endpoint
+	 */
+	@Override
+	public Endpoint update(Endpoint entity) throws BusinessException {
 
-        // Create client if not exitsts
-        keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+		Endpoint endpoint = findById(entity.getId());
+		String oldEndpointPermission = getEndpointPermission(endpoint);
 
-        String endpointPermission = getEndpointPermission(entity);
+		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
 
-        // Create endpoint permission and add it to Execute_All_Endpoints composite
-        keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
+		// Create client if not exitsts
+		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-        KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-        List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(), keycloakConfig.getRealm());
-        for (String compositeRole: roles) {
-            if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
-                keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
-            }
-        }
+		String endpointPermission = getEndpointPermission(entity);
 
-        for (String compositeRole: entity.getRoles()) {
-            keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(), endpointPermission, compositeRole);
-        }
+		// Create endpoint permission and add it to Execute_All_Endpoints composite
+		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
-        super.update(entity);
-        
-        return entity;
-    }
+		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(),
+				keycloakConfig.getRealm());
+		for (String compositeRole : roles) {
+			if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
+				keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
+			}
+		}
 
-    /**
-     * Create and commit the generated JS file to call the endpoint.
-     * Automatically called at endpoint's creation.
-     *
-     * @param endpoint Created endpoint
-     * @return the generated file
-     * @throws IOException if file cannot be created
-     * @throws BusinessException if the changes can't be commited
-     */
-    public File createESFile(@Observes @Created Endpoint endpoint) throws IOException, BusinessException {
-        final File scriptFile = getScriptFile(endpoint);
-        FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint));
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
-        return scriptFile;
-    }
+		for (String compositeRole : entity.getRoles()) {
+			keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+					endpointPermission, compositeRole);
+		}
 
-    /**
-     * Update (or create if not exists yet) the generated JS file to call the endpoint and commit the changes if there are any.
-     * Automatically called at endpoint's update.
-     *
-     * @param endpoint Updated endpoint
-     * @return the updated generated file
-     * @throws IOException if file cannot be created or overwritten
-     * @throws BusinessException if the changes can't be commited
-     */
-    public File updateESFile(@Observes @Updated Endpoint endpoint) throws IOException, BusinessException {
-        final File scriptFile = getScriptFile(endpoint);
-        String updatedScript = esGeneratorService.buildJSInterface(endpoint);
+		entity = super.update(entity);
 
-        if(!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
-            FileUtils.write(scriptFile, updatedScript);
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
-        }
+		return entity;
+	}
 
-        return scriptFile;
-    }
-
-    /**
-     * Remove the generated JS file from Meveo git repository.
-     * Called at endpoint's deletion.
-     *
-     * @param endpoint Removed endpoint
-     * @return the result of {@link File#delete()} called on the script file
-     * @throws BusinessException if the changes can't be commited
-     */
-    public boolean removeESFile(@Observes @Removed Endpoint endpoint) throws BusinessException {
-        File scriptFile = getScriptFile(endpoint);
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
-        return scriptFile.delete();
-    }
-
-    public File getScriptFile(Endpoint endpoint) {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-        final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
-        endpointDir.mkdirs();
-        return new File(endpointDir, endpoint.getCode() + ".js");
-    }
-
-    /**
-     * Checks if an endpoint interface is already created and pushed in git repository.
-     * @param endpoint endpoint to search
-     * @return true if endpoint interface exists
-     */
+	/**
+	 * Checks if an endpoint interface is already created and pushed in git
+	 * repository.
+	 * 
+	 * @param endpoint endpoint to search
+	 * @return true if endpoint interface exists
+	 */
 	public boolean isEndpointScriptExists(Endpoint endpoint) {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
 		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
 		File f = new File(endpointDir, endpoint.getCode() + ".js");
 
 		return f.exists() && !f.isDirectory();
+	}
+
+	public File getScriptFile(Endpoint endpoint) {
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
+		endpointDir.mkdirs();
+		return new File(endpointDir, endpoint.getCode() + ".js");
 	}
 }

@@ -281,4 +281,10 @@ public interface IPersistenceService<E extends IEntity> {
 	 * @return entity matching the code
 	 */
 	E findByCode(String code);
+	
+	/**
+	 * @see org.meveo.service.base.local.IPersistenceService#update(org.meveo.model.IEntity)
+	 */
+	E update(E entity, boolean asyncEvent) throws BusinessException;
+
 }

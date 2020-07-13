@@ -5,7 +5,6 @@
     <include file="db.properties.xml" relativeToChangelogFile="true" />
 
     <include file="rebuild/structure.xml" relativeToChangelogFile="true" />
-    <include file="rebuild/structure.xml" relativeToChangelogFile="true" />
     <include file="rebuild/data.xml" relativeToChangelogFile="true" />
     <include file="db.current.xml" relativeToChangelogFile="true" />
 

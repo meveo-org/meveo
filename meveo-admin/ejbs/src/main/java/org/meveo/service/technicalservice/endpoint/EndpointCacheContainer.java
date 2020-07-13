@@ -38,21 +38,21 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /**
- * @author Clément Bareth * 
+ * @author Clément Bareth *
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.9.0
+ * @version 6.10
  */
 @Singleton
 @Startup
 public class EndpointCacheContainer {
 
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
-    private Cache<String, PendingResult> pendingExecutions;
+	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
+	private Cache<String, PendingResult> pendingExecutions;
 
-    @Inject
-    private EndpointService endpointService;
+	@Inject
+	private EndpointService endpointService;
 
-    private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
+	private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
 
 	@PostConstruct
 	private void init() {
@@ -61,52 +61,50 @@ public class EndpointCacheContainer {
 				.build(new CacheLoader<String, Endpoint>() { //
 					@Override
 					public Endpoint load(String key) {
-						Endpoint result = endpointService.findByCode(
-                            key, 
-                            Arrays.asList("service"));
-						if(result!=null) {
-                            result.getService();
-                            result.getRoles().forEach(r -> {
-                            });
-                            result.getPathParameters().forEach(e -> {
-                            });
-                            result.getParametersMapping().forEach(e -> {
-                            });
-                        }
+						Endpoint result = endpointService.findByCode(key, Arrays.asList("service"));
+						result.getService();
+						result.getRoles().forEach(r -> {
+						});
+						result.getPathParametersNullSafe().forEach(e -> {
+						});
+						;
+						result.getParametersMappingNullSafe().forEach(e -> {
+						});
+						;
 						return result;
 					}
 				});
 	}
 
-    public PendingResult getPendingExecution(String key) {
-        return pendingExecutions.get(key);
-    }
+	public PendingResult getPendingExecution(String key) {
+		return pendingExecutions.get(key);
+	}
 
-    public void remove(String key){
-        pendingExecutions.remove(key);
-    }
+	public void remove(String key) {
+		pendingExecutions.remove(key);
+	}
 
-    public void put(String key, PendingResult value){
-        pendingExecutions.put(key, value);
-    }
+	public void put(String key, PendingResult value) {
+		pendingExecutions.put(key, value);
+	}
 
-    public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
-        endpointLoadingCache.invalidate(endpoint.getCode());
-    }
+	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
+		endpointLoadingCache.invalidate(endpoint.getCode());
+	}
 
-    public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
-        endpointLoadingCache.put(endpoint.getCode(), endpoint);
-    }
+	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
+		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+	}
 
-    public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
-        endpointLoadingCache.put(endpoint.getCode(), endpoint);
-    }
+	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
+		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+	}
 
-    public Endpoint getEndpoint(String code){
-        try {
-            return endpointLoadingCache.getUnchecked(code);
-        } catch (CacheLoader.InvalidCacheLoadException e){
-            return null;
-        }
-    }
+	public Endpoint getEndpoint(String code) {
+		try {
+			return endpointLoadingCache.getUnchecked(code);
+		} catch (CacheLoader.InvalidCacheLoadException e) {
+			return null;
+		}
+	}
 }

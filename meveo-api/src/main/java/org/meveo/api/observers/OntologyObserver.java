@@ -726,6 +726,16 @@ public class OntologyObserver {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
                 File file = new File(pathJava, fileName + ".java");
+                if (!file.exists()) {
+                    CustomEntityTemplate cet = customEntityTemplateService.findByCode(fileName);
+                    if (cet != null) {
+                        try {
+                            cetCreated(cet);
+                        } catch (Exception e) {
+                            LOGGER.error("Error create/write to the JSON Schema file", e);
+                        }
+                    }
+                }
                 files.add(file);
                 continue;
             }

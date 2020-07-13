@@ -90,8 +90,9 @@ import org.meveo.service.index.ElasticClient;
  *
  * @author Clément Bareth
  * @author Andrius Karpavicius
- * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.10
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Wassim Drira
+ * @version 6.9.0
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
 	protected Class<E> entityClass;
@@ -415,6 +416,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	}
 
 	private void preUpdate(E entity) throws BusinessException {
+		preUpdate(entity, false);
+	}
+
+	private void preUpdate(E entity, boolean asynchEvent) throws BusinessException {
 
 		beforeUpdateOrCreate(entity);
 
@@ -423,7 +428,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 
 		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
-			entityUpdatedEventProducer.fire((BaseEntity) entity);
+			if (asynchEvent) {
+				entityUpdatedEventProducer.fireAsync((BaseEntity) entity);
+
+			} else {
+				entityUpdatedEventProducer.fire((BaseEntity) entity);
+			}
 		}
 
 		// Schedule end of period events
@@ -434,15 +444,20 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 	}
 
+	@Override
+	public E update(E entity) throws BusinessException {
+		return update(entity, false);
+	}
+
 	/**
 	 * @see org.meveo.service.base.local.IPersistenceService#update(org.meveo.model.IEntity)
 	 */
 	@Override
-	public E update(E entity) throws BusinessException {
+	public E update(E entity, boolean asyncEvent) throws BusinessException {
 
 		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
-		preUpdate(entity);
+		preUpdate(entity, asyncEvent);
 
 		try {
 			entity = getEntityManager().merge(entity);
@@ -1336,10 +1351,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		session.refresh(entity);
 
 		return entity;
-	}
-
-	public E findByCode(String code) {
-		throw new UnsupportedOperationException();
 	}
 
 }

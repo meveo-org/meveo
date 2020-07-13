@@ -18,10 +18,14 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
+import org.slf4j.Logger;
 
 @Stateless
 public class MavenDependencyService {
 
+	@Inject
+	private Logger log;
+	
     @Inject
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
@@ -31,6 +35,7 @@ public class MavenDependencyService {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) // Need a new transaction
     public void onScriptUpdated(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Updated ScriptInstance si) {
+    	log.debug("[CDI event]  Trigger onScriptUpdated script instance with id={}", si.getId());
     	removeOrphans();
     }
     
