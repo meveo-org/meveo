@@ -136,7 +136,7 @@
                 <ui:define name="buttons">
                     <p:commandButton id="download" value="#{messages['meveoModule.download']}" rendered="#{meveoModuleListBean.canUserUpdateEntity()}"
                         oncomplete="PF('meveoModuleDialog').hide();PF('meveoModulesDialog').show()" process="@this" action="#{meveoModuleListBean.downloadModule}"
-                        update="@this :#{p:component('meveoModulesDialog')}">
+                        update="@this :#{p:component('meveoModulesDialog')} :#{p:component('listOfModules')}">
                     </p:commandButton>
                     <p:commandButton id="downloadAndInstall" value="#{messages['meveoModule.downloadAndInstall']}" rendered="#{meveoModuleListBean.canUserUpdateEntity()}"
                         oncomplete="PF('meveoModuleDialog').hide();PF('meveoModulesDialog').hide()" process="@this" action="#{meveoModuleListBean.downloadAndInstallModule}"
