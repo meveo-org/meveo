@@ -94,7 +94,13 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        if (!name.startsWith("org.meveo")) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        } else {
+                                            compilationUnit.addImport(name);
+                                            String[] className = name.split("\\.");
+                                            name = className[className.length -1];
+                                        }
                                         vd.setType("List<" + name + ">");
                                     }
                                 }
@@ -121,7 +127,13 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        if (!name.startsWith("org.meveo")) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        } else {
+                                            compilationUnit.addImport(name);
+                                            String[] className = name.split("\\.");
+                                            name = className[className.length -1];
+                                        }
                                         vd.setType("Map<String, " + name + ">");
                                     }
                                 }
@@ -157,7 +169,13 @@ public class JSONSchemaIntoJavaClassParser {
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
-                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            if (!name.startsWith("org.meveo")) {
+                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            } else {
+                                compilationUnit.addImport(name);
+                                String[] className = name.split("\\.");
+                                name = className[className.length -1];
+                            }
                             vd.setType(name);
                         }
                     } else if (values.get("enum") != null && values.get("type") == null) {

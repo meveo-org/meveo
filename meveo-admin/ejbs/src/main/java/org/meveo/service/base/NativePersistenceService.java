@@ -1768,7 +1768,11 @@ public class NativePersistenceService extends BaseService {
     			}
     			
     		} else if(v instanceof EntityReferenceWrapper) {
-    			serializedValues.put(k, ((EntityReferenceWrapper) v).getUuid());
+    			if (!StringUtils.isBlank(((EntityReferenceWrapper) v).getUuid())) {
+					serializedValues.put(k, ((EntityReferenceWrapper) v).getUuid());
+				} else {
+					serializedValues.put(k, ((EntityReferenceWrapper) v).getId());
+				}
     			
     		}
     	});

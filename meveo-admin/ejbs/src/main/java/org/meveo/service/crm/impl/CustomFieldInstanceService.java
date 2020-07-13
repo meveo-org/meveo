@@ -1,17 +1,15 @@
 package org.meveo.service.crm.impl;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
-import javax.ejb.Stateless;
-import javax.ejb.Timeout;
+import javax.ejb.*;
 import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -26,10 +24,8 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.DatePeriod;
-import org.meveo.model.ICustomFieldEntity;
-import org.meveo.model.IEntity;
+import org.meveo.model.*;
+import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
@@ -47,6 +43,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.keycloak.CurrentUserProvider;
+import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.BaseService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -77,6 +74,9 @@ public class CustomFieldInstanceService extends BaseService {
 
     @Inject
     private ProviderService providerService;
+
+    @Inject
+    private UserService userService;
 
     @Inject
     @MeveoJpa
@@ -133,7 +133,6 @@ public class CustomFieldInstanceService extends BaseService {
                     query.setParameter("code", entityInstance.getCode().toLowerCase());
                 }
             } else {
-                BusinessEntity businessEntity = new BusinessEntity();
                 CustomEntityInstance cei = new CustomEntityInstance();
                 try {
                     Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, value);
@@ -154,13 +153,29 @@ public class CustomFieldInstanceService extends BaseService {
                            cei = customEntityInstanceService.fromMap(customEntityTemplate, list.get(0));
                         }
                     }
-                    businessEntity = cei;
                 } catch (EntityDoesNotExistsException e) {}
-                return businessEntity;
+                return cei;
             }
         } else {
-            query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
-            query.setParameter("code", value);
+            if (classNameAndCode.equals(User.class.getName())) {
+                User user = userService.findByUsername(value);
+                BusinessEntity businessEntity = new BusinessEntity();
+                businessEntity.setCode(value);
+                businessEntity.setId(user.getId());
+                return businessEntity;
+            } else if (classNameAndCode.equals(Provider.class.getName())) {
+                Provider provider = providerService.findByCode(value);
+                if (provider == null) {
+                  provider = providerService.findById(Long.valueOf(value));
+                }
+                BusinessEntity businessEntity = new BusinessEntity();
+                businessEntity.setCode(provider.getCode());
+                businessEntity.setId(provider.getId());
+                return businessEntity;
+            } else {
+                query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
+                query.setParameter("code", value.toLowerCase());
+            }
         }
 
         List<BusinessEntity> entities = query.getResultList();
@@ -189,13 +204,24 @@ public class CustomFieldInstanceService extends BaseService {
                 String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
                 query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) like :code");
                 query.setParameter("cetCode", cetCode);
-
+                query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
+                entities = query.getResultList();
             } else {
-                query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
+                if (classNameAndCode.equals(User.class.getName())) {
+                   List<User> users = userService.list();
+                   for (User user : users) {
+                       BusinessEntity businessEntity = new BusinessEntity();
+                       businessEntity.setCode(user.getUserName());
+                       businessEntity.setId(user.getId());
+                       entities.add(businessEntity);
+                   }
+                } else {
+                    query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
+                    query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
+                    entities = query.getResultList();
+                }
             }
 
-            query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
-            entities = query.getResultList();
         }
 
         if (entities.isEmpty() && classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
@@ -2532,6 +2558,19 @@ public class CustomFieldInstanceService extends BaseService {
 			        value = false;
                 }
 			}
+            if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof BigInteger) {
+                EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+                if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
+                    User user = userService.findById(((BigInteger) value).longValue());
+                    entityReferenceWrapper.setCode(user.getUserName());
+                } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
+                    Provider provider = providerService.findById(((BigInteger) value).longValue());
+                    entityReferenceWrapper.setCode(provider.getCode());
+                }
+                entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
+                entityReferenceWrapper.setId(((BigInteger) value).longValue());
+                value = entityReferenceWrapper;
+            }
 
             setCFValue(entity, cetField.getKey(), value);
 		}
