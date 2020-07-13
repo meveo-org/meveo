@@ -302,4 +302,10 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 		return null;
 	}
 
+	@Override
+	public CategoryTest findByCode(String code) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

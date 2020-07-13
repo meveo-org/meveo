@@ -9,6 +9,21 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
+	<changeSet author="EdwardPLegaspi"
+		id="20200626 - Github#16: Add web notification">
+		<createTable tableName="adm_notif_webnotification">
+			<column name="id" type="bigint">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="adm_notif_webnotification_pkey" />
+			</column>
+			<column name="id_strategy" type="varchar(25)"></column>
+			<column name="notif_data_el" type="text"></column>
+			<column name="publication_allowed" type="${type.boolean}" defaultValueNumeric="0"></column>
+			<column name="persist_history" type="${type.boolean}" defaultValueNumeric="0"></column>
+		</createTable>
+	</changeSet>
+
+
 	<changeSet id="#4284 - FunctionCategory" author="Clément Bareth">
 		<createTable tableName="function_category">
 			<column name="id" type="BIGINT">
