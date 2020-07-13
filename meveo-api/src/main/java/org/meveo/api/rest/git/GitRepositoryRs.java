@@ -60,8 +60,8 @@ import io.swagger.annotations.ApiResponses;
  * REST interface to manage git repositories
  *
  * @author Clement Bareth
- * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @RequestScoped
 @Path("/git")
@@ -101,7 +101,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 	@ApiOperation(value = "Create a new repository", notes = "If branch is specified and does not exist, will create it")
 	public void create(@NotNull @ApiParam("Repository information") GitRepositoryDto postData, @QueryParam("username") @ApiParam("Username to connect to remote") String username,
 			@QueryParam("password") @ApiParam("Password to connect to remote") String password, @QueryParam("branch") @ApiParam("Branch to checkout") String branch)
-			throws BusinessException {
+			throws MeveoApiException, BusinessException {
 		gitRepositoryApi.create(postData, true, username, password);
 		if (branch != null) {
 			checkout(postData.getCode(), branch, true);
@@ -123,7 +123,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 	@ApiOperation(value = "Create or update a new repository", notes = "If repository with specified code exists, first delete it. If branch is specified and does not exist, will create it.")
 	public void overwrite(@PathParam("code") String code, @NotNull @ApiParam("Repository information") GitRepositoryDto postData,
 			@QueryParam("username") @ApiParam("Username to connect to remote") String username, @QueryParam("password") @ApiParam("Password to connect to remote") String password,
-			@QueryParam("branch") @ApiParam("Branch to checkout") String branch) throws BusinessException {
+			@QueryParam("branch") @ApiParam("Branch to checkout") String branch) throws MeveoApiException, BusinessException {
 		postData.setCode(code);
 		final boolean exists = gitRepositoryApi.exists(postData);
 		if (exists) {

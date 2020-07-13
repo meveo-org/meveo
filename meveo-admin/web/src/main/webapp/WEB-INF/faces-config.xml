@@ -988,6 +988,18 @@
             <redirect/>
         </navigation-case>
 
+	 	<navigation-case>
+            <from-outcome>webNotificationDetail</from-outcome>
+            <to-view-id>/pages/notification/webNotificationDetail.xhtml
+            </to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>webNotifications</from-outcome>
+            <to-view-id>/pages/notification/webNotifications.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
 
         <navigation-case>
             <from-outcome>emailNotificationDetail</from-outcome>

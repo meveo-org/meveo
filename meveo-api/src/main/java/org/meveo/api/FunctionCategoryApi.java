@@ -57,7 +57,7 @@ public class FunctionCategoryApi extends BaseCrudApi<FunctionCategory, BusinessE
 	}
 
 	@Override
-	public FunctionCategory fromDto(BusinessEntityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public FunctionCategory fromDto(BusinessEntityDto dto) throws MeveoApiException {
 		FunctionCategory fc = new FunctionCategory();
 		fc.setCode(dto.getCode());
 		fc.setDescription(dto.getDescription());

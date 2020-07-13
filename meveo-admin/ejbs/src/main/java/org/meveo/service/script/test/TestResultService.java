@@ -315,4 +315,10 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 		return null;
 	}
 
+	@Override
+	public TestResultDto findByCode(String code) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

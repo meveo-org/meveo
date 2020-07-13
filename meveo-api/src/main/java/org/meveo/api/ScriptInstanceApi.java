@@ -39,7 +39,7 @@ import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @version 6.10
  **/
 @Stateless
@@ -53,7 +53,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Inject
 	private MavenDependencyService mavenDependencyService;
-	
+
 	@Inject
 	private FunctionCategoryService fcService;
 
@@ -83,7 +83,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	}
 
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
-		
+
 		List<ScriptInstanceErrorDto> result = new ArrayList<>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
 
@@ -102,7 +102,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				result.add(errorDto);
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -237,8 +237,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setScript(dto.getScript());
 		scriptInstance.setSamples(dto.getSamples());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
-		
-		if(dto.getCategory() != null) {
+
+		if (dto.getCategory() != null) {
 			scriptInstance.setCategory(fcService.findByCode(dto.getCategory()));
 		}
 
@@ -296,12 +296,12 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 					throw new BusinessException("Same artifact with other version already exist");
 				}
 				line++;
-				
-                MavenDependency existingDependency = mavenDependencyService.find(maven.getBuiltCoordinates());
-                if(existingDependency != null) {
-                	scriptInstance.getMavenDependenciesNullSafe().remove(existingDependency);
-                	scriptInstance.getMavenDependenciesNullSafe().add(existingDependency);
-                }
+
+				MavenDependency existingDependency = mavenDependencyService.find(maven.getBuiltCoordinates());
+				if (existingDependency != null) {
+					scriptInstance.getMavenDependenciesNullSafe().remove(existingDependency);
+					scriptInstance.getMavenDependenciesNullSafe().add(existingDependency);
+				}
 			}
 		}
 
@@ -333,7 +333,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	}
 
 	@Override
-	public ScriptInstance fromDto(ScriptInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public ScriptInstance fromDto(ScriptInstanceDto dto) throws MeveoApiException {
 		return null;
 	}
 

@@ -28,8 +28,8 @@ import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
 
 /**
- * @author Edward P. Legaspi
- * @version 6.9.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
@@ -302,7 +302,7 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 	}
 
 	@Override
-	public JobInstance fromDto(JobInstanceDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public JobInstance fromDto(JobInstanceDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

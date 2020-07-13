@@ -24,6 +24,8 @@ import org.meveo.service.script.ScriptInstanceService;
 
 /**
  * @author Tyshan Shi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
@@ -222,7 +224,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 	}
 
 	@Override
-	public JobTrigger fromDto(JobTriggerDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public JobTrigger fromDto(JobTriggerDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

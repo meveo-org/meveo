@@ -25,12 +25,14 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.notification.Notification;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.job.JobExecutionService;
-import org.meveo.service.notification.NotificationService;
+import org.meveo.service.notification.ScriptNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
 
 /**
  * The Class InternalNotificationJobBean.
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class InternalNotificationJobBean {
@@ -60,7 +62,7 @@ public class InternalNotificationJobBean {
 
     /** The notification service. */
     @Inject
-    private NotificationService notificationService;
+    private ScriptNotificationService notificationService;
 
     /** The script instance service. */
     @Inject

@@ -32,7 +32,6 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.slf4j.Logger;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -46,9 +45,6 @@ import com.google.common.cache.LoadingCache;
 @Singleton
 @Startup
 public class EndpointCacheContainer {
-
-	@Inject
-	private Logger log;
 
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;
@@ -97,7 +93,6 @@ public class EndpointCacheContainer {
 	}
 
 	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
-		log.debug("[CDI event] Updating endpoint cache with id={}", endpoint.getId());
 		endpointLoadingCache.put(endpoint.getCode(), endpoint);
 	}
 

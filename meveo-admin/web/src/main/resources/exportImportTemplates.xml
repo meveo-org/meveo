@@ -126,7 +126,6 @@
             <java-class>org.meveo.model.catalog.HourInDay</java-class>
         </classesToExportAsFull>
     </template>
-    <template name="ServiceTemplate" entityToExport="org.meveo.model.catalog.ServiceTemplate"/>
 
     <template name="Catalog's custom field templates" entityToExport="org.meveo.model.crm.CustomFieldTemplate">
         <filters>

@@ -30,7 +30,7 @@ import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.notification.NotificationService;
+import org.meveo.service.notification.ScriptNotificationService;
 import org.slf4j.Logger;
 
 /**
@@ -50,7 +50,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
     protected Logger log;
 
     @EJB
-    private NotificationService notificationService;
+    private ScriptNotificationService notificationService;
 
     private ParamBean paramBean = ParamBean.getInstance();
 

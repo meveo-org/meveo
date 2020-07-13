@@ -17,7 +17,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConfiguration, BinaryStorageConfigurationDto> {
@@ -102,7 +103,7 @@ public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConf
 	}
 
 	@Override
-	public BinaryStorageConfiguration fromDto(BinaryStorageConfigurationDto dto) throws EntityDoesNotExistsException {
+	public BinaryStorageConfiguration fromDto(BinaryStorageConfigurationDto dto) throws MeveoApiException {
 		BinaryStorageConfiguration entity = new BinaryStorageConfiguration();
 		entity.setCode(dto.getCode());
 		entity.setRootPath(dto.getRootPath());

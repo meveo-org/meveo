@@ -65,8 +65,6 @@ import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.catalog.BusinessServiceModelDto;
-import org.meveo.api.dto.catalog.ServiceTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
@@ -81,7 +79,6 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
-import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.module.MeveoModule;
@@ -116,8 +113,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @author Wassim Drira
- * @lastModifiedVersion 6.9.0
+ * @version 6.10
  */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
@@ -456,11 +452,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		meveoModuleService.uninstall(meveoModule, remove);
 	}
 
-	private void parseModuleInfoOnlyFromDtoBSM(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
-
-		bsm.setDuplicatePricePlan(bsmDto.isDuplicatePricePlan());
-		bsm.setDuplicateService(bsmDto.isDuplicateService());
-	}
+	
 
 	public void parseModuleInfoOnlyFromDto(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 
@@ -495,10 +487,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 
-		// Converting subclasses of MeveoModuleDto class
-		if (moduleDto instanceof BusinessServiceModelDto) {
-			parseModuleInfoOnlyFromDtoBSM((BusinessServiceModel) meveoModule, (BusinessServiceModelDto) moduleDto);
-		}
 
 		// Extract module script used for installation and module activation
 		ScriptInstance scriptInstance = null;
@@ -609,9 +597,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		Class<? extends MeveoModuleDto> dtoClass = MeveoModuleDto.class;
-		if (module instanceof BusinessServiceModel) {
-			dtoClass = BusinessServiceModelDto.class;
-		}
 
 		MeveoModuleDto moduleDto;
 		try {
@@ -706,11 +691,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 
-		// Finish converting subclasses of MeveoModule class
-		if (module instanceof BusinessServiceModel) {
-			businessServiceModelToDto((BusinessServiceModel) module, (BusinessServiceModelDto) moduleDto);
-
-		}
 		
 		if (module.getPatches() != null && !module.getPatches().isEmpty()) {
 			moduleDto.setPatches(module.getPatches().stream().map(e -> modulePatchApi.toDto(e)).collect(Collectors.toList()));
@@ -719,21 +699,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return moduleDto;
 	}
 
-	/**
-	 * Finish converting BusinessServiceModel object to DTO representation
-	 * 
-	 * @param bsm BusinessServiceModel object to convert
-	 * @param dto BusinessServiceModel object DTO representation (as result of base MeveoModule object conversion)
-	 */
-	private void businessServiceModelToDto(BusinessServiceModel bsm, BusinessServiceModelDto dto) {
-
-		if (bsm.getServiceTemplate() != null) {
-			dto.setServiceTemplate(new ServiceTemplateDto(bsm.getServiceTemplate(), entityToDtoConverter.getCustomFieldsDTO(bsm.getServiceTemplate(), true)));
-		}
-		dto.setDuplicateService(bsm.isDuplicateService());
-		dto.setDuplicatePricePlan(bsm.isDuplicatePricePlan());
-
-	}
 
 	@Override
 	public MeveoModuleDto toDto(MeveoModule entity) {
@@ -745,7 +710,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
-	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public MeveoModule fromDto(MeveoModuleDto dto) throws MeveoApiException {
 		try {
 			MeveoModule meveoModule = new MeveoModule();
 			parseModuleInfoOnlyFromDto(meveoModule, dto);
