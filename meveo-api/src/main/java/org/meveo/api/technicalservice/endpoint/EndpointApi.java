@@ -705,4 +705,20 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		return endpointRequestSchemaService.generateResponseSchema(endpoint);
 	}
+
+	/**
+	 * Generates the response schema of the custom entity template.
+	 *
+	 * @param code code of the endpoint
+	 * @return response schema of the custom entity template
+	 */
+	public Response responseJsonSchema(@NotNull String code) {
+		Endpoint endpoint = endpointService.findByCode(code);
+		if (endpoint == null) {
+			return Response.noContent().build();
+		} else {
+			String jsonSchema = endpointService.getJsonSchemaContent(endpoint);
+			return Response.ok(jsonSchema).build();
+		}
+	}
 }

@@ -205,4 +205,18 @@ public class EndpointRs extends BaseRs {
 		return endpointApi.responseSchema(code);
 	}
 
+	/**
+	 * Generates and returns the response schema of the custom entity template.
+	 *
+	 * @param code code of the endpoint
+	 * @return response schema of the custom entity template
+	 */
+	@GET
+	@Path("/{code}/jsonSchema")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Generates and returns the response schema of the custom entity template.")
+	public Response responseJsonSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+		return endpointApi.responseJsonSchema(code);
+	}
+
 }
