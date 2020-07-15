@@ -257,10 +257,6 @@ public class CustomTableCreatorService implements Serializable {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createTable(String sqlConnectionCode, String dbTableName) {
 
-		if (PostgresReserverdKeywords.isReserved(dbTableName)) {
-			dbTableName = "\"" + dbTableName + "\"";
-		}
-
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
 		// Changeset for Postgress
@@ -357,10 +353,6 @@ public class CustomTableCreatorService implements Serializable {
 		}
 
 		String dbFieldname = cft.getDbFieldname();
-
-		if (PostgresReserverdKeywords.isReserved(cft.getDbFieldname())) {
-			dbFieldname = "\"" + dbFieldname + "\"";
-		}
 
 		if (cft.getFieldType() == CustomFieldTypeEnum.STRING && (cft.getMaxValue() == null || cft.getMaxValue() < 1)) {
 			cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
