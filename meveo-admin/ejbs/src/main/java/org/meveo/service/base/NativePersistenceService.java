@@ -85,6 +85,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.custom.PostgresReserverdKeywords;
 import org.meveo.util.MeveoParamBean;
 
 /**
@@ -219,6 +220,9 @@ public class NativePersistenceService extends BaseService {
 				selectQuery.append("uuid");
 			} else {
 				for (String field : selectFields) {
+					if (PostgresReserverdKeywords.isReserved(field)) {
+						field = "\"" + field + "\"";
+					}
 					selectQuery.append(field).append(", ");
 				}
 				selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
@@ -434,10 +438,17 @@ public class NativePersistenceService extends BaseService {
 			StringBuilder findIdFields = new StringBuilder();
 
 			boolean first = true;
+			String fieldNameInSQL = null;
 			for (String fieldName : values.keySet()) {
 				// Ignore a null ID field
 				if (fieldName.equals(FIELD_ID) && values.get(fieldName) == null) {
 					continue;
+				}
+
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldNameInSQL = "\"" + fieldName + "\"";
+				} else {
+					fieldNameInSQL = fieldName;
 				}
 
 				if (!first) {
@@ -445,14 +456,14 @@ public class NativePersistenceService extends BaseService {
 					fieldValues.append(",");
 					findIdFields.append(" and ");
 				}
-				fields.append(fieldName);
+				fields.append(fieldNameInSQL);
 				if (values.get(fieldName) == null) {
 					fieldValues.append("NULL");
 					findIdFields.append(fieldName).append(" IS NULL");
 
 				} else {
 					fieldValues.append(" ? ");
-					findIdFields.append(fieldName).append(" = :").append(fieldName);
+					findIdFields.append(fieldNameInSQL).append(" = :").append(fieldName);
 				}
 				first = false;
 			}
