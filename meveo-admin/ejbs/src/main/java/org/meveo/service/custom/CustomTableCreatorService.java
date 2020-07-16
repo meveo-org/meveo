@@ -257,10 +257,6 @@ public class CustomTableCreatorService implements Serializable {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createTable(String sqlConnectionCode, String dbTableName) {
 
-		if (PostgresReserverdKeywords.isReserved(dbTableName)) {
-			throw new IllegalArgumentException("Table name '" + dbTableName + "' is a PostgresQL reserved keyword");
-		}
-
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
 		// Changeset for Postgress
@@ -310,6 +306,7 @@ public class CustomTableCreatorService implements Serializable {
 
 		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
+		String finalDbTableName = dbTableName;
 		hibernateSession.doWork(connection -> {
 
 			Database database;
@@ -320,7 +317,7 @@ public class CustomTableCreatorService implements Serializable {
 				liquibase.update(new Contexts(), new LabelExpression());
 
 			} catch (Exception e) {
-				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
+				log.error("Failed to create a custom table {} on SQL Configuration {}", finalDbTableName, sqlConnectionCode, e);
 				throw new SQLException(e);
 			}
 
@@ -355,15 +352,11 @@ public class CustomTableCreatorService implements Serializable {
 			return;
 		}
 
-		if (PostgresReserverdKeywords.isReserved(cft.getDbFieldname())) {
-			throw new IllegalArgumentException("Field name '" + cft.getDbFieldname() + "' is a PostgresQL reserved keyword");
-		}
+		String dbFieldname = cft.getDbFieldname();
 
 		if (cft.getFieldType() == CustomFieldTypeEnum.STRING && (cft.getMaxValue() == null || cft.getMaxValue() < 1)) {
 			cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
 		}
-
-		String dbFieldname = cft.getDbFieldname();
 
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
@@ -418,6 +411,7 @@ public class CustomTableCreatorService implements Serializable {
 			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 			try {
+				String finalDbFieldname = dbFieldname;
 				CompletableFuture.runAsync(() -> {
 					hibernateSession.doWork(connection -> {
 						Database database;
@@ -429,7 +423,7 @@ public class CustomTableCreatorService implements Serializable {
 							liquibase.forceReleaseLocks();
 
 						} catch (Exception e) {
-							log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
+							log.error("Failed to add field {} to custom table {}", finalDbFieldname, dbTableName, e);
 							throw new SQLException(e);
 						}
 					});
