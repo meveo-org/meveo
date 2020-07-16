@@ -148,6 +148,10 @@
 	</build>
 	<dependencies>
 		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
 		</dependency>
