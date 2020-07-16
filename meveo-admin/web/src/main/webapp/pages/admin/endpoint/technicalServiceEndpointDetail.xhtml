@@ -46,7 +46,7 @@
 		<hftl:formPanel formId="endpointForm"
 			label="#{messages['endpoint.panel']}" showAddModuleButton="true"
 			backingBean="#{endpointBean}" killConversationOnSave="true">
-			<h:panelGrid columns="5">
+			<h:panelGrid columns="6">
 				<hftl:formField label="#{messages['endpoint.name']}" field="code"
 					required="true" validateUnique="true"
 					listenerUpdate=":endpointForm:endpointUrl" />
@@ -70,9 +70,9 @@
 							itemValue="POST" />
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
-				<hftl:formField label="#{messages['enpoint.synchronous']}"
-					field="synchronous" />
+				<hftl:formField label="#{messages['enpoint.synchronous']}" field="synchronous" />
 			</h:panelGrid>
+			
 			<h:panelGroup id="functionInputs">
 				<hftl:decorateFormField componentWidth="100%"
 					rendered="#{notificationBean.entity.function.hasInputs()}"
@@ -137,6 +137,14 @@
 			</h:panelGrid>
 			<h:panelGroup id="endpoint-technical-configuration" layout="block"
 				style="display:flex">
+				<hftl:decorateFormField style="width: auto" 
+					field="secured" 
+					fieldId="secured" 
+					label="Secured">
+						<p:selectBooleanCheckbox id="secured" 
+							value="#{endpointBean.entity.secured}"/>
+				</hftl:decorateFormField>
+			
 				<hftl:decorateFormField style="width: auto" field="contentType"
 					fieldId="contentType" label="#{messages['endpoint.contentType']}">
 					<p:inputText id="contentType"

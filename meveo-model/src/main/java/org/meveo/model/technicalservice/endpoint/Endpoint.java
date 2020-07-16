@@ -72,6 +72,11 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
+	
+	/** Whether endpoint is accessible without logging */
+	@Column(name = "secured", nullable = false)
+	@Type(type = "numeric_boolean")
+	private boolean isSecured = true;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
@@ -240,6 +245,14 @@ public class Endpoint extends BusinessEntity {
 
 	public void setRoles(List<String> roles) {
 		this.roles = roles;
+	}
+	
+	public boolean isSecured() {
+		return isSecured;
+	}
+
+	public void setSecured(boolean isSecured) {
+		this.isSecured = isSecured;
 	}
 
 	@Transient
