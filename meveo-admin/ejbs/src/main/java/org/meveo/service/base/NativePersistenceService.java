@@ -208,6 +208,10 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		try {
+			if (PostgresReserverdKeywords.isReserved(tableName)) {
+				tableName = "\"" + tableName + "\"";
+			}
+
 			Session session = sqlConnectionProvider.getSession(sqlConnectionCode);
 		
 			StringBuilder selectQuery = new StringBuilder();
@@ -261,7 +265,11 @@ public class NativePersistenceService extends BaseService {
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
 	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
-		
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		if(queryValues.isEmpty()) {
 			throw new IllegalArgumentException("Query values should not be empty");
 		}
@@ -288,6 +296,9 @@ public class NativePersistenceService extends BaseService {
 		
 		AtomicInteger i = new AtomicInteger(1);
 		uniqueValues.forEach((key, value) -> {
+			if (PostgresReserverdKeywords.isReserved(key)) {
+				key = "\"" + key + "\"";
+			}
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
 				if(i.get() == 1) {
 					q.append("WHERE a." + key + " = ?\n");
@@ -421,6 +432,10 @@ public class NativePersistenceService extends BaseService {
 		
 		if (tableName == null) {
 			throw new BusinessException("Table name must not be null");
+		}
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
 		}
 
 		if (values == null || values.isEmpty()) {
@@ -557,6 +572,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void create(String sqlConnectionCode, String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
 
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		List<Map<String, Object>> values = ceis.stream().map(e -> e.getCfValuesAsValues()).collect(Collectors.toList());
 
 		if (values == null || values.isEmpty()) {
@@ -573,6 +592,9 @@ public class NativePersistenceService extends BaseService {
 
 		boolean first = true;
 		for (String fieldName : firstValue.keySet()) {
+			if (PostgresReserverdKeywords.isReserved(fieldName)) {
+				fieldName = "\"" + fieldName + "\"";
+			}
 
 			if (!first) {
 				fields.append(",");
@@ -678,6 +700,10 @@ public class NativePersistenceService extends BaseService {
 			throws BusinessException {
 
 		String tableName = cei.getTableName();
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		
@@ -700,6 +726,13 @@ public class NativePersistenceService extends BaseService {
 			sql.append("UPDATE ").append(tableName).append(" SET ");
 			boolean first = true;
 			for (String fieldName : values.keySet()) {
+				String fieldNameInSQL = null;
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldNameInSQL = "\"" + fieldName + "\"";
+				} else {
+					fieldNameInSQL = fieldName;
+				}
+
 				if (fieldName.equals(FIELD_ID)) {
 					continue;
 				}
@@ -708,10 +741,10 @@ public class NativePersistenceService extends BaseService {
 					sql.append(",");
 				}
 				if (values.get(fieldName) == null) {
-					sql.append(fieldName).append(" = NULL");
+					sql.append(fieldNameInSQL).append(" = NULL");
 
 				} else {
-					sql.append(fieldName).append(" = ? ");
+					sql.append(fieldNameInSQL).append(" = ? ");
 				}
 				first = false;
 			}
@@ -744,12 +777,12 @@ public class NativePersistenceService extends BaseService {
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
-			record.setCetCode(tableName);
+			record.setCetCode(cei.getTableName());
 
 			customTableRecordUpdate.fire(record);
 
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(tableName), values);
-			customEntityInstance.setCetCode(tableName);
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(cei.getTableName()), values);
+			customEntityInstance.setCetCode(cei.getTableName());
 			customEntityInstanceUpdate.fire(customEntityInstance);
 
 		} catch (Exception e) {
@@ -772,6 +805,15 @@ public class NativePersistenceService extends BaseService {
 		if (value instanceof Collection) {
 			value = JacksonUtil.toString(value);
 		}
+
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
+		if (PostgresReserverdKeywords.isReserved(fieldName)) {
+			fieldName = "\"" + fieldName + "\"";
+		}
 		
 		StringBuilder sql = new StringBuilder();
 		
@@ -793,7 +835,7 @@ public class NativePersistenceService extends BaseService {
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid(uuid);
-			record.setCetCode(tableName);
+			record.setCetCode(cetCode);
 			customTableRecordUpdate.fire(record);
 
 		} catch (Exception e) {
@@ -810,7 +852,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void disable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -822,7 +866,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void disable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
 	}
 
@@ -834,7 +880,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void enable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -847,6 +895,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode)
 			.createNativeQuery("update " + tableName + " set disabled=0 where uuid= ?")
 			.setParameter(1, uuid)
@@ -860,6 +911,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName) throws BusinessException {
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName).executeUpdate();
 
 	}
@@ -872,11 +926,16 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
 		for (String id : ids) {
 			CustomTableRecord record = new CustomTableRecord();
-			record.setCetCode(tableName);
+			record.setCetCode(cetCode);
 			record.setUuid(id);
 			customTableRecordRemoved.fire(record);
 		}
@@ -890,13 +949,17 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
 			.setParameter(1, uuid)
 			.executeUpdate();
 
 		CustomTableRecord record = new CustomTableRecord();
-		record.setCetCode(tableName);
+		record.setCetCode(cetCode);
 		record.setUuid(uuid);
 		customTableRecordRemoved.fire(record);
 	}
@@ -1023,6 +1086,10 @@ public class NativePersistenceService extends BaseService {
 	@SuppressWarnings({ "rawtypes" })
 	public QueryBuilder getQuery(String tableName, PaginationConfiguration config) {
 		String startQuery;
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"" ;
+		}
 
 		// If no fetch fields are defined, return everyinthing
 		if (config == null || config.getFetchFields() == null) {
