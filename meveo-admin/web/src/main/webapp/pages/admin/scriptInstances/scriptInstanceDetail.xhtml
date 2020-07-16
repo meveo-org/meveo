@@ -169,7 +169,7 @@
 							</h:inputText>
 						</p:column>
 						<p:column headerText="#{messages['mavenDependencies.coordinates']}">
-							<h:outputText value="#{mavenDependency.buildCoordinates}" size="50"/>
+							<h:outputText value="#{mavenDependency.builtCoordinates}" size="50"/>
 						</p:column>
 						<p:column styleClass="actions-column" headerText="#{messages['commons.actions']}" width="40">
 							<p:commandButton action="#{scriptInstanceBean.removeMavenDependency(mavenDependency)}" icon="ui-icon-trash" update="mavenDependenciesPanel" immediate="true" />
