@@ -18,6 +18,7 @@ package org.meveo.jmeter.login.gui;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jorphan.gui.ComponentUtil;
+import org.meveo.jmeter.login.model.Host;
 import org.meveo.jmeter.utils.SwingUtils;
 import org.meveo.jmeter.utils.Waiting;
 
@@ -39,6 +40,7 @@ public class LoginDialog extends JDialog {
     private final JComboBox<String> protocolInput;
     private final JTextField hostInput;
     private final JTextField portInput;
+    private final JTextField authServer;
     private final Waiting waiting;
 
     public LoginDialog() {
@@ -142,22 +144,29 @@ public class LoginDialog extends JDialog {
         hostPanel.add(savedHostsPanel, BorderLayout.NORTH);
         hostPanel.add(hostInformation, BorderLayout.SOUTH);
         hostPanel.setBorder(BorderFactory.createTitledBorder("Server"));
-
+        
         /* Credentials */
         JPanel credentials = new JPanel(new GridLayout(1, 2));
         credentials.add(usernamePanel);
         credentials.add(passwordPanel);
         credentials.setBorder(BorderFactory.createTitledBorder("Credentials"));
         credentials.setPreferredSize(new Dimension(WIDTH, 75));
-
+        
+        /* Auth server */
+        JPanel authServerPanel = new JPanel(new BorderLayout());
+        authServer = new JTextField();
+        authServerPanel.add(authServer);
+        authServerPanel.setBorder(BorderFactory.createTitledBorder("Authentication server (leave blank if same)"));
+        
         /* Top component */
         JPanel informationPanel = new JPanel(new BorderLayout());
         informationPanel.add(hostPanel, BorderLayout.NORTH);
         informationPanel.add(credentials, BorderLayout.SOUTH);
-
+        informationPanel.add(authServerPanel, BorderLayout.CENTER);
+        
         /* Main dialog */
         setLayout(new BorderLayout());
-        Dimension size = new Dimension(WIDTH, 325);
+        Dimension size = new Dimension(WIDTH, 350);
         setResizable(false);
         setSize(size);
         setPreferredSize(size);
@@ -174,11 +183,12 @@ public class LoginDialog extends JDialog {
         savedHostsList.repaint();
     }
 
-    public void loadHost(String name, String protocol, String host, String port) {
-        protocolInput.setSelectedItem(protocol);
-        hostInput.setText(host);
-        portInput.setText(port);
-        savedHostsList.setSelectedItem(name);
+    public void loadHost(Host host) {
+        protocolInput.setSelectedItem(host.getProtocol());
+        hostInput.setText(host.getHostName());
+        portInput.setText(host.getPortNumber());
+        authServer.setText(host.getAuthServer());
+        savedHostsList.setSelectedItem(host.getNickName());
     }
 
     public void setOnSavedHostChange(ActionListener a) {
@@ -230,5 +240,12 @@ public class LoginDialog extends JDialog {
         waiting.start();
         SwingUtils.setEnable(this, false);
     }
+
+	/**
+	 * @return
+	 */
+	public String getAuthServer() {
+		return authServer.getText();
+	}
 
 }
