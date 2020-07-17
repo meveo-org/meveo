@@ -121,6 +121,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
     
     private static Logger staticLogger = LoggerFactory.getLogger(CustomScriptService.class);
+    
+    private static ClassLoaderImpl classLoader = new ClassLoaderImpl(CustomScriptService.class.getClassLoader());
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -149,7 +151,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
-
+    
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -785,7 +787,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
 
-        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(CustomScriptService.classLoader, Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
         return compiler.compile(fullClassName, javaSrc, errs, fileList, ScriptInterface.class);
     }
@@ -814,8 +816,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 	Class clazz;
                 	
                 	try {
-	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-	                    clazz = classLoader.loadClass(className);
+	                    clazz = CustomScriptService.classLoader.loadClass(className);
 	                    
                 	} catch(ClassNotFoundException e) {
                 		clazz = Class.forName(className);
@@ -1027,15 +1028,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     public static void addLibrary(String location) {
         File file = new File(location);
-        URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Method method;
 
         try {
             URL url = file.toURI().toURL();
-            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            method.setAccessible(true);
-            method.invoke(classLoader, url);
-
+            classLoader.addUrl(url);
         } catch (Exception e) {
             e.printStackTrace();
         }
