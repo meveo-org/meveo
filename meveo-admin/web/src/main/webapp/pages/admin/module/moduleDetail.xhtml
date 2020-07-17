@@ -139,7 +139,7 @@
 					<p:column headerText="#{messages['commons.actions']}" width="15%">
 						<p:commandButton icon="ui-icon-minus" partialSubmit="true"
 							immediate="true" update="moduleFilesId @form"
-							action="#{meveoModuleBean.removeFileFromModule(item)}" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
+							action="#{meveoModuleBean.removeFileFromModule(item)}" rendered="#{meveoModuleBean.entity.isInDraft and (!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed)}"/>
 					</p:column>
 				</p:dataTable>
 			</hftl:decorateFormField>
@@ -184,7 +184,7 @@
 						<p:commandButton value="#{messages['meveoModuleDependency.add']}"
 							actionListener="#{meveoModuleBean.initializePatch}"
 							oncomplete="PF('dlg_searchModulePopup').show()"
-							icon="ui-icon-add" rendered="#{meveoModuleBean.entity.active or meveoModuleBean.entity.installed}"/>
+							icon="ui-icon-add" rendered="#{meveoModuleBean.entity.isInDraft and (!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed)}"/>
 					</f:facet>
 				</p:dataTable>
 
@@ -235,7 +235,7 @@
 
 			<ui:param name="buttons" value="true" />
             <ui:define name="buttons">
-                <hf:formButtons backingBean="#{meveoModuleBean}" edit="true" showEditButton="#{!meveoModuleBean.entity.downloaded}"
+                <hf:formButtons backingBean="#{meveoModuleBean}" edit="true" showEditButton="#{!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed}"
                     showEnableDisableButton="#{!meveoModuleBean.entity.downloaded}" showDeleteButton="false" formId="moduleId"
                     useCustomIdParam="true" ajaxSubmit="">
 

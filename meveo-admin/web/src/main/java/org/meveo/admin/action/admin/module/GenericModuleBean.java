@@ -141,7 +141,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         T module = super.initEntity();
 
         // If module is in being developed, show module items from meveoModule.moduleItems()
-        if (!module.isDownloaded()) {
+        if (!module.isDownloaded() || module.isInstalled()) {
             if (module.getModuleItems() == null) {
                 return module;
             }
