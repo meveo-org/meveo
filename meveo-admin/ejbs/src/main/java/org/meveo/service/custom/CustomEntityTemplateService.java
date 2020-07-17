@@ -127,10 +127,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
-
-        if (PostgresReserverdKeywords.isReserved(cet.getCode())) {
-            throw new IllegalArgumentException("Table name '" + cet.getName() + "' is a PostgresQL reserved keyword");
-        }
     	
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");

@@ -306,7 +306,6 @@ public class CustomTableCreatorService implements Serializable {
 
 		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
-		String finalDbTableName = dbTableName;
 		hibernateSession.doWork(connection -> {
 
 			Database database;
@@ -317,7 +316,7 @@ public class CustomTableCreatorService implements Serializable {
 				liquibase.update(new Contexts(), new LabelExpression());
 
 			} catch (Exception e) {
-				log.error("Failed to create a custom table {} on SQL Configuration {}", finalDbTableName, sqlConnectionCode, e);
+				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
 				throw new SQLException(e);
 			}
 
@@ -411,7 +410,6 @@ public class CustomTableCreatorService implements Serializable {
 			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
 
 			try {
-				String finalDbFieldname = dbFieldname;
 				CompletableFuture.runAsync(() -> {
 					hibernateSession.doWork(connection -> {
 						Database database;
@@ -423,7 +421,7 @@ public class CustomTableCreatorService implements Serializable {
 							liquibase.forceReleaseLocks();
 
 						} catch (Exception e) {
-							log.error("Failed to add field {} to custom table {}", finalDbFieldname, dbTableName, e);
+							log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
 							throw new SQLException(e);
 						}
 					});
