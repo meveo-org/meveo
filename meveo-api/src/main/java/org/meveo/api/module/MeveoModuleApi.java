@@ -830,10 +830,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		List<MeveoModuleDto> modules = getModules(json);
 
-		// Import files contained in each modules
-		importFileFromModule(modules);
+		try {
+			checkModuleDependencies(modules);
+			// Import files contained in each modules
+			importFileFromModule(modules);
 
-		importEntities(modules, overwrite);
+			importEntities(modules, overwrite);
+		} catch (EntityDoesNotExistsException e) {
+			throw new EntityDoesNotExistsException(e.getMessage());
+		}
 	}
 
 	public void importJSON(List<MeveoModuleDto> modules, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
@@ -973,7 +978,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
-	public void importZip(String fileName, InputStream inputStream, boolean overwrite) {
+	public void importZip(String fileName, InputStream inputStream, boolean overwrite) throws EntityDoesNotExistsException {
 		super.importZip(fileName, inputStream, overwrite);
 	}
 
@@ -1163,6 +1168,41 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			meveoModuleService.releaseModule(module, nextVersion);
 		} else {
 			throw new ValidationException("Failed to release module. Next version is less than the current version " + module.getCurrentVersion());
+		}
+	}
+
+	private void checkModuleDependencies(List<MeveoModuleDto> modules) throws EntityDoesNotExistsException {
+		List<MeveoModule> meveoModules = meveoModuleService.list();
+		List<String> moduleCode = new ArrayList<>();
+		if (!meveoModules.isEmpty()) {
+			for (MeveoModule meveoModule : meveoModules) {
+				moduleCode.add(meveoModule.getCode());
+			}
+		}
+		for (MeveoModuleDto meveoModuleDto : modules) {
+			if (!meveoModuleDto.getModuleDependencies().isEmpty()) {
+				if (!moduleCode.isEmpty()) {
+					for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
+						if (!moduleCode.contains(dependencyDto.getCode())) {
+							throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() +" doesn't exists locally.");
+						} else {
+							MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode());
+							List<String> versions = new ArrayList<>();
+							versions.add(meveoModule.getCurrentVersion());
+							if (!meveoModule.getReleases().isEmpty()) {
+								for (ModuleRelease moduleRelease : meveoModule.getReleases()) {
+									versions.add(moduleRelease.getCurrentVersion());
+								}
+							}
+							if (!versions.contains(dependencyDto.getCurrentVersion())) {
+								throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() + " with version " + dependencyDto.getCurrentVersion() +" doesn't exists locally.");
+							}
+						}
+					}
+				} else {
+					throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency doesn't exists locally.");
+				}
+			}
 		}
 	}
 }
