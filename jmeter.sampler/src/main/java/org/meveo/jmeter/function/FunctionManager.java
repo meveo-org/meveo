@@ -217,7 +217,7 @@ public class FunctionManager {
 
         return doRequest(() -> {
 
-            HttpPost post = new HttpPost(getHostUri() + LOGGING_URL);
+            HttpPost post = new HttpPost(getAuthUrl());
 
             ArrayList<NameValuePair> postParameters = new ArrayList<>();
             postParameters.add(new BasicNameValuePair("client_id", CLIENT_ID));
@@ -241,6 +241,14 @@ public class FunctionManager {
             return true;
         }, "Cannot log in", false);
     }
+
+	/**
+	 * @return the auth url used to login
+	 */
+	private static String getAuthUrl() {
+		String baseUrl = StringUtils.isBlank(currentHost.getAuthServer()) ? getHostUri() : currentHost.getAuthServer();
+		return baseUrl + LOGGING_URL;
+	}
 
     @SuppressWarnings("unchecked")
 	private static List<String> download() {
@@ -277,7 +285,7 @@ public class FunctionManager {
     private static long getRefreshToken() {
 
         return doRequest(() -> {
-            HttpPost post = new HttpPost(getHostUri() + LOGGING_URL);
+            HttpPost post = new HttpPost(getAuthUrl());
 
             ArrayList<NameValuePair> postParameters = new ArrayList<>();
             postParameters.add(new BasicNameValuePair("client_id", CLIENT_ID));

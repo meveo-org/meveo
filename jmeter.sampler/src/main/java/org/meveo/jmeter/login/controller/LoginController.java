@@ -170,6 +170,7 @@ public class LoginController {
         host.setHostName(loginDialog.getHostName());
         host.setPortNumber(loginDialog.getPort());
         host.setProtocol(loginDialog.getProtocol());
+        host.setAuthServer(loginDialog.getAuthServer());
         return host;
     }
 
@@ -195,6 +196,7 @@ public class LoginController {
             host.setHostName(newHost.getHostName());
             host.setPortNumber(newHost.getPortNumber());
             host.setProtocol(newHost.getProtocol());
+            host.setAuthServer(newHost.getAuthServer());
             updateStoredHosts();
         }else {
             String nickName = JOptionPane.showInputDialog("Please provide a name for this host");
@@ -208,7 +210,7 @@ public class LoginController {
     }
 
     private void loadHost(Host host) {
-        loginDialog.loadHost(host.getNickName(), host.getProtocol(), host.getHostName(), host.getPortNumber());
+        loginDialog.loadHost(host);
         loadedHost = host;
     }
 

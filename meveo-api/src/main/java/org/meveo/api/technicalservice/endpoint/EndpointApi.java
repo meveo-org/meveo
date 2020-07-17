@@ -452,6 +452,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpointDto.setMethod(endpoint.getMethod());
 		endpointDto.setServiceCode(endpoint.getService().getCode());
 		endpointDto.setSynchronous(endpoint.isSynchronous());
+		endpointDto.setSecured(endpoint.isSecured());
 		endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
 		endpointDto.setSerializeResult(endpoint.isSerializeResult());
 		List<String> pathParameterDtos = new ArrayList<>();
@@ -505,6 +506,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		// Synchronous
 		endpoint.setSynchronous(endpointDto.isSynchronous());
+		
+		// Secured
+		endpoint.setSecured(endpointDto.isSecured());
 
 		// JSONata query
 		endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
@@ -577,6 +581,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	public boolean isUserAuthorized(Endpoint endpoint) {
+		if(!endpoint.isSecured()) {
+			return true;
+		}
+		
 		try {
 			Set<String> currentUserRoles = keycloakAdminClientService
 					.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);

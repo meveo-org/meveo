@@ -53,6 +53,11 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
 
 	private static final long serialVersionUID = 3419481525817374645L;
 
+	/** Whether endpoint is accessible without logging */
+	@ApiModelProperty("Whether endpoint is accessible without logging")
+	@JsonProperty(defaultValue = "true")
+	private boolean secured = true;
+	
 	/**
      * Code of the technical service to update or create
      */
@@ -126,6 +131,14 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     
     public String getContentType() {
 		return contentType;
+	}
+    
+	public boolean isSecured() {
+		return secured;
+	}
+
+	public void setSecured(boolean secured) {
+		this.secured = secured;
 	}
 
 	public void setContentType(String contentType) {
