@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -51,11 +50,14 @@ import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.security.permission.AuthorizationService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
@@ -85,9 +87,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	@EJB
-	private KeycloakAdminClientService keycloakAdminClientService;
-
 	@Inject
 	private ESGeneratorService esGeneratorService;
 
@@ -96,6 +95,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
+	
+	@Inject
+	private AuthorizationService authService;
 
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -305,7 +307,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return the created Endpoint
 	 */
 	public Endpoint create(EndpointDto endpointDto) throws BusinessException {
-		validateCompositeRoles(endpointDto);
 		Endpoint endpoint = fromDto(endpointDto);
 		endpointService.create(endpoint);
 		return endpoint;
@@ -376,8 +377,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-
-		validateCompositeRoles(endpointDto);
 
 		endpoint = fromDto(endpointDto, endpoint);
 
@@ -473,7 +472,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
 		endpointDto.setContentType(endpoint.getContentType());
-		endpointDto.setRoles(endpoint.getRoles());
 		return endpointDto;
 	}
 
@@ -532,8 +530,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		endpoint.setContentType(endpointDto.getContentType());
 
-		endpoint.setRoles(endpointDto.getRoles());
-
 		return endpoint;
 	}
 
@@ -570,48 +566,18 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointParameter;
 	}
 
-	public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
-		KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
-		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(
-				keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
-		if (CollectionUtils.isNotEmpty(roles)) {
-			for (String selectedRole : endpointDto.getRoles()) {
-				if (!roles.contains(selectedRole)) {
-					throw new IllegalArgumentException("The role does not exists");
-				}
-			}
-		}
-		return roles;
-	}
-
 	public boolean isUserAuthorized(Endpoint endpoint) {
 		if(!endpoint.isSecured()) {
 			return true;
 		}
 		
 		try {
-			Set<String> currentUserRoles = keycloakAdminClientService
-					.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
-			if (!currentUserRoles.contains(EndpointService.getEndpointPermission(endpoint))) {
-				// If does not directly contained, for each role of meveo-web, check the role
-				// mappings for endpoints
-				KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-				currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
-				for (String userRole : currentUserRoles) {
-					if (endpoint.getRoles().contains(userRole)) {
-						return true;
-					}
-				}
-
-				return false;
-			}
-
-			return true;
-
-		} catch (Exception e) {
-			log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+			authService.checkAuthorization(DefaultPermission.EXECUTE_ENDPOINT, DefaultRole.ADMIN, endpoint.getId());
+		} catch (UserNotAuthorizedException e) {
 			return false;
 		}
+		
+		return true;
 	}
 
 	@Override

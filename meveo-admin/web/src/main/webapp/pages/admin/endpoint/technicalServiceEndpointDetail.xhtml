@@ -196,15 +196,6 @@
 				</h:panelGroup>
 			</h:panelGroup>
 
-			<h:panelGroup>
-				<hftl:decorateFormField componentWidth="100%"
-					label="#{messages['endpoint.roles']}">
-					<p:pickList id="pickListRoles" value="#{endpointBean.rolesDM}"
-						var="item" itemLabel="#{item}" itemValue="#{item}">
-					</p:pickList>
-				</hftl:decorateFormField>
-			</h:panelGroup>
-
 			<h:panelGrid id="endpointUrl" columns="1">
 				<hftl:decorateFormField field="endpointUrl" fieldId="endpointUrlId"
 					label="#{messages['endpoint.accessUrl']}">
@@ -212,6 +203,10 @@
 						size="100" readonly="true" />
 				</hftl:decorateFormField>
 			</h:panelGrid>
+			
+            <h:panelGrid columns="2">
+				<hftl:entityPermissions permission="execute-endpoint" varName="executeEndpoint" entityId="#{endpointBean.entity.id}"/>
+            </h:panelGrid>
 
 		</hftl:formPanel>
 	</ui:define>

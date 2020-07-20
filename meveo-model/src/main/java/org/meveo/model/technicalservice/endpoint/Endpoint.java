@@ -83,12 +83,6 @@ public class Endpoint extends BusinessEntity {
 	@Type(type = "numeric_boolean")	
 	private boolean checkPathParams = true;
 
-	@ElementCollection(fetch = FetchType.EAGER)
-	@CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
-	@Column(name = "role")
-	@OrderColumn(name = "pos")
-	private List<String> roles = new ArrayList<>();
-
 	/**
 	 * Technical service associated to the endpoint
 	 */
@@ -236,22 +230,6 @@ public class Endpoint extends BusinessEntity {
 		this.parametersMapping = parametersMapping;
 	}
 
-	public List<String> getRolesNullSafe() {
-		if (roles == null) {
-			roles = new ArrayList<>();
-		}
-
-		return getRoles();
-	}
-
-	public List<String> getRoles() {
-		return roles;
-	}
-
-	public void setRoles(List<String> roles) {
-		this.roles = roles;
-	}
-	
 	public boolean isSecured() {
 		return isSecured;
 	}
