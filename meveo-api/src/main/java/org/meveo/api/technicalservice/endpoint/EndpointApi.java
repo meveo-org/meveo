@@ -221,7 +221,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		// Assign path parameters
 		List<String> missingPathParameters = new ArrayList<>();
 
-		if (pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
+		if (endpoint.isCheckPathParams() && pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
 			throw new IllegalArgumentException("Path parameters does not match with endpoint.");
 		}
 
@@ -453,6 +453,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpointDto.setServiceCode(endpoint.getService().getCode());
 		endpointDto.setSynchronous(endpoint.isSynchronous());
 		endpointDto.setSecured(endpoint.isSecured());
+		endpointDto.setCheckPathParams(endpoint.isCheckPathParams());
 		endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
 		endpointDto.setSerializeResult(endpoint.isSerializeResult());
 		List<String> pathParameterDtos = new ArrayList<>();
@@ -509,6 +510,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		
 		// Secured
 		endpoint.setSecured(endpointDto.isSecured());
+		
+		// Check path params
+		endpoint.setCheckPathParams(endpointDto.isCheckPathParams());
 
 		// JSONata query
 		endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());

@@ -77,6 +77,11 @@ public class Endpoint extends BusinessEntity {
 	@Column(name = "secured", nullable = false)
 	@Type(type = "numeric_boolean")
 	private boolean isSecured = true;
+	
+	/** Whether to check exact match of path parameters number */
+	@Column(name = "check_path_params", nullable = false)
+	@Type(type = "numeric_boolean")	
+	private boolean checkPathParams = true;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "service_endpoint_roles", joinColumns = @JoinColumn(name = "endpoint_id"))
@@ -279,4 +284,12 @@ public class Endpoint extends BusinessEntity {
 		parametersMapping.add(e);
 	}
 
+	public boolean isCheckPathParams() {
+		return checkPathParams;
+	}
+
+	public void setCheckPathParams(boolean checkPathParams) {
+		this.checkPathParams = checkPathParams;
+	}
+	
 }

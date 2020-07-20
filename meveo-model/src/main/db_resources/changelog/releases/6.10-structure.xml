@@ -73,4 +73,12 @@
 		</addColumn>
 	</changeSet>
 	
+	<changeSet id="Endpoint - Add option to disable path parameters check - #74" author="Clément Bareth">
+		<addColumn tableName="service_endpoint">
+			<column name="check_path_params" defaultValue="1" type="${type.boolean}">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
 </databaseChangeLog>

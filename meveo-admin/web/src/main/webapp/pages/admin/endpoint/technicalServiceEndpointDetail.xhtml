@@ -107,6 +107,15 @@
 								update=":endpointForm:parametersMapping :endpointForm:endpointUrl" />
 						</p:pickList>
 					</hftl:decorateFormField>
+					
+					<hftl:decorateFormField style="width: auto" 
+						field="checkPathParams" 
+						fieldId="checkPathParams" 
+						label="Check number of path parameters">
+							<p:selectBooleanCheckbox id="checkPathParams" 
+								value="#{endpointBean.entity.checkPathParams}"/>
+					</hftl:decorateFormField>
+					
 				</h:panelGroup>
 				<h:panelGroup id="parametersMapping">
 					<hftl:decorateFormField componentWidth="100%"
