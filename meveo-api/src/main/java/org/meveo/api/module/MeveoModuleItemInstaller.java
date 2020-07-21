@@ -226,6 +226,11 @@ public class MeveoModuleItemInstaller {
 					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
 					ModuleItemOrder sortOrder2 = entityClass2.getAnnotation(ModuleItemOrder.class);
 
+					if(sortOrder1 == null || sortOrder2 == null) {
+						log.warn("Can't sort module items {} and {} because @ModuleItemOrder is not present on entity class", o1, o2);
+						return 0;
+					}
+					
 					return sortOrder1.value() - sortOrder2.value();
 
 				} catch (ClassNotFoundException e) {
