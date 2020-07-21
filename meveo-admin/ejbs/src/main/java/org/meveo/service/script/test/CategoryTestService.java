@@ -36,17 +36,17 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 	@Override
 	public long count() {
 		return emWrapper.getEntityManager()
-				.createQuery("SELECT COUNT (DISTINCT id) FROM FunctionCategory", Long.class)
+				.createQuery("SELECT COUNT (DISTINCT id) FROM FunctionCategory WHERE disabled = false", Long.class)
 				.getSingleResult();
 	}
 
 	@Override
 	public long count(PaginationConfiguration config) {
-		String query = "SELECT COUNT (DISTINCT id) FROM FunctionCategory fnc ";
+		String query = "SELECT COUNT (DISTINCT id) FROM FunctionCategory fnc WHERE fnc.disabled = false";
 		
 		//  Filters 
 		if(config != null && config.getFilters().containsKey("category.code")) {
-			query += "WHERE fnc.code LIKE :code";
+			query += "\nAND fnc.code LIKE :code";
 		}
 		
 		TypedQuery<Long> typedQuery = emWrapper.getEntityManager().createQuery(query, Long.class);
@@ -80,11 +80,8 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 				"        )\r\n" + 
 				"\r\n" + 
 				"FROM \r\n" + 
-				"    JobExecutionResultImpl jeri \r\n" + 
-				"    JOIN jeri.jobInstance ji, \r\n" + 
-
-				"    Function fn\r\n" + 
-				"    JOIN fn.category fnCategory \r\n" + 
+				"    JobExecutionResultImpl JOIN jeri.jobInstance ji, \r\n" + 
+				"    Function fn JOIN fn.category fnCategory \r\n" + 
 				"\r\n" + 
 				"WHERE jeri.endDate = (\r\n" + 
 				"    SELECT max(jeri1.endDate)\r\n" + 
@@ -92,7 +89,8 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 				"    WHERE jeri1.jobInstance.id = ji.id\r\n" + 
 				")\r\n" + 
 				"AND ji.jobCategoryEnum = 'TEST'\r\n" + 
-				"AND fn.code = ji.parametres\r\n";
+				"AND fn.code = ji.parametres\r\n" + 
+				"AND fnCategory.disabled = false";
 		
 		//  Filters 
 		if(config != null && config.getFilters().containsKey("category.code")) {
