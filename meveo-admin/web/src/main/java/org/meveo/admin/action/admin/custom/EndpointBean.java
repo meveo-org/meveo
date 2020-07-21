@@ -89,12 +89,12 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {
-		return Arrays.asList("service", "roles", "pathParameters", "parametersMapping");
+		return Arrays.asList("service", "pathParameters", "parametersMapping");
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("service", "roles");
+		return Arrays.asList("service");
 	}
 
 	@Override
