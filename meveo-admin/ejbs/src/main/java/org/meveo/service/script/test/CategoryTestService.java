@@ -80,7 +80,7 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 				"        )\r\n" + 
 				"\r\n" + 
 				"FROM \r\n" + 
-				"    JobExecutionResultImpl JOIN jeri.jobInstance ji, \r\n" + 
+				"    JobExecutionResultImpl jeri JOIN jeri.jobInstance ji, \r\n" + 
 				"    Function fn JOIN fn.category fnCategory \r\n" + 
 				"\r\n" + 
 				"WHERE jeri.endDate = (\r\n" + 
@@ -90,7 +90,7 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 				")\r\n" + 
 				"AND ji.jobCategoryEnum = 'TEST'\r\n" + 
 				"AND fn.code = ji.parametres\r\n" + 
-				"AND fnCategory.disabled = false";
+				"AND fnCategory.disabled = false\r\n";
 		
 		//  Filters 
 		if(config != null && config.getFilters().containsKey("category.code")) {
@@ -142,6 +142,9 @@ public class CategoryTestService implements IPersistenceService<CategoryTest> {
 		if(config != null && config.getFilters().containsKey("category.code")) {
 			typedQuery.setParameter("code", config.getFilters().get("category.code").toString().replace("*", "%"));
 		}
+		
+		typedQuery.setFirstResult(config.getFirstRow());
+		typedQuery.setMaxResults(config.getNumberOfRows());
 		
 		return typedQuery.getResultList();
 	}
