@@ -221,8 +221,16 @@ public class MeveoModuleItemInstaller {
 					m2 = ModuleUtil.getModuleItemName(Class.forName(o2.getDtoClassName()));
 
 					Class<?> entityClass1 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
+					if(entityClass1 == null) {
+						log.error("Can't get module item type for {}", m1);
+						return 0;
+					}
+					
 					Class<?> entityClass2 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
-
+					if(entityClass2 == null) {
+						log.error("Can't get module item type for {}", m2);
+					}
+					
 					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
 					ModuleItemOrder sortOrder2 = entityClass2.getAnnotation(ModuleItemOrder.class);
 
