@@ -140,6 +140,9 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 			typedQuery.setParameter("code", config.getFilters().get("category"));
 		}
 		
+		typedQuery.setFirstResult(config.getFirstRow());
+		typedQuery.setMaxResults(config.getNumberOfRows());
+		
 		Stream<Tuple> resultList = (Stream<Tuple>) typedQuery.getResultStream();
 		
 		return resultList.map(t -> {
@@ -177,6 +180,13 @@ public class TestResultService implements IPersistenceService<TestResultDto>{
 		//  Filters 
 		if(config != null && config.getFilters().containsKey("category")) {
 			query += "AND fnCategory.code = :code ";
+		}
+		
+		if(config != null && config.getFilters().get("active") != null) {
+			boolean active = (boolean) config.getFilters().get("active");
+			if(active) {
+				query += "AND ji.disabled = false";
+			}
 		}
 		
 		TypedQuery<Long> typedQuery = emWrapper.getEntityManager()

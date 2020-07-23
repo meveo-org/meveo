@@ -782,7 +782,6 @@ public class NativePersistenceService extends BaseService {
 			customTableRecordUpdate.fire(record);
 
 			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(cei.getTableName()), values);
-			customEntityInstance.setCetCode(cei.getTableName());
 			customEntityInstanceUpdate.fire(customEntityInstance);
 
 		} catch (Exception e) {
@@ -1817,7 +1816,7 @@ public class NativePersistenceService extends BaseService {
 
                     // Replace cft code with db field name if needed
                     String dbFieldname = CustomFieldTemplate.getDbFieldname(fieldName);
-                    if (!fieldName.equals(dbFieldname)) {
+                    if (!fieldName.equalsIgnoreCase(dbFieldname)) {
                         key = key.replaceAll(fieldName, dbFieldname);
                     }
                     valuesConverted.put(key, value);

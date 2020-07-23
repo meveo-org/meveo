@@ -28,8 +28,8 @@ services:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
+        KEYCLOAK_URL: https://{{keycloak-domain}}/auth
         WILDFLY_DEBUG_ENABLE: "true"    # default: false
-        #KEYCLOAK_URL: https://<keycloak-domain>/auth
       ports:
         - 8080:8080
       depends_on:
