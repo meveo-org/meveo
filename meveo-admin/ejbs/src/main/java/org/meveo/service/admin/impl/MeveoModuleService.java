@@ -48,6 +48,7 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -55,6 +56,7 @@ import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
@@ -90,7 +92,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.9.0
+ * @lastModifiedVersion 6.10
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -293,8 +295,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                     if(removeItems) {
                         if (itemEntity instanceof Endpoint) {
                             Endpoint endpoint = (Endpoint) itemEntity;
-                            if (CollectionUtils.isNotEmpty(endpoint.getPathParameters())) {
+                            if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
                                 getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
+                                        .setParameter("endpointId", endpoint.getId())
+                                        .executeUpdate();
+                            }
+                            if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+                                getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
                                         .setParameter("endpointId", endpoint.getId())
                                         .executeUpdate();
                             }
@@ -622,8 +629,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public MeveoModule update(MeveoModule entity) throws BusinessException {
-	    MeveoModule meveoModule = findById(entity.getId());
-	    Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
+	    MeveoModule meveoModule = updateModule(entity);
+        return super.update(meveoModule);
+    }
+
+    public MeveoModule mergeModule(MeveoModule entity) {
+	    MeveoModule meveoModule = updateModule(entity);
+	    return getEntityManager().merge(meveoModule);
+    }
+
+    private MeveoModule updateModule(MeveoModule entity) {
+        MeveoModule meveoModule = findById(entity.getId());
+        Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
             for (MeveoModuleDependency meveoModuleDependency : entity.getModuleDependencies()) {
                 moduleDependencies.add(meveoModuleDependency);
@@ -631,7 +648,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         }
 
         if(meveoModule.getModuleDependencies() != null) {
-	    meveoModule.getModuleDependencies().clear();
+            meveoModule.getModuleDependencies().clear();
         }
         Set<String> moduleFiles = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
@@ -653,7 +670,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if(meveoModule.getModuleItems() != null) {
             meveoModule.getModuleItems().clear();
         }
-        
+
         Set<MeveoModulePatch> modulePatches = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getPatches())) {
             for (MeveoModulePatch meveoModulePatch : entity.getPatches()) {
@@ -692,11 +709,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 meveoModule.getPatches().add(modulePatch);
             }
         }
-        return super.update(meveoModule);
+        return meveoModule;
     }
 
-    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) {
+    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) throws EntityDoesNotExistsException {
         MeveoModule meveoModule = findByCode(code);
+        if (meveoModule == null) {
+            throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ code +" doesn't exists locally.");
+        }
         if (currentVersion.equals(meveoModule.getCurrentVersion())) {
             return meveoModule;
         }
@@ -800,5 +820,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 file.delete();
             }
         }
+    }
+
+    @Override
+    public MeveoModule findById(Long id, List<String> fetchFields, boolean refresh) {
+	    getEntityManager().clear();
+        return super.findById(id, fetchFields, refresh);
+    }
+
+    @Override
+    public List<MeveoModule> list(PaginationConfiguration config) {
+        getEntityManager().clear();
+        return super.list(config);
     }
 }

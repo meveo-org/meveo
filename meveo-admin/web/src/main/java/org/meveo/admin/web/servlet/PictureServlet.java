@@ -6,7 +6,6 @@ import org.meveo.admin.util.ModuleUtil;
 import org.meveo.model.crm.Provider;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.crm.impl.ProviderService;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
@@ -50,9 +49,6 @@ public class PictureServlet extends HttpServlet {
 
     @Inject
     ProviderService providerService;
-
-    @Inject
-    ServiceTemplateService serviceTemplateService;
 
     @Inject
     @ApplicationProvider

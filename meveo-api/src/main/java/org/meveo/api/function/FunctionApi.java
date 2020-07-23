@@ -25,12 +25,15 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.ws.rs.PathParam;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.function.FunctionDto;
+import org.meveo.event.qualifier.Created;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
@@ -83,6 +86,9 @@ public class FunctionApi {
         functionDto.setTestSuite(function.getTestSuite());
         functionDto.setInputs(concreteFunctionService.getInputs(function));
         functionDto.setOutputs(concreteFunctionService.getOutputs(function));
+        if(function.getCategory() != null) {
+        	function.setCategory(function.getCategory());
+        }
         return functionDto;
     }
 
@@ -97,6 +103,9 @@ public class FunctionApi {
             functionDto.setTestSuite(e.getTestSuite());
             functionDto.setInputs(concreteFunctionService.getInputs(e));
             functionDto.setOutputs(concreteFunctionService.getOutputs(e));
+            if(e.getCategory() != null) {
+            	e.setCategory(e.getCategory());
+            }            
             return functionDto;
         }).collect(Collectors.toList());
     }
@@ -157,7 +166,7 @@ public class FunctionApi {
         jobExecutionService.executeJob(jobInstance, null);
     }
 
-    private static String getTestJobCode(String functionCode) {
+    public static String getTestJobCode(String functionCode) {
         return "FunctionTestJob_" + functionCode;
     }
 

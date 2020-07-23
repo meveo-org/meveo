@@ -32,6 +32,8 @@ import com.google.gson.reflect.TypeToken;
 
 /**
  * @author Rachid AITYAAZZA
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshipTemplate, CustomRelationshipTemplateDto> {
@@ -262,7 +264,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 	}
 
 	@Override
-	public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws MeveoApiException {
 		return CustomRelationshipTemplateDto.fromDTO(dto, null);
 	}
 

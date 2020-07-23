@@ -9,7 +9,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.catalog.BusinessServiceModelDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.BaseResponse;
 
@@ -28,7 +27,6 @@ public class MeveoModuleDtosResponse extends BaseResponse {
     /** The modules. */
     @XmlElementWrapper(name = "modules")
     @XmlElements({ 
-                  @XmlElement(name = "businessServiceModel", type = BusinessServiceModelDto.class),
                   @XmlElement(name = "module", type = MeveoModuleDto.class) })
     private List<MeveoModuleDto> modules;
 

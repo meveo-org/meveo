@@ -129,9 +129,8 @@ public class ModuleReleaseApi {
 		Set<Class<?>> moduleItemClasses = reflections.getTypesAnnotatedWith(ModuleItem.class);
 
 		for (Class<?> aClass : moduleItemClasses) {
-			String type = aClass.getAnnotation(ModuleItem.class).value();
-			MeveoModuleItemInstaller.MODULE_ITEM_TYPES.put(type, aClass);
-			log.debug("Registering module item type {} from class {}", type, aClass);
+			MeveoModuleItemInstaller.MODULE_ITEM_TYPES.put(aClass.getSimpleName(), aClass);
+			log.debug("Registering module item type {} from class {}", aClass.getSimpleName(), aClass);
 		}
 	}
 

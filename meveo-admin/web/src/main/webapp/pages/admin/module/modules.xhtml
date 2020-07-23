@@ -27,7 +27,14 @@
             <p:autoUpdate />
         </p:messages>
         <p:outputPanel id="listOfModules">
-	        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{meveoModuleListBean}" exportXlsxButton="false" exportToCsv="false" exportToJson="true" exportToXml="false">
+	        <hftl:dataList label="#{messages['meveoModule.title']}" 
+	        	backingBean="#{meveoModuleListBean}" 
+	        	exportXlsxButton="false" 
+	        	exportToCsv="false" 
+	        	exportToJson="true"
+	        	import="true"
+	        	exportToXml="false">
+	        	
 	            <hftl:column label="#{messages['BusinessEntity.code']}" field="code" useCustomIdParam="true"/>
 	            <hftl:column label="#{messages['BusinessEntity.description']}" field="description" />
 	            <p:column headerText="#{messages['meveoModule.logo']}">
@@ -129,7 +136,7 @@
                 <ui:define name="buttons">
                     <p:commandButton id="download" value="#{messages['meveoModule.download']}" rendered="#{meveoModuleListBean.canUserUpdateEntity()}"
                         oncomplete="PF('meveoModuleDialog').hide();PF('meveoModulesDialog').show()" process="@this" action="#{meveoModuleListBean.downloadModule}"
-                        update="@this :#{p:component('meveoModulesDialog')}">
+                        update="@this :#{p:component('meveoModulesDialog')} :#{p:component('listOfModules')}">
                     </p:commandButton>
                     <p:commandButton id="downloadAndInstall" value="#{messages['meveoModule.downloadAndInstall']}" rendered="#{meveoModuleListBean.canUserUpdateEntity()}"
                         oncomplete="PF('meveoModuleDialog').hide();PF('meveoModulesDialog').hide()" process="@this" action="#{meveoModuleListBean.downloadAndInstallModule}"

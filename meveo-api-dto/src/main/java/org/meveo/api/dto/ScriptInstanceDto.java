@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * The Class ScriptInstanceDto.
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.10
  */
 @XmlRootElement(name = "ScriptInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -83,34 +83,38 @@ public class ScriptInstanceDto extends CustomScriptDto {
     public ScriptInstanceDto(ScriptInstance scriptInstance, String source) {
         super(scriptInstance, source);
 
-        if (scriptInstance.getExecutionRoles() != null) {
-            for (Role role : scriptInstance.getExecutionRoles()) {
+        if (scriptInstance.getExecutionRolesNullSafe() != null) {
+            for (Role role : scriptInstance.getExecutionRolesNullSafe()) {
                 executionRoles.add(new RoleDto(role, true, true));
             }
         }
-        if (scriptInstance.getSourcingRoles() != null) {
-            for (Role role : scriptInstance.getSourcingRoles()) {
+        if (scriptInstance.getSourcingRolesNullSafe() != null) {
+            for (Role role : scriptInstance.getSourcingRolesNullSafe()) {
                 sourcingRoles.add(new RoleDto(role, true, true));
             }
         }
 
-        if (scriptInstance.getMavenDependencies() != null) {
-            for (MavenDependency maven : scriptInstance.getMavenDependencies() ) {
+        if (scriptInstance.getMavenDependenciesNullSafe() != null) {
+            for (MavenDependency maven : scriptInstance.getMavenDependenciesNullSafe() ) {
                 mavenDependencies.add(new MavenDependencyDto(maven));
             }
         }
 
-        if (scriptInstance.getImportScriptInstances() != null) {
-            for (ScriptInstance script : scriptInstance.getImportScriptInstances() ) {
+        if (scriptInstance.getImportScriptInstancesNullSafe() != null) {
+            for (ScriptInstance script : scriptInstance.getImportScriptInstancesNullSafe() ) {
                 importScriptInstances.add(new ScriptInstanceDto(script, script.getScript()));
             }
+        }
+        
+        if(scriptInstance.getCategory() != null) {
+        	super.setCategory(scriptInstance.getCategory().getCode());
         }
     }
 
 
     @Override
     public String toString() {
-        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", script=" + getScript() + ", executionRoles="
+        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", category=" + getCategory() + "script=" + getScript() + ", executionRoles="
                 + executionRoles + ", sourcingRoles=" + sourcingRoles + "]";
     }
 

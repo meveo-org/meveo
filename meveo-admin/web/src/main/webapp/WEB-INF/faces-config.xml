@@ -120,6 +120,17 @@
             <redirect/>
         </navigation-case>
 
+		<navigation-case>
+			<from-outcome>categoryTests</from-outcome>
+			<to-view-id>/pages/admin/job/categoryTests.xhtml</to-view-id>
+            <redirect/>
+		</navigation-case>
+		<navigation-case>
+			<from-outcome>testResults</from-outcome>
+			<to-view-id>/pages/admin/job/testResults.xhtml</to-view-id>
+            <redirect/>
+		</navigation-case>
+
         <navigation-case>
             <from-outcome>jobInstances</from-outcome>
             <to-view-id>/pages/admin/job/jobInstances.xhtml</to-view-id>
@@ -130,11 +141,25 @@
             <to-view-id>/pages/admin/job/jobInstanceDetail.xhtml</to-view-id>
             <redirect include-view-params="true"/>
         </navigation-case>
+        
+        <navigation-case>
+        	<from-outcome>functionCategories</from-outcome>
+        	<to-view-id>/pages/admin/scriptInstances/functionCategories.xhtml</to-view-id>
+        	<redirect/>
+        </navigation-case>
+        
+        <navigation-case>
+        	<from-outcome>functionCategoryDetail</from-outcome>
+        	<to-view-id>/pages/admin/scriptInstances/functionCategoryDetail.xhtml</to-view-id>
+        	<redirect/>
+        </navigation-case>
+        
         <navigation-case>
             <from-outcome>scriptInstances</from-outcome>
             <to-view-id>/pages/admin/scriptInstances/scriptInstances.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        
         <navigation-case>
             <from-outcome>scriptInstanceDetail</from-outcome>
             <to-view-id>/pages/admin/scriptInstances/scriptInstanceDetail.xhtml</to-view-id>
@@ -963,6 +988,18 @@
             <redirect/>
         </navigation-case>
 
+	 	<navigation-case>
+            <from-outcome>webNotificationDetail</from-outcome>
+            <to-view-id>/pages/notification/webNotificationDetail.xhtml
+            </to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>webNotifications</from-outcome>
+            <to-view-id>/pages/notification/webNotifications.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
 
         <navigation-case>
             <from-outcome>emailNotificationDetail</from-outcome>

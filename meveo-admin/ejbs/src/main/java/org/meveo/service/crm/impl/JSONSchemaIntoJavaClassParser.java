@@ -17,7 +17,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 
 /**
  * Parse a cet map into a java source code.
- * 
+ *
  * @author Edward P. Legaspi
  * @since 6.8.0
  * @version 6.8.0
@@ -94,29 +94,71 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        if (!name.startsWith("org.meveo")) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        } else {
+                                            compilationUnit.addImport(name);
+                                            String[] className = name.split("\\.");
+                                            name = className[className.length -1];
+                                        }
                                         vd.setType("List<" + name + ">");
                                     }
                                 }
                             } else if (value.containsKey("type")) {
-                                if (value.get("type").equals("number")) {
+                                if (value.get("type").equals("integer")) {
                                     vd.setType("List<Long>");
+                                } else if (value.get("type").equals("number")) {
+                                    vd.setType("List<Double>");
                                 } else {
                                     String typeItem = (String) value.get("type");
                                     typeItem = Character.toUpperCase(typeItem.charAt(0)) + typeItem.substring(1);
                                     vd.setType("List<" + typeItem + ">");
                                 }
+                            } else if (value.containsKey("enum")) {
+                                vd.setType("List<String>");
                             }
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
-                            vd.setType("Map<String, String>");
+                            Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");
+                            Map<String, Object> properties = (Map<String, Object>) patternProperties.get("^.*$");
+                            if (properties.containsKey("$ref")) {
+                                String ref = (String) properties.get("$ref");
+                                if (ref != null) {
+                                    String[] data = ref.split("/");
+                                    if (data.length > 0) {
+                                        String name = data[data.length - 1];
+                                        if (!name.startsWith("org.meveo")) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                        } else {
+                                            compilationUnit.addImport(name);
+                                            String[] className = name.split("\\.");
+                                            name = className[className.length -1];
+                                        }
+                                        vd.setType("Map<String, " + name + ">");
+                                    }
+                                }
+                            } else if (properties.containsKey("type")) {
+                                if (properties.get("type").equals("string")) {
+                                    vd.setType("Map<String, String>");
+                                } else {
+                                    vd.setType("Map<String, Object>");
+                                }
+                            }
+                        } else if (values.get("type").equals("integer")) {
+                            if (code.equals("count")) {
+                                vd.setType("Integer");
+                            } else {
+                                vd.setType("Long");
+                            }
                         } else if (values.get("type").equals("number")) {
-                            vd.setType("Long");
+                            vd.setType("Double");
                         } else if ((values.get("format") != null)) {
                             if (values.get("format").equals("date-time")) {
                                 compilationUnit.addImport("java.time.Instant");
                                 vd.setType("Instant");
                             }
+                        } else if (values.get("default") != null && (values.get("default").equals("true") || values.get("default").equals("false"))) {
+                            vd.setType("Boolean");
                         } else {
                             String type = (String) values.get("type");
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);
@@ -127,9 +169,17 @@ public class JSONSchemaIntoJavaClassParser {
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
-                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            if (!name.startsWith("org.meveo")) {
+                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                            } else {
+                                compilationUnit.addImport(name);
+                                String[] className = name.split("\\.");
+                                name = className[className.length -1];
+                            }
                             vd.setType(name);
                         }
+                    } else if (values.get("enum") != null && values.get("type") == null) {
+                        vd.setType("String");
                     }
 
                     fd.addVariable(vd);

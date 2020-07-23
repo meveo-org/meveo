@@ -48,7 +48,7 @@ import org.meveo.model.security.Role;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.10
  **/
 @FunctionServiceFor(ScriptInstance.TYPE)
 @Stateless
@@ -64,7 +64,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
-        for(MavenDependency md : script.getMavenDependencies()) {
+        for(MavenDependency md : script.getMavenDependenciesNullSafe()) {
         	MavenDependency persistentMd = mdService.find(md.getBuiltCoordinates());
         	if(persistentMd != null) {
         		mavenDependencies.add(persistentMd);
@@ -182,8 +182,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @throws org.meveo.admin.exception.InvalidPermissionException invalid permission exception.
      */
     public void isUserHasExecutionRole(ScriptInstance scriptInstance) throws InvalidPermissionException {
-        if (scriptInstance != null && scriptInstance.getExecutionRoles() != null && !scriptInstance.getExecutionRoles().isEmpty()) {
-            Set<Role> execRoles = scriptInstance.getExecutionRoles();
+        if (scriptInstance != null && scriptInstance.getExecutionRolesNullSafe() != null && !scriptInstance.getExecutionRolesNullSafe().isEmpty()) {
+            Set<Role> execRoles = scriptInstance.getExecutionRolesNullSafe();
             for (Role role : execRoles) {
                 if (currentUser.hasRole(role.getName())) {
                     return;
@@ -198,8 +198,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @return true if user have the souring role.
      */
     public boolean isUserHasSourcingRole(ScriptInstance scriptInstance) {
-        if (scriptInstance != null && scriptInstance.getSourcingRoles() != null && !scriptInstance.getSourcingRoles().isEmpty()) {
-            Set<Role> sourcingRoles = scriptInstance.getSourcingRoles();
+        if (scriptInstance != null && scriptInstance.getSourcingRolesNullSafe() != null && !scriptInstance.getSourcingRolesNullSafe().isEmpty()) {
+            Set<Role> sourcingRoles = scriptInstance.getSourcingRolesNullSafe();
             for (Role role : sourcingRoles) {
                 if (currentUser.hasRole(role.getName())) {
                     return true;

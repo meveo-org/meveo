@@ -1,6 +1,6 @@
 {
 	"realm": "${meveo.keycloak.realm}",
-	"auth-server-url": "${meveo.keycloak.url:http://localhost:8080/auth}",
+	"auth-server-url": "${meveo.keycloak.url:http://localhost:8081/auth}",
 	"ssl-required": "${meveo.keycloak.ssl:none}",
 	"resource": "${meveo.keycloak.client:meveo-web}",
 	"credentials": {

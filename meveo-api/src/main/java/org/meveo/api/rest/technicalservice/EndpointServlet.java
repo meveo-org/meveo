@@ -18,10 +18,15 @@ package org.meveo.api.rest.technicalservice;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -38,9 +43,12 @@ import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.security.permission.RequirePermission;
 import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
@@ -59,6 +67,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * Header "Wait-For-Finish" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
  * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @WebServlet("/rest/*")
 public class EndpointServlet extends HttpServlet {
@@ -68,7 +78,7 @@ public class EndpointServlet extends HttpServlet {
     @Inject
     public Logger log;
 
-    @Inject
+    @EJB
     private EndpointApi endpointApi;
 
     @Inject
@@ -78,6 +88,7 @@ public class EndpointServlet extends HttpServlet {
     private EndpointExecutionFactory endpointExecutionFactory;
 
     @Override
+	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
 
@@ -90,6 +101,7 @@ public class EndpointServlet extends HttpServlet {
     }
 
     @Override
+	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         String requestBody = StringUtils.readBuffer(req.getReader());
@@ -115,6 +127,7 @@ public class EndpointServlet extends HttpServlet {
     }
 
     @Override
+	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
@@ -130,10 +143,16 @@ public class EndpointServlet extends HttpServlet {
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
+        if(endpoint==null){
+                endpointExecution.getResp().setStatus(404);
+                endpointExecution.getResp().getWriter().print("Endpoint not found");
+                return;
+        }
+
         // Check if a required parameter is missing at endpoint execution
-        if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+        if (CollectionUtils.isNotEmpty(endpoint.getParametersMappingNullSafe())) {
             List<TSParameterMapping> requiredParameters = new ArrayList<>();
-            for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+            for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
                 if (tsParameterMapping.isValueRequired() && tsParameterMapping.getDefaultValue() == null) {
                     requiredParameters.add(tsParameterMapping);
                 }

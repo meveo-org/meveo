@@ -25,8 +25,17 @@ public class Host implements Serializable {
     private String hostName;
     private String portNumber;
     private String nickName;
+    private String authServer;
+    
+    public String getAuthServer() {
+		return authServer;
+	}
 
-    public String getNickName() {
+	public void setAuthServer(String authServer) {
+		this.authServer = authServer;
+	}
+
+	public String getNickName() {
         return nickName;
     }
 

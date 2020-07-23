@@ -24,7 +24,6 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
-import org.meveo.api.dto.catalog.BusinessServiceModelDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
@@ -33,8 +32,6 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.VersionedEntity;
-import org.meveo.model.catalog.BusinessServiceModel;
-import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -43,7 +40,6 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.slf4j.Logger;
@@ -74,9 +70,6 @@ public class MeveoModuleItemInstaller {
     
     @Inject
     private ModuleScriptService moduleScriptService;
-    
-    @Inject
-    private ServiceTemplateService serviceTemplateService;
     
     @EJB
     private MeveoModuleItemInstaller meveoModuleItemInstaller;
@@ -122,10 +115,6 @@ public class MeveoModuleItemInstaller {
         return meveoModule;
     }
 
-	private void unpackAndInstallBSMItems(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
-        ServiceTemplate serviceTemplate = serviceTemplateService.findByCode(bsmDto.getServiceTemplate().getCode());
-        bsm.setServiceTemplate(serviceTemplate);
-    }
 	
 	/**
 	 * @param meveoModule
@@ -232,11 +221,24 @@ public class MeveoModuleItemInstaller {
 					m2 = ModuleUtil.getModuleItemName(Class.forName(o2.getDtoClassName()));
 
 					Class<?> entityClass1 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
+					if(entityClass1 == null) {
+						log.error("Can't get module item type for {}", m1);
+						return 0;
+					}
+					
 					Class<?> entityClass2 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
-
+					if(entityClass2 == null) {
+						log.error("Can't get module item type for {}", m2);
+					}
+					
 					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
 					ModuleItemOrder sortOrder2 = entityClass2.getAnnotation(ModuleItemOrder.class);
 
+					if(sortOrder1 == null || sortOrder2 == null) {
+						log.warn("Can't sort module items {} and {} because @ModuleItemOrder is not present on entity class", o1, o2);
+						return 0;
+					}
+					
 					return sortOrder1.value() - sortOrder2.value();
 
 				} catch (ClassNotFoundException e) {
@@ -289,10 +291,6 @@ public class MeveoModuleItemInstaller {
 			}
         }
 
-        // Converting subclasses of MeveoModuleDto class
-        if (moduleDto instanceof BusinessServiceModelDto) {
-            unpackAndInstallBSMItems((BusinessServiceModel) meveoModule, (BusinessServiceModelDto) moduleDto);
-        }
     }
 	
 	/**

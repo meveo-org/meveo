@@ -19,36 +19,26 @@
  */
 package org.meveo.admin.action;
 
-import java.io.*;
-import java.util.List;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedOutputStream;
-import java.util.zip.ZipOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
-import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.IEntity;
-import org.meveo.model.module.MeveoModule;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.meveo.commons.utils.FileUtils.addToZipFile;
 
 /**
  * Base bean class. Other backing beans extends this class if they need functionality it provides.
@@ -56,7 +46,7 @@ import static org.meveo.commons.utils.FileUtils.addToZipFile;
  * @author Clément Bareth
  * @author Wassim Drira
  * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @version 6.10.0
  */
 @Named
 @ViewScoped
@@ -105,7 +95,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
     @Override
     public abstract BaseCrudApi<T, D> getBaseCrudApi();
 
-	public StreamedContent exportXML() throws IOException, BusinessException {
+	public StreamedContent exportXML() throws IOException, MeveoApiException, BusinessException {
         if(baseCrudApi == null) {
         	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
         }
@@ -121,7 +111,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
         return defaultStreamedContent;
 	}
 	
-	public StreamedContent exportJSON() throws IOException, BusinessException {
+	public StreamedContent exportJSON() throws IOException, BusinessException, MeveoApiException {
 		if(baseCrudApi == null) {
 			baseCrudApi = getBaseCrudApi();
 		}
@@ -141,7 +131,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 		return defaultStreamedContent;
 	}
 	
-	public StreamedContent exportCSV() throws IOException, BusinessException {
+	public StreamedContent exportCSV() throws IOException, BusinessException, MeveoApiException {
         if(baseCrudApi == null) {
         	throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
         }

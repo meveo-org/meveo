@@ -21,28 +21,31 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.util.NullAwareBeanUtilsBean;
 import org.primefaces.model.SortOrder;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -59,11 +62,14 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
  * Base API service for CRUD operations on entity
  * 
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * 
  * @param <E> Entity class
  * @param <T> Dto class
  */
-public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi implements ApiService<E, T> {
+public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi
+		implements ApiService<E, T> {
 
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
@@ -74,17 +80,22 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		this.dtoClass = dtoClass;
 		this.jpaClass = jpaClass;
 	}
-	
+
 	/**
 	 * @return all entities
 	 */
 	@Transactional
 	public List<T> findAll() {
+
 		List<E> entities = getPersistenceService().list();
-		return entities == null ? new ArrayList<>() : 
-			entities.stream()
-				.map(this::toDto)
-				.collect(Collectors.toList());
+		return entities == null ? new ArrayList<>() : entities.stream().map(t -> {
+			try {
+				return toDto(t);
+
+			} catch (MeveoApiException e) {
+				return null;
+			}
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	/**
@@ -92,17 +103,41 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 *
 	 * @param entity Entity to convert
 	 * @return Entity converted
+	 * @throws MeveoApiException
 	 */
-	public abstract T toDto(E entity);
+	public abstract T toDto(E entity) throws MeveoApiException;
 
 	/**
 	 * Build a JPA representation from a DTO
 	 *
 	 * @param dto DTO to convert
 	 * @return The JPA entity built from the DTO
-	 * @throws org.meveo.exceptions.EntityDoesNotExistsException if a linked entity does not exists
+	 * @throws MeveoApiException
 	 */
-	public abstract E fromDto(T dto) throws org.meveo.exceptions.EntityDoesNotExistsException;
+	public E fromDto(T dto) throws MeveoApiException {
+		return fromDto(dto, null);
+	}
+
+	public E fromDto(T dto, E entity) throws MeveoApiException {
+
+		if (entity == null) {
+			try {
+				entity = jpaClass.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new MeveoApiException("Failed to instantiate class " + jpaClass.getName());
+			}
+		}
+
+		try {
+			BeanUtilsBean beanUtilsBean = new NullAwareBeanUtilsBean();
+			beanUtilsBean.copyProperties(entity, dto);
+
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			throw new MeveoApiException("Unable to copy dto to entity. Make sure that the properties match.");
+		}
+
+		return entity;
+	}
 
 	/**
 	 * @return The persistence service used by the implementation
@@ -137,7 +172,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param conf Filters
 	 * @return the export file
 	 */
-	public File exportXML(PaginationConfiguration conf) throws IOException {
+	public File exportXML(PaginationConfiguration conf) throws MeveoApiException {
 		return exportEntities(conf, ExportFormat.XML);
 	}
 
@@ -147,7 +182,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param config Filters
 	 * @return the export file
 	 */
-	public File exportJSON(PaginationConfiguration config) throws IOException {
+	public File exportJSON(PaginationConfiguration config) throws MeveoApiException {
 		return exportEntities(config, ExportFormat.JSON);
 	}
 
@@ -157,7 +192,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param config Filters
 	 * @return the export file
 	 */
-	public File exportCSV(PaginationConfiguration config) throws IOException {
+	public File exportCSV(PaginationConfiguration config) throws MeveoApiException {
 		return exportEntities(config, ExportFormat.CSV);
 	}
 
@@ -168,15 +203,23 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param format Format of generated file
 	 * @return the export file
 	 */
-	public File exportEntities(PaginationConfiguration conf, ExportFormat format) throws IOException {
+	public File exportEntities(PaginationConfiguration conf, ExportFormat format) throws MeveoApiException {
 		List<E> entities = getPersistenceService().list(conf);
 
 		List<T> dtos = new ArrayList<>();
 		for (E entity : entities) {
-			dtos.add(toDto(entity));
+			try {
+				dtos.add(toDto(entity));
+			} catch (MeveoApiException e) {
+				throw e;
+			}
 		}
 
-		return exportDtos(format, dtos);
+		try {
+			return exportDtos(format, dtos);
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	public File exportEntities(ExportFormat format, List<E> entities) throws IOException {
@@ -185,7 +228,14 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		if (CollectionUtils.isEmpty(entities)) {
 			dtos = new ArrayList<>();
 		} else {
-			dtos = entities.stream().map(this::toDto).collect(Collectors.toList());
+			dtos = entities.stream().map(t -> {
+				try {
+					return toDto(t);
+				} catch (MeveoApiException e) {
+					log.error("Null entity during entity conversion={}", e.getMessage());
+					return null;
+				}
+			}).filter(Objects::nonNull).collect(Collectors.toList());
 		}
 
 		return exportDtos(format, dtos);
@@ -196,31 +246,29 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			throw new IllegalArgumentException("Format must be provided");
 		}
 
-		File exportFile = new File("export_" + jpaClass.getSimpleName() + System.currentTimeMillis() + "." + format.getFormat());
+		File exportFile = new File(
+				"export_" + jpaClass.getSimpleName() + System.currentTimeMillis() + "." + format.getFormat());
 
 		switch (format) {
 
-			case JSON:
-				new ObjectMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
-						.enable(SerializationFeature.INDENT_OUTPUT)
-						.writeValue(exportFile, dtos);
-				break;
+		case JSON:
+			new ObjectMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+					.enable(SerializationFeature.INDENT_OUTPUT).writeValue(exportFile, dtos);
+			break;
 
-			case XML:
-				new XmlMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
-						.enable(SerializationFeature.INDENT_OUTPUT)
-						.writeValue(exportFile, dtos);
-				break;
+		case XML:
+			new XmlMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+					.enable(SerializationFeature.INDENT_OUTPUT).writeValue(exportFile, dtos);
+			break;
 
-			case CSV:
-				CsvMapper csvMapper = (CsvMapper) new CsvMapper()
-						.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
-						.enable(SerializationFeature.INDENT_OUTPUT);
+		case CSV:
+			CsvMapper csvMapper = (CsvMapper) new CsvMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true)
+					.enable(SerializationFeature.INDENT_OUTPUT);
 
-				CsvSchema schema = csvMapper.schemaFor(dtoClass).withColumnSeparator(';');
-				ObjectWriter myObjectWriter = csvMapper.writer(schema);
-				myObjectWriter.writeValue(exportFile, dtos);
-				break;
+			CsvSchema schema = csvMapper.schemaFor(dtoClass).withColumnSeparator(';');
+			ObjectWriter myObjectWriter = csvMapper.writer(schema);
+			myObjectWriter.writeValue(exportFile, dtos);
+			break;
 		}
 
 		return exportFile;
@@ -268,18 +316,19 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param json      File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
+	public void importJSON(InputStream json, boolean overwrite)
+			throws BusinessException, IOException, MeveoApiException {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		List<?> entities = jsonMapper.readValue(json, List.class);
 
 		List<T> entitiesCasted = new ArrayList<>();
-		for(Object entity : entities) {
+		for (Object entity : entities) {
 			entitiesCasted.add(jsonMapper.convertValue(entity, dtoClass));
 		}
 
 		importEntities(entitiesCasted, overwrite);
 	}
-	
+
 	/**
 	 * Import data from a CSV file
 	 * 
@@ -288,36 +337,35 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 */
 	public void importCSV(InputStream csv, boolean overwrite) throws IOException, BusinessException, MeveoApiException {
 		CsvMapper csvMapper = new CsvMapper();
-		
-		CsvSchema schema = csvMapper.schemaFor(dtoClass)
-				.withColumnSeparator(';');
-		
-		MappingIterator<T> reader = csvMapper.readerFor(dtoClass)
-				.with(schema)
-				.readValues(csv);
-		
+
+		CsvSchema schema = csvMapper.schemaFor(dtoClass).withColumnSeparator(';');
+
+		MappingIterator<T> reader = csvMapper.readerFor(dtoClass).with(schema).readValues(csv);
+
 		importEntities(reader.readAll(), overwrite);
 	}
 
 	/**
 	 * Import data from a zip
 	 *
-	 * @param fileName   Name of the file
-	 * @param file       File to import
+	 * @param fileName  Name of the file
+	 * @param file      File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importZip(String fileName, InputStream file, boolean overwrite) {
+	public void importZip(String fileName, InputStream file, boolean overwrite) throws EntityDoesNotExistsException {
 		Path fileImport = null;
-		
+
 		try {
 			fileImport = Files.createTempDirectory(fileName);
 			FileUtils.unzipFile(fileImport.toString(), file);
 			buildFileList(fileImport.toFile(), overwrite);
+		} catch (EntityDoesNotExistsException e) {
+			throw new EntityDoesNotExistsException(e.getMessage());
 		} catch (Exception e) {
 			log.error("Error import zip file {}", fileName, e);
 		}
-		
-		if(fileImport != null) {
+
+		if (fileImport != null) {
 			try {
 				org.apache.commons.io.FileUtils.deleteDirectory(fileImport.toFile());
 			} catch (IOException e) {
@@ -329,11 +377,11 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	private void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		File[] files = file.listFiles();
 		fileImport.clear();
-		
+
 		for (File fileFromZip : files) {
 			fileImport.add(fileFromZip);
 		}
-		
+
 		for (File importFile : files) {
 			if (importFile.getName().endsWith(".json")) {
 				FileInputStream inputStream = new FileInputStream(importFile);
@@ -345,24 +393,27 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	/**
 	 * @see BaseCrudApi#exportCSV(PaginationConfiguration)
 	 */
-	public File exportCSV(PagingAndFiltering config) throws InvalidParameterException, IOException {
-		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+	public File exportCSV(PagingAndFiltering config) throws MeveoApiException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config,
+				jpaClass);
 		return exportCSV(pagination);
 	}
 
 	/**
 	 * @see BaseCrudApi#exportXML(PaginationConfiguration)
 	 */
-	public File exportXML(PagingAndFiltering config) throws InvalidParameterException, IOException {
-		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+	public File exportXML(PagingAndFiltering config) throws MeveoApiException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config,
+				jpaClass);
 		return exportXML(pagination);
 	}
 
 	/**
 	 * @see BaseCrudApi#exportJSON(PaginationConfiguration)
 	 */
-	public File exportJSON(PagingAndFiltering config) throws InvalidParameterException, IOException {
-		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config, jpaClass);
+	public File exportJSON(PagingAndFiltering config) throws MeveoApiException {
+		PaginationConfiguration pagination = toPaginationConfiguration("code", SortOrder.ASCENDING, null, config,
+				jpaClass);
 		return exportJSON(pagination);
 	}
 

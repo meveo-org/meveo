@@ -22,8 +22,8 @@ import org.meveo.service.notification.WebHookService;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi
- * @lastModifiedVersion 5.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
@@ -258,7 +258,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 	}
 
 	@Override
-	public WebHook fromDto(WebHookDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public WebHook fromDto(WebHookDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

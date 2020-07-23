@@ -20,14 +20,7 @@
 package org.meveo.admin.action;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -55,7 +48,11 @@ import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.BaseCrudApi;
+import org.meveo.api.*;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -63,6 +60,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.VersionedEntity;
 import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
@@ -70,6 +68,8 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.filter.Filter;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -77,9 +77,12 @@ import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.api.EntityHelperBean;
 import org.meveo.service.base.MeveoExceptionMapper;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.filter.FilterService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.util.ApplicationProvider;
+import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.view.ESBasedDataModel;
 import org.meveo.util.view.PagePermission;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
@@ -140,6 +143,21 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private ElasticClient elasticClient;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+
+    @Inject
+    private EndpointService endpointService;
+
+    @Inject
+    private CustomFieldTemplateApi customFieldTemplateApi;
+
+    @Inject
+    private EntityCustomActionApi entityCustomActionApi;
+
+    @Inject
+    private EndpointApi endpointApi;
 
     /** Search filters. */
     protected Map<String, Object> filters = new HashMap<String, Object>();
@@ -494,22 +512,28 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     }
 
     public void addToModule()  {
-        for (MeveoModule eachModule: selectedMeveoModules ) {
-            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
-            if (entity != null && !eachModule.equals(entity)) {
-                BusinessEntity businessEntity = (BusinessEntity) entity;
-                MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-                if (!module.getModuleItems().contains(item)) {
-                    module.addModuleItem(item);
-                }
-                try {
-                    meveoModuleService.update(module);
-                    messages.info(businessEntity.getCode() + " added to module " + module.getCode());
-                } catch (BusinessException e) {
-                    messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
+            for (MeveoModule eachModule : selectedMeveoModules) {
+                MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+                if (entity != null && !eachModule.equals(entity)) {
+                    BusinessEntity businessEntity = (BusinessEntity) entity;
+                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+                    if (!module.getModuleItems().contains(item)) {
+                        module.addModuleItem(item);
+                        try {
+                            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
+                                module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+                            }
+                            meveoModuleService.mergeModule(module);
+                            messages.info(businessEntity.getCode() + " added to module " + module.getCode());
+                        } catch (Exception e) {
+                            messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
+                        }
+                    } else {
+                        messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), businessEntity.getCode(), module.getCode());
+                        return;
+                    }
                 }
             }
-        }
     }
 
     public void addManyToModule()  {
@@ -524,25 +548,104 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         for (MeveoModule eachModule : selectedMeveoModules) {
 
-            MeveoModule module = meveoModuleService.findByCode(eachModule.getCode());
-            try {
+            MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 
+            try {
+                List<String> itemExisted = new ArrayList<>();
 	            for (IEntity entity : selectedEntities) {
 	                if (entity != null && !eachModule.equals(entity)) {
 	                    BusinessEntity businessEntity = (BusinessEntity) entity;
 	                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 	                    if (!module.getModuleItems().contains(item)) {
 	                        module.addModuleItem(item);
-	                    }
+	                    } else {
+	                        itemExisted.add(item.getItemCode());
+                        }
 	                }
 	            }
-
-                meveoModuleService.update(module);
+	            if (!itemExisted.isEmpty()) {
+	                messages.error(itemExisted + " already exist in the module items of module " + module.getCode());
+	                return;
+                }
+	            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
+                    module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+                }
+                meveoModuleService.mergeModule(module);
                 messages.info(codes + " added to module " + module.getCode());
-            } catch (BusinessException e) {
+            } catch (Exception e) {
                 messages.error(codes + " not added to module " + module.getCode(), e);
             }
         }
+    }
+
+    public MeveoModuleDto updateModuleItemDto(MeveoModule meveoModule) {
+
+        Set<MeveoModuleItem> moduleItems = meveoModule.getModuleItems();
+
+        MeveoModuleDto moduleDto = JacksonUtil.fromString(meveoModule.getModuleSource(), MeveoModuleDto.class);
+
+        if (!moduleDto.getModuleItems().isEmpty()) {
+            moduleDto.getModuleItems().clear();
+        }
+
+        if (moduleItems != null) {
+            for (MeveoModuleItem item : moduleItems) {
+
+                try {
+                    BaseEntityDto itemDto = null;
+
+                    if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
+                        // we will only add a cft if it's not a field of a cet
+                        if (!org.meveo.commons.utils.StringUtils.isBlank(item.getAppliesTo())) {
+                            String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
+                            if (customEntityTemplateService.findByCode(cetCode) == null) {
+                                itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+                            }
+
+                        } else {
+                            itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+                        }
+
+                    } else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
+                        itemDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+
+                    } else {
+                        try {
+                            Class clazz = Class.forName(item.getItemClass());
+                            if (clazz.getSimpleName().startsWith("Endpoint")) {
+                                Endpoint endpoint = endpointService.findByCode(item.getItemCode(), Arrays.asList("roles", "service", "pathParameters", "parametersMapping"));
+                                itemDto = endpointApi.toDto(endpoint);
+                            } else if (clazz.isAnnotationPresent(VersionedEntity.class)) {
+                                ApiVersionedService apiService = ApiUtils.getApiVersionedService(item.getItemClass(), true);
+                                itemDto = apiService.findIgnoreNotFound(
+                                        item.getItemCode(),
+                                        item.getValidity() != null ? item.getValidity().getFrom() : null,
+                                        item.getValidity() != null ? item.getValidity().getTo() : null
+                                );
+                            } else {
+                                ApiService apiService = ApiUtils.getApiService(clazz, true);
+                                itemDto = apiService.findIgnoreNotFound(item.getItemCode());
+                            }
+                        } catch (org.meveo.exceptions.EntityDoesNotExistsException e) {
+                            log.error(clazz.getSimpleName() + " with code=" + item.getItemCode() + " does not exists.");
+                        }
+                    }
+                    if (itemDto != null) {
+                        moduleDto.addModuleItem(itemDto);
+                    } else {
+                        log.warn("Failed to find a module item or not added in case of CFT that is a field of CET {}", item);
+                    }
+
+                } catch (ClassNotFoundException e) {
+                    log.error("Failed to find a class", e);
+
+                } catch (MeveoApiException e) {
+                    log.error("Failed to transform module item to DTO. Module item {}", item, e);
+                }
+            }
+        }
+
+        return moduleDto;
     }
 
     /**
@@ -1308,13 +1411,15 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public int getCacheNumRows() {
         String username = currentUser.getUserName();
 
-        String clazzName = clazz.getName();
-        Map<String, Integer> numberRow = cacheNumberRow.get(username);
-        if (numberRow != null && numberRow.get(clazzName) != null) {
-            return numberRow.get(clazzName);
-        } else {
-            return 10;
+        if(clazz != null) {
+	        String clazzName = clazz.getName();
+	        Map<String, Integer> numberRow = cacheNumberRow.get(username);
+	        if (numberRow != null && numberRow.get(clazzName) != null) {
+	            return numberRow.get(clazzName);
+	        }
         }
+        
+        return 10;
     }
 
     /**

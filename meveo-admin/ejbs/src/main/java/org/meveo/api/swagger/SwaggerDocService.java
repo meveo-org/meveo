@@ -43,7 +43,7 @@ import io.swagger.models.parameters.QueryParameter;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.10
  */
 @Stateless
 public class SwaggerDocService {
@@ -73,8 +73,8 @@ public class SwaggerDocService {
 			path.setPost(operation);
 		}
 
-		if (!Objects.isNull(endpoint.getPathParameters())) {
-			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParameters()) {
+		if (!Objects.isNull(endpoint.getPathParametersNullSafe())) {
+			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParametersNullSafe()) {
 				Parameter parameter = new PathParameter();
 				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
 				path.addParameter(parameter);
@@ -85,10 +85,10 @@ public class SwaggerDocService {
 
 		List<Sample> samples = endpoint.getService().getSamples();
 
-		if (!Objects.isNull(endpoint.getParametersMapping())) {
+		if (!Objects.isNull(endpoint.getParametersMappingNullSafe())) {
 			List<Parameter> operationParameter = new ArrayList<>();
 
-			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 
 				if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
 					QueryParameter queryParameter = new QueryParameter();

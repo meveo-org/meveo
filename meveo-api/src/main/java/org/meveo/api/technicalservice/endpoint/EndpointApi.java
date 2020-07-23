@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -51,11 +50,14 @@ import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.security.permission.AuthorizationService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
@@ -72,9 +74,9 @@ import io.swagger.util.Json;
  * API for managing technical services endpoints
  *
  * @author clement.bareth
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @since 01.02.2019
- * @version 6.9.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ * @since 01.02.2019 *
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
@@ -85,18 +87,18 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	@EJB
-	private KeycloakAdminClientService keycloakAdminClientService;
-
 	@Inject
 	private ESGeneratorService esGeneratorService;
-	
+
 	@Inject
 	private SwaggerDocService swaggerDocService;
-	
+
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
 	
+	@Inject
+	private AuthorizationService authService;
+
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
 	}
@@ -112,37 +114,40 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
 		}
-		
-		if(!isUserAuthorized(endpoint)) {
+
+		if (!isUserAuthorized(endpoint)) {
 			throw new UserNotAuthorizedException();
 		}
 
 		return esGeneratorService.buildJSInterface(baseUrl, endpoint);
 	}
-	
-	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution) throws BusinessException, ExecutionException, InterruptedException {
+
+	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution)
+			throws BusinessException, ExecutionException, InterruptedException {
 		Function service = endpoint.getService();
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+				.getFunctionService(service.getCode());
 		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
-		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService, parameterMap);
-		
-        CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
-            try {
-        		Map<String, Object> result = execute(endpointExecution, functionService, parameterMap, executionEngine);
-                String data = transformData(endpoint, result);
-                return new EndpointResult(data, endpoint.getContentType());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        
+		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService,
+				parameterMap);
+
+		CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
+			try {
+				Map<String, Object> result = execute(endpointExecution, functionService, parameterMap, executionEngine);
+				String data = transformData(endpoint, result);
+				return new EndpointResult(data, endpoint.getContentType());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
+
 		PendingResult pendingResult = new PendingResult();
 		pendingResult.setEngine(executionEngine);
 		pendingResult.setResult(future);
-		
+
 		return pendingResult;
 	}
-	
+
 	/**
 	 * Execute the technical service associated to the endpoint
 	 *
@@ -151,10 +156,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return The result of the execution
 	 * @throws BusinessException if error occurs while execution
 	 */
-	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution) throws BusinessException, ExecutionException, InterruptedException {
+	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution)
+			throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+				.getFunctionService(service.getCode());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 
 		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
@@ -173,7 +180,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @throws ExecutionException
 	 * @throws BusinessException
 	 */
-	public Map<String, Object> execute(EndpointExecution execution, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap, final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
+	public Map<String, Object> execute(EndpointExecution execution,
+			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
+			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
 		// Start endpoint script with timeout if one was set
 		if (execution.getDelayValue() != null) {
 			try {
@@ -202,21 +211,28 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return
 	 * @throws IllegalArgumentException
 	 */
-	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service, final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) {
-		List<String> pathParameters = new ArrayList<>(Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
+	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
+			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) {
+		List<String> pathParameters = new ArrayList<>(
+				Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
 		// Set budget variables
 		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
 		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
-		
+
 		// Assign path parameters
 		List<String> missingPathParameters = new ArrayList<>();
 
-		if (pathParameters.isEmpty() && !endpoint.getPathParameters().isEmpty()) {
-			missingPathParameters.addAll(endpoint.getPathParameters().stream().map(EndpointPathParameter::toString).collect(Collectors.toList()));
-			
+		if (endpoint.isCheckPathParams() && pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
+			throw new IllegalArgumentException("Path parameters does not match with endpoint.");
+		}
+
+		if (pathParameters.isEmpty() && !endpoint.getPathParametersNullSafe().isEmpty()) {
+			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream()
+					.map(EndpointPathParameter::toString).collect(Collectors.toList()));
+
 		} else {
-			for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+			for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
 				if (pathParameters.get(pathParameter.getPosition()) != null) {
 					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
 
@@ -225,13 +241,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				}
 			}
 		}
-		
+
 		if (!missingPathParameters.isEmpty()) {
-			throw new IllegalArgumentException("The following path parameters must be specified [" + String.join(",", missingPathParameters) + "]");
+			throw new IllegalArgumentException("The following path parameters must be specified ["
+					+ String.join(",", missingPathParameters) + "]");
 		}
 
 		// Assign query or post parameters
-		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 			Object parameterValue = execution.getParameters().get(tsParameterMapping.getParameterName());
 
 			// Use default value if parameter not provided
@@ -246,7 +263,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					} else if (arrValue.length == 1) {
 						parameterValue = arrValue[0];
 					} else {
-						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+						throw new IllegalArgumentException(
+								"Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
 					}
 				} else if (parameterValue instanceof Collection) {
 					@SuppressWarnings("rawtypes")
@@ -254,7 +272,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
 						parameterValue = colValue.iterator().next();
 					} else if (!tsParameterMapping.isMultivalued()) {
-						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+						throw new IllegalArgumentException(
+								"Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
 					}
 				}
 			}
@@ -262,7 +281,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			parameterMap.remove(tsParameterMapping.getParameterName());
 			parameterMap.put(paramName, parameterValue);
 		}
-
 
 		final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 
@@ -289,7 +307,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return the created Endpoint
 	 */
 	public Endpoint create(EndpointDto endpointDto) throws BusinessException {
-		validateCompositeRoles(endpointDto);
 		Endpoint endpoint = fromDto(endpointDto);
 		endpointService.create(endpoint);
 		return endpoint;
@@ -360,53 +377,70 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
-		validateCompositeRoles(endpointDto);
-		Endpoint updatedEndpoint = new Endpoint();
-		updatedEndpoint.setId(endpoint.getId());
-		updatedEndpoint.setCode(endpointDto.getCode());
-		updatedEndpoint.setDescription(endpointDto.getDescription());
 
-		updatedEndpoint.setSynchronous(endpointDto.isSynchronous());
-		updatedEndpoint.setMethod(endpointDto.getMethod());
+		endpoint = fromDto(endpointDto, endpoint);
 
-		final List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-		updatedEndpoint.setPathParameters(endpointPathParameters);
+		if (endpointDto.getPathParameters() != null && !endpointDto.getPathParameters().isEmpty()) {
+			if (endpoint.getPathParametersNullSafe() == null || endpoint.getPathParametersNullSafe().isEmpty()) {
+				endpoint.getPathParametersNullSafe().addAll(getEndpointPathParameters(endpointDto, endpoint));
 
-		final List<TSParameterMapping> parameterMappings = getParameterMappings(endpointDto, endpoint);
-		updatedEndpoint.setParametersMapping(parameterMappings);
+			} else {
+				final Endpoint finalEndpoint = endpoint;
+				endpointDto.getPathParameters().stream()
+						.filter(e -> finalEndpoint.getPathParametersNullSafe().stream()
+								.noneMatch(f -> e.contentEquals(f.getEndpointParameter().getParameter())))
+						.forEach(g -> {
+							EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
+							endpointPathParameter.setEndpointParameter(buildEndpointParameter(finalEndpoint, g));
+							finalEndpoint.addPathParameter(endpointPathParameter);
+						});
 
-		updatedEndpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
-		updatedEndpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
-		updatedEndpoint.setSerializeResult(endpointDto.isSerializeResult());
-		updatedEndpoint.setContentType(endpointDto.getContentType());
-		updatedEndpoint.setRoles(endpointDto.getRoles());
-		
-		// Technical Service
-		if (!StringUtils.isBlank(endpointDto.getServiceCode())) {
-			final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
-			Function service = functionService.findByCode(endpointDto.getServiceCode());
-			updatedEndpoint.setService(service);
+				List<EndpointPathParameter> toRemove = new ArrayList<EndpointPathParameter>();
+				endpoint.getPathParametersNullSafe().stream()
+						.filter(e -> endpointDto.getPathParameters().stream()
+								.noneMatch(f -> f.contentEquals(e.getEndpointParameter().getParameter())))
+						.forEach(g -> toRemove.add(g));
+				finalEndpoint.getPathParametersNullSafe().removeAll(toRemove);
+			}
+
+		} else {
+			endpoint.getPathParametersNullSafe().clear();
 		}
 
-		endpoint.getPathParameters().clear();
-		endpoint.getParametersMapping().clear();
+		if (endpointDto.getParameterMappings() != null && !endpointDto.getParameterMappings().isEmpty()) {
+			if (endpoint.getParametersMappingNullSafe() == null || endpoint.getParametersMappingNullSafe().isEmpty()) {
+				endpoint.getParametersMappingNullSafe().addAll(getParameterMappings(endpointDto, endpoint));
 
-		endpointService.flush();
+			} else {
+				final Endpoint finalEndpoint = endpoint;
+				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMappingNullSafe()
+						.stream()
+						.noneMatch(f -> e.getParameterName().contentEquals(f.getParameterName())
+								&& e.getServiceParameter().contentEquals(f.getEndpointParameter().getParameter())))
+						.forEach(g -> {
+							TSParameterMapping tsParameterMapping = new TSParameterMapping();
+							tsParameterMapping.setEndpointParameter(
+									buildEndpointParameter(finalEndpoint, g.getServiceParameter()));
+							tsParameterMapping.setDefaultValue(g.getDefaultValue());
+							tsParameterMapping.setMultivalued(g.getMultivalued());
+							tsParameterMapping.setParameterName(g.getParameterName());
+							tsParameterMapping.setValueRequired(g.getValueRequired());
+							finalEndpoint.addParametersMapping(tsParameterMapping);
+						});
 
-		endpoint.getPathParameters().addAll(updatedEndpoint.getPathParameters());
-        endpoint.getParametersMapping().addAll(updatedEndpoint.getParametersMapping());
-        endpoint.setJsonataTransformer(updatedEndpoint.getJsonataTransformer());
-        endpoint.setMethod(updatedEndpoint.getMethod());
-        endpoint.setService(updatedEndpoint.getService());
-        endpoint.setSynchronous(updatedEndpoint.isSynchronous());
-        endpoint.setCode(updatedEndpoint.getCode());
-        endpoint.setDescription(updatedEndpoint.getDescription());
-        endpoint.setReturnedVariableName(updatedEndpoint.getReturnedVariableName());
-        endpoint.setSerializeResult(updatedEndpoint.isSerializeResult());
-        endpoint.setContentType(updatedEndpoint.getContentType());
-        endpoint.setRoles(updatedEndpoint.getRoles());
+				List<TSParameterMapping> toRemove = new ArrayList<TSParameterMapping>();
+				endpoint.getParametersMappingNullSafe().stream().filter(e -> endpointDto.getParameterMappings().stream()
+						.noneMatch(f -> f.getParameterName().contentEquals(e.getParameterName())
+								&& f.getServiceParameter().contentEquals(e.getEndpointParameter().getParameter())))
+						.forEach(g -> toRemove.add(g));
+				finalEndpoint.getParametersMappingNullSafe().removeAll(toRemove);
+			}
 
-		endpointService.update(updatedEndpoint);
+		} else {
+			endpoint.getPathParametersNullSafe().clear();
+		}
+
+		endpointService.update(endpoint);
 	}
 
 	@Override
@@ -417,16 +451,18 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpointDto.setMethod(endpoint.getMethod());
 		endpointDto.setServiceCode(endpoint.getService().getCode());
 		endpointDto.setSynchronous(endpoint.isSynchronous());
+		endpointDto.setSecured(endpoint.isSecured());
+		endpointDto.setCheckPathParams(endpoint.isCheckPathParams());
 		endpointDto.setReturnedVariableName(endpoint.getReturnedVariableName());
 		endpointDto.setSerializeResult(endpoint.isSerializeResult());
 		List<String> pathParameterDtos = new ArrayList<>();
 		endpointDto.setPathParameters(pathParameterDtos);
-		for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+		for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
 			pathParameterDtos.add(pathParameter.getEndpointParameter().getParameter());
 		}
 		List<TSParameterMappingDto> mappingDtos = new ArrayList<>();
 		endpointDto.setParameterMappings(mappingDtos);
-		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
 			TSParameterMappingDto mappingDto = new TSParameterMappingDto();
 			mappingDto.setDefaultValue(tsParameterMapping.getDefaultValue());
 			mappingDto.setValueRequired(tsParameterMapping.isValueRequired());
@@ -436,14 +472,27 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
 		endpointDto.setContentType(endpoint.getContentType());
-		endpointDto.setRoles(endpoint.getRoles());
 		return endpointDto;
 	}
 
 	@Override
 	public Endpoint fromDto(EndpointDto endpointDto) {
+		return fromDto(endpointDto, null);
+	}
 
-		Endpoint endpoint = new Endpoint();
+	public Endpoint fromDto(EndpointDto endpointDto, Endpoint endpoint) {
+
+		if (endpoint == null) {
+			endpoint = new Endpoint();
+
+			// Parameters mappings
+			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
+			endpoint.setParametersMapping(tsParameterMappings);
+
+			// Path parameters
+			List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+			endpoint.setPathParameters(endpointPathParameters);
+		}
 
 		// Code
 		endpoint.setCode(endpointDto.getCode());
@@ -456,6 +505,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		// Synchronous
 		endpoint.setSynchronous(endpointDto.isSynchronous());
+		
+		// Secured
+		endpoint.setSecured(endpointDto.isSecured());
+		
+		// Check path params
+		endpoint.setCheckPathParams(endpointDto.isCheckPathParams());
 
 		// JSONata query
 		endpoint.setJsonataTransformer(endpointDto.getJsonataTransformer());
@@ -464,23 +519,16 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpoint.setReturnedVariableName(endpointDto.getReturnedVariableName());
 
 		// Technical Service
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService.getFunctionService(endpointDto.getServiceCode());
-		Function service = functionService.findByCode(endpointDto.getServiceCode());
-		endpoint.setService(service);
-
-		// Parameters mappings
-		List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
-		endpoint.setParametersMapping(tsParameterMappings);
-
-		// Path parameters
-		List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-		endpoint.setPathParameters(endpointPathParameters);
+		if (!StringUtils.isBlank(endpointDto.getServiceCode())) {
+			final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+					.getFunctionService(endpointDto.getServiceCode());
+			Function service = functionService.findByCode(endpointDto.getServiceCode());
+			endpoint.setService(service);
+		}
 
 		endpoint.setSerializeResult(endpointDto.isSerializeResult());
 
 		endpoint.setContentType(endpointDto.getContentType());
-
-		endpoint.setRoles(endpointDto.getRoles());
 
 		return endpoint;
 	}
@@ -503,7 +551,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
 			tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
 			tsParameterMapping.setValueRequired(parameterMappingDto.getValueRequired());
-			EndpointParameter endpointParameter = buildEndpointParameter(endpoint, parameterMappingDto.getServiceParameter());
+			EndpointParameter endpointParameter = buildEndpointParameter(endpoint,
+					parameterMappingDto.getServiceParameter());
 			tsParameterMapping.setEndpointParameter(endpointParameter);
 			tsParameterMappings.add(tsParameterMapping);
 		}
@@ -517,42 +566,18 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointParameter;
 	}
 
-	public List<String> validateCompositeRoles(EndpointDto endpointDto) throws IllegalArgumentException {
-		KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
-		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
-		if (CollectionUtils.isNotEmpty(roles)) {
-			for (String selectedRole : endpointDto.getRoles()) {
-				if (!roles.contains(selectedRole)) {
-					throw new IllegalArgumentException("The role does not exists");
-				}
-			}
-		}
-		return roles;
-	}
-
 	public boolean isUserAuthorized(Endpoint endpoint) {
-		try {
-			Set<String> currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(EndpointService.ENDPOINTS_CLIENT);
-			if (!currentUserRoles.contains(EndpointService.getEndpointPermission(endpoint))) {
-				// If does not directly contained, for each role of meveo-web, check the role
-				// mappings for endpoints
-				KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-				currentUserRoles = keycloakAdminClientService.getCurrentUserRoles(keycloakConfig.getClientId());
-				for (String userRole : currentUserRoles) {
-					if (endpoint.getRoles().contains(userRole)) {
-						return true;
-					}
-				}
-
-				return false;
-			}
-
+		if(!endpoint.isSecured()) {
 			return true;
-
-		} catch (Exception e) {
-			log.info("User not authorized to access endpoint due to error : {}", e.getMessage());
+		}
+		
+		try {
+			authService.checkAuthorization(DefaultPermission.EXECUTE_ENDPOINT, DefaultRole.ADMIN, endpoint.getId());
+		} catch (UserNotAuthorizedException e) {
 			return false;
 		}
+		
+		return true;
 	}
 
 	@Override
@@ -581,8 +606,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (endpoint == null) {
 			return Response.noContent().build();
 		}
-		
-		if(!isUserAuthorized(endpoint)) {
+
+		if (!isUserAuthorized(endpoint)) {
 			return Response.status(403).entity("You are not authorized to access this endpoint").build();
 		}
 
@@ -590,43 +615,47 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	/**
-	 * Extract variable pointed by returned variable name and apply JSONata query if defined
-	 * If endpoint is not configured to serialize the result and that returned variable name is set, do not serialize result. Otherwise serialize it.
+	 * Extract variable pointed by returned variable name and apply JSONata query if
+	 * defined If endpoint is not configured to serialize the result and that
+	 * returned variable name is set, do not serialize result. Otherwise serialize
+	 * it.
 	 *
 	 * @param endpoint Endpoint endpoxecuted
-	 * @param result Result of the endpoint execution
-	 * @return the transformed JSON result if JSONata query was defined or the serialized result if query was not defined.
+	 * @param result   Result of the endpoint execution
+	 * @return the transformed JSON result if JSONata query was defined or the
+	 *         serialized result if query was not defined.
 	 */
-	public String transformData(Endpoint endpoint, Map<String, Object> result){
-	    final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
-	    boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
-	
+	public String transformData(Endpoint endpoint, Map<String, Object> result) {
+		final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
+		boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
+
 		Object returnValue = result;
-		if(returnedVarNameDefined) {
+		if (returnedVarNameDefined) {
 			Object extractedValue = result.get(endpoint.getReturnedVariableName());
-			if(extractedValue != null){
+			if (extractedValue != null) {
 				returnValue = extractedValue;
-			}else {
-				log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(), endpoint.getReturnedVariableName());
+			} else {
+				log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(),
+						endpoint.getReturnedVariableName());
 			}
 		}
-	
-	    if (!shouldSerialize) {
-	        return returnValue.toString();
-	    }
-	
-	    if(returnValue instanceof Map){
-	    	((Map<?, ?>) returnValue).remove("response");
-	    	((Map<?, ?>) returnValue).remove("request");
-	    }
-	    
-	    final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
-	    if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
-	        return serializedResult;
-	    }
-	
-	    return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
-	
+
+		if (!shouldSerialize) {
+			return returnValue.toString();
+		}
+
+		if (returnValue instanceof Map) {
+			((Map<?, ?>) returnValue).remove("response");
+			((Map<?, ?>) returnValue).remove("request");
+		}
+
+		final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);
+		if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
+			return serializedResult;
+		}
+
+		return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
+
 	}
 
 	/**
@@ -636,9 +665,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return request schema of the given endpoint
 	 */
 	public String requestSchema(@NotNull String code) {
-		
+
 		Endpoint endpoint = endpointService.findByCode(code);
-		
+
 		return endpointRequestSchemaService.generateRequestSchema(endpoint);
 	}
 
@@ -653,5 +682,21 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Endpoint endpoint = endpointService.findByCode(code);
 
 		return endpointRequestSchemaService.generateResponseSchema(endpoint);
+	}
+
+	/**
+	 * Generates the response schema of the custom entity template.
+	 *
+	 * @param code code of the endpoint
+	 * @return response schema of the custom entity template
+	 */
+	public Response responseJsonSchema(@NotNull String code) {
+		Endpoint endpoint = endpointService.findByCode(code);
+		if (endpoint == null) {
+			return Response.noContent().build();
+		} else {
+			String jsonSchema = endpointService.getJsonSchemaContent(endpoint);
+			return Response.ok(jsonSchema).build();
+		}
 	}
 }

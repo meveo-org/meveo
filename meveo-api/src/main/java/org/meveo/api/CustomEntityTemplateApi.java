@@ -54,7 +54,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.9.0
+ * @version 6.10.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -96,7 +96,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         handleMissingParameters();
-
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
@@ -171,10 +170,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        }
         
 		} catch (Exception e) {
-			// Delete CET if error occurs
-			log.error("Creation of cet={} failed with error={}", cet, e);
-			customEntityTemplateService.remove(cet);
-			throw e;
+            if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+                throw new IllegalArgumentException(e.getMessage());
+            } else {
+                // Delete CET if error occurs
+                log.error("Creation of cet={} failed with error={}", cet, e);
+                customEntityTemplateService.remove(cet);
+                throw e;
+            }
 		}
 
         return cet;
@@ -758,7 +761,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	}
 
 	@Override
-	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws MeveoApiException {
 		return fromDTO(dto, null);
 	}
 

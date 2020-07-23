@@ -257,10 +257,6 @@ public class CustomTableCreatorService implements Serializable {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createTable(String sqlConnectionCode, String dbTableName) {
 
-		if (PostgresReserverdKeywords.isReserved(dbTableName)) {
-			throw new IllegalArgumentException("Table name '" + dbTableName + "' is a PostgresQL reserved keyword");
-		}
-
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
 		// Changeset for Postgress
@@ -355,11 +351,11 @@ public class CustomTableCreatorService implements Serializable {
 			return;
 		}
 
-		if (PostgresReserverdKeywords.isReserved(cft.getDbFieldname())) {
-			throw new IllegalArgumentException("Field name '" + cft.getDbFieldname() + "' is a PostgresQL reserved keyword");
-		}
-
 		String dbFieldname = cft.getDbFieldname();
+
+		if (cft.getFieldType() == CustomFieldTypeEnum.STRING && (cft.getMaxValue() == null || cft.getMaxValue() < 1)) {
+			cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
+		}
 
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
@@ -608,11 +604,15 @@ public class CustomTableCreatorService implements Serializable {
 		String referenceTableName = null;
 		if (referenceCet == null) {
 			try {
-				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
+				if (cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
+					referenceTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
+				} else {
+					Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
 
-				// get field type of reference entity
-				referenceColumnNames = PersistenceUtils.getPKColumnName(jpaEntityClazz);
-				referenceTableName = PersistenceUtils.getTableName(jpaEntityClazz);
+					// get field type of reference entity
+					referenceColumnNames = PersistenceUtils.getPKColumnName(jpaEntityClazz);
+					referenceTableName = PersistenceUtils.getTableName(jpaEntityClazz);
+				}
 
 			} catch (ClassNotFoundException e) {
 				throw new IllegalArgumentException("Cannot create foreign key constraint. Referenced cet or jpa entity " + cft.getEntityClazzCetCode() + " does not exists");
@@ -818,7 +818,7 @@ public class CustomTableCreatorService implements Serializable {
 		CustomFieldTypeEnum fieldType = cft.getFieldType();
 		if (fieldType == CustomFieldTypeEnum.ENTITY) {
 			final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-			if (referenceCet == null) {
+			if (referenceCet == null && !cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
 				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
 				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));
 				
