@@ -282,6 +282,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                         }
                     }
                 }
+            } else {
+                messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), itemEntity.getCode(), entity.getCode());
+                return;
             }
 
             moduleItemEntity = itemEntity;

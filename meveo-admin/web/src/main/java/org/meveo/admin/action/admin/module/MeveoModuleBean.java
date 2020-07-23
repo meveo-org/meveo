@@ -43,6 +43,7 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.module.MeveoModuleApi;
@@ -361,35 +362,43 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		String fileName = event.getFile().getFileName();
 
 		switch (contentType.trim()) {
-		case "text/xml":
-		case "application/xml":
-			meveoModuleApi.importXML(inputStream, isOverride());
-			break;
+			case "text/xml":
+			case "application/xml":
+				meveoModuleApi.importXML(inputStream, isOverride());
+				break;
 
-		case "application/json":
-			List<MeveoModuleDto> meveoModuleDtos = meveoModuleApi.getModules(inputStream);
-			if (CollectionUtils.isNotEmpty(meveoModuleDtos)) {
-				boolean checkUpload = beforeUpload(meveoModuleDtos);
-				if (!checkUpload) {
-					return;
+			case "application/json":
+				try {
+					List<MeveoModuleDto> meveoModuleDtos = meveoModuleApi.getModules(inputStream);
+					if (CollectionUtils.isNotEmpty(meveoModuleDtos)) {
+						boolean checkUpload = beforeUpload(meveoModuleDtos);
+						if (!checkUpload) {
+							return;
+						}
+					}
+					meveoModuleApi.importJSON(meveoModuleDtos, isOverride());
+				} catch (EntityDoesNotExistsException e) {
+					messages.error(e.getMessage());
 				}
-			}
-			meveoModuleApi.importJSON(meveoModuleDtos, isOverride());
-			break;
+				break;
 
-		case "text/csv":
-		case "application/vnd.ms-excel":
-			meveoModuleApi.importCSV(inputStream, isOverride());
-			break;
+			case "text/csv":
+			case "application/vnd.ms-excel":
+				meveoModuleApi.importCSV(inputStream, isOverride());
+				break;
 
-		case "application/octet-stream":
-		case "application/x-zip-compressed":
-			meveoModuleApi.importZip(fileName, inputStream, isOverride());
-			break;
+			case "application/octet-stream":
+			case "application/x-zip-compressed":
+				try {
+					meveoModuleApi.importZip(fileName, inputStream, isOverride());
+				} catch (EntityDoesNotExistsException e) {
+					messages.error(e.getMessage());
+				}
+				break;
 		}
 	}
 
-	public boolean beforeUpload(List<MeveoModuleDto> meveoModuleDtos) {
+	public boolean beforeUpload(List<MeveoModuleDto> meveoModuleDtos) throws EntityDoesNotExistsException {
 
 		for (MeveoModuleDto meveoModuleDto : meveoModuleDtos) {
 			List<ModuleDependencyDto> dtos = new ArrayList<>();
@@ -397,7 +406,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 				for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
 					MeveoModule meveoModule = meveoModuleService.getMeveoModuleByVersionModule(dependencyDto.getCode(), dependencyDto.getCurrentVersion());
 					if (meveoModule == null) {
-						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode());
+						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode(), getFormFieldsToFetch());
 						Set<ModuleRelease> moduleReleases = module.getReleases();
 						List<Integer> versionReleases = new ArrayList<>();
 						for (ModuleRelease moduleRelease : moduleReleases) {

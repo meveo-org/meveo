@@ -40,7 +40,7 @@ The following environment variables should be defined in meveo service inside do
 
 | Variable Name | Default Value | Description |
 | --- | --- | --- |
-| DOMAIN_NAME | localhost | The server domain name should be defined when meveo run on the production server. |
+| KEYCLOAK_URL | - | keycloak url should be defined because meveo image doesn't integrate a keycloak. |
 | WILDFLY_PROXY_ADDRESS_FORWARDING | false | This is a flag to use the reverse proxy. It should be "true" if meveo is running behind the reverse proxy |
 
 
@@ -50,7 +50,6 @@ The following environment variables can be redefined for meveo service
 
 | Variable Name | Default Value | Description |
 | --- | --- | --- |
-| KEYCLOAK_URL | http://localhost:8080/auth | This url is defined when meveo need to use the external keycloak |
 | KEYCLOAK_REALM | meveo | realm in the external keycloak |
 | KEYCLOAK_CLIENT | meveo-web | client in the external keycloak  |
 | KEYCLOAK_SECRET | - | secret in the external keycloak |
@@ -67,4 +66,5 @@ The following environment variables can be redefined for meveo service
 | WILDFLY_DEBUG_ENABLE | "false" | Add a debug option to Wildfly startup command ("true" or "false"). debug_enable could not be used with `JAVA_OPTS` together. If this value is `true`, `JAVA_OPTS` should be commented. |
 | WILDFLY_DEBUG_PORT | 9999 | Wildfly debug port |
 | JAVA_OPTS | Many parameters.<br/>Need to look at code | This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored. |
+| JAVA_EXTRA_OPTS | - | The extra options to add to the default jvm options. |
 

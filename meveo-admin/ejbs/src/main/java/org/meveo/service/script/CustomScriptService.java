@@ -192,18 +192,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     protected void afterUpdateOrCreate(T script) {
         try {
+        	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
             if (scriptFile.exists()) {
                 String previousScript = MeveoFileUtils.readString(scriptFile.getAbsolutePath());
                 if (previousScript.equals(script.getScript())) {
                     // Don't commit if there are no difference
-                    return;
+                	commitFile = false;
                 }
             }
 
-            buildScriptFile(scriptFile, script);
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
-
+            if(commitFile) {
+	            buildScriptFile(scriptFile, script);
+	            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+            }
+            
         } catch (Exception e) {
             log.error("Error committing script", e);
         }
