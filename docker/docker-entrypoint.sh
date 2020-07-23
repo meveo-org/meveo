@@ -122,6 +122,13 @@ else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
 fi
 
+#
+# The extra options to pass to the Java VM.
+#
+if [ "x${JAVA_EXTRA_OPTS}" != "x" ]; then
+    JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
+fi
+
 export JAVA_OPTS=$JAVA_OPTS
 
 # Set admin user/pass for wildfly
