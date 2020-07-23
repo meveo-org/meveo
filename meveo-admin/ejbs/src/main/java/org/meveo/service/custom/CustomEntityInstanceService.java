@@ -65,6 +65,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		cei.setCet(cet);
 		cei.setDescription((String) values.get("description"));
 		cei.setUuid((String) values.get("uuid"));
+		cei.setCetCode(cet.getCode());
 		try {
 			customFieldInstanceService.setCfValues(cei, cet.getCode(), values);
 		} catch (BusinessException e) {

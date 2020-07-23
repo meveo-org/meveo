@@ -42,6 +42,8 @@ import java.io.InputStream;
 /**
  * 
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  *
  * @param <T>
  * @param <D>
@@ -122,7 +124,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportCSV(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportCSV(config);
-		} catch (InvalidParameterException | IOException e) {
+		} catch (MeveoApiException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}
@@ -131,7 +133,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportJSON(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportJSON(config);
-		} catch (InvalidParameterException | IOException e) {
+		} catch (MeveoApiException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}
@@ -140,7 +142,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public File exportXML(PagingAndFiltering config) {
 		try {
 			return getBaseCrudApi().exportXML(config);
-		} catch (InvalidParameterException | IOException e) {
+		} catch (MeveoApiException e) {
 			throw new ServerErrorException(500, e);
 		}
 	}

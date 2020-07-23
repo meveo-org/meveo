@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.validation.Valid;
@@ -42,11 +43,20 @@ import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.dto.technicalservice.TechnicalServiceFilters;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.function.FunctionApi;
 import org.meveo.api.technicalservice.DescriptionApi;
+import org.meveo.event.model.AttributeUpdateEvent;
+import org.meveo.event.qualifier.AttributeUpdated;
 import org.meveo.exceptions.EntityAlreadyExistsException;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.job.JobInstanceService;
+import org.meveo.service.script.FunctionCategoryService;
+import org.meveo.service.script.FunctionService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 
@@ -74,6 +84,16 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 
     @Inject
     private EndpointService endpointService;
+    
+    @Inject
+    private FunctionCategoryService fcService;
+    
+    @Inject
+    private JobInstanceService jobInstanceService;
+    
+    @Inject
+    @AttributeUpdated("code")
+    protected Event<AttributeUpdateEvent<T, String>> serviceRenamedEventProducer;
 
     private TechnicalServiceService<T> persistenceService;
 
@@ -99,6 +119,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         dto.setExtendedServices(
         		technicalService.getExtendedServices().stream().map(TechnicalService::getCode).collect(Collectors.toSet())	
 		);
+        
+        if(technicalService.getCategory() != null) {
+        	dto.setCategory(technicalService.getCategory().getCode());
+        }
+        
         return dto;
     }
 
@@ -131,6 +156,10 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
         			throw new IllegalArgumentException("Can't find extended service " + serviceCode);
         		}
         	}
+        }
+        
+        if(postData.getCategory() != null) {
+        	technicalService.setCategory(fcService.findByCode(postData.getCategory()));
         }
         
         return technicalService;
@@ -227,6 +256,12 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
 
         }
         
+        if(data.getCategory() != null) {
+        	service.setCategory(fcService.findByCode(data.getCategory()));
+        } else {
+        	service.setCategory(null);
+        }
+        
         return service;
     }
 
@@ -282,10 +317,22 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     public void rename(String oldName, String newName) throws BusinessException {
         final List<T> technicalServices = persistenceService.findByName(oldName);
         for (T t : technicalServices) {
+        	String oldCode = t.getCode();
+        	
             t.setName(newName);
             t.setCode(newName + "." + t.getFunctionVersion());
             persistenceService.update(t);
+            
+            // Modify the test job associated
+            List<JobInstance> jobsToUpdate = jobInstanceService.findJobsByTypeAndParameters(FunctionService.FUNCTION_TEST_JOB, oldCode, JobCategoryEnum.TEST);
+            jobsToUpdate.forEach(job -> { 
+            	job.setParametres(t.getCode());
+            	job.setCode(FunctionApi.getTestJobCode(t.getCode()));
+            });
+            
+            serviceRenamedEventProducer.fire(new AttributeUpdateEvent(t, oldCode, t.getCode()));
         }
+
     }
 
     /**
@@ -298,11 +345,24 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * @throws BusinessException If an error occurs
      */
     public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
-        final T service = persistenceService.findByNameAndVersion(name, oldVersion)
-                .orElseThrow(() -> new EntityDoesNotExistsException(name + "." + oldVersion));
+        String oldCode = name + "." + oldVersion;
+        
+    	final T service = persistenceService.findByNameAndVersion(name, oldVersion)
+                .orElseThrow(() -> new EntityDoesNotExistsException(oldCode));
+    	
         service.setFunctionVersion(newVersion);
         service.setCode(name + "." + service.getFunctionVersion());
         persistenceService.update(service);
+        
+        // Modify the test job associated
+        List<JobInstance> jobsToUpdate = jobInstanceService.findJobsByTypeAndParameters(FunctionService.FUNCTION_TEST_JOB, oldCode, JobCategoryEnum.TEST);
+        jobsToUpdate.forEach(job -> { 
+        	job.setParametres(service.getCode());
+        	job.setCode(FunctionApi.getTestJobCode(service.getCode()));
+        });
+        
+        serviceRenamedEventProducer.fire(new AttributeUpdateEvent(service, oldCode, service.getCode()));
+    
     }
 
     /**

@@ -26,6 +26,8 @@ import org.meveocrm.services.dwh.MeasuredValueService;
 
 /**
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, MeasurableQuantityDto> {
@@ -203,7 +205,7 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
 	}
 
 	@Override
-	public MeasurableQuantity fromDto(MeasurableQuantityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public MeasurableQuantity fromDto(MeasurableQuantityDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

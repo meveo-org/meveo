@@ -7,7 +7,8 @@ public enum DefaultPermission {
 	NONE("", null, null),
 	
 	GIT_WRITE("git-write", DefaultPermissionCategory.GIT, -31L),
-	GIT_READ("git-read", DefaultPermissionCategory.GIT, -32L);
+	GIT_READ("git-read", DefaultPermissionCategory.GIT, -32L),
+	EXECUTE_ENDPOINT("execute-endpoint", DefaultPermissionCategory.ENDPOINT, -33L);
 	
 	private String permission;
 	private DefaultPermissionCategory category;

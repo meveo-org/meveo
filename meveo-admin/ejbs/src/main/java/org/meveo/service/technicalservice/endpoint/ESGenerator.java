@@ -25,6 +25,10 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ */
 public class ESGenerator {
 
     public static String generateHtmlForm(Endpoint endpoint) {
@@ -36,13 +40,13 @@ public class ESGenerator {
 
         List<String> params = new ArrayList<>();
 
-        for (EndpointPathParameter pathParameter : endpoint.getPathParameters()) {
+        for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
             String parameter = pathParameter.getEndpointParameter().getParameter();
             appendFormField(code, buffer, parameter);
             params.add(parameter);
         }
 
-        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMapping()) {
+        for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
             String parameter = tsParameterMapping.getParameterName();
             appendFormField(code, buffer, parameter);
             params.add(parameter);
@@ -83,7 +87,7 @@ public class ESGenerator {
 
         // Path parameters
         StringJoiner pathParamJoiner = new StringJoiner("/", "/", "`, baseUrl);");
-        endpoint.getPathParameters().forEach(endpointPathParameter -> pathParamJoiner.add("${parameters." + endpointPathParameter.getEndpointParameter().getParameter() + "}"));
+        endpoint.getPathParametersNullSafe().forEach(endpointPathParameter -> pathParamJoiner.add("${parameters." + endpointPathParameter.getEndpointParameter().getParameter() + "}"));
 
         buffer.append(" {\n");
 
@@ -96,7 +100,7 @@ public class ESGenerator {
         // Query parameters
         if (endpoint.getMethod() == EndpointHttpMethod.GET) {
             StringJoiner getParamJoiner = new StringJoiner("", "", "");
-            endpoint.getParametersMapping().forEach(tsParameterMapping -> {
+            endpoint.getParametersMappingNullSafe().forEach(tsParameterMapping -> {
                 buffer.append("\n\tif (parameters.")
                         .append(tsParameterMapping.getEndpointParameter().getParameter())
                         .append(" !== undefined) {");
@@ -130,7 +134,7 @@ public class ESGenerator {
         if (endpoint.getMethod() == EndpointHttpMethod.POST) {
         	buffer.append(", \n\t\theaders : new Headers({\n \t\t\t'Content-Type': 'application/json'\n\t\t})");
             StringJoiner bodyParamJoiner = new StringJoiner(",\n\t\t\t", "JSON.stringify({\n\t\t\t", "\n\t\t})");
-            endpoint.getParametersMapping().forEach(tsParameterMapping -> bodyParamJoiner.add(tsParameterMapping.getParameterName() + " : parameters." + tsParameterMapping.getParameterName()));
+            endpoint.getParametersMappingNullSafe().forEach(tsParameterMapping -> bodyParamJoiner.add(tsParameterMapping.getParameterName() + " : parameters." + tsParameterMapping.getParameterName()));
             buffer.append(",\n\t\tbody: ").append(bodyParamJoiner.toString());
         }
 

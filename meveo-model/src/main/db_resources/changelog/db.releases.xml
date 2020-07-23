@@ -26,5 +26,6 @@
     <include file="releases/6.7-structure.xml" relativeToChangelogFile="true"/>
     <include file="releases/6.8-structure.xml" relativeToChangelogFile="true"/>
     <include file="releases/6.9-structure.xml" relativeToChangelogFile="true"/>
+    <include file="releases/6.10-structure.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

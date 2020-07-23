@@ -1,6 +1,7 @@
 package org.meveo.model.notification;
 
 public enum InstantMessagingProviderEnum {
+SSE(0,"enum.InstantMessagingProviderEnum.SSE"),
 SKYPE(1,"enum.InstantMessagingProviderEnum.SKYPE"),
 FACEBOOK(2,"enum.InstantMessagingProviderEnum.FACEBOOK"),
 TWITTER(3,"enum.InstantMessagingProviderEnum.TWITTER"),

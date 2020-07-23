@@ -76,13 +76,13 @@ public class CharSequenceCompiler<T> {
     * @throws IllegalStateException
     *            if the Java compiler cannot be loaded.
     */
-   public CharSequenceCompiler(ClassLoader loader, Iterable<String> options) {
+   public CharSequenceCompiler(ClassLoaderImpl loader, Iterable<String> options) {
       compiler = ToolProvider.getSystemJavaCompiler();
       if (compiler == null) {
          throw new IllegalStateException("Cannot find the system Java compiler. "
                + "Check that your class path includes tools.jar");
       }
-      classLoader = new ClassLoaderImpl(loader);
+      classLoader = loader;
       diagnostics = new DiagnosticCollector<JavaFileObject>();
       final JavaFileManager fileManager = compiler.getStandardFileManager(diagnostics,
             null, null);
@@ -223,23 +223,38 @@ public class CharSequenceCompiler<T> {
          }
 
          // Get a CompliationTask from the compiler and compile the sources
-         final CompilationTask task = compiler.getTask(null, javaFileManager, diagnostics,
-                 options, null, sources);
+         final CompilationTask task = compiler.getTask(
+        		 null, 
+        		 javaFileManager, 
+        		 diagnostics,
+                 options, 
+                 null, 
+                 sources
+             );
 
          final Boolean result = task.call();
+         
          if (result == null || !result.booleanValue()) {
             throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
          } else {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
-            compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            compiler.getTask(null, 
+            		fileManager, 
+            		diagnostics, 
+            		Arrays.asList("-cp", classPath), 
+            		null, 
+            		compilationUnits)
+            	.call();
             for (File file : fileList) {
                file.delete();
             }
          }
+         
       } catch (IOException e) {
       }
+      
       try {
          // For each class name in the inpput map, get its compiled
          // class and put it in the output map
@@ -417,9 +432,16 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
    @Override
    public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName,
          Kind kind, FileObject outputFile) throws IOException {
-      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
-      classLoader.add(qualifiedName, file);
-      return file;
+	   
+	   if(outputFile instanceof JavaFileObject) {
+	      classLoader.add(qualifiedName, (JavaFileObject) outputFile);
+	      return (JavaFileObject) outputFile;
+	      
+	   } else {
+	      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
+	      classLoader.add(qualifiedName, file);
+	      return file;
+	   }
    }
 
    @Override
@@ -557,81 +579,5 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
     */
    byte[] getByteCode() {
       return byteCode.toByteArray();
-   }
-}
-
-/**
- * A custom ClassLoader which maps class names to JavaFileObjectImpl instances.
- */
-final class ClassLoaderImpl extends ClassLoader {
-   private final Map<String, JavaFileObject> classes = new HashMap<String, JavaFileObject>();
-
-   ClassLoaderImpl(final ClassLoader parentClassLoader) {
-      super(parentClassLoader);
-   }
-
-   /**
-    * @return An collection of JavaFileObject instances for the classes in the
-    *         class loader.
-    */
-   Collection<JavaFileObject> files() {
-      return Collections.unmodifiableCollection(classes.values());
-   }
-
-	@Override
-	protected Class<?> findClass(final String qualifiedClassName) throws ClassNotFoundException {
-		JavaFileObject file = classes.get(qualifiedClassName);
-		if (file != null) {
-			byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
-			return defineClass(qualifiedClassName, bytes, 0, bytes.length);
-		}
-		// Workaround for "feature" in Java 6
-		// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6434149
-		try {
-			Class<?> c = Class.forName(qualifiedClassName);
-			return c;
-		} catch (ClassNotFoundException nf) {
-
-		}
-
-		try {
-			Class<?> c = ClassLoader.getSystemClassLoader().loadClass(qualifiedClassName);
-			return c;
-		} catch (ClassNotFoundException ignored) {
-
-		}
-
-		return super.findClass(qualifiedClassName);
-	}
-
-   /**
-    * Add a class name/JavaFileObject mapping
-    * 
-    * @param qualifiedClassName
-    *           the name
-    * @param javaFile
-    *           the file associated with the name
-    */
-   void add(final String qualifiedClassName, final JavaFileObject javaFile) {
-      classes.put(qualifiedClassName, javaFile);
-   }
-
-   @Override
-   protected synchronized Class<?> loadClass(final String name, final boolean resolve)
-         throws ClassNotFoundException {
-      return super.loadClass(name, resolve);
-   }
-
-   @Override
-   public InputStream getResourceAsStream(final String name) {
-      if (name.endsWith(".class")) {
-         String qualifiedClassName = name.substring(0,
-               name.length() - ".class".length()).replace('/', '.');
-         JavaFileObjectImpl file = (JavaFileObjectImpl) classes.get(qualifiedClassName);
-         if (file != null) {
-            return new ByteArrayInputStream(file.getByteCode());
-         }
-      }
-      return super.getResourceAsStream(name);
    }
 }

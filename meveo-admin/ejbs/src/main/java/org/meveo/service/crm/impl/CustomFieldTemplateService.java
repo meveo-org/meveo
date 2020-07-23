@@ -254,6 +254,11 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         checkIdentifierTypeAndUniqueness(cft);
 
+        //  if CFT is of type STRING
+        if (cft.getFieldType() == CustomFieldTypeEnum.STRING &&(cft.getMaxValue()== null || cft.getMaxValue() == 0)) {
+            cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
+        }
+
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
         	checkDateFormat(cft);

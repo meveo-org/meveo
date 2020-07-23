@@ -421,6 +421,8 @@ public class CustomFieldTemplateApi extends BaseApi {
 
         if (dto.getDefaultValue() != null) {
             cft.setDefaultValue(dto.getDefaultValue());
+        } else if (StringUtils.isBlank(dto.getDefaultValue()) && dto.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+            cft.setDefaultValue("false");
         }
         if (dto.isUseInheritedAsDefaultValue() != null) {
             cft.setUseInheritedAsDefaultValue(dto.isUseInheritedAsDefaultValue());

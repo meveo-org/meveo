@@ -28,7 +28,8 @@ import org.meveocrm.services.dwh.ChartService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
@@ -318,7 +319,7 @@ public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
 	}
 
 	@Override
-	public Chart fromDto(ChartDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public Chart fromDto(ChartDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

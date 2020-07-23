@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.model.persistence.JacksonUtil;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -44,7 +44,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TechnicalServiceDto extends BusinessEntityDto {
+public class TechnicalServiceDto extends FunctionDto {
 
     private static final long serialVersionUID = 5579910176536059520L;
 

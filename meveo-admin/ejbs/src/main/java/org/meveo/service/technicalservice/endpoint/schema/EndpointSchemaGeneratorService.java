@@ -109,7 +109,8 @@ public class EndpointSchemaGeneratorService {
 	 */
 	public String generateSchema(String schemaLocation, EndpointSchema endpointSchema) {
 
-		return generateSchema(schemaLocation, processorOf(endpointSchema));
+		CustomEndpointParameterProcessor endpointProcessor = processorOf(endpointSchema);
+		return generateSchema(schemaLocation, endpointProcessor);
 	}
 
 	/**
@@ -168,15 +169,19 @@ public class EndpointSchemaGeneratorService {
 		Map<String, EndpointParameter> fields = template.fields();
 		if (fields != null) {
 			fields.forEach((key, field) -> {
-				if (field.getCet() != null) {
-					result.addPropertySchema(key, jsonSchemaGenerator.createSchemaOfCet(schemaLocation, field.getCet()));
-					if (field.isRequired()) {
-						result.addRequiredProperty(field.getName());
-					}
-				} else {
-					result.addPropertySchema(key, createFieldSchema(schemaLocation, template, field, allRefs).build());
-					if (field.isRequired()) {
-						result.addRequiredProperty(field.getName());
+				if (field != null) {
+					if (field.getCet() != null) {
+						result.addPropertySchema(key,
+								jsonSchemaGenerator.createSchemaOfCet(schemaLocation, field.getCet()));
+						if (field.isRequired()) {
+							result.addRequiredProperty(field.getName());
+						}
+					} else {
+						result.addPropertySchema(key,
+								createFieldSchema(schemaLocation, template, field, allRefs).build());
+						if (field.isRequired()) {
+							result.addRequiredProperty(field.getName());
+						}
 					}
 				}
 			});

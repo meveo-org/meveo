@@ -30,6 +30,10 @@ import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowHistoryService;
 import org.meveo.service.wf.WorkflowService;
 
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
+ */
 @Stateless
 public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
 
@@ -336,7 +340,7 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
 	}
 
 	@Override
-	public Workflow fromDto(WorkflowDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public Workflow fromDto(WorkflowDto dto) throws MeveoApiException {
 		// TODO Auto-generated method stub
 		return null;
 	}

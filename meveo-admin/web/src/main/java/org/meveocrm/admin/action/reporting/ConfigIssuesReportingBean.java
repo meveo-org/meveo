@@ -4,11 +4,9 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.catalog.CounterTemplate;
-import org.meveo.model.catalog.ServiceTemplate;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
-import org.meveo.service.catalog.impl.ServiceTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.TabChangeEvent;
 
@@ -24,20 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- * @author Wassim Drira
- * @lastModifiedVersion 5.0
- *
- */
 @Named
 @ViewScoped
 public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
 
     private static final long serialVersionUID = 1L;
 
-
-    @Inject
-    private ServiceTemplateService serviceTemplateService;
 
     @Inject
     private CounterTemplateService counterTemplateService;
@@ -47,7 +37,6 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
 
     private List<Entry<String, String>> jaspers;
 
-    List<ServiceTemplate> servicesWithNotOfferList = new ArrayList<ServiceTemplate>();
     List<CounterTemplate> counterWithNotServicList = new ArrayList<CounterTemplate>();
     List<CustomScript> scriptInstanceWithErrorList = new ArrayList<CustomScript>();
     Map<String, String> jasperFilesList = new HashMap<String, String>();
@@ -116,10 +105,6 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
 
     public ConfigIssuesReportingDTO getReportConfigDto() {
         return reportConfigDto;
-    }
-
-    public List<ServiceTemplate> getServicesWithNotOfferList() {
-        return servicesWithNotOfferList;
     }
 
     public List<CounterTemplate> getCounterWithNotServicList() {
