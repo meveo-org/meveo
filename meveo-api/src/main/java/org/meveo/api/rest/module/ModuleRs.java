@@ -259,7 +259,7 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/importZip")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@ApiOperation(value = "Import from a zip")
-	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Upload module") ModuleUploadForm uploadForm, @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite);
+	void importZip(@GZIP @MultipartForm @NotNull @ApiParam("Upload module") ModuleUploadForm uploadForm, @ApiParam("Whether to overwrite existing data") @QueryParam("overwrite")  boolean overwrite) throws EntityDoesNotExistsException;
 
 	/**
 	 * Export module

@@ -232,7 +232,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 	}
 
     @Override
-    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) {
+    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) throws EntityDoesNotExistsException {
         moduleApi.importZip(uploadForm.getFilename(), uploadForm.getData(), overwrite);
     }
 
