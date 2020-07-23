@@ -118,6 +118,7 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
     JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
     JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XshowSettings:vm"
     JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=${JBOSS_MODULES_SYSTEM_PKGS} -Djava.awt.headless=true"
+    JAVA_OPTS="${JAVA_OPTS} --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED"
 else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
 fi
