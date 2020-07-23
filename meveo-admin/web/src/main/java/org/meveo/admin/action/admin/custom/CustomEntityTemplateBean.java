@@ -1287,6 +1287,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
 				module.addModuleItem(item);
+			} else {
+				messages.error(new BundleKey("messages", "customizedEntities.cetExisted.error"), businessEntity.getCode(), module.getCode());
+				return;
 			}
 
 			for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
