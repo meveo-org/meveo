@@ -352,13 +352,15 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param file      File to import
 	 * @param overwrite Whether we should update existing data
 	 */
-	public void importZip(String fileName, InputStream file, boolean overwrite) {
+	public void importZip(String fileName, InputStream file, boolean overwrite) throws EntityDoesNotExistsException {
 		Path fileImport = null;
 
 		try {
 			fileImport = Files.createTempDirectory(fileName);
 			FileUtils.unzipFile(fileImport.toString(), file);
 			buildFileList(fileImport.toFile(), overwrite);
+		} catch (EntityDoesNotExistsException e) {
+			throw new EntityDoesNotExistsException(e.getMessage());
 		} catch (Exception e) {
 			log.error("Error import zip file {}", fileName, e);
 		}

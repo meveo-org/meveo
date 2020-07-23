@@ -56,6 +56,7 @@ import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
@@ -711,8 +712,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         return meveoModule;
     }
 
-    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) {
+    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) throws EntityDoesNotExistsException {
         MeveoModule meveoModule = findByCode(code);
+        if (meveoModule == null) {
+            throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ code +" doesn't exists locally.");
+        }
         if (currentVersion.equals(meveoModule.getCurrentVersion())) {
             return meveoModule;
         }

@@ -58,6 +58,10 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
 	@JsonProperty(defaultValue = "true")
 	private boolean secured = true;
 	
+	/** Whether to check exact match of path parameters number */
+	@ApiModelProperty("Whether to check exact match of path parameters number")
+	private boolean checkPathParams = true;
+	
 	/**
      * Code of the technical service to update or create
      */
@@ -216,4 +220,12 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
+
+	public boolean isCheckPathParams() {
+		return checkPathParams;
+	}
+
+	public void setCheckPathParams(boolean checkPathParams) {
+		this.checkPathParams = checkPathParams;
+	}
 }

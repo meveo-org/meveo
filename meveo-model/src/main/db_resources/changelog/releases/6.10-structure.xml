@@ -73,4 +73,32 @@
 		</addColumn>
 	</changeSet>
 	
+	<changeSet id="Endpoint - Add option to disable path parameters check - #74" author="Clément Bareth">
+		<addColumn tableName="service_endpoint">
+			<column name="check_path_params" defaultValue="1" type="${type.boolean}">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="[Endpoint] Move permission handling from keycloak to meveo #72" author="Clément Bareth">
+        <insert tableName="adm_permission_category">
+        	<column name="id" value="ENDPOINT"></column>
+        </insert>
+        <insert tableName="adm_permission">
+            <column name="id" valueNumeric="-33" />
+            <column name="name" value="Execute endpoint" />
+            <column name="permission" value="execute-endpoint" />
+            <column name="category" value="ENDPOINT" />
+        </insert>
+        <sql>
+        	INSERT INTO entity_permission
+        	SELECT -1, 'execute-endpoint', endpoint.id, 'WHITE', -33 FROM service_endpoint as endpoint
+        </sql>
+	</changeSet>
+	
+	<changeSet id="#72 : remove roles column" author="Clément Bareth">
+		<dropTable tableName="service_endpoint_roles"/>
+	</changeSet>
+	
 </databaseChangeLog>
