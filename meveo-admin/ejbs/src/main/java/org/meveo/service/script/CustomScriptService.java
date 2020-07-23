@@ -814,7 +814,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 	Class clazz;
                 	
                 	try {
-	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 	                    clazz = classLoader.loadClass(className);
 	                    
                 	} catch(ClassNotFoundException e) {
@@ -1025,19 +1025,40 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return null;
     }
 
-    public static void addLibrary(String location) {
+    /**
+     * Add a jar file to application class path
+     * 
+     * @param location location of the jar file
+     */
+    public void addLibrary(String location) {
         File file = new File(location);
-        URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Method method;
-
-        try {
-            URL url = file.toURI().toURL();
-            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            method.setAccessible(true);
-            method.invoke(classLoader, url);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        
+        if(systemClassLoader instanceof URLClassLoader) {
+			URLClassLoader classLoader = (URLClassLoader) systemClassLoader;
+	        Method method;
+	
+	        try {
+	            URL url = file.toURI().toURL();
+	            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+	            method.setAccessible(true);
+	            method.invoke(classLoader, url);
+	
+	        } catch (Exception e) {
+	            throw new RuntimeException(e);
+	        }
+	        
+        } else {
+	        try {
+	        	Method method = systemClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
+	            method.setAccessible(true);
+	            method.invoke(systemClassLoader, file.getAbsolutePath());
+	
+	        } catch (Exception e) {
+	        	log.warn("Libray {} not added to classpath", location);
+	        	log.warn("Can't access system class loader class, please restart JVM with the following options : --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED");
+	        }
         }
     }
 
