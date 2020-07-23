@@ -223,38 +223,23 @@ public class CharSequenceCompiler<T> {
          }
 
          // Get a CompliationTask from the compiler and compile the sources
-         final CompilationTask task = compiler.getTask(
-        		 null, 
-        		 javaFileManager, 
-        		 diagnostics,
-                 options, 
-                 null, 
-                 sources
-             );
+         final CompilationTask task = compiler.getTask(null, javaFileManager, diagnostics,
+                 options, null, sources);
 
          final Boolean result = task.call();
-         
          if (result == null || !result.booleanValue()) {
             throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
          } else {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
-            compiler.getTask(null, 
-            		fileManager, 
-            		diagnostics, 
-            		Arrays.asList("-cp", classPath), 
-            		null, 
-            		compilationUnits)
-            	.call();
+            compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits).call();
             for (File file : fileList) {
                file.delete();
             }
          }
-         
       } catch (IOException e) {
       }
-      
       try {
          // For each class name in the inpput map, get its compiled
          // class and put it in the output map
@@ -432,16 +417,9 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
    @Override
    public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName,
          Kind kind, FileObject outputFile) throws IOException {
-	   
-	   if(outputFile instanceof JavaFileObject) {
-	      classLoader.add(qualifiedName, (JavaFileObject) outputFile);
-	      return (JavaFileObject) outputFile;
-	      
-	   } else {
-	      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
-	      classLoader.add(qualifiedName, file);
-	      return file;
-	   }
+      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
+      classLoader.add(qualifiedName, file);
+      return file;
    }
 
    @Override
