@@ -89,12 +89,12 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {
-		return Arrays.asList("service", "roles", "pathParameters", "parametersMapping");
+		return Arrays.asList("service", "pathParameters", "parametersMapping");
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("service", "roles");
+		return Arrays.asList("service");
 	}
 
 	@Override
@@ -241,27 +241,6 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		this.returnedVariableNames = returnedVariableNames;
 	}
 
-	public DualListModel<String> getRolesDM() {
-		if (rolesDM == null) {
-			KeycloakAdminClientConfig keycloakAdminClientConfig = KeycloakUtils.loadConfig();
-			List<String> perksSource = keycloakAdminClientService.getCompositeRolesByRealmClientId(
-					keycloakAdminClientConfig.getClientId(), keycloakAdminClientConfig.getRealm());
-			List<String> perksTarget = new ArrayList<>();
-			if (entity.getRoles() != null) {
-				perksTarget.addAll(entity.getRoles());
-			}
-			perksSource.removeAll(perksTarget);
-			rolesDM = new DualListModel<>(perksSource, perksTarget);
-
-		}
-		rolesDM.getSource().remove(EndpointService.ENDPOINT_MANAGEMENT);
-		return rolesDM;
-	}
-
-	public void setRolesDM(DualListModel<String> rolesDM) {
-		this.rolesDM = rolesDM;
-	}
-
 	private EndpointParameter buildEndpointParameter(Endpoint endpoint, String param) {
 		EndpointParameter endpointParameter = new EndpointParameter();
 		endpointParameter.setEndpoint(endpoint);
@@ -301,17 +280,6 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 		} else {
 			entity.getPathParametersNullSafe().clear();
-		}
-
-		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-			final List<String> entityRoles = new ArrayList<>(entity.getRolesNullSafe());
-			rolesDM.getTarget().stream().filter(e -> entityRoles.stream().noneMatch(f -> e.equals(f)))
-					.collect(Collectors.toList()).forEach(g -> entity.getRoles().add(g));
-			entityRoles.stream().filter(e -> rolesDM.getTarget().stream().noneMatch(f -> e.equals(f)))
-					.collect(Collectors.toList()).forEach(g -> entity.getRoles().remove(g));
-
-		} else {
-			entity.setRoles(rolesDM.getTarget());
 		}
 
 		boolean isError = false;

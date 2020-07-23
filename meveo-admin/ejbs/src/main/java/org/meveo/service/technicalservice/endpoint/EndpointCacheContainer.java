@@ -63,8 +63,6 @@ public class EndpointCacheContainer {
 					public Endpoint load(String key) {
 						Endpoint result = endpointService.findByCode(key, Arrays.asList("service"));
 						result.getService();
-						result.getRoles().forEach(r -> {
-						});
 						result.getPathParametersNullSafe().forEach(e -> {
 						});
 						;

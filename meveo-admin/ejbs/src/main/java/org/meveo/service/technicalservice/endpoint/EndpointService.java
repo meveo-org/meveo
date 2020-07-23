@@ -35,7 +35,6 @@ import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.JsonUtils;
@@ -45,11 +44,18 @@ import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.security.DefaultPermission;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.security.permission.RequirePermission;
+import org.meveo.security.permission.SecuredEntity;
+import org.meveo.security.permission.Whitelist;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.ScriptInstanceService;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * EJB for managing technical services endpoints
@@ -116,31 +122,32 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @param entity Endpoint to create
 	 */
 	@Override
-	public void create(Endpoint entity) throws BusinessException {
+	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
+	public void create(@Whitelist(DefaultRole.ADMIN) Endpoint entity) throws BusinessException {
 
 		// Create client if not exitsts
-		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+		// keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
 
-		String endpointPermission = getEndpointPermission(entity);
+		// String endpointPermission = getEndpointPermission(entity);
 
 		// Create endpoint permission and add it to Execute_All_Endpoints composite
-		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
+		// keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
 		// Create endpointManagement role in default client if not exists
-		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-		keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
+		// KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+		// keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
 
 		// Add endpoint role and selected composite roles
-		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-			for (String compositeRole : entity.getRoles()) {
-				keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-						endpointPermission, compositeRole);
-			}
-		}
-
-		// Add Execute_All_Endpoints to endpointManagement composite if not already in
-		keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-				EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
+//		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+//			for (String compositeRole : entity.getRoles()) {
+//				keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+//						endpointPermission, compositeRole);
+//			}
+//		}
+//
+//		// Add Execute_All_Endpoints to endpointManagement composite if not already in
+//		keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+//				EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
 
 		super.create(entity);
 	}
@@ -151,16 +158,17 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @param entity Endpoint to remove
 	 */
 	@Override
-	public void remove(Endpoint entity) throws BusinessException {
+	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
+	public void remove(@SecuredEntity(remove = true) Endpoint entity) throws BusinessException {
 		super.remove(entity);
-		String role = getEndpointPermission(entity);
-		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
-		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-			for (String compositeRole : entity.getRoles()) {
-				keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
-			}
-		}
-		keycloakAdminClientService.removeRole(role);
+//		String role = getEndpointPermission(entity);
+//		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
+//		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
+//			for (String compositeRole : entity.getRoles()) {
+//				keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
+//			}
+//		}
+//		keycloakAdminClientService.removeRole(role);
 	}
 
 	/**
@@ -172,32 +180,32 @@ public class EndpointService extends BusinessService<Endpoint> {
 	@Override
 	public Endpoint update(Endpoint entity) throws BusinessException {
 
-		Endpoint endpoint = findById(entity.getId());
-		String oldEndpointPermission = getEndpointPermission(endpoint);
-
-		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
-
-		// Create client if not exitsts
-		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
-
-		String endpointPermission = getEndpointPermission(entity);
-
-		// Create endpoint permission and add it to Execute_All_Endpoints composite
-		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
-
-		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(),
-				keycloakConfig.getRealm());
-		for (String compositeRole : roles) {
-			if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
-				keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
-			}
-		}
-
-		for (String compositeRole : entity.getRoles()) {
-			keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-					endpointPermission, compositeRole);
-		}
+//		Endpoint endpoint = findById(entity.getId());
+//		String oldEndpointPermission = getEndpointPermission(endpoint);
+//
+//		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
+//
+//		// Create client if not exitsts
+//		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
+//
+//		String endpointPermission = getEndpointPermission(entity);
+//
+//		// Create endpoint permission and add it to Execute_All_Endpoints composite
+//		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
+//
+//		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
+//		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(),
+//				keycloakConfig.getRealm());
+//		for (String compositeRole : roles) {
+//			if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
+//				keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
+//			}
+//		}
+//
+//		for (String compositeRole : entity.getRoles()) {
+//			keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
+//					endpointPermission, compositeRole);
+//		}
 
 		entity = super.update(entity);
 

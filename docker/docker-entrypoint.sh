@@ -40,18 +40,19 @@ if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
 fi
 
 # Keycloak parameters
-if [ "x${KEYCLOAK_URL}" = "x" ]; then
-    if [ "x${DOMAIN_NAME}" = "x" ]; then
-        export KEYCLOAK_URL="http://localhost:8080/auth"
-    else
-        export KEYCLOAK_URL="https://${DOMAIN_NAME}/auth"
-    fi
-    export KEYCLOAK_FIXED_HOSTNAME=${DOMAIN_NAME:-localhost}
-else
-    export KEYCLOAK_URL=${KEYCLOAK_URL}
-    domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
-    export KEYCLOAK_FIXED_HOSTNAME=${domain}
-fi
+# if [ "x${KEYCLOAK_URL}" = "x" ]; then
+#     if [ "x${DOMAIN_NAME}" = "x" ]; then
+#         export KEYCLOAK_URL="http://localhost:8080/auth"
+#     else
+#         export KEYCLOAK_URL="https://${DOMAIN_NAME}/auth"
+#     fi
+#     export KEYCLOAK_FIXED_HOSTNAME=${DOMAIN_NAME:-localhost}
+# else
+#     export KEYCLOAK_URL=${KEYCLOAK_URL}
+#     domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
+#     export KEYCLOAK_FIXED_HOSTNAME=${domain}
+# fi
+export KEYCLOAK_URL=${KEYCLOAK_URL:-http://localhost:8080/auth}
 export KEYCLOAK_REALM=${KEYCLOAK_REALM:-meveo}
 export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
