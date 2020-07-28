@@ -133,6 +133,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 		try {
 			BeanUtilsBean beanUtilsBean = new NullAwareBeanUtilsBean();
 			beanUtilsBean.copyProperties(entity, postData);
+			entity.setParams(postData.getScriptParams());
 
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new MeveoApiException("Unable to copy dto to entity. Make sure that the properties match.");
@@ -155,6 +156,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 			D dto = dtoClass.newInstance();
 			BeanUtilsBean beanUtilsBean = new NullAwareBeanUtilsBean();
 			beanUtilsBean.copyProperties(dto, entity);
+			dto.setScriptParams(entity.getParams());
 
 			if (entity.getCounterTemplate() != null) {
 				dto.setCounterTemplate(entity.getCounterTemplate().getCode());
