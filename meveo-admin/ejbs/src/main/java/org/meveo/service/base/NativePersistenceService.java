@@ -221,7 +221,7 @@ public class NativePersistenceService extends BaseService {
 			} else {
 				for (String field : selectFields) {
 					if (PostgresReserverdKeywords.isReserved(field)) {
-						field = "\"" + field.toLowerCase() + "\"";
+						field = "\"" + field + "\"";
 					}
 					selectQuery.append(field).append(", ");
 				}
@@ -293,7 +293,7 @@ public class NativePersistenceService extends BaseService {
 		AtomicInteger i = new AtomicInteger(1);
 		uniqueValues.forEach((key, value) -> {
 			if (PostgresReserverdKeywords.isReserved(key)) {
-				key = "\"" + key.toLowerCase() + "\"";
+				key = "\"" + key + "\"";
 			}
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
 				if(i.get() == 1) {
@@ -457,7 +457,7 @@ public class NativePersistenceService extends BaseService {
 				}
 
 				if (PostgresReserverdKeywords.isReserved(fieldName)) {
-					fieldNameInSQL = "\"" + fieldName.toLowerCase() + "\"";
+					fieldNameInSQL = "\"" + fieldName + "\"";
 				} else {
 					fieldNameInSQL = fieldName;
 				}
@@ -589,7 +589,7 @@ public class NativePersistenceService extends BaseService {
 		boolean first = true;
 		for (String fieldName : firstValue.keySet()) {
 			if (PostgresReserverdKeywords.isReserved(fieldName)) {
-				fieldName = "\"" + fieldName.toLowerCase() + "\"";
+				fieldName = "\"" + fieldName + "\"";
 			}
 
 			if (!first) {
@@ -724,7 +724,7 @@ public class NativePersistenceService extends BaseService {
 			for (String fieldName : values.keySet()) {
 				String fieldNameInSQL = null;
 				if (PostgresReserverdKeywords.isReserved(fieldName)) {
-					fieldNameInSQL = "\"" + fieldName.toLowerCase() + "\"";
+					fieldNameInSQL = "\"" + fieldName + "\"";
 				} else {
 					fieldNameInSQL = fieldName;
 				}
@@ -804,7 +804,7 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		if (PostgresReserverdKeywords.isReserved(fieldName)) {
-			fieldName = "\"" + fieldName.toLowerCase() + "\"";
+			fieldName = "\"" + fieldName + "\"";
 		}
 		
 		StringBuilder sql = new StringBuilder();
