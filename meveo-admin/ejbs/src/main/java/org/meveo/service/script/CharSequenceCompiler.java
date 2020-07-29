@@ -11,6 +11,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -249,6 +252,9 @@ public class CharSequenceCompiler<T> {
                javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, source);
             }
          }
+         
+         options.add("-d");
+         options.add(scriptsDir.getAbsolutePath());
 
          // Get a CompliationTask from the compiler and compile the sources
          final CompilationTask task = compiler.getTask(
@@ -264,20 +270,23 @@ public class CharSequenceCompiler<T> {
          
          if (result == null || !result.booleanValue()) {
             throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
+         
          } else {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            
+            
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
             compiler.getTask(null, 
             		fileManager, 
             		diagnostics, 
-            		Arrays.asList("-cp", classPath), 
+            		options, 
             		null, 
             		compilationUnits)
             	.call();
-            for (File file : fileList) {
-               file.delete();
-            }
+//            for (File file : fileList) {
+//               file.delete();
+//            }
          }
          
       } catch (IOException e) {
@@ -458,18 +467,10 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
     *      FileObject)
     */
    @Override
-   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName,
-         Kind kind, FileObject outputFile) throws IOException {
-	   
-	   if(outputFile instanceof JavaFileObject) {
-	      classLoader.add(qualifiedName, (JavaFileObject) outputFile);
-	      return (JavaFileObject) outputFile;
-	      
-	   } else {
-	      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
-	      classLoader.add(qualifiedName, file);
-	      return file;
-	   }
+   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName, Kind kind, FileObject outputFile) throws IOException {
+      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
+      classLoader.add(qualifiedName, file);
+      return file;
    }
 
    @Override
