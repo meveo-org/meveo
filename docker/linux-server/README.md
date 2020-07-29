@@ -1,4 +1,4 @@
-﻿# Installation on a linux server
+# Installation on a linux server
 
 This procedure is to install a meveo server with keycloack security server embedded and nginx as a reverse proxy using letsencrypt ssl certificates (generated automatically during installation)
 
@@ -21,7 +21,7 @@ go to the root dir of the server
 cd /home/myserver
 ```
 
-edit the .env file and set the server name, email to be used with lets encrypt,...
+edit the .env file and set the server name, the keycloak server name, email to be used with lets encrypt, ...
 
 start the server
 
