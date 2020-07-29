@@ -121,8 +121,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
     
     private static Logger staticLogger = LoggerFactory.getLogger(CustomScriptService.class);
-    
-    private static ClassLoaderImpl classLoader = new ClassLoaderImpl(CustomScriptService.class.getClassLoader());
 
     @Inject
     private ResourceBundle resourceMessages;
@@ -151,7 +149,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
-    
+
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -790,7 +788,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
 
-        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(CustomScriptService.classLoader, Arrays.asList("-cp", classPath));
+        CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
         return compiler.compile(fullClassName, javaSrc, errs, fileList, ScriptInterface.class);
     }
@@ -819,7 +817,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 	Class clazz;
                 	
                 	try {
-	                    clazz = CustomScriptService.classLoader.loadClass(className);
+                		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+	                    clazz = classLoader.loadClass(className);
 	                    
                 	} catch(ClassNotFoundException e) {
                 		clazz = Class.forName(className);
@@ -1029,14 +1028,40 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return null;
     }
 
-    public static void addLibrary(String location) {
+    /**
+     * Add a jar file to application class path
+     * 
+     * @param location location of the jar file
+     */
+    public void addLibrary(String location) {
         File file = new File(location);
-
-        try {
-            URL url = file.toURI().toURL();
-            classLoader.addUrl(url);
-        } catch (Exception e) {
-            e.printStackTrace();
+        
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        
+        if(systemClassLoader instanceof URLClassLoader) {
+			URLClassLoader classLoader = (URLClassLoader) systemClassLoader;
+	        Method method;
+	
+	        try {
+	            URL url = file.toURI().toURL();
+	            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+	            method.setAccessible(true);
+	            method.invoke(classLoader, url);
+	
+	        } catch (Exception e) {
+	            throw new RuntimeException(e);
+	        }
+	        
+        } else {
+	        try {
+	        	Method method = systemClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
+	            method.setAccessible(true);
+	            method.invoke(systemClassLoader, file.getAbsolutePath());
+	
+	        } catch (Exception e) {
+	        	log.warn("Libray {} not added to classpath", location);
+	        	log.warn("Can't access system class loader class, please restart JVM with the following options : --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED");
+	        }
         }
     }
 
