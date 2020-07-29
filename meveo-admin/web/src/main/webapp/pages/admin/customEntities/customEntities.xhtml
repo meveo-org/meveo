@@ -23,6 +23,7 @@
 
 		<o:importConstants
 			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
+		<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
 
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -134,6 +135,7 @@
 			<p:panel width="100"
 				rendered="#{customEntityInstanceListBean.repository != null}">
 				<h:form prependId="false">
+					<p:messages autoUpdate="true"/>
 					<p:dataTable id="results_panel"
 						value="#{customEntityInstanceListBean.nativeDataModel}"
 						var="entity" lazy="true" widgetVar="ctTable"
@@ -144,6 +146,11 @@
 						liveResize="true" editable="false" rowSelectMode="checkbox"
 						selection="#{customEntityInstanceListBean.selectedValues}"
 						rowIndexVar="rowIdx">
+
+						<p:ajax event="rowSelectCheckbox" update="contentBody" />
+						<p:ajax event="rowUnselectCheckbox" update="contentBody" />
+						<p:ajax event="rowSelect" update="contentBody" />
+						<p:ajax event="rowUnselect" update="contentBody" />
 
 						<p:column id="multiSelect" selectionMode="multiple" width="4%"
 							exportable="false" toggleable="false" selectRow="false" />
@@ -318,6 +325,15 @@
 							</p:commandButton>
 						</p:column>
 					</p:dataTable>
+					<p:column id="customActionButton">
+						<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
+							<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
+								<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
+												 rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity) and ! empty customEntityInstanceListBean.selectedValues}" update="contentBody">
+								</p:commandButton>
+							</ui:repeat>
+						</c:if>
+					</p:column>
 				</h:form>
 			</p:panel>
 		</p:outputPanel>
