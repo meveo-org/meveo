@@ -1,19 +1,45 @@
 package org.meveo.service.script;
 
-import org.apache.commons.io.FileUtils;
-import org.meveo.service.custom.CustomEntityTemplateService;
-
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.tools.*;
+import javax.tools.DiagnosticCollector;
+import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+
+import org.apache.commons.io.FileUtils;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Compile a String or other {@link CharSequence}, returning a Java
@@ -63,6 +89,8 @@ public class CharSequenceCompiler<T> {
 
    // The FileManager which will store source and class "files".
    private final FileManagerImpl javaFileManager;
+   
+   static final Logger LOGGER = LoggerFactory.getLogger(CharSequenceCompiler.class);
 
    /**
     * Construct a new instance which delegates to the named class loader.
@@ -76,13 +104,13 @@ public class CharSequenceCompiler<T> {
     * @throws IllegalStateException
     *            if the Java compiler cannot be loaded.
     */
-   public CharSequenceCompiler(ClassLoaderImpl loader, Iterable<String> options) {
+   public CharSequenceCompiler(ClassLoader loader, Iterable<String> options) {
       compiler = ToolProvider.getSystemJavaCompiler();
       if (compiler == null) {
          throw new IllegalStateException("Cannot find the system Java compiler. "
                + "Check that your class path includes tools.jar");
       }
-      classLoader = loader;
+      classLoader = new ClassLoaderImpl(loader);
       diagnostics = new DiagnosticCollector<JavaFileObject>();
       final JavaFileManager fileManager = compiler.getStandardFileManager(diagnostics,
             null, null);
@@ -579,5 +607,94 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
     */
    byte[] getByteCode() {
       return byteCode.toByteArray();
+   }
+}
+
+/**
+ * A custom ClassLoader which maps class names to JavaFileObjectImpl instances.
+ */
+final class ClassLoaderImpl extends ClassLoader {
+   private final Map<String, JavaFileObject> classes = new HashMap<String, JavaFileObject>();
+
+   ClassLoaderImpl(final ClassLoader parentClassLoader) {
+      super(parentClassLoader);
+   }
+
+   /**
+    * @return An collection of JavaFileObject instances for the classes in the
+    *         class loader.
+    */
+   Collection<JavaFileObject> files() {
+      return Collections.unmodifiableCollection(classes.values());
+   }
+
+	@Override
+	protected Class<?> findClass(final String qualifiedClassName) throws ClassNotFoundException {
+		JavaFileObject file = classes.get(qualifiedClassName);
+		
+		try {
+			if (file != null) {
+				byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
+				return defineClass(qualifiedClassName, bytes, 0, bytes.length);
+			} 
+		} catch (NoClassDefFoundError nf) {
+			try (URLClassLoader urlCl = new URLClassLoader(
+					new URL[] { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() },
+					this.getParent()
+			)){
+				return urlCl.loadClass(qualifiedClassName);
+			} catch (Exception e) {
+				CharSequenceCompiler.LOGGER.error("Can't load class", e);
+			}
+		}
+		
+		// Workaround for "feature" in Java 6
+		// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6434149
+		try {
+			Class<?> c = Class.forName(qualifiedClassName);
+			return c;
+		} catch (ClassNotFoundException nf) {
+
+		}
+
+		try {
+			Class<?> c = ClassLoader.getSystemClassLoader().loadClass(qualifiedClassName);
+			return c;
+		} catch (ClassNotFoundException ignored) {
+
+		}
+
+		return super.findClass(qualifiedClassName);
+	}
+
+   /**
+    * Add a class name/JavaFileObject mapping
+    * 
+    * @param qualifiedClassName
+    *           the name
+    * @param javaFile
+    *           the file associated with the name
+    */
+   void add(final String qualifiedClassName, final JavaFileObject javaFile) {
+      classes.put(qualifiedClassName, javaFile);
+   }
+
+   @Override
+   protected synchronized Class<?> loadClass(final String name, final boolean resolve)
+         throws ClassNotFoundException {
+      return super.loadClass(name, resolve);
+   }
+
+   @Override
+   public InputStream getResourceAsStream(final String name) {
+      if (name.endsWith(".class")) {
+         String qualifiedClassName = name.substring(0,
+               name.length() - ".class".length()).replace('/', '.');
+         JavaFileObjectImpl file = (JavaFileObjectImpl) classes.get(qualifiedClassName);
+         if (file != null) {
+            return new ByteArrayInputStream(file.getByteCode());
+         }
+      }
+      return super.getResourceAsStream(name);
    }
 }

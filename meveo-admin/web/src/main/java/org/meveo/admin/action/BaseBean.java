@@ -519,15 +519,18 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                     MeveoModuleItem item = new MeveoModuleItem(businessEntity);
                     if (!module.getModuleItems().contains(item)) {
                         module.addModuleItem(item);
-                    }
-                    try {
-                        if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
-                           module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+                        try {
+                            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
+                                module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+                            }
+                            meveoModuleService.mergeModule(module);
+                            messages.info(businessEntity.getCode() + " added to module " + module.getCode());
+                        } catch (Exception e) {
+                            messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
                         }
-                        meveoModuleService.mergeModule(module);
-                        messages.info(businessEntity.getCode() + " added to module " + module.getCode());
-                    } catch (Exception e) {
-                        messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
+                    } else {
+                        messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), businessEntity.getCode(), module.getCode());
+                        return;
                     }
                 }
             }
@@ -548,16 +551,22 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 
             try {
-
+                List<String> itemExisted = new ArrayList<>();
 	            for (IEntity entity : selectedEntities) {
 	                if (entity != null && !eachModule.equals(entity)) {
 	                    BusinessEntity businessEntity = (BusinessEntity) entity;
 	                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 	                    if (!module.getModuleItems().contains(item)) {
 	                        module.addModuleItem(item);
-	                    }
+	                    } else {
+	                        itemExisted.add(item.getItemCode());
+                        }
 	                }
 	            }
+	            if (!itemExisted.isEmpty()) {
+	                messages.error(itemExisted + " already exist in the module items of module " + module.getCode());
+	                return;
+                }
 	            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
                     module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
                 }
