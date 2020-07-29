@@ -175,18 +175,23 @@
 							selectRow="false">
 
 							<!--  Date -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out_date"
+							<h:outputText id="#{entity[field.dbFieldname]}_out_date_table"
 								value="#{entity[field.dbFieldname]}" styleClass="field-value"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] != null}">
+								rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] != null and customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}">
 								<f:convertDateTime type="date"
 									pattern="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
 							</h:outputText>
 
+							<h:outputText id="#{entity[field.dbFieldname]}_out_date"
+										  value="#{entity[field.dbFieldname]}" styleClass="field-value" converter="dateConverter"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] != null and !customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}">
+							</h:outputText>
+
 							<h:outputText id="field_#{entity[field.dbFieldname]}_out_date"
-										  value="#{entity[field.code]}" styleClass="field-value"
+										  value="#{entity[field.code]}" styleClass="field-value" converter="dateConverter"
 										  rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] == null}">
-								<f:convertDateTime type="date"
-												   pattern="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
+								<!--<f:convertDateTime type="date"-->
+												   <!--pattern="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />-->
 							</h:outputText>
 
 							<!--  String, Enum or Long  -->
@@ -209,6 +214,28 @@
 										  value="#{entity[field.code]}" styleClass="field-value"
 										  rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE and entity[field.dbFieldname] == null}">
 								<f:converter converterId="javax.faces.Double" />
+							</h:outputText>
+
+							<!--  Boolean -->
+							<h:outputText id="#{entity[field.dbFieldname]}_out_boolean"
+										  value="#{entity[field.dbFieldname]}" styleClass="field-value" converter="booleanConverter"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.dbFieldname] != null}">
+							</h:outputText>
+
+							<h:outputText id="field_#{entity[field.dbFieldname]}_out_boolean"
+										  value="#{entity[field.code]}" styleClass="field-value" converter="booleanConverter"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.dbFieldname] == null}">
+							</h:outputText>
+
+							<!--  Text Area -->
+							<h:outputText id="#{entity[field.dbFieldname]}_out_textarea"
+										  value="#{entity[field.dbFieldname]}" styleClass="field-value"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.dbFieldname] != null}">
+							</h:outputText>
+
+							<h:outputText id="field_#{entity[field.dbFieldname]}_out_textarea"
+										  value="#{entity[field.code]}" styleClass="field-value"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.dbFieldname] == null}">
 							</h:outputText>
 
 							<h:outputText id="#{entity[field.dbFieldname]}_input_link"
