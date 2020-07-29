@@ -85,6 +85,8 @@ public class MeveoModuleItem extends BaseEntity {
                 this.validity = (DatePeriod) FieldUtils.readField(itemEntity, "validity", true);
             } catch (IllegalAccessException e) {
             }
+        } else {
+            this.validity = null;
         }
     }
 

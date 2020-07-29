@@ -130,10 +130,6 @@ public class NativePersistenceService extends BaseService {
 	@Updated
 	private Event<CustomTableRecord> customTableRecordUpdate;
 
-    @Inject
-    @Updated
-    private Event<CustomEntityInstance> customEntityInstanceUpdate;
-
 	@Inject
 	@Removed
 	private Event<CustomTableRecord> customTableRecordRemoved;
@@ -780,9 +776,6 @@ public class NativePersistenceService extends BaseService {
 			record.setCetCode(cei.getTableName());
 
 			customTableRecordUpdate.fire(record);
-
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(cei.getTableName()), values);
-			customEntityInstanceUpdate.fire(customEntityInstance);
 
 		} catch (Exception e) {
 			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);

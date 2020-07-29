@@ -37,6 +37,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import javax.transaction.SystemException;
@@ -49,6 +50,9 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
+import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -121,6 +125,18 @@ public class CrossStorageService implements CustomPersistenceService {
 	
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
+	
+    @Inject
+    @Updated
+    private Event<CustomEntityInstance> customEntityInstanceUpdate;
+    
+    @Inject
+    @Created
+    private Event<CustomEntityInstance> customEntityInstanceCreate;
+    
+    @Inject
+    @Removed
+    private Event<CustomEntityInstance> customEntityInstanceDelete;
 
 	/**
 	 * Retrieves one entity instance
@@ -611,6 +627,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		} catch (IllegalArgumentException e) {
 			//It's no problem if we can't retrieve record using values - we consider it does not exist
 		}
+		
+		boolean created = foundId == null;
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
@@ -666,6 +684,12 @@ public class CrossStorageService implements CustomPersistenceService {
 			} else {
 				throw new RuntimeException(e);
 			}
+		}
+		
+		if(created) {
+			customEntityInstanceCreate.fire(cei);
+		} else {
+			customEntityInstanceUpdate.fire(cei);
 		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
@@ -1114,7 +1138,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 
 		fileSystemService.delete(repository, cet, uuid);
-
+		
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCet(cet);
+		cei.setCetCode(cet.getCode());
+		cei.setUuid(uuid);
+		
+		customEntityInstanceDelete.fire(cei);
 	}
 
 	/**
