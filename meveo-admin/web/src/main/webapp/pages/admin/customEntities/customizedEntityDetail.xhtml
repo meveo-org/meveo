@@ -20,7 +20,7 @@
                 <p:menuitem value="#{messages['commons.new']} #{messages['customizedEntities.customEntity']}" disabled="true"
                     rendered="#{customEntityTemplateBean.entity.code==null and customEntityTemplateBean.customEntityTemplate}" />
 
-                <p:menuitem value="#{customEntityTemplateBean.entity.code}" disabled="true" rendered="#{customEntityTemplateBean.entity.code!=null}" />
+                <p:menuitem value="org.meveo.model.customEntities.#{customEntityTemplateBean.entity.code}" disabled="true" rendered="#{customEntityTemplateBean.entity.code!=null}" />
 
                 <p:menuitem value="#{customEntityTemplateBean.customizedEntity.classnameToDisplayHuman}" disabled="true" rendered="#{! customEntityTemplateBean.customEntityTemplate}" />
 
