@@ -59,6 +59,7 @@
 								<hftl:objectConverter />
 								<f:selectItem itemLabel="#{messages['commons.select']}" />
 								<f:selectItems value="#{jobInstanceBean.getFollowingJobList()}" var="t_" itemLabel="#{t_.code}" itemValue="#{t_}" />
+								<p:ajax event="change" process="@form" partialSubmit="true" update=":formId:tabView"></p:ajax>
 							</p:selectOneMenu>
 						</hftl:decorateFormField>
 						<hftl:formField label="#{messages['jobInstance.runOnNodes']}" field="runOnNodes" listenerUpdate="clusterInfo" />

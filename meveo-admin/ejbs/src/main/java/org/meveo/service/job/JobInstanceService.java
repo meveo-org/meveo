@@ -257,6 +257,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         instance.setRunOnNodes(jobInstance.getRunOnNodes());
         instance.setLimitToSingleNode(jobInstance.isLimitToSingleNode());
         instance.setRunTimeValues(jobInstance.getRunTimeValues());
+        instance.setCfValues(jobInstance.getCfValues());
 
         instance.getExecutionResults().clear();
         if (CollectionUtils.isNotEmpty(jobExecutionResults)) {
