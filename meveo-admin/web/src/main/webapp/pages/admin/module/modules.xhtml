@@ -166,8 +166,8 @@
         <p:dialog widgetVar="importFromInternalFileDialog" header="#{messages['action.selectFile']}" dynamic="true" modal="true" styleClass="form-dialog"
                    closeOnEscape="true" width="60%" appendTo="@(body)">
             <h:form id="importForm">
-                <p:dataTable var="file" value="#{meveoModuleListBean.fileList}"
-                             sortBy="#{file.name}" resizableColumns="true">
+                <p:dataTable var="file" value="#{meveoModuleListBean.fileList}" sortBy="#{file.name}" rows="10" resizableColumns="true"
+                             paginator="true" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="10,15">
                     <f:facet name="header">
                         <p:spacer width="8" />
                         <p:commandButton icon="fa fa-level-up" value="Up"
