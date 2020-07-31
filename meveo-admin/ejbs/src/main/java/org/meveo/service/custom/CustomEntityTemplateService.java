@@ -51,6 +51,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -102,6 +103,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
+
+    @Inject
+    private EntityCustomActionService entityCustomActionService;
 
     private static boolean useCETCache = true;
 
@@ -272,6 +276,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
+        Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
+
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
         }
@@ -286,6 +292,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
             neo4jService.removeCet(cet);
             neo4jService.removeUUIDIndexes(cet);
+        }
+
+        for (EntityCustomAction entityCustomAction : customActionMap.values()) {
+            entityCustomActionService.remove(entityCustomAction.getId());
         }
 
         customFieldsCache.removeCustomEntityTemplate(cet);
