@@ -650,9 +650,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes().stream().filter(e -> e instanceof ClassOrInterfaceDeclaration)
-                .map(e -> (ClassOrInterfaceDeclaration) e).findFirst().get();
+                .map(e -> (ClassOrInterfaceDeclaration) e)
+                .findFirst()
+                .get();
 
-        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers().stream().filter(e -> e instanceof MethodDeclaration).map(e -> (MethodDeclaration) e)
+        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+        		.stream().filter(e -> e instanceof MethodDeclaration)
+        		.map(e -> (MethodDeclaration) e)
                 .collect(Collectors.toList());
 
         final List<Accessor> setters = ScriptUtils.getSetters(methods);
@@ -661,33 +665,37 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         
         // Find getter and setter defined in super types
         for(ClassOrInterfaceType type : classOrInterfaceDeclaration.getExtendedTypes()) {
-        	String className = compilationUnit.getImports().stream()
-        		.filter(importEntry -> importEntry.getNameAsString().contains(type.getNameAsString()))
-        		.map(ImportDeclaration::getNameAsString)
-        		.findFirst()
-        		.orElse(type.getNameAsString());
+        	Class<?> typeClass = null;
         	
         	try {
-				Class<?> typeClass = Class.forName(className);
+        		typeClass = Class.forName(type.getNameAsString());
+        	} catch (Exception e) {
+            	String className = compilationUnit.getImports().stream()
+                		.filter(importEntry -> importEntry.getNameAsString().endsWith("." + type.getNameAsString()))
+                		.map(ImportDeclaration::getNameAsString)
+                		.findFirst()
+                		.get();
+            	try {
+    				typeClass = Class.forName(className);
+    			} catch (ClassNotFoundException e1) {
+    				throw new BusinessException(e1);
+    			}
+        	}
 				
-				// Build getters and setter of extended types
-				Arrays.stream(typeClass.getMethods())
-						.filter(m -> m.getName().startsWith(Accessor.SET))
-						.filter(m -> m.getParameterCount() == 1)
-						.filter(m -> m.getReturnType() == void.class)
-						.map(Accessor::new)
-						.forEach(setters::add);
-				
-				Arrays.stream(typeClass.getMethods())
-						.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
-						.filter(m -> m.getParameterCount() == 0)
-						.filter(m -> m.getReturnType() != void.class)
-						.map(Accessor::new)
-						.forEach(getters::add);
-				
-			} catch (ClassNotFoundException e1) {
-				log.warn("Can't find class {}", className);
-			}
+			// Build getters and setter of extended types
+			Arrays.stream(typeClass.getMethods())
+					.filter(m -> m.getName().startsWith(Accessor.SET))
+					.filter(m -> m.getParameterCount() == 1)
+					.filter(m -> m.getReturnType() == void.class)
+					.map(Accessor::new)
+					.forEach(setters::add);
+			
+			Arrays.stream(typeClass.getMethods())
+					.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
+					.filter(m -> m.getParameterCount() == 0)
+					.filter(m -> m.getReturnType() != void.class)
+					.map(Accessor::new)
+					.forEach(getters::add);
         }
 
         checkEndpoints(script, setters);
