@@ -90,10 +90,6 @@
 						<f:param name="cid"
 							value="#{javax.enterprise.context.conversation.id}" />
 					</p:commandButton>
-					<p:commandButton value="#{messages['fileExplorer.importMeveoModule']}"
-									 rendered="#{userBean.selectedFileName.endsWith('.json') or userBean.selectedFileName.endsWith('.zip')}"
-									 action="#{userBean.importFromInternalFile}" update=":fileExplorer">
-					</p:commandButton>
 				</p:panel>
 				<p:panel id="downloadZipfile"
 					rendered="#{userBean.selectedFileName==null}">

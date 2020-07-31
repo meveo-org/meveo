@@ -51,7 +51,6 @@ import org.meveo.admin.action.admin.module.MeveoModuleBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.UserApi;
-import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
@@ -120,9 +119,6 @@ public class UserBean extends CustomFieldBean<User> {
     
     @Inject
     private MeveoModuleBean meveoModuleBean;
-
-    @Inject
-    private MeveoModuleApi meveoModuleApi;
 
     private String selectedFolder;
     
@@ -824,22 +820,6 @@ public class UserBean extends CustomFieldBean<User> {
 			}
 		}
 	}
-
-    public void importFromInternalFile() {
-        try {
-            File file = new File(getFilePath(selectedFileName));
-            InputStream inputStream = new FileInputStream(file);
-            if (selectedFileName.endsWith(".json")) {
-                meveoModuleApi.importJSON(inputStream, true);
-                messages.info(new BundleKey("messages", "user.importFromFile.successful"), selectedFileName);
-            } else if (selectedFileName.endsWith(".zip")) {
-                meveoModuleApi.importZip(selectedFileName, inputStream, true);
-                messages.info(new BundleKey("messages", "user.importFromFile.successful"), selectedFileName);
-            }
-        } catch (Exception e) {
-            messages.error(new BundleKey("messages", "user.importFromFile.error"), selectedFileName);
-        }
-    }
 
     public String getPassphrase() {
         return passphrase;

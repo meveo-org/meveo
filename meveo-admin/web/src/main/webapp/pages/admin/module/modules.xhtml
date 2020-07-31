@@ -64,7 +64,7 @@
 	                <p:commandButton id="downloadMeveoModuleButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.downloadAndInstallModules']}"
 	                    update=":#{p:component('meveoModulesDialog')}" oncomplete="PF('meveoModulesDialog').show()">
 	                </p:commandButton>
-                    <p:button id="importFromFileButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.importFromInternalFile']}" outcome="fileExplorer"/>
+                    <p:commandButton id="importFromFileButton" value="#{messages['meveoModule.importFromInternalFile']}" actionListener="#{meveoModuleListBean.getFilesFromFileExplorer}" oncomplete="PF('importFromInternalFileDialog').show()" update="importForm"/>
 	            </ui:define>
 	        </hftl:dataList>
         </p:outputPanel>
@@ -161,6 +161,54 @@
                     <p:commandButton action="#{meveoModuleListBean.deleteModuleFile()}" immediate="true" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
                     <p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" onclick="PF('deleteDialog').hide();" />
                 </h:panelGroup>
+            </h:form>
+        </p:dialog>
+        <p:dialog widgetVar="importFromInternalFileDialog" header="#{messages['action.selectFile']}" dynamic="true" modal="true" styleClass="form-dialog"
+                   closeOnEscape="true" width="60%" appendTo="@(body)">
+            <h:form id="importForm">
+                <p:dataTable var="file" value="#{meveoModuleListBean.fileList}"
+                             sortBy="#{file.name}" resizableColumns="true">
+                    <f:facet name="header">
+                        <p:spacer width="8" />
+                        <p:commandButton icon="fa fa-level-up" value="Up"
+                                         rendered="#{meveoModuleListBean.hasSelectedFolder()}"
+                                         action="#{meveoModuleListBean.setSelectedFolder('..')}"
+                                         update=":importForm" />
+                        <p:spacer width="8" />
+                        <h:outputText
+                                value="#{messages['fileExplorer.currentDirectory']}: #{meveoModuleListBean.selectedFolder}"
+                                rendered="#{meveoModuleListBean.hasSelectedFolder()}" />
+                    </f:facet>
+                    <p:column headerText="#{messages['fileExplorer.fileName']}"
+                              sortBy="#{file.name}">
+                        <p:commandLink action="#{meveoModuleListBean.setSelectedFolder(file.name)}"
+                                       rendered="#{file.isDirectory()}" update=":importForm">
+                            <i class="fa fa-folder-o fa-2x"></i>
+                            <p:spacer width="8" />
+                            <h:outputText value='#{file.name}' />
+                        </p:commandLink>
+                        <p:commandLink action="#{meveoModuleListBean.setSelectedFileName(file.name)}"
+                                       rendered="#{!file.isDirectory()}" update=":importForm">
+                            <i class="fa fa-file-#{meveoModuleListBean.getFileType(file.name)}-o fa-2x"></i>
+                            <p:spacer width="8" />
+                            <h:outputText value='#{file.name}' />
+                        </p:commandLink>
+                    </p:column>
+
+                    <p:column headerText="#{messages['fileExplorer.fileDate']}"
+                              sortBy="#{file.lastModified()}">
+                        <h:outputText value="#{file.lastModified()}">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+                        </h:outputText>
+                    </p:column>
+                    <f:facet name="footer">
+                        <h:outputText value="#{meveoModuleListBean.selectedFileName}" rendered="#{meveoModuleListBean.selectedFileName != null and (meveoModuleListBean.selectedFileName.endsWith('.json') or meveoModuleListBean.selectedFileName.endsWith('.zip'))}"/>
+                        <p:commandButton value="#{messages['fileExplorer.importMeveoModule']}" action="#{meveoModuleListBean.importFromInternalFile}" oncomplete="PF('importFromInternalFileDialog').hide();" update="@form :listOfModules"
+                                         rendered="#{meveoModuleListBean.selectedFileName != null and (meveoModuleListBean.selectedFileName.endsWith('.json') or meveoModuleListBean.selectedFileName.endsWith('.zip'))}">
+                        </p:commandButton>
+                        <p:button value="#{messages['action.cancel']}" onclick="PF('importFromInternalFileDialog').hide(); return false;"/>
+                    </f:facet>
+                </p:dataTable>
             </h:form>
         </p:dialog>
     </ui:define>
