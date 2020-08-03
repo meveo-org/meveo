@@ -613,7 +613,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                         try {
                             Class clazz = Class.forName(item.getItemClass());
                             if (clazz.getSimpleName().startsWith("Endpoint")) {
-                                Endpoint endpoint = endpointService.findByCode(item.getItemCode(), Arrays.asList("roles", "service", "pathParameters", "parametersMapping"));
+                                Endpoint endpoint = endpointService.findByCode(item.getItemCode(), Arrays.asList("service", "pathParameters", "parametersMapping"));
                                 itemDto = endpointApi.toDto(endpoint);
                             } else if (clazz.isAnnotationPresent(VersionedEntity.class)) {
                                 ApiVersionedService apiService = ApiUtils.getApiVersionedService(item.getItemClass(), true);
