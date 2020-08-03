@@ -15,6 +15,7 @@
  */
 package org.meveo.api.technicalservice.endpoint;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,7 +110,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		this.concreteFunctionService = concreteFunctionService;
 	}
 
-	public String getEndpointScript(String baseUrl, String code) throws EntityDoesNotExistsException {
+	public String getEndpointScript(String baseUrl, String code) throws EntityDoesNotExistsException, IOException {
+		
+		if(code.equals(Endpoint.ENDPOINT_INTERFACE_JS)) {
+			return esGeneratorService.buildBaseEndpointInterface(baseUrl);
+		}
+		
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
