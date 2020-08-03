@@ -49,6 +49,7 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.MeveoModulePatchApi;
 import org.meveo.api.module.ModuleReleaseApi;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
@@ -95,6 +96,10 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	private ModuleRelease moduleReleaseExport;
 	private transient UploadedFile patchFile;
 	private transient MeveoModulePatch newMeveoModulePatch;
+	private List<File> fileList;
+	private String selectedFolder;
+	private String selectedFileName;
+	private boolean currentDirEmpty;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -157,6 +162,91 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	public void setMeveoModules(List<MeveoModule> meveoModules) {
 		this.meveoModules = meveoModules;
+	}
+
+	public List<File> getFileList() {
+		return fileList;
+	}
+
+	public void setFileList(List<File> fileList) {
+		this.fileList = fileList;
+	}
+
+	public String getSelectedFolder() {
+		return selectedFolder;
+	}
+
+	public void setSelectedFolder(String selectedFolder) {
+		setSelectedFileName(null);
+		if (selectedFolder == null) {
+			this.selectedFolder = null;
+		} else if ("..".equals(selectedFolder)) {
+			if (this.selectedFolder.lastIndexOf(File.separator) > 0) {
+				this.selectedFolder = this.selectedFolder.substring(0, this.selectedFolder.lastIndexOf(File.separator));
+			} else {
+				this.selectedFolder = null;
+			}
+		} else {
+			if (this.selectedFolder == null) {
+				this.selectedFolder = File.separator + selectedFolder;
+			} else {
+				this.selectedFolder += File.separator + selectedFolder;
+			}
+		}
+		buildFileList();
+	}
+
+	private String getFilePath() {
+		return paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+
+	}
+
+	private String getFilePath(String name) {
+		String result = getFilePath() + File.separator + name;
+		if (selectedFolder != null) {
+			result = getFilePath() + File.separator + selectedFolder + File.separator + name;
+		}
+		return result;
+	}
+
+	private void buildFileList() {
+		String folder = getFilePath() + File.separator + (this.selectedFolder == null ? "" : this.selectedFolder);
+		File file = new File(folder);
+
+		File[] files = file.listFiles();
+
+		List<String> hiddenFolders = Arrays.asList("imports", "invoices", "jasper");
+
+		fileList = files == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(files));
+		fileList = fileList.stream().filter(e -> !e.isDirectory() || (e.isDirectory() && !hiddenFolders.contains(e.getName()))).collect(Collectors.toList());
+		currentDirEmpty = !StringUtils.isBlank(this.selectedFolder) && fileList.isEmpty();
+	}
+
+	public boolean hasSelectedFolder() {
+		return !StringUtils.isBlank(selectedFolder);
+	}
+
+	public String getSelectedFileName() {
+		return selectedFileName;
+	}
+
+	public void setSelectedFileName(String selectedFileName) {
+		this.selectedFileName = selectedFileName;
+	}
+
+	public boolean isCurrentDirEmpty() {
+		return currentDirEmpty;
+	}
+
+	public void setCurrentDirEmpty(boolean currentDirEmpty) {
+		this.currentDirEmpty = currentDirEmpty;
+	}
+
+	public String getFileType(String fileName) {
+		if (fileName != null && fileName.endsWith(".zip")) {
+			return "zip";
+		}
+		return "text";
 	}
 
 	/**
@@ -467,6 +557,26 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 			}
 		}
 		return true;
+	}
+
+	public void getFilesFromFileExplorer() {
+		setSelectedFolder(null);
+		buildFileList();
+	}
+
+	public void importFromInternalFile() {
+		try {
+			File file = new File(getFilePath(selectedFileName));
+			InputStream inputStream = new FileInputStream(file);
+			if (selectedFileName.endsWith(".json")) {
+				meveoModuleApi.importJSON(inputStream, true);
+			} else if (selectedFileName.endsWith(".zip")) {
+				meveoModuleApi.importZip(selectedFileName, inputStream, true);
+			}
+			messages.info(new BundleKey("messages", "meveoModule.importFromFile.successful"), selectedFileName);
+		} catch (Exception e) {
+			messages.error(new BundleKey("messages", "meveoModule.importFromFile.error"), selectedFileName, e.getMessage());
+		}
 	}
 
 	public MeveoModulePatch getNewMeveoModulePatch() {
