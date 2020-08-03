@@ -35,12 +35,9 @@ import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.JsonUtils;
-import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
-import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
@@ -111,8 +108,8 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @return the filtered list of endpoints
 	 */
 	public List<Endpoint> findByParameterName(String code, String parameterName) {
-		return getEntityManager().createNamedQuery("findByParameterName", Endpoint.class)
-				.setParameter("serviceCode", code).setParameter("propertyName", parameterName).getResultList();
+		return getEntityManager().createNamedQuery("findByParameterName", Endpoint.class).setParameter("serviceCode", code).setParameter("propertyName", parameterName)
+				.getResultList();
 	}
 
 	/**
@@ -131,11 +128,13 @@ public class EndpointService extends BusinessService<Endpoint> {
 		// String endpointPermission = getEndpointPermission(entity);
 
 		// Create endpoint permission and add it to Execute_All_Endpoints composite
-		// keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
+		// keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT,
+		// endpointPermission, EXECUTE_ALL_ENDPOINTS);
 
 		// Create endpointManagement role in default client if not exists
 		// KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-		// keycloakAdminClientService.createRole(keycloakConfig.getClientId(), ENDPOINT_MANAGEMENT);
+		// keycloakAdminClientService.createRole(keycloakConfig.getClientId(),
+		// ENDPOINT_MANAGEMENT);
 
 		// Add endpoint role and selected composite roles
 //		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
@@ -227,11 +226,31 @@ public class EndpointService extends BusinessService<Endpoint> {
 		return f.exists() && !f.isDirectory();
 	}
 
+	/**
+	 * Checks if the base endpoint interface is already created and pushed in git
+	 * repository.
+	 * 
+	 * @param endpoint endpoint to search
+	 * @return true if endpoint interface exists
+	 */
+	public boolean isBaseEndpointScriptExists() {
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File f = new File(repositoryDir, "/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
+
+		return f.exists() && !f.isDirectory();
+	}
+
 	public File getScriptFile(Endpoint endpoint) {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
 		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
+	}
+	
+	public File getBaseScriptFile() {
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File endpointFile = new File(repositoryDir, "/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
+		return endpointFile;
 	}
 
 	public String getJsonSchemaContent(Endpoint endpoint) {
@@ -239,7 +258,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(endpoint.getService().getCode());
 		String content = scriptInstance.getScript();
 
-		final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()+ "/src/main/java/custom/entities");
+		final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
 
 		List<File> files = new ArrayList<>();
 
@@ -266,7 +285,8 @@ public class EndpointService extends BusinessService<Endpoint> {
 					ObjectMapper objectMapper = new ObjectMapper();
 					Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
 					list.add(jsonMap);
-				} catch (IOException e) {}
+				} catch (IOException e) {
+				}
 			}
 		}
 
