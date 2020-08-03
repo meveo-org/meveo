@@ -1,8 +1,7 @@
 package org.meveo.service.custom;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -197,6 +196,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			if (filterValue.getValue() == null) {
 				continue;
 			}
+
+			if (filterValue.getValue() instanceof Date) {
+				filterValue.setValue(((Date) filterValue.getValue()).getTime());
+			}
 			
 			String strPattern = filterValue.getValue().toString().replace("*", ".*");
 			Pattern pattern = Pattern.compile(strPattern, Pattern.CASE_INSENSITIVE);
@@ -210,9 +213,22 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 					Matcher matcher = pattern.matcher(customEntityInstance.getCode());
 					return matcher.matches();
 				}
+
+				List<String> keys = new ArrayList<>(cfValuesAsValues.keySet());
+				for (String key : keys) {
+					if (key.equalsIgnoreCase(fieldName)) {
+						cfValuesAsValues.put(fieldName, cfValuesAsValues.get(key));
+					}
+				}
 			}
 
 			Object referenceValue = cfValuesAsValues.get(fieldName);
+
+			if (referenceValue instanceof Instant) {
+				referenceValue = Date.from((Instant) referenceValue).getTime();
+			} else if (referenceValue instanceof Date) {
+				referenceValue = ((Date) referenceValue).getTime();
+			}
 			if ("fromRange".equals(condition)) {
 				if (new BigDecimal(referenceValue.toString()).compareTo(new BigDecimal(filterValue.getValue().toString())) < 0) {
 					return false;
