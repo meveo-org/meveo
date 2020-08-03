@@ -18,11 +18,9 @@
  */
 package org.meveo.admin.jsf.converter;
 
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -55,9 +53,6 @@ public class DateConverter implements Converter {
 
     @Override
     public String getAsString(FacesContext facesContext, UIComponent uIComponent, Object obj) {
-        if (obj instanceof Instant) {
-            obj = new Timestamp(((Instant) obj).toEpochMilli());
-        }
         ParamBeanFactory paramBeanFactory = (ParamBeanFactory) EjbUtils.getServiceInterface(ParamBeanFactory.class.getSimpleName());
         String dateFormat = paramBeanFactory.getInstance().getDateFormat();
         DateFormat df = new SimpleDateFormat(dateFormat, FacesContext.getCurrentInstance().getViewRoot().getLocale());
