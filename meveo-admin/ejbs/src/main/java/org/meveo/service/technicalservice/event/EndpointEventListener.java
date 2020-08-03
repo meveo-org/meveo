@@ -2,7 +2,10 @@ package org.meveo.service.technicalservice.event;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -63,13 +66,21 @@ public class EndpointEventListener {
 	 * @throws IOException       if file cannot be created
 	 * @throws BusinessException if the changes can't be commited
 	 */
-	public File createESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint)
-			throws IOException, BusinessException {
+	public File createESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) throws IOException, BusinessException {
+
+		List<File> filesToCommit = new ArrayList<>();
+		// check if base interface exists
+		if (!endpointService.isBaseEndpointScriptExists()) {
+			final File baseScriptFile = endpointService.getBaseScriptFile();
+			FileUtils.write(baseScriptFile, esGeneratorService.buildBaseEndpointInterface(""), StandardCharsets.UTF_8);
+			filesToCommit.add(baseScriptFile);
+		}
 
 		final File scriptFile = endpointService.getScriptFile(endpoint);
-		FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint));
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile),
-				"Create JS script for endpoint " + endpoint.getCode());
+		FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint), StandardCharsets.UTF_8);
+		filesToCommit.add(scriptFile);
+
+		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
 
 		return scriptFile;
 	}
@@ -84,8 +95,7 @@ public class EndpointEventListener {
 	 * @throws IOException       if file cannot be created or overwritten
 	 * @throws BusinessException if the changes can't be commited
 	 */
-	public File updateESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint)
-			throws IOException, BusinessException {
+	public File updateESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) throws IOException, BusinessException {
 
 		log.debug("[CDI event] on update es file with id={}", endpoint.getId());
 		final File scriptFile = endpointService.getScriptFile(endpoint);
@@ -93,8 +103,7 @@ public class EndpointEventListener {
 
 		if (!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
 			FileUtils.write(scriptFile, updatedScript);
-			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile),
-					"Update JS script for endpoint " + endpoint.getCode());
+			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
 		}
 
 		return scriptFile;
@@ -108,12 +117,10 @@ public class EndpointEventListener {
 	 * @return the result of {@link File#delete()} called on the script file
 	 * @throws BusinessException if the changes can't be commited
 	 */
-	public boolean removeESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint)
-			throws BusinessException {
+	public boolean removeESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) throws BusinessException {
 
 		File scriptFile = endpointService.getScriptFile(endpoint);
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile),
-				"Update JS script for endpoint " + endpoint.getCode());
+		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
 
 		return scriptFile.delete();
 	}

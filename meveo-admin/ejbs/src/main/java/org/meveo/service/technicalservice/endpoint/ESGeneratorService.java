@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -87,8 +88,7 @@ public class ESGeneratorService {
 		if (endpointService.isEndpointScriptExists(endpoint)) {
 			StringWriter writer = new StringWriter();
 			try {
-				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getScriptFile(endpoint))),
-						writer);
+				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getScriptFile(endpoint))), writer);
 
 			} catch (IOException e) {
 				log.error("Failed loading js template with error {}", e.getMessage());
@@ -99,6 +99,45 @@ public class ESGeneratorService {
 		}
 
 		return buildJSInterfaceFromTemplate(baseUrl, endpoint, template);
+	}
+
+	/**
+	 * Build the base endpoint interface for all classes. Accessible at
+	 * MEVEO_URL/api/rest/endpoint/EndpointInterface.js
+	 * 
+	 * @param baseUrl  base url of the request
+	 * @param endpoint endpoint
+	 * @return
+	 * @throws IOException
+	 */
+	public String buildBaseEndpointInterface(String baseUrl) throws IOException {
+
+		String template = "";
+		// checks if the file exists in repository
+		if (endpointService.isBaseEndpointScriptExists()) {
+			StringWriter writer = new StringWriter();
+			try {
+				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getBaseScriptFile())), writer);
+
+			} catch (IOException e) {
+				log.error("Failed loading base js interface template with error {}", e.getMessage());
+				return "Missing base endpointInterface template";
+			}
+
+			template = writer.toString();
+		}
+
+		return buildBaseJSInterfaceFromTemplate(baseUrl, template);
+	}
+
+	private String buildBaseJSInterfaceFromTemplate(String baseUrl, String template) throws IOException {
+
+		EndpointJSInterface endpointJSInterface = new EndpointJSInterface();
+		endpointJSInterface.setApiUrl(baseUrl);
+		URL templateUrl = ESGenerator.class.getClassLoader().getResource("/endpoint-js-template/endpoint-interface-template.js");
+		endpointJSInterface.setTemplate(IOUtils.toString(templateUrl, StandardCharsets.UTF_8));
+
+		return endpointJSInterface.build();
 	}
 
 	/**
@@ -119,8 +158,7 @@ public class ESGeneratorService {
 		endpointJSInterface.setHttpMethod(endpoint.getMethod());
 		endpointJSInterface.setApiUrl(baseUrl);
 
-		String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(),
-				endpoint.getReturnedVariableName());
+		String returnedVariableType = ScriptUtils.findScriptVariableType(endpoint.getService(), endpoint.getReturnedVariableName());
 		CustomEntityTemplate returnedCet = customEntityTemplateService.findByDbTablename(returnedVariableType);
 		if (returnedCet != null) {
 			endpointJSInterface.setCet(true);
@@ -145,7 +183,7 @@ public class ESGeneratorService {
 
 				log.debug("Loading template file {}", templateUrl.getFile());
 
-				endpointJSInterface.setTemplate(IOUtils.toString(templateUrl));
+				endpointJSInterface.setTemplate(IOUtils.toString(templateUrl, StandardCharsets.UTF_8));
 
 			} else {
 				endpointJSInterface.setTemplate(template);
