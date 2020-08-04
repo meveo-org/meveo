@@ -169,7 +169,16 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 		if(targetCode == null) 
 			return null;
 		
-		return customRelationshipTemplateService.findBySourceOrTarget(cetCode, targetCode);
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		List<CustomRelationshipTemplate> relations = customRelationshipTemplateService.findBySourceOrTarget(cetCode, targetCode);
+		
+		while(cet.getSuperTemplate() != null) {
+			List<CustomRelationshipTemplate> crts = customRelationshipTemplateService.findBySourceOrTarget(cet.getSuperTemplate().getCode(), targetCode);
+			relations.addAll(crts);
+			cet = cet.getSuperTemplate();
+		}
+
+		return relations;
 	}
 
 

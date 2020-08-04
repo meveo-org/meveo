@@ -84,7 +84,19 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         useCFTCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCFT", "true"));
     }
     
-    public boolean exists(String code, String appliesTo) {
+    @Override
+	protected void beforeUpdateOrCreate(CustomFieldTemplate entity) throws BusinessException {
+		super.beforeUpdateOrCreate(entity);
+		
+		if(entity.getRelationship() != null) {
+			if(entity.getRelationship().getId() != null) {
+				CustomRelationshipTemplate crt = getEntityManager().find(CustomRelationshipTemplate.class, entity.getRelationship().getId());
+				entity.setRelationship(crt);
+			}
+		}
+	}
+
+	public boolean exists(String code, String appliesTo) {
     	try { 
     		return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
     			+ "code = :code and applies_to = :appliesTo")
