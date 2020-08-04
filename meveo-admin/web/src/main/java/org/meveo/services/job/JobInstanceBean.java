@@ -155,6 +155,11 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 	@Override
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
+        if (entity.getFollowingJob() != null) {
+            JobInstance jobInstance = jobInstanceService.findById(entity.getFollowingJob().getId(), getFormFieldsToFetch());
+            entity.setFollowingJob(jobInstance);
+        }
+
 		// need to cancel existing attached timer
 		if (prevTimerEntity != entity.getTimerEntity()) {
 			jobInstanceService.scheduleUnscheduleJob(entity.getId());
@@ -265,7 +270,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("timerEntity", "executionResults");
+        return Arrays.asList("timerEntity", "executionResults", "followingJob");
     }
     
 	@Override
