@@ -254,7 +254,7 @@
 			
 			<p:commandButton 
 				rendered="#{import and backingBean.canUserUpdateEntity()}"
-				value="#{messages['action.import']} #{backingBean.entity.class.simpleName}"
+				value="#{messages[backingBean != meveoModuleListBean?'action.import':'meveoModule.importFromFile']} #{backingBean != meveoModuleListBean? backingBean.entity.class.simpleName:''}"
 				id="#{formId}buttonImport" type="button"
 				onclick="PF('importDataDialog').show();" />
 

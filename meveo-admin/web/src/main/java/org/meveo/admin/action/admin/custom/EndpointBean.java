@@ -64,8 +64,6 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	private String serviceCode;
 
-	private DualListModel<String> rolesDM;
-
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
 	 * for {@link BaseBean}.

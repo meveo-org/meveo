@@ -195,10 +195,12 @@
 			<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
 		</p:commandButton>
 
-		<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
-						 rendered="#{not empty cc.attrs.backingBean.objectId and cc.attrs.showAddModuleButton and cc.attrs.backingBean.canUserUpdateEntity()}"
-						 update="addToModuleForm" oncomplete="PF('addToModuleDlg').show()">
-		</p:commandButton>
+		<c:if test="#{cc.attrs.showAddModuleButton}">
+			<p:commandButton value="#{messages['commons.addToModule']}" icon="ui-icon-newwin" actionListener="#{meveoModuleBean.initializeModules()}"
+							 rendered="#{not empty cc.attrs.backingBean.objectId and cc.attrs.showAddModuleButton and cc.attrs.backingBean.canUserUpdateEntity()}"
+							 update="addToModuleForm" oncomplete="PF('addToModuleDlg').show()">
+			</p:commandButton>
+		</c:if>
 
 		<p:confirmDialog id="confirmCannotUpdateWithMessageDialog" styleClass="confirm-dialog"
 						 message="#{messages['message.confirm.cannotUpdate']}" header=""
@@ -209,7 +211,7 @@
 			</p:panel>
 		</p:confirmDialog>
 
-	<c:if test="#{showAddModuleButton}">
+	<c:if test="#{cc.attrs.showAddModuleButton}">
 			<p:dialog widgetVar="addToModuleDlg" header="Select Module" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
 				<h:form id="addToModuleForm">
 				

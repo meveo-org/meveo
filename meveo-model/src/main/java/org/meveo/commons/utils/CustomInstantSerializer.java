@@ -13,8 +13,8 @@ public class CustomInstantSerializer extends JsonSerializer<Instant> {
 
     @Override
     public void serialize(Instant value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        String formattedDate = formatter.format(value);
+        //SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        String formattedDate = value.toString();
         jgen.writeString(formattedDate);
     }
 }
