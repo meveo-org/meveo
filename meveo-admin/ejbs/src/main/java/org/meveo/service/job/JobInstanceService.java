@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CacheKeyLong;
 import org.meveo.cache.JobCacheContainerProvider;
@@ -43,6 +44,7 @@ import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.security.CurrentUser;
@@ -222,6 +224,9 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
     @Override
     public JobInstance update(JobInstance jobInstance) throws BusinessException {
+        if (jobInstance.getJobTemplate().equals("ScriptingJob")) {
+            jobInstance = updateJobInstance(jobInstance);
+        }
         super.update(jobInstance);
         jobCacheContainerProvider.addUpdateJobInstance(jobInstance.getId());
         scheduleUnscheduleJob(jobInstance);
@@ -229,6 +234,37 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         clusterEventPublisher.publishEvent(jobInstance, CrudActionEnum.update);
 
         return jobInstance;
+    }
+
+    private JobInstance updateJobInstance(JobInstance jobInstance) {
+        getEntityManager().clear();
+        JobInstance instance = findById(jobInstance.getId());
+
+        List<JobExecutionResultImpl> jobExecutionResults = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(jobInstance.getExecutionResults())) {
+            for (JobExecutionResultImpl job : jobInstance.getExecutionResults()) {
+                jobExecutionResults.add(job);
+            }
+        }
+        instance.setJobCategoryEnum(jobInstance.getJobCategoryEnum());
+        instance.setJobTemplate(jobInstance.getJobTemplate());
+        instance.setCode(jobInstance.getCode());
+        instance.setDescription(jobInstance.getDescription());
+        instance.setTimerEntity(jobInstance.getTimerEntity());
+        instance.setParametres(jobInstance.getParametres());
+        instance.setFollowingJob(jobInstance.getFollowingJob());
+        instance.setProviderCode(jobInstance.getProviderCode());
+        instance.setRunOnNodes(jobInstance.getRunOnNodes());
+        instance.setLimitToSingleNode(jobInstance.isLimitToSingleNode());
+        instance.setRunTimeValues(jobInstance.getRunTimeValues());
+        instance.setCfValues(jobInstance.getCfValues());
+
+        instance.getExecutionResults().clear();
+        if (CollectionUtils.isNotEmpty(jobExecutionResults)) {
+            instance.getExecutionResults().addAll(jobExecutionResults);
+        }
+
+        return instance;
     }
 
     @Override
@@ -368,5 +404,11 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         expression.start(timerEntity.getStart());
         expression.year(timerEntity.getYear());
         return expression;
+    }
+
+    @Override
+    public JobInstance findById(Long id, List<String> fetchFields) {
+        getEntityManager().clear();
+        return super.findById(id, fetchFields);
     }
 }

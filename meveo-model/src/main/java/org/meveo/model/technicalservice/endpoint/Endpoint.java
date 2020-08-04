@@ -73,6 +73,8 @@ public class Endpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884613L;
 	
+	public static final String ENDPOINT_INTERFACE_JS = "EndpointInterface";
+	
 	/** Whether endpoint is accessible without logging */
 	@Column(name = "secured", nullable = false)
 	@Type(type = "numeric_boolean")
