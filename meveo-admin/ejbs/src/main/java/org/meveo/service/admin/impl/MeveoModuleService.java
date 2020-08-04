@@ -21,15 +21,7 @@ package org.meveo.service.admin.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import javax.ejb.Stateless;
@@ -824,13 +816,23 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public MeveoModule findById(Long id, List<String> fetchFields, boolean refresh) {
-	    getEntityManager().clear();
+	    MeveoModule meveoModule = findById(id);
+	    if (getEntityManager().contains(meveoModule)) {
+	        getEntityManager().detach(meveoModule);
+        }
         return super.findById(id, fetchFields, refresh);
     }
 
     @Override
     public List<MeveoModule> list(PaginationConfiguration config) {
-        getEntityManager().clear();
-        return super.list(config);
+	    List<MeveoModule> list = new ArrayList<>();
+        List<MeveoModule> meveoModules = super.list(config);
+        if (CollectionUtils.isNotEmpty(meveoModules)) {
+            for (MeveoModule meveoModule : meveoModules) {
+                meveoModule = findById(meveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+                list.add(meveoModule);
+            }
+        }
+        return list;
     }
 }
