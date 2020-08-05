@@ -18,7 +18,7 @@ class #{ENDPOINT_CODE} extends EndpointInterface {
 		// name and http method, these are inserted when code is generated
 		super("#{ENDPOINT_CODE}", "GET");
 		this.requestSchema = requestSchema;
-		this.responseSchema = responseSchema;nd
+		this.responseSchema = responseSchema;
 		this.mockResult = mockResult;
 	}
 
