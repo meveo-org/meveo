@@ -21,8 +21,19 @@ package org.meveo.service.admin.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
@@ -36,6 +47,9 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -51,6 +65,7 @@ import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -106,6 +121,87 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private ConcreteFunctionService concreteFunctionService;
+    
+    /**
+     * Add missing dependencies of each module item
+     * 
+     * @param moduleCode Code of the module to synchronize
+     * @return the total number of items added to the module
+     * @throws BusinessException if the module can't be updated
+     */
+	public int synchronizeLinkedItems(String moduleCode) throws BusinessException {
+		MeveoModule meveoModule = findByCode(moduleCode, List.of("moduleItems"));
+		List<MeveoModuleItem> newItems = getMissingItems(meveoModule);
+		int totalCount = 0;
+		
+		while (!newItems.isEmpty()) {
+			totalCount += newItems.size();
+			meveoModule.getModuleItems().addAll(newItems);
+			newItems = getMissingItems(meveoModule);
+		}
+		
+		if(totalCount > 0) {
+			meveoModule.getModuleItems().forEach(m -> m.setMeveoModule(meveoModule));
+			update(meveoModule);
+		}
+		
+		return totalCount;
+	}
+
+	/**
+	 * @param MeveoModule meveoModule the module to get missing items froms
+	 * @return the missing dependencies of each module item
+	 */
+	private List<MeveoModuleItem> getMissingItems(MeveoModule meveoModule) {
+		List<MeveoModuleItem> newItems = new ArrayList<>();
+		
+		for (MeveoModuleItem item : meveoModule.getModuleItems()) {
+			try {
+				// Check if the module item has possible dependencies
+				Class<?> clazz = Class.forName(item.getItemClass());
+				List<Field> fields = ReflectionUtils.getAllFields(new ArrayList<>(), clazz)
+						.stream()
+						.filter(f -> f.getType().getAnnotation(ModuleItem.class) != null)
+						.collect(Collectors.toList());
+				
+				// Load each dependency and add them as module item if they are not present
+				if(!fields.isEmpty()) {
+					Object loadedItem = getEntityManager().
+							unwrap(org.hibernate.Session.class)
+							.byNaturalId(clazz)
+							.with(LockOptions.READ)
+							.using("code", item.getItemCode())
+							.load();
+					
+					for(Field field : fields) {
+						boolean canAccess = field.canAccess(loadedItem);
+						field.setAccessible(true);
+						BusinessEntity fieldValue = (BusinessEntity) field.get(loadedItem);
+						
+						if(fieldValue instanceof HibernateProxy) {
+							Hibernate.initialize(fieldValue); 
+							fieldValue = (BusinessEntity) ((HibernateProxy) fieldValue)
+					                  .getHibernateLazyInitializer()
+					                  .getImplementation();
+						}
+						
+						if(fieldValue != null) {
+							MeveoModuleItem newItem = new MeveoModuleItem(fieldValue);
+							if(!meveoModule.getModuleItems().contains(newItem)) {
+								newItems.add(newItem);
+							}
+						}
+						field.setAccessible(canAccess);
+					}
+				}
+			} catch (Exception e) {
+				log.error("Cannot retrieve dependencies for module item {}", item, e);
+			}
+		}
+		
+
+		return newItems;
+	}
 
     /**
      * import module from remote meveo instance.

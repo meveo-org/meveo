@@ -24,6 +24,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -38,6 +39,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
 
     @Column(name = "code", nullable = false, length = 255)
     @Size(max = 255, min = 1)
+    @NaturalId
     protected String code;
 
     /**

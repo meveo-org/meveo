@@ -235,6 +235,9 @@
 
 			<ui:param name="buttons" value="true" />
             <ui:define name="buttons">
+                <p:messages id="messagesBottom" showDetail="true" closable="true">
+			        <p:autoUpdate />
+			    </p:messages>
                 <hf:formButtons backingBean="#{meveoModuleBean}" edit="true" showEditButton="#{!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed}"
                     showEnableDisableButton="#{!meveoModuleBean.entity.downloaded}" showDeleteButton="false" formId="moduleId"
                     useCustomIdParam="true" ajaxSubmit="">
@@ -249,6 +252,10 @@
 					<p:commandButton id="deleteModule" icon="ui-icon-trash" value="#{messages['commons.delete']}" oncomplete="PF('deleteDialog').show();" immediate="true"
 									 rendered="#{meveoModuleBean.entity.id!=null and meveoModuleBean.canUserUpdateEntity() and !meveoModuleBean.entity.downloaded}" update=":deleteDialog">
 						<f:setPropertyActionListener target="#{meveoModuleBean.deleteFiles}" value="#{!meveoModuleBean.entity.isInDraft}" />
+					</p:commandButton>
+					
+					<p:commandButton id="sync" value="Synchronize module items dependencies" actionListener="#{meveoModuleBean.synchronizeLinkedItems}">
+						
 					</p:commandButton>
 
 					<p:commandButton immediate="true" value="#{messages['meveoModule.patch.apply']}"
