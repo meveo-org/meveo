@@ -352,7 +352,7 @@ public class JSONSchemaGenerator {
 		return result
 				// .readOnly(!field.isAllowEdit())
 				// .nullable(!field.isValueRequired())
-				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element").title(template.code() + "." + field.getCode() + " Element")
+				.id(field.getAppliesTo() + '_' + field.getCode() + "_item").title(template.code() + "." + field.getCode() + " item")
 				// .description(field.getDescription())
 				.schemaLocation(schemaLocation);
 	}
@@ -362,7 +362,7 @@ public class JSONSchemaGenerator {
 		result.requiresObject(true)
 				// .readOnly(!field.isAllowEdit())
 				// .nullable(!field.isValueRequired())
-				.id(field.getAppliesTo() + '_' + field.getCode() + "_$element").title(template.code() + "." + field.getCode() + " Element")
+				.id(field.getAppliesTo() + '_' + field.getCode() + "_item").title(template.code() + "." + field.getCode() + " item")
 				// .description(field.getDescription())
 				.schemaLocation(schemaLocation);
 
