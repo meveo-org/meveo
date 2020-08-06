@@ -475,4 +475,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
         return "CRT_" + code;
     }
 
+	@Override
+	public String toString() {
+		return "CustomRelationshipTemplate [code=" + code + "]";
+	}
+    
+
 }

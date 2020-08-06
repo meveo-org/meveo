@@ -702,6 +702,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 		relationshipToCreate.setStartEntity(source);
 		relationshipToCreate.setEndEntity(target);
 		relationshipToCreate.setAvailableStorages(List.of(DBStorageType.NEO4J));
+		relationshipToCreate.setUnique(entity.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE));
 		
 		try {
 			customRelationshipTemplateService.create(relationshipToCreate);
