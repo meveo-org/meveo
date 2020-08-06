@@ -45,7 +45,6 @@ import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.security.DefaultPermission;
@@ -57,7 +56,6 @@ import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.security.permission.AuthorizationService;
 import org.meveo.service.base.local.IPersistenceService;
-import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
@@ -97,9 +95,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	@Inject
 	private AuthorizationService authService;
-
-	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
 
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -691,19 +686,4 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointRequestSchemaService.generateResponseSchema(endpoint);
 	}
 
-	/**
-	 * Generates the response schema of the custom entity template.
-	 *
-	 * @param cetCode code of the custom entity template
-	 * @return response schema of the custom entity template
-	 */
-	public Response responseJsonSchema(@NotNull String cetCode) throws IOException {
-		CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
-		if (customEntityTemplate == null) {
-			return Response.status(404).entity("Custom entity template " + cetCode + " was not found").build();
-		} else {
-			String jsonSchema = endpointService.getJsonSchemaContent(cetCode);
-			return Response.ok(jsonSchema).build();
-		}
-	}
 }

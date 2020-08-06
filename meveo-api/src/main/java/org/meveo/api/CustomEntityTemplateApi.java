@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -555,6 +557,28 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 		return result;
 	}
+
+    /**
+     * Generates the response schema of the custom entity template.
+     *
+     * @param cetCode code of the custom entity template
+     * @return response schema of the custom entity template
+     */
+    public Response responseJsonSchema(@NotNull String cetCode) {
+
+        CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+        if (customEntityTemplate == null) {
+            return Response.status(404).entity("Custom entity template " + cetCode + " was not found").build();
+        } else {
+            try {
+                String jsonSchema = customEntityTemplateService.getJsonSchemaContent(cetCode);
+                return Response.ok(jsonSchema).build();
+            } catch (Exception e) {
+                return Response.status(404).entity(e.getMessage()).build();
+            }
+        }
+
+    }
 	
     /**
      * Convert CustomEntityTemplateDto to a CustomEntityTemplate instance. Note: does not convert custom fields that are part of DTO
