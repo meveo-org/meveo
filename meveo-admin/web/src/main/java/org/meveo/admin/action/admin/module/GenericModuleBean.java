@@ -50,6 +50,8 @@ import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.api.module.ModuleInstallResult;
+import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -112,6 +114,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     private String tmpPicture;
     private boolean remove = false;
     private boolean deleteFiles;
+    private OnDuplicate onDuplicate = OnDuplicate.SKIP;
 
     public GenericModuleBean() {
 
@@ -127,7 +130,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         root = new DefaultTreeNode("Root");
     }
 
-    public MeveoInstance getMeveoInstance() {
+    public OnDuplicate getOnDuplicate() {
+		return onDuplicate;
+	}
+
+	public void setOnDuplicate(OnDuplicate onDuplicate) {
+		this.onDuplicate = onDuplicate;
+	}
+
+	public MeveoInstance getMeveoInstance() {
         return meveoInstance;
     }
 
@@ -600,13 +611,14 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     @SuppressWarnings("unchecked")
     public void install() {
-        entity = (T) install(entity);
+        entity = (T) install(entity, onDuplicate);
         // fix lazy load issue
         init();
         entity = initEntity();
     }
 
-    public MeveoModule install(MeveoModule module) {
+    public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) {
+    	
         try {
 
             if (!module.isDownloaded()) {
@@ -627,9 +639,10 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                     return null;  
                 }
             }
-            module = moduleApi.install(moduleDto);
+            var result = moduleApi.install(moduleDto, onDuplicate);
             messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
-
+            messages.info(result.toString());
+            
         } catch (Exception e) {
             log.error("Failed to install meveo module {} ", module.getCode(), e);
             messages.error(new BundleKey("messages", "meveoModule.installFailed"), module.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));

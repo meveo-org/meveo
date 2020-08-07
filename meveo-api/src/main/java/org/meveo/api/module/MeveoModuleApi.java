@@ -158,14 +158,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModule install(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
-		meveoModuleItemInstaller.install(meveoModule, moduleDto);
-		return meveoModule;
+		return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
 	}
 
 	public void registerModulePackage(String packageName) {

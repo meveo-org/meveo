@@ -32,6 +32,7 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -142,7 +143,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
     public void downloadAndInstallModule() {
         if (selectedModuleDto != null) {
             try {
-                moduleApi.install(selectedModuleDto);
+                moduleApi.install(selectedModuleDto, OnDuplicate.OVERWRITE);
                 messages.info(new BundleKey("messages", "meveoModule.installSuccess"), selectedModuleDto.getCode());
 
             } catch (ActionForbiddenException e) {
