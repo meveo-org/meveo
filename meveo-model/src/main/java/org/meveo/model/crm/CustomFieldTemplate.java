@@ -418,8 +418,12 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 *
 	 * @return the storage where the cft value will be stored
 	 */
-    public List<DBStorageType> getStorages() {
+    public List<DBStorageType> getStoragesNullSafe() {
         return storages == null ? new ArrayList<>() : storages;
+    }
+    
+    public List<DBStorageType> getStorages() {
+        return storages;
     }
 
     /**

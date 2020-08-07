@@ -415,7 +415,7 @@ public class GraphQLService {
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
             // Skip the field if it is not configured to be stored in neo4j
-            if (customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
+            if (customFieldTemplate.getStoragesNullSafe() == null || !customFieldTemplate.getStoragesNullSafe().contains(DBStorageType.NEO4J)) {
                 continue;
             }
 

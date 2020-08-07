@@ -314,7 +314,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
         code = cf.getCode();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         description = cf.getDescription();
         languageDescriptions = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(cf.getDescriptionI18n());
         fieldType = cf.getFieldType();
@@ -359,7 +359,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         }
 
         identifier = cf.isIdentifier();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         summary=cf.isSummary();
 
         saveOnExplorer = cf.isSaveOnExplorer();

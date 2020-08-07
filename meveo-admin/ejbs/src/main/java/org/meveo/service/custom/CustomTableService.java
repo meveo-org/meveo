@@ -1061,7 +1061,7 @@ public class CustomTableService extends NativePersistenceService {
     public boolean sqlCftFilter(CustomEntityTemplate cet, String key) {
         final CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(key, cet.getAppliesTo());
         if (cft != null) {
-            return cft.getStorages().contains(DBStorageType.SQL);
+            return cft.getStoragesNullSafe().contains(DBStorageType.SQL);
         }
 
         return true;
@@ -1143,7 +1143,7 @@ public class CustomTableService extends NativePersistenceService {
                     Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
 
                     if(customFieldTemplateOpt.isPresent()) {
-                        return customFieldTemplateOpt.get().getStorages().contains(DBStorageType.SQL);
+                        return customFieldTemplateOpt.get().getStoragesNullSafe().contains(DBStorageType.SQL);
                     }else {
                     	log.warn("Column {} of table {} cannot be translated into custom field", entry.getKey(), SQLStorageConfiguration.getCetDbTablename(cet.getCode()));
                     	return false;

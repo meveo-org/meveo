@@ -280,9 +280,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             entity.setCalendar(calendarService.retrieveIfNotManaged(entity.getCalendar()));
         }
 
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }
@@ -577,9 +577,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         		perksTarget.addAll(cetStorageDM.getTarget());
         	} else {
         		perksSource.addAll(cetStorageDM.getTarget());
-	            if (getEntity().getStorages() != null) {
-	                perksTarget.addAll(getEntity().getStorages());		// Persistent data
-	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
+	            if (getEntity().getStoragesNullSafe() != null) {
+	                perksTarget.addAll(getEntity().getStoragesNullSafe());		// Persistent data
+	                perksSource.removeAll(getEntity().getStoragesNullSafe());	// Display remaining available storages
 	            }
         	}
 
@@ -667,9 +667,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 * On change available storages.
 	 */
     public void onChangeAvailableStorages() {
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }

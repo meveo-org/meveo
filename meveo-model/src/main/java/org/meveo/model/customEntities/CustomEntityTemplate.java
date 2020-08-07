@@ -129,6 +129,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
+	
+	@Type(type = "numeric_boolean")
+	@Column(name = "audited")
+	private boolean audited = false;
 
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
@@ -456,6 +460,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		}
 
 		return getSqlStorageConfiguration().isStoreAsTable();
+	}	
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 
 }

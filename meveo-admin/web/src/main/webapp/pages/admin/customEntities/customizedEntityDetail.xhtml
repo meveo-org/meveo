@@ -55,6 +55,7 @@
 						</p:selectOneMenu>
 					</hftl:decorateFormField>
 					<hftl:formField label="#{messages['BusinessEntity.description']}" field="description"  />
+					<hftl:formField label="#{messages['customizedEntities.audited']}" id="audited" field="audited" allowEdit="false" />
 				</h:panelGrid>
 				<!-- Module -->
 				<h:panelGrid columns = "1" width="100%">
@@ -97,15 +98,18 @@
 
 				<!--  SQL Storage -->
                 <h:panelGroup id="persistences">
-                    <p:fieldset id="sql" toggleable="true" collapsed="true" legend="SQL Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.sqlStorageConfiguration}">
-                        <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable"
-                                        field="sqlStorageConfiguration"
-                                        childField="storeAsTable"
-                                        allowEdit="false"/>
-                        <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}"
-                                                rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable}">
-                            <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value"/>
-                        </hftl:decorateFormField>
+                    <p:fieldset id="sql" toggleable="true" collapsed="false" legend="SQL Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.sqlStorageConfiguration}">
+                    	<h:panelGroup id="sqlPanel">
+	                        <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable"
+	                                        field="sqlStorageConfiguration"
+	                                        childField="storeAsTable"
+	                                        allowEdit="false"
+	                                        listenerUpdate="sqlPanel" />
+	                        <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}"
+	                                                rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable == true}">
+	                            <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value"/>
+	                        </hftl:decorateFormField>
+                        </h:panelGroup>
                     </p:fieldset>
 
                     <!--  Neo4J Storage -->
