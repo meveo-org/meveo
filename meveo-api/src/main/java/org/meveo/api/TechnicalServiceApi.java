@@ -570,7 +570,11 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     @Override
     public D findIgnoreNotFound(String code) {
         final T service = technicalServiceService().findByCode(code);
-        return toDto(service);
+        if(service != null) {
+        	return toDto(service);
+        } else {
+        	return null;
+        }
     }
 
     /**

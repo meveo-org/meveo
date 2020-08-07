@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.TransactionRequiredException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
@@ -175,9 +176,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
                 throw new IllegalArgumentException(e.getMessage());
             } else {
-                // Delete CET if error occurs
-                log.error("Creation of cet={} failed with error={}", cet, e);
-                customEntityTemplateService.remove(cet);
+            	try {
+	                // Delete CET if error occurs
+	                log.error("Creation of {} failed: {}", cet, e.getMessage());
+	        		customEntityTemplateService.removeInNewTx(cet);
+                } catch(Exception ex) {
+                	log.warn("Failed to remove {}: {}", cet, ex.getMessage());
+                }
+                
                 throw e;
             }
 		}
