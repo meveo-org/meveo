@@ -49,6 +49,7 @@ import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
+import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -166,12 +167,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				
 				// Load each dependency and add them as module item if they are not present
 				if(!fields.isEmpty()) {
-					Object loadedItem = getEntityManager().
+					NaturalIdLoadAccess<?> query = getEntityManager().
 							unwrap(org.hibernate.Session.class)
 							.byNaturalId(clazz)
 							.with(LockOptions.READ)
-							.using("code", item.getItemCode())
-							.load();
+							.using("code", item.getItemCode());
+					
+					if(item.getAppliesTo() != null) {
+						query = query.using("appliesTo", item.getAppliesTo());
+					}
+					
+					Object loadedItem = query.load();
 					
 					for(Field field : fields) {
 						boolean canAccess = field.canAccess(loadedItem);

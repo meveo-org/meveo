@@ -101,4 +101,8 @@
 		<dropTable tableName="service_endpoint_roles"/>
 	</changeSet>
 	
+	<changeSet id="Add code UK on crt table" author="Clément Bareth">
+		<addUniqueConstraint columnNames="code" tableName="cust_crt"/>
+	</changeSet>
+	
 </databaseChangeLog>

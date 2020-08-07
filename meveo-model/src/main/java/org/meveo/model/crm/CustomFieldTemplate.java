@@ -53,6 +53,7 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
@@ -158,6 +159,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Column(name = "applies_to", nullable = false, length = 100)
     @Size(max = 100)
+    @NaturalId
     private String appliesTo;
 
     @Type(type = "numeric_boolean")
