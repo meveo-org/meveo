@@ -41,8 +41,9 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -72,6 +73,7 @@ import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -280,6 +282,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         return cetUpdated;
+    }
+    
+    @Transactional(TxType.REQUIRES_NEW)
+    public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
     }
 
     @Override
