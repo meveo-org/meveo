@@ -599,8 +599,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		int nbItemsAdded = meveoModuleService.synchronizeLinkedItems(entity.getCode());
 		log.info("synchronizeLinkedItems : {} items added to module {}", nbItemsAdded, entity.getCode());
 	
-        FacesContext.getCurrentInstance()
-        	.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Synchronization", nbItemsAdded + " items added. Reload to see changes."));
+        messages.info("Synchronization", nbItemsAdded + " items added. Reload to see changes.");
 
 	}
 }
